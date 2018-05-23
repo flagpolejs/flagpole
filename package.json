@@ -1,0 +1,37 @@
+{
+  "name": "Flagpole",
+  "version": "0.1.1",
+  "description": "Simple and fast DOM integration and REST API testing framework.",
+  "keywords": [
+    "qa",
+    "test",
+    "integration",
+    "smoke",
+    "dom",
+    "testing",
+    "rest",
+    "api",
+    "json",
+    "endpoint",
+    "html",
+    "node"
+  ],
+  "homepage": "https://github.com/flocasts/flagpole",
+  "repository": "git@github.com:flocasts/flagpole.git",
+  "author": "Jason Byrne <jason.byrne@flosports.tv>",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "request": "^2.87.0",
+    "typescript": "^2.8.3",
+    "yargs": "^11.0.0"
+  },
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "flagpole": "dist/cli.js"
+  }
+}
