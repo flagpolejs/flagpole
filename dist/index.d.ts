@@ -14,7 +14,7 @@ export declare class Suite {
     wait(bool?: boolean): Suite;
     isDone(): boolean;
     getDuration(): number;
-    print(): void;
+    print(): Suite;
     Scenario(title: string, tags?: [string]): Scenario;
     getScenarioByTag(tag: string): Scenario;
     getAllScenariosByTag(tag: string): [Scenario];
@@ -45,9 +45,10 @@ export declare class Scenario {
     passed(): boolean;
     timeout(timeout: number): Scenario;
     wait(bool?: boolean): Scenario;
-    form(form: any): Scenario;
+    form(form: {}): Scenario;
     auth(authorization: any): Scenario;
-    headers(headers: any): Scenario;
+    headers(headers: {}): Scenario;
+    header(key: string, value: any): Scenario;
     type(type: string): Scenario;
     method(method: string): Scenario;
     isDone(): boolean;

@@ -3,12 +3,12 @@ import {isNumber} from "util";
 let request = require('request');
 let cheerio = require('cheerio');
 
-interface iRequest {
+interface iResponse {
     select(path: string, findIn?: any): Property
     status(): Property
     and(): Property|null
     done(): void
-    label(message: string): iRequest
+    label(message: string): iResponse
     property(property: Property): Property
     readonly scenario: Scenario
 }
@@ -37,22 +37,43 @@ export class Suite {
         this.start = Date.now();
     }
 
+    /**
+     * By default tell scenarios in this suite not to run until specifically told to by execute()
+     *
+     * @param {boolean} bool
+     * @returns {Suite}
+     */
     public wait(bool: boolean = true): Suite {
         this.waitToExecute = bool;
         return this;
     }
 
+    /**
+     * Have all of the scenarios in this suite completed?
+     *
+     * @returns {boolean}
+     */
     public isDone(): boolean {
         return this.scenarios.every(function(scenario) {
             return scenario.isDone();
         });
     }
 
+    /**
+     * How long has this been running?
+     *
+     * @returns {number}
+     */
     public getDuration(): number {
         return Date.now() - this.start;
     }
 
-    public print() {
+    /**
+     * Print all logs to console
+     *
+     * @returns {Suite}
+     */
+    public print(): Suite {
         Flagpole.heading(this.title);
         Flagpole.message('» Base URL: ' + this.baseUrl);
         Flagpole.message('» Environment: ' + process.env.ENVIRONMENT);
@@ -66,8 +87,17 @@ export class Suite {
                 line.write();
             });
         });
+        return this;
     }
 
+    /**
+     * Create a new scenario for this suite
+     *
+     * @param {string} title
+     * @param {[string]} tags
+     * @returns {Scenario}
+     * @constructor
+     */
     public Scenario(title: string, tags?: [string]): Scenario {
         let suite: Suite = this;
         let scenario: Scenario = new Scenario(this, title, function() {
@@ -89,27 +119,56 @@ export class Suite {
         return scenario;
     }
 
+    /**
+     * Search scenarios in this suite for one with this tag
+     *
+     * @param {string} tag
+     * @returns {Scenario}
+     */
     public getScenarioByTag(tag: string): Scenario {
         return this.byTag.hasOwnProperty(tag) ?
             this.byTag[tag][0] : null;
     }
 
+    /**
+     * Search scenarios in this suite and find all of them with this tag
+     *
+     * @param {string} tag
+     * @returns {[Scenario]}
+     */
     public getAllScenariosByTag(tag: string): [Scenario] {
         return this.byTag.hasOwnProperty(tag) ?
             this.byTag[tag] : [];
     }
 
+    /**
+     * Set the base url, which is typically the domain. All scenarios will run relative to it
+     *
+     * @param {string} url
+     * @returns {Suite}
+     */
     public base(url: string): Suite {
         this.baseUrl = url;
         return this;
     }
 
+    /**
+     * Used by scenario to build its url
+     *
+     * @param {string} path
+     * @returns {string}
+     */
     public buildUrl(path: string): string {
         return (!!this.baseUrl) ?
             (this.baseUrl + path) :
             path;
     }
 
+    /**
+     * If suite was told to wait, this will tell each scenario in it to run
+     *
+     * @returns {Suite}
+     */
     public execute(): Suite {
         this.scenarios.forEach(function(scenario) {
             scenario.execute();
@@ -117,12 +176,22 @@ export class Suite {
         return this;
     }
 
+    /**
+     * Did every scenario in this suite pass?
+     *
+     * @returns {boolean}
+     */
     public passed(): boolean {
         return this.scenarios.every(function(scenario) {
             return scenario.passed();
         });
     }
 
+    /**
+     * Did any scenario in this suite fail?
+     *
+     * @returns {boolean}
+     */
     public failed(): boolean {
         return this.scenarios.some(function(scenario) {
             return scenario.failed();
@@ -164,58 +233,140 @@ export class Scenario {
         this.subheading(title);
     }
 
+    /**
+     * Did any assertions in this scenario fail?
+     *
+     * @returns {boolean}
+     */
     public failed(): boolean {
         return (this.failures.length > 0);
     }
 
+    /**
+     * Did all assertions in this scenario pass? This also requires that the scenario has completed
+     *
+     * @returns {boolean}
+     */
     public passed(): boolean {
         return !!(this.passes.length > 0 && this.end && this.failures.length == 0);
     }
 
+    /**
+     * Set the timeout for how long the request should wait for a response
+     *
+     * @param {number} timeout
+     * @returns {Scenario}
+     */
     public timeout(timeout: number): Scenario {
         this.options.timeout = timeout;
         return this;
     }
 
+    /**
+     * Do not run this scenario until execute() is called
+     *
+     * @param {boolean} bool
+     * @returns {Scenario}
+     */
     public wait(bool: boolean = true): Scenario {
         this.waitToExecute = bool;
         return this;
     }
 
-    public form(form: any): Scenario {
+    /**
+     * Set the form options that will be submitted with the request
+     *
+     * @param form
+     * @returns {Scenario}
+     */
+    public form(form: {}): Scenario {
         this.options.form = form;
         return this;
     }
 
+    /**
+     * Set the basic authentication headers to be sent with this request
+     *
+     * @param authorization
+     * @returns {Scenario}
+     */
     public auth(authorization: any): Scenario {
         this.options.auth = authorization;
         return this;
     }
 
-    public headers(headers: any): Scenario {
+    /**
+     * Set the full list of headers to submit with this request
+     *
+     * @param headers
+     * @returns {Scenario}
+     */
+    public headers(headers: {}): Scenario {
         this.options.headers = headers;
         return this;
     }
 
+    /**
+     * Set a single header key-value without overriding others
+     *
+     * @param {string} key
+     * @param value
+     * @returns {Scenario}
+     */
+    public header(key: string, value: any): Scenario {
+        this.options.headers = this.options.headers || {};
+        this.options.headers[key] = value;
+        return this;
+    }
+
+    /**
+     * Set the type of request this is. Default is "html" but you can set this to "json" for REST APIs
+     *
+     * @param {string} type
+     * @returns {Scenario}
+     */
     public type(type: string): Scenario {
         this.pageType = type;
         return this;
     }
 
+    /**
+     * Set the HTTP method of this request
+     *
+     * @param {string} method
+     * @returns {Scenario}
+     */
     public method(method: string): Scenario {
         this.options.method = method.toUpperCase();
         return this;
     }
 
+    /**
+     * Has this scenario completed?
+     *
+     * @returns {boolean}
+     */
     public isDone(): boolean {
         return (this.end !== null);
     }
 
+    /**
+     * Add a subheading log message to buffer
+     *
+     * @param {string} message
+     * @returns {Scenario}
+     */
     public subheading(message: string): Scenario {
         this.log.push(new ConsoleLine(message));
         return this;
     }
 
+    /**
+     * Push in a new passing assertion
+     *
+     * @param {string} message
+     * @returns {Scenario}
+     */
     public pass(message: string): Scenario {
         if (this.nextLabel) {
             message = this.nextLabel;
@@ -226,6 +377,12 @@ export class Scenario {
         return this;
     }
 
+    /**
+     * Push in a new failing assertion
+     *
+     * @param {string} message
+     * @returns {Scenario}
+     */
     public fail(message: string): Scenario {
         if (this.nextLabel) {
             message = this.nextLabel;
@@ -236,6 +393,12 @@ export class Scenario {
         return this;
     }
 
+    /**
+     * Set the URL that this scenario will hit
+     *
+     * @param {string} url
+     * @returns {Scenario}
+     */
     public open(url: string): Scenario {
         // You can only load the url once per scenario
         if (!this.start) {
@@ -247,6 +410,12 @@ export class Scenario {
         return this;
     }
 
+    /**
+     * Set the callback for the assertions to run after the request has a response
+     *
+     * @param {Function} then
+     * @returns {Scenario}
+     */
     public assertions(then: Function): Scenario {
         // You can only load the url once per scenario
         if (!this.start) {
@@ -258,6 +427,11 @@ export class Scenario {
         return this;
     }
 
+    /**
+     * Skip this scenario completely and mark it done
+     *
+     * @returns {Scenario}
+     */
     public skip(): Scenario {
         if (!this.start) {
             this.start = Date.now();
@@ -309,24 +483,53 @@ export class Scenario {
         return this;
     }
 
+    /**
+     * Add a new scenario to the parent suite... this facilitates chaining
+     *
+     * @param {string} title
+     * @param {[string]} tags
+     * @returns {Scenario}
+     * @constructor
+     */
     public Scenario(title: string, tags?: [string]): Scenario {
         return this.suite.Scenario(title, tags);
     }
 
+    /**
+     * Override the next test's default pass/fail message with something custom and more human readable
+     *
+     * @param {string} message
+     * @returns {Scenario}
+     */
     public label(message: string): Scenario {
         this.nextLabel = message;
         return this;
     }
 
+    /**
+     * Get the log buffer
+     *
+     * @returns {Array<ConsoleLine>}
+     */
     public getLog(): Array<ConsoleLine> {
         return this.log;
     }
 
+    /**
+     * Find the total execution time of this scenario
+     *
+     * @returns {number}
+     */
     protected getExecutionTime(): number {
         return (this.end !== null && this.start !== null) ?
             (this.end - this.start) : 0;
     }
 
+    /**
+     * Mark this scenario as completed
+     *
+     * @returns {Scenario}
+     */
     public done(): Scenario {
         this.end = Date.now();
         this.log.push(new ConsoleLine("  » Took " + this.getExecutionTime() + "ms\n"));
@@ -341,14 +544,14 @@ export class Scenario {
  */
 class Property {
 
-    protected endPoint: iRequest;
+    protected response: iResponse;
     protected name: string;
     protected obj: any;
 
     protected flipAssertion: boolean = false;
 
-    constructor(endPoint: iRequest, name: string, obj: any) {
-        this.endPoint = endPoint;
+    constructor(response: iResponse, name: string, obj: any) {
+        this.response = response;
         this.name = name;
         this.obj = obj;
     }
@@ -366,11 +569,11 @@ class Property {
     /**
      * Clear out any previous settings
      *
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    protected reset(): iRequest {
+    protected reset(): iResponse {
         this.flipAssertion = false;
-        return this.endPoint;
+        return this.response;
     }
 
     /**
@@ -390,61 +593,107 @@ class Property {
      * @returns {Property}
      */
     public find(selector: string): Property {
-        return this.endPoint.select(selector, this.obj);
+        return this.response.select(selector, this.obj);
     }
 
+    /**
+     * Find the next element matching, relative to the currently selected element
+     *
+     * @param {string} selector
+     * @returns {Property}
+     */
     public next(selector?: string): Property {
         let obj: any = null;
         let name: string = 'next ' + selector;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.next(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
     }
 
+    /**
+     * Find the previous element matching, relative to the currently selected element
+     *
+     * @param {string} selector
+     * @returns {Property}
+     */
     public prev(selector?: string): Property {
         let obj: any = null;
         let name: string = 'next ' + selector;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.prev(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
     }
 
+    /**
+     * Going up the object model, find the closest matching element, relative to the currently selected element
+     *
+     * @param {string} selector
+     * @returns {Property}
+     */
     public closest(selector: string): Property {
         let obj: any = null;
         let name: string = 'next ' + selector;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.closest(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
     }
 
+    /**
+     * Find a matching parent element, relative to the currently selected element
+     *
+     * @param {string} selector
+     * @returns {Property}
+     */
     public parents(selector?: string): Property {
         let obj: any = null;
         let name: string = 'next ' + selector;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.parents(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
     }
 
+    /**
+     * Find matching sibling elements, relative to the currently selected element
+     *
+     * @param {string} selector
+     * @returns {Property}
+     */
     public siblings(selector?: string): Property {
         let obj: any = null;
         let name: string = 'next ' + selector;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.siblings(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
     }
 
+    /**
+     * Find matching child elements, relative to the currently selected element
+     *
+     * @param {string} selector
+     * @returns {Property}
+     */
     public children(selector?: string): Property {
         let obj: any = null;
         let name: string = 'next ' + selector;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.children(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
+    }
+
+    /**
+     * Alias for nth because it's what jQuery uses even though it's a stupid name
+     *
+     * @param {number} i
+     * @returns {Property}
+     */
+    public eq(i: number): Property {
+        return this.nth(i);
     }
 
     /**
@@ -463,7 +712,7 @@ class Property {
                 obj = this.obj.eq(i);
             }
         }
-        return this.endPoint.property(new Property(this.endPoint, this.name + '[' + i + ']', obj));
+        return this.response.property(new Property(this.response, this.name + '[' + i + ']', obj));
     }
 
     /**
@@ -500,7 +749,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return this.endPoint.property(new Property(this.endPoint,  this.name + '[' + key + ']', text));
+        return this.response.property(new Property(this.response,  this.name + '[' + key + ']', text));
     }
 
     /**
@@ -517,7 +766,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return this.endPoint.property(new Property(this.endPoint,  this.name + '[' + key + ']', text));
+        return this.response.property(new Property(this.response,  this.name + '[' + key + ']', text));
     }
 
     /**
@@ -534,7 +783,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return this.endPoint.property(new Property(this.endPoint,  this.name + '[' + key + ']', text));
+        return this.response.property(new Property(this.response,  this.name + '[' + key + ']', text));
     }
 
     /**
@@ -550,7 +799,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj)) {
             text = String(this.obj);
         }
-        return this.endPoint.property(new Property(this.endPoint, 'Value of ' + this.name, text));
+        return this.response.property(new Property(this.response, 'Value of ' + this.name, text));
     }
 
     /**
@@ -566,7 +815,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj)) {
             text = String(this.obj);
         }
-        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, text));
+        return this.response.property(new Property(this.response, 'Text of ' + this.name, text));
     }
 
     /**
@@ -582,7 +831,7 @@ class Property {
         else {
             num = parseInt(this.obj);
         }
-        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, num));
+        return this.response.property(new Property(this.response, 'Text of ' + this.name, num));
     }
 
     /**
@@ -598,7 +847,7 @@ class Property {
         else {
             num = parseFloat(this.obj);
         }
-        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, num));
+        return this.response.property(new Property(this.response, 'Text of ' + this.name, num));
     }
 
     /**
@@ -609,7 +858,7 @@ class Property {
     public length(): Property {
         let count: number = (this.obj && this.obj.length) ?
             this.obj.length : 0;
-        return this.endPoint.property(new Property(this.endPoint, 'Length of ' + this.name, count));
+        return this.response.property(new Property(this.response, 'Length of ' + this.name, count));
     }
 
     /**
@@ -618,7 +867,7 @@ class Property {
      * @param {string} message
      */
     protected pass(message: string) {
-        this.endPoint.scenario.pass(
+        this.response.scenario.pass(
             this.flipAssertion ?
                 'NOT: ' + message :
                 message
@@ -631,7 +880,7 @@ class Property {
      * @param {string} message
      */
     protected fail(message: string) {
-        this.endPoint.scenario.fail(
+        this.response.scenario.fail(
             this.flipAssertion ?
                 'NOT: ' + message :
                 message
@@ -645,7 +894,7 @@ class Property {
      * @returns {Property}
      */
     public label(message: string): Property {
-        this.endPoint.label(message);
+        this.response.label(message);
         return this;
     }
 
@@ -654,9 +903,9 @@ class Property {
     /**
      * Does this element exist?
      *
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public exists(): iRequest {
+    public exists(): iResponse {
         let exists: boolean = false;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             exists = (this.obj.length > 0);
@@ -674,9 +923,9 @@ class Property {
      * Does this element have this class name?
      *
      * @param {string} className
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public hasClass(className: string): iRequest {
+    public hasClass(className: string): iResponse {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             this.assert(this.obj.hasClass(className)) ?
                 this.pass(this.name + ' has class ' + className) :
@@ -689,9 +938,9 @@ class Property {
      * Is this object's value greater than this?
      *
      * @param {number} value
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public greaterThan(value: number): iRequest {
+    public greaterThan(value: number): iResponse {
         this.assert(this.obj > value) ?
             this.pass(this.name + ' is greater than ' + value + ' (' + this.obj + ')') :
             this.fail(this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
@@ -702,9 +951,9 @@ class Property {
      *  Is this object's value greater than or equal to this?
      *
      * @param value
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public greaterThanOrEquals(value: any): iRequest {
+    public greaterThanOrEquals(value: any): iResponse {
         this.assert(this.obj >= value) ?
             this.pass(this.name + ' is greater than ' + value + ' (' + this.obj + ')') :
             this.fail(this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
@@ -715,9 +964,9 @@ class Property {
      * Is this object's value less than this?
      *
      * @param {number} value
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public lessThan(value: number): iRequest {
+    public lessThan(value: number): iResponse {
         this.assert(this.obj < value) ?
             this.pass(this.name + ' is less than ' + value + ' (' + this.obj + ')') :
             this.fail(this.name + ' is not less than ' + value + ' (' + this.obj + ')');
@@ -728,9 +977,9 @@ class Property {
      * Is this object's value less or equal to this?
      *
      * @param value
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public lessThanOrEquals(value: any): iRequest {
+    public lessThanOrEquals(value: any): iResponse {
         this.assert(this.obj <= value) ?
             this.pass(this.name + ' is less than ' + value + ' (' + this.obj + ')') :
             this.fail(this.name + ' is not less than ' + value + ' (' + this.obj + ')');
@@ -742,9 +991,9 @@ class Property {
      *
      * @param value
      * @param {boolean} permissiveMatching
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public equals(value: any, permissiveMatching: boolean = false): iRequest {
+    public equals(value: any, permissiveMatching: boolean = false): iResponse {
         let matchValue: string = String(this.obj);
         let positiveCase: string = 'equals';
         let negativeCase: string = 'does not equal';
@@ -764,7 +1013,7 @@ class Property {
      * Is this object's value similar to this?
      *
      * @param value
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
     public similarTo(value: any) {
         return this.equals(value, true);
@@ -774,9 +1023,9 @@ class Property {
      * Does this object contain this? Works for strings, arrays, and objects alike
      *
      * @param {string} string
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public contains(string: string): iRequest {
+    public contains(string: string): iResponse {
         let contains: boolean = false;
         if (Flagpole.toType(this.obj) == 'array') {
             contains = (this.obj.indexOf(string) >= 0);
@@ -797,9 +1046,9 @@ class Property {
      * Does this objects type match this?
      *
      * @param {string} type
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public is(type: string): iRequest {
+    public is(type: string): iResponse {
         let myType: string = Flagpole.toType(this.obj);
         this.assert(myType == type.toLocaleLowerCase()) ?
             this.pass(this.name + ' is type ' + type) :
@@ -810,9 +1059,9 @@ class Property {
     /**
      * For debugging, just spit out a value
      *
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public echo(): iRequest {
+    public echo(): iResponse {
         this.pass(this.name + ' = ' + this.obj);
         return this.reset();
     }
@@ -820,22 +1069,21 @@ class Property {
     /**
      * For debugging, just spit out this object's type
      *
-     * @returns {iRequest}
+     * @returns {iResponse}
      */
-    public typeof(): iRequest {
+    public typeof(): iResponse {
         this.pass('typeof ' + this.name + ' = ' + Flagpole.toType(this.obj));
         return this.reset();
     }
 
 }
 
-abstract class GenericRequest  implements iRequest {
+abstract class GenericRequest  implements iResponse {
 
     public readonly scenario: Scenario;
 
     protected url: string;
     protected response: SimplifiedResponse;
-    protected body: string|null = null;
     protected last: Property|null = null;
 
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
@@ -873,7 +1121,7 @@ abstract class GenericRequest  implements iRequest {
         this.scenario.done();
     }
 
-    public label(message: string): iRequest {
+    public label(message: string): iResponse {
         this.scenario.label(message);
         return this;
     }
@@ -897,7 +1145,7 @@ class JsonRequest extends GenericRequest {
     public select(path: string, findIn?: any): Property {
         let args: Array<string> = path.split('.');
         let obj: any = findIn || this.json;
-        let endPoint: iRequest = this;
+        let endPoint: iResponse = this;
         if (args.every(function(value: string) {
                 obj = obj[value];
                 return (typeof obj !== 'undefined');

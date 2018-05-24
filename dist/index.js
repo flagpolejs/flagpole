@@ -35,6 +35,7 @@ class Suite {
                 line.write();
             });
         });
+        return this;
     }
     Scenario(title, tags) {
         let suite = this;
@@ -137,6 +138,11 @@ class Scenario {
     }
     headers(headers) {
         this.options.headers = headers;
+        return this;
+    }
+    header(key, value) {
+        this.options.headers = this.options.headers || {};
+        this.options.headers[key] = value;
         return this;
     }
     type(type) {
@@ -251,9 +257,9 @@ class Scenario {
 }
 exports.Scenario = Scenario;
 class Property {
-    constructor(endPoint, name, obj) {
+    constructor(response, name, obj) {
         this.flipAssertion = false;
-        this.endPoint = endPoint;
+        this.response = response;
         this.name = name;
         this.obj = obj;
     }
@@ -262,14 +268,14 @@ class Property {
     }
     reset() {
         this.flipAssertion = false;
-        return this.endPoint;
+        return this.response;
     }
     not() {
         this.flipAssertion = true;
         return this;
     }
     find(selector) {
-        return this.endPoint.select(selector, this.obj);
+        return this.response.select(selector, this.obj);
     }
     next(selector) {
         let obj = null;
@@ -277,7 +283,7 @@ class Property {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.next(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
     }
     prev(selector) {
         let obj = null;
@@ -285,7 +291,7 @@ class Property {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.prev(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
     }
     closest(selector) {
         let obj = null;
@@ -293,7 +299,7 @@ class Property {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.closest(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
     }
     parents(selector) {
         let obj = null;
@@ -301,7 +307,7 @@ class Property {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.parents(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
     }
     siblings(selector) {
         let obj = null;
@@ -309,7 +315,7 @@ class Property {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.siblings(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
     }
     children(selector) {
         let obj = null;
@@ -317,7 +323,10 @@ class Property {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             obj = this.obj.children(selector);
         }
-        return this.endPoint.property(new Property(this.endPoint, name, obj));
+        return this.response.property(new Property(this.response, name, obj));
+    }
+    eq(i) {
+        return this.nth(i);
     }
     nth(i) {
         let obj = null;
@@ -329,7 +338,7 @@ class Property {
                 obj = this.obj.eq(i);
             }
         }
-        return this.endPoint.property(new Property(this.endPoint, this.name + '[' + i + ']', obj));
+        return this.response.property(new Property(this.response, this.name + '[' + i + ']', obj));
     }
     first() {
         return this.nth(0);
@@ -345,7 +354,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return this.endPoint.property(new Property(this.endPoint, this.name + '[' + key + ']', text));
+        return this.response.property(new Property(this.response, this.name + '[' + key + ']', text));
     }
     property(key) {
         let text = null;
@@ -355,7 +364,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return this.endPoint.property(new Property(this.endPoint, this.name + '[' + key + ']', text));
+        return this.response.property(new Property(this.response, this.name + '[' + key + ']', text));
     }
     data(key) {
         let text = null;
@@ -365,7 +374,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return this.endPoint.property(new Property(this.endPoint, this.name + '[' + key + ']', text));
+        return this.response.property(new Property(this.response, this.name + '[' + key + ']', text));
     }
     val() {
         let text = null;
@@ -375,7 +384,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj)) {
             text = String(this.obj);
         }
-        return this.endPoint.property(new Property(this.endPoint, 'Value of ' + this.name, text));
+        return this.response.property(new Property(this.response, 'Value of ' + this.name, text));
     }
     text() {
         let text = '';
@@ -385,7 +394,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj)) {
             text = String(this.obj);
         }
-        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, text));
+        return this.response.property(new Property(this.response, 'Text of ' + this.name, text));
     }
     parseInt() {
         let num = null;
@@ -395,7 +404,7 @@ class Property {
         else {
             num = parseInt(this.obj);
         }
-        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, num));
+        return this.response.property(new Property(this.response, 'Text of ' + this.name, num));
     }
     parseFloat() {
         let num = null;
@@ -405,25 +414,25 @@ class Property {
         else {
             num = parseFloat(this.obj);
         }
-        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, num));
+        return this.response.property(new Property(this.response, 'Text of ' + this.name, num));
     }
     length() {
         let count = (this.obj && this.obj.length) ?
             this.obj.length : 0;
-        return this.endPoint.property(new Property(this.endPoint, 'Length of ' + this.name, count));
+        return this.response.property(new Property(this.response, 'Length of ' + this.name, count));
     }
     pass(message) {
-        this.endPoint.scenario.pass(this.flipAssertion ?
+        this.response.scenario.pass(this.flipAssertion ?
             'NOT: ' + message :
             message);
     }
     fail(message) {
-        this.endPoint.scenario.fail(this.flipAssertion ?
+        this.response.scenario.fail(this.flipAssertion ?
             'NOT: ' + message :
             message);
     }
     label(message) {
-        this.endPoint.label(message);
+        this.response.label(message);
         return this;
     }
     exists() {
@@ -523,7 +532,6 @@ class Property {
 }
 class GenericRequest {
     constructor(scenario, url, response) {
-        this.body = null;
         this.last = null;
         this.scenario = scenario;
         this.url = url;

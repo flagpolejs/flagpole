@@ -32,5 +32,6 @@ Flagpole.Suite('Smoke Tests')
             .select('#tabs a').first().text().contains('interesting')
             .select('#tabs a').nth(1).text().contains('featured')
             .select('#tabs a').nth(2).text().contains('hot')
+            .select('#tabs a').nth(2).attribute('href').echo()
             .done();
     });

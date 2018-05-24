@@ -6,8 +6,13 @@ let fs = require('fs');
 process.env.ENVIRONMENT = argv.env || 'prod';
 process.env.SUITE = argv.suite || null;
 process.env.GROUP = argv.group || null;
-process.env.ROOT_FOLDER = argv.root || (function () {
-    return argv.group ? process.cwd() + '/tests/' + argv.group + '/' : process.cwd() + '/tests/';
+process.env.ROOT_FOLDER = (function () {
+    let rootFolder = argv.group ? process.cwd() + '/tests/' + argv.group + '/' : process.cwd() + '/tests/';
+    if (argv.root) {
+        rootFolder = argv.root;
+        rootFolder = (rootFolder.match(/\/$/) ? rootFolder : rootFolder + '/') + 'tests/';
+    }
+    return rootFolder;
 })();
 class TestSuiteFile {
     constructor(dir, file) {
@@ -16,7 +21,7 @@ class TestSuiteFile {
         this.name = '';
         this.filePath = dir + file;
         this.fileName = file;
-        this.name = dir.replace(process.cwd() + '/tests/', '') + file.split('.').slice(0, -1).join('.');
+        this.name = dir.replace(String(process.env.ROOT_FOLDER), '') + file.split('.').slice(0, -1).join('.');
     }
 }
 let runTestFile = function (filePath) {
