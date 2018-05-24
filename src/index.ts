@@ -1,12 +1,15 @@
+import {isNumber} from "util";
+
 let request = require('request');
 let cheerio = require('cheerio');
 
 interface iRequest {
-    select(path: string): Property
+    select(path: string, findIn?: any): Property
     status(): Property
     and(): Property|null
     done(): void
     label(message: string): iRequest
+    property(property: Property): Property
     readonly scenario: Scenario
 }
 
@@ -350,118 +353,270 @@ class Property {
         this.obj = obj;
     }
 
+    /**
+     * Assert something is true, with respect to the flipped not()
+     *
+     * @param {boolean} statement
+     * @returns {boolean}
+     */
     protected assert(statement: boolean): boolean {
-        return this.flipAssertion ?
-            !statement :
-            !!statement;
+        return this.flipAssertion ? !statement : !!statement;
     }
 
+    /**
+     * Clear out any previous settings
+     *
+     * @returns {iRequest}
+     */
     protected reset(): iRequest {
         this.flipAssertion = false;
         return this.endPoint;
     }
 
+    /**
+     * Flip the next assertion
+     *
+     * @returns {Property}
+     */
     public not(): Property {
         this.flipAssertion = true;
         return this;
     }
 
-    public toString(): string {
-        return (Flagpole.toType(this.obj) == 'cheerio') ?
-            this.obj.text().toString() :
-            this.obj.toString();
+    /**
+     * Find a child element of the currently selected element
+     *
+     * @param {string} selector
+     * @returns {Property}
+     */
+    public find(selector: string): Property {
+        return this.endPoint.select(selector, this.obj);
     }
 
+    public next(selector?: string): Property {
+        let obj: any = null;
+        let name: string = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.next(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+
+    public prev(selector?: string): Property {
+        let obj: any = null;
+        let name: string = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.prev(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+
+    public closest(selector: string): Property {
+        let obj: any = null;
+        let name: string = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.closest(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+
+    public parents(selector?: string): Property {
+        let obj: any = null;
+        let name: string = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.parents(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+
+    public siblings(selector?: string): Property {
+        let obj: any = null;
+        let name: string = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.siblings(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+
+    public children(selector?: string): Property {
+        let obj: any = null;
+        let name: string = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.children(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+
+    /**
+     * Select the nth value or an array or collection
+     *
+     * @param {number} i
+     * @returns {Property}
+     */
     public nth(i: number): Property {
-        if (Flagpole.toType(this.obj) == 'array') {
-            return new Property(this.endPoint, this.name + '[' + i + ']', this.obj[i]);
+        let obj: any = null;
+        if (i >= 0) {
+            if (Flagpole.toType(this.obj) == 'array') {
+                obj = this.obj[i];
+            }
+            else if (Flagpole.toType(this.obj) == 'cheerio') {
+                obj = this.obj.eq(i);
+            }
         }
-        else if (Flagpole.toType(this.obj) == 'cheerio') {
-            return new Property(this.endPoint, this.name + '[' + i + ']', this.obj.eq(i));
-        }
-        return new Property(this.endPoint, 'Length of ' + this.name, null)
+        return this.endPoint.property(new Property(this.endPoint, this.name + '[' + i + ']', obj));
     }
 
+    /**
+     * Get the first element in the array
+     *
+     * @returns {Property}
+     */
     public first(): Property {
-        if (
-            Flagpole.toType(this.obj) == 'array' ||
-            Flagpole.toType(this.obj) == 'cheerio'
-        ) {
-            return this.nth(0);
-        }
-        return new Property(this.endPoint, 'Length of ' + this.name, null)
+        return this.nth(0);
     }
 
+    /**
+     * Get the last element in the array
+     *
+     * @returns {Property}
+     */
     public last(): Property {
-        if (
-            Flagpole.toType(this.obj) == 'array' ||
-            Flagpole.toType(this.obj) == 'cheerio'
-        ) {
-            return this.nth(this.obj.length - 1);
-        }
-        return new Property(this.endPoint, 'Length of ' + this.name, null)
+        return this.nth(
+            (this.obj && this.obj.length) ? (this.obj.length - 1) : -1
+        );
     }
 
+    /**
+     * Get the attribute by name of this object
+     *
+     * @param {string} key
+     * @returns {Property}
+     */
     public attribute(key: string): Property {
         let text: string|null = null;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             text = this.obj.attr(key);
         }
-        else if (this.obj.hasOwnProperty(key)) {
+        else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return new Property(this.endPoint,  this.name + '[' + key + ']', text);
+        return this.endPoint.property(new Property(this.endPoint,  this.name + '[' + key + ']', text));
     }
 
+    /**
+     * Get the property by name of this object
+     *
+     * @param {string} key
+     * @returns {Property}
+     */
     public property(key: string): Property {
         let text: string|null = null;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             text = this.obj.prop(key);
         }
-        else if (this.obj.hasOwnProperty(key)) {
+        else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return new Property(this.endPoint,  this.name + '[' + key + ']', text);
+        return this.endPoint.property(new Property(this.endPoint,  this.name + '[' + key + ']', text));
     }
 
+    /**
+     * Get the data attribute by name of this object
+     *
+     * @param {string} key
+     * @returns {Property}
+     */
     public data(key: string): Property {
         let text: string|null = null;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             text = this.obj.data(key);
         }
-        else if (this.obj.hasOwnProperty(key)) {
+        else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return new Property(this.endPoint,  this.name + '[' + key + ']', text);
+        return this.endPoint.property(new Property(this.endPoint,  this.name + '[' + key + ']', text));
     }
 
+    /**
+     * Get the value of this object
+     *
+     * @returns {Property}
+     */
     public val(): Property {
         let text: string|null = null;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             text = this.obj.val();
         }
-        else {
-            text = this.toString();
+        else if (!Flagpole.isNullOrUndefined(this.obj)) {
+            text = String(this.obj);
         }
-        return new Property(this.endPoint, 'Value of ' + this.name, text);
+        return this.endPoint.property(new Property(this.endPoint, 'Value of ' + this.name, text));
     }
 
+    /**
+     * Get the text value of this object
+     *
+     * @returns {Property}
+     */
     public text(): Property {
         let text: string = '';
         if (Flagpole.toType(this.obj) == 'cheerio') {
             text = this.obj.text();
         }
-        else {
-            text = this.obj.toString();
+        else if (!Flagpole.isNullOrUndefined(this.obj)) {
+            text = String(this.obj);
         }
-        return new Property(this.endPoint, 'Text of ' + this.name, text);
+        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, text));
     }
 
+    /**
+     * Get the integer value of this object
+     *
+     * @returns {Property}
+     */
+    public parseInt(): Property {
+        let num: number|null = null;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            num = parseInt(this.obj.text());
+        }
+        else {
+            num = parseInt(this.obj);
+        }
+        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, num));
+    }
+
+    /**
+     * Get the float/double value of this object
+     *
+     * @returns {Property}
+     */
+    public parseFloat(): Property {
+        let num: number|null = null;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            num = parseFloat(this.obj.text());
+        }
+        else {
+            num = parseFloat(this.obj);
+        }
+        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, num));
+    }
+
+    /**
+     * Find the number of elements in array or length of a string
+     *
+     * @returns {Property}
+     */
     public length(): Property {
-        let count: number = this.obj.length;
-        return new Property(this.endPoint, 'Length of ' + this.name, count);
+        let count: number = (this.obj && this.obj.length) ?
+            this.obj.length : 0;
+        return this.endPoint.property(new Property(this.endPoint, 'Length of ' + this.name, count));
     }
 
+    /**
+     * Write a message for a passing assertion
+     *
+     * @param {string} message
+     */
     protected pass(message: string) {
         this.endPoint.scenario.pass(
             this.flipAssertion ?
@@ -470,6 +625,11 @@ class Property {
         );
     }
 
+    /**
+     * Write message for a failing assertion
+     *
+     * @param {string} message
+     */
     protected fail(message: string) {
         this.endPoint.scenario.fail(
             this.flipAssertion ?
@@ -478,6 +638,12 @@ class Property {
         );
     }
 
+    /**
+     * Override the default message for this test so we can have a custom message that is more human readable
+     *
+     * @param {string} message
+     * @returns {Property}
+     */
     public label(message: string): Property {
         this.endPoint.label(message);
         return this;
@@ -485,16 +651,31 @@ class Property {
 
     /* ASSERTIONS */
 
+    /**
+     * Does this element exist?
+     *
+     * @returns {iRequest}
+     */
     public exists(): iRequest {
-        let exists: boolean = (Flagpole.toType(this.obj) == 'cheerio') ?
-            (typeof this.obj && this.obj.length) :
-            (typeof this.obj !== 'undefined');
+        let exists: boolean = false;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            exists = (this.obj.length > 0);
+        }
+        else if (!Flagpole.isNullOrUndefined(this.obj)) {
+            exists = true;
+        }
         this.assert(exists) ?
             this.pass(this.name + ' exists') :
             this.fail(this.name + ' does not exist');
         return this.reset();
     }
 
+    /**
+     * Does this element have this class name?
+     *
+     * @param {string} className
+     * @returns {iRequest}
+     */
     public hasClass(className: string): iRequest {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             this.assert(this.obj.hasClass(className)) ?
@@ -504,31 +685,101 @@ class Property {
         return this.reset();
     }
 
-    public greaterThan(value: any): iRequest {
+    /**
+     * Is this object's value greater than this?
+     *
+     * @param {number} value
+     * @returns {iRequest}
+     */
+    public greaterThan(value: number): iRequest {
         this.assert(this.obj > value) ?
             this.pass(this.name + ' is greater than ' + value + ' (' + this.obj + ')') :
             this.fail(this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
         return this.reset();
     }
 
-    public lessThan(value: any): iRequest {
+    /**
+     *  Is this object's value greater than or equal to this?
+     *
+     * @param value
+     * @returns {iRequest}
+     */
+    public greaterThanOrEquals(value: any): iRequest {
+        this.assert(this.obj >= value) ?
+            this.pass(this.name + ' is greater than ' + value + ' (' + this.obj + ')') :
+            this.fail(this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
+        return this.reset();
+    }
+
+    /**
+     * Is this object's value less than this?
+     *
+     * @param {number} value
+     * @returns {iRequest}
+     */
+    public lessThan(value: number): iRequest {
         this.assert(this.obj < value) ?
             this.pass(this.name + ' is less than ' + value + ' (' + this.obj + ')') :
             this.fail(this.name + ' is not less than ' + value + ' (' + this.obj + ')');
         return this.reset();
     }
 
-    public equals(value: any): iRequest {
-        this.assert(this.obj == value) ?
-            this.pass(this.name + ' equals ' + value) :
-            this.fail(this.name + ' does not equal ' + value + ' (' + this.obj + ')');
+    /**
+     * Is this object's value less or equal to this?
+     *
+     * @param value
+     * @returns {iRequest}
+     */
+    public lessThanOrEquals(value: any): iRequest {
+        this.assert(this.obj <= value) ?
+            this.pass(this.name + ' is less than ' + value + ' (' + this.obj + ')') :
+            this.fail(this.name + ' is not less than ' + value + ' (' + this.obj + ')');
         return this.reset();
     }
 
+    /**
+     *  Is this object's value equal to this?
+     *
+     * @param value
+     * @param {boolean} permissiveMatching
+     * @returns {iRequest}
+     */
+    public equals(value: any, permissiveMatching: boolean = false): iRequest {
+        let matchValue: string = String(this.obj);
+        let positiveCase: string = 'equals';
+        let negativeCase: string = 'does not equal';
+        if (permissiveMatching) {
+            value = value.toLowerCase().trim();
+            matchValue = matchValue.toLowerCase().trim();
+            positiveCase = 'is similar to';
+            negativeCase = 'is not similar to';
+        }
+        this.assert(matchValue == value) ?
+            this.pass(this.name + ' ' + positiveCase + ' ' + value) :
+            this.fail(this.name + ' ' + negativeCase + ' ' + value + ' (' + matchValue + ')');
+        return this.reset();
+    }
+
+    /**
+     * Is this object's value similar to this?
+     *
+     * @param value
+     * @returns {iRequest}
+     */
+    public similarTo(value: any) {
+        return this.equals(value, true);
+    }
+
+    /**
+     * Does this object contain this? Works for strings, arrays, and objects alike
+     *
+     * @param {string} string
+     * @returns {iRequest}
+     */
     public contains(string: string): iRequest {
         let contains: boolean = false;
         if (Flagpole.toType(this.obj) == 'array') {
-            contains = (this.obj.toString().indexOf(string) >= 0);
+            contains = (this.obj.indexOf(string) >= 0);
         }
         else if (Flagpole.toType(this.obj) == 'object') {
             contains = (this.obj.hasOwnProperty(string));
@@ -542,11 +793,37 @@ class Property {
         return this.reset();
     }
 
+    /**
+     * Does this objects type match this?
+     *
+     * @param {string} type
+     * @returns {iRequest}
+     */
     public is(type: string): iRequest {
         let myType: string = Flagpole.toType(this.obj);
         this.assert(myType == type.toLocaleLowerCase()) ?
             this.pass(this.name + ' is type ' + type) :
             this.fail(this.name + ' is not type ' + type + ' (' + myType + ')');
+        return this.reset();
+    }
+
+    /**
+     * For debugging, just spit out a value
+     *
+     * @returns {iRequest}
+     */
+    public echo(): iRequest {
+        this.pass(this.name + ' = ' + this.obj);
+        return this.reset();
+    }
+
+    /**
+     * For debugging, just spit out this object's type
+     *
+     * @returns {iRequest}
+     */
+    public typeof(): iRequest {
+        this.pass('typeof ' + this.name + ' = ' + Flagpole.toType(this.obj));
         return this.reset();
     }
 
@@ -565,6 +842,11 @@ abstract class GenericRequest  implements iRequest {
         this.scenario = scenario;
         this.url = url;
         this.response = response;
+    }
+
+    public property(property: Property): Property {
+        this.last = property;
+        return property;
     }
 
     public and(): Property|null {
@@ -612,9 +894,9 @@ class JsonRequest extends GenericRequest {
             this.scenario.fail('JSON is not valid');
     }
 
-    public select(path: string): Property {
+    public select(path: string, findIn?: any): Property {
         let args: Array<string> = path.split('.');
-        let obj: any = this.json;
+        let obj: any = findIn || this.json;
         let endPoint: iRequest = this;
         if (args.every(function(value: string) {
                 obj = obj[value];
@@ -639,8 +921,14 @@ class HtmlRequest extends GenericRequest {
         this.$ = cheerio.load(response.body);
     }
 
-    public select(selector: string): Property {
-        let obj: any = this.$(selector);
+    public select(selector: string, findIn?: any): Property {
+        let obj: any = null;
+        if (Flagpole.toType(findIn) == 'cheerio') {
+            obj = findIn.find(selector);
+        }
+        else if (typeof findIn == 'undefined') {
+            obj = this.$(selector);
+        }
         this.last =  new Property(this, selector, obj);
         return this.last;
     }
@@ -690,7 +978,11 @@ export class Flagpole {
         };
     }
 
-    static toType(obj): string {
+    static isNullOrUndefined(obj: any): boolean {
+        return (typeof obj === "undefined" || obj === null);
+    }
+
+    static toType(obj: any): string {
         if (typeof obj === "undefined") {
             return 'undefined';
         }

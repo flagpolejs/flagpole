@@ -4,8 +4,19 @@ let argv = require('yargs').argv;
 let exec = require('child_process').exec;
 let fs = require('fs');
 
+// Read command line arguments
+process.env.ENVIRONMENT = argv.env || 'prod';
+process.env.SUITE = argv.suite || null;
+process.env.GROUP = argv.group || null;
+process.env.ROOT_FOLDER = argv.root || (function() {
+    return argv.group ? process.cwd() + '/tests/' + argv.group + '/' : process.cwd() + '/tests/';
+})();
 
-class TestSuite {
+
+/**
+ * Will hold a suite file that we find in the specified folder
+ */
+class TestSuiteFile {
 
     public filePath: string = '';
     public fileName: string = '';
@@ -19,15 +30,40 @@ class TestSuite {
 
 }
 
-// Get root test folder
-let getRootTestsFolder = function() {
-    return argv.group ? process.cwd() + '/tests/' + argv.group + '/' : process.cwd() + '/tests/';
+/**
+ * Execute a test
+ *
+ * @param filePath: string
+ */
+let runTestFile = function(filePath: string) {
+    exec('node ' + filePath, function(err, stdout, stderr) {
+        if (err) {
+            // node couldn't execute the command
+            return;
+        }
+        console.log(`${stdout}`);
+        console.log(`${stderr}`);
+    });
+};
+
+/**
+ * Find a test with this name in our list of available tests
+ *
+ * @param name: string
+ * @returns {TestSuiteFile}
+ */
+let getTestByName = function(name: string) {
+    for (let i=0; i < tests.length; i++) {
+        if (tests[i].name == name) {
+            return tests[i];
+        }
+    }
 };
 
 // Get all of the tests available
-let tests = (function(startDirectory) {
+let tests = (function(): Array<TestSuiteFile> {
 
-    let tests: Array<TestSuite> = [];
+    let tests: Array<TestSuiteFile> = [];
 
     let findTests = function(dir) {
         // Does this folder exist?
@@ -40,7 +76,7 @@ let tests = (function(startDirectory) {
                 }
                 // Push in any JS files, but without the extension
                 else if (file.match(/.js$/)) {
-                    tests.push(new TestSuite(dir, file));
+                    tests.push(new TestSuiteFile(dir, file));
                 }
             });
         }
@@ -48,32 +84,14 @@ let tests = (function(startDirectory) {
         return tests;
     };
 
-    return findTests(startDirectory);
+    return findTests(process.env.ROOT_FOLDER);
 
-})(getRootTestsFolder());
+})();
 
-let run = function(testFilePath) {
-    exec('node ' + testFilePath, function(err, stdout, stderr) {
-        if (err) {
-            // node couldn't execute the command
-            return;
-        }
-        console.log(`${stdout}`);
-        console.log(`${stderr}`);
-    });
-};
 
-let getTestByName = function(name) {
-    for (let i=0; i < tests.length; i++) {
-        if (tests[i].name == name) {
-            return tests[i];
-        }
-    }
-};
-
-// Get environment from command
-process.env.ENVIRONMENT = argv.env || 'prod';
-
+/**
+ *  Header branding
+ */
 console.log("\x1b[32m", "\n", `\x1b[31m$$$$$$$$\\ $$\\                                         $$\\           
 \x1b[31m $$  _____|$$ |                                        $$ |          
 \x1b[31m $$ |      $$ | $$$$$$\\   $$$$$$\\   $$$$$$\\   $$$$$$\\  $$ | $$$$$$\\  
@@ -88,27 +106,28 @@ console.log("\x1b[32m", "\n", `\x1b[31m$$$$$$$$\\ $$\\                          
 
 // List available test suites
 if (argv.list) {
-    console.log('Looking in folder: ' + getRootTestsFolder() + "\n");
+    console.log('Looking in folder: ' + process.env.ROOT_FOLDER + "\n");
     if (tests.length > 0) {
         console.log('Found these test suites:');
         tests.forEach(function(test) {
             console.log('  » ' + test.name);
         });
+        console.log("\n");
     }
     else {
-        console.log('Did not find any tests.');
+        console.log("Did not find any tests.\n");
     }
 }
 // Run a specific test suite
 else if (argv.suite) {
     let test = getTestByName(argv.suite);
     test ?
-        run(test.filePath) :
-        console.log('Could not find test suite: ' + argv.suite);
+        runTestFile(test.filePath) :
+        console.log('Could not find test suite: ' + argv.suite + "\n");
 }
 // Run all test suites
 else if (argv.all) {
     tests.forEach(function(test) {
-        run(test.filePath);
+        runTestFile(test.filePath);
     });
 }

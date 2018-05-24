@@ -1,6 +1,6 @@
 # Flagpole
 
-*"Run it up the cli.ts and see who salutes"*
+*"Run it up the flagpole and see who salutes"*
 
 This quote represents to float an idea or concept out there and test the results. So in our context we are flying our code by this quick QA test framework and testing its success.
 

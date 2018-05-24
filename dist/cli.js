@@ -3,7 +3,13 @@
 let argv = require('yargs').argv;
 let exec = require('child_process').exec;
 let fs = require('fs');
-class TestSuite {
+process.env.ENVIRONMENT = argv.env || 'prod';
+process.env.SUITE = argv.suite || null;
+process.env.GROUP = argv.group || null;
+process.env.ROOT_FOLDER = argv.root || (function () {
+    return argv.group ? process.cwd() + '/tests/' + argv.group + '/' : process.cwd() + '/tests/';
+})();
+class TestSuiteFile {
     constructor(dir, file) {
         this.filePath = '';
         this.fileName = '';
@@ -13,29 +19,8 @@ class TestSuite {
         this.name = dir.replace(process.cwd() + '/tests/', '') + file.split('.').slice(0, -1).join('.');
     }
 }
-let getRootTestsFolder = function () {
-    return argv.group ? process.cwd() + '/tests/' + argv.group + '/' : process.cwd() + '/tests/';
-};
-let tests = (function (startDirectory) {
-    let tests = [];
-    let findTests = function (dir) {
-        if (fs.existsSync(dir)) {
-            let files = fs.readdirSync(dir);
-            files.forEach(function (file) {
-                if (fs.statSync(dir + file).isDirectory()) {
-                    tests = findTests(dir + file + '/');
-                }
-                else if (file.match(/.js$/)) {
-                    tests.push(new TestSuite(dir, file));
-                }
-            });
-        }
-        return tests;
-    };
-    return findTests(startDirectory);
-})(getRootTestsFolder());
-let run = function (testFilePath) {
-    exec('node ' + testFilePath, function (err, stdout, stderr) {
+let runTestFile = function (filePath) {
+    exec('node ' + filePath, function (err, stdout, stderr) {
         if (err) {
             return;
         }
@@ -50,7 +35,24 @@ let getTestByName = function (name) {
         }
     }
 };
-process.env.ENVIRONMENT = argv.env || 'prod';
+let tests = (function () {
+    let tests = [];
+    let findTests = function (dir) {
+        if (fs.existsSync(dir)) {
+            let files = fs.readdirSync(dir);
+            files.forEach(function (file) {
+                if (fs.statSync(dir + file).isDirectory()) {
+                    tests = findTests(dir + file + '/');
+                }
+                else if (file.match(/.js$/)) {
+                    tests.push(new TestSuiteFile(dir, file));
+                }
+            });
+        }
+        return tests;
+    };
+    return findTests(process.env.ROOT_FOLDER);
+})();
 console.log("\x1b[32m", "\n", `\x1b[31m$$$$$$$$\\ $$\\                                         $$\\           
 \x1b[31m $$  _____|$$ |                                        $$ |          
 \x1b[31m $$ |      $$ | $$$$$$\\   $$$$$$\\   $$$$$$\\   $$$$$$\\  $$ | $$$$$$\\  
@@ -63,25 +65,26 @@ console.log("\x1b[32m", "\n", `\x1b[31m$$$$$$$$\\ $$\\                          
 \x1b[34m                         \\$$$$$$  |$$ |                              
 \x1b[34m                          \\______/ \\__|`, "\x1b[0m", "\n");
 if (argv.list) {
-    console.log('Looking in folder: ' + getRootTestsFolder() + "\n");
+    console.log('Looking in folder: ' + process.env.ROOT_FOLDER + "\n");
     if (tests.length > 0) {
         console.log('Found these test suites:');
         tests.forEach(function (test) {
             console.log('  » ' + test.name);
         });
+        console.log("\n");
     }
     else {
-        console.log('Did not find any tests.');
+        console.log("Did not find any tests.\n");
     }
 }
 else if (argv.suite) {
     let test = getTestByName(argv.suite);
     test ?
-        run(test.filePath) :
-        console.log('Could not find test suite: ' + argv.suite);
+        runTestFile(test.filePath) :
+        console.log('Could not find test suite: ' + argv.suite + "\n");
 }
 else if (argv.all) {
     tests.forEach(function (test) {
-        run(test.filePath);
+        runTestFile(test.filePath);
     });
 }

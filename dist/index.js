@@ -258,9 +258,7 @@ class Property {
         this.obj = obj;
     }
     assert(statement) {
-        return this.flipAssertion ?
-            !statement :
-            !!statement;
+        return this.flipAssertion ? !statement : !!statement;
     }
     reset() {
         this.flipAssertion = false;
@@ -270,87 +268,149 @@ class Property {
         this.flipAssertion = true;
         return this;
     }
-    toString() {
-        return (Flagpole.toType(this.obj) == 'cheerio') ?
-            this.obj.text().toString() :
-            this.obj.toString();
+    find(selector) {
+        return this.endPoint.select(selector, this.obj);
+    }
+    next(selector) {
+        let obj = null;
+        let name = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.next(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+    prev(selector) {
+        let obj = null;
+        let name = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.prev(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+    closest(selector) {
+        let obj = null;
+        let name = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.closest(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+    parents(selector) {
+        let obj = null;
+        let name = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.parents(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+    siblings(selector) {
+        let obj = null;
+        let name = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.siblings(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
+    }
+    children(selector) {
+        let obj = null;
+        let name = 'next ' + selector;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            obj = this.obj.children(selector);
+        }
+        return this.endPoint.property(new Property(this.endPoint, name, obj));
     }
     nth(i) {
-        if (Flagpole.toType(this.obj) == 'array') {
-            return new Property(this.endPoint, this.name + '[' + i + ']', this.obj[i]);
+        let obj = null;
+        if (i >= 0) {
+            if (Flagpole.toType(this.obj) == 'array') {
+                obj = this.obj[i];
+            }
+            else if (Flagpole.toType(this.obj) == 'cheerio') {
+                obj = this.obj.eq(i);
+            }
         }
-        else if (Flagpole.toType(this.obj) == 'cheerio') {
-            return new Property(this.endPoint, this.name + '[' + i + ']', this.obj.eq(i));
-        }
-        return new Property(this.endPoint, 'Length of ' + this.name, null);
+        return this.endPoint.property(new Property(this.endPoint, this.name + '[' + i + ']', obj));
     }
     first() {
-        if (Flagpole.toType(this.obj) == 'array' ||
-            Flagpole.toType(this.obj) == 'cheerio') {
-            return this.nth(0);
-        }
-        return new Property(this.endPoint, 'Length of ' + this.name, null);
+        return this.nth(0);
     }
     last() {
-        if (Flagpole.toType(this.obj) == 'array' ||
-            Flagpole.toType(this.obj) == 'cheerio') {
-            return this.nth(this.obj.length - 1);
-        }
-        return new Property(this.endPoint, 'Length of ' + this.name, null);
+        return this.nth((this.obj && this.obj.length) ? (this.obj.length - 1) : -1);
     }
     attribute(key) {
         let text = null;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             text = this.obj.attr(key);
         }
-        else if (this.obj.hasOwnProperty(key)) {
+        else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return new Property(this.endPoint, this.name + '[' + key + ']', text);
+        return this.endPoint.property(new Property(this.endPoint, this.name + '[' + key + ']', text));
     }
     property(key) {
         let text = null;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             text = this.obj.prop(key);
         }
-        else if (this.obj.hasOwnProperty(key)) {
+        else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return new Property(this.endPoint, this.name + '[' + key + ']', text);
+        return this.endPoint.property(new Property(this.endPoint, this.name + '[' + key + ']', text));
     }
     data(key) {
         let text = null;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             text = this.obj.data(key);
         }
-        else if (this.obj.hasOwnProperty(key)) {
+        else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.hasOwnProperty && this.obj.hasOwnProperty(key)) {
             text = this.obj[key].toString();
         }
-        return new Property(this.endPoint, this.name + '[' + key + ']', text);
+        return this.endPoint.property(new Property(this.endPoint, this.name + '[' + key + ']', text));
     }
     val() {
         let text = null;
         if (Flagpole.toType(this.obj) == 'cheerio') {
             text = this.obj.val();
         }
-        else {
-            text = this.toString();
+        else if (!Flagpole.isNullOrUndefined(this.obj)) {
+            text = String(this.obj);
         }
-        return new Property(this.endPoint, 'Value of ' + this.name, text);
+        return this.endPoint.property(new Property(this.endPoint, 'Value of ' + this.name, text));
     }
     text() {
         let text = '';
         if (Flagpole.toType(this.obj) == 'cheerio') {
             text = this.obj.text();
         }
-        else {
-            text = this.obj.toString();
+        else if (!Flagpole.isNullOrUndefined(this.obj)) {
+            text = String(this.obj);
         }
-        return new Property(this.endPoint, 'Text of ' + this.name, text);
+        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, text));
+    }
+    parseInt() {
+        let num = null;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            num = parseInt(this.obj.text());
+        }
+        else {
+            num = parseInt(this.obj);
+        }
+        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, num));
+    }
+    parseFloat() {
+        let num = null;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            num = parseFloat(this.obj.text());
+        }
+        else {
+            num = parseFloat(this.obj);
+        }
+        return this.endPoint.property(new Property(this.endPoint, 'Text of ' + this.name, num));
     }
     length() {
-        let count = this.obj.length;
-        return new Property(this.endPoint, 'Length of ' + this.name, count);
+        let count = (this.obj && this.obj.length) ?
+            this.obj.length : 0;
+        return this.endPoint.property(new Property(this.endPoint, 'Length of ' + this.name, count));
     }
     pass(message) {
         this.endPoint.scenario.pass(this.flipAssertion ?
@@ -367,9 +427,13 @@ class Property {
         return this;
     }
     exists() {
-        let exists = (Flagpole.toType(this.obj) == 'cheerio') ?
-            (typeof this.obj && this.obj.length) :
-            (typeof this.obj !== 'undefined');
+        let exists = false;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            exists = (this.obj.length > 0);
+        }
+        else if (!Flagpole.isNullOrUndefined(this.obj)) {
+            exists = true;
+        }
         this.assert(exists) ?
             this.pass(this.name + ' exists') :
             this.fail(this.name + ' does not exist');
@@ -389,22 +453,46 @@ class Property {
             this.fail(this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
         return this.reset();
     }
+    greaterThanOrEquals(value) {
+        this.assert(this.obj >= value) ?
+            this.pass(this.name + ' is greater than ' + value + ' (' + this.obj + ')') :
+            this.fail(this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
+        return this.reset();
+    }
     lessThan(value) {
         this.assert(this.obj < value) ?
             this.pass(this.name + ' is less than ' + value + ' (' + this.obj + ')') :
             this.fail(this.name + ' is not less than ' + value + ' (' + this.obj + ')');
         return this.reset();
     }
-    equals(value) {
-        this.assert(this.obj == value) ?
-            this.pass(this.name + ' equals ' + value) :
-            this.fail(this.name + ' does not equal ' + value + ' (' + this.obj + ')');
+    lessThanOrEquals(value) {
+        this.assert(this.obj <= value) ?
+            this.pass(this.name + ' is less than ' + value + ' (' + this.obj + ')') :
+            this.fail(this.name + ' is not less than ' + value + ' (' + this.obj + ')');
         return this.reset();
+    }
+    equals(value, permissiveMatching = false) {
+        let matchValue = String(this.obj);
+        let positiveCase = 'equals';
+        let negativeCase = 'does not equal';
+        if (permissiveMatching) {
+            value = value.toLowerCase().trim();
+            matchValue = matchValue.toLowerCase().trim();
+            positiveCase = 'is similar to';
+            negativeCase = 'is not similar to';
+        }
+        this.assert(matchValue == value) ?
+            this.pass(this.name + ' ' + positiveCase + ' ' + value) :
+            this.fail(this.name + ' ' + negativeCase + ' ' + value + ' (' + matchValue + ')');
+        return this.reset();
+    }
+    similarTo(value) {
+        return this.equals(value, true);
     }
     contains(string) {
         let contains = false;
         if (Flagpole.toType(this.obj) == 'array') {
-            contains = (this.obj.toString().indexOf(string) >= 0);
+            contains = (this.obj.indexOf(string) >= 0);
         }
         else if (Flagpole.toType(this.obj) == 'object') {
             contains = (this.obj.hasOwnProperty(string));
@@ -424,6 +512,14 @@ class Property {
             this.fail(this.name + ' is not type ' + type + ' (' + myType + ')');
         return this.reset();
     }
+    echo() {
+        this.pass(this.name + ' = ' + this.obj);
+        return this.reset();
+    }
+    typeof() {
+        this.pass('typeof ' + this.name + ' = ' + Flagpole.toType(this.obj));
+        return this.reset();
+    }
 }
 class GenericRequest {
     constructor(scenario, url, response) {
@@ -432,6 +528,10 @@ class GenericRequest {
         this.scenario = scenario;
         this.url = url;
         this.response = response;
+    }
+    property(property) {
+        this.last = property;
+        return property;
     }
     and() {
         return this.last;
@@ -465,9 +565,9 @@ class JsonRequest extends GenericRequest {
             this.scenario.pass('JSON is valid') :
             this.scenario.fail('JSON is not valid');
     }
-    select(path) {
+    select(path, findIn) {
         let args = path.split('.');
-        let obj = this.json;
+        let obj = findIn || this.json;
         let endPoint = this;
         if (args.every(function (value) {
             obj = obj[value];
@@ -486,8 +586,14 @@ class HtmlRequest extends GenericRequest {
         super(scenario, url, response);
         this.$ = cheerio.load(response.body);
     }
-    select(selector) {
-        let obj = this.$(selector);
+    select(selector, findIn) {
+        let obj = null;
+        if (Flagpole.toType(findIn) == 'cheerio') {
+            obj = findIn.find(selector);
+        }
+        else if (typeof findIn == 'undefined') {
+            obj = this.$(selector);
+        }
         this.last = new Property(this, selector, obj);
         return this.last;
     }
@@ -523,6 +629,9 @@ class Flagpole {
             body: body,
             headers: response.headers,
         };
+    }
+    static isNullOrUndefined(obj) {
+        return (typeof obj === "undefined" || obj === null);
     }
     static toType(obj) {
         if (typeof obj === "undefined") {

@@ -75,5 +75,6 @@ export declare class Flagpole {
     static heading(message: string): void;
     static message(message: string, color?: string): void;
     static toSimplifiedResponse(response: any, body: any): SimplifiedResponse;
+    static isNullOrUndefined(obj: any): boolean;
     static toType(obj: any): string;
 }
