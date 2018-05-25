@@ -10,6 +10,7 @@ Flagpole.Suite('Smoke Tests')
             .headers().contains('content-type')
             .headers('content-type').contains('text/html')
             .label('Top bar and call to actions exists')
+            .comment('TOP BAR')
             .select('.top-bar').find('.-ctas').length().greaterThan(0)
             .label('Login Link exists')
             .and().find('a.login-link')
@@ -30,13 +31,11 @@ Flagpole.Suite('Smoke Tests')
             .select('#tabs a').first().text().contains('interesting')
             .select('#tabs a').nth(1).text().contains('featured')
             .select('#tabs a').nth(2).text().contains('hot')
-            .select('#tabs a').nth(2).attribute('href').echo()
+            .select('#tabs a').nth(2).attribute('href').echo();
 
-            // This doesn't work right yet
-            .label('start each test')
+        test.comment('start each test')
             .select('#tabs a').each(function(element) {
-                console.log(element.toString());
-                element.attribute('href').typeof();
+                element.attribute('href').exists();
             });
 
 

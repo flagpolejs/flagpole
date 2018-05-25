@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 let request = require('request');
 let cheerio = require('cheerio');
+let $ = cheerio;
 class Suite {
     constructor(title) {
         this.scenarios = [];
@@ -160,6 +161,11 @@ class Scenario {
         this.log.push(new ConsoleLine(message));
         return this;
     }
+    comment(message) {
+        this.log.push(new ConsoleLine('  »  ' + message, "\x1b[34m"));
+        this.passes.push(message);
+        return this;
+    }
     pass(message) {
         if (this.nextLabel) {
             message = this.nextLabel;
@@ -271,6 +277,9 @@ class Property {
             this.obj.text().toString() :
             this.obj.toString();
     }
+    get() {
+        return this.obj;
+    }
     assert(statement) {
         return this.flipAssertion ? !statement : !!statement;
     }
@@ -301,6 +310,10 @@ class Property {
         return this.response.scenario.fail(this.flipAssertion ?
             'NOT: ' + message :
             message);
+    }
+    comment(message) {
+        this.response.scenario.comment(message);
+        return this;
     }
     label(message) {
         this.response.label(message);
@@ -335,19 +348,22 @@ class Property {
         return this.reset();
     }
     echo() {
-        this.pass(this.name + ' = ' + this.obj);
-        return this.reset();
+        this.comment(this.name + ' = ' + this.obj);
+        return this;
     }
     typeof() {
-        this.pass('typeof ' + this.name + ' = ' + Flagpole.toType(this.obj));
-        return this.reset();
+        this.comment('typeof ' + this.name + ' = ' + Flagpole.toType(this.obj));
+        return this;
     }
     each(callback) {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             let name = this.name;
             let response = this.response;
-            this.obj.each(function (el, index) {
-                callback(new Element(response, name + '[' + index + ']', el));
+            this.obj.each(function (index, el) {
+                el = $(el);
+                let element = new Element(response, name + '[' + index + ']', el);
+                response.lastElement(element);
+                callback(element);
             });
         }
         else if (Flagpole.toType(this.obj) == 'array') {
@@ -360,6 +376,19 @@ class Property {
             this.obj.toString().split(' ').forEach(callback);
         }
         return this.response;
+    }
+    exists() {
+        let exists = false;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            exists = (this.obj.length > 0);
+        }
+        else if (!Flagpole.isNullOrUndefined(this.obj)) {
+            exists = true;
+        }
+        this.assert(exists) ?
+            this.pass(this.name + ' exists') :
+            this.fail(this.name + ' does not exist');
+        return this.reset();
     }
 }
 class Value extends Property {
@@ -551,19 +580,6 @@ class Element extends Property {
         }
         return new Value(this.response, 'Text of ' + this.name, num);
     }
-    exists() {
-        let exists = false;
-        if (Flagpole.toType(this.obj) == 'cheerio') {
-            exists = (this.obj.length > 0);
-        }
-        else if (!Flagpole.isNullOrUndefined(this.obj)) {
-            exists = true;
-        }
-        this.assert(exists) ?
-            this.pass(this.name + ' exists') :
-            this.fail(this.name + ' does not exist');
-        return this.reset();
-    }
     hasClass(className) {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             this.assert(this.obj.hasClass(className)) ?
@@ -575,10 +591,10 @@ class Element extends Property {
 }
 class GenericRequest {
     constructor(scenario, url, response) {
-        this.last = null;
         this.scenario = scenario;
         this.url = url;
         this.response = response;
+        this.last = new Element(this, 'Empty Element', []);
     }
     lastElement(property) {
         if (typeof property == 'undefined') {
@@ -589,8 +605,18 @@ class GenericRequest {
             return property;
         }
     }
+    echo() {
+        return this.lastElement().echo();
+    }
+    typeof() {
+        return this.lastElement().typeof();
+    }
     and() {
         return this.last || new Element(this, 'Empty Element', []);
+    }
+    comment(message) {
+        this.scenario.comment(message);
+        return this;
     }
     headers(key) {
         if (typeof key !== 'undefined') {

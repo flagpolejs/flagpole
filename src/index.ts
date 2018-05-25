@@ -2,6 +2,7 @@ import {isNumber} from "util";
 
 let request = require('request');
 let cheerio = require('cheerio');
+let $ = cheerio;
 
 interface iResponse {
     select(path: string, findIn?: any): Element
@@ -10,11 +11,12 @@ interface iResponse {
     done(): iResponse
     label(message: string): iResponse
     lastElement(property?: Element): Element
+    comment(message: string): iResponse
     readonly scenario: Scenario
 }
 
 interface iProperty {
-
+    comment(message: string): iProperty
 }
 
 export interface SimplifiedResponse {
@@ -365,6 +367,12 @@ export class Scenario {
         return this;
     }
 
+    public comment(message: string): Scenario {
+        this.log.push(new ConsoleLine('  »  ' + message, "\x1b[34m"));
+        this.passes.push(message);
+        return this;
+    }
+
     /**
      * Push in a new passing assertion
      *
@@ -573,6 +581,10 @@ abstract class Property implements iProperty {
             this.obj.toString();
     }
 
+    public get(): any {
+        return this.obj;
+    }
+
     /**
      * Assert something is true, with respect to the flipped not()
      *
@@ -646,6 +658,16 @@ abstract class Property implements iProperty {
     }
 
     /**
+     * Write message for a comment
+     *
+     * @param {string} message
+     */
+    public comment(message: string): iProperty {
+        this.response.scenario.comment(message);
+        return this;
+    }
+
+    /**
      * Override the default message for this test so we can have a custom message that is more human readable
      *
      * @param {string} message
@@ -707,21 +729,21 @@ abstract class Property implements iProperty {
     /**
      * For debugging, just spit out a value
      *
-     * @returns {iResponse}
+     * @returns {iProperty}
      */
-    public echo(): iResponse {
-        this.pass(this.name + ' = ' + this.obj);
-        return this.reset();
+    public echo(): iProperty {
+        this.comment(this.name + ' = ' + this.obj);
+        return this;
     }
 
     /**
      * For debugging, just spit out this object's type
      *
-     * @returns {iResponse}
+     * @returns {iProperty}
      */
-    public typeof(): iResponse {
-        this.pass('typeof ' + this.name + ' = ' + Flagpole.toType(this.obj));
-        return this.reset();
+    public typeof(): iProperty {
+        this.comment('typeof ' + this.name + ' = ' + Flagpole.toType(this.obj));
+        return this;
     }
 
     /**
@@ -732,11 +754,13 @@ abstract class Property implements iProperty {
      */
     public each(callback: Function): iResponse {
         if (Flagpole.toType(this.obj) == 'cheerio') {
-            // Not working right yet
             let name: string = this.name;
             let response: iResponse = this.response;
-            this.obj.each(function(el, index) {
-                callback(new Element(response, name + '[' + index + ']', el));
+            this.obj.each(function(index, el) {
+                el = $(el);
+                let element: Element = new Element(response, name + '[' + index + ']', el);
+                response.lastElement(element);
+                callback(element);
             });
         }
         else if (Flagpole.toType(this.obj) == 'array') {
@@ -749,6 +773,25 @@ abstract class Property implements iProperty {
             this.obj.toString().split(' ').forEach(callback);
         }
         return this.response;
+    }
+
+    /**
+     * Does this element exist?
+     *
+     * @returns {iResponse}
+     */
+    public exists(): iResponse {
+        let exists: boolean = false;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            exists = (this.obj.length > 0);
+        }
+        else if (!Flagpole.isNullOrUndefined(this.obj)) {
+            exists = true;
+        }
+        this.assert(exists) ?
+            this.pass(this.name + ' exists') :
+            this.fail(this.name + ' does not exist');
+        return this.reset();
     }
 
 }
@@ -1124,25 +1167,6 @@ class Element extends Property implements iProperty {
     /* ASSERTIONS */
 
     /**
-     * Does this element exist?
-     *
-     * @returns {iResponse}
-     */
-    public exists(): iResponse {
-        let exists: boolean = false;
-        if (Flagpole.toType(this.obj) == 'cheerio') {
-            exists = (this.obj.length > 0);
-        }
-        else if (!Flagpole.isNullOrUndefined(this.obj)) {
-            exists = true;
-        }
-        this.assert(exists) ?
-            this.pass(this.name + ' exists') :
-            this.fail(this.name + ' does not exist');
-        return this.reset();
-    }
-
-    /**
      * Does this element have this class name?
      *
      * @param {string} className
@@ -1166,12 +1190,13 @@ abstract class GenericRequest  implements iResponse {
     protected url: string;
     protected response: SimplifiedResponse;
 
-    private last: Element|null = null;
+    private last: Element;
 
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
         this.scenario = scenario;
         this.url = url;
         this.response = response;
+        this.last = new Element(this, 'Empty Element', []);
     }
 
     public lastElement(property?: Element): Element {
@@ -1184,8 +1209,21 @@ abstract class GenericRequest  implements iResponse {
         }
     }
 
+    public echo(): iProperty {
+        return this.lastElement().echo();
+    }
+
+    public typeof(): iProperty {
+        return this.lastElement().typeof();
+    }
+
     public and(): Element {
         return this.last || new Element(this, 'Empty Element', []);
+    }
+
+    public comment(message: string): iResponse {
+        this.scenario.comment(message);
+        return this;
     }
 
     public headers(key?: string): Value  {

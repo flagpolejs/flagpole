@@ -53,6 +53,7 @@ export declare class Scenario {
     method(method: string): Scenario;
     isDone(): boolean;
     subheading(message: string): Scenario;
+    comment(message: string): Scenario;
     pass(message: string): Scenario;
     fail(message: string): Scenario;
     open(url: string): Scenario;
