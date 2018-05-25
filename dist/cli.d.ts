@@ -1,6 +1,14 @@
 declare let argv: any;
 declare let exec: any;
 declare let fs: any;
+declare let testSuiteStatus: {
+    [s: string]: number | null;
+};
+declare let onTestStart: (filePath: string) => void;
+declare let onTestExit: (filePath: string, exitCode: number) => void;
+declare let consoleLog: Array<string>;
+declare let log: (message: string) => void;
+declare let exit: (exitCode: number) => void;
 declare class TestSuiteFile {
     filePath: string;
     fileName: string;

@@ -14,6 +14,32 @@ process.env.ROOT_FOLDER = (function () {
     }
     return rootFolder;
 })();
+let testSuiteStatus = {};
+let onTestStart = function (filePath) {
+    testSuiteStatus[filePath] = null;
+};
+let onTestExit = function (filePath, exitCode) {
+    testSuiteStatus[filePath] = exitCode;
+    let areDone = Object.keys(testSuiteStatus).every(function (filePath) {
+        return (testSuiteStatus[filePath] !== null);
+    });
+    let areAllPassing = Object.keys(testSuiteStatus).every(function (filePath) {
+        return (testSuiteStatus[filePath] === 0);
+    });
+    if (areDone) {
+        exit(areAllPassing ? 0 : 1);
+    }
+};
+let consoleLog = [];
+let log = function (message) {
+    consoleLog.push(message);
+};
+let exit = function (exitCode) {
+    consoleLog.forEach(function (message) {
+        console.log(message.trim());
+    });
+    process.exit(exitCode);
+};
 class TestSuiteFile {
     constructor(dir, file) {
         this.filePath = '';
@@ -25,12 +51,24 @@ class TestSuiteFile {
     }
 }
 let runTestFile = function (filePath) {
-    exec('node ' + filePath, function (err, stdout, stderr) {
-        if (err) {
-            return;
+    onTestStart(filePath);
+    let child = exec('node ' + filePath);
+    child.stdout.on('data', function (data) {
+        data && log(data);
+    });
+    child.stderr.on('data', function (data) {
+        data && log(data);
+    });
+    child.on('error', function (data) {
+        data && log(data);
+    });
+    child.on('exit', function (exitCode) {
+        if (exitCode > 0) {
+            log('FAILED TEST SUITE:');
+            log(filePath + ' exited with error code ' + exitCode);
+            log("\n");
         }
-        console.log(`${stdout}`);
-        console.log(`${stderr}`);
+        onTestExit(filePath, exitCode);
     });
 };
 let getTestByName = function (name) {
@@ -70,25 +108,34 @@ console.log("\x1b[32m", "\n", `\x1b[31m$$$$$$$$\\ $$\\                          
 \x1b[34m                         \\$$$$$$  |$$ |                              
 \x1b[34m                          \\______/ \\__|`, "\x1b[0m", "\n");
 if (argv.list) {
-    console.log('Looking in folder: ' + process.env.ROOT_FOLDER + "\n");
+    log('Looking in folder: ' + process.env.ROOT_FOLDER + "\n");
     if (tests.length > 0) {
-        console.log('Found these test suites:');
+        log('Found these test suites:');
         tests.forEach(function (test) {
-            console.log('  » ' + test.name);
+            log('  » ' + test.name);
         });
-        console.log("\n");
+        log("\n");
+        exit(0);
     }
     else {
-        console.log("Did not find any tests.\n");
+        log("Did not find any tests.\n");
+        exit(2);
     }
 }
 else if (argv.suite) {
     let test = getTestByName(argv.suite);
-    test ?
-        runTestFile(test.filePath) :
-        console.log('Could not find test suite: ' + argv.suite + "\n");
+    if (test) {
+        runTestFile(test.filePath);
+    }
+    else {
+        log('Could not find test suite: ' + argv.suite + "\n");
+        exit(3);
+    }
 }
 else if (argv.all) {
+    tests.forEach(function (test) {
+        onTestStart(test.filePath);
+    });
     tests.forEach(function (test) {
         runTestFile(test.filePath);
     });

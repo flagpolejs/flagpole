@@ -43,6 +43,7 @@ class Suite {
         let scenario = new Scenario(this, title, function () {
             if (suite.isDone()) {
                 suite.print();
+                process.exit(suite.passed() ? 0 : 1);
             }
         });
         if (this.waitToExecute) {
@@ -628,6 +629,24 @@ class Element extends Property {
         }
         return this.reset();
     }
+    greaterThan(value) {
+        return this.parseFloat().greaterThan(value);
+    }
+    greaterThanOrEquals(value) {
+        return this.parseFloat().greaterThanOrEquals(value);
+    }
+    lessThan(value) {
+        return this.parseFloat().lessThan(value);
+    }
+    lessThanOrEquals(value) {
+        return this.parseFloat().lessThanOrEquals(value);
+    }
+    equals(value, permissiveMatching = false) {
+        return this.text().equals(value, permissiveMatching);
+    }
+    similarTo(value) {
+        return this.text().similarTo(value);
+    }
 }
 class GenericRequest {
     constructor(scenario, url, response) {
@@ -699,6 +718,7 @@ class JsonRequest extends GenericRequest {
             element = new Element(response, path, undefined);
         }
         this.lastElement(element);
+        element.exists();
         return element;
     }
 }

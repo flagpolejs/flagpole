@@ -19,6 +19,46 @@ process.env.ROOT_FOLDER = (function() {
     return rootFolder;
 })();
 
+/**
+ * Keep track of the test suites that ran and their exit code
+ */
+let testSuiteStatus: { [s: string]: number|null; } = {};
+let onTestStart = function(filePath: string) {
+    testSuiteStatus[filePath] = null;
+};
+let onTestExit = function(filePath: string, exitCode: number) {
+    testSuiteStatus[filePath] = exitCode;
+    // Are they all done?
+    let areDone: boolean = Object.keys(testSuiteStatus).every(function(filePath: string) {
+        return (testSuiteStatus[filePath] !== null);
+    });
+    let areAllPassing: boolean = Object.keys(testSuiteStatus).every(function(filePath: string) {
+        return (testSuiteStatus[filePath] === 0);
+    });
+    if (areDone) {
+        exit(
+            areAllPassing ? 0 : 1
+        );
+    }
+};
+
+/**
+ * Buffer for console
+ */
+let consoleLog: Array<string> = [];
+let log = function(message: string) {
+    consoleLog.push(message);
+};
+
+/**
+ * Exit
+ */
+let exit = function(exitCode: number) {
+    consoleLog.forEach(function(message: string) {
+        console.log(message.trim());
+    });
+    process.exit(exitCode);
+};
 
 /**
  * Will hold a suite file that we find in the specified folder
@@ -43,14 +83,32 @@ class TestSuiteFile {
  * @param filePath: string
  */
 let runTestFile = function(filePath: string) {
-    exec('node ' + filePath, function(err, stdout, stderr) {
-        if (err) {
-            // node couldn't execute the command
-            return;
-        }
-        console.log(`${stdout}`);
-        console.log(`${stderr}`);
+
+    onTestStart(filePath);
+
+    let child = exec('node ' + filePath);
+
+    child.stdout.on('data', function(data) {
+        data && log(data);
     });
+
+    child.stderr.on('data', function(data) {
+        data && log(data);
+    });
+
+    child.on('error', function(data) {
+        data && log(data);
+    });
+
+    child.on('exit', function(exitCode) {
+        if (exitCode > 0) {
+            log('FAILED TEST SUITE:');
+            log(filePath + ' exited with error code ' + exitCode);
+            log("\n");
+        }
+        onTestExit(filePath, exitCode);
+    });
+    
 };
 
 /**
@@ -67,7 +125,11 @@ let getTestByName = function(name: string) {
     }
 };
 
-// Get all of the tests available
+/**
+ * Get all of the tests available
+ *
+ * @type {Array<TestSuiteFile>}
+ */
 let tests = (function(): Array<TestSuiteFile> {
 
     let tests: Array<TestSuiteFile> = [];
@@ -98,6 +160,8 @@ let tests = (function(): Array<TestSuiteFile> {
 
 /**
  *  Header branding
+ *
+ *  We'll write this right away
  */
 console.log("\x1b[32m", "\n", `\x1b[31m$$$$$$$$\\ $$\\                                         $$\\           
 \x1b[31m $$  _____|$$ |                                        $$ |          
@@ -111,29 +175,45 @@ console.log("\x1b[32m", "\n", `\x1b[31m$$$$$$$$\\ $$\\                          
 \x1b[34m                         \\$$$$$$  |$$ |                              
 \x1b[34m                          \\______/ \\__|`, "\x1b[0m", "\n");
 
+
+/**
+ * COMMAND LINE ARGUMENTS
+ */
+
 // List available test suites
 if (argv.list) {
-    console.log('Looking in folder: ' + process.env.ROOT_FOLDER + "\n");
+    log('Looking in folder: ' + process.env.ROOT_FOLDER + "\n");
     if (tests.length > 0) {
-        console.log('Found these test suites:');
+        log('Found these test suites:');
         tests.forEach(function(test) {
-            console.log('  » ' + test.name);
+            log('  » ' + test.name);
         });
-        console.log("\n");
+        log("\n");
+        exit(0);
     }
     else {
-        console.log("Did not find any tests.\n");
+        log("Did not find any tests.\n");
+        exit(2);
     }
 }
 // Run a specific test suite
 else if (argv.suite) {
     let test = getTestByName(argv.suite);
-    test ?
-        runTestFile(test.filePath) :
-        console.log('Could not find test suite: ' + argv.suite + "\n");
+    if (test) {
+        runTestFile(test.filePath);
+    }
+    else {
+        log('Could not find test suite: ' + argv.suite + "\n");
+        exit(3);
+    }
 }
 // Run all test suites
 else if (argv.all) {
+    // Loop through first and just add them to make sure we are tracking it (avoid race conditions)
+    tests.forEach(function(test) {
+        onTestStart(test.filePath);
+    });
+    // Now loop through again to actually run them
     tests.forEach(function(test) {
         runTestFile(test.filePath);
     });

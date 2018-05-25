@@ -39,8 +39,4 @@ Flagpole.Suite('Smoke Tests')
                 element.attribute('href').exists();
             });
 
-
-
-    })
-
-
+    });

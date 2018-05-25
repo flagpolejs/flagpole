@@ -108,6 +108,9 @@ export class Suite {
         let scenario: Scenario = new Scenario(this, title, function() {
             if (suite.isDone()) {
                 suite.print();
+                process.exit(
+                    suite.passed() ? 0 : 1
+                );
             }
         });
         if (this.waitToExecute) {
@@ -1265,6 +1268,30 @@ class Element extends Property implements iProperty {
         return this.reset();
     }
 
+    public greaterThan(value: number): iResponse {
+        return this.parseFloat().greaterThan(value);
+    }
+
+    public greaterThanOrEquals(value: number): iResponse {
+        return this.parseFloat().greaterThanOrEquals(value);
+    }
+
+    public lessThan(value: number): iResponse {
+        return this.parseFloat().lessThan(value);
+    }
+
+    public lessThanOrEquals(value: number): iResponse {
+        return this.parseFloat().lessThanOrEquals(value);
+    }
+
+    public equals(value: any, permissiveMatching: boolean = false): iResponse {
+        return this.text().equals(value, permissiveMatching);
+    }
+
+    public similarTo(value: any): iResponse {
+        return this.text().similarTo(value);
+    }
+
 }
 
 abstract class GenericRequest  implements iResponse, iProperty {
@@ -1417,7 +1444,10 @@ class JsonRequest extends GenericRequest {
         else {
             element = new Element(response, path, undefined);
         }
+        // Create the property
         this.lastElement(element);
+        // Inferred exists assertion
+        element.exists();
         return element;
     }
 
