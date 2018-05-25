@@ -7,7 +7,6 @@ Flagpole.Suite('Smoke Tests')
     .assertions(function(test) {
         test
             .status().equals(200)
-            .headers().contains('content-type')
             .headers('content-type').contains('text/html')
             .select('title').text().contains('Stack Overflow')
             .label('Top bar and call to actions exists')

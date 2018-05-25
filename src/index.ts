@@ -11,6 +11,7 @@ interface iResponse {
     label(message: string): iResponse
     lastElement(property?: Element): Element
     comment(message: string): iResponse
+    headers(key?: string): Value
     readonly scenario: Scenario
 }
 
@@ -578,9 +579,15 @@ abstract class Property implements iProperty {
      * @returns {string}
      */
     public toString(): string {
-        return (Flagpole.toType(this.obj) == 'cheerio') ?
-            this.obj.text().toString() :
-            this.obj.toString();
+        if ((Flagpole.toType(this.obj) == 'cheerio')) {
+            return this.obj.text().toString();
+        }
+        else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.toString) {
+            return this.obj.toString();
+        }
+        else {
+            return String(this.obj);
+        }
     }
 
     /**
@@ -710,8 +717,8 @@ abstract class Property implements iProperty {
         else if (Flagpole.toType(this.obj) == 'object') {
             contains = (this.obj.hasOwnProperty(string));
         }
-        else {
-            contains = (this.obj.toString().indexOf(string) >= 0);
+        else if (!Flagpole.isNullOrUndefined(this.obj)) {
+            contains = (this.toString().indexOf(string) >= 0);
         }
         this.assert(contains) ?
             this.pass(this.name + ' contains ' + string) :
@@ -729,7 +736,7 @@ abstract class Property implements iProperty {
         let assert: boolean = false;
         let value: string = '';
         if (!Flagpole.isNullOrUndefined(this.obj)) {
-            value = this.obj.toString();
+            value = this.toString();
             assert = (value.indexOf(matchText) === 0);
         }
         this.assert(assert) ?
@@ -748,7 +755,7 @@ abstract class Property implements iProperty {
         let assert: boolean = false;
         let value: string = '';
         if (!Flagpole.isNullOrUndefined(this.obj)) {
-            value = this.obj.toString();
+            value = this.toString();
             assert = (value.indexOf(matchText) === value.length - matchText.length);
         }
         this.assert(assert) ?
@@ -911,6 +918,10 @@ abstract class Property implements iProperty {
             num = parseFloat(this.obj);
         }
         return new Value(this.response, 'Text of ' + this.name, num);
+    }
+
+    public headers(key?: string): Value  {
+        return this.response.headers(key);
     }
 
 }
@@ -1374,7 +1385,11 @@ abstract class GenericRequest  implements iResponse, iProperty {
             // Try first as they put it in the test, then try all lowercase
             let value: string = typeof this.response.headers[key] !== 'undefined' ?
                 this.response.headers[key] : this.response.headers[key.toLowerCase()];
-            return new Value(this, 'HTTP Headers[' + key + ']', value);
+            let name: string = 'HTTP Headers[' + key + ']';
+            if (typeof value == 'undefined') {
+                this.scenario.fail(name + ' does not exist');
+            }
+            return new Value(this, name, value);
         }
         else {
             return new Value(this, 'HTTP Headers', this.response.headers);

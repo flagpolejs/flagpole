@@ -274,9 +274,15 @@ class Property {
         this.obj = obj;
     }
     toString() {
-        return (Flagpole.toType(this.obj) == 'cheerio') ?
-            this.obj.text().toString() :
-            this.obj.toString();
+        if ((Flagpole.toType(this.obj) == 'cheerio')) {
+            return this.obj.text().toString();
+        }
+        else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.toString) {
+            return this.obj.toString();
+        }
+        else {
+            return String(this.obj);
+        }
     }
     get() {
         return this.obj;
@@ -333,8 +339,8 @@ class Property {
         else if (Flagpole.toType(this.obj) == 'object') {
             contains = (this.obj.hasOwnProperty(string));
         }
-        else {
-            contains = (this.obj.toString().indexOf(string) >= 0);
+        else if (!Flagpole.isNullOrUndefined(this.obj)) {
+            contains = (this.toString().indexOf(string) >= 0);
         }
         this.assert(contains) ?
             this.pass(this.name + ' contains ' + string) :
@@ -345,7 +351,7 @@ class Property {
         let assert = false;
         let value = '';
         if (!Flagpole.isNullOrUndefined(this.obj)) {
-            value = this.obj.toString();
+            value = this.toString();
             assert = (value.indexOf(matchText) === 0);
         }
         this.assert(assert) ?
@@ -357,7 +363,7 @@ class Property {
         let assert = false;
         let value = '';
         if (!Flagpole.isNullOrUndefined(this.obj)) {
-            value = this.obj.toString();
+            value = this.toString();
             assert = (value.indexOf(matchText) === value.length - matchText.length);
         }
         this.assert(assert) ?
@@ -450,6 +456,9 @@ class Property {
             num = parseFloat(this.obj);
         }
         return new Value(this.response, 'Text of ' + this.name, num);
+    }
+    headers(key) {
+        return this.response.headers(key);
     }
 }
 class Value extends Property {
@@ -681,7 +690,11 @@ class GenericRequest {
         if (typeof key !== 'undefined') {
             let value = typeof this.response.headers[key] !== 'undefined' ?
                 this.response.headers[key] : this.response.headers[key.toLowerCase()];
-            return new Value(this, 'HTTP Headers[' + key + ']', value);
+            let name = 'HTTP Headers[' + key + ']';
+            if (typeof value == 'undefined') {
+                this.scenario.fail(name + ' does not exist');
+            }
+            return new Value(this, name, value);
         }
         else {
             return new Value(this, 'HTTP Headers', this.response.headers);
