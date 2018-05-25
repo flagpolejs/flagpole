@@ -9,6 +9,7 @@ Flagpole.Suite('Smoke Tests')
             .status().equals(200)
             .headers().contains('content-type')
             .headers('content-type').contains('text/html')
+            .select('title').text().contains('Stack Overflow')
             .label('Top bar and call to actions exists')
             .comment('TOP BAR')
             .select('.top-bar').find('.-ctas').length().greaterThan(0)
@@ -31,7 +32,7 @@ Flagpole.Suite('Smoke Tests')
             .select('#tabs a').first().text().contains('interesting')
             .select('#tabs a').nth(1).text().contains('featured')
             .select('#tabs a').nth(2).text().contains('hot')
-            .select('#tabs a').nth(2).attribute('href').echo();
+            .select('#tabs a').nth(2).trim().startsWith('h');
 
         test.comment('start each test')
             .select('#tabs a').each(function(element) {

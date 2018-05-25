@@ -8,7 +8,6 @@ interface iResponse {
     select(path: string, findIn?: any): Element
     status(): Value
     and(): Element
-    done(): iResponse
     label(message: string): iResponse
     lastElement(property?: Element): Element
     comment(message: string): iResponse
@@ -581,6 +580,11 @@ abstract class Property implements iProperty {
             this.obj.toString();
     }
 
+    /**
+     * Get the raw object
+     *
+     * @returns any
+     */
     public get(): any {
         return this.obj;
     }
@@ -713,6 +717,86 @@ abstract class Property implements iProperty {
     }
 
     /**
+     * Does it start with this value?
+     *
+     * @param {string} matchText
+     * @returns {iResponse}
+     */
+    public startsWith(matchText: string): iResponse {
+        let assert: boolean = false;
+        let value: string = '';
+        if (!Flagpole.isNullOrUndefined(this.obj)) {
+            value = this.obj.toString();
+            assert = (value.indexOf(matchText) === 0);
+        }
+        this.assert(assert) ?
+            this.pass(this.name + ' starts with ' + matchText) :
+            this.fail(this.name + ' does not start with ' + matchText + ' (' + value + ')');
+        return this.reset();
+    }
+
+    /**
+     * Does this end with this value?
+     *
+     * @param {string} matchText
+     * @returns {iResponse}
+     */
+    public endsWith(matchText: string): iResponse {
+        let assert: boolean = false;
+        let value: string = '';
+        if (!Flagpole.isNullOrUndefined(this.obj)) {
+            value = this.obj.toString();
+            assert = (value.indexOf(matchText) === value.length - matchText.length);
+        }
+        this.assert(assert) ?
+            this.pass(this.name + ' ends with ' + matchText) :
+            this.fail(this.name + ' does not end with ' + matchText + ' (' + value + ')');
+        return this.reset();
+    }
+
+    /**
+     * Trim extra whitespace around the string value
+     *
+     * @returns {Value}
+     */
+    public trim(): Value {
+        let text: string = this.toString().trim();
+        return new Value(this.response, 'Trimmed text of ' + this.name, text);
+    }
+
+    /**
+     * Lowercase the string value
+     *
+     * @returns {Value}
+     */
+    public toLowerCase(): Value {
+        let text: string = this.toString().toLowerCase();
+        return new Value(this.response, 'Lowercased text of ' + this.name, text);
+    }
+
+    /**
+     * Uppercase the string value
+     *
+     * @returns {Value}
+     */
+    public toUpperCase(): Value {
+        let text: string = this.toString().toUpperCase();
+        return new Value(this.response, 'Uppercased text of ' + this.name, text);
+    }
+
+    /**
+     * Replace the string value
+     *
+     * @param {string | RegExp} search
+     * @param {string} replace
+     * @returns {Value}
+     */
+    public replace(search: string|RegExp, replace: string): Value {
+        let text: string = this.toString().replace(search, replace);
+        return new Value(this.response, 'Replaced text of ' + this.name, text);
+    }
+
+    /**
      * Does this objects type match this?
      *
      * @param {string} type
@@ -792,6 +876,38 @@ abstract class Property implements iProperty {
             this.pass(this.name + ' exists') :
             this.fail(this.name + ' does not exist');
         return this.reset();
+    }
+
+    /**
+     * Get the integer value of this object
+     *
+     * @returns {Value}
+     */
+    public parseInt(): Value {
+        let num: number|null = null;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            num = parseInt(this.obj.text());
+        }
+        else {
+            num = parseInt(this.obj);
+        }
+        return new Value(this.response, 'Text of ' + this.name, num);
+    }
+
+    /**
+     * Get the float/double value of this object
+     *
+     * @returns {Value}
+     */
+    public parseFloat(): Value {
+        let num: number|null = null;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            num = parseFloat(this.obj.text());
+        }
+        else {
+            num = parseFloat(this.obj);
+        }
+        return new Value(this.response, 'Text of ' + this.name, num);
     }
 
 }
@@ -1132,38 +1248,6 @@ class Element extends Property implements iProperty {
         return new Value(this.response, 'Value of ' + this.name, text);
     }
 
-    /**
-     * Get the integer value of this object
-     *
-     * @returns {Value}
-     */
-    public parseInt(): Value {
-        let num: number|null = null;
-        if (Flagpole.toType(this.obj) == 'cheerio') {
-            num = parseInt(this.obj.text());
-        }
-        else {
-            num = parseInt(this.obj);
-        }
-        return new Value(this.response, 'Text of ' + this.name, num);
-    }
-
-    /**
-     * Get the float/double value of this object
-     *
-     * @returns {Value}
-     */
-    public parseFloat(): Value {
-        let num: number|null = null;
-        if (Flagpole.toType(this.obj) == 'cheerio') {
-            num = parseFloat(this.obj.text());
-        }
-        else {
-            num = parseFloat(this.obj);
-        }
-        return new Value(this.response, 'Text of ' + this.name, num);
-    }
-
     /* ASSERTIONS */
 
     /**
@@ -1183,13 +1267,12 @@ class Element extends Property implements iProperty {
 
 }
 
-abstract class GenericRequest  implements iResponse {
+abstract class GenericRequest  implements iResponse, iProperty {
 
     public readonly scenario: Scenario;
 
     protected url: string;
     protected response: SimplifiedResponse;
-
     private last: Element;
 
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
@@ -1199,6 +1282,12 @@ abstract class GenericRequest  implements iResponse {
         this.last = new Element(this, 'Empty Element', []);
     }
 
+    /**
+     * Get or set last element
+     *
+     * @param {Element} property
+     * @returns {Element}
+     */
     public lastElement(property?: Element): Element {
         if (typeof property == 'undefined') {
             return this.last || new Element(this, 'Empty Element', []);
@@ -1209,23 +1298,50 @@ abstract class GenericRequest  implements iResponse {
         }
     }
 
+    /**
+     * Spit out the value of the last element
+     *
+     * @returns {iProperty}
+     */
     public echo(): iProperty {
         return this.lastElement().echo();
     }
 
+    /**
+     * Spit out the type of the last element
+     *
+     * @returns {iProperty}
+     */
     public typeof(): iProperty {
         return this.lastElement().typeof();
     }
 
+    /**
+     * Return last element
+     *
+     * @returns {Element}
+     */
     public and(): Element {
         return this.last || new Element(this, 'Empty Element', []);
     }
 
+    /**
+     * Add a console comment
+     *
+     * @param {string} message
+     * @returns {iResponse}
+     */
     public comment(message: string): iResponse {
         this.scenario.comment(message);
         return this;
     }
 
+    /**
+     * Return a single header by key or all headers in an object
+     *
+     * @param {string} key
+     * @returns {Value}
+     */
     public headers(key?: string): Value  {
         if (typeof key !== 'undefined') {
             // Try first as they put it in the test, then try all lowercase
@@ -1238,20 +1354,32 @@ abstract class GenericRequest  implements iResponse {
         }
     }
 
+    /**
+     * Get the http status
+     *
+     * @returns {Value}
+     */
     public status(): Value {
         return new Value(this, 'HTTP Status', this.response.statusCode);
     }
 
-    public done(): iResponse {
-        this.scenario.done();
-        return this;
-    }
-
+    /**
+     * Set human readable label to override normal assertion message for next test
+     *
+     * @param {string} message
+     * @returns {iResponse}
+     */
     public label(message: string): iResponse {
         this.scenario.label(message);
         return this;
     }
 
+    /**
+     * Select something on this response body
+     *
+     * @param {string} path
+     * @returns {Element}
+     */
     abstract select(path: string): Element
 
 }
@@ -1268,6 +1396,13 @@ class JsonRequest extends GenericRequest {
             this.scenario.fail('JSON is not valid');
     }
 
+    /**
+     * Select a json property in this response body
+     *
+     * @param {string} path
+     * @param findIn
+     * @returns {Element}
+     */
     public select(path: string, findIn?: any): Element {
         let args: Array<string> = path.split('.');
         let obj: any = findIn || this.json;
@@ -1297,6 +1432,13 @@ class HtmlRequest extends GenericRequest {
         this.$ = cheerio.load(response.body);
     }
 
+    /**
+     * Select the html element at this CSS Selector or XPath
+     *
+     * @param {string} selector
+     * @param findIn
+     * @returns {Element}
+     */
     public select(selector: string, findIn?: any): Element {
         let obj: any = null;
         // If findIn is a cheerio object, then look in it
@@ -1336,10 +1478,22 @@ export class ConsoleLine {
 
 export class Flagpole {
 
+    /**
+     * Create a new suite
+     *
+     * @param {string} title
+     * @returns {Suite}
+     * @constructor
+     */
     static Suite(title: string): Suite {
         return new Suite(title);
     }
 
+    /**
+     * Write a big heading like what might go over top of the suite
+     *
+     * @param {string} message
+     */
     static heading(message: string) {
         let length: number = Math.max(message.length + 10, 50),
             padding: number = (length - message.length) / 2;
@@ -1348,10 +1502,23 @@ export class Flagpole {
         new ConsoleLine('='.repeat(length), "\x1b[33m").write();
     }
 
+    /**
+     * Write something to console right away
+     *
+     * @param {string} message
+     * @param {string} color
+     */
     static message(message: string, color?: string) {
         new ConsoleLine(message, color).write();
     }
 
+    /**
+     * Convert the full response object into just the essentials
+     *
+     * @param response
+     * @param body
+     * @returns {SimplifiedResponse}
+     */
     static toSimplifiedResponse(response, body): SimplifiedResponse {
         return {
             statusCode: response.statusCode,
@@ -1360,10 +1527,22 @@ export class Flagpole {
         };
     }
 
+    /**
+     * Ist his object null or undefined?
+     *
+     * @param obj
+     * @returns {boolean}
+     */
     static isNullOrUndefined(obj: any): boolean {
         return (typeof obj === "undefined" || obj === null);
     }
 
+    /**
+     * Get the real and normalized type of object
+     *
+     * @param obj
+     * @returns {string}
+     */
     static toType(obj: any): string {
         if (typeof obj === "undefined") {
             return 'undefined';

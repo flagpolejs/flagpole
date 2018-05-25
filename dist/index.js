@@ -340,6 +340,46 @@ class Property {
             this.fail(this.name + ' does not contain ' + string);
         return this.reset();
     }
+    startsWith(matchText) {
+        let assert = false;
+        let value = '';
+        if (!Flagpole.isNullOrUndefined(this.obj)) {
+            value = this.obj.toString();
+            assert = (value.indexOf(matchText) === 0);
+        }
+        this.assert(assert) ?
+            this.pass(this.name + ' starts with ' + matchText) :
+            this.fail(this.name + ' does not start with ' + matchText + ' (' + value + ')');
+        return this.reset();
+    }
+    endsWith(matchText) {
+        let assert = false;
+        let value = '';
+        if (!Flagpole.isNullOrUndefined(this.obj)) {
+            value = this.obj.toString();
+            assert = (value.indexOf(matchText) === value.length - matchText.length);
+        }
+        this.assert(assert) ?
+            this.pass(this.name + ' ends with ' + matchText) :
+            this.fail(this.name + ' does not end with ' + matchText + ' (' + value + ')');
+        return this.reset();
+    }
+    trim() {
+        let text = this.toString().trim();
+        return new Value(this.response, 'Trimmed text of ' + this.name, text);
+    }
+    toLowerCase() {
+        let text = this.toString().toLowerCase();
+        return new Value(this.response, 'Lowercased text of ' + this.name, text);
+    }
+    toUpperCase() {
+        let text = this.toString().toUpperCase();
+        return new Value(this.response, 'Uppercased text of ' + this.name, text);
+    }
+    replace(search, replace) {
+        let text = this.toString().replace(search, replace);
+        return new Value(this.response, 'Replaced text of ' + this.name, text);
+    }
     is(type) {
         let myType = Flagpole.toType(this.obj);
         this.assert(myType == type.toLocaleLowerCase()) ?
@@ -389,6 +429,26 @@ class Property {
             this.pass(this.name + ' exists') :
             this.fail(this.name + ' does not exist');
         return this.reset();
+    }
+    parseInt() {
+        let num = null;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            num = parseInt(this.obj.text());
+        }
+        else {
+            num = parseInt(this.obj);
+        }
+        return new Value(this.response, 'Text of ' + this.name, num);
+    }
+    parseFloat() {
+        let num = null;
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            num = parseFloat(this.obj.text());
+        }
+        else {
+            num = parseFloat(this.obj);
+        }
+        return new Value(this.response, 'Text of ' + this.name, num);
     }
 }
 class Value extends Property {
@@ -560,26 +620,6 @@ class Element extends Property {
         }
         return new Value(this.response, 'Value of ' + this.name, text);
     }
-    parseInt() {
-        let num = null;
-        if (Flagpole.toType(this.obj) == 'cheerio') {
-            num = parseInt(this.obj.text());
-        }
-        else {
-            num = parseInt(this.obj);
-        }
-        return new Value(this.response, 'Text of ' + this.name, num);
-    }
-    parseFloat() {
-        let num = null;
-        if (Flagpole.toType(this.obj) == 'cheerio') {
-            num = parseFloat(this.obj.text());
-        }
-        else {
-            num = parseFloat(this.obj);
-        }
-        return new Value(this.response, 'Text of ' + this.name, num);
-    }
     hasClass(className) {
         if (Flagpole.toType(this.obj) == 'cheerio') {
             this.assert(this.obj.hasClass(className)) ?
@@ -630,10 +670,6 @@ class GenericRequest {
     }
     status() {
         return new Value(this, 'HTTP Status', this.response.statusCode);
-    }
-    done() {
-        this.scenario.done();
-        return this;
     }
     label(message) {
         this.scenario.label(message);
