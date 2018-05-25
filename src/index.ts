@@ -10,6 +10,8 @@ interface iResponse {
     lastElement(property?: Element): Element
     comment(message: string): iResponse
     headers(key?: string): Value
+    not(): iResponse
+    assert(statement: boolean, passMessage: string, failMessage: string): iResponse
     readonly scenario: Scenario
 }
 
@@ -18,7 +20,8 @@ interface iProperty {
     select(path: string, findIn?: any): Element
     toString(): string
     get(): any
-    not(): iProperty
+    assert(statement: boolean, passMessage: string, failMessage: string): iResponse
+    not(): iResponse
     text(): Value
     label(message: string): iProperty
     length(): Value
@@ -585,12 +588,24 @@ abstract class Property implements iProperty {
     protected response: iResponse;
     protected name: string;
     protected obj: any;
-    protected flipAssertion: boolean = false;
 
     constructor(response: iResponse, name: string, obj: any) {
         this.response = response;
         this.name = name;
         this.obj = obj;
+    }
+
+    public assert(statement: boolean, passMessage: string, failMessage: string): iResponse {
+        return this.response.assert(statement, passMessage, failMessage);
+    }
+
+    /**
+     * Flip the next assertion
+     *
+     * @returns {iResponse}
+     */
+    public not(): iResponse {
+        return this.response.not();
     }
 
     /**
@@ -620,36 +635,6 @@ abstract class Property implements iProperty {
     }
 
     /**
-     * Assert something is true, with respect to the flipped not()
-     *
-     * @param {boolean} statement
-     * @returns {boolean}
-     */
-    protected assert(statement: boolean): boolean {
-        return this.flipAssertion ? !statement : !!statement;
-    }
-
-    /**
-     * Clear out any previous settings
-     *
-     * @returns {iResponse}
-     */
-    protected reset(): iResponse {
-        this.flipAssertion = false;
-        return this.response;
-    }
-
-    /**
-     * Flip the next assertion
-     *
-     * @returns {iProperty}
-     */
-    public not(): iProperty {
-        this.flipAssertion = true;
-        return this;
-    }
-
-    /**
      * Get the text value of this object
      *
      * @returns {Value}
@@ -657,10 +642,9 @@ abstract class Property implements iProperty {
     public text(): Value {
         let text: string = this.toString();
         let name: string = 'Text of ' + this.name;
-        if (text.length === 0) {
-            this.fail(name + ' is not set');
-        }
-        return new Value(this.response, name, text);
+        let value: Value = new Value(this.response, name, text);
+        value.length().greaterThan(0);
+        return value;
     }
 
     /**
@@ -669,11 +653,7 @@ abstract class Property implements iProperty {
      * @param {string} message
      */
     protected pass(message: string): Scenario {
-        return this.response.scenario.pass(
-            this.flipAssertion ?
-                'NOT: ' + message :
-                message
-        );
+        return this.response.scenario.pass(message);
     }
 
     /**
@@ -682,11 +662,7 @@ abstract class Property implements iProperty {
      * @param {string} message
      */
     protected fail(message: string): Scenario {
-        return this.response.scenario.fail(
-            this.flipAssertion ?
-                'NOT: ' + message :
-                message
-        );
+        return this.response.scenario.fail(message);
     }
 
     /**
@@ -738,10 +714,10 @@ abstract class Property implements iProperty {
         else if (!Flagpole.isNullOrUndefined(this.obj)) {
             contains = (this.toString().indexOf(string) >= 0);
         }
-        this.assert(contains) ?
-            this.pass(this.name + ' contains ' + string) :
-            this.fail(this.name + ' does not contain ' + string);
-        return this.reset();
+        return this.assert(contains,
+            this.name + ' contains ' + string,
+            this.name + ' does not contain ' + string
+        );
     }
 
     /**
@@ -757,10 +733,10 @@ abstract class Property implements iProperty {
             value = this.toString();
             assert = (value.indexOf(matchText) === 0);
         }
-        this.assert(assert) ?
-            this.pass(this.name + ' starts with ' + matchText) :
-            this.fail(this.name + ' does not start with ' + matchText + ' (' + value + ')');
-        return this.reset();
+        return this.assert(assert,
+            this.name + ' starts with ' + matchText,
+            this.name + ' does not start with ' + matchText + ' (' + value + ')'
+        );
     }
 
     /**
@@ -776,10 +752,10 @@ abstract class Property implements iProperty {
             value = this.toString();
             assert = (value.indexOf(matchText) === value.length - matchText.length);
         }
-        this.assert(assert) ?
-            this.pass(this.name + ' ends with ' + matchText) :
-            this.fail(this.name + ' does not end with ' + matchText + ' (' + value + ')');
-        return this.reset();
+        return this.assert(assert,
+            this.name + ' ends with ' + matchText,
+            this.name + ' does not end with ' + matchText + ' (' + value + ')'
+        );
     }
 
     /**
@@ -832,10 +808,10 @@ abstract class Property implements iProperty {
      */
     public is(type: string): iResponse {
         let myType: string = Flagpole.toType(this.obj);
-        this.assert(myType == type.toLocaleLowerCase()) ?
-            this.pass(this.name + ' is type ' + type) :
-            this.fail(this.name + ' is not type ' + type + ' (' + myType + ')');
-        return this.reset();
+        return this.assert((myType == type.toLocaleLowerCase()),
+            this.name + ' is type ' + type,
+            this.name + ' is not type ' + type + ' (' + myType + ')'
+        );
     }
 
     /**
@@ -900,10 +876,10 @@ abstract class Property implements iProperty {
         else if (!Flagpole.isNullOrUndefined(this.obj)) {
             exists = true;
         }
-        this.assert(exists) ?
-            this.pass(this.name + ' exists') :
-            this.fail(this.name + ' does not exist');
-        return this.reset();
+        return this.assert(exists,
+            this.name + ' exists',
+            this.name + ' does not exist'
+        );
     }
 
     /**
@@ -957,10 +933,10 @@ class Value extends Property implements iProperty {
      * @returns {iResponse}
      */
     public greaterThan(value: number): iResponse {
-        this.assert(this.obj > value) ?
-            this.pass(this.name + ' is greater than ' + value + ' (' + this.obj + ')') :
-            this.fail(this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
-        return this.reset();
+        return this.assert(this.obj > value,
+            this.name + ' is greater than ' + value + ' (' + this.obj + ')',
+            this.name + ' is not greater than ' + value + ' (' + this.obj + ')'
+        );
     }
 
     /**
@@ -970,10 +946,10 @@ class Value extends Property implements iProperty {
      * @returns {iResponse}
      */
     public greaterThanOrEquals(value: any): iResponse {
-        this.assert(this.obj >= value) ?
-            this.pass(this.name + ' is greater than ' + value + ' (' + this.obj + ')') :
-            this.fail(this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
-        return this.reset();
+        return this.assert(this.obj >= value,
+            this.name + ' is greater than ' + value + ' (' + this.obj + ')',
+            this.name + ' is not greater than ' + value + ' (' + this.obj + ')'
+        );
     }
 
     /**
@@ -983,10 +959,10 @@ class Value extends Property implements iProperty {
      * @returns {iResponse}
      */
     public lessThan(value: number): iResponse {
-        this.assert(this.obj < value) ?
-            this.pass(this.name + ' is less than ' + value + ' (' + this.obj + ')') :
-            this.fail(this.name + ' is not less than ' + value + ' (' + this.obj + ')');
-        return this.reset();
+        return this.assert(this.obj < value,
+            this.name + ' is less than ' + value + ' (' + this.obj + ')',
+            this.name + ' is not less than ' + value + ' (' + this.obj + ')'
+        );
     }
 
     /**
@@ -996,10 +972,10 @@ class Value extends Property implements iProperty {
      * @returns {iResponse}
      */
     public lessThanOrEquals(value: any): iResponse {
-        this.assert(this.obj <= value) ?
-            this.pass(this.name + ' is less than ' + value + ' (' + this.obj + ')') :
-            this.fail(this.name + ' is not less than ' + value + ' (' + this.obj + ')');
-        return this.reset();
+        return this.assert(this.obj <= value,
+            this.name + ' is less than ' + value + ' (' + this.obj + ')',
+            this.name + ' is not less than ' + value + ' (' + this.obj + ')'
+        );
     }
 
     /**
@@ -1019,10 +995,10 @@ class Value extends Property implements iProperty {
             positiveCase = 'is similar to';
             negativeCase = 'is not similar to';
         }
-        this.assert(matchValue == value) ?
-            this.pass(this.name + ' ' + positiveCase + ' ' + value) :
-            this.fail(this.name + ' ' + negativeCase + ' ' + value + ' (' + matchValue + ')');
-        return this.reset();
+        return this.assert(matchValue == value,
+            this.name + ' ' + positiveCase + ' ' + value,
+            this.name + ' ' + negativeCase + ' ' + value + ' (' + matchValue + ')'
+        );
     }
 
     /**
@@ -1294,11 +1270,12 @@ class Element extends Property implements iProperty {
      */
     public hasClass(className: string): iResponse {
         if (Flagpole.toType(this.obj) == 'cheerio') {
-            this.assert(this.obj.hasClass(className)) ?
-                this.pass(this.name + ' has class ' + className) :
-                this.fail(this.name + ' does not have class ' + className);
+            return this.assert(this.obj.hasClass(className),
+                this.name + ' has class ' + className,
+                this.name + ' does not have class ' + className
+            );
         }
-        return this.reset();
+        return this.response;
     }
 
     public greaterThan(value: number): iResponse {
@@ -1333,6 +1310,7 @@ abstract class GenericRequest  implements iResponse {
 
     protected url: string;
     protected response: SimplifiedResponse;
+    protected flipAssertion: boolean = false;
     private last: Element;
 
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
@@ -1340,6 +1318,39 @@ abstract class GenericRequest  implements iResponse {
         this.url = url;
         this.response = response;
         this.last = new Element(this, 'Empty Element', []);
+    }
+
+    /**
+     * Assert something is true, with respect to the flipped not()
+     *
+     * @param {boolean} statement
+     * @returns {boolean}
+     */
+    public assert(statement: boolean, passMessage, failMessage): iResponse {
+        (this.flipAssertion ? !statement : !!statement) ?
+            this.scenario.pass(this.flipAssertion ? 'NOT: ' + passMessage : passMessage) :
+            this.scenario.fail(this.flipAssertion ? 'NOT: ' + failMessage : failMessage);
+        return this.reset();
+    }
+
+    /**
+     * Clear out any previous settings
+     *
+     * @returns {iResponse}
+     */
+    protected reset(): iResponse {
+        this.flipAssertion = false;
+        return this;
+    }
+
+    /**
+     * Flip the next assertion
+     *
+     * @returns {iResponse}
+     */
+    public not(): iResponse {
+        this.flipAssertion = true;
+        return this;
     }
 
     /**
@@ -1405,13 +1416,11 @@ abstract class GenericRequest  implements iResponse {
     public headers(key?: string): Value  {
         if (typeof key !== 'undefined') {
             // Try first as they put it in the test, then try all lowercase
-            let value: string = typeof this.response.headers[key] !== 'undefined' ?
-                this.response.headers[key] : this.response.headers[key.toLowerCase()];
+            key = typeof this.response.headers[key] !== 'undefined' ? key : key.toLowerCase();
             let name: string = 'HTTP Headers[' + key + ']';
-            if (typeof value == 'undefined') {
-                this.scenario.fail(name + ' does not exist');
-            }
-            return new Value(this, name, value);
+            let value: Value = new Value(this, name, this.response.headers[key]);
+            value.exists();
+            return value;
         }
         else {
             return new Value(this, 'HTTP Headers', this.response.headers);

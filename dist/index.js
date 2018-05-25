@@ -268,10 +268,15 @@ class Scenario {
 exports.Scenario = Scenario;
 class Property {
     constructor(response, name, obj) {
-        this.flipAssertion = false;
         this.response = response;
         this.name = name;
         this.obj = obj;
+    }
+    assert(statement, passMessage, failMessage) {
+        return this.response.assert(statement, passMessage, failMessage);
+    }
+    not() {
+        return this.response.not();
     }
     toString() {
         if ((Flagpole.toType(this.obj) == 'cheerio')) {
@@ -287,34 +292,18 @@ class Property {
     get() {
         return this.obj;
     }
-    assert(statement) {
-        return this.flipAssertion ? !statement : !!statement;
-    }
-    reset() {
-        this.flipAssertion = false;
-        return this.response;
-    }
-    not() {
-        this.flipAssertion = true;
-        return this;
-    }
     text() {
         let text = this.toString();
         let name = 'Text of ' + this.name;
-        if (text.length === 0) {
-            this.fail(name + ' is not set');
-        }
-        return new Value(this.response, name, text);
+        let value = new Value(this.response, name, text);
+        value.length().greaterThan(0);
+        return value;
     }
     pass(message) {
-        return this.response.scenario.pass(this.flipAssertion ?
-            'NOT: ' + message :
-            message);
+        return this.response.scenario.pass(message);
     }
     fail(message) {
-        return this.response.scenario.fail(this.flipAssertion ?
-            'NOT: ' + message :
-            message);
+        return this.response.scenario.fail(message);
     }
     comment(message) {
         this.response.scenario.comment(message);
@@ -340,10 +329,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj)) {
             contains = (this.toString().indexOf(string) >= 0);
         }
-        this.assert(contains) ?
-            this.pass(this.name + ' contains ' + string) :
-            this.fail(this.name + ' does not contain ' + string);
-        return this.reset();
+        return this.assert(contains, this.name + ' contains ' + string, this.name + ' does not contain ' + string);
     }
     startsWith(matchText) {
         let assert = false;
@@ -352,10 +338,7 @@ class Property {
             value = this.toString();
             assert = (value.indexOf(matchText) === 0);
         }
-        this.assert(assert) ?
-            this.pass(this.name + ' starts with ' + matchText) :
-            this.fail(this.name + ' does not start with ' + matchText + ' (' + value + ')');
-        return this.reset();
+        return this.assert(assert, this.name + ' starts with ' + matchText, this.name + ' does not start with ' + matchText + ' (' + value + ')');
     }
     endsWith(matchText) {
         let assert = false;
@@ -364,10 +347,7 @@ class Property {
             value = this.toString();
             assert = (value.indexOf(matchText) === value.length - matchText.length);
         }
-        this.assert(assert) ?
-            this.pass(this.name + ' ends with ' + matchText) :
-            this.fail(this.name + ' does not end with ' + matchText + ' (' + value + ')');
-        return this.reset();
+        return this.assert(assert, this.name + ' ends with ' + matchText, this.name + ' does not end with ' + matchText + ' (' + value + ')');
     }
     trim() {
         let text = this.toString().trim();
@@ -387,10 +367,7 @@ class Property {
     }
     is(type) {
         let myType = Flagpole.toType(this.obj);
-        this.assert(myType == type.toLocaleLowerCase()) ?
-            this.pass(this.name + ' is type ' + type) :
-            this.fail(this.name + ' is not type ' + type + ' (' + myType + ')');
-        return this.reset();
+        return this.assert((myType == type.toLocaleLowerCase()), this.name + ' is type ' + type, this.name + ' is not type ' + type + ' (' + myType + ')');
     }
     echo() {
         this.comment(this.name + ' = ' + this.obj);
@@ -430,10 +407,7 @@ class Property {
         else if (!Flagpole.isNullOrUndefined(this.obj)) {
             exists = true;
         }
-        this.assert(exists) ?
-            this.pass(this.name + ' exists') :
-            this.fail(this.name + ' does not exist');
-        return this.reset();
+        return this.assert(exists, this.name + ' exists', this.name + ' does not exist');
     }
     parseInt() {
         let num = null;
@@ -464,28 +438,16 @@ class Property {
 }
 class Value extends Property {
     greaterThan(value) {
-        this.assert(this.obj > value) ?
-            this.pass(this.name + ' is greater than ' + value + ' (' + this.obj + ')') :
-            this.fail(this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
-        return this.reset();
+        return this.assert(this.obj > value, this.name + ' is greater than ' + value + ' (' + this.obj + ')', this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
     }
     greaterThanOrEquals(value) {
-        this.assert(this.obj >= value) ?
-            this.pass(this.name + ' is greater than ' + value + ' (' + this.obj + ')') :
-            this.fail(this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
-        return this.reset();
+        return this.assert(this.obj >= value, this.name + ' is greater than ' + value + ' (' + this.obj + ')', this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
     }
     lessThan(value) {
-        this.assert(this.obj < value) ?
-            this.pass(this.name + ' is less than ' + value + ' (' + this.obj + ')') :
-            this.fail(this.name + ' is not less than ' + value + ' (' + this.obj + ')');
-        return this.reset();
+        return this.assert(this.obj < value, this.name + ' is less than ' + value + ' (' + this.obj + ')', this.name + ' is not less than ' + value + ' (' + this.obj + ')');
     }
     lessThanOrEquals(value) {
-        this.assert(this.obj <= value) ?
-            this.pass(this.name + ' is less than ' + value + ' (' + this.obj + ')') :
-            this.fail(this.name + ' is not less than ' + value + ' (' + this.obj + ')');
-        return this.reset();
+        return this.assert(this.obj <= value, this.name + ' is less than ' + value + ' (' + this.obj + ')', this.name + ' is not less than ' + value + ' (' + this.obj + ')');
     }
     equals(value, permissiveMatching = false) {
         let matchValue = String(this.obj);
@@ -497,10 +459,7 @@ class Value extends Property {
             positiveCase = 'is similar to';
             negativeCase = 'is not similar to';
         }
-        this.assert(matchValue == value) ?
-            this.pass(this.name + ' ' + positiveCase + ' ' + value) :
-            this.fail(this.name + ' ' + negativeCase + ' ' + value + ' (' + matchValue + ')');
-        return this.reset();
+        return this.assert(matchValue == value, this.name + ' ' + positiveCase + ' ' + value, this.name + ' ' + negativeCase + ' ' + value + ' (' + matchValue + ')');
     }
     similarTo(value) {
         return this.equals(value, true);
@@ -633,11 +592,9 @@ class Element extends Property {
     }
     hasClass(className) {
         if (Flagpole.toType(this.obj) == 'cheerio') {
-            this.assert(this.obj.hasClass(className)) ?
-                this.pass(this.name + ' has class ' + className) :
-                this.fail(this.name + ' does not have class ' + className);
+            return this.assert(this.obj.hasClass(className), this.name + ' has class ' + className, this.name + ' does not have class ' + className);
         }
-        return this.reset();
+        return this.response;
     }
     greaterThan(value) {
         return this.parseFloat().greaterThan(value);
@@ -660,10 +617,25 @@ class Element extends Property {
 }
 class GenericRequest {
     constructor(scenario, url, response) {
+        this.flipAssertion = false;
         this.scenario = scenario;
         this.url = url;
         this.response = response;
         this.last = new Element(this, 'Empty Element', []);
+    }
+    assert(statement, passMessage, failMessage) {
+        (this.flipAssertion ? !statement : !!statement) ?
+            this.scenario.pass(this.flipAssertion ? 'NOT: ' + passMessage : passMessage) :
+            this.scenario.fail(this.flipAssertion ? 'NOT: ' + failMessage : failMessage);
+        return this.reset();
+    }
+    reset() {
+        this.flipAssertion = false;
+        return this;
+    }
+    not() {
+        this.flipAssertion = true;
+        return this;
     }
     lastElement(property) {
         if (typeof property == 'undefined') {
@@ -689,13 +661,11 @@ class GenericRequest {
     }
     headers(key) {
         if (typeof key !== 'undefined') {
-            let value = typeof this.response.headers[key] !== 'undefined' ?
-                this.response.headers[key] : this.response.headers[key.toLowerCase()];
+            key = typeof this.response.headers[key] !== 'undefined' ? key : key.toLowerCase();
             let name = 'HTTP Headers[' + key + ']';
-            if (typeof value == 'undefined') {
-                this.scenario.fail(name + ' does not exist');
-            }
-            return new Value(this, name, value);
+            let value = new Value(this, name, this.response.headers[key]);
+            value.exists();
+            return value;
         }
         else {
             return new Value(this, 'HTTP Headers', this.response.headers);
