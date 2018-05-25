@@ -1,5 +1,3 @@
-import {isNumber} from "util";
-
 let request = require('request');
 let cheerio = require('cheerio');
 let $ = cheerio;
@@ -17,6 +15,28 @@ interface iResponse {
 
 interface iProperty {
     comment(message: string): iProperty
+    select(path: string, findIn?: any): Element
+    toString(): string
+    get(): any
+    not(): iProperty
+    text(): Value
+    label(message: string): iProperty
+    length(): Value
+    contains(string: string): iResponse
+    startsWith(matchText: string): iResponse
+    endsWith(matchText: string): iResponse
+    trim(): Value
+    toLowerCase(): Value
+    toUpperCase(): Value
+    replace(search: string|RegExp, replace: string): Value
+    is(type: string): iResponse
+    echo(): iProperty
+    typeof(): iProperty
+    each(callback: Function): iResponse
+    exists(): iResponse
+    parseInt(): Value
+    parseFloat(): Value
+    headers(key?: string): Value
 }
 
 export interface SimplifiedResponse {
@@ -580,7 +600,7 @@ abstract class Property implements iProperty {
      */
     public toString(): string {
         if ((Flagpole.toType(this.obj) == 'cheerio')) {
-            return this.obj.text().toString();
+            return this.obj.text();
         }
         else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.toString) {
             return this.obj.toString();
@@ -635,14 +655,12 @@ abstract class Property implements iProperty {
      * @returns {Value}
      */
     public text(): Value {
-        let text: string = '';
-        if (Flagpole.toType(this.obj) == 'cheerio') {
-            text = this.obj.text();
+        let text: string = this.toString();
+        let name: string = 'Text of ' + this.name;
+        if (text.length === 0) {
+            this.fail(name + ' is not set');
         }
-        else if (!Flagpole.isNullOrUndefined(this.obj)) {
-            text = String(this.obj);
-        }
-        return new Value(this.response, 'Text of ' + this.name, text);
+        return new Value(this.response, name, text);
     }
 
     /**
@@ -922,6 +940,10 @@ abstract class Property implements iProperty {
 
     public headers(key?: string): Value  {
         return this.response.headers(key);
+    }
+
+    select(path: string, findIn?: any): Element {
+        return this.response.select(path, findIn);
     }
 
 }
@@ -1305,7 +1327,7 @@ class Element extends Property implements iProperty {
 
 }
 
-abstract class GenericRequest  implements iResponse, iProperty {
+abstract class GenericRequest  implements iResponse {
 
     public readonly scenario: Scenario;
 

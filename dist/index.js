@@ -275,7 +275,7 @@ class Property {
     }
     toString() {
         if ((Flagpole.toType(this.obj) == 'cheerio')) {
-            return this.obj.text().toString();
+            return this.obj.text();
         }
         else if (!Flagpole.isNullOrUndefined(this.obj) && this.obj.toString) {
             return this.obj.toString();
@@ -299,14 +299,12 @@ class Property {
         return this;
     }
     text() {
-        let text = '';
-        if (Flagpole.toType(this.obj) == 'cheerio') {
-            text = this.obj.text();
+        let text = this.toString();
+        let name = 'Text of ' + this.name;
+        if (text.length === 0) {
+            this.fail(name + ' is not set');
         }
-        else if (!Flagpole.isNullOrUndefined(this.obj)) {
-            text = String(this.obj);
-        }
-        return new Value(this.response, 'Text of ' + this.name, text);
+        return new Value(this.response, name, text);
     }
     pass(message) {
         return this.response.scenario.pass(this.flipAssertion ?
@@ -459,6 +457,9 @@ class Property {
     }
     headers(key) {
         return this.response.headers(key);
+    }
+    select(path, findIn) {
+        return this.response.select(path, findIn);
     }
 }
 class Value extends Property {
