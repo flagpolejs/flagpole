@@ -36,6 +36,10 @@ let onTestExit = function(filePath: string, exitCode: number) {
         return (testSuiteStatus[filePath] === 0);
     });
     if (areDone) {
+        if (!areAllPassing) {
+            log('Some suites failed.');
+            log("\n");
+        }
         exit(
             areAllPassing ? 0 : 1
         );

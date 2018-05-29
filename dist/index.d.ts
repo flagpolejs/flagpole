@@ -1,76 +1,22 @@
+import { Suite } from "./suite";
+import { Scenario } from "./scenario";
+import { Element, Value } from "./property";
+export interface iResponse {
+    select(path: string, findIn?: any): Element;
+    status(): Value;
+    and(): Element;
+    label(message: string): iResponse;
+    lastElement(property?: Element): Element;
+    comment(message: string): iResponse;
+    headers(key?: string): Value;
+    not(): iResponse;
+    assert(statement: boolean, passMessage: string, failMessage: string): iResponse;
+    readonly scenario: Scenario;
+}
 export interface SimplifiedResponse {
     statusCode: number;
     body: string;
     headers: Array<any>;
-}
-export declare class Suite {
-    scenarios: Array<Scenario>;
-    protected title: string;
-    protected baseUrl: string | null;
-    protected start: number;
-    protected waitToExecute: boolean;
-    protected byTag: any;
-    constructor(title: string);
-    wait(bool?: boolean): Suite;
-    isDone(): boolean;
-    getDuration(): number;
-    print(): Suite;
-    Scenario(title: string, tags?: [string]): Scenario;
-    getScenarioByTag(tag: string): Scenario;
-    getAllScenariosByTag(tag: string): [Scenario];
-    base(url: string): Suite;
-    buildUrl(path: string): string;
-    execute(): Suite;
-    passed(): boolean;
-    failed(): boolean;
-}
-export declare class Scenario {
-    readonly suite: Suite;
-    protected title: string;
-    protected log: Array<ConsoleLine>;
-    protected failures: Array<string>;
-    protected passes: Array<string>;
-    protected onDone: Function;
-    protected initialized: number | null;
-    protected start: number | null;
-    protected end: number | null;
-    protected pageType: string;
-    protected then: Function | null;
-    protected url: string | null;
-    protected waitToExecute: boolean;
-    protected nextLabel: string | null;
-    protected options: any;
-    constructor(suite: Suite, title: string, onDone: Function);
-    failed(): boolean;
-    passed(): boolean;
-    timeout(timeout: number): Scenario;
-    wait(bool?: boolean): Scenario;
-    form(form: {}): Scenario;
-    auth(authorization: any): Scenario;
-    headers(headers: {}): Scenario;
-    header(key: string, value: any): Scenario;
-    type(type: string): Scenario;
-    method(method: string): Scenario;
-    isDone(): boolean;
-    subheading(message: string): Scenario;
-    comment(message: string): Scenario;
-    pass(message: string): Scenario;
-    fail(message: string): Scenario;
-    open(url: string): Scenario;
-    assertions(then: Function): Scenario;
-    skip(): Scenario;
-    execute(): Scenario;
-    Scenario(title: string, tags?: [string]): Scenario;
-    label(message: string): Scenario;
-    getLog(): Array<ConsoleLine>;
-    protected getExecutionTime(): number;
-    done(): Scenario;
-}
-export declare class ConsoleLine {
-    color: string;
-    message: string;
-    constructor(message: string, color?: string);
-    write(): void;
 }
 export declare class Flagpole {
     static Suite(title: string): Suite;

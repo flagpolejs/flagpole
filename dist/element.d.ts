@@ -1,0 +1,31 @@
+import { iProperty, iResponse } from "./index";
+import { Scenario } from "./scenario";
+import { Property } from "./property";
+import { Value } from "./value";
+export declare class Element extends Property implements iProperty {
+    constructor(response: iResponse, name: string, obj: any);
+    and(): Element;
+    click(nextScenario: Scenario): Element;
+    find(selector: string): Element;
+    next(selector?: string): Element;
+    prev(selector?: string): Element;
+    closest(selector: string): Element;
+    parents(selector?: string): Element;
+    siblings(selector?: string): Element;
+    children(selector?: string): Element;
+    eq(i: number): Element;
+    nth(i: number): Element;
+    first(): Element;
+    last(): Element;
+    attribute(key: string): Value;
+    property(key: string): Value;
+    data(key: string): Value;
+    val(): Value;
+    hasClass(className: string): iResponse;
+    greaterThan(value: number): iResponse;
+    greaterThanOrEquals(value: number): iResponse;
+    lessThan(value: number): iResponse;
+    lessThanOrEquals(value: number): iResponse;
+    equals(value: any, permissiveMatching?: boolean): iResponse;
+    similarTo(value: any): iResponse;
+}
