@@ -23,8 +23,8 @@ Flagpole.Suite('iTunes API Tests')
 
         test.comment('Loop through each result element');
         results.each(function(test) {
-                test.property('trackId').is('number');
-                test.property('kind').equals('music-video');
+            test.property('trackId').is('number');
+            test.property('kind').equals('music-video');
         });
 
     });
