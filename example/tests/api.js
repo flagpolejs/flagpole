@@ -5,13 +5,14 @@ Flagpole.Suite('iTunes API Tests')
 
     .Scenario('See if there are any 2Pac Videos')
     .open('/search?term=2pac&entity=musicVideo').type('json')
-    .assertions(function(test) {
+    .assertions(function(response) {
 
-        test.status().equals('200');
-        test.headers('Content-Type').contains('text/javascript');
+        response.status().equals('200');
+        response.headers('Content-Type').contains('text/javascript');
+        response.headers('content-length').greaterThan(0);
 
-        var resultCount = test.select('resultCount');
-        var results = test.select('results');
+        var resultCount = response.select('resultCount');
+        var results = response.select('results');
         var firstTrack = results.first();
 
         resultCount.is('number');
@@ -21,10 +22,10 @@ Flagpole.Suite('iTunes API Tests')
         firstTrack.property('wrapperType').equals('track');
         firstTrack.property('artworkUrl100').matches(/mzstatic\.com.+100x100bb\.jpg$/);
 
-        test.comment('Loop through each result element');
-        results.each(function(test) {
-            test.property('trackId').is('number');
-            test.property('kind').equals('music-video');
+        results.comment('Loop through each result element');
+        results.each(function(track) {
+            track.property('trackId').is('number');
+            track.property('kind').equals('music-video');
         });
 
     });

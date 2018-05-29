@@ -58,7 +58,7 @@ There are some cases where we may not want to set it yet, like if the URL of the
 And finally we do our assertions callback, which will get called after the page or endpoint loads.
 
 ```
-.assertions(function(test) {
+.assertions(function(response) {
    // Your test assertions will go in here
 }
 ```
@@ -77,8 +77,67 @@ Flagpole.Suite('iTunes API Tests')
     .Scenario('See if there are any 2Pac Videos')
     .type('json')
     .open('/search?term=2pac&entity=musicVideo')
-    .assertions(function(test) {
+    .assertions(function(response) {
         // Your test assertions will go in here
     });
 ```
 
+## Response Traversal
+
+Once the endpoint is loaded, the assertions callback will fire with the response object. 
+
+The first thing you may want to do is test some of the basic response headers and such. Things like...
+
+```javascript
+
+// Check for HTTP status code
+response.status().equals(200);
+// Check for certain header values
+response.headers('Content-Type').contains('text/javascript');
+response.headers('content-length').greaterThan(0);
+
+```
+
+Now let's look into the response body and check for certain things to exit. We want to traverse the body. This works both for HTML and JSON responses.
+
+So for an HTML response, we might want to do something with CSS selectors like:
+
+```javascript
+var topStories = reponse.select('#topStories articles');
+```
+
+While for a JSON response we may want to do:
+
+```javascript
+var results = response.select('data.results');
+```
+
+Once you have grabbed a certain element like that, you could do further traversal. Some are available for JSON too, but this is usually more of an HTML thing.
+
+```javascript
+var summaries = topStories.find('p.summary');
+```
+
+You could also do most of the jQuery methods like children, closest, next, etc. But I won't get into all of those for now.
+
+For a selector that returns a multiple matching elements, you can also use nth (or its synonym eq), first, and last.
+
+## Making assertions
+
+...
+
+## Loops
+
+...
+
+## Delaying execution and dynamic endpoints
+
+...
+
+## Using the CLI
+
+...
+
+## More Advanced Topics
+
+...
