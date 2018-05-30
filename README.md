@@ -180,8 +180,33 @@ let firstElement = results.first();
 firstElement.property('artist-name').startsWith('Tu').endsWith('pac');
 ```
 
-Got it?
+Got it? Good!
 
+And if you're doing more HTML specific things you can do that too with jQuery similar methods, like this...
+
+```javascript
+let topStories = response.select('#topStories articles');
+let lastStory = topStories.last();
+lastStory.find('strong.title').text().trim().length().greaterThan(0);
+lastStory.find('a.author').attribute('href')
+    .and().text().matches(/a-z+/i)
+    .and().data('author-id').is('number');
+```
+
+Okay, so we got the last element. We made sure it had a title with actual text in it.
+
+Then we checked on the author link. We made sure it had a href attribute (again this uses an implied exists() so we don't need to explicity test the exists).
+
+Then we made sure it had text that matched the regex in the author. And last we checked for a data attribute, just like jQuery might support.
+
+If we wanted to check the value on a form, we'd do it similar to jQuery also...
+
+```javascript
+let commentBox = response.select('#commentForm textarea[name="comment"]');
+commentBox.val().equals('Enter your comment here');
+```
+
+Beautiful!
 
 ## Loops
 
@@ -198,11 +223,119 @@ results.each(function(track) {
 
 ## Delaying execution and dynamic endpoints
 
-...
+Okay... now you say... well that's great if you know the URL, but what if you want to build something dynamically based on something else. Like run one scenario, that triggers another scenario based on something in the first scenario.
+
+Well if you thought you could trip me up that easily, HAH!
+
+```javascript
+
+let articleTest = Scenario('Check on an article')
+    .assertions(function(response) {
+        response.status().equals(200);        response.select('main article.body').text().length().greaterThan(0);
+
+    });
+
+let homepageTest = Scenario('Check on homepage content').open('/')
+    .assertions(function(response) {
+        response.status().equals(200);
+        response.select('#topStories article a.title').first()
+            .text().length().greaterThan(0)
+            .and().click(articleTest);
+    });
+
+```
+
+So you're all wait... a minute... but we're not actually running a web browser, so how can we CLICK something?!? We'll you'd be right about that. That is really some sugar syntax to just make it nice and similate a click on an <a href> tag. If you tried that on something without a href element then it would fail.
+
+So what we actually did though... notice the articeTest does not have an open() method. So we never give it a URL to open at first. So it doesn't automatically execute.
+
+When we call the click() method and pass in a reference to that scenario, it applies that URL to that scenario, which causes it to execute asynchronously. 
+
+SWEET!
+
+But what if you don't like all that sugar? And you wanna fetch that href content yourself. Then you go on with your bad self and you do that...
+
+```javascript
+
+let articleTest = Scenario('Check on an article')
+    .assertions(function(response) {
+        response.status().equals(200);        response.select('main article.body').text().length().greaterThan(0);
+
+    });
+
+let homepageTest = Scenario('Check on homepage content').open('/')
+    .assertions(function(response) {
+        response.status().equals(200);
+        var articleLink = response.select('#topStories article a.title').first()
+            .text().length().greaterThan(0)
+            .and().attribute('href').toString();
+        articleTest.open(articleLink);
+    });
+
+```
+
+So if you can parse though all of the chaining... at the end of the day we ran a toString() method which made the whole thing return the value of that attribute. We could also have done a get() method instead of toString() ... they are similar but not exactly the same. But both result in returning that value.
+
+After that then we manually told articleTest to open that URL... which (since the assertions and url are then defined) causes it to execute right away.
+
+If for some reason you really don't want something to execute... even after giving it both assertions and a URL, then you can use the wait() and execute() methods.
+
+
+```javascript
+
+let articleTest = Scenario('Check on an article')
+    .wait()
+    .assertions(function(response) {
+        response.status().equals(200);        response.select('main article.body').text().length().greaterThan(0);
+
+    });
+
+let homepageTest = Scenario('Check on homepage content').open('/')
+    .assertions(function(response) {
+        response.status().equals(200);
+        var articleLink = response.select('#topStories article a.title').first()
+            .text().length().greaterThan(0)
+            .and().attribute('href').toString();
+        articleTest.open(articleLink);
+        setTimeout(function() {
+            articleTest.execute();
+        }, 5000);
+    });
+
+```
+
+So since we told it to wait() at first, even after we set the open() then it will then wait for that execute() ... which in this case fires 5 seconds later.
 
 ## Using the CLI
 
-...
+**List all tests**
+
+flagpole --list
+
+**Execute a specific suite**
+
+flagpole --suite=api
+
+**Execute all tests**
+
+flagpole --all
+
+**Set the root folder where to look for the tests**
+
+flagpole --root=path/to/project
+
+**List all tests in a specific group (subfolder)**
+
+flagpole --list --group=flotrack
+
+**Run all tests in a specific group**
+
+flagpole --all --group=flotrack
+
+**Run a suite within a group**
+
+flagpole --suite=flotrack/api
+
 
 ## More Advanced Topics
 
