@@ -124,11 +124,77 @@ For a selector that returns a multiple matching elements, you can also use nth (
 
 ## Making assertions
 
-...
+Cool! So now we selected something....
+
+```javascript
+var results = response.select('data.results');
+```
+
+"But what do we do with it???" Well, I'm glad you asked, young padwan! We make assertions.
+
+But just because we have an element... that doesn't mean we want to make an assertion against the element directly. No, more like you wan to make an assertion about something about that element.
+
+Like maybe we want to make sure it is a certain data type.
+
+```javascript
+results.is('array');
+```
+
+Well that was easy, but what if we also want to make sure the array isn't empty?
+
+```javascript
+results.length().greaterThan(0);
+```
+
+BAM! Okay, okay, but let's check some of the actual content. Sure...
+
+```javascript
+results.first().property('id').is('number').greaterThan(0);
+```
+
+Ohhh... see I'm pretty slick there with my chaining. Like when you do a spin move on the dance floor and then throw in a split at the end or something.
+
+So above we selected the first element of the results array, and then looked at the id property.
+
+Built in with that property('id') method is an exists() call, so we don't need to explicitly check for the exists. And then we chain it to then make sure it's a number that is greater than 0.
+
+What else can we check for?
+
+```javascript
+let firstElement = results.first();
+firstElement.property('id').is('number').greaterThan(0)
+    .and().property('kind').equals('music-video')
+    .and().property('artist-name').contains('Makaveli')
+    .and().property('first-name').startsWith('Tu')
+    .and().property('last-name').endsWith('ur')
+    .and().property('status').matches(/hip-?hop/i)
+    .and().property('genre').similarTo('greatest of all time');
+```
+
+Alright, so we started using and(). This makes it a bit more legible, but also whenever you use and() it returns you back the last element that you traversed to. So sometimes you get lost in your chaining and you might end up being on a property, but you want to get back to the element. The and() will go back to that last thing you got from a traversal method.
+
+If, on the other hand, you just wanted to do two tests on the same property then you don't need the and() ... like this:
+
+```javascript
+let firstElement = results.first();
+firstElement.property('artist-name').startsWith('Tu').endsWith('pac');
+```
+
+Got it?
+
 
 ## Loops
 
-...
+So what if you want to loop through all elements in that results array? We got you!
+
+Remember earlier we fetched the results array? Let's loop through each element of that.
+
+```javascript
+results.each(function(track) {
+    track.property('trackId').is('number');
+    track.property('kind').equals('music-video');
+});
+```
 
 ## Delaying execution and dynamic endpoints
 
