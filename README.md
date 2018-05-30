@@ -103,7 +103,7 @@ Now let's look into the response body and check for certain things to exit. We w
 So for an HTML response, we might want to do something with CSS selectors like:
 
 ```javascript
-var topStories = reponse.select('#topStories articles');
+var topStories = response.select('#topStories articles');
 ```
 
 While for a JSON response we may want to do:
@@ -245,9 +245,9 @@ let homepageTest = Scenario('Check on homepage content').open('/')
 
 ```
 
-So you're all wait... a minute... but we're not actually running a web browser, so how can we CLICK something?!? We'll you'd be right about that. That is really some sugar syntax to just make it nice and similate a click on an <a href> tag. If you tried that on something without a href element then it would fail.
+So you're all wait... a minute... but we're not actually running a web browser, so how can we CLICK something?!? We'll you'd be right about that. That is really some sugar syntax to just make it nice and similate a click on an "a href" tag. If you tried that on something without a href element then it would fail.
 
-So what we actually did though... notice the articeTest does not have an open() method. So we never give it a URL to open at first. So it doesn't automatically execute.
+So what we actually did though... notice the articleTest does not have an open() method. So we never give it a URL to open at first. So it doesn't automatically execute.
 
 When we call the click() method and pass in a reference to that scenario, it applies that URL to that scenario, which causes it to execute asynchronously. 
 
