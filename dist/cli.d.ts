@@ -1,6 +1,8 @@
-declare let argv: any;
 declare let exec: any;
 declare let fs: any;
+declare let yargs: any;
+declare let argv: any;
+declare function printHeader(): void;
 declare let testSuiteStatus: {
     [s: string]: number | null;
 };

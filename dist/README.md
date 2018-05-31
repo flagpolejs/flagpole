@@ -310,31 +310,35 @@ So since we told it to wait() at first, even after we set the open() then it wil
 
 **List all tests**
 
-flagpole --list
+flagpole list
 
 **Execute a specific suite**
 
-flagpole --suite=api
+flagpole run -s api
+
+**Execute multiple named suites**
+
+flagpole run -s api smoke
 
 **Execute all tests**
 
-flagpole --all
+flagpole run
 
-**Set the root folder where to look for the tests**
+**Set the root path where to look for the tests**
 
-flagpole --root=path/to/project
+flagpole -p path/to/project/tests
 
 **List all tests in a specific group (subfolder)**
 
-flagpole --list --group=flotrack
+flagpole list -g flotrack
 
 **Run all tests in a specific group**
 
-flagpole --all --group=flotrack
+flagpole run -g flotrack
 
 **Run a suite within a group**
 
-flagpole --suite=flotrack/api
+flagpole run -s basic/smoke
 
 
 ## More Advanced Topics

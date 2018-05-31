@@ -1,18 +1,73 @@
 #!/usr/bin/env node
 'use strict';
-let argv = require('yargs').argv;
 let exec = require('child_process').exec;
 let fs = require('fs');
-process.env.ENVIRONMENT = argv.env || 'prod';
-process.env.SUITE = argv.suite || null;
-process.env.GROUP = argv.group || null;
-process.env.ROOT_FOLDER = (function () {
-    let rootFolder = argv.group ? process.cwd() + '/tests/' + argv.group + '/' : process.cwd() + '/tests/';
-    if (argv.root) {
-        rootFolder = argv.root;
-        rootFolder = (rootFolder.match(/\/$/) ? rootFolder : rootFolder + '/') + 'tests/';
-    }
-    return rootFolder;
+let yargs = require('yargs');
+let argv = require('yargs')
+    .usage('Usage: $0 <command> [options]')
+    .help(false)
+    .version(false)
+    .demandCommand(1, 'You must specify a command: list, run')
+    .alias({
+    's': 'suite',
+    'g': 'group',
+    'p': 'path',
+    'e': 'env'
+})
+    .describe({
+    'g': 'Filter only a group of test suites in this subfolder',
+    's': 'Specify one or more suites to run',
+    'p': 'Specify the folder to look for tests within',
+    'e': 'Environment like: dev, staging, prod'
+})
+    .array('s')
+    .string('g')
+    .string('p')
+    .string('e')
+    .conflicts('g', 's')
+    .default('p', function () {
+    return process.cwd() + '/tests';
+}, '(current)')
+    .example('flagpole list', 'To show a list of test suites')
+    .example('flagpole run', 'To run all test suites')
+    .example('flagpole run -s smoke', 'To run just the suite called smoke')
+    .example('flagpole run -s smoke api', 'Or you can run multiple suites (smoke and api)')
+    .example('flagpole run -g basic', 'To run all test suites in the basic group')
+    .epilogue('For more information, go to https://github.com/flocasts/flagpole')
+    .wrap(Math.min(100, yargs.terminalWidth()))
+    .fail(function (msg, err, yargs) {
+    printHeader();
+    console.log(yargs.help());
+    console.log(msg);
+    process.exit(1);
+})
+    .argv;
+process.env.COMMAND = argv._[0];
+if (['run', 'list'].indexOf(String(process.env.COMMAND)) < 0) {
+    printHeader();
+    console.log("Command must be either: run, list\n");
+    console.log("Example: flagpole run\n");
+    process.exit(1);
+}
+function printHeader() {
+    console.log("\x1b[32m", "\n", `    \x1b[31m$$$$$$$$\\ $$\\                                         $$\\           
+    \x1b[31m $$  _____|$$ |                                        $$ |          
+    \x1b[31m $$ |      $$ | $$$$$$\\   $$$$$$\\   $$$$$$\\   $$$$$$\\  $$ | $$$$$$\\  
+    \x1b[31m $$$$$\\    $$ | \\____$$\\ $$  __$$\\ $$  __$$\\ $$  __$$\\ $$ |$$  __$$\\ 
+    \x1b[37m $$  __|   $$ | $$$$$$$ |$$ /  $$ |$$ /  $$ |$$ /  $$ |$$ |$$$$$$$$ |
+    \x1b[37m $$ |      $$ |$$  __$$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |$$   ____|
+    \x1b[37m $$ |      $$ |\\$$$$$$$ |\\$$$$$$$ |$$$$$$$  |\\$$$$$$  |$$ |\\$$$$$$$\\ 
+    \x1b[34m \\__|      \\__| \\_______| \\____$$ |$$  ____/  \\______/ \\__| \\_______|
+    \x1b[34m                         $$\\   $$ |$$ |                              
+    \x1b[34m                         \\$$$$$$  |$$ |                              
+    \x1b[34m                          \\______/ \\__|`, "\x1b[0m", "\n");
+}
+;
+process.env.TESTS_FOLDER = (function () {
+    let path = argv.p;
+    let group = (typeof argv.g !== 'undefined') ? (argv.g.match(/\/$/) ? argv.g : argv.g + '/') : '';
+    path = (path.match(/\/$/) ? path : path + '/');
+    return path + group;
 })();
 let testSuiteStatus = {};
 let onTestStart = function (filePath) {
@@ -51,7 +106,7 @@ class TestSuiteFile {
         this.name = '';
         this.filePath = dir + file;
         this.fileName = file;
-        this.name = dir.replace(String(process.env.ROOT_FOLDER), '') + file.split('.').slice(0, -1).join('.');
+        this.name = dir.replace(String(process.env.TESTS_FOLDER), '') + file.split('.').slice(0, -1).join('.');
     }
 }
 let runTestFile = function (filePath) {
@@ -98,21 +153,11 @@ let tests = (function () {
         }
         return tests;
     };
-    return findTests(process.env.ROOT_FOLDER);
+    return findTests(process.env.TESTS_FOLDER);
 })();
-console.log("\x1b[32m", "\n", `\x1b[31m$$$$$$$$\\ $$\\                                         $$\\           
-\x1b[31m $$  _____|$$ |                                        $$ |          
-\x1b[31m $$ |      $$ | $$$$$$\\   $$$$$$\\   $$$$$$\\   $$$$$$\\  $$ | $$$$$$\\  
-\x1b[31m $$$$$\\    $$ | \\____$$\\ $$  __$$\\ $$  __$$\\ $$  __$$\\ $$ |$$  __$$\\ 
-\x1b[37m $$  __|   $$ | $$$$$$$ |$$ /  $$ |$$ /  $$ |$$ /  $$ |$$ |$$$$$$$$ |
-\x1b[37m $$ |      $$ |$$  __$$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |$$   ____|
-\x1b[37m $$ |      $$ |\\$$$$$$$ |\\$$$$$$$ |$$$$$$$  |\\$$$$$$  |$$ |\\$$$$$$$\\ 
-\x1b[34m \\__|      \\__| \\_______| \\____$$ |$$  ____/  \\______/ \\__| \\_______|
-\x1b[34m                         $$\\   $$ |$$ |                              
-\x1b[34m                         \\$$$$$$  |$$ |                              
-\x1b[34m                          \\______/ \\__|`, "\x1b[0m", "\n");
-if (argv.list) {
-    log('Looking in folder: ' + process.env.ROOT_FOLDER + "\n");
+if (process.env.COMMAND == 'list') {
+    printHeader();
+    log('Looking in folder: ' + process.env.TESTS_FOLDER + "\n");
     if (tests.length > 0) {
         log('Found these test suites:');
         tests.forEach(function (test) {
@@ -126,21 +171,30 @@ if (argv.list) {
         exit(2);
     }
 }
-else if (argv.suite) {
-    let test = getTestByName(argv.suite);
-    if (test) {
-        runTestFile(test.filePath);
+else if (process.env.COMMAND == 'run') {
+    printHeader();
+    if (argv.suite) {
+        let testSuites = [];
+        argv.suite.forEach(function (suiteName) {
+            let testSuite = getTestByName(suiteName);
+            if (testSuite) {
+                testSuites.push(testSuite);
+            }
+            else {
+                log('Could not find test suite: ' + suiteName + "\n");
+                exit(3);
+            }
+        });
+        testSuites.forEach(function (testSuite) {
+            runTestFile(testSuite.filePath);
+        });
     }
     else {
-        log('Could not find test suite: ' + argv.suite + "\n");
-        exit(3);
+        tests.forEach(function (test) {
+            onTestStart(test.filePath);
+        });
+        tests.forEach(function (test) {
+            runTestFile(test.filePath);
+        });
     }
-}
-else if (argv.all) {
-    tests.forEach(function (test) {
-        onTestStart(test.filePath);
-    });
-    tests.forEach(function (test) {
-        runTestFile(test.filePath);
-    });
 }
