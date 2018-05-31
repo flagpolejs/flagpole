@@ -1,4 +1,4 @@
-let Flagpole = require('../../dist/index.js').Flagpole;
+let Flagpole = require('../dist/index.js').Flagpole;
 
 Flagpole.Suite('Smoke Tests')
     .base('http://www.stackoverflow.com')

@@ -58,7 +58,7 @@ export class Suite {
     public print(): Suite {
         Flagpole.heading(this.title);
         Flagpole.message('» Base URL: ' + this.baseUrl);
-        Flagpole.message('» Environment: ' + process.env.ENVIRONMENT);
+        Flagpole.message('» Environment: ' + process.env.ENV);
         Flagpole.message('» Took ' + this.getDuration() + "ms\n");
 
         let color: string = this.passed() ? "\x1b[32m" : "\x1b[31m";

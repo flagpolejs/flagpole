@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-let exec = require('child_process').exec;
+import { Cli, Tests, TestSuiteFile } from "./cli-helper";
+
 let fs = require('fs');
 
 /**
@@ -16,22 +17,29 @@ let argv = require('yargs')
         's': 'suite',
         'g': 'group',
         'p': 'path',
-        'e': 'env'
+        'e': 'env',
+        'c': 'config'
     })
     .describe({
         'g': 'Filter only a group of test suites in this subfolder',
         's': 'Specify one or more suites to run',
         'p': 'Specify the folder to look for tests within',
-        'e': 'Environment like: dev, staging, prod'
+        'e': 'Environment like: dev, staging, prod',
+        'c': 'Path to config file'
     })
     .array('s')
     .string('g')
     .string('p')
     .string('e')
-    .conflicts('g', 's')
-    .default('p', function() {
-        return process.cwd() + '/tests';
-    }, '(current)')
+    .default('e', function() {
+        return 'dev';
+    }, 'dev')
+    .default('s', function() {
+        return [];
+    })
+    .default('g', function() {
+        return '';
+    })
     .example('flagpole list', 'To show a list of test suites')
     .example('flagpole run', 'To run all test suites')
     .example('flagpole run -s smoke', 'To run just the suite called smoke')
@@ -40,253 +48,135 @@ let argv = require('yargs')
     .epilogue('For more information, go to https://github.com/flocasts/flagpole')
     .wrap(Math.min(100, yargs.terminalWidth()))
     .fail(function (msg, err, yargs) {
-        printHeader();
-        console.log(yargs.help());
-        console.log(msg);
-        process.exit(1);
+        Cli.log(yargs.help());
+        Cli.log(msg);
+        Cli.exit(1);
     })
     .argv;
 
 // Enforce limited list of commands
-process.env.COMMAND = argv._[0];
-if (['run', 'list'].indexOf(String(process.env.COMMAND)) < 0) {
-    printHeader();
-    console.log("Command must be either: run, list\n");
-    console.log("Example: flagpole run\n");
-    process.exit(1);
+process.env.FLAGPOLE_COMMAND = argv._[0];
+if (['run', 'list'].indexOf(String(process.env.FLAGPOLE_COMMAND)) < 0) {
+    Cli.log("Command must be either: run, list\n");
+    Cli.log("Example: flagpole run\n");
+    Cli.exit(1);
+}
+
+
+/**
+ * Get environment
+ */
+process.env.FLAGPOLE_ENV = argv.e;
+
+/**
+ * Set initial base path
+ */
+process.env.FLAGPOLE_PATH = Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
+if (argv.p) {
+    if (fs.existsSync(process.env.FLAGPOLE_PATH)) {
+        // Query the entry
+        let stats = fs.lstatSync(process.env.FLAGPOLE_PATH);
+        // Is it a directory?
+        if (!stats.isDirectory()) {
+            Cli.log("The path you specified is not a directory.");
+            Cli.exit(1);
+        }
+    }
+    else {
+        Cli.log("The path you specified did not exist.");
+        Cli.exit(1);
+    }
 }
 
 /**
- *  Header branding
- *
- *  We'll write this right away
+ * Read the config file in the path
  */
-function printHeader() {
-    console.log("\x1b[32m", "\n", `    \x1b[31m$$$$$$$$\\ $$\\                                         $$\\           
-    \x1b[31m $$  _____|$$ |                                        $$ |          
-    \x1b[31m $$ |      $$ | $$$$$$\\   $$$$$$\\   $$$$$$\\   $$$$$$\\  $$ | $$$$$$\\  
-    \x1b[31m $$$$$\\    $$ | \\____$$\\ $$  __$$\\ $$  __$$\\ $$  __$$\\ $$ |$$  __$$\\ 
-    \x1b[37m $$  __|   $$ | $$$$$$$ |$$ /  $$ |$$ /  $$ |$$ /  $$ |$$ |$$$$$$$$ |
-    \x1b[37m $$ |      $$ |$$  __$$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |$$   ____|
-    \x1b[37m $$ |      $$ |\\$$$$$$$ |\\$$$$$$$ |$$$$$$$  |\\$$$$$$  |$$ |\\$$$$$$$\\ 
-    \x1b[34m \\__|      \\__| \\_______| \\____$$ |$$  ____/  \\______/ \\__| \\_______|
-    \x1b[34m                         $$\\   $$ |$$ |                              
-    \x1b[34m                         \\$$$$$$  |$$ |                              
-    \x1b[34m                          \\______/ \\__|`, "\x1b[0m", "\n");
-};
-
+process.env.FLAGPOLE_CONFIG_PATH = (argv.c || process.env.FLAGPOLE_PATH + 'flagpole.json');
+let config: any = {};
+// If we found a config file at this path
+if (fs.existsSync(process.env.FLAGPOLE_CONFIG_PATH)) {
+    let contents = fs.readFileSync(process.env.FLAGPOLE_CONFIG_PATH);
+    let configDir: string = Cli.normalizePath(require('path').dirname(process.env.FLAGPOLE_CONFIG_PATH));
+    config = JSON.parse(contents);
+    if (config.hasOwnProperty('path')) {
+        // If path is absolute
+        if (/^\//.test(config.path)) {
+            process.env.FLAGPOLE_PATH = Cli.normalizePath(config.path);
+        }
+        // If path just says current directory
+        else if (config.path == '.') {
+            process.env.FLAGPOLE_PATH = Cli.normalizePath(configDir);
+        }
+        // Path is relative
+        else {
+            process.env.FLAGPOLE_PATH = Cli.normalizePath(configDir + config.path);
+        }
+    }
+}
+// If they specified a command line config that doesn't exist
+else if (argv.c) {
+    Cli.log("The config file you specified did not exist.\n");
+    Cli.exit(1);
+}
 
 /**
- * Read tests folder from here
+ * Determine the root tests folder
  */
-process.env.TESTS_FOLDER = (function() {
+process.env.FLAGPOLE_TESTS_FOLDER = (function() {
     // Get command line args
-    let path: string = argv.p;
-    let group: string = (typeof argv.g !== 'undefined') ? (argv.g.match(/\/$/) ? argv.g : argv.g + '/') : '';
+    let path: string = Cli.normalizePath(process.env.FLAGPOLE_PATH || process.cwd());
+    let group: string = (typeof argv.g !== 'undefined') ? argv.g : '';
     // Make sure path has trailing slashes
-    path = (path.match(/\/$/) ? path : path + '/');
+    path = Cli.normalizePath(path);
     // Now build our output
     return path + group;
 })();
 
 /**
- * Keep track of the test suites that ran and their exit code
- */
-let testSuiteStatus: { [s: string]: number|null; } = {};
-let onTestStart = function(filePath: string) {
-    testSuiteStatus[filePath] = null;
-};
-let onTestExit = function(filePath: string, exitCode: number) {
-    testSuiteStatus[filePath] = exitCode;
-    // Are they all done?
-    let areDone: boolean = Object.keys(testSuiteStatus).every(function(filePath: string) {
-        return (testSuiteStatus[filePath] !== null);
-    });
-    let areAllPassing: boolean = Object.keys(testSuiteStatus).every(function(filePath: string) {
-        return (testSuiteStatus[filePath] === 0);
-    });
-    if (areDone) {
-        if (!areAllPassing) {
-            log('Some suites failed.');
-            log("\n");
-        }
-        exit(
-            areAllPassing ? 0 : 1
-        );
-    }
-};
-
-/**
- * Buffer for console
- */
-let consoleLog: Array<string> = [];
-let log = function(message: string) {
-    consoleLog.push(message);
-};
-
-/**
- * Exit
- */
-let exit = function(exitCode: number) {
-    consoleLog.forEach(function(message: string) {
-        console.log(message.trim());
-    });
-    process.exit(exitCode);
-};
-
-/**
- * Will hold a suite file that we find in the specified folder
- */
-class TestSuiteFile {
-
-    public filePath: string = '';
-    public fileName: string = '';
-    public name: string = '';
-
-    constructor(dir: string, file: string) {
-        this.filePath = dir + file;
-        this.fileName = file;
-        this.name = dir.replace(String(process.env.TESTS_FOLDER), '') + file.split('.').slice(0, -1).join('.');
-    }
-
-}
-
-/**
- * Execute a test
- *
- * @param filePath: string
- */
-let runTestFile = function(filePath: string) {
-
-    onTestStart(filePath);
-
-    let child = exec('node ' + filePath);
-
-    child.stdout.on('data', function(data) {
-        data && log(data);
-    });
-
-    child.stderr.on('data', function(data) {
-        data && log(data);
-    });
-
-    child.on('error', function(data) {
-        data && log(data);
-    });
-
-    child.on('exit', function(exitCode) {
-        if (exitCode > 0) {
-            log('FAILED TEST SUITE:');
-            log(filePath + ' exited with error code ' + exitCode);
-            log("\n");
-        }
-        onTestExit(filePath, exitCode);
-    });
-    
-};
-
-/**
- * Find a test with this name in our list of available tests
- *
- * @param name: string
- * @returns {TestSuiteFile}
- */
-let getTestByName = function(name: string) {
-    for (let i=0; i < tests.length; i++) {
-        if (tests[i].name == name) {
-            return tests[i];
-        }
-    }
-};
-
-/**
- * Get all of the tests available
- *
- * @type {Array<TestSuiteFile>}
- */
-let tests = (function(): Array<TestSuiteFile> {
-
-    let tests: Array<TestSuiteFile> = [];
-
-    let findTests = function(dir) {
-        // Does this folder exist?
-        if (fs.existsSync(dir)) {
-            // Read contents
-            let files = fs.readdirSync(dir);
-            files.forEach(function(file) {
-                if (fs.statSync(dir + file).isDirectory()) {
-                    tests = findTests(dir + file + '/');
-                }
-                // Push in any JS files, but without the extension
-                else if (file.match(/.js$/)) {
-                    tests.push(new TestSuiteFile(dir, file));
-                }
-            });
-        }
-
-        return tests;
-    };
-
-    return findTests(process.env.TESTS_FOLDER);
-
-})();
-
-
-
-
-/**
  * LIST TEST SUITES
  */
-if (process.env.COMMAND == 'list') {
-    printHeader();
-    log('Looking in folder: ' + process.env.TESTS_FOLDER + "\n");
-    if (tests.length > 0) {
-        log('Found these test suites:');
-        tests.forEach(function(test) {
-            log('  » ' + test.name);
-        });
-        log("\n");
-        exit(0);
+if (process.env.FLAGPOLE_COMMAND == 'list') {
+    let tests: Tests = new Tests(process.env.FLAGPOLE_TESTS_FOLDER || process.cwd());
+
+    Cli.log('Looking in folder: ' + tests.getTestsFolder() + "\n");
+    if (tests.foundTestSuites()) {
+        Cli.log('Found these test suites:');
+        Cli.list(tests.getSuiteNames());
+        Cli.log("\n");
+        Cli.exit(0);
     }
     else {
-        log("Did not find any tests.\n");
-        exit(2);
+        Cli.log("Did not find any tests.\n");
+        Cli.exit(2);
     }
 }
 /**
  * RUN TEST SUITES
  */
-else if (process.env.COMMAND == 'run') {
-    printHeader();
+else if (process.env.FLAGPOLE_COMMAND == 'run') {
+    let tests: Tests = new Tests(process.env.FLAGPOLE_TESTS_FOLDER || process.cwd());
+
     // Run a specific test suites
     if (argv.suite) {
-        // First get all test suites that we found or error
-        let testSuites: Array<TestSuiteFile> = [];
-        argv.suite.forEach(function(suiteName) {
-            let testSuite: TestSuiteFile|undefined = getTestByName(suiteName);
-            if (testSuite) {
-                testSuites.push(testSuite);
-            }
-            else {
-                log('Could not find test suite: ' + suiteName + "\n");
-                exit(3);
-            }
-        });
-        // Now loop through those suites
-        testSuites.forEach(function(testSuite: TestSuiteFile) {
-            runTestFile(testSuite.filePath);
-        });
+        // Do all of these test suites requested actually exist?
+        let notExists: string|null = tests.getAnyTestSuitesNotFound(argv.suite)
+        if (notExists !== null) {
+            Cli.log('Test suite not found: ' + notExists);
+            Cli.exit(1);
+        }
     }
-    // Run all matching test suites
-    else {
-        // Loop through first and just add them to make sure we are tracking it (avoid race conditions)
-        tests.forEach(function(test) {
-            onTestStart(test.filePath);
-        });
-        // Now loop through again to actually run them
-        tests.forEach(function(test) {
-            runTestFile(test.filePath);
-        });
+
+    // Apply filters
+    tests.filterTestSuitesByName(argv.suite);
+
+    // If no matching tests found to run
+    if (!tests.foundTestSuites()) {
+        Cli.log("Did not find any tests to run.\n");
+        Cli.exit(2);
     }
+
+    // Run them doggies
+    tests.runAll();
+
 }
 

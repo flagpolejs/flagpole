@@ -1,4 +1,4 @@
-let Flagpole = require('../../dist/index.js').Flagpole;
+let Flagpole = require('../dist/index.js').Flagpole;
 
 Flagpole.Suite('iTunes API Tests')
     .base('https://itunes.apple.com')
