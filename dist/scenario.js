@@ -31,7 +31,7 @@ class Scenario {
         return (this.failures.length > 0);
     }
     passed() {
-        return !!(this.passes.length > 0 && this.end && this.failures.length == 0);
+        return !!(this.end && this.failures.length == 0);
     }
     timeout(timeout) {
         this.options.timeout = timeout;

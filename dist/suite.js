@@ -26,7 +26,7 @@ class Suite {
     print() {
         index_1.Flagpole.heading(this.title);
         index_1.Flagpole.message('» Base URL: ' + this.baseUrl);
-        index_1.Flagpole.message('» Environment: ' + process.env.ENV);
+        index_1.Flagpole.message('» Environment: ' + process.env.FLAGPOLE_ENV);
         index_1.Flagpole.message('» Took ' + this.getDuration() + "ms\n");
         let color = this.passed() ? "\x1b[32m" : "\x1b[31m";
         index_1.Flagpole.message('» Passed? ' + (this.passed() ? 'Yes' : 'No') + "\n", color);

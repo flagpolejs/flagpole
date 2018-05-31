@@ -34,7 +34,11 @@ export class Flagpole {
      * @constructor
      */
     static Suite(title: string): Suite {
-        return new Suite(title);
+        let suite: Suite = new Suite(title);
+        if (typeof process.env.FLAGPOLE_BASE_DOMAIN !== 'undefined') {
+            suite.base(String(process.env.FLAGPOLE_BASE_DOMAIN));
+        }
+        return suite;
     }
 
     /**

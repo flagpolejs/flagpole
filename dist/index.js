@@ -5,7 +5,11 @@ const suite_1 = require("./suite");
 let cheerio = require('cheerio');
 class Flagpole {
     static Suite(title) {
-        return new suite_1.Suite(title);
+        let suite = new suite_1.Suite(title);
+        if (typeof process.env.FLAGPOLE_BASE_DOMAIN !== 'undefined') {
+            suite.base(String(process.env.FLAGPOLE_BASE_DOMAIN));
+        }
+        return suite;
     }
     static heading(message) {
         let length = Math.max(message.length + 10, 50), padding = (length - message.length) / 2;

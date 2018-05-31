@@ -87,6 +87,11 @@ if (fs.existsSync(process.env.FLAGPOLE_CONFIG_PATH)) {
             process.env.FLAGPOLE_PATH = cli_helper_1.Cli.normalizePath(configDir + config.path);
         }
     }
+    if (config.hasOwnProperty('base')) {
+        if (config.base.hasOwnProperty(process.env.FLAGPOLE_ENV)) {
+            process.env.FLAGPOLE_BASE_DOMAIN = config.base[String(process.env.FLAGPOLE_ENV)];
+        }
+    }
 }
 else if (argv.c) {
     cli_helper_1.Cli.log("The config file you specified did not exist.\n");

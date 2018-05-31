@@ -54,7 +54,7 @@ export class Scenario {
      * @returns {boolean}
      */
     public passed(): boolean {
-        return !!(this.passes.length > 0 && this.end && this.failures.length == 0);
+        return !!(this.end && this.failures.length == 0);
     }
 
     /**
