@@ -521,4 +521,29 @@ Ahhh... I threw a new one on you! There is a skip method for scenarios. This wil
 
 ## More Advanced Topics
 
-...
+Let's say you want to loop through every item in an array of elements and make sure it passes. But you don't really want to do an each() method and make assertions because then you'll have SO MANY assertions in your report. You just want one line in the tests and make sure they all pass. 
+
+```javascript
+let results = response.select('results');
+results.label('Make sure every track is type music video.');
+results.every(function(track) {
+    return track.property('kind').toString() == 'music-video';
+});
+```
+
+They key here is we are NOT making assertions in the every function callbacks. We are evaluating the result ourselves and returning true or false. If it meets the criteria return true, if not return false. So don't try to rely on an assertion method, use get() or toString() to get values and evaluate them yourself. 
+
+If every loop over that array returns true, then the test passes. Notice that before it we put a label() method to set the pass/fail message. This is optional but will make your assertion log make more sense if you put a descriptive label of what you are testing for.
+
+Similar to that, maybe we just want to test that AT LEAST ONE in the array passes. That's what some() is for.
+
+```javascript
+let results = response.select('results');
+results.label('Make sure at least one track is a music video');
+results.some(function(track) {
+    return track.property('kind').toString() == 'music-video';
+});
+```
+
+Works the same way, except the assertion passes if at least one returns true.
+

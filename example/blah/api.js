@@ -23,10 +23,12 @@ Flagpole.Suite('iTunes API Tests')
         firstTrack.property('artworkUrl100').matches(/mzstatic\.com.+100x100bb\.jpg$/);
 
         results.comment('Loop through each result element');
-        results.each(function(track) {
-            track.property('trackId').is('number');
-            track.property('kind').equals('music-video');
+        results.label('Make sure every track is type music video.');
+        results.every(function(track) {
+            return track.property('kind').toString() == 'music-video';
         });
+
+        resultCount.text();
 
     });
 

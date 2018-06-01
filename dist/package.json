@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "0.5.14",
+  "version": "0.5.16",
   "description": "Simple and fast DOM integration and REST API testing framework.",
   "keywords": [
     "qa",
@@ -14,7 +14,8 @@
     "json",
     "endpoint",
     "html",
-    "node"
+    "node",
+    "automation"
   ],
   "main": "./index.js",
   "homepage": "https://github.com/flocasts/flagpole",

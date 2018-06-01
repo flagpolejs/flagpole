@@ -9,6 +9,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
     protected url: string;
     protected response: SimplifiedResponse;
     protected flipAssertion: boolean = false;
+    protected ignoreAssertion: boolean = false;
     private _lastElement: Element;
 
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
@@ -20,15 +21,21 @@ export abstract class GenericRequest  implements iResponse, iProperty {
 
     /**
      * Assert something is true, with respect to the flipped not()
+     * Also respect ignore assertions flag
      *
      * @param {boolean} statement
-     * @returns {boolean}
+     * @param passMessage
+     * @param failMessage
+     * @returns {iResponse}
      */
     public assert(statement: boolean, passMessage, failMessage): iResponse {
-        (this.flipAssertion ? !statement : !!statement) ?
-            this.scenario.pass(this.flipAssertion ? 'NOT: ' + passMessage : passMessage) :
-            this.scenario.fail(this.flipAssertion ? 'NOT: ' + failMessage : failMessage);
-        return this.reset();
+        if (!this.ignoreAssertion) {
+            (this.flipAssertion ? !statement : !!statement) ?
+                this.scenario.pass(this.flipAssertion ? 'NOT: ' + passMessage : passMessage) :
+                this.scenario.fail(this.flipAssertion ? 'NOT: ' + failMessage : failMessage);
+            return this.reset();
+        }
+        return this;
     }
 
     /**
@@ -38,6 +45,26 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      */
     protected reset(): iResponse {
         this.flipAssertion = false;
+        return this;
+    }
+
+    /**
+     * Just skip any assertions until further notice
+     *
+     * @returns {iResponse}
+     */
+    public startIgnoringAssertions(): iResponse {
+        this.ignoreAssertion = true;
+        return this;
+    }
+
+    /**
+     * Okay pay attention to assertions again
+     *
+     * @returns {iResponse}
+     */
+    public stopIgnoringAssertions(): iResponse {
+        this.ignoreAssertion = false;
         return this;
     }
 
@@ -256,6 +283,24 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      */
     public each(callback: Function): iResponse {
         return this.lastElement().each(callback);
+    }
+
+    /**
+     *
+     * @param {Function} callback
+     * @returns {iResponse}
+     */
+    public some(callback: Function): iResponse {
+        return this.lastElement().some(callback);
+    }
+
+    /**
+     *
+     * @param {Function} callback
+     * @returns {iResponse}
+     */
+    public every(callback: Function): iResponse {
+        return this.lastElement().every(callback);
     }
 
     /**

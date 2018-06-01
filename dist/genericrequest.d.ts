@@ -6,10 +6,13 @@ export declare abstract class GenericRequest implements iResponse, iProperty {
     protected url: string;
     protected response: SimplifiedResponse;
     protected flipAssertion: boolean;
+    protected ignoreAssertion: boolean;
     private _lastElement;
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse);
     assert(statement: boolean, passMessage: any, failMessage: any): iResponse;
     protected reset(): iResponse;
+    startIgnoringAssertions(): iResponse;
+    stopIgnoringAssertions(): iResponse;
     not(): iResponse;
     lastElement(property?: Element): Element;
     get(): any;
@@ -32,6 +35,8 @@ export declare abstract class GenericRequest implements iResponse, iProperty {
     replace(search: string | RegExp, replace: string): Value;
     is(type: string): iResponse;
     each(callback: Function): iResponse;
+    some(callback: Function): iResponse;
+    every(callback: Function): iResponse;
     exists(): iResponse;
     parseInt(): Value;
     parseFloat(): Value;

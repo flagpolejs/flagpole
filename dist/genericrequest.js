@@ -4,19 +4,31 @@ const property_1 = require("./property");
 class GenericRequest {
     constructor(scenario, url, response) {
         this.flipAssertion = false;
+        this.ignoreAssertion = false;
         this.scenario = scenario;
         this.url = url;
         this.response = response;
         this._lastElement = new property_1.Element(this, 'Empty Element', []);
     }
     assert(statement, passMessage, failMessage) {
-        (this.flipAssertion ? !statement : !!statement) ?
-            this.scenario.pass(this.flipAssertion ? 'NOT: ' + passMessage : passMessage) :
-            this.scenario.fail(this.flipAssertion ? 'NOT: ' + failMessage : failMessage);
-        return this.reset();
+        if (!this.ignoreAssertion) {
+            (this.flipAssertion ? !statement : !!statement) ?
+                this.scenario.pass(this.flipAssertion ? 'NOT: ' + passMessage : passMessage) :
+                this.scenario.fail(this.flipAssertion ? 'NOT: ' + failMessage : failMessage);
+            return this.reset();
+        }
+        return this;
     }
     reset() {
         this.flipAssertion = false;
+        return this;
+    }
+    startIgnoringAssertions() {
+        this.ignoreAssertion = true;
+        return this;
+    }
+    stopIgnoringAssertions() {
+        this.ignoreAssertion = false;
         return this;
     }
     not() {
@@ -102,6 +114,12 @@ class GenericRequest {
     }
     each(callback) {
         return this.lastElement().each(callback);
+    }
+    some(callback) {
+        return this.lastElement().some(callback);
+    }
+    every(callback) {
+        return this.lastElement().every(callback);
     }
     exists() {
         return this.lastElement().exists();

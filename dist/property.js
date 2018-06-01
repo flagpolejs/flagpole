@@ -155,6 +155,84 @@ class Property {
         }
         return this.response;
     }
+    every(callback) {
+        let name = this.name;
+        let response = this.response;
+        let every = true;
+        this.response.startIgnoringAssertions();
+        if (index_1.Flagpole.toType(this.obj) == 'cheerio') {
+            this.obj.each(function (index, el) {
+                el = $(el);
+                let element = new Element(response, name + '[' + index + ']', el);
+                response.lastElement(element);
+                if (!callback(element)) {
+                    every = false;
+                }
+            });
+        }
+        else if (index_1.Flagpole.toType(this.obj) == 'array') {
+            every = this.obj.every(function (el, index) {
+                let element = new Element(response, name + '[' + index + ']', el);
+                response.lastElement(element);
+                return callback(element);
+            });
+        }
+        else if (index_1.Flagpole.toType(this.obj) == 'object') {
+            let obj = this.obj;
+            every = this.obj.keys().every(function (key) {
+                let element = new Element(response, name + '[' + key + ']', obj[key]);
+                response.lastElement(element);
+                return callback(element);
+            });
+        }
+        else if (index_1.Flagpole.toType(this.obj) == 'string') {
+            every = this.obj.toString().trim().split(' ').every(function (word, index) {
+                let value = new Value(response, name + '[' + index + ']', word);
+                return callback(value);
+            });
+        }
+        this.response.stopIgnoringAssertions();
+        return this.assert(every, 'Every ' + this.name + ' passed', 'Every ' + this.name + ' did not pass');
+    }
+    some(callback) {
+        let name = this.name;
+        let response = this.response;
+        let some = false;
+        this.response.startIgnoringAssertions();
+        if (index_1.Flagpole.toType(this.obj) == 'cheerio') {
+            this.obj.each(function (index, el) {
+                el = $(el);
+                let element = new Element(response, name + '[' + index + ']', el);
+                response.lastElement(element);
+                if (callback(element)) {
+                    some = true;
+                }
+            });
+        }
+        else if (index_1.Flagpole.toType(this.obj) == 'array') {
+            some = this.obj.some(function (el, index) {
+                let element = new Element(response, name + '[' + index + ']', el);
+                response.lastElement(element);
+                return callback(element);
+            });
+        }
+        else if (index_1.Flagpole.toType(this.obj) == 'object') {
+            let obj = this.obj;
+            some = this.obj.keys().some(function (key) {
+                let element = new Element(response, name + '[' + key + ']', obj[key]);
+                response.lastElement(element);
+                return callback(element);
+            });
+        }
+        else if (index_1.Flagpole.toType(this.obj) == 'string') {
+            some = this.obj.toString().trim().split(' ').some(function (word, index) {
+                let value = new Value(response, name + '[' + index + ']', word);
+                return callback(value);
+            });
+        }
+        this.response.stopIgnoringAssertions();
+        return this.assert(some, 'Some ' + this.name + ' passed', 'No ' + this.name + ' passed');
+    }
     exists() {
         let exists = false;
         if (index_1.Flagpole.toType(this.obj) == 'cheerio') {

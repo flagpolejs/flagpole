@@ -10,6 +10,8 @@ export interface iResponse {
     comment(message: string): iResponse;
     headers(key?: string): Value;
     not(): iResponse;
+    startIgnoringAssertions(): iResponse;
+    stopIgnoringAssertions(): iResponse;
     assert(statement: boolean, passMessage: string, failMessage: string): iResponse;
     readonly scenario: Scenario;
 }

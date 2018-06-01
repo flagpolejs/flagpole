@@ -19,6 +19,8 @@ export interface iProperty {
     label(message: string): iResponse;
     comment(message: string): iResponse;
     each(callback: Function): iResponse;
+    some(callback: Function): iResponse;
+    every(callback: Function): iResponse;
     assert(statement: boolean, passMessage: string, failMessage: string): iResponse;
     exists(): iResponse;
     is(type: string): iResponse;
@@ -62,6 +64,8 @@ export declare abstract class Property implements iProperty {
     echo(): iProperty;
     typeof(): iProperty;
     each(callback: Function): iResponse;
+    every(callback: Function): iResponse;
+    some(callback: Function): iResponse;
     exists(): iResponse;
     parseInt(): Value;
     parseFloat(): Value;

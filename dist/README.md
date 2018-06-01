@@ -8,6 +8,116 @@ It is created as a quick way to run smoke or integration tests against an applic
 
 Flagpole is also suitable for testing REST API frameworks, currently only supporting JSON format. We don't have plans currently to add support for XML or SOAP formats, because they suck. But hey if you want to add it, that wouldn't be too hard!
 
+## Getting Started
+
+First thing we need to do is install Flagpole with npm. Go into the root of your project and run this:
+
+```bash
+npm i -g flagpole
+npm i flagpole
+```
+
+The above command installs it both locally (within the project) and globally. This is a little annoying that we have to do both. But we do. Globally is so that the command "flagpole" will run. The second one is so that your test suites can find it.
+
+You should be able to run the flagpole command now, which will give you instructions on how to use the CLI.
+
+```bash
+flagpole
+```
+
+Pretty colors, eh?
+
+Now we need a folder to put our tests in. So create one. Let's just call it tests for now.
+
+```bash
+mkdir tests
+```
+
+Let's create an empty test file just so we can see something work quickly.
+
+```bash
+touch tests/hello.js
+```
+
+Now run flagpole and point it at that folder to list the test suites in it. Like this:
+
+```bash
+flagpole list -p tests/
+```
+
+Let's create a config file now, so we don't have to pass in the path parameter.
+
+```bash
+touch flagpole.json
+```
+
+Now open that file in your favorite editor and put this in it and save:
+
+```json
+{
+    "path": "tests/"
+}
+```
+
+Now run the command again with no path argument.
+
+```bash
+flagpole list
+```
+
+Sweet! How about we actually do something with the test now and run it. So open that hello.js file we created earlier in your editor and put this in it:
+
+```typescript
+import { Flagpole } from 'flagpole'
+
+Flagpole.Suite('Hello World').base('https://www.flosports.tv')
+
+    .Scenario('Just getting a test to run').open('/')
+    .assertions(function(response) {
+        response.status().equals(200);
+    });
+```
+
+Now run the flagpole run command, like so...
+
+```bash
+flagpole run
+```
+
+And if we did everything right, then you should see something like:
+
+```text
+
+     $$$$$$$$\ $$\                                         $$\           
+     $$  _____|$$ |                                        $$ |          
+     $$ |      $$ | $$$$$$\   $$$$$$\   $$$$$$\   $$$$$$\  $$ | $$$$$$\  
+     $$$$$\    $$ | \____$$\ $$  __$$\ $$  __$$\ $$  __$$\ $$ |$$  __$$\ 
+     $$  __|   $$ | $$$$$$$ |$$ /  $$ |$$ /  $$ |$$ /  $$ |$$ |$$$$$$$$ |
+     $$ |      $$ |$$  __$$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |$$   ____|
+     $$ |      $$ |\$$$$$$$ |\$$$$$$$ |$$$$$$$  |\$$$$$$  |$$ |\$$$$$$$\ 
+     \__|      \__| \_______| \____$$ |$$  ____/  \______/ \__| \_______|
+                             $$\   $$ |$$ |                              
+                             \$$$$$$  |$$ |                              
+                              \______/ \__|  
+
+ ================================================== 
+                    HELLO WORLD                    
+ ================================================== 
+ » Base URL: http://www.flosports.tv 
+ » Environment: dev 
+ » Took 1383ms
+ 
+ » Passed? Yes
+ 
+ Just getting a test to run 
+   ✔  Loaded HTML Page / 
+   ✔  HTTP Status equals 200 
+   » Took 1382ms
+
+```
+
+That's it! Now start learning more and writing tests!
+
 ## QA Terminology
 
 **Group** A group of suites, which is within Flagpole defined just by grouping suites into subfolders of the tests folder.
@@ -340,7 +450,100 @@ flagpole run -g flotrack
 
 flagpole run -s basic/smoke
 
+**Run tests and specify a config file**
+
+flagpole run -c path/to/config.json
+
+**Having trouble? Run it with additional debug info**
+
+flagpole list --debug
+
+## Using a config file
+
+By default Flagpole will look for a file called flagpole.json in the path supplied as a command line parameter, or (if no path argument was provided) in the current working directory.
+
+In that file, you can specify a couple of things:
+
+```javascript
+
+{
+  "path": "test/flagpole",
+  "base": {
+    "dev": "http://www.mysite.local",
+    "staging": "http://staging.mysite.com",
+    "prod": "http://www.mysite.com"
+  }
+}
+```
+
+The path setting will set the default path of where to look for tests. You can override this with the path argument in the command line. However, this makes it so you can place the config file in the base of your project (or where ever you intend to run it from) and it will know where your tests are without you having to tell it.
+
+The base setting is to define the base domain where the tests will start from, with respect to the environment (which is set as a command line argument).
+
+So rather than having to specify the base method in each test suite, just set it once in the config.
+
+I'm sure we'll add more config options as the need arises.
+
+## What about the things that Flagpole doesn't support??!
+
+Well at the end of the data, you're just writing JavaScript (or TypeScript). So you can usually do the thing that you think the framework can't do yourself!
+
+There is a plain old assert() method you can do to create your own assertions. So let's say you want to test if something is an even number but you're all "Flagpole don't have an assertEvent() method!!!" Well do it your own dang self:
+
+```typescript
+let someNumber: number = response.select('#something span.num').parseInt().get();
+response.assert(someNumber % 2 == 0, "Yay! It's even! :-)", "Boo! It's odd. :-(");
+```
+
+Also if you want to conditionally run tests or not within a given scenario you can do that. You don't need our help to do that, bro.
+
+```javascript
+if (someNumber % 2 == 0) {
+    response.select('div.thisThing').text().similarTo('foo');
+}
+else {
+    response.select('div.thatOtherThing').text().similarTo('bar');
+}
+```
+
+Or if you want to run a whole scenario conditionally, cool. So use the technique we outlined above to not run a scenario at first. Either by not (yet) setting the URL to open or by setting wait() on it. Let's assume we put wait() on otherScenario below.
+
+```javascript
+if (someNumber % 2 == 0) {
+    otherScenario.execute();
+}
+else {
+    otherScenario.skip();
+}
+```
+
+Ahhh... I threw a new one on you! There is a skip method for scenarios. This will not execute any of the assertions in it, but it will mark it as completed and your suite can pass without running this scenario.
 
 ## More Advanced Topics
 
-...
+Let's say you want to loop through every item in an array of elements and make sure it passes. But you don't really want to do an each() method and make assertions because then you'll have SO MANY assertions in your report. You just want one line in the tests and make sure they all pass. 
+
+```javascript
+let results = response.select('results');
+results.label('Make sure every track is type music video.');
+results.every(function(track) {
+    return track.property('kind').toString() == 'music-video';
+});
+```
+
+They key here is we are NOT making assertions in the every function callbacks. We are evaluating the result ourselves and returning true or false. If it meets the criteria return true, if not return false. So don't try to rely on an assertion method, use get() or toString() to get values and evaluate them yourself. 
+
+If every loop over that array returns true, then the test passes. Notice that before it we put a label() method to set the pass/fail message. This is optional but will make your assertion log make more sense if you put a descriptive label of what you are testing for.
+
+Similar to that, maybe we just want to test that AT LEAST ONE in the array passes. That's what some() is for.
+
+```javascript
+let results = response.select('results');
+results.label('Make sure at least one track is a music video');
+results.some(function(track) {
+    return track.property('kind').toString() == 'music-video';
+});
+```
+
+Works the same way, except the assertion passes if at least one returns true.
+

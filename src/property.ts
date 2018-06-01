@@ -23,6 +23,8 @@ export interface iProperty {
     label(message: string): iResponse
     comment(message: string): iResponse
     each(callback: Function): iResponse
+    some(callback: Function): iResponse
+    every(callback: Function): iResponse
     assert(statement: boolean, passMessage: string, failMessage: string): iResponse
     exists(): iResponse
     is(type: string): iResponse
@@ -355,6 +357,104 @@ export abstract class Property implements iProperty {
             });
         }
         return this.response;
+    }
+
+    /**
+     * Loops through the element and expects the return from every callback to be true
+     *
+     * @param {Function} callback
+     * @returns {iResponse}
+     */
+    public every(callback: Function): iResponse {
+        let name: string = this.name;
+        let response: iResponse = this.response;
+        let every: boolean = true;
+        this.response.startIgnoringAssertions();
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            this.obj.each(function(index, el) {
+                el = $(el);
+                let element: Element = new Element(response, name + '[' + index + ']', el);
+                response.lastElement(element);
+                if (!callback(element)) {
+                    every = false;
+                }
+            });
+        }
+        else if (Flagpole.toType(this.obj) == 'array') {
+            every = this.obj.every(function(el, index) {
+                let element: Element = new Element(response, name + '[' + index + ']', el);
+                response.lastElement(element);
+                return callback(element);
+            });
+        }
+        else if (Flagpole.toType(this.obj) == 'object') {
+            let obj: {} = this.obj;
+            every = this.obj.keys().every(function(key) {
+                let element: Element = new Element(response, name + '[' + key + ']', obj[key]);
+                response.lastElement(element);
+                return callback(element);
+            });
+        }
+        else if (Flagpole.toType(this.obj) == 'string') {
+            every = this.obj.toString().trim().split(' ').every(function(word, index) {
+                let value: Value = new Value(response, name + '[' + index + ']', word);
+                return callback(value);
+            });
+        }
+        this.response.stopIgnoringAssertions();
+        return this.assert(every,
+            'Every ' + this.name + ' passed',
+            'Every ' + this.name + ' did not pass'
+        );
+    }
+
+    /**
+     * Loops through the element and expects the return from every callback to be true
+     *
+     * @param {Function} callback
+     * @returns {iResponse}
+     */
+    public some(callback: Function): iResponse {
+        let name: string = this.name;
+        let response: iResponse = this.response;
+        let some: boolean = false;
+        this.response.startIgnoringAssertions();
+        if (Flagpole.toType(this.obj) == 'cheerio') {
+            this.obj.each(function(index, el) {
+                el = $(el);
+                let element: Element = new Element(response, name + '[' + index + ']', el);
+                response.lastElement(element);
+                if (callback(element)) {
+                    some = true;
+                }
+            });
+        }
+        else if (Flagpole.toType(this.obj) == 'array') {
+            some = this.obj.some(function(el, index) {
+                let element: Element = new Element(response, name + '[' + index + ']', el);
+                response.lastElement(element);
+                return callback(element);
+            });
+        }
+        else if (Flagpole.toType(this.obj) == 'object') {
+            let obj: {} = this.obj;
+            some = this.obj.keys().some(function(key) {
+                let element: Element = new Element(response, name + '[' + key + ']', obj[key]);
+                response.lastElement(element);
+                return callback(element);
+            });
+        }
+        else if (Flagpole.toType(this.obj) == 'string') {
+            some = this.obj.toString().trim().split(' ').some(function(word, index) {
+                let value: Value = new Value(response, name + '[' + index + ']', word);
+                return callback(value);
+            });
+        }
+        this.response.stopIgnoringAssertions();
+        return this.assert(some,
+            'Some ' + this.name + ' passed',
+            'No ' + this.name + ' passed'
+        );
     }
 
     /**
