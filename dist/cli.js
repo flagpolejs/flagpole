@@ -14,7 +14,8 @@ let argv = require('yargs')
     'g': 'group',
     'p': 'path',
     'e': 'env',
-    'c': 'config'
+    'c': 'config',
+    'd': 'debug'
 })
     .describe({
     'g': 'Filter only a group of test suites in this subfolder',
@@ -27,6 +28,7 @@ let argv = require('yargs')
     .string('g')
     .string('p')
     .string('e')
+    .boolean('d')
     .default('e', function () {
     return 'dev';
 }, 'dev')
@@ -71,26 +73,11 @@ if (argv.p) {
     }
 }
 process.env.FLAGPOLE_CONFIG_PATH = (argv.c || process.env.FLAGPOLE_PATH + 'flagpole.json');
-let config = {};
-if (fs.existsSync(process.env.FLAGPOLE_CONFIG_PATH)) {
-    let contents = fs.readFileSync(process.env.FLAGPOLE_CONFIG_PATH);
-    let configDir = cli_helper_1.Cli.normalizePath(require('path').dirname(process.env.FLAGPOLE_CONFIG_PATH));
-    config = JSON.parse(contents);
-    if (config.hasOwnProperty('path')) {
-        if (/^\//.test(config.path)) {
-            process.env.FLAGPOLE_PATH = cli_helper_1.Cli.normalizePath(config.path);
-        }
-        else if (config.path == '.') {
-            process.env.FLAGPOLE_PATH = cli_helper_1.Cli.normalizePath(configDir);
-        }
-        else {
-            process.env.FLAGPOLE_PATH = cli_helper_1.Cli.normalizePath(configDir + config.path);
-        }
-    }
-    if (config.hasOwnProperty('base')) {
-        if (config.base.hasOwnProperty(process.env.FLAGPOLE_ENV)) {
-            process.env.FLAGPOLE_BASE_DOMAIN = config.base[String(process.env.FLAGPOLE_ENV)];
-        }
+let config = cli_helper_1.Cli.parseConfigFile(String(process.env.FLAGPOLE_CONFIG_PATH));
+if (config.isValid()) {
+    process.env.FLAGPOLE_PATH = config.testsPath;
+    if (config.envBase.hasOwnProperty(String(process.env.FLAGPOLE_ENV))) {
+        process.env.FLAGPOLE_BASE_DOMAIN = config.envBase[String(process.env.FLAGPOLE_ENV)];
     }
 }
 else if (argv.c) {
@@ -103,9 +90,52 @@ process.env.FLAGPOLE_TESTS_FOLDER = (function () {
     path = cli_helper_1.Cli.normalizePath(path);
     return path + group;
 })();
+if (argv.d) {
+    cli_helper_1.Cli.log('DEBUG INFO');
+    cli_helper_1.Cli.log('');
+    cli_helper_1.Cli.log('Config File:');
+    cli_helper_1.Cli.list([
+        'Path: ' + process.env.FLAGPOLE_CONFIG_PATH,
+        'Status: ' + (config.isValid() ? 'Loaded' : 'Not Found')
+    ]);
+    if (config.isValid()) {
+        cli_helper_1.Cli.log('Config Values:');
+        cli_helper_1.Cli.list([
+            'Config file directory: ' + config.configDir,
+            'Tests directory: ' + config.testsPath
+        ]);
+        if (config.envBase.length) {
+            cli_helper_1.Cli.log('Base Domains by Environment:');
+            let envBase = [];
+            for (let key in config.envBase) {
+                envBase.push(key + ': ' + config.envBase[key]);
+            }
+            cli_helper_1.Cli.list(envBase);
+        }
+    }
+    cli_helper_1.Cli.log('');
+    cli_helper_1.Cli.log('Command Line Arguments:');
+    cli_helper_1.Cli.list([
+        'Environment: ' + argv.e,
+        'Group: ' + argv.g,
+        'Suite: ' + argv.s.join(', '),
+        'Path: ' + argv.p,
+        'Config: ' + argv.c,
+        'Debug: ' + argv.d
+    ]);
+    cli_helper_1.Cli.log('');
+    cli_helper_1.Cli.log('Other settings:');
+    cli_helper_1.Cli.list([
+        'Environment: ' + process.env.FLAGPOLE_ENV,
+        'Path: ' + process.env.FLAGPOLE_PATH,
+        'Base Domain: ' + process.env.FLAGPOLE_BASE_DOMAIN,
+    ]);
+    cli_helper_1.Cli.log('');
+}
 if (process.env.FLAGPOLE_COMMAND == 'list') {
     let tests = new cli_helper_1.Tests(process.env.FLAGPOLE_TESTS_FOLDER || process.cwd());
-    cli_helper_1.Cli.log('Looking in folder: ' + tests.getTestsFolder() + "\n");
+    cli_helper_1.Cli.log('Looking in folder: ' + tests.getTestsFolder());
+    cli_helper_1.Cli.log('');
     if (tests.foundTestSuites()) {
         cli_helper_1.Cli.log('Found these test suites:');
         cli_helper_1.Cli.list(tests.getSuiteNames());

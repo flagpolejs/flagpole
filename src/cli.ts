@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-import { Cli, Tests, TestSuiteFile } from "./cli-helper";
+import { Cli, Tests, FlagpoleConfig } from "./cli-helper";
 
 let fs = require('fs');
 
@@ -18,7 +18,8 @@ let argv = require('yargs')
         'g': 'group',
         'p': 'path',
         'e': 'env',
-        'c': 'config'
+        'c': 'config',
+        'd': 'debug'
     })
     .describe({
         'g': 'Filter only a group of test suites in this subfolder',
@@ -31,6 +32,7 @@ let argv = require('yargs')
     .string('g')
     .string('p')
     .string('e')
+    .boolean('d')
     .default('e', function() {
         return 'dev';
     }, 'dev')
@@ -92,30 +94,12 @@ if (argv.p) {
  * Read the config file in the path
  */
 process.env.FLAGPOLE_CONFIG_PATH = (argv.c || process.env.FLAGPOLE_PATH + 'flagpole.json');
-let config: any = {};
 // If we found a config file at this path
-if (fs.existsSync(process.env.FLAGPOLE_CONFIG_PATH)) {
-    let contents = fs.readFileSync(process.env.FLAGPOLE_CONFIG_PATH);
-    let configDir: string = Cli.normalizePath(require('path').dirname(process.env.FLAGPOLE_CONFIG_PATH));
-    config = JSON.parse(contents);
-    if (config.hasOwnProperty('path')) {
-        // If path is absolute
-        if (/^\//.test(config.path)) {
-            process.env.FLAGPOLE_PATH = Cli.normalizePath(config.path);
-        }
-        // If path just says current directory
-        else if (config.path == '.') {
-            process.env.FLAGPOLE_PATH = Cli.normalizePath(configDir);
-        }
-        // Path is relative
-        else {
-            process.env.FLAGPOLE_PATH = Cli.normalizePath(configDir + config.path);
-        }
-    }
-    if (config.hasOwnProperty('base')) {
-        if (config.base.hasOwnProperty(process.env.FLAGPOLE_ENV)) {
-            process.env.FLAGPOLE_BASE_DOMAIN = config.base[String(process.env.FLAGPOLE_ENV)];
-        }
+let config: FlagpoleConfig = Cli.parseConfigFile(String(process.env.FLAGPOLE_CONFIG_PATH));
+if (config.isValid()) {
+    process.env.FLAGPOLE_PATH = config.testsPath;
+    if (config.envBase.hasOwnProperty(String(process.env.FLAGPOLE_ENV))) {
+        process.env.FLAGPOLE_BASE_DOMAIN = config.envBase[String(process.env.FLAGPOLE_ENV)];
     }
 }
 // If they specified a command line config that doesn't exist
@@ -137,13 +121,61 @@ process.env.FLAGPOLE_TESTS_FOLDER = (function() {
     return path + group;
 })();
 
+
+/**
+ * Include debug information
+ */
+if (argv.d) {
+    Cli.log('DEBUG INFO');
+    Cli.log('');
+    Cli.log('Config File:');
+    Cli.list([
+        'Path: ' + process.env.FLAGPOLE_CONFIG_PATH,
+        'Status: ' + (config.isValid() ? 'Loaded' : 'Not Found')
+    ]);
+    if (config.isValid()) {
+        Cli.log('Config Values:');
+        Cli.list([
+            'Config file directory: ' + config.configDir,
+            'Tests directory: ' + config.testsPath
+        ]);
+        if (config.envBase.length) {
+            Cli.log('Base Domains by Environment:');
+            let envBase: Array<string> = [];
+            for (let key in config.envBase) {
+                envBase.push(key + ': ' + config.envBase[key]);
+            }
+            Cli.list(envBase);
+        }
+    }
+    Cli.log('');
+    Cli.log('Command Line Arguments:')
+    Cli.list([
+        'Environment: ' + argv.e,
+        'Group: ' + argv.g,
+        'Suite: ' + argv.s.join(', '),
+        'Path: ' + argv.p,
+        'Config: ' + argv.c,
+        'Debug: ' + argv.d
+    ]);
+    Cli.log('');
+    Cli.log('Other settings:')
+    Cli.list([
+        'Environment: ' + process.env.FLAGPOLE_ENV,
+        'Path: ' + process.env.FLAGPOLE_PATH,
+        'Base Domain: ' + process.env.FLAGPOLE_BASE_DOMAIN,
+    ]);
+    Cli.log('');
+}
+
 /**
  * LIST TEST SUITES
  */
 if (process.env.FLAGPOLE_COMMAND == 'list') {
     let tests: Tests = new Tests(process.env.FLAGPOLE_TESTS_FOLDER || process.cwd());
 
-    Cli.log('Looking in folder: ' + tests.getTestsFolder() + "\n");
+    Cli.log('Looking in folder: ' + tests.getTestsFolder());
+    Cli.log('');
     if (tests.foundTestSuites()) {
         Cli.log('Found these test suites:');
         Cli.list(tests.getSuiteNames());

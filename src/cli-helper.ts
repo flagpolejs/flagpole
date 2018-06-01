@@ -1,6 +1,7 @@
 
 let fs = require('fs');
 let exec = require('child_process').exec;
+let path = require('path');
 
 function printHeader() {
     console.log("\x1b[32m", "\n", `    \x1b[31m$$$$$$$$\\ $$\\                                         $$\\           
@@ -16,16 +17,30 @@ function printHeader() {
     \x1b[34m                          \\______/ \\__|`, "\x1b[0m", "\n");
 }
 
+export class FlagpoleConfig {
+
+    public configDir: string|undefined;
+    public testsPath: string|undefined;
+    public envBase: Array<{[s: string]: string;}> = [];
+
+    public isValid(): boolean {
+        return (typeof this.configDir !== 'undefined');
+    }
+
+}
+
 export class TestSuiteFile {
 
+    public rootTestsDir: string = '';
     public filePath: string = '';
     public fileName: string = '';
     public name: string = '';
 
-    constructor(dir: string, file: string) {
+    constructor(rootTestsDir: string, dir: string, file: string) {
+        this.rootTestsDir = rootTestsDir;
         this.filePath = dir + file;
         this.fileName = file;
-        this.name = dir.replace(String(process.env.TESTS_FOLDER), '') + file.split('.').slice(0, -1).join('.');
+        this.name = dir.replace(this.rootTestsDir, '') + file.split('.').slice(0, -1).join('.');
     }
 
 }
@@ -41,22 +56,24 @@ export class Tests {
         this.testsFolder = testsFolder = Cli.normalizePath(testsFolder);
 
         // Discover all test suites in the specified folder
+        let me: Tests = this;
         this.suites = (function(): Array<TestSuiteFile> {
 
             let tests: Array<TestSuiteFile> = [];
 
-            let findTests = function(dir) {
+            let findTests = function(dir: string, isSubFolder: boolean = false) {
                 // Does this folder exist?
                 if (fs.existsSync(dir)) {
                     // Read contents
                     let files = fs.readdirSync(dir);
                     files.forEach(function(file) {
-                        if (fs.statSync(dir + file).isDirectory()) {
-                            tests = findTests(dir + file + '/');
+                        // Drill into sub-folders, but only once!
+                        if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
+                            tests = findTests(dir + file + '/', true);
                         }
-                        // Push in any JS files, but without the extension
+                        // Push in any JS files
                         else if (file.match(/.js$/)) {
-                            tests.push(new TestSuiteFile(dir, file));
+                            tests.push(new TestSuiteFile(me.testsFolder, dir, file));
                         }
                     });
                 }
@@ -210,7 +227,9 @@ export class Cli {
     static consoleLog: Array<string> = [];
 
     static log(message: string) {
-        Cli.consoleLog.push(message.replace(/\n$/, ''));
+        if (typeof message !== 'undefined') {
+            Cli.consoleLog.push(message.replace(/\n$/, ''));
+        }
     }
 
     static list(list: Array<string>) {
@@ -232,6 +251,40 @@ export class Cli {
             path = (path.match(/\/$/) ? path : path + '/');
         }
         return path;
+    }
+
+    static parseConfigFile(configPath: string): FlagpoleConfig {
+        let config: FlagpoleConfig = new FlagpoleConfig();
+        // Does path exist?
+        if (configPath && fs.existsSync(configPath)) {
+            // Read the file
+            let configContent: string = fs.readFileSync(configPath);
+            let configDir: string = Cli.normalizePath(path.dirname(configPath));
+            let configData: any = JSON.parse(configContent) || {};
+            // Remember the config folder
+            config.configDir = configDir;
+            // Path to tests specified, then grab that
+            if (configData.hasOwnProperty('path')) {
+                // If path is absolute
+                if (/^\//.test(configData.path)) {
+                    config.testsPath = Cli.normalizePath(configData.path);
+                }
+                // If path just says current directory
+                else if (configData.path == '.') {
+                    config.testsPath = Cli.normalizePath(configDir);
+                }
+                // Path is relative
+                else {
+                    config.testsPath = Cli.normalizePath(configDir + configData.path);
+                }
+            }
+            // Look for base domain definition
+            if (configData.hasOwnProperty('base')) {
+                config.envBase = configData.base;
+            }
+            //console.log(config);
+        }
+        return config;
     }
 
 }

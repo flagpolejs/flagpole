@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 let fs = require('fs');
 let exec = require('child_process').exec;
+let path = require('path');
 function printHeader() {
     console.log("\x1b[32m", "\n", `    \x1b[31m$$$$$$$$\\ $$\\                                         $$\\           
     \x1b[31m $$  _____|$$ |                                        $$ |          
@@ -15,14 +16,25 @@ function printHeader() {
     \x1b[34m                         \\$$$$$$  |$$ |                              
     \x1b[34m                          \\______/ \\__|`, "\x1b[0m", "\n");
 }
+class FlagpoleConfig {
+    constructor() {
+        this.envBase = [];
+    }
+    isValid() {
+        return (typeof this.configDir !== 'undefined');
+    }
+}
+exports.FlagpoleConfig = FlagpoleConfig;
 class TestSuiteFile {
-    constructor(dir, file) {
+    constructor(rootTestsDir, dir, file) {
+        this.rootTestsDir = '';
         this.filePath = '';
         this.fileName = '';
         this.name = '';
+        this.rootTestsDir = rootTestsDir;
         this.filePath = dir + file;
         this.fileName = file;
-        this.name = dir.replace(String(process.env.TESTS_FOLDER), '') + file.split('.').slice(0, -1).join('.');
+        this.name = dir.replace(this.rootTestsDir, '') + file.split('.').slice(0, -1).join('.');
     }
 }
 exports.TestSuiteFile = TestSuiteFile;
@@ -31,17 +43,18 @@ class Tests {
         this.testSuiteStatus = {};
         this.suites = [];
         this.testsFolder = testsFolder = Cli.normalizePath(testsFolder);
+        let me = this;
         this.suites = (function () {
             let tests = [];
-            let findTests = function (dir) {
+            let findTests = function (dir, isSubFolder = false) {
                 if (fs.existsSync(dir)) {
                     let files = fs.readdirSync(dir);
                     files.forEach(function (file) {
-                        if (fs.statSync(dir + file).isDirectory()) {
-                            tests = findTests(dir + file + '/');
+                        if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
+                            tests = findTests(dir + file + '/', true);
                         }
                         else if (file.match(/.js$/)) {
-                            tests.push(new TestSuiteFile(dir, file));
+                            tests.push(new TestSuiteFile(me.testsFolder, dir, file));
                         }
                     });
                 }
@@ -160,7 +173,9 @@ class Tests {
 exports.Tests = Tests;
 class Cli {
     static log(message) {
-        Cli.consoleLog.push(message.replace(/\n$/, ''));
+        if (typeof message !== 'undefined') {
+            Cli.consoleLog.push(message.replace(/\n$/, ''));
+        }
     }
     static list(list) {
         list.forEach(function (message) {
@@ -180,6 +195,30 @@ class Cli {
             path = (path.match(/\/$/) ? path : path + '/');
         }
         return path;
+    }
+    static parseConfigFile(configPath) {
+        let config = new FlagpoleConfig();
+        if (configPath && fs.existsSync(configPath)) {
+            let configContent = fs.readFileSync(configPath);
+            let configDir = Cli.normalizePath(path.dirname(configPath));
+            let configData = JSON.parse(configContent) || {};
+            config.configDir = configDir;
+            if (configData.hasOwnProperty('path')) {
+                if (/^\//.test(configData.path)) {
+                    config.testsPath = Cli.normalizePath(configData.path);
+                }
+                else if (configData.path == '.') {
+                    config.testsPath = Cli.normalizePath(configDir);
+                }
+                else {
+                    config.testsPath = Cli.normalizePath(configDir + configData.path);
+                }
+            }
+            if (configData.hasOwnProperty('base')) {
+                config.envBase = configData.base;
+            }
+        }
+        return config;
     }
 }
 Cli.consoleLog = [];
