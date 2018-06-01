@@ -10,7 +10,113 @@ Flagpole is also suitable for testing REST API frameworks, currently only suppor
 
 ## Getting Started
 
-.... doing this next ...
+First thing we need to do is install Flagpole with npm. Go into the root of your project and run this:
+
+```bash
+npm i -g flagpole
+npm i flagpole
+```
+
+The above command installs it both locally (within the project) and globally. This is a little annoying that we have to do both. But we do. Globally is so that the command "flagpole" will run. The second one is so that your test suites can find it.
+
+You should be able to run the flagpole command now, which will give you instructions on how to use the CLI.
+
+```bash
+flagpole
+```
+
+Pretty colors, eh?
+
+Now we need a folder to put our tests in. So create one. Let's just call it tests for now.
+
+```bash
+mkdir tests
+```
+
+Let's create an empty test file just so we can see something work quickly.
+
+```bash
+touch tests/hello.js
+```
+
+Now run flagpole and point it at that folder to list the test suites in it. Like this:
+
+```bash
+flagpole list -p tests/
+```
+
+Let's create a config file now, so we don't have to pass in the path parameter.
+
+```bash
+touch flagpole.json
+```
+
+Now open that file in your favorite editor and put this in it and save:
+
+```json
+{
+    "path": "tests/"
+}
+```
+
+Now run the command again with no path argument.
+
+```bash
+flagpole list
+```
+
+Sweet! How about we actually do something with the test now and run it. So open that hello.js file we created earlier in your editor and put this in it:
+
+```typescript
+import { Flagpole } from 'flagpole'
+
+Flagpole.Suite('Hello World').base('https://www.flosports.tv')
+
+    .Scenario('Just getting a test to run').open('/')
+    .assertions(function(response) {
+        response.status().equals(200);
+    });
+```
+
+Now run the flagpole run command, like so...
+
+```bash
+flagpole run
+```
+
+And if we did everything right, then you should see something like:
+
+```text
+
+     $$$$$$$$\ $$\                                         $$\           
+     $$  _____|$$ |                                        $$ |          
+     $$ |      $$ | $$$$$$\   $$$$$$\   $$$$$$\   $$$$$$\  $$ | $$$$$$\  
+     $$$$$\    $$ | \____$$\ $$  __$$\ $$  __$$\ $$  __$$\ $$ |$$  __$$\ 
+     $$  __|   $$ | $$$$$$$ |$$ /  $$ |$$ /  $$ |$$ /  $$ |$$ |$$$$$$$$ |
+     $$ |      $$ |$$  __$$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |$$   ____|
+     $$ |      $$ |\$$$$$$$ |\$$$$$$$ |$$$$$$$  |\$$$$$$  |$$ |\$$$$$$$\ 
+     \__|      \__| \_______| \____$$ |$$  ____/  \______/ \__| \_______|
+                             $$\   $$ |$$ |                              
+                             \$$$$$$  |$$ |                              
+                              \______/ \__|  
+
+ ================================================== 
+                    HELLO WORLD                    
+ ================================================== 
+ » Base URL: http://www.flosports.tv 
+ » Environment: dev 
+ » Took 1383ms
+ 
+ » Passed? Yes
+ 
+ Just getting a test to run 
+   ✔  Loaded HTML Page / 
+   ✔  HTTP Status equals 200 
+   » Took 1382ms
+
+```
+
+That's it! Now start learning more and writing tests!
 
 ## QA Terminology
 
