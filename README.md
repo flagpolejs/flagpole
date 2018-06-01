@@ -8,6 +8,10 @@ It is created as a quick way to run smoke or integration tests against an applic
 
 Flagpole is also suitable for testing REST API frameworks, currently only supporting JSON format. We don't have plans currently to add support for XML or SOAP formats, because they suck. But hey if you want to add it, that wouldn't be too hard!
 
+## Getting Started
+
+.... doing this next ...
+
 ## QA Terminology
 
 **Group** A group of suites, which is within Flagpole defined just by grouping suites into subfolders of the tests folder.
@@ -340,6 +344,74 @@ flagpole run -g flotrack
 
 flagpole run -s basic/smoke
 
+**Run tests and specify a config file**
+
+flagpole run -c path/to/config.json
+
+**Having trouble? Run it with additional debug info**
+
+flagpole list --debug
+
+## Using a config file
+
+By default Flagpole will look for a file called flagpole.json in the path supplied as a command line parameter, or (if no path argument was provided) in the current working directory.
+
+In that file, you can specify a couple of things:
+
+```javascript
+
+{
+  "path": "test/flagpole",
+  "base": {
+    "dev": "http://www.mysite.local",
+    "staging": "http://staging.mysite.com",
+    "prod": "http://www.mysite.com"
+  }
+}
+```
+
+The path setting will set the default path of where to look for tests. You can override this with the path argument in the command line. However, this makes it so you can place the config file in the base of your project (or where ever you intend to run it from) and it will know where your tests are without you having to tell it.
+
+The base setting is to define the base domain where the tests will start from, with respect to the environment (which is set as a command line argument).
+
+So rather than having to specify the base method in each test suite, just set it once in the config.
+
+I'm sure we'll add more config options as the need arises.
+
+## What about the things that Flagpole doesn't support??!
+
+Well at the end of the data, you're just writing JavaScript (or TypeScript). So you can usually do the thing that you think the framework can't do yourself!
+
+There is a plain old assert() method you can do to create your own assertions. So let's say you want to test if something is an even number but you're all "Flagpole don't have an assertEvent() method!!!" Well do it your own dang self:
+
+```typescript
+let someNumber: number = response.select('#something span.num').parseInt().get();
+response.assert(someNumber % 2 == 0, "Yay! It's even! :-)", "Boo! It's odd. :-(");
+```
+
+Also if you want to conditionally run tests or not within a given scenario you can do that. You don't need our help to do that, bro.
+
+```javascript
+if (someNumber % 2 == 0) {
+    response.select('div.thisThing').text().similarTo('foo');
+}
+else {
+    response.select('div.thatOtherThing').text().similarTo('bar');
+}
+```
+
+Or if you want to run a whole scenario conditionally, cool. So use the technique we outlined above to not run a scenario at first. Either by not (yet) setting the URL to open or by setting wait() on it. Let's assume we put wait() on otherScenario below.
+
+```javascript
+if (someNumber % 2 == 0) {
+    otherScenario.execute();
+}
+else {
+    otherScenario.skip();
+}
+```
+
+Ahhh... I threw a new one on you! There is a skip method for scenarios. This will not execute any of the assertions in it, but it will mark it as completed and your suite can pass without running this scenario.
 
 ## More Advanced Topics
 
