@@ -1,4 +1,4 @@
-import { ConsoleLine } from "./consoleline";
+import { ConsoleLine, LogType } from "./consoleline";
 import { Suite } from "./suite";
 import { Scenario } from "./scenario";
 import { Element, Value } from "./property";

@@ -2,6 +2,10 @@ let Flagpole = require('../dist/index.js').Flagpole;
 
 Flagpole.Suite('Smoke Tests')
     .base('http://www.stackoverflow.com')
+    .setConsoleOutput(false)
+    .onDone(function(suite) {
+        console.log(suite.toJson());
+    })
 
     .Scenario('Homepage').open('/')
     .assertions(function(test) {

@@ -6,11 +6,16 @@ export declare class Suite {
     protected start: number;
     protected waitToExecute: boolean;
     protected byTag: any;
+    protected usingConsoleOutput: boolean;
+    protected callback: Function | null;
     constructor(title: string);
+    setConsoleOutput(usingConsoleOutput: boolean): Suite;
+    onDone(callback: Function): Suite;
     wait(bool?: boolean): Suite;
     isDone(): boolean;
     getDuration(): number;
     print(): Suite;
+    toJson(): any;
     Scenario(title: string, tags?: [string]): Scenario;
     getScenarioByTag(tag: string): Scenario;
     getAllScenariosByTag(tag: string): [Scenario];

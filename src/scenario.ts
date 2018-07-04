@@ -168,7 +168,9 @@ export class Scenario {
     }
 
     public comment(message: string): Scenario {
-        this.log.push(new ConsoleLine('  »  ' + message, "\x1b[34m"));
+        this.log.push(
+            ConsoleLine.comment('  »  ' + message)
+        );
         this.passes.push(message);
         return this;
     }
@@ -184,7 +186,7 @@ export class Scenario {
             message = this.nextLabel;
             this.nextLabel = null;
         }
-        this.log.push(new ConsoleLine('  ✔  ' + message, "\x1b[32m"));
+        this.log.push(ConsoleLine.pass('  ✔  ' + message));
         this.passes.push(message);
         return this;
     }
@@ -200,7 +202,7 @@ export class Scenario {
             message = this.nextLabel;
             this.nextLabel = null;
         }
-        this.log.push(new ConsoleLine('  ✕  ' + message, "\x1b[31m"));
+        this.log.push(ConsoleLine.fail('  ✕  ' + message));
         this.failures.push(message);
         return this;
     }

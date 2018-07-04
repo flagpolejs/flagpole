@@ -1,5 +1,6 @@
 import { Flagpole } from "./index";
 import { Scenario } from "./scenario";
+import { ConsoleLine, LogType } from "./consoleline";
 
 /**
  * A suite contains many scenarios
@@ -13,10 +14,33 @@ export class Suite {
     protected start: number;
     protected waitToExecute: boolean = false;
     protected byTag: any = {};
+    protected usingConsoleOutput: boolean = true;
+    protected callback: Function|null = null;
 
     constructor(title: string) {
         this.title = title;
         this.start = Date.now();
+    }
+
+    /**
+     * Whether or not to automatically push output to console. This is really if we are using at command line or not.
+     *
+     * @param {boolean} usingConsoleOutput
+     * @returns {Suite}
+     */
+    public setConsoleOutput(usingConsoleOutput: boolean): Suite {
+        this.usingConsoleOutput = usingConsoleOutput;
+        return this;
+    }
+
+    /**
+     *
+     * @param {Function} callback
+     * @returns {Suite}
+     */
+    public onDone(callback: Function): Suite {
+        this.callback = callback;
+        return this
     }
 
     /**
@@ -36,9 +60,13 @@ export class Suite {
      * @returns {boolean}
      */
     public isDone(): boolean {
-        return this.scenarios.every(function(scenario) {
+        let isDone: boolean =  this.scenarios.every(function(scenario) {
             return scenario.isDone();
         });
+        if (isDone && this.callback) {
+            this.callback(this);
+        }
+        return isDone;
     }
 
     /**
@@ -65,11 +93,43 @@ export class Suite {
         Flagpole.message('» Passed? ' + (this.passed() ? 'Yes' : 'No') + "\n", color);
 
         this.scenarios.forEach(function(scenario) {
-            scenario.getLog().forEach(function(line) {
+            scenario.getLog().forEach(function(line: ConsoleLine) {
                 line.write();
             });
         });
         return this;
+    }
+
+    /**
+     * Get JSON output
+     *
+     * @returns {any}
+     */
+    public toJson(): any {
+        let out: any = {
+            title: this.title,
+            baseUrl: this.baseUrl,
+            duration: this.getDuration(),
+            scenarios: []
+        };
+        this.scenarios.forEach(function(scenario, index) {
+            out.scenarios[index] = {
+                done: scenario.isDone(),
+                failCount: 0,
+                passCount: 0,
+                log: []
+            };
+            scenario.getLog().forEach(function(line: ConsoleLine) {
+                out.scenarios[index].log.push(line.toJson());
+                if (line.type == LogType.Pass) {
+                    out.scenarios[index].passCount++;
+                }
+                else if (line.type == LogType.Fail) {
+                    out.scenarios[index].failCount++;
+                }
+            });
+        });
+        return out;
     }
 
     /**
@@ -84,10 +144,12 @@ export class Suite {
         let suite: Suite = this;
         let scenario: Scenario = new Scenario(this, title, function() {
             if (suite.isDone()) {
-                suite.print();
-                process.exit(
-                    suite.passed() ? 0 : 1
-                );
+                if (suite.usingConsoleOutput) {
+                    suite.print();
+                    process.exit(
+                        suite.passed() ? 0 : 1
+                    );
+                }
             }
         });
         if (this.waitToExecute) {

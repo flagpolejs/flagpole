@@ -74,7 +74,7 @@ class Scenario {
         return this;
     }
     comment(message) {
-        this.log.push(new consoleline_1.ConsoleLine('  »  ' + message, "\x1b[34m"));
+        this.log.push(consoleline_1.ConsoleLine.comment('  »  ' + message));
         this.passes.push(message);
         return this;
     }
@@ -83,7 +83,7 @@ class Scenario {
             message = this.nextLabel;
             this.nextLabel = null;
         }
-        this.log.push(new consoleline_1.ConsoleLine('  ✔  ' + message, "\x1b[32m"));
+        this.log.push(consoleline_1.ConsoleLine.pass('  ✔  ' + message));
         this.passes.push(message);
         return this;
     }
@@ -92,7 +92,7 @@ class Scenario {
             message = this.nextLabel;
             this.nextLabel = null;
         }
-        this.log.push(new consoleline_1.ConsoleLine('  ✕  ' + message, "\x1b[31m"));
+        this.log.push(consoleline_1.ConsoleLine.fail('  ✕  ' + message));
         this.failures.push(message);
         return this;
     }

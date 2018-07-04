@@ -2,6 +2,10 @@ let Flagpole = require('../../dist/index.js').Flagpole;
 
 Flagpole.Suite('iTunes API Tests')
     .base('https://itunes.apple.com')
+    .setConsoleOutput(false)
+    .onDone(function(suite) {
+        console.log(suite.toJson());
+    })
 
     .Scenario('See if there are any 2Pac Videos')
     .open('/search?term=2pac&entity=musicVideo').type('json')

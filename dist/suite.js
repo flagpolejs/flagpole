@@ -2,23 +2,38 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 const scenario_1 = require("./scenario");
+const consoleline_1 = require("./consoleline");
 class Suite {
     constructor(title) {
         this.scenarios = [];
         this.baseUrl = null;
         this.waitToExecute = false;
         this.byTag = {};
+        this.usingConsoleOutput = true;
+        this.callback = null;
         this.title = title;
         this.start = Date.now();
+    }
+    setConsoleOutput(usingConsoleOutput) {
+        this.usingConsoleOutput = usingConsoleOutput;
+        return this;
+    }
+    onDone(callback) {
+        this.callback = callback;
+        return this;
     }
     wait(bool = true) {
         this.waitToExecute = bool;
         return this;
     }
     isDone() {
-        return this.scenarios.every(function (scenario) {
+        let isDone = this.scenarios.every(function (scenario) {
             return scenario.isDone();
         });
+        if (isDone && this.callback) {
+            this.callback(this);
+        }
+        return isDone;
     }
     getDuration() {
         return Date.now() - this.start;
@@ -37,12 +52,40 @@ class Suite {
         });
         return this;
     }
+    toJson() {
+        let out = {
+            title: this.title,
+            baseUrl: this.baseUrl,
+            duration: this.getDuration(),
+            scenarios: []
+        };
+        this.scenarios.forEach(function (scenario, index) {
+            out.scenarios[index] = {
+                done: scenario.isDone(),
+                failCount: 0,
+                passCount: 0,
+                log: []
+            };
+            scenario.getLog().forEach(function (line) {
+                out.scenarios[index].log.push(line.toJson());
+                if (line.type == consoleline_1.LogType.Pass) {
+                    out.scenarios[index].passCount++;
+                }
+                else if (line.type == consoleline_1.LogType.Fail) {
+                    out.scenarios[index].failCount++;
+                }
+            });
+        });
+        return out;
+    }
     Scenario(title, tags) {
         let suite = this;
         let scenario = new scenario_1.Scenario(this, title, function () {
             if (suite.isDone()) {
-                suite.print();
-                process.exit(suite.passed() ? 0 : 1);
+                if (suite.usingConsoleOutput) {
+                    suite.print();
+                    process.exit(suite.passed() ? 0 : 1);
+                }
             }
         });
         if (this.waitToExecute) {
