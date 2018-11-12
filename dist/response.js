@@ -11,6 +11,9 @@ class GenericResponse {
         this.response = response;
         this._lastElement = new node_1.Node(this, 'Empty Element', null);
     }
+    getBody() {
+        return this.response.body;
+    }
     assert(statement, passMessage, failMessage) {
         if (!this.ignoreAssertion) {
             (this.flipAssertion ? !statement : !!statement) ?
@@ -44,14 +47,8 @@ class GenericResponse {
     getLastElement() {
         return this._lastElement || new node_1.Node(this, 'Empty Element', []);
     }
-    get() {
-        return this.getLastElement().get();
-    }
-    echo() {
-        return this.getLastElement().echo();
-    }
-    typeof() {
-        return this.getLastElement().typeof();
+    getLastElementPath() {
+        return this._lastElementPath;
     }
     and() {
         return this._lastElement || new node_1.Node(this, 'Empty Element', []);
@@ -81,75 +78,6 @@ class GenericResponse {
     label(message) {
         this.scenario.label(message);
         return this;
-    }
-    text() {
-        return this.getLastElement().text();
-    }
-    length() {
-        return this.getLastElement().length();
-    }
-    contains(string) {
-        return this.getLastElement().contains(string);
-    }
-    matches(pattern) {
-        return this.getLastElement().matches(pattern);
-    }
-    startsWith(matchText) {
-        return this.getLastElement().startsWith(matchText);
-    }
-    endsWith(matchText) {
-        return this.getLastElement().endsWith(matchText);
-    }
-    trim() {
-        return this.getLastElement().text().trim();
-    }
-    toLowerCase() {
-        return this.getLastElement().text().toLowerCase();
-    }
-    toUpperCase() {
-        return this.getLastElement().text().toUpperCase();
-    }
-    replace(search, replace) {
-        return this.getLastElement().text().replace(search, replace);
-    }
-    is(type) {
-        return this.getLastElement().is(type);
-    }
-    each(callback) {
-        return this.getLastElement().each(callback);
-    }
-    some(callback) {
-        return this.getLastElement().some(callback);
-    }
-    every(callback) {
-        return this.getLastElement().every(callback);
-    }
-    exists() {
-        return this.getLastElement().exists();
-    }
-    parseInt() {
-        return this.getLastElement().text().parseInt();
-    }
-    parseFloat() {
-        return this.getLastElement().text().parseFloat();
-    }
-    greaterThan(value) {
-        return this.getLastElement().greaterThan(value);
-    }
-    greaterThanOrEquals(value) {
-        return this.getLastElement().greaterThanOrEquals(value);
-    }
-    lessThan(value) {
-        return this.getLastElement().lessThan(value);
-    }
-    lessThanOrEquals(value) {
-        return this.getLastElement().lessThanOrEquals(value);
-    }
-    equals(value, permissiveMatching) {
-        return this.getLastElement().equals(value, permissiveMatching);
-    }
-    similarTo(value) {
-        return this.getLastElement().similarTo(value);
     }
 }
 exports.GenericResponse = GenericResponse;

@@ -160,25 +160,111 @@ class Node {
         return this.response.select(selector, this.obj);
     }
     closest(selector) {
-        return this.response.closest(selector);
+        let name = 'closest ' + selector;
+        if (this.isDomElement()) {
+            return this.response.setLastElement(null, new Node(this.response, name, this.get().closest(selector)));
+        }
+        else if (this.isObject()) {
+            let arrPath = (this.response.getLastElementPath() || '').split('.');
+            let found = false;
+            let i = arrPath.length - 1;
+            for (; i >= 0; i--) {
+                if (arrPath[i] == selector) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                return this.select(arrPath.slice(0, i + 1).join('.'));
+            }
+        }
+        return this.response.setLastElement('', new Node(this.response, name, null));
     }
     parents(selector) {
-        return this.response.parents(selector);
+        let name = 'parent ' + selector;
+        if (typeof selector == 'undefined') {
+            return this.parent();
+        }
+        if (this.isDomElement()) {
+            return this.response.setLastElement(null, new Node(this.response, name, this.get().parents(selector)));
+        }
+        else if (this.isObject()) {
+            let arrPath = (this.response.getLastElementPath() || '').split('.');
+            if (arrPath.length > 1) {
+                let found = false;
+                let i = arrPath.length - 2;
+                for (; i >= 0; i--) {
+                    if (arrPath[i] == selector) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    return this.select(arrPath.slice(0, i + 1).join('.'));
+                }
+            }
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
     parent() {
-        return this.response.parent();
+        let name = 'parent';
+        if (this.isDomElement()) {
+            return this.response.setLastElement(null, new Node(this.response, name, this.get().parent()));
+        }
+        else if (this.isObject()) {
+            let arrPath = (this.response.getLastElementPath() || '').split('.');
+            if (arrPath.length > 1) {
+                return this.select(arrPath.slice(0, arrPath.length - 1).join('.'));
+            }
+            else {
+                return this.response.setLastElement('', new Node(this.response, name, this.response.getRoot()));
+            }
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
     siblings(selector) {
-        return this.response.siblings(selector);
+        let name = 'siblings ' + selector;
+        if (this.isDomElement()) {
+            return this.response.setLastElement(null, new Node(this.response, name, this.get().siblings(selector)));
+        }
+        else if (this.isObject()) {
+            return this.parent().children(selector);
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
     children(selector) {
-        return this.response.siblings(selector);
+        let name = 'children ' + selector;
+        if (this.isDomElement()) {
+            return this.response.setLastElement(null, new Node(this.response, name, this.get().children(selector)));
+        }
+        else if (this.isObject() || this.isArray()) {
+            let obj = this.get();
+            if (typeof selector !== 'undefined') {
+                return this.select(selector, obj);
+            }
+            return this.response.setLastElement(null, new Node(this.response, name, obj));
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
     next(selector) {
-        return this.response.next(selector);
+        let name = 'next ' + selector;
+        if (this.isDomElement()) {
+            return this.response.setLastElement(null, new Node(this.response, name, this.get().next(selector)));
+        }
+        else if (this.isObject()) {
+            return this.parent().children(selector);
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
     prev(selector) {
-        return this.response.prev(selector);
+        let name = 'next ' + selector;
+        if (this.isDomElement()) {
+            return this.response.setLastElement(null, new Node(this.response, name, this.get().prev(selector)));
+        }
+        else if (this.isObject()) {
+            return this.parent().children(selector);
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
     eq(i) {
         return this.nth(i);
@@ -209,6 +295,9 @@ class Node {
         else if (!_1.Flagpole.isNullOrUndefined(this.obj) && this.hasProperty(key)) {
             text = this.obj[key];
         }
+        else if (this.response.getLastElement().isDomElement()) {
+            text = this.response.getLastElement().get().attr(key);
+        }
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
     property(key) {
@@ -219,6 +308,9 @@ class Node {
         else if (!this.isNullOrUndefined() && this.hasProperty(key)) {
             text = this.obj[key];
         }
+        else if (this.response.getLastElement().isDomElement()) {
+            text = this.response.getLastElement().get().prop(key);
+        }
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
     data(key) {
@@ -228,6 +320,9 @@ class Node {
         }
         else if (!this.isNullOrUndefined() && this.hasProperty(key)) {
             text = this.obj[key];
+        }
+        else if (this.response.getLastElement().isDomElement()) {
+            text = this.response.getLastElement().get().data(key);
         }
         return new Node(this.response, this.name + '[' + key + ']', text);
     }

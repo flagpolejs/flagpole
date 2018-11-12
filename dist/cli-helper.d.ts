@@ -18,10 +18,10 @@ export declare class Tests {
     private testSuiteStatus;
     private suites;
     constructor(testsFolder: string);
-    private onTestStart;
-    private onTestExit;
-    private getTestByName;
-    private runTestFile;
+    private onTestStart(filePath);
+    private onTestExit(filePath, exitCode);
+    private getTestByName(name);
+    private runTestFile(filePath);
     foundTestSuites(): boolean;
     getSuiteNames(): Array<string>;
     getTestsFolder(): string;

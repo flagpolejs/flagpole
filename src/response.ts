@@ -7,21 +7,17 @@ import { Node } from "./node";
  */
 export interface iResponse {
     select(path: string, findIn?: any): Node
-    parents(selector?: string): Node
-    parent(): Node 
-    closest(selector: string): Node
-    children(selector?: string): Node
-    siblings(selector?: string): Node
-    next(selector?: string): Node
-    prev(selector?: string): Node
     status(): Node
     and(): Node
     loadTime(): Node
+    headers(key?: string): Node
     label(message: string): iResponse
     setLastElement(path: string | null, element: Node): Node
     getLastElement(): Node
+    getLastElementPath(): string | null
+    getRoot(): any
+    getBody(): string
     comment(message: string): iResponse
-    headers(key?: string): Node
     not(): iResponse
     startIgnoringAssertions(): iResponse
     stopIgnoringAssertions(): iResponse
@@ -58,13 +54,11 @@ export abstract class GenericResponse implements iResponse {
     }
 
     abstract select(path: string, findIn?: any): Node
-    abstract parents(selector?: string): Node
-    abstract parent(): Node
-    abstract closest(selector: string): Node
-    abstract children(selector: string): Node
-    abstract siblings(selector: string): Node
-    abstract next(selector: string): Node
-    abstract prev(selector: string): Node
+    abstract getRoot(): any
+
+    public getBody(): string {
+        return this.response.body;
+    }
 
     /**
      * Assert something is true, with respect to the flipped not()
@@ -148,30 +142,10 @@ export abstract class GenericResponse implements iResponse {
     }
 
     /**
-     * Return the real value of the last element
-     *
-     * @returns any
+     * Last selected/traversed path
      */
-    public get(): any {
-        return this.getLastElement().get();
-    }
-
-    /**
-     * Spit out the value of the last element
-     *
-     * @returns {Node}
-     */
-    public echo(): Node {
-        return this.getLastElement().echo();
-    }
-
-    /**
-     * Spit out the type of the last element
-     *
-     * @returns {Node}
-     */
-    public typeof(): Node {
-        return this.getLastElement().typeof();
+    public getLastElementPath(): string | null {
+        return this._lastElementPath;
     }
 
     /**
@@ -239,207 +213,6 @@ export abstract class GenericResponse implements iResponse {
     public label(message: string): iResponse {
         this.scenario.label(message);
         return this;
-    }
-
-    /**
-     *
-     * @returns {Node}
-     */
-    public text(): Node {
-        return this.getLastElement().text();
-    }
-
-    /**
-     *
-     * @returns {Node}
-     */
-    public length(): Node {
-        return this.getLastElement().length();
-    }
-
-    /**
-     *
-     * @param {string} string
-     * @returns {iResponse}
-     */
-    public contains(string: string): iResponse {
-        return this.getLastElement().contains(string);
-    }
-
-    /**
-     *
-     * @param {RegExp} pattern
-     * @returns {iResponse}
-     */
-    public matches(pattern: RegExp): iResponse {
-        return this.getLastElement().matches(pattern);
-    }
-
-    /**
-     *
-     * @param {string} matchText
-     * @returns {iResponse}
-     */
-    public startsWith(matchText: string): iResponse {
-        return this.getLastElement().startsWith(matchText);
-    }
-
-    /**
-     *
-     * @param {string} matchText
-     * @returns {iResponse}
-     */
-    public endsWith(matchText: string): iResponse {
-        return this.getLastElement().endsWith(matchText);
-    }
-
-    /**
-     *
-     * @returns {Node}
-     */
-    public trim(): Node {
-        return this.getLastElement().text().trim();
-    }
-
-    /**
-     *
-     * @returns {Node}
-     */
-    public toLowerCase(): Node {
-        return this.getLastElement().text().toLowerCase();
-    }
-
-    /**
-     *
-     * @returns {Node}
-     */
-    public toUpperCase(): Node {
-        return this.getLastElement().text().toUpperCase();
-    }
-
-    /**
-     *
-     * @param {string | RegExp} search
-     * @param {string} replace
-     * @returns {Node}
-     */
-    public replace(search: string | RegExp, replace: string): Node {
-        return this.getLastElement().text().replace(search, replace);
-    }
-
-    /**
-     *
-     * @param {string} type
-     * @returns {iResponse}
-     */
-    public is(type: string): iResponse {
-        return this.getLastElement().is(type);
-    }
-
-    /**
-     *
-     * @param {Function} callback
-     * @returns {iResponse}
-     */
-    public each(callback: Function): iResponse {
-        return this.getLastElement().each(callback);
-    }
-
-    /**
-     *
-     * @param {Function} callback
-     * @returns {iResponse}
-     */
-    public some(callback: Function): iResponse {
-        return this.getLastElement().some(callback);
-    }
-
-    /**
-     *
-     * @param {Function} callback
-     * @returns {iResponse}
-     */
-    public every(callback: Function): iResponse {
-        return this.getLastElement().every(callback);
-    }
-
-    /**
-     *
-     * @returns {iResponse}
-     */
-    public exists(): iResponse {
-        return this.getLastElement().exists();
-    }
-
-    /**
-     *
-     * @returns {Node}
-     */
-    public parseInt(): Node {
-        return this.getLastElement().text().parseInt();
-    }
-
-    /**
-     *
-     * @returns {Node}
-     */
-    public parseFloat(): Node {
-        return this.getLastElement().text().parseFloat();
-    }
-
-    /**
-     *
-     * @param {number} 
-     * @returns {iResponse}
-     */
-    public greaterThan(value: number): iResponse {
-        return this.getLastElement().greaterThan(value);
-    }
-
-    /**
-     *
-     * @param {number} value
-     * @returns {iResponse}
-     */
-    public greaterThanOrEquals(value: number): iResponse {
-        return this.getLastElement().greaterThanOrEquals(value);
-    }
-
-    /**
-     *
-     * @param {number} value
-     * @returns {iResponse}
-     */
-    public lessThan(value: number): iResponse {
-        return this.getLastElement().lessThan(value);
-    }
-
-    /**
-     *
-     * @param {number} value
-     * @returns {iResponse}
-     */
-    public lessThanOrEquals(value: number): iResponse {
-        return this.getLastElement().lessThanOrEquals(value);
-    }
-
-    /**
-     *
-     * @param value
-     * @param {boolean} permissiveMatching
-     * @returns {iResponse}
-     */
-    public equals(value: any, permissiveMatching: boolean): iResponse {
-        return this.getLastElement().equals(value, permissiveMatching);
-    }
-
-    /**
-     *
-     * @param value
-     * @returns {iResponse}
-     */
-    public similarTo(value: any): iResponse {
-        return this.getLastElement().similarTo(value);
     }
 
 }

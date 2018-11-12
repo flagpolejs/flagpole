@@ -10,6 +10,9 @@ class HtmlResponse extends response_1.GenericResponse {
         super(scenario, url, response);
         $ = cheerio.load(response.body);
     }
+    getRoot() {
+        return $;
+    }
     select(path, findIn) {
         let obj = null;
         if (index_1.Flagpole.toType(findIn) == 'cheerio') {
@@ -22,64 +25,6 @@ class HtmlResponse extends response_1.GenericResponse {
         this.setLastElement(path, element);
         element.exists();
         return element;
-    }
-    parents(selector) {
-        let obj = null;
-        let name = 'parent ' + selector;
-        let last = this.getLastElement();
-        if (last.isDomElement()) {
-            obj = last.get().parents(selector);
-        }
-        return this.setLastElement(null, new node_1.Node(this, name, obj));
-    }
-    parent() {
-        let obj = null;
-        let name = 'parent';
-        let last = this.getLastElement();
-        if (last.isDomElement()) {
-            obj = last.get().parent();
-        }
-        return this.setLastElement(null, new node_1.Node(this, name, obj));
-    }
-    closest(selector) {
-        let obj = null;
-        let name = 'closest ' + selector;
-        if (this.getLastElement().isDomElement()) {
-            obj = this.getLastElement().get().closest(selector);
-        }
-        return this.setLastElement(null, new node_1.Node(this, name, obj));
-    }
-    children(selector) {
-        let obj = null;
-        let name = 'children ' + selector;
-        if (this.getLastElement().isDomElement()) {
-            obj = this.getLastElement().get().children(selector);
-        }
-        return this.setLastElement(null, new node_1.Node(this, name, obj));
-    }
-    siblings(selector) {
-        let obj = null;
-        let name = 'next ' + selector;
-        if (this.getLastElement().isDomElement()) {
-            obj = this.getLastElement().get().siblings(selector);
-        }
-        return this.setLastElement(null, new node_1.Node(this, name, obj));
-    }
-    next(selector) {
-        let obj = null;
-        let name = 'next ' + selector;
-        if (this.getLastElement().isDomElement()) {
-            obj = this.getLastElement().get().next(selector);
-        }
-        return this.setLastElement(null, new node_1.Node(this, name, obj));
-    }
-    prev(selector) {
-        let obj = null;
-        let name = 'next ' + selector;
-        if (this.getLastElement().isDomElement()) {
-            obj = this.getLastElement().get().prev(selector);
-        }
-        return this.setLastElement(null, new node_1.Node(this, name, obj));
     }
 }
 exports.HtmlResponse = HtmlResponse;

@@ -317,31 +317,136 @@ export class Node {
     }
 
     public closest(selector: string): Node {
-        return this.response.closest(selector);
+        let name: string = 'closest ' + selector;
+        if (this.isDomElement()) {
+            return this.response.setLastElement(
+                null, new Node(this.response, name, this.get().closest(selector))
+            );
+        }
+        else if (this.isObject()) {
+            let arrPath: string[] = (this.response.getLastElementPath() || '').split('.');
+            let found: boolean = false;
+            // Loop through the path backwards
+            let i = arrPath.length - 1;
+            for (; i >= 0; i--) {
+                if (arrPath[i] == selector) {
+                    found = true;
+                    break;
+                }
+            }
+            // Found something that matched selector..  So build path up to that point
+            if (found) {
+                return this.select(arrPath.slice(0, i + 1).join('.'));
+            }
+        }
+        return this.response.setLastElement('', new Node(this.response, name, null));
     }
 
     public parents(selector?: string): Node {
-        return this.response.parents(selector);
+        let name: string = 'parent ' + selector;
+        // If there is no selector then this is the same as the parent method
+        if (typeof selector == 'undefined') {
+            return this.parent();
+        }
+        if (this.isDomElement()) {
+            return this.response.setLastElement(
+                null, new Node(this.response, name, this.get().parents(selector))
+            );
+        }
+        else if (this.isObject()) {
+            let arrPath: string[] = (this.response.getLastElementPath() || '').split('.');
+            if (arrPath.length > 1) {
+                // Loop backwards, starting at the second to last element in path
+                let found: boolean = false;
+                let i = arrPath.length - 2;
+                for (; i >= 0; i--) {
+                    if (arrPath[i] == selector) {
+                        found = true;
+                        break;
+                    }
+                }
+                // Found something that matched selector..  So build path up to that point
+                if (found) {
+                    return this.select(arrPath.slice(0, i + 1).join('.'));
+                }
+            }  
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
 
     public parent(): Node {
-        return this.response.parent();
+        let name: string = 'parent';
+        if (this.isDomElement()) {
+            return this.response.setLastElement(null, new Node(this.response, name, this.get().parent()));
+        }
+        else if (this.isObject()) {
+            let arrPath: string[] = (this.response.getLastElementPath() || '').split('.');
+            // If the last selected path is at least 2 deep
+            if (arrPath.length > 1) {
+                return this.select(arrPath.slice(0, arrPath.length - 1).join('.'));
+            }
+            // Else return top level
+            else {
+                return this.response.setLastElement('', new Node(this.response, name, this.response.getRoot()));
+            }
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
 
     public siblings(selector): Node {
-        return this.response.siblings(selector);
+        let name: string = 'siblings ' + selector;
+        if (this.isDomElement()) {
+            return this.response.setLastElement(
+                null, new Node(this.response, name, this.get().siblings(selector))
+            );
+        }
+        else if (this.isObject()) {
+            return this.parent().children(selector);
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
 
     public children(selector): Node {
-        return this.response.siblings(selector);
+        let name: string = 'children ' + selector;
+        if (this.isDomElement()) {
+            return this.response.setLastElement(
+                null, new Node(this.response, name, this.get().children(selector))
+            );
+        }
+        else if (this.isObject() || this.isArray()) {
+            let obj: any = this.get();
+            if (typeof selector !== 'undefined') {
+                return this.select(selector, obj);
+            }
+            return this.response.setLastElement(null, new Node(this.response, name, obj));
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
 
     public next(selector): Node {
-        return this.response.next(selector);
+        let name: string = 'next ' + selector;
+        if (this.isDomElement()) {
+            return this.response.setLastElement(
+                null, new Node(this.response, name, this.get().next(selector))
+            );
+        }
+        else if (this.isObject()) {
+            return this.parent().children(selector);
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
 
     public prev(selector): Node {
-        return this.response.prev(selector);
+        let name: string = 'next ' + selector;
+        if (this.isDomElement()) {
+            return this.response.setLastElement(
+                null, new Node(this.response, name, this.get().prev(selector))
+            );
+        }
+        else if (this.isObject()) {
+            return this.parent().children(selector);
+        }
+        return this.response.setLastElement(null, new Node(this.response, name, null));
     }
 
     /**
@@ -411,6 +516,9 @@ export class Node {
         else if (!Flagpole.isNullOrUndefined(this.obj) && this.hasProperty(key)) {
             text = this.obj[key];
         }
+        else if (this.response.getLastElement().isDomElement()) {
+            text = this.response.getLastElement().get().attr(key);
+        }
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
 
@@ -428,6 +536,9 @@ export class Node {
         else if (!this.isNullOrUndefined() && this.hasProperty(key)) {
             text = this.obj[key];
         }
+        else if (this.response.getLastElement().isDomElement()) {
+            text = this.response.getLastElement().get().prop(key);
+        }
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
 
@@ -444,6 +555,9 @@ export class Node {
         }
         else if (!this.isNullOrUndefined() && this.hasProperty(key)) {
             text = this.obj[key];
+        }
+        else if (this.response.getLastElement().isDomElement()) {
+            text = this.response.getLastElement().get().data(key);
         }
         return new Node(this.response, this.name + '[' + key + ']', text);
     }

@@ -13,6 +13,10 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         $ = cheerio.load(response.body);
     }
 
+    public getRoot(): any {
+        return $;
+    }
+
     /**
      * Select the html element at this CSS Selector or XPath
      *
@@ -36,110 +40,6 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         // Inferred exists assertion
         element.exists();
         return element;
-    }
-
-    /**
-     * Find a matching parent element, relative to the currently selected element
-     *
-     * @param {string} selector
-     * @returns {Node}
-     */
-    public parents(selector?: string): Node {
-        let obj: any = null;
-        let name: string = 'parent ' + selector;
-        let last: Node = this.getLastElement();
-        if (last.isDomElement()) {
-            obj = last.get().parents(selector);
-        }
-        return this.setLastElement(null, new Node(this, name, obj));
-    }
-
-    /**
-     * 
-     */
-    public parent(): Node {
-        let obj: any = null;
-        let name: string = 'parent';
-        let last: Node = this.getLastElement();
-        if (last.isDomElement()) {
-            obj = last.get().parent();
-        }
-        return this.setLastElement(null, new Node(this, name, obj));
-    }
-
-    /**
-    * Going up the object model, find the closest matching element, relative to the currently selected element
-    *
-    * @param {string} selector
-    * @returns {Node}
-    */
-    public closest(selector: string): Node {
-        let obj: any = null;
-        let name: string = 'closest ' + selector;
-        if (this.getLastElement().isDomElement()) {
-            obj = this.getLastElement().get().closest(selector);
-        }
-        return this.setLastElement(null, new Node(this, name, obj));
-    }
-
-    /**
-     * Find matching child elements, relative to the currently selected element
-     *
-     * @param {string} selector
-     * @returns {Node}
-     */
-    public children(selector?: string): Node {
-        let obj: any = null;
-        let name: string = 'children ' + selector;
-        if (this.getLastElement().isDomElement()) {
-            obj = this.getLastElement().get().children(selector);
-        }
-        return this.setLastElement(null, new Node(this, name, obj));
-    }
-
-    /**
-     * Find matching sibling elements, relative to the currently selected element
-     *
-     * @param {string} selector
-     * @returns {Node}
-     */
-    public siblings(selector?: string): Node {
-        let obj: any = null;
-        let name: string = 'next ' + selector;
-        if (this.getLastElement().isDomElement()) {
-            obj = this.getLastElement().get().siblings(selector);
-        }
-        return this.setLastElement(null, new Node(this, name, obj));
-    }
-
-    /**
-     * Find the next element matching, relative to the currently selected element
-     *
-     * @param {string} selector
-     * @returns {Node}
-     */
-    public next(selector?: string): Node {
-        let obj: any = null;
-        let name: string = 'next ' + selector;
-        if (this.getLastElement().isDomElement()) {
-            obj = this.getLastElement().get().next(selector);
-        }
-        return this.setLastElement(null, new Node(this, name, obj));
-    }
-
-    /**
-     * Find the previous element matching, relative to the currently selected element
-     *
-     * @param {string} selector
-     * @returns {Node}
-     */
-    public prev(selector?: string): Node {
-        let obj: any = null;
-        let name: string = 'next ' + selector;
-        if (this.getLastElement().isDomElement()) {
-            obj = this.getLastElement().get().prev(selector);
-        }
-        return this.setLastElement(null, new Node(this, name, obj));
     }
 
 }
