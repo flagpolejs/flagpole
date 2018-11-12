@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "0.5.16",
+  "version": "0.5.17",
   "description": "Simple and fast DOM integration and REST API testing framework.",
   "keywords": [
     "qa",
@@ -23,6 +23,7 @@
   "author": "Jason Byrne <jason.byrne@flosports.tv>",
   "license": "MIT",
   "dependencies": {
+    "@types/cheerio": "^0.22.9",
     "cheerio": "^1.0.0-rc.2",
     "request": "^2.87.0",
     "typescript": "^2.8.3",

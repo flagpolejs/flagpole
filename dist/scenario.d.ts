@@ -10,6 +10,8 @@ export declare class Scenario {
     protected initialized: number | null;
     protected start: number | null;
     protected end: number | null;
+    protected requestStart: number | null;
+    protected requestLoaded: number | null;
     protected pageType: string;
     protected then: Function | null;
     protected url: string | null;
@@ -19,10 +21,18 @@ export declare class Scenario {
     constructor(suite: Suite, title: string, onDone: Function);
     failed(): boolean;
     passed(): boolean;
+    jsonBody(jsonObject: any): Scenario;
+    body(str: string): Scenario;
+    proxy(proxyUri: string): Scenario;
     timeout(timeout: number): Scenario;
     wait(bool?: boolean): Scenario;
     form(form: {}): Scenario;
-    auth(authorization: any): Scenario;
+    maxRedirects(n: number): Scenario;
+    followRedirect(onRedirect: boolean | Function): Scenario;
+    auth(authorization: {
+        username: string;
+        password: string;
+    }): Scenario;
     headers(headers: {}): Scenario;
     header(key: string, value: any): Scenario;
     type(type: string): Scenario;
@@ -41,4 +51,6 @@ export declare class Scenario {
     getLog(): Array<ConsoleLine>;
     protected getExecutionTime(): number;
     done(): Scenario;
+    getUrl(): string | null;
+    getRequestLoadTime(): number | null;
 }

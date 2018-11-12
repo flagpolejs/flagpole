@@ -1,8 +1,8 @@
 import { Flagpole } from "./index";
 import { Suite } from "./suite";
 import { ConsoleLine } from "./consoleline";
-import { JsonRequest } from "./jsonrequest";
-import { HtmlRequest } from "./htmlrequest";
+import { JsonResponse } from "./jsonresponse";
+import { HtmlResponse } from "./htmlresponse";
 
 let request = require('request');
 
@@ -18,17 +18,20 @@ export class Scenario {
     protected failures: Array<string> = [];
     protected passes: Array<string> = [];
     protected onDone: Function;
-    protected initialized: number|null = null;
-    protected start: number|null = null;
-    protected end: number|null = null;
+    protected initialized: number | null = null;
+    protected start: number | null = null;
+    protected end: number | null = null;
+    protected requestStart: number | null = null;
+    protected requestLoaded: number | null = null;
     protected pageType: string = 'html';
-    protected then: Function|null = null;
-    protected url: string|null = null;
+    protected then: Function | null = null;
+    protected url: string | null = null;
     protected waitToExecute: boolean = false;
-    protected nextLabel: string|null = null;
+    protected nextLabel: string | null = null;
 
     protected options: any = {
-        method: 'GET'
+        method: 'GET',
+        headers: {}
     };
 
     constructor(suite: Suite, title: string, onDone: Function) {
@@ -55,6 +58,35 @@ export class Scenario {
      */
     public passed(): boolean {
         return !!(this.end && this.failures.length == 0);
+    }
+
+    /**
+     * Set body to submit
+     * 
+     * @param jsonObject 
+     * @returns {Scenario}
+     */
+    public jsonBody(jsonObject: any): Scenario {
+        this.header('Content-Type', 'application/json');
+        return this.body(JSON.stringify(jsonObject));
+    }
+
+    /**
+     * 
+     * @param str 
+     */
+    public body(str: string): Scenario {
+        this.options.body = str;
+        return this;
+    }
+
+    /**
+     * 
+     * @param proxyUri 
+     */
+    public proxy(proxyUri: string): Scenario {
+        this.options.proxy = proxyUri;
+        return this;
     }
 
     /**
@@ -91,12 +123,30 @@ export class Scenario {
     }
 
     /**
+     * 
+     * @param n 
+     */
+    public maxRedirects(n: number): Scenario {
+        this.options.maxRedirects = n;
+        return this;
+    }
+
+    /**
+     * 
+     * @param onRedirect 
+     */
+    public followRedirect(onRedirect: boolean | Function): Scenario {
+        this.options.followRedirect = onRedirect;
+        return this;
+    }
+
+    /**
      * Set the basic authentication headers to be sent with this request
      *
      * @param authorization
      * @returns {Scenario}
      */
-    public auth(authorization: any): Scenario {
+    public auth(authorization: { username: string, password: string }): Scenario {
         this.options.auth = authorization;
         return this;
     }
@@ -108,7 +158,7 @@ export class Scenario {
      * @returns {Scenario}
      */
     public headers(headers: {}): Scenario {
-        this.options.headers = headers;
+        this.options.headers = Object.assign(this.options.headers, headers);
         return this;
     }
 
@@ -262,7 +312,6 @@ export class Scenario {
      * @returns {Scenario}
      */
     public execute(): Scenario {
-        let scenario: Scenario = this;
         if (!this.start && this.url !== null) {
             this.start = Date.now();
             this.options.uri = this.suite.buildUrl(this.url);
@@ -270,21 +319,17 @@ export class Scenario {
             if (this.waitToExecute && this.initialized !== null) {
                 this.log.push(new ConsoleLine('  »  Waited ' + (this.start - this.initialized) + 'ms'));
             }
+            // Html or Json?
+            let requestObject = (this.pageType == 'json') ? JsonResponse : HtmlResponse;
+            let pageType: string = (this.pageType == 'json') ? 'REST End Point' : 'HTML Page';
             // Execute it
-            let requestObject;
-            let pageType: string = 'HTML Page';
-
-            if (this.pageType == 'json') {
-                pageType = 'REST End Point'
-                requestObject = JsonRequest;
-            }
-            else {
-                requestObject = HtmlRequest;
-            }
-            request(this.options, function(error, response, body) {
-                if (!error && (response.statusCode >= 200 && response.statusCode < 300)) {
+            let scenario: Scenario = this;
+            this.requestStart = Date.now();
+            request(this.options, function (error, response, body) {
+                if (!error) {
+                    scenario.requestLoaded = Date.now();
                     scenario.pass('Loaded ' + pageType + ' ' + scenario.url);
-                    if (scenario.then !== null) {
+                    if (scenario.then !== null && scenario.url !== null) {
                         scenario.then(
                             new requestObject(scenario, scenario.url, Flagpole.toSimplifiedResponse(response, body))
                         );
@@ -352,6 +397,18 @@ export class Scenario {
         this.log.push(new ConsoleLine("  » Took " + this.getExecutionTime() + "ms\n"));
         this.onDone(this);
         return this;
+    }
+
+    /**
+     * Get the url
+     */
+    public getUrl(): string | null {
+        return this.url;
+    }
+
+    public getRequestLoadTime(): number | null {
+        return (this.requestLoaded && this.requestStart) ?
+            (this.requestLoaded - this.requestStart): null;
     }
 
 }

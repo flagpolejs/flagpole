@@ -1,8 +1,45 @@
-import { iResponse, SimplifiedResponse } from "./index";
 import { Scenario } from "./scenario";
-import { Element, Value, iProperty } from "./property";
+import { iResponse, SimplifiedResponse } from "./response";
+import { Node } from "./node";
 
-export abstract class GenericRequest  implements iResponse, iProperty {
+/**
+ * Responses may be HTML or JSON, so this interface let's us know how to handle either
+ */
+export interface iResponse {
+    select(path: string, findIn?: any): Node
+    parents(selector?: string): Node
+    parent(): Node 
+    closest(selector: string): Node
+    children(selector?: string): Node
+    siblings(selector?: string): Node
+    next(selector?: string): Node
+    prev(selector?: string): Node
+    status(): Node
+    and(): Node
+    loadTime(): Node
+    label(message: string): iResponse
+    setLastElement(path: string | null, element: Node): Node
+    getLastElement(): Node
+    comment(message: string): iResponse
+    headers(key?: string): Node
+    not(): iResponse
+    startIgnoringAssertions(): iResponse
+    stopIgnoringAssertions(): iResponse
+    assert(statement: boolean, passMessage: string, failMessage: string): iResponse
+    readonly scenario: Scenario
+}
+
+/**
+ * This is named confusing, but it represents the original response we get from the http request
+ */
+export interface SimplifiedResponse {
+    statusCode: number
+    body: string
+    headers: Array<any>
+}
+
+
+export abstract class GenericResponse implements iResponse {
 
     public readonly scenario: Scenario;
 
@@ -10,14 +47,24 @@ export abstract class GenericRequest  implements iResponse, iProperty {
     protected response: SimplifiedResponse;
     protected flipAssertion: boolean = false;
     protected ignoreAssertion: boolean = false;
-    private _lastElement: Element;
+    protected _lastElement: Node;
+    protected _lastElementPath: string | null = null;
 
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
         this.scenario = scenario;
         this.url = url;
         this.response = response;
-        this._lastElement = new Element(this, 'Empty Element', []);
+        this._lastElement = new Node(this, 'Empty Element', null);
     }
+
+    abstract select(path: string, findIn?: any): Node
+    abstract parents(selector?: string): Node
+    abstract parent(): Node
+    abstract closest(selector: string): Node
+    abstract children(selector: string): Node
+    abstract siblings(selector: string): Node
+    abstract next(selector: string): Node
+    abstract prev(selector: string): Node
 
     /**
      * Assert something is true, with respect to the flipped not()
@@ -79,19 +126,25 @@ export abstract class GenericRequest  implements iResponse, iProperty {
     }
 
     /**
+     * Set last element
+     * 
+     * @param path 
+     * @param element 
+     */
+    public setLastElement(path: string | null, element: Node): Node {
+        this._lastElement = element;
+        this._lastElementPath = path;
+        return element;
+    }
+
+    /**
      * Get or set last element
      *
-     * @param {Element} property
-     * @returns {Element}
+     * @param {Node} property
+     * @returns {Node}
      */
-    public lastElement(property?: Element): Element {
-        if (typeof property == 'undefined') {
-            return this._lastElement || new Element(this, 'Empty Element', []);
-        }
-        else {
-            this._lastElement = property;
-            return property;
-        }
+    public getLastElement(): Node {
+        return this._lastElement || new Node(<iResponse>this, 'Empty Element', []);
     }
 
     /**
@@ -100,34 +153,34 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns any
      */
     public get(): any {
-        return this.lastElement().get();
+        return this.getLastElement().get();
     }
 
     /**
      * Spit out the value of the last element
      *
-     * @returns {iProperty}
+     * @returns {Node}
      */
-    public echo(): iProperty {
-        return this.lastElement().echo();
+    public echo(): Node {
+        return this.getLastElement().echo();
     }
 
     /**
      * Spit out the type of the last element
      *
-     * @returns {iProperty}
+     * @returns {Node}
      */
-    public typeof(): iProperty {
-        return this.lastElement().typeof();
+    public typeof(): Node {
+        return this.getLastElement().typeof();
     }
 
     /**
      * Return last element
      *
-     * @returns {Element}
+     * @returns {Node}
      */
-    public and(): Element {
-        return this._lastElement || new Element(this, 'Empty Element', []);
+    public and(): Node {
+        return this._lastElement || new Node(this, 'Empty Element', []);
     }
 
     /**
@@ -145,29 +198,36 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * Return a single header by key or all headers in an object
      *
      * @param {string} key
-     * @returns {Value}
+     * @returns {Node}
      */
-    public headers(key?: string): Value  {
+    public headers(key?: string): Node {
         if (typeof key !== 'undefined') {
             // Try first as they put it in the test, then try all lowercase
             key = typeof this.response.headers[key] !== 'undefined' ? key : key.toLowerCase();
             let name: string = 'HTTP Headers[' + key + ']';
-            let value: Value = new Value(this, name, this.response.headers[key]);
+            let value: Node = new Node(this, name, this.response.headers[key]);
             value.exists();
             return value;
         }
         else {
-            return new Value(this, 'HTTP Headers', this.response.headers);
+            return new Node(this, 'HTTP Headers', this.response.headers);
         }
     }
 
     /**
      * Get the http status
      *
-     * @returns {Value}
+     * @returns {Node}
      */
-    public status(): Value {
-        return new Value(this, 'HTTP Status', this.response.statusCode);
+    public status(): Node {
+        return new Node(this, 'HTTP Status', this.response.statusCode);
+    }
+
+    /**
+     * Load time of request to response
+     */
+    public loadTime(): Node {
+        return new Node(this, 'Load Time', this.scenario.getRequestLoadTime());
     }
 
     /**
@@ -183,18 +243,18 @@ export abstract class GenericRequest  implements iResponse, iProperty {
 
     /**
      *
-     * @returns {Value}
+     * @returns {Node}
      */
-    public text(): Value {
-        return this.lastElement().text();
+    public text(): Node {
+        return this.getLastElement().text();
     }
 
     /**
      *
-     * @returns {Value}
+     * @returns {Node}
      */
-    public length(): Value {
-        return this.lastElement().length();
+    public length(): Node {
+        return this.getLastElement().length();
     }
 
     /**
@@ -203,7 +263,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public contains(string: string): iResponse {
-        return this.lastElement().contains(string);
+        return this.getLastElement().contains(string);
     }
 
     /**
@@ -212,7 +272,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public matches(pattern: RegExp): iResponse {
-        return this.lastElement().matches(pattern);
+        return this.getLastElement().matches(pattern);
     }
 
     /**
@@ -221,7 +281,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public startsWith(matchText: string): iResponse {
-        return this.lastElement().startsWith(matchText);
+        return this.getLastElement().startsWith(matchText);
     }
 
     /**
@@ -230,41 +290,41 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public endsWith(matchText: string): iResponse {
-        return this.lastElement().endsWith(matchText);
+        return this.getLastElement().endsWith(matchText);
     }
 
     /**
      *
-     * @returns {Value}
+     * @returns {Node}
      */
-    public trim(): Value {
-        return this.lastElement().trim();
+    public trim(): Node {
+        return this.getLastElement().text().trim();
     }
 
     /**
      *
-     * @returns {Value}
+     * @returns {Node}
      */
-    public toLowerCase(): Value {
-        return this.lastElement().toLowerCase();
+    public toLowerCase(): Node {
+        return this.getLastElement().text().toLowerCase();
     }
 
     /**
      *
-     * @returns {Value}
+     * @returns {Node}
      */
-    public toUpperCase(): Value {
-        return this.lastElement().toUpperCase();
+    public toUpperCase(): Node {
+        return this.getLastElement().text().toUpperCase();
     }
 
     /**
      *
      * @param {string | RegExp} search
      * @param {string} replace
-     * @returns {Value}
+     * @returns {Node}
      */
-    public replace(search: string|RegExp, replace: string): Value {
-        return this.lastElement().replace(search, replace);
+    public replace(search: string | RegExp, replace: string): Node {
+        return this.getLastElement().text().replace(search, replace);
     }
 
     /**
@@ -273,7 +333,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public is(type: string): iResponse {
-        return this.lastElement().is(type);
+        return this.getLastElement().is(type);
     }
 
     /**
@@ -282,7 +342,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public each(callback: Function): iResponse {
-        return this.lastElement().each(callback);
+        return this.getLastElement().each(callback);
     }
 
     /**
@@ -291,7 +351,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public some(callback: Function): iResponse {
-        return this.lastElement().some(callback);
+        return this.getLastElement().some(callback);
     }
 
     /**
@@ -300,7 +360,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public every(callback: Function): iResponse {
-        return this.lastElement().every(callback);
+        return this.getLastElement().every(callback);
     }
 
     /**
@@ -308,32 +368,32 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public exists(): iResponse {
-        return this.lastElement().exists();
+        return this.getLastElement().exists();
     }
 
     /**
      *
-     * @returns {Value}
+     * @returns {Node}
      */
-    public parseInt(): Value {
-        return this.lastElement().parseInt();
+    public parseInt(): Node {
+        return this.getLastElement().text().parseInt();
     }
 
     /**
      *
-     * @returns {Value}
+     * @returns {Node}
      */
-    public parseFloat(): Value {
-        return this.lastElement().parseFloat();
+    public parseFloat(): Node {
+        return this.getLastElement().text().parseFloat();
     }
 
     /**
      *
-     * @param {number} value
+     * @param {number} 
      * @returns {iResponse}
      */
     public greaterThan(value: number): iResponse {
-        return this.lastElement().greaterThan(value);
+        return this.getLastElement().greaterThan(value);
     }
 
     /**
@@ -342,7 +402,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public greaterThanOrEquals(value: number): iResponse {
-        return this.lastElement().greaterThanOrEquals(value);
+        return this.getLastElement().greaterThanOrEquals(value);
     }
 
     /**
@@ -351,7 +411,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public lessThan(value: number): iResponse {
-        return this.lastElement().lessThan(value);
+        return this.getLastElement().lessThan(value);
     }
 
     /**
@@ -360,7 +420,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public lessThanOrEquals(value: number): iResponse {
-        return this.lastElement().lessThanOrEquals(value);
+        return this.getLastElement().lessThanOrEquals(value);
     }
 
     /**
@@ -370,7 +430,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public equals(value: any, permissiveMatching: boolean): iResponse {
-        return this.lastElement().equals(value, permissiveMatching);
+        return this.getLastElement().equals(value, permissiveMatching);
     }
 
     /**
@@ -379,15 +439,7 @@ export abstract class GenericRequest  implements iResponse, iProperty {
      * @returns {iResponse}
      */
     public similarTo(value: any): iResponse {
-        return this.lastElement().similarTo(value);
+        return this.getLastElement().similarTo(value);
     }
-
-    /**
-     *
-     * @param {string} path
-     * @param findIn
-     * @returns {Element}
-     */
-    abstract select(path: string, findIn?: any): Element
 
 }

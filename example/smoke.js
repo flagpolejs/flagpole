@@ -4,7 +4,7 @@ Flagpole.Suite('Smoke Tests')
     .base('http://www.stackoverflow.com')
     .setConsoleOutput(false)
     .onDone(function(suite) {
-        console.log(suite.toJson());
+        suite.print();
     })
 
     .Scenario('Homepage').open('/')
@@ -28,20 +28,9 @@ Flagpole.Suite('Smoke Tests')
             .and().length().greaterThan(5)
             .select('.question-summary').first()
             .and().find('.views span').exists()
-            .and().parseInt().greaterThan(0)
+            .and().text().parseInt().greaterThan(0)
             .select('.question-summary').nth(2)
             .and().find('.status span').exists()
-            .and().parseInt().greaterThanOrEquals(0)
-            .select('#tabs').exists()
-            .select('#tabs a').length().equals(5)
-            .select('#tabs a').first().text().contains('interesting')
-            .select('#tabs a').nth(1).text().contains('featured')
-            .select('#tabs a').nth(2).text().contains('hot')
-            .select('#tabs a').nth(2).trim().startsWith('h');
-
-        test.comment('start each test')
-            .select('#tabs a').each(function(element) {
-                element.attribute('href').exists();
-            });
+            .and().text().parseInt().greaterThanOrEquals(0);
 
     });

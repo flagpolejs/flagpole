@@ -1,15 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const property_1 = require("./property");
-const element_1 = require("./element");
-class GenericRequest {
+const node_1 = require("./node");
+class GenericResponse {
     constructor(scenario, url, response) {
         this.flipAssertion = false;
         this.ignoreAssertion = false;
         this.scenario = scenario;
         this.url = url;
         this.response = response;
-        this._lastElement = new element_1.Element(this, 'Empty Element', []);
+        this._lastElement = new node_1.Node(this, 'Empty Element', []);
     }
     assert(statement, passMessage, failMessage) {
         if (!this.ignoreAssertion) {
@@ -38,7 +37,7 @@ class GenericRequest {
     }
     lastElement(property) {
         if (typeof property == 'undefined') {
-            return this._lastElement || new element_1.Element(this, 'Empty Element', []);
+            return this._lastElement || new node_1.Node(this, 'Empty Element', []);
         }
         else {
             this._lastElement = property;
@@ -55,7 +54,7 @@ class GenericRequest {
         return this.lastElement().typeof();
     }
     and() {
-        return this._lastElement || new element_1.Element(this, 'Empty Element', []);
+        return this._lastElement || new node_1.Node(this, 'Empty Element', []);
     }
     comment(message) {
         this.scenario.comment(message);
@@ -65,16 +64,16 @@ class GenericRequest {
         if (typeof key !== 'undefined') {
             key = typeof this.response.headers[key] !== 'undefined' ? key : key.toLowerCase();
             let name = 'HTTP Headers[' + key + ']';
-            let value = new property_1.Value(this, name, this.response.headers[key]);
+            let value = new node_1.Node(this, name, this.response.headers[key]);
             value.exists();
             return value;
         }
         else {
-            return new property_1.Value(this, 'HTTP Headers', this.response.headers);
+            return new node_1.Node(this, 'HTTP Headers', this.response.headers);
         }
     }
     status() {
-        return new property_1.Value(this, 'HTTP Status', this.response.statusCode);
+        return new node_1.Node(this, 'HTTP Status', this.response.statusCode);
     }
     label(message) {
         this.scenario.label(message);
@@ -99,16 +98,16 @@ class GenericRequest {
         return this.lastElement().endsWith(matchText);
     }
     trim() {
-        return this.lastElement().trim();
+        return this.lastElement().text().trim();
     }
     toLowerCase() {
-        return this.lastElement().toLowerCase();
+        return this.lastElement().text().toLowerCase();
     }
     toUpperCase() {
-        return this.lastElement().toUpperCase();
+        return this.lastElement().text().toUpperCase();
     }
     replace(search, replace) {
-        return this.lastElement().replace(search, replace);
+        return this.lastElement().text().replace(search, replace);
     }
     is(type) {
         return this.lastElement().is(type);
@@ -126,10 +125,10 @@ class GenericRequest {
         return this.lastElement().exists();
     }
     parseInt() {
-        return this.lastElement().parseInt();
+        return this.lastElement().text().parseInt();
     }
     parseFloat() {
-        return this.lastElement().parseFloat();
+        return this.lastElement().text().parseFloat();
     }
     greaterThan(value) {
         return this.lastElement().greaterThan(value);
@@ -150,4 +149,4 @@ class GenericRequest {
         return this.lastElement().similarTo(value);
     }
 }
-exports.GenericRequest = GenericRequest;
+exports.GenericResponse = GenericResponse;

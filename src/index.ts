@@ -1,30 +1,8 @@
-import { ConsoleLine, LogType } from "./consoleline";
+import { ConsoleLine } from "./consoleline";
 import { Suite } from "./suite";
-import { Scenario } from "./scenario";
-import { Element, Value } from "./property";
+import { SimplifiedResponse } from "./response";
 
 let cheerio = require('cheerio');
-
-export interface iResponse {
-    select(path: string, findIn?: any): Element
-    status(): Value
-    and(): Element
-    label(message: string): iResponse
-    lastElement(property?: Element): Element
-    comment(message: string): iResponse
-    headers(key?: string): Value
-    not(): iResponse
-    startIgnoringAssertions(): iResponse
-    stopIgnoringAssertions(): iResponse
-    assert(statement: boolean, passMessage: string, failMessage: string): iResponse
-    readonly scenario: Scenario
-}
-
-export interface SimplifiedResponse {
-    statusCode: number
-    body: string
-    headers: Array<any>
-}
 
 export class Flagpole {
 

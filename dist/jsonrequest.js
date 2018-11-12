@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const genericrequest_1 = require("./genericrequest");
-const property_1 = require("./property");
+const element_1 = require("./element");
 class JsonRequest extends genericrequest_1.GenericRequest {
     constructor(scenario, url, response) {
         super(scenario, url, response);
@@ -19,10 +19,10 @@ class JsonRequest extends genericrequest_1.GenericRequest {
             obj = obj[value];
             return (typeof obj !== 'undefined');
         })) {
-            element = new property_1.Element(response, path, obj);
+            element = new element_1.Element(response, path, obj);
         }
         else {
-            element = new property_1.Element(response, path, undefined);
+            element = new element_1.Element(response, path, undefined);
         }
         this.lastElement(element);
         element.exists();
