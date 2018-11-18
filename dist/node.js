@@ -8,15 +8,6 @@ class Node {
         this.name = name;
         this.obj = obj;
     }
-    select(path, findIn) {
-        return this.response.select(path, findIn);
-    }
-    and() {
-        return this.response.and();
-    }
-    not() {
-        return this.response.not();
-    }
     isNullOrUndefined() {
         return _1.Flagpole.isNullOrUndefined(this.obj);
     }
@@ -62,6 +53,12 @@ class Node {
     hasProperty(key) {
         return this.obj.hasOwnProperty && this.obj.hasOwnProperty(key);
     }
+    pass(message) {
+        return this.response.scenario.pass(message);
+    }
+    fail(message) {
+        return this.response.scenario.fail(message);
+    }
     get(index) {
         if (typeof index !== 'undefined') {
             if (this.isArray()) {
@@ -73,19 +70,43 @@ class Node {
         }
         return this.obj;
     }
-    pass(message) {
-        return this.response.scenario.pass(message);
+    toString() {
+        if (this.isDomElement()) {
+            return (this.obj.text() || this.obj.val()).toString();
+        }
+        else if (!this.isNullOrUndefined() && this.obj.toString) {
+            return this.obj.toString();
+        }
+        else {
+            return String(this.obj);
+        }
     }
-    fail(message) {
-        return this.response.scenario.fail(message);
+    select(path, findIn) {
+        return this.response.select(path, findIn);
+    }
+    headers(key) {
+        return this.response.headers(key);
+    }
+    status() {
+        return this.response.status();
+    }
+    loadTime() {
+        return this.response.loadTime();
+    }
+    and() {
+        return this.response.and();
+    }
+    not() {
+        this.response.not();
+        return this;
     }
     comment(message) {
         this.response.scenario.comment(message);
-        return this.response;
+        return this;
     }
     label(message) {
         this.response.label(message);
-        return this.response;
+        return this;
     }
     echo() {
         this.comment(this.name + ' = ' + this.obj);
@@ -94,9 +115,6 @@ class Node {
     typeof() {
         this.comment('typeof ' + this.name + ' = ' + _1.Flagpole.toType(this.obj));
         return this;
-    }
-    headers(key) {
-        return this.response.headers(key);
     }
     click(nextScenario) {
         if (this.isLinkElement()) {
@@ -373,17 +391,6 @@ class Node {
         let text = this.toString().replace(search, replace);
         return new Node(this.response, 'Replaced text of ' + this.name, text);
     }
-    toString() {
-        if (this.isDomElement()) {
-            return (this.obj.text() || this.obj.val()).toString();
-        }
-        else if (!this.isNullOrUndefined() && this.obj.toString) {
-            return this.obj.toString();
-        }
-        else {
-            return String(this.obj);
-        }
-    }
     each(callback) {
         let name = this.name;
         let response = this.response;
@@ -409,7 +416,7 @@ class Node {
                 callback(new Node(response, name + '[' + index + ']', word));
             });
         }
-        return this.response;
+        return this;
     }
     every(callback) {
         let name = this.name;
@@ -442,7 +449,8 @@ class Node {
             });
         }
         this.response.stopIgnoringAssertions();
-        return this.assert(every, 'Every ' + this.name + ' passed', 'Every ' + this.name + ' did not pass');
+        this.assert(every, 'Every ' + this.name + ' passed', 'Every ' + this.name + ' did not pass');
+        return this;
     }
     some(callback) {
         let name = this.name;
@@ -475,16 +483,17 @@ class Node {
             });
         }
         this.response.stopIgnoringAssertions();
-        return this.assert(some, 'Some ' + this.name + ' passed', 'No ' + this.name + ' passed');
+        this.assert(some, 'Some ' + this.name + ' passed', 'No ' + this.name + ' passed');
+        return this;
     }
     any(callback) {
         return this.some(callback);
     }
     hasClass(className) {
         if (this.isDomElement()) {
-            return this.assert(this.obj.hasClass(className), this.name + ' has class ' + className, this.name + ' does not have class ' + className);
+            this.assert(this.obj.hasClass(className), this.name + ' has class ' + className, this.name + ' does not have class ' + className);
         }
-        return this.response;
+        return this;
     }
     greaterThan(value) {
         return this.assert(this.obj > value, this.name + ' is greater than ' + value + ' (' + this.obj + ')', this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
@@ -499,7 +508,8 @@ class Node {
         return this.assert(this.obj <= value, this.name + ' is less than or equal to ' + value + ' (' + this.obj + ')', this.name + ' is not less than or equal to ' + value + ' (' + this.obj + ')');
     }
     assert(statement, passMessage, failMessage) {
-        return this.response.assert(statement, passMessage, failMessage);
+        this.response.assert(statement, passMessage, failMessage);
+        return this;
     }
     contains(string) {
         let contains = false;

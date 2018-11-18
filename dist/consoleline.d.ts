@@ -1,7 +1,7 @@
 export declare enum LogType {
     Pass = 0,
     Fail = 1,
-    Comment = 2,
+    Comment = 2
 }
 export declare class ConsoleLine {
     color: string;

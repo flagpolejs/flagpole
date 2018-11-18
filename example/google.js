@@ -9,14 +9,12 @@ let suite = Flagpole.Suite('Test Google')
 
 let homepage = suite.Scenario('Homepage').open('/')
     .assertions(function (test) {
-        test
-            .status().equals(200)
-            .headers('content-type').contains('text/html');
+        test.status().equals(200);
+        test.headers('content-type').contains('text/html');
 
         test.select('form')
             .attribute('action').equals('/search')
-            .getLastElement()
-            .fillForm({
+            .and().fillForm({
                 q: 'milesplit'
             })
             .submit(searchResults);
@@ -26,9 +24,8 @@ let homepage = suite.Scenario('Homepage').open('/')
 
 let searchResults = suite.Scenario('Search Results')
     .assertions(function (test) {
-        test
-            .status().equals(200)
-            .headers('content-type').contains('text/html');
+        test.status().equals(200);
+        test.headers('content-type').contains('text/html');
         
         test.select('input[name="q"]').val().equals('milesplit');
 

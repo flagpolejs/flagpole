@@ -39,6 +39,14 @@ class GenericResponse {
         this.flipAssertion = true;
         return this;
     }
+    label(message) {
+        this.scenario.label(message);
+        return this;
+    }
+    comment(message) {
+        this.scenario.comment(message);
+        return this;
+    }
     setLastElement(path, element) {
         this._lastElement = element;
         this._lastElementPath = path;
@@ -51,11 +59,7 @@ class GenericResponse {
         return this._lastElementPath;
     }
     and() {
-        return this._lastElement || new node_1.Node(this, 'Empty Element', []);
-    }
-    comment(message) {
-        this.scenario.comment(message);
-        return this;
+        return this.getLastElement();
     }
     headers(key) {
         if (typeof key !== 'undefined') {
@@ -74,10 +78,6 @@ class GenericResponse {
     }
     loadTime() {
         return new node_1.Node(this, 'Load Time', this.scenario.getRequestLoadTime());
-    }
-    label(message) {
-        this.scenario.label(message);
-        return this;
     }
 }
 exports.GenericResponse = GenericResponse;

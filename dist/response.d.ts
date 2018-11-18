@@ -42,13 +42,13 @@ export declare abstract class GenericResponse implements iResponse {
     startIgnoringAssertions(): iResponse;
     stopIgnoringAssertions(): iResponse;
     not(): iResponse;
+    label(message: string): iResponse;
+    comment(message: string): iResponse;
     setLastElement(path: string | null, element: Node): Node;
     getLastElement(): Node;
     getLastElementPath(): string | null;
     and(): Node;
-    comment(message: string): iResponse;
     headers(key?: string): Node;
     status(): Node;
     loadTime(): Node;
-    label(message: string): iResponse;
 }

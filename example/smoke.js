@@ -7,10 +7,8 @@ Flagpole.Suite('Smoke Tests')
         suite.print();
     })
 
-    .Scenario('Homepage').open('/')
-    .assertions(function(test) {
-        test
-            .status().equals(200)
+    .Scenario('Homepage').open('/').assertions(function(test) {
+        test.status().equals(200)
             .headers('content-type').contains('text/html')
             .select('title').text().contains('Stack Overflow')
             .select('link')

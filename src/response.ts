@@ -120,6 +120,28 @@ export abstract class GenericResponse implements iResponse {
     }
 
     /**
+     * Set human readable label to override normal assertion message for next test
+     *
+     * @param {string} message
+     * @returns {iResponse}
+     */
+    public label(message: string): iResponse {
+        this.scenario.label(message);
+        return this;
+    }
+
+    /**
+         * Add a console comment
+         *
+         * @param {string} message
+         * @returns {iResponse}
+         */
+    public comment(message: string): iResponse {
+        this.scenario.comment(message);
+        return this;
+    }
+
+    /**
      * Set last element
      * 
      * @param path 
@@ -138,7 +160,7 @@ export abstract class GenericResponse implements iResponse {
      * @returns {Node}
      */
     public getLastElement(): Node {
-        return this._lastElement || new Node(<iResponse>this, 'Empty Element', []);
+        return this._lastElement || new Node(this, 'Empty Element', []);
     }
 
     /**
@@ -154,18 +176,7 @@ export abstract class GenericResponse implements iResponse {
      * @returns {Node}
      */
     public and(): Node {
-        return this._lastElement || new Node(this, 'Empty Element', []);
-    }
-
-    /**
-     * Add a console comment
-     *
-     * @param {string} message
-     * @returns {iResponse}
-     */
-    public comment(message: string): iResponse {
-        this.scenario.comment(message);
-        return this;
+        return this.getLastElement();
     }
 
     /**
@@ -202,17 +213,6 @@ export abstract class GenericResponse implements iResponse {
      */
     public loadTime(): Node {
         return new Node(this, 'Load Time', this.scenario.getRequestLoadTime());
-    }
-
-    /**
-     * Set human readable label to override normal assertion message for next test
-     *
-     * @param {string} message
-     * @returns {iResponse}
-     */
-    public label(message: string): iResponse {
-        this.scenario.label(message);
-        return this;
     }
 
 }

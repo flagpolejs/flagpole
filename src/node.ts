@@ -20,48 +20,20 @@ export class Node {
     }
 
     /**
-     * Select another element.
-     * 
-     * @param path 
-     * @param findIn 
-     */
-    public select(path: string, findIn?: any): Node {
-        return this.response.select(path, findIn);
-    }
-
-    /**
-    * Just mapping this to response.and() to facilitate chaining
-    *
-    * @returns {Node}
+    * Test the raw object to see if its nullish
     */
-    public and(): Node {
-        return this.response.and();
-    }
-
-    /**
-     * Flip the next assertion
-     *
-     * @returns {iResponse}
-     */
-    public not(): iResponse {
-        return this.response.not();
-    }
-
-    /**
-     * Test the raw object to see if its nullish
-     */
-    public isNullOrUndefined(): boolean {
+    protected isNullOrUndefined(): boolean {
         return Flagpole.isNullOrUndefined(this.obj);
     }
 
     /**
      * Is this node a DOM Element?
      */
-    public isDomElement(): boolean {
+    protected isDomElement(): boolean {
         return (Flagpole.toType(this.obj) == 'cheerio');
     }
 
-    public getTagName(): string | null {
+    protected getTagName(): string | null {
         if (this.isDomElement()) {
             return this.obj.get(0).tagName;
         }
@@ -71,7 +43,7 @@ export class Node {
     /**
      * Check if the underlying html element is a form tag
      */
-    public isFormElement(): boolean {
+    protected isFormElement(): boolean {
         if (this.isDomElement()) {
             return this.getTagName() === 'form';
         }
@@ -81,7 +53,7 @@ export class Node {
     /**
      * Check if the underlying html element is a button tag
      */
-    public isButtonElement(): boolean {
+    protected isButtonElement(): boolean {
         if (this.isDomElement()) {
             return this.getTagName() === 'button';
         }
@@ -91,7 +63,7 @@ export class Node {
     /**
      * Check if the underlying html element is an a tag
      */
-    public isLinkElement(): boolean {
+    protected isLinkElement(): boolean {
         if (this.isDomElement()) {
             return this.getTagName() === 'a';
         }
@@ -101,28 +73,28 @@ export class Node {
     /**
      * Is this element one we can fake click on?
      */
-    public isClickable(): boolean {
+    protected isClickable(): boolean {
         return (this.isLinkElement() || this.isButtonElement());
     }
 
     /**
      * 
      */
-    public isArray(): boolean {
+    protected isArray(): boolean {
         return Flagpole.toType(this.obj) == 'array';
     }
 
     /**
      * 
      */
-    public isString(): boolean {
+    protected isString(): boolean {
         return Flagpole.toType(this.obj) == 'string';
     }
 
     /**
      * 
      */
-    public isObject(): boolean {
+    protected isObject(): boolean {
         return Flagpole.toType(this.obj) == 'object';
     }
 
@@ -130,26 +102,8 @@ export class Node {
      * 
      * @param key 
      */
-    public hasProperty(key: string): boolean {
+    protected hasProperty(key: string): boolean {
         return this.obj.hasOwnProperty && this.obj.hasOwnProperty(key);
-    }
-
-    /**
-     * Get the raw object
-     *
-     * @returns any
-     */
-    public get(index?: number): any {
-        if (typeof index !== 'undefined') {
-            if (this.isArray()) {
-                return this.obj[index];
-            } 
-            else if (this.isDomElement()) {
-                return this.obj.eq(index);
-            }
-        }
-        // Still here? return it all
-        return this.obj;
     }
 
     /**
@@ -171,30 +125,105 @@ export class Node {
     }
 
     /**
+     * Get the raw object
+     */
+    public get(index?: number): any {
+        if (typeof index !== 'undefined') {
+            if (this.isArray()) {
+                return this.obj[index];
+            }
+            else if (this.isDomElement()) {
+                return this.obj.eq(index);
+            }
+        }
+        // Still here? return it all
+        return this.obj;
+    }
+
+    /**
+    * Sometimes we need to get the actual string
+    */
+    public toString(): string {
+        if (this.isDomElement()) {
+            return (this.obj.text() || this.obj.val()).toString();
+        }
+        else if (!this.isNullOrUndefined() && this.obj.toString) {
+            return this.obj.toString();
+        }
+        else {
+            return String(this.obj);
+        }
+    }
+
+    /**
+     * Select another element.
+     * 
+     * @param path 
+     * @param findIn 
+     */
+    public select(path: string, findIn?: any): Node {
+        return this.response.select(path, findIn);
+    }
+
+    /**
+     * 
+     * @param key 
+     */
+    public headers(key?: string): Node {
+        return this.response.headers(key);
+    }
+
+    /**
+     * 
+     */
+    public status(): Node {
+        return this.response.status();
+    }
+
+    /**
+     * 
+     */
+    public loadTime(): Node {
+        return this.response.loadTime();
+    }
+
+    /**
+    * Gets back to the last element selected
+    */
+    public and(): Node {
+        return this.response.and();
+    }
+
+    /**
+     * Flip the next assertion
+     */
+    public not(): Node {
+        this.response.not();
+        return this;
+    }
+
+    /**
      * Write message for a comment
      *
      * @param {string} message
      */
-    public comment(message: string): iResponse {
+    public comment(message: string): Node {
         this.response.scenario.comment(message);
-        return this.response;
+        return this;
     }
 
     /**
      * Override the default message for this test so we can have a custom message that is more human readable
      *
      * @param {string} message
-     * @returns {iResponse}
      */
-    public label(message: string): iResponse {
+    public label(message: string): Node {
         this.response.label(message);
-        return this.response;
+        return this;
     }
 
     /**
      * For debugging, just spit out a value
-     *
-     * @returns {Node}
      */
     public echo(): Node {
         this.comment(this.name + ' = ' + this.obj);
@@ -203,21 +232,10 @@ export class Node {
 
     /**
      * For debugging, just spit out this object's type
-     *
-     * @returns {Node}
      */
     public typeof(): Node {
         this.comment('typeof ' + this.name + ' = ' + Flagpole.toType(this.obj));
         return this;
-    }
-
-    /**
-     * Returns header from the main response
-     * 
-     * @param key 
-     */
-    public headers(key?: string): Node {
-        return this.response.headers(key);
     }
 
     /**
@@ -284,10 +302,6 @@ export class Node {
         return this;
     }
 
-    /**
-     * 
-     * @param formData 
-     */
     public fillForm(formData: any): Node {
         if (this.isFormElement()) {
             this.comment('Filling out form');
@@ -453,7 +467,6 @@ export class Node {
      * Alias for nth because it's what jQuery uses even though it's a stupid name
      *
      * @param {number} i
-     * @returns {Node}
      */
     public eq(i: number): Node {
         return this.nth(i);
@@ -463,14 +476,13 @@ export class Node {
      * Select the nth value or an array or collection
      *
      * @param {number} i
-     * @returns {Node}
      */
     public nth(i: number): Node {
         let obj: any = null;
         if (i >= 0) {
             if (this.isArray()) {
                 obj = this.obj[i];
-            }
+            } 
             else if (this.isDomElement()) {
                 obj = this.obj.eq(i);
             }
@@ -480,8 +492,6 @@ export class Node {
 
     /**
      * Get the first element in the array
-     *
-     * @returns {Node}
      */
     public first(): Node {
         return this.nth(0);
@@ -489,8 +499,6 @@ export class Node {
 
     /**
      * Get the last element in the array
-     *
-     * @returns {Node}
      */
     public last(): Node {
         return this.nth(
@@ -506,7 +514,6 @@ export class Node {
      * Get the attribute by name of this object
      *
      * @param {string} key
-     * @returns {Node}
      */
     public attribute(key: string): Node {
         let text: any = null;
@@ -526,7 +533,6 @@ export class Node {
      * Get the property by name of this object
      *
      * @param {string} key
-     * @returns {Node}
      */
     public property(key: string): Node {
         let text: any;
@@ -546,7 +552,6 @@ export class Node {
      * Get the data attribute by name of this object
      *
      * @param {string} key
-     * @returns {Node}
      */
     public data(key: string): Node {
         let text: any = null;
@@ -564,8 +569,6 @@ export class Node {
 
     /**
      * Get the value of this object
-     *
-     * @returns {Node}
      */
     public val(): Node {
         let text: any = null;
@@ -579,9 +582,7 @@ export class Node {
     }
 
     /**
-    * Get the value of this object
-    *
-    * @returns {Node}
+    * Get the text of this object
     */
     public text(): Node {
         let text: any = null;
@@ -596,8 +597,6 @@ export class Node {
 
     /**
      * Find the number of elements in array or length of a string
-     *
-     * @returns {Node}
      */
     public length(): Node {
         let count: number = (this.obj && this.obj.length) ?
@@ -607,8 +606,6 @@ export class Node {
 
     /**
      * Get the float/double value of this object
-     *
-     * @returns {Node}
      */
     public parseFloat(): Node {
         return new Node(this.response, 'Float of ' + this.name, parseFloat(this.toString()));
@@ -616,8 +613,6 @@ export class Node {
 
     /**
      * Get the integer value of this object
-     *
-     * @returns {Node}
      */
     public parseInt(): Node {
         return new Node(this.response, 'Integer of ' + this.name, parseInt(this.toString()));
@@ -625,8 +620,6 @@ export class Node {
 
     /**
      * Trim extra whitespace around the string value
-     *
-     * @returns {Node}
      */
     public trim(): Node {
         let text: string = this.toString().trim();
@@ -635,8 +628,6 @@ export class Node {
 
     /**
      * Lowercase the string value
-     *
-     * @returns {Node}
      */
     public toLowerCase(): Node {
         let text: string = this.toString().toLowerCase();
@@ -645,8 +636,6 @@ export class Node {
 
     /**
      * Uppercase the string value
-     *
-     * @returns {Node}
      */
     public toUpperCase(): Node {
         let text: string = this.toString().toUpperCase();
@@ -658,28 +647,10 @@ export class Node {
      *
      * @param {string | RegExp} search
      * @param {string} replace
-     * @returns {Node}
      */
     public replace(search: string | RegExp, replace: string): Node {
         let text: string = this.toString().replace(search, replace);
         return new Node(this.response, 'Replaced text of ' + this.name, text);
-    }
-
-    /**
-    * Sometimes we need to get the actual string
-    *
-    * @returns {string}
-    */
-    public toString(): string {
-        if (this.isDomElement()) {
-            return (this.obj.text() || this.obj.val()).toString();
-        }
-        else if (!this.isNullOrUndefined() && this.obj.toString) {
-            return this.obj.toString();
-        }
-        else {
-            return String(this.obj);
-        }
     }
 
     /**
@@ -690,9 +661,8 @@ export class Node {
      * Loop through it
      *
      * @param {Function} callback
-     * @returns {iResponse}
      */
-    public each(callback: Function): iResponse {
+    public each(callback: Function): Node {
         let name: string = this.name;
         let response: iResponse = this.response;
         if (this.isDomElement()) {
@@ -725,16 +695,15 @@ export class Node {
                 );
             });
         }
-        return this.response;
+        return this;
     }
 
     /**
      * Loops through the element and expects the return from every callback to be true
      *
      * @param {Function} callback
-     * @returns {iResponse}
      */
-    public every(callback: Function): iResponse {
+    public every(callback: Function): Node {
         let name: string = this.name;
         let response: iResponse = this.response;
         let every: boolean = true;
@@ -771,19 +740,19 @@ export class Node {
             });
         }
         this.response.stopIgnoringAssertions();
-        return this.assert(every,
+        this.assert(every,
             'Every ' + this.name + ' passed',
             'Every ' + this.name + ' did not pass'
         );
+        return this;
     }
 
     /**
      * Loops through the element and expects the return from every callback to be true
      *
      * @param {Function} callback
-     * @returns {iResponse}
      */
-    public some(callback: Function): iResponse {
+    public some(callback: Function): Node {
         let name: string = this.name;
         let response: iResponse = this.response;
         let some: boolean = false;
@@ -820,10 +789,11 @@ export class Node {
             });
         }
         this.response.stopIgnoringAssertions();
-        return this.assert(some,
+        this.assert(some,
             'Some ' + this.name + ' passed',
             'No ' + this.name + ' passed'
         );
+        return this;
     }
 
     /**
@@ -831,7 +801,7 @@ export class Node {
      * 
      * @param callback 
      */
-    public any(callback: Function): iResponse {
+    public any(callback: Function): Node {
         return this.some(callback);
     }
 
@@ -843,25 +813,23 @@ export class Node {
      * Does this element have this class name?
      *
      * @param {string} className
-     * @returns {iResponse}
      */
-    public hasClass(className: string): iResponse {
+    public hasClass(className: string): Node {
         if (this.isDomElement()) {
-            return this.assert(this.obj.hasClass(className),
+            this.assert(this.obj.hasClass(className),
                 this.name + ' has class ' + className,
                 this.name + ' does not have class ' + className
             );
         }
-        return this.response;
+        return this;
     }
     
     /**
     * Is this object's value greater than this?
     *
     * @param {number} value
-    * @returns {iResponse}
     */
-    public greaterThan(value: number): iResponse {
+    public greaterThan(value: number): Node {
         return this.assert(this.obj > value,
             this.name + ' is greater than ' + value + ' (' + this.obj + ')',
             this.name + ' is not greater than ' + value + ' (' + this.obj + ')'
@@ -872,9 +840,8 @@ export class Node {
      *  Is this object's value greater than or equal to this?
      *
      * @param value
-     * @returns {iResponse}
      */
-    public greaterThanOrEquals(value: any): iResponse {
+    public greaterThanOrEquals(value: any): Node {
         return this.assert(this.obj >= value,
             this.name + ' is greater than or equal to ' + value + ' (' + this.obj + ')',
             this.name + ' is not greater than or equal to ' + value + ' (' + this.obj + ')'
@@ -885,9 +852,8 @@ export class Node {
      * Is this object's value less than this?
      *
      * @param {number} value
-     * @returns {iResponse}
      */
-    public lessThan(value: number): iResponse {
+    public lessThan(value: number): Node {
         return this.assert(this.obj < value,
             this.name + ' is less than ' + value + ' (' + this.obj + ')',
             this.name + ' is not less than ' + value + ' (' + this.obj + ')'
@@ -898,9 +864,8 @@ export class Node {
      * Is this object's value less or equal to this?
      *
      * @param value
-     * @returns {iResponse}
      */
-    public lessThanOrEquals(value: any): iResponse {
+    public lessThanOrEquals(value: any): Node {
         return this.assert(this.obj <= value,
             this.name + ' is less than or equal to ' + value + ' (' + this.obj + ')',
             this.name + ' is not less than or equal to ' + value + ' (' + this.obj + ')'
@@ -914,8 +879,9 @@ export class Node {
      * @param passMessage 
      * @param failMessage 
      */
-    public assert(statement: boolean, passMessage: string, failMessage: string): iResponse {
-        return this.response.assert(statement, passMessage, failMessage);
+    public assert(statement: boolean, passMessage: string, failMessage: string): Node {
+        this.response.assert(statement, passMessage, failMessage);
+        return this;
     }
 
     /**
@@ -923,7 +889,7 @@ export class Node {
      *
      * @param {string} string
      */
-    public contains(string: string): iResponse {
+    public contains(string: string): Node {
         let contains: boolean = false;
         if (this.isArray()) {
             contains = (this.obj.indexOf(string) >= 0);
@@ -945,7 +911,7 @@ export class Node {
      * 
      * @param string 
      */
-    public contain(string: string): iResponse {
+    public contain(string: string): Node {
         return this.contains(string);
     }
 
@@ -954,7 +920,7 @@ export class Node {
      *
      * @param {RegExp} pattern
      */
-    public matches(pattern: RegExp) {
+    public matches(pattern: RegExp): Node {
         let value: string = this.toString();
         return this.assert(pattern.test(value),
             this.name + ' matches ' + String(pattern),
@@ -966,9 +932,8 @@ export class Node {
      * Does it start with this value?
      *
      * @param {string} matchText
-     * @returns {iResponse}
      */
-    public startsWith(matchText: string): iResponse {
+    public startsWith(matchText: string): Node {
         let assert: boolean = false;
         let value: string = '';
         if (!this.isNullOrUndefined()) {
@@ -985,9 +950,8 @@ export class Node {
      * Does this end with this value?
      *
      * @param {string} matchText
-     * @returns {iResponse}
      */
-    public endsWith(matchText: string): iResponse {
+    public endsWith(matchText: string): Node {
         let assert: boolean = false;
         let value: string = '';
         if (!this.isNullOrUndefined()) {
@@ -1004,9 +968,8 @@ export class Node {
      * Does this objects type match this?
      *
      * @param {string} type
-     * @returns {iResponse}
      */
-    public is(type: string): iResponse {
+    public is(type: string): Node {
         let myType: string = Flagpole.toType(this.obj);
         return this.assert((myType == type.toLocaleLowerCase()),
             this.name + ' is type ' + type,
@@ -1016,10 +979,8 @@ export class Node {
 
     /**
      * Does this element exist?
-     *
-     * @returns {iResponse}
      */
-    public exists(): iResponse {
+    public exists(): Node {
         let exists: boolean = false;
         if (this.isDomElement()) {
             exists = (this.obj.length > 0);
@@ -1038,9 +999,8 @@ export class Node {
      *
      * @param value
      * @param {boolean} permissiveMatching
-     * @returns {iResponse}
      */
-    public equals(value: any, permissiveMatching: boolean = false): iResponse {
+    public equals(value: any, permissiveMatching: boolean = false): Node {
         let matchValue: string = this.toString();
         let positiveCase: string = 'equals';
         let negativeCase: string = 'does not equal';
@@ -1060,9 +1020,8 @@ export class Node {
      * Is this object's value similar to this?
      *
      * @param value
-     * @returns {iResponse}
      */
-    public similarTo(value: any): iResponse {
+    public similarTo(value: any): Node {
         return this.equals(value, true);
     }
 
