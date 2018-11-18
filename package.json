@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "0.6.2",
+  "version": "1.0.0",
   "description": "Simple and fast DOM integration and REST API testing framework.",
   "keywords": [
     "qa",
