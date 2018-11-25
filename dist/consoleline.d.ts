@@ -11,6 +11,6 @@ export declare class ConsoleLine {
     write(): void;
     toJson(): any;
     static pass(message: string): ConsoleLine;
-    static fail(message: string): ConsoleLine;
+    static fail(message: string, isOptional?: boolean): ConsoleLine;
     static comment(message: string): ConsoleLine;
 }

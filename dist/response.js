@@ -13,6 +13,7 @@ var ReponseType;
 class GenericResponse {
     constructor(scenario, url, response) {
         this.flipAssertion = false;
+        this.optionalAssertion = false;
         this.ignoreAssertion = false;
         this._lastElementPath = null;
         this.scenario = scenario;
@@ -35,15 +36,27 @@ class GenericResponse {
     }
     assert(statement, passMessage, failMessage) {
         if (!this.ignoreAssertion) {
-            (this.flipAssertion ? !statement : !!statement) ?
-                this.scenario.pass(this.flipAssertion ? 'NOT: ' + passMessage : passMessage) :
-                this.scenario.fail(this.flipAssertion ? 'NOT: ' + failMessage : failMessage);
+            let passed = this.flipAssertion ? !statement : !!statement;
+            if (this.flipAssertion) {
+                passMessage = 'NOT: ' + passMessage;
+                failMessage = 'NOT: ' + failMessage;
+            }
+            if (this.optionalAssertion) {
+                failMessage += ' (Optional)';
+            }
+            if (passed) {
+                this.scenario.pass(passMessage);
+            }
+            else {
+                this.scenario.fail(failMessage, this.optionalAssertion);
+            }
             return this.reset();
         }
         return this;
     }
     reset() {
         this.flipAssertion = false;
+        this.optionalAssertion = false;
         return this;
     }
     startIgnoringAssertions() {
@@ -56,6 +69,10 @@ class GenericResponse {
     }
     not() {
         this.flipAssertion = true;
+        return this;
+    }
+    optional() {
+        this.optionalAssertion = true;
         return this;
     }
     label(message) {

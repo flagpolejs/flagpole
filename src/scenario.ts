@@ -245,17 +245,19 @@ export class Scenario {
 
     /**
      * Push in a new failing assertion
-     *
-     * @param {string} message
-     * @returns {Scenario}
+     * 
+     * @param message 
+     * @param isOptional 
      */
-    public fail(message: string): Scenario {
+    public fail(message: string, isOptional: boolean = false): Scenario {
         if (this.nextLabel) {
             message = this.nextLabel;
             this.nextLabel = null;
         }
-        this.log.push(ConsoleLine.fail('  ✕  ' + message));
-        this.failures.push(message);
+        this.log.push(ConsoleLine.fail('  ✕  ' + message, isOptional));
+        if (!isOptional) {
+            this.failures.push(message);
+        }
         return this;
     }
 

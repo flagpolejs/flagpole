@@ -42,7 +42,7 @@ export declare class Scenario {
     subheading(message: string): Scenario;
     comment(message: string): Scenario;
     pass(message: string): Scenario;
-    fail(message: string): Scenario;
+    fail(message: string, isOptional?: boolean): Scenario;
     open(url: string): Scenario;
     assertions(then: Function): Scenario;
     skip(): Scenario;

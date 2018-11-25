@@ -16,6 +16,10 @@ let homepage = suite.Scenario('Homepage').open('/')
             img.load('Image ' + index);
         });
 
+        test.optional().select('link[rel="stylesheet"]').each(function (link, index) {
+            link.load('Stylesheet ' + index);
+        });
+
         test.select('form')
             .attribute('action').equals('/search')
             .and().fillForm({

@@ -1,6 +1,7 @@
 import { Scenario } from "./scenario";
 import { iResponse, SimplifiedResponse } from "./response";
 import { Node } from "./node";
+import { fail } from "assert";
 
 /**
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
@@ -19,6 +20,7 @@ export interface iResponse {
     getBody(): string
     comment(message: string): iResponse
     not(): iResponse
+    optional(): iResponse
     startIgnoringAssertions(): iResponse
     stopIgnoringAssertions(): iResponse
     assert(statement: boolean, passMessage: string, failMessage: string): iResponse
@@ -52,6 +54,7 @@ export abstract class GenericResponse implements iResponse {
     protected url: string;
     protected response: SimplifiedResponse;
     protected flipAssertion: boolean = false;
+    protected optionalAssertion: boolean = false;
     protected ignoreAssertion: boolean = false;
     protected _lastElement: Node;
     protected _lastElementPath: string | null = null;
@@ -91,9 +94,20 @@ export abstract class GenericResponse implements iResponse {
      */
     public assert(statement: boolean, passMessage, failMessage): iResponse {
         if (!this.ignoreAssertion) {
-            (this.flipAssertion ? !statement : !!statement) ?
-                this.scenario.pass(this.flipAssertion ? 'NOT: ' + passMessage : passMessage) :
-                this.scenario.fail(this.flipAssertion ? 'NOT: ' + failMessage : failMessage);
+            let passed: boolean = this.flipAssertion ? !statement : !!statement;
+            if (this.flipAssertion) {
+                passMessage = 'NOT: ' + passMessage;
+                failMessage = 'NOT: ' + failMessage;
+            }
+            if (this.optionalAssertion) {
+                failMessage += ' (Optional)';
+            }
+            if (passed) {
+                this.scenario.pass(passMessage);
+            }
+            else {
+                this.scenario.fail(failMessage, this.optionalAssertion);
+            }
             return this.reset();
         }
         return this;
@@ -106,6 +120,7 @@ export abstract class GenericResponse implements iResponse {
      */
     protected reset(): iResponse {
         this.flipAssertion = false;
+        this.optionalAssertion = false;
         return this;
     }
 
@@ -136,6 +151,14 @@ export abstract class GenericResponse implements iResponse {
      */
     public not(): iResponse {
         this.flipAssertion = true;
+        return this;
+    }
+
+    /**
+     * Consider the next set of tests optional, until the next selector
+     */
+    public optional(): iResponse {
+        this.optionalAssertion = true;
         return this;
     }
 

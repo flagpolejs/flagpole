@@ -15,6 +15,7 @@ export interface iResponse {
     getBody(): string;
     comment(message: string): iResponse;
     not(): iResponse;
+    optional(): iResponse;
     startIgnoringAssertions(): iResponse;
     stopIgnoringAssertions(): iResponse;
     assert(statement: boolean, passMessage: string, failMessage: string): iResponse;
@@ -39,6 +40,7 @@ export declare abstract class GenericResponse implements iResponse {
     protected url: string;
     protected response: SimplifiedResponse;
     protected flipAssertion: boolean;
+    protected optionalAssertion: boolean;
     protected ignoreAssertion: boolean;
     protected _lastElement: Node;
     protected _lastElementPath: string | null;
@@ -52,6 +54,7 @@ export declare abstract class GenericResponse implements iResponse {
     startIgnoringAssertions(): iResponse;
     stopIgnoringAssertions(): iResponse;
     not(): iResponse;
+    optional(): iResponse;
     label(message: string): iResponse;
     comment(message: string): iResponse;
     setLastElement(path: string | null, element: Node): Node;

@@ -115,13 +115,15 @@ class Scenario {
         this.passes.push(message);
         return this;
     }
-    fail(message) {
+    fail(message, isOptional = false) {
         if (this.nextLabel) {
             message = this.nextLabel;
             this.nextLabel = null;
         }
-        this.log.push(consoleline_1.ConsoleLine.fail('  ✕  ' + message));
-        this.failures.push(message);
+        this.log.push(consoleline_1.ConsoleLine.fail('  ✕  ' + message, isOptional));
+        if (!isOptional) {
+            this.failures.push(message);
+        }
         return this;
     }
     open(url) {
