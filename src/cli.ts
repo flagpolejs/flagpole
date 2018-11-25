@@ -7,12 +7,14 @@ let fs = require('fs');
 /**
  * COMMAND LINE ARGUMENTS
  */
+let commands = ['run', 'list'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
     .help(false)
-    .version(false)
-    .demandCommand(1, 'You must specify a command: list, run')
+    .alias('v', 'version')
+    .version()
+    .demandCommand(1, 'You must specify a command: ' + commands.join(", "))
     .alias({
         's': 'suite',
         'g': 'group',
@@ -58,12 +60,11 @@ let argv = require('yargs')
 
 // Enforce limited list of commands
 process.env.FLAGPOLE_COMMAND = argv._[0];
-if (['run', 'list'].indexOf(String(process.env.FLAGPOLE_COMMAND)) < 0) {
-    Cli.log("Command must be either: run, list\n");
+if (commands.indexOf(String(process.env.FLAGPOLE_COMMAND)) < 0) {
+    Cli.log("Command must be either: " + commands.join(", ") + "\n");
     Cli.log("Example: flagpole run\n");
     Cli.exit(1);
 }
-
 
 /**
  * Get environment

@@ -208,6 +208,12 @@ response.headers('content-length').greaterThan(0);
 
 ```
 
+You can also test for load time being under a threshold:
+
+```javascript
+test.loadTime().lessThan(1000);
+```
+
 Now let's look into the response body and check for certain things to exit. We want to traverse the body. This works both for HTML and JSON responses.
 
 So for an HTML response, we might want to do something with CSS selectors like:
@@ -415,6 +421,42 @@ let homepageTest = Scenario('Check on homepage content').open('/')
 ```
 
 So since we told it to wait() at first, even after we set the open() then it will then wait for that execute() ... which in this case fires 5 seconds later.
+
+## Simulating filling a form and submitting
+
+For simple forms, we can complete them... check their input and submit them. 
+
+The resulting page will run in another scenario that gets delayed until the form submission response comes back.
+
+```javascript
+
+let suite = Flagpole.Suite('Test Google')
+    .base('http://www.google.com')
+    .setConsoleOutput(false)
+    .onDone(function (suite) {
+        suite.print();
+    });
+
+let homepage = suite.Scenario('Homepage').open('/')
+    .assertions(function (test) {
+        test.status().equals(200)
+            .headers('content-type').contains('text/html')
+            .select('form')
+                .attribute('action').equals('/search')
+                .and().fillForm({
+                    q: 'milesplit'
+                })
+                .submit(searchResults);
+    });
+
+let searchResults = suite.Scenario('Search Results')
+    .assertions(function (test) {
+        test.status().equals(200)
+            .headers('content-type').contains('text/html')
+            .select('input[name="q"]').val().equals('milesplit');
+    });
+
+```
 
 ## Using the CLI
 

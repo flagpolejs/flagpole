@@ -1,6 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_1 = require("./node");
+var ReponseType;
+(function (ReponseType) {
+    ReponseType[ReponseType["html"] = 0] = "html";
+    ReponseType[ReponseType["json"] = 1] = "json";
+    ReponseType[ReponseType["image"] = 2] = "image";
+    ReponseType[ReponseType["stylesheet"] = 3] = "stylesheet";
+    ReponseType[ReponseType["script"] = 4] = "script";
+    ReponseType[ReponseType["resource"] = 5] = "resource";
+})(ReponseType = exports.ReponseType || (exports.ReponseType = {}));
 class GenericResponse {
     constructor(scenario, url, response) {
         this.flipAssertion = false;
@@ -11,8 +20,18 @@ class GenericResponse {
         this.response = response;
         this._lastElement = new node_1.Node(this, 'Empty Element', null);
     }
+    absolutizeUri(uri) {
+        let baseUrl = new URL(this.scenario.suite.buildUrl(this.scenario.getUrl() || ''));
+        return (new URL(uri, baseUrl.href)).href;
+    }
     getBody() {
         return this.response.body;
+    }
+    getRoot() {
+        return this.response.body;
+    }
+    select(path, findIn) {
+        return new node_1.Node(this, 'Body', this.response.body);
     }
     assert(statement, passMessage, failMessage) {
         if (!this.ignoreAssertion) {

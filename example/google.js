@@ -12,6 +12,10 @@ let homepage = suite.Scenario('Homepage').open('/')
         test.status().equals(200);
         test.headers('content-type').contains('text/html');
 
+        test.select('img').each(function (img, index) {
+            img.load('Image ' + index);
+        });
+
         test.select('form')
             .attribute('action').equals('/search')
             .and().fillForm({

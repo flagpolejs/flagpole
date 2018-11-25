@@ -18,7 +18,16 @@ export interface iResponse {
     startIgnoringAssertions(): iResponse;
     stopIgnoringAssertions(): iResponse;
     assert(statement: boolean, passMessage: string, failMessage: string): iResponse;
+    absolutizeUri(uri: string): string;
     readonly scenario: Scenario;
+}
+export declare enum ReponseType {
+    html = 0,
+    json = 1,
+    image = 2,
+    stylesheet = 3,
+    script = 4,
+    resource = 5,
 }
 export interface SimplifiedResponse {
     statusCode: number;
@@ -34,9 +43,10 @@ export declare abstract class GenericResponse implements iResponse {
     protected _lastElement: Node;
     protected _lastElementPath: string | null;
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse);
-    abstract select(path: string, findIn?: any): Node;
-    abstract getRoot(): any;
+    absolutizeUri(uri: string): string;
     getBody(): string;
+    getRoot(): any;
+    select(path: string, findIn?: any): Node;
     assert(statement: boolean, passMessage: any, failMessage: any): iResponse;
     protected reset(): iResponse;
     startIgnoringAssertions(): iResponse;

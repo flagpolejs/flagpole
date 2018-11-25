@@ -40,6 +40,18 @@ export class Node {
         return null;
     }
 
+    protected getAttribute(name: string): string | null {
+        if (this.isDomElement()) {
+            return (typeof this.obj.get(0).attribs[name] !== 'undefined') ?
+                this.obj.get(0).attribs[name] : null;
+        }
+        return null;
+    }
+
+    protected getUrl(): string | null {
+        return this.getAttribute('src') || this.getAttribute('href');
+    }
+
     /**
      * Check if the underlying html element is a form tag
      */
@@ -65,7 +77,33 @@ export class Node {
      */
     protected isLinkElement(): boolean {
         if (this.isDomElement()) {
-            return this.getTagName() === 'a';
+            return this.getTagName() === 'a' &&
+                this.getAttribute('href') !== null;
+        }
+        return false;
+    }
+
+    protected isImageElement(): boolean {
+        if (this.isDomElement()) {
+            return this.getTagName() === 'img' && 
+                this.getAttribute('src') !== null;
+        }
+        return false;
+    }
+
+    protected isScriptElement(): boolean {
+        if (this.isDomElement()) {
+            return this.getTagName() === 'script' &&
+                this.getAttribute('src') !== null;
+        }
+        return false;
+    }
+
+    protected isStylesheetElement(): boolean {
+        if (this.isDomElement()) {
+            return this.getTagName() === 'link' &&
+                (this.getAttribute('rel') || '').toLowerCase() == 'stylesheet' &&
+                this.getAttribute('href') !== null
         }
         return false;
     }
@@ -318,6 +356,33 @@ export class Node {
         }
         else {
             this.fail('Not a form');
+        }
+        return this;
+    }
+
+    public load(title: string, assertions?: (response: iResponse) => void): Node {
+        let scenario: Scenario = this.response.scenario;
+        let relativePath: string | null = this.getUrl();
+        let url: string = this.response.absolutizeUri(relativePath || '');
+        if (relativePath === null) {
+            this.fail('No URL to load in this node: ' + title);
+        }
+        if (typeof assertions == 'undefined') {
+            assertions = function (response: iResponse) {
+                return scenario;
+            };
+        }
+        if (this.isImageElement()) {
+            this.response.scenario.Image(title).open(url).assertions(assertions);
+        }
+        else if (this.isStylesheetElement()) {
+            this.response.scenario.Stylesheet(title).open(url).assertions(assertions);
+        }
+        else if (this.isScriptElement()) {
+            this.response.scenario.Script(title).open(url).assertions(assertions);
+        }
+        else {
+            this.response.scenario.Resource(title).open(url).assertions(assertions); 
         }
         return this;
     }
@@ -669,14 +734,16 @@ export class Node {
             this.obj.each(function (index, el) {
                 el = $(el);
                 callback(
-                    new Node(response, name + '[' + index + ']', el)
+                    new Node(response, name + '[' + index + ']', el), 
+                    index
                 );
             });
         }
         else if (this.isArray()) {
             this.obj.forEach(function (el, index) {
                 callback(
-                    new Node(response, name + '[' + index + ']', el)
+                    new Node(response, name + '[' + index + ']', el),
+                    index
                 );
             });
         }
@@ -684,14 +751,16 @@ export class Node {
             let obj: {} = this.obj;
             this.obj.keys().forEach(function (key) {
                 callback(
-                    new Node(response, name + '[' + key + ']', obj[key])
+                    new Node(response, name + '[' + key + ']', obj[key]),
+                    key
                 );
             });
         }
         else if (Flagpole.toType(this.obj) == 'string') {
             this.obj.toString().trim().split(' ').forEach(function (word, index) {
                 callback(
-                    new Node(response, name + '[' + index + ']', word)
+                    new Node(response, name + '[' + index + ']', word),
+                    index
                 );
             });
         }
@@ -869,6 +938,13 @@ export class Node {
         return this.assert(this.obj <= value,
             this.name + ' is less than or equal to ' + value + ' (' + this.obj + ')',
             this.name + ' is not less than or equal to ' + value + ' (' + this.obj + ')'
+        );
+    }
+
+    public between(minValue: any, maxValue: any): Node {
+        return this.assert(this.obj >= minValue && this.obj <= maxValue,
+            this.name + ' is between ' + minValue + ' and ' + maxValue + ' (' + this.obj + ')',
+            this.name + ' is not between ' + minValue + ' and ' + maxValue + ' (' + this.obj + ')'
         );
     }
 

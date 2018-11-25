@@ -4,6 +4,11 @@ const index_1 = require("./index");
 const consoleline_1 = require("./consoleline");
 const jsonresponse_1 = require("./jsonresponse");
 const htmlresponse_1 = require("./htmlresponse");
+const response_1 = require("./response");
+const imageresponse_1 = require("./imageresponse");
+const resourceresponse_1 = require("./resourceresponse");
+const scriptresponse_1 = require("./scriptresponse");
+const cssresponse_1 = require("./cssresponse");
 let request = require('request');
 class Scenario {
     constructor(suite, title, onDone) {
@@ -15,7 +20,7 @@ class Scenario {
         this.end = null;
         this.requestStart = null;
         this.requestLoaded = null;
-        this.pageType = 'html';
+        this.responseType = response_1.ReponseType.html;
         this.then = null;
         this.url = null;
         this.waitToExecute = false;
@@ -82,7 +87,7 @@ class Scenario {
         return this;
     }
     type(type) {
-        this.pageType = type;
+        this.responseType = type;
         return this;
     }
     method(method) {
@@ -153,16 +158,52 @@ class Scenario {
             if (this.waitToExecute && this.initialized !== null) {
                 this.log.push(new consoleline_1.ConsoleLine('  »  Waited ' + (this.start - this.initialized) + 'ms'));
             }
-            let requestObject = (this.pageType == 'json') ? jsonresponse_1.JsonResponse : htmlresponse_1.HtmlResponse;
-            let pageType = (this.pageType == 'json') ? 'REST End Point' : 'HTML Page';
             let scenario = this;
+            let scenarioType = (function () {
+                if (scenario.responseType == response_1.ReponseType.json) {
+                    return {
+                        name: 'REST End Point',
+                        responseObject: jsonresponse_1.JsonResponse
+                    };
+                }
+                else if (scenario.responseType == response_1.ReponseType.image) {
+                    return {
+                        name: 'Image',
+                        responseObject: imageresponse_1.ImageResponse
+                    };
+                }
+                else if (scenario.responseType == response_1.ReponseType.script) {
+                    return {
+                        name: 'Script',
+                        responseObject: scriptresponse_1.ScriptResponse
+                    };
+                }
+                else if (scenario.responseType == response_1.ReponseType.stylesheet) {
+                    return {
+                        name: 'Stylesheet',
+                        responseObject: cssresponse_1.CssResponse
+                    };
+                }
+                else if (scenario.responseType == response_1.ReponseType.resource) {
+                    return {
+                        name: 'Resource',
+                        responseObject: resourceresponse_1.ResourceResponse
+                    };
+                }
+                else {
+                    return {
+                        name: 'HTML Page',
+                        responseObject: htmlresponse_1.HtmlResponse
+                    };
+                }
+            })();
             this.requestStart = Date.now();
             request(this.options, function (error, response, body) {
                 if (!error) {
                     scenario.requestLoaded = Date.now();
-                    scenario.pass('Loaded ' + pageType + ' ' + scenario.url);
+                    scenario.pass('Loaded ' + scenarioType.name + ' ' + scenario.url);
                     if (scenario.then !== null && scenario.url !== null) {
-                        scenario.then(new requestObject(scenario, scenario.url, index_1.Flagpole.toSimplifiedResponse(response, body)));
+                        scenario.then(new scenarioType.responseObject(scenario, scenario.url, index_1.Flagpole.toSimplifiedResponse(response, body)));
                     }
                     scenario.done();
                 }
@@ -175,6 +216,24 @@ class Scenario {
     }
     Scenario(title, tags) {
         return this.suite.Scenario(title, tags);
+    }
+    Json(title, tags) {
+        return this.suite.Json(title, tags);
+    }
+    Image(title, tags) {
+        return this.suite.Image(title, tags);
+    }
+    Html(title, tags) {
+        return this.suite.Html(title, tags);
+    }
+    Stylesheet(title, tags) {
+        return this.suite.Stylesheet(title, tags);
+    }
+    Script(title, tags) {
+        return this.suite.Script(title, tags);
+    }
+    Resource(title, tags) {
+        return this.suite.Resource(title, tags);
     }
     label(message) {
         this.nextLabel = message;

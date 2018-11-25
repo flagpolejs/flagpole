@@ -9,9 +9,14 @@ export class JsonResponse extends GenericResponse implements iResponse {
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
         super(scenario, url, response);
         this.json = JSON.parse(response.body);
-        (this.json) ?
-            this.scenario.pass('JSON is valid') :
-            this.scenario.fail('JSON is not valid');
+        this.valid();
+    }
+
+    protected valid(): iResponse {
+        return this.assert(
+            (typeof this.json === 'object' && this.json  !== null),
+            'JSON is valid', 'JSON is not valid'
+        );
     }
 
     public getRoot(): any {

@@ -6,9 +6,10 @@ class JsonResponse extends response_1.GenericResponse {
     constructor(scenario, url, response) {
         super(scenario, url, response);
         this.json = JSON.parse(response.body);
-        (this.json) ?
-            this.scenario.pass('JSON is valid') :
-            this.scenario.fail('JSON is not valid');
+        this.valid();
+    }
+    valid() {
+        return this.assert((typeof this.json === 'object' && this.json !== null), 'JSON is valid', 'JSON is not valid');
     }
     getRoot() {
         return this.json;

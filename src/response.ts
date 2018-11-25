@@ -22,7 +22,17 @@ export interface iResponse {
     startIgnoringAssertions(): iResponse
     stopIgnoringAssertions(): iResponse
     assert(statement: boolean, passMessage: string, failMessage: string): iResponse
+    absolutizeUri(uri: string): string
     readonly scenario: Scenario
+}
+
+export enum ReponseType {
+    html,
+    json,
+    image,
+    stylesheet,
+    script,
+    resource
 }
 
 /**
@@ -53,11 +63,21 @@ export abstract class GenericResponse implements iResponse {
         this._lastElement = new Node(this, 'Empty Element', null);
     }
 
-    abstract select(path: string, findIn?: any): Node
-    abstract getRoot(): any
+    public absolutizeUri(uri: string): string {
+        let baseUrl: URL = new URL(this.scenario.suite.buildUrl(this.scenario.getUrl() || ''));
+        return (new URL(uri, baseUrl.href)).href;
+    }
 
     public getBody(): string {
         return this.response.body;
+    }
+
+    public getRoot(): any {
+        return this.response.body;
+    }
+
+    public select(path: string, findIn?: any): Node {
+        return new Node(this, 'Body', this.response.body);
     }
 
     /**

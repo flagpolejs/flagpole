@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 const scenario_1 = require("./scenario");
 const consoleline_1 = require("./consoleline");
+const response_1 = require("./response");
 class Suite {
     constructor(title) {
         this.scenarios = [];
@@ -101,6 +102,24 @@ class Suite {
         this.scenarios.push(scenario);
         return scenario;
     }
+    Json(title, tags) {
+        return this.Scenario(title, tags).type(response_1.ReponseType.json);
+    }
+    Image(title, tags) {
+        return this.Scenario(title, tags).type(response_1.ReponseType.image);
+    }
+    Html(title, tags) {
+        return this.Scenario(title, tags).type(response_1.ReponseType.html);
+    }
+    Stylesheet(title, tags) {
+        return this.Scenario(title, tags).type(response_1.ReponseType.stylesheet);
+    }
+    Script(title, tags) {
+        return this.Scenario(title, tags).type(response_1.ReponseType.script);
+    }
+    Resource(title, tags) {
+        return this.Scenario(title, tags).type(response_1.ReponseType.resource);
+    }
     getScenarioByTag(tag) {
         return this.byTag.hasOwnProperty(tag) ?
             this.byTag[tag][0] : null;
@@ -110,13 +129,20 @@ class Suite {
             this.byTag[tag] : [];
     }
     base(url) {
-        this.baseUrl = url;
+        this.baseUrl = new URL(url);
         return this;
     }
     buildUrl(path) {
-        return (!!this.baseUrl) ?
-            (this.baseUrl + path) :
-            path;
+        if (this.baseUrl === null) {
+            return path;
+        }
+        else if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+        else if (path.startsWith('/')) {
+            return this.baseUrl.protocol + '//' + this.baseUrl.host + path;
+        }
+        return (new URL(path, this.baseUrl.href)).href;
     }
     execute() {
         this.scenarios.forEach(function (scenario) {

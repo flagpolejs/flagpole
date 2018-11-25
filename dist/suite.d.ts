@@ -2,7 +2,7 @@ import { Scenario } from "./scenario";
 export declare class Suite {
     scenarios: Array<Scenario>;
     protected title: string;
-    protected baseUrl: string | null;
+    protected baseUrl: URL | null;
     protected start: number;
     protected waitToExecute: boolean;
     protected byTag: any;
@@ -17,6 +17,12 @@ export declare class Suite {
     print(): Suite;
     toJson(): any;
     Scenario(title: string, tags?: [string]): Scenario;
+    Json(title: string, tags?: [string]): Scenario;
+    Image(title: string, tags?: [string]): Scenario;
+    Html(title: string, tags?: [string]): Scenario;
+    Stylesheet(title: string, tags?: [string]): Scenario;
+    Script(title: string, tags?: [string]): Scenario;
+    Resource(title: string, tags?: [string]): Scenario;
     getScenarioByTag(tag: string): Scenario;
     getAllScenariosByTag(tag: string): [Scenario];
     base(url: string): Suite;

@@ -3,6 +3,11 @@ import { Suite } from "./suite";
 import { ConsoleLine } from "./consoleline";
 import { JsonResponse } from "./jsonresponse";
 import { HtmlResponse } from "./htmlresponse";
+import { ReponseType } from "./response";
+import { ImageResponse } from "./imageresponse";
+import { ResourceResponse } from "./resourceresponse";
+import { ScriptResponse } from "./scriptresponse";
+import { CssResponse } from "./cssresponse";
 
 let request = require('request');
 
@@ -23,7 +28,7 @@ export class Scenario {
     protected end: number | null = null;
     protected requestStart: number | null = null;
     protected requestLoaded: number | null = null;
-    protected pageType: string = 'html';
+    protected responseType: ReponseType = ReponseType.html;
     protected then: Function | null = null;
     protected url: string | null = null;
     protected waitToExecute: boolean = false;
@@ -177,12 +182,9 @@ export class Scenario {
 
     /**
      * Set the type of request this is. Default is "html" but you can set this to "json" for REST APIs
-     *
-     * @param {string} type
-     * @returns {Scenario}
      */
-    public type(type: string): Scenario {
-        this.pageType = type;
+    public type(type: ReponseType): Scenario {
+        this.responseType = type;
         return this;
     }
 
@@ -320,18 +322,54 @@ export class Scenario {
                 this.log.push(new ConsoleLine('  »  Waited ' + (this.start - this.initialized) + 'ms'));
             }
             // Html or Json?
-            let requestObject = (this.pageType == 'json') ? JsonResponse : HtmlResponse;
-            let pageType: string = (this.pageType == 'json') ? 'REST End Point' : 'HTML Page';
-            // Execute it
             let scenario: Scenario = this;
+            let scenarioType: { name: string, responseObject } = (function () {
+                if (scenario.responseType == ReponseType.json) {
+                    return {
+                        name: 'REST End Point',
+                        responseObject: JsonResponse
+                    }
+                }
+                else if (scenario.responseType == ReponseType.image) {
+                    return {
+                        name: 'Image',
+                        responseObject: ImageResponse
+                    }
+                }
+                else if (scenario.responseType == ReponseType.script) {
+                    return {
+                        name: 'Script',
+                        responseObject: ScriptResponse
+                    }
+                }
+                else if (scenario.responseType == ReponseType.stylesheet) {
+                    return {
+                        name: 'Stylesheet',
+                        responseObject: CssResponse
+                    }
+                }
+                else if (scenario.responseType == ReponseType.resource) {
+                    return {
+                        name: 'Resource',
+                        responseObject: ResourceResponse
+                    }
+                }
+                else {
+                    return {
+                        name: 'HTML Page',
+                        responseObject: HtmlResponse
+                    } 
+                }
+            })();
+            // Execute it
             this.requestStart = Date.now();
             request(this.options, function (error, response, body) {
                 if (!error) {
                     scenario.requestLoaded = Date.now();
-                    scenario.pass('Loaded ' + pageType + ' ' + scenario.url);
+                    scenario.pass('Loaded ' + scenarioType.name + ' ' + scenario.url);
                     if (scenario.then !== null && scenario.url !== null) {
                         scenario.then(
-                            new requestObject(scenario, scenario.url, Flagpole.toSimplifiedResponse(response, body))
+                            new scenarioType.responseObject(scenario, scenario.url, Flagpole.toSimplifiedResponse(response, body))
                         );
                     }
                     scenario.done();
@@ -355,6 +393,30 @@ export class Scenario {
      */
     public Scenario(title: string, tags?: [string]): Scenario {
         return this.suite.Scenario(title, tags);
+    }
+
+    public Json(title: string, tags?: [string]): Scenario {
+        return this.suite.Json(title, tags);
+    }
+
+    public Image(title: string, tags?: [string]): Scenario {
+        return this.suite.Image(title, tags);
+    }
+
+    public Html(title: string, tags?: [string]): Scenario {
+        return this.suite.Html(title, tags);
+    }
+
+    public Stylesheet(title: string, tags?: [string]): Scenario {
+        return this.suite.Stylesheet(title, tags);
+    }
+
+    public Script(title: string, tags?: [string]): Scenario {
+        return this.suite.Script(title, tags);
+    }
+
+    public Resource(title: string, tags?: [string]): Scenario {
+        return this.suite.Resource(title, tags);
     }
 
     /**

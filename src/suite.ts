@@ -1,6 +1,7 @@
 import { Flagpole } from "./index";
 import { Scenario } from "./scenario";
 import { ConsoleLine, LogType } from "./consoleline";
+import { ReponseType } from "./response";
 
 /**
  * A suite contains many scenarios
@@ -10,7 +11,7 @@ export class Suite {
     public scenarios: Array<Scenario> = [];
 
     protected title: string;
-    protected baseUrl: string|null = null;
+    protected baseUrl: URL | null = null;
     protected start: number;
     protected waitToExecute: boolean = false;
     protected byTag: any = {};
@@ -166,6 +167,30 @@ export class Suite {
         return scenario;
     }
 
+    public Json(title: string, tags?: [string]): Scenario {
+        return this.Scenario(title, tags).type(ReponseType.json);
+    }
+
+    public Image(title: string, tags?: [string]): Scenario {
+        return this.Scenario(title, tags).type(ReponseType.image);
+    }
+
+    public Html(title: string, tags?: [string]): Scenario {
+        return this.Scenario(title, tags).type(ReponseType.html);
+    }
+
+    public Stylesheet(title: string, tags?: [string]): Scenario {
+        return this.Scenario(title, tags).type(ReponseType.stylesheet);
+    }
+
+    public Script(title: string, tags?: [string]): Scenario {
+        return this.Scenario(title, tags).type(ReponseType.script);
+    }
+
+    public Resource(title: string, tags?: [string]): Scenario {
+        return this.Scenario(title, tags).type(ReponseType.resource);
+    }
+
     /**
      * Search scenarios in this suite for one with this tag
      *
@@ -195,7 +220,7 @@ export class Suite {
      * @returns {Suite}
      */
     public base(url: string): Suite {
-        this.baseUrl = url;
+        this.baseUrl = new URL(url);
         return this;
     }
 
@@ -206,9 +231,16 @@ export class Suite {
      * @returns {string}
      */
     public buildUrl(path: string): string {
-        return (!!this.baseUrl) ?
-            (this.baseUrl + path) :
-            path;
+        if (this.baseUrl === null) {
+            return path;
+        }
+        else if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+        else if (path.startsWith('/')) {
+            return this.baseUrl.protocol + '//' + this.baseUrl.host + path;
+        }
+        return (new URL(path, this.baseUrl.href)).href;
     }
 
     /**

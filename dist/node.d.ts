@@ -8,9 +8,14 @@ export declare class Node {
     protected isNullOrUndefined(): boolean;
     protected isDomElement(): boolean;
     protected getTagName(): string | null;
+    protected getAttribute(name: string): string | null;
+    protected getUrl(): string | null;
     protected isFormElement(): boolean;
     protected isButtonElement(): boolean;
     protected isLinkElement(): boolean;
+    protected isImageElement(): boolean;
+    protected isScriptElement(): boolean;
+    protected isStylesheetElement(): boolean;
     protected isClickable(): boolean;
     protected isArray(): boolean;
     protected isString(): boolean;
@@ -33,6 +38,7 @@ export declare class Node {
     click(nextScenario: Scenario): Node;
     submit(nextScenario: Scenario): Node;
     fillForm(formData: any): Node;
+    load(title: string, assertions?: (response: iResponse) => void): Node;
     find(selector: string): Node;
     closest(selector: string): Node;
     parents(selector?: string): Node;
@@ -66,6 +72,7 @@ export declare class Node {
     greaterThanOrEquals(value: any): Node;
     lessThan(value: number): Node;
     lessThanOrEquals(value: any): Node;
+    between(minValue: any, maxValue: any): Node;
     assert(statement: boolean, passMessage: string, failMessage: string): Node;
     contains(string: string): Node;
     contain(string: string): Node;

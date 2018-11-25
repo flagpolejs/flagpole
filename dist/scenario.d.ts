@@ -1,5 +1,6 @@
 import { Suite } from "./suite";
 import { ConsoleLine } from "./consoleline";
+import { ReponseType } from "./response";
 export declare class Scenario {
     readonly suite: Suite;
     protected title: string;
@@ -12,7 +13,7 @@ export declare class Scenario {
     protected end: number | null;
     protected requestStart: number | null;
     protected requestLoaded: number | null;
-    protected pageType: string;
+    protected responseType: ReponseType;
     protected then: Function | null;
     protected url: string | null;
     protected waitToExecute: boolean;
@@ -35,7 +36,7 @@ export declare class Scenario {
     }): Scenario;
     headers(headers: {}): Scenario;
     header(key: string, value: any): Scenario;
-    type(type: string): Scenario;
+    type(type: ReponseType): Scenario;
     method(method: string): Scenario;
     isDone(): boolean;
     subheading(message: string): Scenario;
@@ -47,6 +48,12 @@ export declare class Scenario {
     skip(): Scenario;
     execute(): Scenario;
     Scenario(title: string, tags?: [string]): Scenario;
+    Json(title: string, tags?: [string]): Scenario;
+    Image(title: string, tags?: [string]): Scenario;
+    Html(title: string, tags?: [string]): Scenario;
+    Stylesheet(title: string, tags?: [string]): Scenario;
+    Script(title: string, tags?: [string]): Scenario;
+    Resource(title: string, tags?: [string]): Scenario;
     label(message: string): Scenario;
     getLog(): Array<ConsoleLine>;
     protected getExecutionTime(): number;
