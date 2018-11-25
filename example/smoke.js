@@ -31,8 +31,16 @@ Flagpole.Suite('Smoke Tests')
             .and().find('.status span').exists()
             .and().text().parseInt().greaterThanOrEquals(0);
 
+        test.select('img').each(function (img, index) {
+            img.load('Image ' + index);
+        });
+
         test.select('link[rel="stylesheet"]').each(function (link, index) {
             link.load('Stylesheet ' + index);
+        });
+
+        test.select('script[src]').each(function (script, index) {
+            script.load('Script ' + index);
         });
 
     });

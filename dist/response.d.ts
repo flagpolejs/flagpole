@@ -60,5 +60,6 @@ export declare abstract class GenericResponse implements iResponse {
     and(): Node;
     headers(key?: string): Node;
     status(): Node;
+    length(): Node;
     loadTime(): Node;
 }

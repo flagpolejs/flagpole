@@ -28,6 +28,7 @@
     "css": "^2.2.4",
     "request": "^2.87.0",
     "typescript": "^2.8.3",
+    "valid-data-url": "^1.0.0",
     "yargs": "^11.0.0"
   },
   "scripts": {

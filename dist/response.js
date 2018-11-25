@@ -95,6 +95,9 @@ class GenericResponse {
     status() {
         return new node_1.Node(this, 'HTTP Status', this.response.statusCode);
     }
+    length() {
+        return new node_1.Node(this, 'Length of Response Body', this.response.body.length);
+    }
     loadTime() {
         return new node_1.Node(this, 'Load Time', this.scenario.getRequestLoadTime());
     }

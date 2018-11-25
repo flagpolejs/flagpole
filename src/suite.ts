@@ -234,7 +234,7 @@ export class Suite {
         if (this.baseUrl === null) {
             return path;
         }
-        else if (path.startsWith('http://') || path.startsWith('https://')) {
+        else if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
             return path;
         }
         else if (path.startsWith('/')) {

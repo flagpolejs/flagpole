@@ -5,6 +5,9 @@ class ScriptResponse extends response_1.GenericResponse {
     constructor(scenario, url, response) {
         super(scenario, url, response);
         this.status().between(200, 299);
+        this.headers('Content-Type')
+            .label('MIME Type matches expected value for JavaScript')
+            .matches(/(text|application)\/(javascript|ecmascript)/);
     }
 }
 exports.ScriptResponse = ScriptResponse;

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const _1 = require(".");
 let $ = require('cheerio');
+const isValidDataUrl = require('valid-data-url');
 class Node {
     constructor(response, name, obj) {
         this.response = response;
@@ -211,15 +212,18 @@ class Node {
         let scenario = this.response.scenario;
         let relativePath = this.getUrl();
         let url = this.response.absolutizeUri(relativePath || '');
-        if (relativePath === null) {
-            this.fail('No URL to load in this node: ' + title);
-        }
         if (typeof assertions == 'undefined') {
             assertions = function (response) {
                 return scenario;
             };
         }
-        if (this.isImageElement()) {
+        if (relativePath === null) {
+            this.fail('No URL to load in this node: ' + title);
+        }
+        else if (relativePath.startsWith('data:')) {
+            this.assert(isValidDataUrl(relativePath), 'Is valid data URL', 'Is not valid data URL');
+        }
+        else if (this.isImageElement()) {
             this.response.scenario.Image(title).open(url).assertions(assertions);
         }
         else if (this.isStylesheetElement()) {

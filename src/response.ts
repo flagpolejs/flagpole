@@ -229,6 +229,13 @@ export abstract class GenericResponse implements iResponse {
     }
 
     /**
+     * Length of the response body
+     */
+    public length(): Node {
+        return new Node(this, 'Length of Response Body', this.response.body.length);
+    }
+
+    /**
      * Load time of request to response
      */
     public loadTime(): Node {

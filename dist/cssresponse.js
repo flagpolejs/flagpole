@@ -6,12 +6,15 @@ class CssResponse extends response_1.GenericResponse {
     constructor(scenario, url, response) {
         super(scenario, url, response);
         this.status().between(200, 299);
+        this.headers('Content-Type').similarTo('text/css');
         this.css = css.parse(this.response.body, { silent: true });
         this.validate();
     }
     validate() {
-        console.log(this.css);
-        this.assert(this.css.type == 'stylesheet' && this.css.stylesheet && this.css.stylesheet.parsingErrors.length === 0, 'CSS is valid', 'CSS is not valid');
+        this.assert((this.css.type == 'stylesheet' &&
+            this.css.stylesheet &&
+            this.css.stylesheet.parsingErrors &&
+            this.css.stylesheet.parsingErrors.length === 0), 'CSS is valid', 'CSS is not valid');
     }
 }
 exports.CssResponse = CssResponse;

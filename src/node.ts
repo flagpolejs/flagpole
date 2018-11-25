@@ -3,6 +3,7 @@ import { iResponse } from "./response";
 import { Flagpole } from ".";
 
 let $: CheerioStatic = require('cheerio');
+const isValidDataUrl = require('valid-data-url');
 
 /**
  * Various different types of properties that assertions can be made against
@@ -364,15 +365,21 @@ export class Node {
         let scenario: Scenario = this.response.scenario;
         let relativePath: string | null = this.getUrl();
         let url: string = this.response.absolutizeUri(relativePath || '');
-        if (relativePath === null) {
-            this.fail('No URL to load in this node: ' + title);
-        }
         if (typeof assertions == 'undefined') {
             assertions = function (response: iResponse) {
                 return scenario;
             };
         }
-        if (this.isImageElement()) {
+        if (relativePath === null) {
+            this.fail('No URL to load in this node: ' + title);
+        }
+        else if (relativePath.startsWith('data:')) {
+            this.assert(
+                isValidDataUrl(relativePath),
+                'Is valid data URL', 'Is not valid data URL'
+            );
+        }
+        else if (this.isImageElement()) {
             this.response.scenario.Image(title).open(url).assertions(assertions);
         }
         else if (this.isStylesheetElement()) {
