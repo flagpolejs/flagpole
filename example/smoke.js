@@ -30,10 +30,6 @@ Flagpole.Suite('Smoke Tests')
             .select('.question-summary').nth(2)
             .and().find('.status span').exists()
             .and().text().parseInt().greaterThanOrEquals(0);
-        
-        test.select('img').each(function (img, index) {
-            img.load('Image ' + index);
-        });
 
         test.select('link[rel="stylesheet"]').each(function (link, index) {
             link.load('Stylesheet ' + index);
