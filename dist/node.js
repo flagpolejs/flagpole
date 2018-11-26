@@ -153,7 +153,7 @@ class Node {
     click(scenarioOrTitle, impliedAssertion = false) {
         let scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         if (this.isLinkElement()) {
-            let link = new link_1.Link(this.response, this.attribute('href').toString());
+            let link = new link_1.Link(this.response, this.getAttribute('href') || '').validate();
             (link.isNavigation()) ?
                 scenario.open(link.getUri()) :
                 scenario.skip('Not a navigation link');
@@ -172,7 +172,8 @@ class Node {
     }
     submit(scenarioOrTitle, impliedAssertion = false) {
         let scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
-        let link = new link_1.Link(this.response, this.obj.attr('action') || this.response.scenario.getUrl() || '');
+        let link = new link_1.Link(this.response, this.obj.attr('action') || this.response.scenario.getUrl() || '')
+            .validate();
         if (this.isFormElement() && link.isNavigation()) {
             let uri;
             let method = this.obj.attr('method') || 'get';
@@ -224,7 +225,7 @@ class Node {
                 else if (node.isScriptElement()) {
                     return node.response.scenario.Script(scenarioOrTitle);
                 }
-                else if (node.isFormElement()) {
+                else if (node.isFormElement() || node.isClickable()) {
                     return node.response.scenario.Html(scenarioOrTitle);
                 }
                 else {
@@ -241,14 +242,10 @@ class Node {
     }
     load(scenarioOrTitle, impliedAssertion = false) {
         let relativePath = this.getUrl();
-        let link = new link_1.Link(this.response, relativePath || '');
+        let link = new link_1.Link(this.response, relativePath || '').validate();
         let scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         if (relativePath === null) {
             scenario.skip('No URL to load');
-        }
-        else if (link.isData()) {
-            this.assert(link.isValidDataUri(), 'Is valid data URL', 'Is not valid data URL');
-            scenario.skip('Link is a data URL');
         }
         else if (link.isNavigation()) {
             scenario.open(link.getUri());

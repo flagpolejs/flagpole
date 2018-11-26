@@ -16,4 +16,5 @@ export declare class Link {
     isFtp(): boolean;
     isNonNavigation(): boolean;
     isNavigation(): boolean;
+    validate(): Link;
 }

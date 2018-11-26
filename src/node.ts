@@ -290,9 +290,9 @@ export class Node {
         let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         // If this was a link, click it and then run the resulting scenaior
         if (this.isLinkElement()) {
-            let link: Link = new Link(this.response, this.attribute('href').toString());
+            let link: Link = new Link(this.response, this.getAttribute('href') || '').validate();
             (link.isNavigation()) ?
-                scenario.open(link.getUri()) : 
+                scenario.open(link.getUri()) :
                 scenario.skip('Not a navigation link');
         }
         // If this was a button and it has a form to submit... submit that form
@@ -316,7 +316,8 @@ export class Node {
      */
     public submit(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
         let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
-        let link: Link = new Link(this.response, this.obj.attr('action') || this.response.scenario.getUrl() || '');
+        let link: Link = new Link(this.response, this.obj.attr('action') || this.response.scenario.getUrl() || '')
+            .validate();
         if (this.isFormElement() && link.isNavigation()) {
             let uri: string;
             let method: string = this.obj.attr('method') || 'get';
@@ -376,7 +377,7 @@ export class Node {
                 else if (node.isScriptElement()) {
                     return node.response.scenario.Script(scenarioOrTitle);
                 }
-                else if (node.isFormElement()) {
+                else if (node.isFormElement() || node.isClickable()) {
                     return node.response.scenario.Html(scenarioOrTitle);
                 }
                 else {
@@ -395,17 +396,10 @@ export class Node {
 
     public load(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
         let relativePath: string | null = this.getUrl();
-        let link: Link = new Link(this.response, relativePath || '');
+        let link: Link = new Link(this.response, relativePath || '').validate();
         let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         if (relativePath === null) {
             scenario.skip('No URL to load');
-        }
-        else if (link.isData()) {
-            this.assert(
-                link.isValidDataUri(),
-                'Is valid data URL', 'Is not valid data URL'
-            );
-            scenario.skip('Link is a data URL');
         }
         else if (link.isNavigation()) {
             scenario.open(link.getUri())

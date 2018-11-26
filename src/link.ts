@@ -90,4 +90,22 @@ export class Link {
         );
     }
 
+    public validate(): Link {
+        if (this.isAnchor()) {
+            let anchorName: string = this.uri.substr(1);
+            this.response.assert(
+                this.response.getRoot()('a[name="' + anchorName + '"]').length > 0,
+                'Anchor link has a matching anchor (' + anchorName + ')',
+                'No anchor mathed the link (' + anchorName + ')'
+            );
+        }
+        else if (this.isData()) {
+            this.response.assert(
+                this.isValidDataUri(),
+                'Is valid data URL', 'Is not valid data URL'
+            );
+        }
+        return this;
+    }
+
 }

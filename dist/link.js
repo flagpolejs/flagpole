@@ -66,5 +66,15 @@ class Link {
                 /^\//i.test(this.uri) ||
                 !/^[a-z-]{1,10}:/i.test(this.uri)));
     }
+    validate() {
+        if (this.isAnchor()) {
+            let anchorName = this.uri.substr(1);
+            this.response.assert(this.response.getRoot()('a[name="' + anchorName + '"]').length > 0, 'Anchor link has a matching anchor (' + anchorName + ')', 'No anchor mathed the link (' + anchorName + ')');
+        }
+        else if (this.isData()) {
+            this.response.assert(this.isValidDataUri(), 'Is valid data URL', 'Is not valid data URL');
+        }
+        return this;
+    }
 }
 exports.Link = Link;
