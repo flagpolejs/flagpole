@@ -1,4 +1,4 @@
-import { iResponse, SimplifiedResponse, GenericResponse } from "./response";
+import { iResponse, SimplifiedResponse, GenericResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { Node } from "./node";
 
@@ -10,6 +10,10 @@ export class JsonResponse extends GenericResponse implements iResponse {
         super(scenario, url, response);
         this.json = JSON.parse(response.body);
         this.valid();
+    }
+
+    public getType(): ResponseType {
+        return ResponseType.json;
     }
 
     protected valid(): iResponse {

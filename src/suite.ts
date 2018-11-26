@@ -1,7 +1,7 @@
 import { Flagpole } from "./index";
 import { Scenario } from "./scenario";
 import { ConsoleLine, LogType } from "./consoleline";
-import { ReponseType } from "./response";
+import { ResponseType } from "./response";
 
 /**
  * A suite contains many scenarios
@@ -168,27 +168,27 @@ export class Suite {
     }
 
     public Json(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ReponseType.json);
+        return this.Scenario(title, tags).type(ResponseType.json);
     }
 
     public Image(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ReponseType.image);
+        return this.Scenario(title, tags).type(ResponseType.image);
     }
 
     public Html(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ReponseType.html);
+        return this.Scenario(title, tags).type(ResponseType.html);
     }
 
     public Stylesheet(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ReponseType.stylesheet);
+        return this.Scenario(title, tags).type(ResponseType.stylesheet);
     }
 
     public Script(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ReponseType.script);
+        return this.Scenario(title, tags).type(ResponseType.script);
     }
 
     public Resource(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ReponseType.resource);
+        return this.Scenario(title, tags).type(ResponseType.resource);
     }
 
     /**

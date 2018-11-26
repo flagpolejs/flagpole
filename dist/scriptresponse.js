@@ -9,5 +9,8 @@ class ScriptResponse extends response_1.GenericResponse {
             .label('MIME Type matches expected value for JavaScript')
             .matches(/(text|application)\/(javascript|ecmascript)/);
     }
+    getType() {
+        return response_1.ResponseType.script;
+    }
 }
 exports.ScriptResponse = ScriptResponse;

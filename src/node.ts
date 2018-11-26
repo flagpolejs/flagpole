@@ -1,5 +1,5 @@
 import { Scenario } from "./scenario";
-import { iResponse } from "./response";
+import { iResponse, ResponseType } from "./response";
 import { Flagpole } from ".";
 import { Link } from "./link";
 
@@ -34,6 +34,10 @@ export class Node {
         return (Flagpole.toType(this.obj) == 'cheerio');
     }
 
+    public tagName(): Node {
+        return new Node(this.response, 'Tag of ' + this.name, this.getTagName());
+    }
+
     protected getTagName(): string | null {
         if (this.isDomElement()) {
             return this.obj.get(0).tagName;
@@ -50,7 +54,22 @@ export class Node {
     }
 
     protected getUrl(): string | null {
-        return this.getAttribute('src') || this.getAttribute('href');
+        let tagName: string | null = this.getTagName();
+        if (tagName !== null) {
+            if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(tagName) >= 0) {
+                return this.getAttribute('src');
+            }
+            else if (['a', 'link'].indexOf(tagName) >= 0) {
+                return this.getAttribute('href');
+            }
+            else if (['form'].indexOf(tagName) >= 0) {
+                return this.getAttribute('action') || this.response.scenario.getUrl();
+            }
+        }
+        else if (this.response.getType() == ResponseType.json) {
+            return this.toString().trim();
+        }
+        return null;
     }
 
     /**
@@ -316,11 +335,11 @@ export class Node {
      */
     public submit(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
         let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
-        let link: Link = new Link(this.response, this.obj.attr('action') || this.response.scenario.getUrl() || '')
+        let link: Link = new Link(this.response, this.getUrl() || '')
             .validate();
         if (this.isFormElement() && link.isNavigation()) {
             let uri: string;
-            let method: string = this.obj.attr('method') || 'get';
+            let method: string = this.getAttribute('method') || 'get';
             scenario.method(method);
             // Submit form values in query string
             if (method == 'get') {
@@ -799,39 +818,40 @@ export class Node {
         let name: string = this.name;
         let response: iResponse = this.response;
         let every: boolean = true;
-        this.response.startIgnoringAssertions();
-        if (this.isDomElement()) {
-            this.obj.each(function (index, el) {
-                el = $(el);
-                let element: Node = new Node(response, name + '[' + index + ']', el);
-                if (!callback(element)) {
-                    every = false;
-                }
-            });
-        }
-        else if (this.isArray()) {
-            every = this.obj.every(function (el, index) {
-                return callback(
-                    new Node(response, name + '[' + index + ']', el)
-                );
-            });
-        }
-        else if (this.isObject()) {
-            let obj: {} = this.obj;
-            every = this.obj.keys().every(function (key) {
-                return callback(
-                    new Node(response, name + '[' + key + ']', obj[key])
-                );
-            });
-        }
-        else if (this.isString()) {
-            every = this.obj.toString().trim().split(' ').every(function (word, index) {
-                return callback(
-                    new Node(response, name + '[' + index + ']', word)
-                );
-            });
-        }
-        this.response.stopIgnoringAssertions();
+        let node: Node = this;
+        this.response.ignore(function () {
+            if (node.isDomElement()) {
+                node.obj.each(function (index, el) {
+                    el = $(el);
+                    let element: Node = new Node(response, name + '[' + index + ']', el);
+                    if (!callback(element)) {
+                        every = false;
+                    }
+                });
+            }
+            else if (node.isArray()) {
+                every = node.obj.every(function (el, index) {
+                    return callback(
+                        new Node(response, name + '[' + index + ']', el)
+                    );
+                });
+            }
+            else if (node.isObject()) {
+                let obj: {} = node.obj;
+                every = node.obj.keys().every(function (key) {
+                    return callback(
+                        new Node(response, name + '[' + key + ']', obj[key])
+                    );
+                });
+            }
+            else if (node.isString()) {
+                every = node.obj.toString().trim().split(' ').every(function (word, index) {
+                    return callback(
+                        new Node(response, name + '[' + index + ']', word)
+                    );
+                });
+            }
+        });
         this.assert(every,
             'Every ' + this.name + ' passed',
             'Every ' + this.name + ' did not pass'
@@ -848,39 +868,40 @@ export class Node {
         let name: string = this.name;
         let response: iResponse = this.response;
         let some: boolean = false;
-        this.response.startIgnoringAssertions();
-        if (this.isDomElement()) {
-            this.obj.each(function (index, el) {
-                el = $(el);
-                let element: Node = new Node(response, name + '[' + index + ']', el);
-                if (callback(element)) {
-                    some = true;
-                }
-            });
-        }
-        else if (this.isArray()) {
-            some = this.obj.some(function (el, index) {
-                return callback(
-                    new Node(response, name + '[' + index + ']', el)
-                );
-            });
-        }
-        else if (this.isObject()) {
-            let obj: {} = this.obj;
-            some = this.obj.keys().some(function (key) {
-                return callback(
-                    new Node(response, name + '[' + key + ']', obj[key])
-                );
-            });
-        }
-        else if (this.isString()) {
-            some = this.obj.toString().trim().split(' ').some(function (word, index) {
-                return callback(
-                    new Node(response, name + '[' + index + ']', word)
-                );
-            });
-        }
-        this.response.stopIgnoringAssertions();
+        let node: Node = this;
+        this.response.ignore(function () {
+            if (node.isDomElement()) {
+                node.obj.each(function (index, el) {
+                    el = $(el);
+                    let element: Node = new Node(response, name + '[' + index + ']', el);
+                    if (callback(element)) {
+                        some = true;
+                    }
+                });
+            }
+            else if (node.isArray()) {
+                some = node.obj.some(function (el, index) {
+                    return callback(
+                        new Node(response, name + '[' + index + ']', el)
+                    );
+                });
+            }
+            else if (node.isObject()) {
+                let obj: {} = node.obj;
+                some = node.obj.keys().some(function (key) {
+                    return callback(
+                        new Node(response, name + '[' + key + ']', obj[key])
+                    );
+                });
+            }
+            else if (node.isString()) {
+                some = node.obj.toString().trim().split(' ').some(function (word, index) {
+                    return callback(
+                        new Node(response, name + '[' + index + ']', word)
+                    );
+                });
+            }
+        });
         this.assert(some,
             'Some ' + this.name + ' passed',
             'No ' + this.name + ' passed'

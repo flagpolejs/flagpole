@@ -7,6 +7,7 @@ export declare class Node {
     constructor(response: iResponse, name: string, obj: any);
     protected isNullOrUndefined(): boolean;
     protected isDomElement(): boolean;
+    tagName(): Node;
     protected getTagName(): string | null;
     protected getAttribute(name: string): string | null;
     protected getUrl(): string | null;

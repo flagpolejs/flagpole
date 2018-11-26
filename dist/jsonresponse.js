@@ -8,6 +8,9 @@ class JsonResponse extends response_1.GenericResponse {
         this.json = JSON.parse(response.body);
         this.valid();
     }
+    getType() {
+        return response_1.ResponseType.json;
+    }
     valid() {
         return this.assert((typeof this.json === 'object' && this.json !== null), 'JSON is valid', 'JSON is not valid');
     }

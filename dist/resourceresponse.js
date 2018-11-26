@@ -6,5 +6,8 @@ class ResourceResponse extends response_1.GenericResponse {
         super(scenario, url, response);
         this.status().between(200, 299);
     }
+    getType() {
+        return response_1.ResponseType.resource;
+    }
 }
 exports.ResourceResponse = ResourceResponse;

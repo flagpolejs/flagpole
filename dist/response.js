@@ -1,78 +1,55 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_1 = require("./node");
-var ReponseType;
-(function (ReponseType) {
-    ReponseType[ReponseType["html"] = 0] = "html";
-    ReponseType[ReponseType["json"] = 1] = "json";
-    ReponseType[ReponseType["image"] = 2] = "image";
-    ReponseType[ReponseType["stylesheet"] = 3] = "stylesheet";
-    ReponseType[ReponseType["script"] = 4] = "script";
-    ReponseType[ReponseType["resource"] = 5] = "resource";
-})(ReponseType = exports.ReponseType || (exports.ReponseType = {}));
+var ResponseType;
+(function (ResponseType) {
+    ResponseType[ResponseType["html"] = 0] = "html";
+    ResponseType[ResponseType["json"] = 1] = "json";
+    ResponseType[ResponseType["image"] = 2] = "image";
+    ResponseType[ResponseType["stylesheet"] = 3] = "stylesheet";
+    ResponseType[ResponseType["script"] = 4] = "script";
+    ResponseType[ResponseType["resource"] = 5] = "resource";
+})(ResponseType = exports.ResponseType || (exports.ResponseType = {}));
 class GenericResponse {
-    constructor(scenario, url, response) {
-        this.flipAssertion = false;
-        this.optionalAssertion = false;
-        this.ignoreAssertion = false;
+    constructor(scenario, url, simplifiedResponse) {
         this._lastElementPath = null;
         this.scenario = scenario;
-        this.url = url;
-        this.response = response;
+        this._url = url;
+        this._statusCode = simplifiedResponse.statusCode;
+        this._body = simplifiedResponse.body;
+        this._headers = simplifiedResponse.headers;
         this._lastElement = new node_1.Node(this, 'Empty Element', null);
     }
     absolutizeUri(uri) {
         let baseUrl = new URL(this.scenario.suite.buildUrl(this.scenario.getUrl() || ''));
         return (new URL(uri, baseUrl.href)).href;
     }
+    getUrl() {
+        return this._url;
+    }
     getBody() {
-        return this.response.body;
+        return this._body;
     }
     getRoot() {
-        return this.response.body;
+        return this._body;
     }
     select(path, findIn) {
-        return new node_1.Node(this, 'Body', this.response.body);
+        return new node_1.Node(this, 'Body', this._body);
     }
     assert(statement, passMessage, failMessage) {
-        if (!this.ignoreAssertion) {
-            let passed = this.flipAssertion ? !statement : !!statement;
-            if (this.flipAssertion) {
-                passMessage = 'NOT: ' + passMessage;
-                failMessage = 'NOT: ' + failMessage;
-            }
-            if (this.optionalAssertion) {
-                failMessage += ' (Optional)';
-            }
-            if (passed) {
-                this.scenario.pass(passMessage);
-            }
-            else {
-                this.scenario.fail(failMessage, this.optionalAssertion);
-            }
-            return this.reset();
-        }
-        return this;
-    }
-    reset() {
-        this.flipAssertion = false;
-        this.optionalAssertion = false;
-        return this;
-    }
-    startIgnoringAssertions() {
-        this.ignoreAssertion = true;
-        return this;
-    }
-    stopIgnoringAssertions() {
-        this.ignoreAssertion = false;
+        this.scenario.assert(statement, passMessage, failMessage);
         return this;
     }
     not() {
-        this.flipAssertion = true;
+        this.scenario.not();
         return this;
     }
     optional() {
-        this.optionalAssertion = true;
+        this.scenario.optional();
+        return this;
+    }
+    ignore(assertions = true) {
+        this.scenario.ignore(assertions);
         return this;
     }
     label(message) {
@@ -99,21 +76,21 @@ class GenericResponse {
     }
     headers(key) {
         if (typeof key !== 'undefined') {
-            key = typeof this.response.headers[key] !== 'undefined' ? key : key.toLowerCase();
+            key = typeof this._headers[key] !== 'undefined' ? key : key.toLowerCase();
             let name = 'HTTP Headers[' + key + ']';
-            let value = new node_1.Node(this, name, this.response.headers[key]);
+            let value = new node_1.Node(this, name, this._headers[key]);
             value.exists();
             return value;
         }
         else {
-            return new node_1.Node(this, 'HTTP Headers', this.response.headers);
+            return new node_1.Node(this, 'HTTP Headers', this._headers);
         }
     }
     status() {
-        return new node_1.Node(this, 'HTTP Status', this.response.statusCode);
+        return new node_1.Node(this, 'HTTP Status', this._statusCode);
     }
     length() {
-        return new node_1.Node(this, 'Length of Response Body', this.response.body.length);
+        return new node_1.Node(this, 'Length of Response Body', this._body.length);
     }
     loadTime() {
         return new node_1.Node(this, 'Load Time', this.scenario.getRequestLoadTime());

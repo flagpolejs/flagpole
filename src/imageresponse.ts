@@ -1,4 +1,4 @@
-import { iResponse, GenericResponse, SimplifiedResponse } from "./response";
+import { iResponse, GenericResponse, SimplifiedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 
 export class ImageResponse extends GenericResponse implements iResponse {
@@ -9,6 +9,10 @@ export class ImageResponse extends GenericResponse implements iResponse {
         this.headers('Content-Type')
             .label('MIME Type matches expected value for an image')
             .startsWith('image/');
+    }
+
+    public getType(): ResponseType {
+        return ResponseType.image;
     }
 
 }

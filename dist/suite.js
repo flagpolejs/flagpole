@@ -103,22 +103,22 @@ class Suite {
         return scenario;
     }
     Json(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ReponseType.json);
+        return this.Scenario(title, tags).type(response_1.ResponseType.json);
     }
     Image(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ReponseType.image);
+        return this.Scenario(title, tags).type(response_1.ResponseType.image);
     }
     Html(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ReponseType.html);
+        return this.Scenario(title, tags).type(response_1.ResponseType.html);
     }
     Stylesheet(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ReponseType.stylesheet);
+        return this.Scenario(title, tags).type(response_1.ResponseType.stylesheet);
     }
     Script(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ReponseType.script);
+        return this.Scenario(title, tags).type(response_1.ResponseType.script);
     }
     Resource(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ReponseType.resource);
+        return this.Scenario(title, tags).type(response_1.ResponseType.resource);
     }
     getScenarioByTag(tag) {
         return this.byTag.hasOwnProperty(tag) ?

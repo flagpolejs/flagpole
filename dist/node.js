@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const response_1 = require("./response");
 const _1 = require(".");
 const link_1 = require("./link");
 let $ = require('cheerio');
@@ -15,6 +16,9 @@ class Node {
     isDomElement() {
         return (_1.Flagpole.toType(this.obj) == 'cheerio');
     }
+    tagName() {
+        return new Node(this.response, 'Tag of ' + this.name, this.getTagName());
+    }
     getTagName() {
         if (this.isDomElement()) {
             return this.obj.get(0).tagName;
@@ -29,7 +33,22 @@ class Node {
         return null;
     }
     getUrl() {
-        return this.getAttribute('src') || this.getAttribute('href');
+        let tagName = this.getTagName();
+        if (tagName !== null) {
+            if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(tagName) >= 0) {
+                return this.getAttribute('src');
+            }
+            else if (['a', 'link'].indexOf(tagName) >= 0) {
+                return this.getAttribute('href');
+            }
+            else if (['form'].indexOf(tagName) >= 0) {
+                return this.getAttribute('action') || this.response.scenario.getUrl();
+            }
+        }
+        else if (this.response.getType() == response_1.ResponseType.json) {
+            return this.toString().trim();
+        }
+        return null;
     }
     isFormElement() {
         if (this.isDomElement()) {
@@ -172,11 +191,11 @@ class Node {
     }
     submit(scenarioOrTitle, impliedAssertion = false) {
         let scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
-        let link = new link_1.Link(this.response, this.obj.attr('action') || this.response.scenario.getUrl() || '')
+        let link = new link_1.Link(this.response, this.getUrl() || '')
             .validate();
         if (this.isFormElement() && link.isNavigation()) {
             let uri;
-            let method = this.obj.attr('method') || 'get';
+            let method = this.getAttribute('method') || 'get';
             scenario.method(method);
             if (method == 'get') {
                 uri = link.getUri(this.obj.serializeArray());
@@ -503,33 +522,34 @@ class Node {
         let name = this.name;
         let response = this.response;
         let every = true;
-        this.response.startIgnoringAssertions();
-        if (this.isDomElement()) {
-            this.obj.each(function (index, el) {
-                el = $(el);
-                let element = new Node(response, name + '[' + index + ']', el);
-                if (!callback(element)) {
-                    every = false;
-                }
-            });
-        }
-        else if (this.isArray()) {
-            every = this.obj.every(function (el, index) {
-                return callback(new Node(response, name + '[' + index + ']', el));
-            });
-        }
-        else if (this.isObject()) {
-            let obj = this.obj;
-            every = this.obj.keys().every(function (key) {
-                return callback(new Node(response, name + '[' + key + ']', obj[key]));
-            });
-        }
-        else if (this.isString()) {
-            every = this.obj.toString().trim().split(' ').every(function (word, index) {
-                return callback(new Node(response, name + '[' + index + ']', word));
-            });
-        }
-        this.response.stopIgnoringAssertions();
+        let node = this;
+        this.response.ignore(function () {
+            if (node.isDomElement()) {
+                node.obj.each(function (index, el) {
+                    el = $(el);
+                    let element = new Node(response, name + '[' + index + ']', el);
+                    if (!callback(element)) {
+                        every = false;
+                    }
+                });
+            }
+            else if (node.isArray()) {
+                every = node.obj.every(function (el, index) {
+                    return callback(new Node(response, name + '[' + index + ']', el));
+                });
+            }
+            else if (node.isObject()) {
+                let obj = node.obj;
+                every = node.obj.keys().every(function (key) {
+                    return callback(new Node(response, name + '[' + key + ']', obj[key]));
+                });
+            }
+            else if (node.isString()) {
+                every = node.obj.toString().trim().split(' ').every(function (word, index) {
+                    return callback(new Node(response, name + '[' + index + ']', word));
+                });
+            }
+        });
         this.assert(every, 'Every ' + this.name + ' passed', 'Every ' + this.name + ' did not pass');
         return this;
     }
@@ -537,33 +557,34 @@ class Node {
         let name = this.name;
         let response = this.response;
         let some = false;
-        this.response.startIgnoringAssertions();
-        if (this.isDomElement()) {
-            this.obj.each(function (index, el) {
-                el = $(el);
-                let element = new Node(response, name + '[' + index + ']', el);
-                if (callback(element)) {
-                    some = true;
-                }
-            });
-        }
-        else if (this.isArray()) {
-            some = this.obj.some(function (el, index) {
-                return callback(new Node(response, name + '[' + index + ']', el));
-            });
-        }
-        else if (this.isObject()) {
-            let obj = this.obj;
-            some = this.obj.keys().some(function (key) {
-                return callback(new Node(response, name + '[' + key + ']', obj[key]));
-            });
-        }
-        else if (this.isString()) {
-            some = this.obj.toString().trim().split(' ').some(function (word, index) {
-                return callback(new Node(response, name + '[' + index + ']', word));
-            });
-        }
-        this.response.stopIgnoringAssertions();
+        let node = this;
+        this.response.ignore(function () {
+            if (node.isDomElement()) {
+                node.obj.each(function (index, el) {
+                    el = $(el);
+                    let element = new Node(response, name + '[' + index + ']', el);
+                    if (callback(element)) {
+                        some = true;
+                    }
+                });
+            }
+            else if (node.isArray()) {
+                some = node.obj.some(function (el, index) {
+                    return callback(new Node(response, name + '[' + index + ']', el));
+                });
+            }
+            else if (node.isObject()) {
+                let obj = node.obj;
+                some = node.obj.keys().some(function (key) {
+                    return callback(new Node(response, name + '[' + key + ']', obj[key]));
+                });
+            }
+            else if (node.isString()) {
+                some = node.obj.toString().trim().split(' ').some(function (word, index) {
+                    return callback(new Node(response, name + '[' + index + ']', word));
+                });
+            }
+        });
         this.assert(some, 'Some ' + this.name + ' passed', 'No ' + this.name + ' passed');
         return this;
     }

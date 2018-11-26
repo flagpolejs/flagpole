@@ -2,6 +2,7 @@ import { Scenario } from "./scenario";
 import { iResponse, SimplifiedResponse } from "./response";
 import { Node } from "./node";
 export interface iResponse {
+    getType(): ResponseType;
     select(path: string, findIn?: any): Node;
     status(): Node;
     and(): Node;
@@ -13,16 +14,16 @@ export interface iResponse {
     getLastElementPath(): string | null;
     getRoot(): any;
     getBody(): string;
+    getUrl(): string;
     comment(message: string): iResponse;
     not(): iResponse;
     optional(): iResponse;
-    startIgnoringAssertions(): iResponse;
-    stopIgnoringAssertions(): iResponse;
+    ignore(assertions?: boolean | Function): iResponse;
     assert(statement: boolean, passMessage: string, failMessage: string): iResponse;
     absolutizeUri(uri: string): string;
     readonly scenario: Scenario;
 }
-export declare enum ReponseType {
+export declare enum ResponseType {
     html = 0,
     json = 1,
     image = 2,
@@ -37,24 +38,23 @@ export interface SimplifiedResponse {
 }
 export declare abstract class GenericResponse implements iResponse {
     readonly scenario: Scenario;
-    protected url: string;
-    protected response: SimplifiedResponse;
-    protected flipAssertion: boolean;
-    protected optionalAssertion: boolean;
-    protected ignoreAssertion: boolean;
-    protected _lastElement: Node;
-    protected _lastElementPath: string | null;
-    constructor(scenario: Scenario, url: string, response: SimplifiedResponse);
+    private _url;
+    private _statusCode;
+    private _body;
+    private _headers;
+    private _lastElement;
+    private _lastElementPath;
+    abstract getType(): ResponseType;
+    constructor(scenario: Scenario, url: string, simplifiedResponse: SimplifiedResponse);
     absolutizeUri(uri: string): string;
+    getUrl(): string;
     getBody(): string;
     getRoot(): any;
     select(path: string, findIn?: any): Node;
     assert(statement: boolean, passMessage: any, failMessage: any): iResponse;
-    protected reset(): iResponse;
-    startIgnoringAssertions(): iResponse;
-    stopIgnoringAssertions(): iResponse;
     not(): iResponse;
     optional(): iResponse;
+    ignore(assertions?: boolean | Function): iResponse;
     label(message: string): iResponse;
     comment(message: string): iResponse;
     setLastElement(path: string | null, element: Node): Node;

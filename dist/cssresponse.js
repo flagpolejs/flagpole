@@ -7,8 +7,11 @@ class CssResponse extends response_1.GenericResponse {
         super(scenario, url, response);
         this.status().between(200, 299);
         this.headers('Content-Type').similarTo('text/css');
-        this.css = css.parse(this.response.body, { silent: true });
+        this.css = css.parse(this.getBody(), { silent: true });
         this.validate();
+    }
+    getType() {
+        return response_1.ResponseType.stylesheet;
     }
     validate() {
         this.assert((this.css.type == 'stylesheet' &&

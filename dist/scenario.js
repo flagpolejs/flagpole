@@ -9,6 +9,7 @@ const imageresponse_1 = require("./imageresponse");
 const resourceresponse_1 = require("./resourceresponse");
 const scriptresponse_1 = require("./scriptresponse");
 const cssresponse_1 = require("./cssresponse");
+const mock_1 = require("./mock");
 let request = require('request');
 class Scenario {
     constructor(suite, title, onDone) {
@@ -20,11 +21,15 @@ class Scenario {
         this.end = null;
         this.requestStart = null;
         this.requestLoaded = null;
-        this.responseType = response_1.ReponseType.html;
-        this.then = null;
+        this.responseType = response_1.ResponseType.html;
         this.url = null;
         this.waitToExecute = false;
         this.nextLabel = null;
+        this.flipAssertion = false;
+        this.optionalAssertion = false;
+        this.ignoreAssertion = false;
+        this._then = null;
+        this._isMock = false;
         this.options = {
             method: 'GET',
             headers: {}
@@ -106,6 +111,50 @@ class Scenario {
         this.passes.push(message);
         return this;
     }
+    assert(statement, passMessage, failMessage) {
+        if (!this.ignoreAssertion) {
+            let passed = this.flipAssertion ? !statement : !!statement;
+            if (this.flipAssertion) {
+                passMessage = 'NOT: ' + passMessage;
+                failMessage = 'NOT: ' + failMessage;
+            }
+            if (this.optionalAssertion) {
+                failMessage += ' (Optional)';
+            }
+            if (passed) {
+                this.pass(passMessage);
+            }
+            else {
+                this.fail(failMessage, this.optionalAssertion);
+            }
+            return this.reset();
+        }
+        return this;
+    }
+    reset() {
+        this.flipAssertion = false;
+        this.optionalAssertion = false;
+        return this;
+    }
+    not() {
+        this.flipAssertion = true;
+        return this;
+    }
+    optional() {
+        this.optionalAssertion = true;
+        return this;
+    }
+    ignore(assertions = true) {
+        if (typeof assertions == 'boolean') {
+            this.ignoreAssertion = assertions;
+        }
+        else if (typeof assertions == 'function') {
+            this.ignore(true);
+            assertions();
+            this.ignore(false);
+        }
+        return this;
+    }
     pass(message) {
         if (this.nextLabel) {
             message = this.nextLabel;
@@ -126,23 +175,28 @@ class Scenario {
         }
         return this;
     }
+    executeWhenReady() {
+        if (!this.waitToExecute && this._then !== null && this.url !== null) {
+            this.execute();
+        }
+    }
     open(url) {
         if (!this.start) {
             this.url = url;
-            if (!this.waitToExecute && this.then) {
-                this.execute();
-            }
+            this._isMock = false;
+            this.executeWhenReady();
         }
         return this;
     }
-    assertions(then) {
+    then(callback) {
         if (!this.start) {
-            this.then = then;
-            if (!this.waitToExecute && this.url) {
-                this.execute();
-            }
+            this._then = callback;
+            this.executeWhenReady();
         }
         return this;
+    }
+    assertions(callback) {
+        return this.then(callback);
     }
     skip(message) {
         if (!this.start) {
@@ -154,67 +208,97 @@ class Scenario {
         }
         return this;
     }
-    execute() {
-        if (!this.start && this.url !== null) {
-            this.start = Date.now();
-            this.options.uri = this.suite.buildUrl(this.url);
-            if (this.waitToExecute && this.initialized !== null) {
-                this.log.push(new consoleline_1.ConsoleLine('  »  Waited ' + (this.start - this.initialized) + 'ms'));
-            }
+    getScenarioType() {
+        if (this.responseType == response_1.ResponseType.json) {
+            return {
+                name: 'REST End Point',
+                responseObject: jsonresponse_1.JsonResponse
+            };
+        }
+        else if (this.responseType == response_1.ResponseType.image) {
+            return {
+                name: 'Image',
+                responseObject: imageresponse_1.ImageResponse
+            };
+        }
+        else if (this.responseType == response_1.ResponseType.script) {
+            return {
+                name: 'Script',
+                responseObject: scriptresponse_1.ScriptResponse
+            };
+        }
+        else if (this.responseType == response_1.ResponseType.stylesheet) {
+            return {
+                name: 'Stylesheet',
+                responseObject: cssresponse_1.CssResponse
+            };
+        }
+        else if (this.responseType == response_1.ResponseType.resource) {
+            return {
+                name: 'Resource',
+                responseObject: resourceresponse_1.ResourceResponse
+            };
+        }
+        else {
+            return {
+                name: 'HTML Page',
+                responseObject: htmlresponse_1.HtmlResponse
+            };
+        }
+    }
+    processResponse(simplifiedResponse) {
+        let scenarioType = this.getScenarioType();
+        this.requestLoaded = Date.now();
+        this.pass('Loaded ' + scenarioType.name + ' ' + this.url);
+        if (this._then !== null && this.url !== null) {
+            this._then(new scenarioType.responseObject(this, this.url, simplifiedResponse));
+        }
+        this.done();
+    }
+    executeRequest() {
+        if (!this.requestStart && this.url !== null) {
             let scenario = this;
-            let scenarioType = (function () {
-                if (scenario.responseType == response_1.ReponseType.json) {
-                    return {
-                        name: 'REST End Point',
-                        responseObject: jsonresponse_1.JsonResponse
-                    };
-                }
-                else if (scenario.responseType == response_1.ReponseType.image) {
-                    return {
-                        name: 'Image',
-                        responseObject: imageresponse_1.ImageResponse
-                    };
-                }
-                else if (scenario.responseType == response_1.ReponseType.script) {
-                    return {
-                        name: 'Script',
-                        responseObject: scriptresponse_1.ScriptResponse
-                    };
-                }
-                else if (scenario.responseType == response_1.ReponseType.stylesheet) {
-                    return {
-                        name: 'Stylesheet',
-                        responseObject: cssresponse_1.CssResponse
-                    };
-                }
-                else if (scenario.responseType == response_1.ReponseType.resource) {
-                    return {
-                        name: 'Resource',
-                        responseObject: resourceresponse_1.ResourceResponse
-                    };
-                }
-                else {
-                    return {
-                        name: 'HTML Page',
-                        responseObject: htmlresponse_1.HtmlResponse
-                    };
-                }
-            })();
             this.requestStart = Date.now();
+            this.options.uri = this.suite.buildUrl(this.url);
             request(this.options, function (error, response, body) {
                 if (!error) {
-                    scenario.requestLoaded = Date.now();
-                    scenario.pass('Loaded ' + scenarioType.name + ' ' + scenario.url);
-                    if (scenario.then !== null && scenario.url !== null) {
-                        scenario.then(new scenarioType.responseObject(scenario, scenario.url, index_1.Flagpole.toSimplifiedResponse(response, body)));
-                    }
-                    scenario.done();
+                    scenario.processResponse(index_1.Flagpole.toSimplifiedResponse(response, body));
                 }
                 else {
                     scenario.fail('Failed to load page ' + scenario.url);
+                    scenario.done();
                 }
             });
         }
+    }
+    executeMock() {
+        if (!this.requestStart && this.url !== null) {
+            let scenario = this;
+            this.requestStart = Date.now();
+            mock_1.Mock.loadLocalFile(this.url).then(function (mock) {
+                scenario.processResponse(mock);
+            }).catch(function () {
+                scenario.fail('Failed to load page ' + scenario.url);
+                scenario.done();
+            });
+        }
+    }
+    execute() {
+        if (!this.start && this.url !== null) {
+            this.start = Date.now();
+            if (this.waitToExecute && this.initialized !== null) {
+                this.log.push(new consoleline_1.ConsoleLine('  »  Waited ' + (this.start - this.initialized) + 'ms'));
+            }
+            this._isMock ?
+                this.executeMock() :
+                this.executeRequest();
+        }
+        return this;
+    }
+    mock(localPath) {
+        this.url = localPath;
+        this._isMock = true;
+        this.executeWhenReady();
         return this;
     }
     Scenario(title, tags) {

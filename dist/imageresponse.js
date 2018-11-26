@@ -9,5 +9,8 @@ class ImageResponse extends response_1.GenericResponse {
             .label('MIME Type matches expected value for an image')
             .startsWith('image/');
     }
+    getType() {
+        return response_1.ResponseType.image;
+    }
 }
 exports.ImageResponse = ImageResponse;

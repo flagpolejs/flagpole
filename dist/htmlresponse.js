@@ -10,6 +10,9 @@ class HtmlResponse extends response_1.GenericResponse {
         super(scenario, url, response);
         $ = cheerio.load(response.body);
     }
+    getType() {
+        return response_1.ResponseType.html;
+    }
     getRoot() {
         return $;
     }

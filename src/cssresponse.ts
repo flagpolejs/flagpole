@@ -1,4 +1,4 @@
-import { iResponse, GenericResponse, SimplifiedResponse } from "./response";
+import { iResponse, GenericResponse, SimplifiedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 
 const css = require('css');
@@ -11,8 +11,12 @@ export class CssResponse extends GenericResponse implements iResponse {
         super(scenario, url, response);
         this.status().between(200, 299);
         this.headers('Content-Type').similarTo('text/css');
-        this.css = css.parse(this.response.body, { silent: true });
+        this.css = css.parse(this.getBody(), { silent: true });
         this.validate();
+    }
+
+    public getType(): ResponseType {
+        return ResponseType.stylesheet;
     }
 
     protected validate() {

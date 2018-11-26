@@ -3,11 +3,12 @@ import { Suite } from "./suite";
 import { ConsoleLine } from "./consoleline";
 import { JsonResponse } from "./jsonresponse";
 import { HtmlResponse } from "./htmlresponse";
-import { ReponseType } from "./response";
+import { ResponseType, SimplifiedResponse } from "./response";
 import { ImageResponse } from "./imageresponse";
 import { ResourceResponse } from "./resourceresponse";
 import { ScriptResponse } from "./scriptresponse";
 import { CssResponse } from "./cssresponse";
+import { Mock } from "./mock";
 
 let request = require('request');
 
@@ -28,11 +29,16 @@ export class Scenario {
     protected end: number | null = null;
     protected requestStart: number | null = null;
     protected requestLoaded: number | null = null;
-    protected responseType: ReponseType = ReponseType.html;
-    protected then: Function | null = null;
+    protected responseType: ResponseType = ResponseType.html;
     protected url: string | null = null;
     protected waitToExecute: boolean = false;
     protected nextLabel: string | null = null;
+    protected flipAssertion: boolean = false;
+    protected optionalAssertion: boolean = false;
+    protected ignoreAssertion: boolean = false;
+
+    protected _then: Function | null = null;
+    protected _isMock: boolean = false;
 
     protected options: any = {
         method: 'GET',
@@ -183,7 +189,7 @@ export class Scenario {
     /**
      * Set the type of request this is. Default is "html" but you can set this to "json" for REST APIs
      */
-    public type(type: ReponseType): Scenario {
+    public type(type: ResponseType): Scenario {
         this.responseType = type;
         return this;
     }
@@ -228,6 +234,71 @@ export class Scenario {
     }
 
     /**
+     * Assert something is true, with respect to the flipped not()
+     * Also respect ignore assertions flag
+     */
+    public assert(statement: boolean, passMessage, failMessage): Scenario {
+        if (!this.ignoreAssertion) {
+            let passed: boolean = this.flipAssertion ? !statement : !!statement;
+            if (this.flipAssertion) {
+                passMessage = 'NOT: ' + passMessage;
+                failMessage = 'NOT: ' + failMessage;
+            }
+            if (this.optionalAssertion) {
+                failMessage += ' (Optional)';
+            }
+            if (passed) {
+                this.pass(passMessage);
+            }
+            else {
+                this.fail(failMessage, this.optionalAssertion);
+            }
+            return this.reset();
+        }
+        return this;
+    }
+
+    /**
+     * Clear out any previous settings
+     */
+    protected reset(): Scenario {
+        this.flipAssertion = false;
+        this.optionalAssertion = false;
+        return this;
+    }
+
+    /**
+     * Flip the next assertion
+     */
+    public not(): Scenario {
+        this.flipAssertion = true;
+        return this;
+    }
+
+    /**
+    * Consider the next set of tests optional, until the next selector
+    */
+    public optional(): Scenario {
+        this.optionalAssertion = true;
+        return this;
+    }
+
+    /**
+     * Ignore assertions until further notice
+     */
+    public ignore(assertions: boolean | Function = true): Scenario {
+        if (typeof assertions == 'boolean') {
+            this.ignoreAssertion = assertions;
+        }
+        else if (typeof assertions == 'function') {
+            this.ignore(true);
+            assertions();
+            this.ignore(false);
+        }
+        return this;
+    }
+
+    /**
      * Push in a new passing assertion
      *
      * @param {string} message
@@ -261,6 +332,12 @@ export class Scenario {
         return this;
     }
 
+    protected executeWhenReady() {
+        if (!this.waitToExecute && this._then !== null && this.url !== null) {
+            this.execute();
+        }
+    }
+
     /**
      * Set the URL that this scenario will hit
      *
@@ -271,28 +348,29 @@ export class Scenario {
         // You can only load the url once per scenario
         if (!this.start) {
             this.url = url;
-            if (!this.waitToExecute && this.then) {
-                this.execute();
-            }
+            this._isMock = false;
+            this.executeWhenReady();
         }
         return this;
     }
 
     /**
      * Set the callback for the assertions to run after the request has a response
-     *
-     * @param {Function} then
-     * @returns {Scenario}
      */
-    public assertions(then: Function): Scenario {
-        // You can only load the url once per scenario
+    public then(callback: Function): Scenario {
+        // If it hasn't already been executed
         if (!this.start) {
-            this.then = then;
-            if (!this.waitToExecute && this.url) {
-                this.execute();
-            }
+            this._then = callback;
+            this.executeWhenReady();
         }
         return this;
+    }
+
+    /**
+     * Alias for then()
+     */
+    public assertions(callback: Function): Scenario {
+        return this.then(callback);
     }
 
     /**
@@ -311,78 +389,112 @@ export class Scenario {
         return this;
     }
 
+    protected getScenarioType(): { name: string, responseObject } {
+        if (this.responseType == ResponseType.json) {
+            return {
+                name: 'REST End Point',
+                responseObject: JsonResponse
+            }
+        }
+        else if (this.responseType == ResponseType.image) {
+            return {
+                name: 'Image',
+                responseObject: ImageResponse
+            }
+        }
+        else if (this.responseType == ResponseType.script) {
+            return {
+                name: 'Script',
+                responseObject: ScriptResponse
+            }
+        }
+        else if (this.responseType == ResponseType.stylesheet) {
+            return {
+                name: 'Stylesheet',
+                responseObject: CssResponse
+            }
+        }
+        else if (this.responseType == ResponseType.resource) {
+            return {
+                name: 'Resource',
+                responseObject: ResourceResponse
+            }
+        }
+        else {
+            return {
+                name: 'HTML Page',
+                responseObject: HtmlResponse
+            }
+        }
+    }
+
+    protected processResponse(simplifiedResponse: SimplifiedResponse) {
+        let scenarioType: { name: string, responseObject } = this.getScenarioType();
+        this.requestLoaded = Date.now();
+        this.pass('Loaded ' + scenarioType.name + ' ' + this.url);
+        if (this._then !== null && this.url !== null) {
+            this._then(
+                new scenarioType.responseObject(this, this.url, simplifiedResponse)
+            );
+        }
+        this.done();
+    }
+
+    protected executeRequest() {
+        if (!this.requestStart && this.url !== null) {
+            let scenario: Scenario = this;
+            this.requestStart = Date.now();
+            this.options.uri = this.suite.buildUrl(this.url);
+            request(this.options, function (error, response, body) {
+                if (!error) {
+                    scenario.processResponse(Flagpole.toSimplifiedResponse(response, body));
+                }
+                else {
+                    scenario.fail('Failed to load page ' + scenario.url);
+                    scenario.done();
+                }
+            });
+        }
+    }
+
+    protected executeMock() {
+        if (!this.requestStart && this.url !== null) {
+            let scenario: Scenario = this;
+            this.requestStart = Date.now();
+            Mock.loadLocalFile(this.url).then(function (mock: Mock) {
+                scenario.processResponse(mock);
+            }).catch(function () {
+                scenario.fail('Failed to load page ' + scenario.url);
+                scenario.done();
+            });
+        }
+    }
+
     /**
      * Execute this scenario
-     *
-     * @returns {Scenario}
      */
     public execute(): Scenario {
         if (!this.start && this.url !== null) {
             this.start = Date.now();
-            this.options.uri = this.suite.buildUrl(this.url);
             // If we waited first
             if (this.waitToExecute && this.initialized !== null) {
                 this.log.push(new ConsoleLine('  »  Waited ' + (this.start - this.initialized) + 'ms'));
             }
-            // Html or Json?
-            let scenario: Scenario = this;
-            let scenarioType: { name: string, responseObject } = (function () {
-                if (scenario.responseType == ReponseType.json) {
-                    return {
-                        name: 'REST End Point',
-                        responseObject: JsonResponse
-                    }
-                }
-                else if (scenario.responseType == ReponseType.image) {
-                    return {
-                        name: 'Image',
-                        responseObject: ImageResponse
-                    }
-                }
-                else if (scenario.responseType == ReponseType.script) {
-                    return {
-                        name: 'Script',
-                        responseObject: ScriptResponse
-                    }
-                }
-                else if (scenario.responseType == ReponseType.stylesheet) {
-                    return {
-                        name: 'Stylesheet',
-                        responseObject: CssResponse
-                    }
-                }
-                else if (scenario.responseType == ReponseType.resource) {
-                    return {
-                        name: 'Resource',
-                        responseObject: ResourceResponse
-                    }
-                }
-                else {
-                    return {
-                        name: 'HTML Page',
-                        responseObject: HtmlResponse
-                    } 
-                }
-            })();
             // Execute it
-            this.requestStart = Date.now();
-            request(this.options, function (error, response, body) {
-                if (!error) {
-                    scenario.requestLoaded = Date.now();
-                    scenario.pass('Loaded ' + scenarioType.name + ' ' + scenario.url);
-                    if (scenario.then !== null && scenario.url !== null) {
-                        scenario.then(
-                            new scenarioType.responseObject(scenario, scenario.url, Flagpole.toSimplifiedResponse(response, body))
-                        );
-                    }
-                    scenario.done();
-                }
-                else {
-                    scenario.fail('Failed to load page ' + scenario.url);
-                }
-            });
-
+            this._isMock ?
+                this.executeMock() :
+                this.executeRequest();
         }
+        return this;
+    }
+
+    /**
+     * Fake response from local file for testing
+     */
+    public mock(localPath: string): Scenario {
+        this.url = localPath;
+        this._isMock = true;
+        this.executeWhenReady();
         return this;
     }
 
