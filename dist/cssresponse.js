@@ -6,7 +6,6 @@ class CssResponse extends response_1.GenericResponse {
     constructor(scenario, url, response) {
         super(scenario, url, response);
         this.status().between(200, 299);
-        this.headers('Content-Type').similarTo('text/css');
         this.css = css.parse(this.getBody(), { silent: true });
         this.validate();
     }

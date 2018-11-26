@@ -65,4 +65,6 @@ export declare abstract class GenericResponse implements iResponse {
     status(): Node;
     length(): Node;
     loadTime(): Node;
+    url(): Node;
+    path(): Node;
 }

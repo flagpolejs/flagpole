@@ -10,7 +10,7 @@ export class CssResponse extends GenericResponse implements iResponse {
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
         super(scenario, url, response);
         this.status().between(200, 299);
-        this.headers('Content-Type').similarTo('text/css');
+        //this.headers('Content-Type').similarTo('text/css');
         this.css = css.parse(this.getBody(), { silent: true });
         this.validate();
     }

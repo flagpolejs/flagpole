@@ -33,20 +33,27 @@ class Node {
         return null;
     }
     getUrl() {
-        let tagName = this.getTagName();
-        if (tagName !== null) {
-            if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(tagName) >= 0) {
-                return this.getAttribute('src');
-            }
-            else if (['a', 'link'].indexOf(tagName) >= 0) {
-                return this.getAttribute('href');
-            }
-            else if (['form'].indexOf(tagName) >= 0) {
-                return this.getAttribute('action') || this.response.scenario.getUrl();
+        if (this.isDomElement()) {
+            let tagName = this.getTagName();
+            if (tagName !== null) {
+                if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(tagName) >= 0) {
+                    return this.getAttribute('src');
+                }
+                else if (['a', 'link'].indexOf(tagName) >= 0) {
+                    return this.getAttribute('href');
+                }
+                else if (['form'].indexOf(tagName) >= 0) {
+                    return this.getAttribute('action') || this.response.scenario.getUrl();
+                }
             }
         }
-        else if (this.response.getType() == response_1.ResponseType.json) {
-            return this.toString().trim();
+        else if (this.isString()) {
+            if (this.response.getType() == response_1.ResponseType.json) {
+                return this.toString().trim();
+            }
+            else if (this.response.getType() == response_1.ResponseType.html) {
+                return this.toString().trim().replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
+            }
         }
         return null;
     }
@@ -405,6 +412,13 @@ class Node {
     last() {
         return this.nth((this.obj && this.obj.length) ? (this.obj.length - 1) : -1);
     }
+    css(key) {
+        let text = null;
+        if (this.isDomElement()) {
+            text = this.obj.css(key);
+        }
+        return new Node(this.response, this.name + '[style][' + key + ']', text);
+    }
     attribute(key) {
         let text = null;
         if (this.isDomElement()) {
@@ -468,6 +482,9 @@ class Node {
         let count = (this.obj && this.obj.length) ?
             this.obj.length : 0;
         return new Node(this.response, 'Length of ' + this.name, count);
+    }
+    type() {
+        return new Node(this.response, 'Type of ' + this.name, _1.Flagpole.toType(this.obj));
     }
     parseFloat() {
         return new Node(this.response, 'Float of ' + this.name, parseFloat(this.toString()));

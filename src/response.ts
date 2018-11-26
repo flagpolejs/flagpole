@@ -213,4 +213,18 @@ export abstract class GenericResponse implements iResponse {
         return new Node(this, 'Load Time', this.scenario.getRequestLoadTime());
     }
 
+    /**
+     * Get URL of the current page
+     */
+    public url(): Node {
+        return new Node(this, 'URL', this.getUrl());
+    }
+
+    /**
+     * Get the path of the current page
+     */
+    public path(): Node {
+        return new Node(this, 'Path', new URL(this.getUrl()).pathname);
+    }
+
 }

@@ -95,5 +95,11 @@ class GenericResponse {
     loadTime() {
         return new node_1.Node(this, 'Load Time', this.scenario.getRequestLoadTime());
     }
+    url() {
+        return new node_1.Node(this, 'URL', this.getUrl());
+    }
+    path() {
+        return new node_1.Node(this, 'Path', new URL(this.getUrl()).pathname);
+    }
 }
 exports.GenericResponse = GenericResponse;

@@ -53,12 +53,14 @@ export declare class Node {
     nth(i: number): Node;
     first(): Node;
     last(): Node;
+    css(key: string): Node;
     attribute(key: string): Node;
     property(key: string): Node;
     data(key: string): Node;
     val(): Node;
     text(): Node;
     length(): Node;
+    type(): Node;
     parseFloat(): Node;
     parseInt(): Node;
     trim(): Node;

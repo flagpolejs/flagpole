@@ -54,20 +54,27 @@ export class Node {
     }
 
     protected getUrl(): string | null {
-        let tagName: string | null = this.getTagName();
-        if (tagName !== null) {
-            if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(tagName) >= 0) {
-                return this.getAttribute('src');
-            }
-            else if (['a', 'link'].indexOf(tagName) >= 0) {
-                return this.getAttribute('href');
-            }
-            else if (['form'].indexOf(tagName) >= 0) {
-                return this.getAttribute('action') || this.response.scenario.getUrl();
+        if (this.isDomElement()) {
+            let tagName: string | null = this.getTagName();
+            if (tagName !== null) {
+                if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(tagName) >= 0) {
+                    return this.getAttribute('src');
+                }
+                else if (['a', 'link'].indexOf(tagName) >= 0) {
+                    return this.getAttribute('href');
+                }
+                else if (['form'].indexOf(tagName) >= 0) {
+                    return this.getAttribute('action') || this.response.scenario.getUrl();
+                }
             }
         }
-        else if (this.response.getType() == ResponseType.json) {
-            return this.toString().trim();
+        else if (this.isString()) {
+            if (this.response.getType() == ResponseType.json) {
+                return this.toString().trim();
+            }
+            else if (this.response.getType() == ResponseType.html) {
+                return this.toString().trim().replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
+            }
         }
         return null;
     }
@@ -616,7 +623,15 @@ export class Node {
     /**
      * PROPERTIES AND ATTRIBUTES
      */
-
+    
+    public css(key: string): Node {
+        let text: any = null;
+        if (this.isDomElement()) {
+            text = this.obj.css(key);
+        }
+        return new Node(this.response, this.name + '[style][' + key + ']', text);
+    }
+    
     /**
      * Get the attribute by name of this object
      *
@@ -709,6 +724,10 @@ export class Node {
         let count: number = (this.obj && this.obj.length) ?
             this.obj.length : 0;
         return new Node(this.response, 'Length of ' + this.name, count);
+    }
+
+    public type(): Node {
+        return new Node(this.response, 'Type of ' + this.name, Flagpole.toType(this.obj));
     }
 
     /**
