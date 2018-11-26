@@ -144,10 +144,11 @@ class Scenario {
         }
         return this;
     }
-    skip() {
+    skip(message) {
         if (!this.start) {
+            message = "  »  Skipped" + (message ? ': ' + message : '');
             this.start = Date.now();
-            this.log.push(new consoleline_1.ConsoleLine("  »  Skipped\n"));
+            this.log.push(new consoleline_1.ConsoleLine(message + "\n"));
             this.end = Date.now();
             this.onDone(this);
         }

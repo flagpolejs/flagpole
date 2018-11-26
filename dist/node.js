@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const _1 = require(".");
+const link_1 = require("./link");
 let $ = require('cheerio');
-const isValidDataUrl = require('valid-data-url');
 class Node {
     constructor(response, name, obj) {
         this.response = response;
@@ -150,48 +150,51 @@ class Node {
         this.comment('typeof ' + this.name + ' = ' + _1.Flagpole.toType(this.obj));
         return this;
     }
-    click(nextScenario) {
+    click(scenarioOrTitle, impliedAssertion = false) {
+        let scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         if (this.isLinkElement()) {
-            let href = this.attribute('href').toString();
-            if (href && !nextScenario.isDone()) {
-                nextScenario.open(href).execute();
-            }
+            let link = new link_1.Link(this.response, this.attribute('href').toString());
+            (link.isNavigation()) ?
+                scenario.open(link.getUri()) :
+                scenario.skip('Not a navigation link');
         }
         else if (this.isButtonElement()) {
-            if (this.attribute('type').toString().toLowerCase() === 'submit') {
-                let formNode = new Node(this.response, 'form', this.obj.parents('form'));
-                formNode.submit(nextScenario);
-            }
+            let formNode = new Node(this.response, 'form', this.obj.parents('form'));
+            (this.attribute('type').toString().toLowerCase() === 'submit' || !formNode.isFormElement()) ?
+                formNode.submit(scenario) :
+                scenario.skip('Button does not submit anything');
         }
         else {
             this.fail('Not a clickable element');
+            scenario.skip();
         }
-        return this;
+        return scenario;
     }
-    submit(nextScenario) {
-        if (this.isFormElement()) {
-            let action = this.obj.attr('action') || this.response.scenario.getUrl() || '';
-            if (action.length > 0) {
-                let method = this.obj.attr('method') || 'get';
-                nextScenario.method(method);
-                if (method == 'get') {
-                    action = action.split('?')[0] + '?' + this.obj.serialize();
-                }
-                else {
-                    let formDataArray = this.obj.serializeArray();
-                    let formData = {};
-                    formDataArray.forEach(function (input) {
-                        formData[input.name] = input.value;
-                    });
-                    nextScenario.form(formData);
-                }
-                if (!nextScenario.isDone()) {
-                    this.comment('Submitting form');
-                    nextScenario.open(action).execute();
-                }
+    submit(scenarioOrTitle, impliedAssertion = false) {
+        let scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
+        let link = new link_1.Link(this.response, this.obj.attr('action') || this.response.scenario.getUrl() || '');
+        if (this.isFormElement() && link.isNavigation()) {
+            let uri;
+            let method = this.obj.attr('method') || 'get';
+            scenario.method(method);
+            if (method == 'get') {
+                uri = link.getUri(this.obj.serializeArray());
             }
+            else {
+                let formDataArray = this.obj.serializeArray();
+                let formData = {};
+                uri = link.getUri();
+                formDataArray.forEach(function (input) {
+                    formData[input.name] = input.value;
+                });
+                scenario.form(formData);
+            }
+            scenario.open(uri);
         }
-        return this;
+        else {
+            scenario.skip('Nothing to submit');
+        }
+        return scenario;
     }
     fillForm(formData) {
         if (this.isFormElement()) {
@@ -208,34 +211,52 @@ class Node {
         }
         return this;
     }
-    load(title, assertions) {
-        let scenario = this.response.scenario;
+    getLambdaScenario(scenarioOrTitle, impliedAssertion = false) {
+        let node = this;
+        let scenario = (function () {
+            if (typeof scenarioOrTitle == 'string') {
+                if (node.isImageElement()) {
+                    return node.response.scenario.Image(scenarioOrTitle);
+                }
+                else if (node.isStylesheetElement()) {
+                    return node.response.scenario.Stylesheet(scenarioOrTitle);
+                }
+                else if (node.isScriptElement()) {
+                    return node.response.scenario.Script(scenarioOrTitle);
+                }
+                else if (node.isFormElement()) {
+                    return node.response.scenario.Html(scenarioOrTitle);
+                }
+                else {
+                    return node.response.scenario.Resource(scenarioOrTitle);
+                }
+            }
+            return scenarioOrTitle;
+        })();
+        if (impliedAssertion) {
+            scenario.assertions(function () {
+            });
+        }
+        return scenario;
+    }
+    load(scenarioOrTitle, impliedAssertion = false) {
         let relativePath = this.getUrl();
-        let url = this.response.absolutizeUri(relativePath || '');
-        if (typeof assertions == 'undefined') {
-            assertions = function (response) {
-                return scenario;
-            };
-        }
+        let link = new link_1.Link(this.response, relativePath || '');
+        let scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         if (relativePath === null) {
-            this.fail('No URL to load in this node: ' + title);
+            scenario.skip('No URL to load');
         }
-        else if (relativePath.startsWith('data:')) {
-            this.assert(isValidDataUrl(relativePath), 'Is valid data URL', 'Is not valid data URL');
+        else if (link.isData()) {
+            this.assert(link.isValidDataUri(), 'Is valid data URL', 'Is not valid data URL');
+            scenario.skip('Link is a data URL');
         }
-        else if (this.isImageElement()) {
-            this.response.scenario.Image(title).open(url).assertions(assertions);
-        }
-        else if (this.isStylesheetElement()) {
-            this.response.scenario.Stylesheet(title).open(url).assertions(assertions);
-        }
-        else if (this.isScriptElement()) {
-            this.response.scenario.Script(title).open(url).assertions(assertions);
+        else if (link.isNavigation()) {
+            scenario.open(link.getUri());
         }
         else {
-            this.response.scenario.Resource(title).open(url).assertions(assertions);
+            scenario.skip('Nothing to load');
         }
-        return this;
+        return scenario;
     }
     find(selector) {
         return this.response.select(selector, this.obj);

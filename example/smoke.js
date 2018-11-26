@@ -32,15 +32,15 @@ Flagpole.Suite('Smoke Tests')
             .and().text().parseInt().greaterThanOrEquals(0);
 
         test.select('img').each(function (img, index) {
-            img.load('Image ' + index);
+            img.load('Image ' + index).assertions(function () { });
         });
 
         test.select('link[rel="stylesheet"]').each(function (link, index) {
-            link.load('Stylesheet ' + index);
+            link.load('Stylesheet ' + index).assertions(function () { });
         });
 
         test.select('script[src]').each(function (script, index) {
-            script.load('Script ' + index);
+            script.load('Script ' + index).assertions(function () { });
         });
 
     });

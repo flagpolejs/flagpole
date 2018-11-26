@@ -1,9 +1,9 @@
 import { Scenario } from "./scenario";
 import { iResponse } from "./response";
 import { Flagpole } from ".";
+import { Link } from "./link";
 
 let $: CheerioStatic = require('cheerio');
-const isValidDataUrl = require('valid-data-url');
 
 /**
  * Various different types of properties that assertions can be made against
@@ -286,26 +286,27 @@ export class Node {
      *
      * @param {Scenario} nextScenario
      */
-    public click(nextScenario: Scenario): Node {
+    public click(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
+        let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         // If this was a link, click it and then run the resulting scenaior
         if (this.isLinkElement()) {
-            let href: string = this.attribute('href').toString();
-            // Need more logic here to handle relative links
-            if (href && !nextScenario.isDone()) {
-                nextScenario.open(href).execute();
-            }
+            let link: Link = new Link(this.response, this.attribute('href').toString());
+            (link.isNavigation()) ?
+                scenario.open(link.getUri()) : 
+                scenario.skip('Not a navigation link');
         }
         // If this was a button and it has a form to submit... submit that form
         else if (this.isButtonElement()) {
-            if (this.attribute('type').toString().toLowerCase() === 'submit') {
-                let formNode: Node = new Node(this.response, 'form', this.obj.parents('form'));
-                formNode.submit(nextScenario);
-            }
+            let formNode: Node = new Node(this.response, 'form', this.obj.parents('form'));
+            (this.attribute('type').toString().toLowerCase() === 'submit' || !formNode.isFormElement()) ?
+                formNode.submit(scenario) : 
+                scenario.skip('Button does not submit anything');
         }
         else {
             this.fail('Not a clickable element');
+            scenario.skip();
         }
-        return this;
+        return scenario;
     }
 
     /**
@@ -313,32 +314,33 @@ export class Node {
      * 
      * @param nextScenario 
      */
-    public submit(nextScenario: Scenario): Node {
-        if (this.isFormElement()) {
-            // If there is an action or else submit to self
-            let action: string = this.obj.attr('action') || this.response.scenario.getUrl() || '';
-            if (action.length > 0) {
-                let method: string = this.obj.attr('method') || 'get';
-                nextScenario.method(method);
-                if (method == 'get') {
-                    action = action.split('?')[0] + '?' + this.obj.serialize();
-                }
-                else {
-                    let formDataArray: any[] = this.obj.serializeArray();
-                    let formData: any = {};
-                    formDataArray.forEach(function (input: any) {
-                        formData[input.name] = input.value;
-                    });
-                    nextScenario.form(formData)
-                }
-                // Need more logic here to handle relative links
-                if (!nextScenario.isDone()) {
-                    this.comment('Submitting form');
-                    nextScenario.open(action).execute();
-                }
+    public submit(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
+        let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
+        let link: Link = new Link(this.response, this.obj.attr('action') || this.response.scenario.getUrl() || '');
+        if (this.isFormElement() && link.isNavigation()) {
+            let uri: string;
+            let method: string = this.obj.attr('method') || 'get';
+            scenario.method(method);
+            // Submit form values in query string
+            if (method == 'get') {
+                uri = link.getUri(this.obj.serializeArray());
             }
+            // Submit form in multi-part form data
+            else {
+                let formDataArray: { name: string, value: string }[] = this.obj.serializeArray();
+                let formData: any = {};
+                uri = link.getUri();
+                formDataArray.forEach(function (input: any) {
+                    formData[input.name] = input.value;
+                });
+                scenario.form(formData)
+            }
+            scenario.open(uri);
         }
-        return this;
+        else {
+            scenario.skip('Nothing to submit');
+        }
+        return scenario;
     }
 
     public fillForm(formData: any): Node {
@@ -361,37 +363,57 @@ export class Node {
         return this;
     }
 
-    public load(title: string, assertions?: (response: iResponse) => void): Node {
-        let scenario: Scenario = this.response.scenario;
+    protected getLambdaScenario(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
+        let node: Node = this;
+        let scenario: Scenario = (function () {
+            if (typeof scenarioOrTitle == 'string') {
+                if (node.isImageElement()) {
+                    return node.response.scenario.Image(scenarioOrTitle);
+                }
+                else if (node.isStylesheetElement()) {
+                    return node.response.scenario.Stylesheet(scenarioOrTitle);
+                }
+                else if (node.isScriptElement()) {
+                    return node.response.scenario.Script(scenarioOrTitle);
+                }
+                else if (node.isFormElement()) {
+                    return node.response.scenario.Html(scenarioOrTitle);
+                }
+                else {
+                    return node.response.scenario.Resource(scenarioOrTitle);
+                }
+            }
+            return scenarioOrTitle;
+        })();
+        if (impliedAssertion) {
+            scenario.assertions(function () {
+                // Nothing
+            });
+        }
+        return scenario;
+    }
+
+    public load(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
         let relativePath: string | null = this.getUrl();
-        let url: string = this.response.absolutizeUri(relativePath || '');
-        if (typeof assertions == 'undefined') {
-            assertions = function (response: iResponse) {
-                return scenario;
-            };
-        }
+        let link: Link = new Link(this.response, relativePath || '');
+        let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         if (relativePath === null) {
-            this.fail('No URL to load in this node: ' + title);
+            scenario.skip('No URL to load');
         }
-        else if (relativePath.startsWith('data:')) {
+        else if (link.isData()) {
             this.assert(
-                isValidDataUrl(relativePath),
+                link.isValidDataUri(),
                 'Is valid data URL', 'Is not valid data URL'
             );
+            scenario.skip('Link is a data URL');
         }
-        else if (this.isImageElement()) {
-            this.response.scenario.Image(title).open(url).assertions(assertions);
-        }
-        else if (this.isStylesheetElement()) {
-            this.response.scenario.Stylesheet(title).open(url).assertions(assertions);
-        }
-        else if (this.isScriptElement()) {
-            this.response.scenario.Script(title).open(url).assertions(assertions);
+        else if (link.isNavigation()) {
+            scenario.open(link.getUri())
         }
         else {
-            this.response.scenario.Resource(title).open(url).assertions(assertions); 
+            scenario.skip('Nothing to load');
         }
-        return this;
+        return scenario;
     }
 
     /**

@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "1.0.9",
+  "version": "1.1.1",
   "description": "Simple and fast DOM integration and REST API testing framework.",
   "keywords": [
     "qa",
@@ -25,8 +25,10 @@
   "dependencies": {
     "@types/cheerio": "^0.22.9",
     "cheerio": "^1.0.0-rc.2",
+    "css": "^2.2.4",
     "request": "^2.87.0",
     "typescript": "^2.8.3",
+    "valid-data-url": "^1.0.0",
     "yargs": "^11.0.0"
   },
   "flo-scripts": {

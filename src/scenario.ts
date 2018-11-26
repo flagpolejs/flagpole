@@ -300,10 +300,11 @@ export class Scenario {
      *
      * @returns {Scenario}
      */
-    public skip(): Scenario {
+    public skip(message?: string): Scenario {
         if (!this.start) {
+            message = "  »  Skipped" + (message ? ': ' + message : '');
             this.start = Date.now();
-            this.log.push(new ConsoleLine("  »  Skipped\n"));
+            this.log.push(new ConsoleLine(message + "\n"));
             this.end = Date.now();
             this.onDone(this);
         }

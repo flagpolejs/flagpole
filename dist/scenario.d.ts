@@ -45,7 +45,7 @@ export declare class Scenario {
     fail(message: string, isOptional?: boolean): Scenario;
     open(url: string): Scenario;
     assertions(then: Function): Scenario;
-    skip(): Scenario;
+    skip(message?: string): Scenario;
     execute(): Scenario;
     Scenario(title: string, tags?: [string]): Scenario;
     Json(title: string, tags?: [string]): Scenario;

@@ -35,10 +35,11 @@ export declare class Node {
     label(message: string): Node;
     echo(): Node;
     typeof(): Node;
-    click(nextScenario: Scenario): Node;
-    submit(nextScenario: Scenario): Node;
+    click(scenarioOrTitle: string | Scenario, impliedAssertion?: boolean): Scenario;
+    submit(scenarioOrTitle: string | Scenario, impliedAssertion?: boolean): Scenario;
     fillForm(formData: any): Node;
-    load(title: string, assertions?: (response: iResponse) => void): Node;
+    protected getLambdaScenario(scenarioOrTitle: string | Scenario, impliedAssertion?: boolean): Scenario;
+    load(scenarioOrTitle: string | Scenario, impliedAssertion?: boolean): Scenario;
     find(selector: string): Node;
     closest(selector: string): Node;
     parents(selector?: string): Node;

@@ -13,11 +13,13 @@ let homepage = suite.Scenario('Homepage').open('/')
         test.headers('content-type').contains('text/html');
 
         test.select('img').each(function (img, index) {
-            img.load('Image ' + index);
+            img.load('Image ' + index).assertions(function (response) {
+                response.length().greaterThan(0);
+            });
         });
 
         test.optional().select('link[rel="stylesheet"]').each(function (link, index) {
-            link.load('Stylesheet ' + index);
+            link.load('Stylesheet ' + index, true);
         });
 
         test.select('form')
@@ -37,6 +39,6 @@ let searchResults = suite.Scenario('Search Results')
         
         test.select('input[name="q"]').val().equals('milesplit');
 
-        test.loadTime().echo().lessThan(1000);
+        test.loadTime().lessThan(1000);
         
     });
