@@ -107,23 +107,45 @@ class Scenario {
         this.passes.push(message);
         return this;
     }
-    assert(statement, passMessage, failMessage) {
+    assert(statement, message, actualValue) {
         if (!this.ignoreAssertion) {
             let passed = this.flipAssertion ? !statement : !!statement;
             if (this.flipAssertion) {
-                passMessage = 'NOT: ' + passMessage;
-                failMessage = 'NOT: ' + failMessage;
+                message = 'NOT: ' + message;
             }
             if (this.optionalAssertion) {
-                failMessage += ' (Optional)';
+                message += ' - Optional';
             }
             if (passed) {
-                this.pass(passMessage);
+                this.pass(message);
             }
             else {
-                this.fail(failMessage, this.optionalAssertion);
+                if (actualValue) {
+                    message += ' (' + actualValue + ')';
+                }
+                this.fail(message, this.optionalAssertion);
             }
             return this.reset();
+        }
+        return this;
+    }
+    pass(message) {
+        if (this.nextLabel) {
+            message = this.nextLabel;
+            this.nextLabel = null;
+        }
+        this.log.push(consoleline_1.ConsoleLine.pass('  ✔  ' + message));
+        this.passes.push(message);
+        return this;
+    }
+    fail(message, isOptional = false) {
+        if (this.nextLabel) {
+            message = this.nextLabel;
+            this.nextLabel = null;
+        }
+        this.log.push(consoleline_1.ConsoleLine.fail('  ✕  ' + message, isOptional));
+        if (!isOptional) {
+            this.failures.push(message);
         }
         return this;
     }
@@ -148,26 +170,6 @@ class Scenario {
             this.ignore(true);
             assertions();
             this.ignore(false);
-        }
-        return this;
-    }
-    pass(message) {
-        if (this.nextLabel) {
-            message = this.nextLabel;
-            this.nextLabel = null;
-        }
-        this.log.push(consoleline_1.ConsoleLine.pass('  ✔  ' + message));
-        this.passes.push(message);
-        return this;
-    }
-    fail(message, isOptional = false) {
-        if (this.nextLabel) {
-            message = this.nextLabel;
-            this.nextLabel = null;
-        }
-        this.log.push(consoleline_1.ConsoleLine.fail('  ✕  ' + message, isOptional));
-        if (!isOptional) {
-            this.failures.push(message);
         }
         return this;
     }

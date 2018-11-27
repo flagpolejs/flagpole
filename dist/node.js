@@ -236,7 +236,7 @@ class Node {
             if (_1.Flagpole.toType(formData) === 'object') {
                 let form = this.obj;
                 for (let name in formData) {
-                    this.assert(form.find('[name="' + name + '"]').val(formData[name]).val() == formData[name], 'Form field ' + name + ' equals ' + formData[name], 'Form field ' + name + ' does not equal ' + formData[name]);
+                    this.assert(form.find('[name="' + name + '"]').val(formData[name]).val() == formData[name], 'Form field ' + name + ' equals ' + formData[name]);
                 }
             }
         }
@@ -594,7 +594,7 @@ class Node {
                 });
             }
         });
-        this.assert(every, 'Every ' + this.name + ' passed', 'Every ' + this.name + ' did not pass');
+        this.assert(every, 'Every ' + this.name + ' passed');
         return this;
     }
     some(callback) {
@@ -629,7 +629,7 @@ class Node {
                 });
             }
         });
-        this.assert(some, 'Some ' + this.name + ' passed', 'No ' + this.name + ' passed');
+        this.assert(some, 'Some ' + this.name + ' passed');
         return this;
     }
     any(callback) {
@@ -637,27 +637,27 @@ class Node {
     }
     hasClass(className) {
         if (this.isDomElement()) {
-            this.assert(this.obj.hasClass(className), this.name + ' has class ' + className, this.name + ' does not have class ' + className);
+            this.assert(this.obj.hasClass(className), this.name + ' has class ' + className);
         }
         return this;
     }
     greaterThan(value) {
-        return this.assert(this.obj > value, this.name + ' is greater than ' + value + ' (' + this.obj + ')', this.name + ' is not greater than ' + value + ' (' + this.obj + ')');
+        return this.assert(this.obj > value, this.name + ' is greater than ' + value + ' (' + this.obj + ')');
     }
     greaterThanOrEquals(value) {
-        return this.assert(this.obj >= value, this.name + ' is greater than or equal to ' + value + ' (' + this.obj + ')', this.name + ' is not greater than or equal to ' + value + ' (' + this.obj + ')');
+        return this.assert(this.obj >= value, this.name + ' is greater than or equal to ' + value + ' (' + this.obj + ')');
     }
     lessThan(value) {
-        return this.assert(this.obj < value, this.name + ' is less than ' + value + ' (' + this.obj + ')', this.name + ' is not less than ' + value + ' (' + this.obj + ')');
+        return this.assert(this.obj < value, this.name + ' is less than ' + value + ' (' + this.obj + ')');
     }
     lessThanOrEquals(value) {
-        return this.assert(this.obj <= value, this.name + ' is less than or equal to ' + value + ' (' + this.obj + ')', this.name + ' is not less than or equal to ' + value + ' (' + this.obj + ')');
+        return this.assert(this.obj <= value, this.name + ' is less than or equal to ' + value + ' (' + this.obj + ')');
     }
     between(minValue, maxValue) {
-        return this.assert(this.obj >= minValue && this.obj <= maxValue, this.name + ' is between ' + minValue + ' and ' + maxValue + ' (' + this.obj + ')', this.name + ' is not between ' + minValue + ' and ' + maxValue + ' (' + this.obj + ')');
+        return this.assert(this.obj >= minValue && this.obj <= maxValue, this.name + ' is between ' + minValue + ' and ' + maxValue + ' (' + this.obj + ')');
     }
-    assert(statement, passMessage, failMessage) {
-        this.response.assert(statement, passMessage, failMessage);
+    assert(statement, message, actualValue) {
+        this.response.assert(statement, message, actualValue);
         return this;
     }
     contains(string) {
@@ -671,14 +671,14 @@ class Node {
         else if (!this.isNullOrUndefined()) {
             contains = (this.toString().indexOf(string) >= 0);
         }
-        return this.assert(contains, this.name + ' contains ' + string, this.name + ' does not contain ' + string);
+        return this.assert(contains, this.name + ' contains "' + string + '"');
     }
     contain(string) {
         return this.contains(string);
     }
     matches(pattern) {
         let value = this.toString();
-        return this.assert(pattern.test(value), this.name + ' matches ' + String(pattern), this.name + ' does not match ' + String(pattern) + ' (' + value + ')');
+        return this.assert(pattern.test(value), this.name + ' matches ' + String(pattern), value);
     }
     startsWith(matchText) {
         let assert = false;
@@ -687,7 +687,7 @@ class Node {
             value = this.toString();
             assert = (value.indexOf(matchText) === 0);
         }
-        return this.assert(assert, this.name + ' starts with ' + matchText, this.name + ' does not start with ' + matchText + ' (' + value + ')');
+        return this.assert(assert, this.name + ' starts with "' + matchText + '"', matchText);
     }
     endsWith(matchText) {
         let assert = false;
@@ -696,11 +696,11 @@ class Node {
             value = this.toString();
             assert = (value.indexOf(matchText) === value.length - matchText.length);
         }
-        return this.assert(assert, this.name + ' ends with ' + matchText, this.name + ' does not end with ' + matchText + ' (' + value + ')');
+        return this.assert(assert, this.name + ' ends with "' + matchText + '"', matchText);
     }
     is(type) {
         let myType = _1.Flagpole.toType(this.obj);
-        return this.assert((myType == type.toLocaleLowerCase()), this.name + ' is type ' + type, this.name + ' is not type ' + type + ' (' + myType + ')');
+        return this.assert((myType == type.toLocaleLowerCase()), this.name + ' is type ' + type, myType);
     }
     exists() {
         let exists = false;
@@ -710,19 +710,18 @@ class Node {
         else if (!this.isNullOrUndefined()) {
             exists = true;
         }
-        return this.assert(exists, this.name + ' exists', this.name + ' does not exist');
+        return this.assert(exists, this.name + ' exists');
     }
     equals(value, permissiveMatching = false) {
         let matchValue = this.toString();
-        let positiveCase = 'equals';
-        let negativeCase = 'does not equal';
+        let equals = 'equals';
+        let messageValue = (typeof value == 'string') ? '"' + value + '"' : value;
         if (permissiveMatching) {
             value = value.toLowerCase().trim();
             matchValue = matchValue.toLowerCase().trim();
-            positiveCase = 'is similar to';
-            negativeCase = 'is not similar to';
+            equals = 'is similar to';
         }
-        return this.assert(matchValue == value, this.name + ' ' + positiveCase + ' ' + value, this.name + ' ' + negativeCase + ' ' + value + ' (' + matchValue + ')');
+        return this.assert(matchValue == value, this.name + ' ' + equals + ' ' + messageValue, matchValue);
     }
     similarTo(value) {
         return this.equals(value, true);

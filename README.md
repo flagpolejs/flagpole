@@ -154,7 +154,7 @@ Next we would usually define each scenario, like so:
 Next we need to define the type of scenario this is, currently either "html" or "json" but more may be added. HTML is the default, so if you're testing a REST API be sure to set it:
 
 ```
-.type('json')
+.json()
 ```
 
 Then we would typically specify the endpoint that are want to hit. Remember this gets build in context with the base URL that we specified earlier, so you should not enter the full URL path.
@@ -347,8 +347,8 @@ Well if you thought you could trip me up that easily, HAH!
 
 let articleTest = Scenario('Check on an article')
     .assertions(function(response) {
-        response.status().equals(200);        response.select('main article.body').text().length().greaterThan(0);
-
+        response.status().equals(200);
+        response.select('main article.body').text().length().greaterThan(0);
     });
 
 let homepageTest = Scenario('Check on homepage content').open('/')
@@ -375,7 +375,8 @@ But what if you don't like all that sugar? And you wanna fetch that href content
 
 let articleTest = Scenario('Check on an article')
     .assertions(function(response) {
-        response.status().equals(200);        response.select('main article.body').text().length().greaterThan(0);
+        response.status().equals(200);
+        response.select('main article.body').text().length().greaterThan(0);
 
     });
 
@@ -402,7 +403,8 @@ If for some reason you really don't want something to execute... even after givi
 let articleTest = Scenario('Check on an article')
     .wait()
     .assertions(function(response) {
-        response.status().equals(200);        response.select('main article.body').text().length().greaterThan(0);
+        response.status().equals(200);
+        response.select('main article.body').text().length().greaterThan(0);
 
     });
 
@@ -534,7 +536,7 @@ There is a plain old assert() method you can do to create your own assertions. S
 
 ```typescript
 let someNumber: number = response.select('#something span.num').parseInt().get();
-response.assert(someNumber % 2 == 0, "Yay! It's even! :-)", "Boo! It's odd. :-(");
+response.assert(someNumber % 2 == 0, "Number is even");
 ```
 
 Also if you want to conditionally run tests or not within a given scenario you can do that. You don't need our help to do that, bro.

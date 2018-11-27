@@ -44,13 +44,13 @@ export declare class Scenario {
     isDone(): boolean;
     subheading(message: string): Scenario;
     comment(message: string): Scenario;
-    assert(statement: boolean, passMessage: any, failMessage: any): Scenario;
+    assert(statement: boolean, message: string, actualValue?: string): Scenario;
+    pass(message: string): Scenario;
+    fail(message: string, isOptional?: boolean): Scenario;
     protected reset(): Scenario;
     not(): Scenario;
     optional(): Scenario;
     ignore(assertions?: boolean | Function): Scenario;
-    pass(message: string): Scenario;
-    fail(message: string, isOptional?: boolean): Scenario;
     protected executeWhenReady(): void;
     open(url: string): Scenario;
     then(callback: Function): Scenario;

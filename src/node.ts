@@ -386,8 +386,7 @@ export class Node {
                 for (let name in formData) {
                     this.assert(
                         form.find('[name="' + name + '"]').val(formData[name]).val() == formData[name],
-                        'Form field ' + name + ' equals ' + formData[name],
-                        'Form field ' + name + ' does not equal ' + formData[name]
+                        'Form field ' + name + ' equals ' + formData[name]
                     );
                 }
             }
@@ -914,8 +913,7 @@ export class Node {
             }
         });
         this.assert(every,
-            'Every ' + this.name + ' passed',
-            'Every ' + this.name + ' did not pass'
+            'Every ' + this.name + ' passed'
         );
         return this;
     }
@@ -964,8 +962,7 @@ export class Node {
             }
         });
         this.assert(some,
-            'Some ' + this.name + ' passed',
-            'No ' + this.name + ' passed'
+            'Some ' + this.name + ' passed'
         );
         return this;
     }
@@ -991,8 +988,7 @@ export class Node {
     public hasClass(className: string): Node {
         if (this.isDomElement()) {
             this.assert(this.obj.hasClass(className),
-                this.name + ' has class ' + className,
-                this.name + ' does not have class ' + className
+                this.name + ' has class ' + className
             );
         }
         return this;
@@ -1005,8 +1001,7 @@ export class Node {
     */
     public greaterThan(value: number): Node {
         return this.assert(this.obj > value,
-            this.name + ' is greater than ' + value + ' (' + this.obj + ')',
-            this.name + ' is not greater than ' + value + ' (' + this.obj + ')'
+            this.name + ' is greater than ' + value + ' (' + this.obj + ')'
         );
     }
 
@@ -1017,8 +1012,7 @@ export class Node {
      */
     public greaterThanOrEquals(value: any): Node {
         return this.assert(this.obj >= value,
-            this.name + ' is greater than or equal to ' + value + ' (' + this.obj + ')',
-            this.name + ' is not greater than or equal to ' + value + ' (' + this.obj + ')'
+            this.name + ' is greater than or equal to ' + value + ' (' + this.obj + ')'
         );
     }
 
@@ -1029,8 +1023,7 @@ export class Node {
      */
     public lessThan(value: number): Node {
         return this.assert(this.obj < value,
-            this.name + ' is less than ' + value + ' (' + this.obj + ')',
-            this.name + ' is not less than ' + value + ' (' + this.obj + ')'
+            this.name + ' is less than ' + value + ' (' + this.obj + ')'
         );
     }
 
@@ -1041,15 +1034,13 @@ export class Node {
      */
     public lessThanOrEquals(value: any): Node {
         return this.assert(this.obj <= value,
-            this.name + ' is less than or equal to ' + value + ' (' + this.obj + ')',
-            this.name + ' is not less than or equal to ' + value + ' (' + this.obj + ')'
+            this.name + ' is less than or equal to ' + value + ' (' + this.obj + ')'
         );
     }
 
     public between(minValue: any, maxValue: any): Node {
         return this.assert(this.obj >= minValue && this.obj <= maxValue,
-            this.name + ' is between ' + minValue + ' and ' + maxValue + ' (' + this.obj + ')',
-            this.name + ' is not between ' + minValue + ' and ' + maxValue + ' (' + this.obj + ')'
+            this.name + ' is between ' + minValue + ' and ' + maxValue + ' (' + this.obj + ')'
         );
     }
 
@@ -1060,8 +1051,8 @@ export class Node {
      * @param passMessage 
      * @param failMessage 
      */
-    public assert(statement: boolean, passMessage: string, failMessage: string): Node {
-        this.response.assert(statement, passMessage, failMessage);
+    public assert(statement: boolean, message: string, actualValue?: string): Node {
+        this.response.assert(statement, message, actualValue);
         return this;
     }
 
@@ -1082,8 +1073,7 @@ export class Node {
             contains = (this.toString().indexOf(string) >= 0);
         }
         return this.assert(contains,
-            this.name + ' contains ' + string,
-            this.name + ' does not contain ' + string
+            this.name + ' contains "' + string + '"'
         );
     }
 
@@ -1105,7 +1095,7 @@ export class Node {
         let value: string = this.toString();
         return this.assert(pattern.test(value),
             this.name + ' matches ' + String(pattern),
-            this.name + ' does not match ' + String(pattern) + ' (' + value + ')'
+            value
         );
     }
 
@@ -1122,8 +1112,8 @@ export class Node {
             assert = (value.indexOf(matchText) === 0);
         }
         return this.assert(assert,
-            this.name + ' starts with ' + matchText,
-            this.name + ' does not start with ' + matchText + ' (' + value + ')'
+            this.name + ' starts with "' + matchText + '"', 
+            matchText
         );
     }
 
@@ -1140,8 +1130,8 @@ export class Node {
             assert = (value.indexOf(matchText) === value.length - matchText.length);
         }
         return this.assert(assert,
-            this.name + ' ends with ' + matchText,
-            this.name + ' does not end with ' + matchText + ' (' + value + ')'
+            this.name + ' ends with "' + matchText + '"',
+            matchText
         );
     }
 
@@ -1153,8 +1143,8 @@ export class Node {
     public is(type: string): Node {
         let myType: string = Flagpole.toType(this.obj);
         return this.assert((myType == type.toLocaleLowerCase()),
-            this.name + ' is type ' + type,
-            this.name + ' is not type ' + type + ' (' + myType + ')'
+            this.name + ' is type ' + type, 
+            myType
         );
     }
 
@@ -1170,8 +1160,7 @@ export class Node {
             exists = true;
         }
         return this.assert(exists,
-            this.name + ' exists',
-            this.name + ' does not exist'
+            this.name + ' exists'
         );
     }
 
@@ -1183,17 +1172,16 @@ export class Node {
      */
     public equals(value: any, permissiveMatching: boolean = false): Node {
         let matchValue: string = this.toString();
-        let positiveCase: string = 'equals';
-        let negativeCase: string = 'does not equal';
+        let equals: string = 'equals';
+        let messageValue: string = (typeof value == 'string') ? '"' + value + '"' : value;
         if (permissiveMatching) {
             value = value.toLowerCase().trim();
             matchValue = matchValue.toLowerCase().trim();
-            positiveCase = 'is similar to';
-            negativeCase = 'is not similar to';
+            equals = 'is similar to';
         }
         return this.assert(matchValue == value,
-            this.name + ' ' + positiveCase + ' ' + value,
-            this.name + ' ' + negativeCase + ' ' + value + ' (' + matchValue + ')'
+            this.name + ' ' + equals + ' ' + messageValue, 
+            matchValue
         );
     }
 

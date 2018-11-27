@@ -229,23 +229,53 @@ export class Scenario {
      * Assert something is true, with respect to the flipped not()
      * Also respect ignore assertions flag
      */
-    public assert(statement: boolean, passMessage, failMessage): Scenario {
+    public assert(statement: boolean, message: string, actualValue?: string): Scenario {
         if (!this.ignoreAssertion) {
             let passed: boolean = this.flipAssertion ? !statement : !!statement;
             if (this.flipAssertion) {
-                passMessage = 'NOT: ' + passMessage;
-                failMessage = 'NOT: ' + failMessage;
+                message = 'NOT: ' + message;
             }
             if (this.optionalAssertion) {
-                failMessage += ' (Optional)';
+                message += ' - Optional';
             }
             if (passed) {
-                this.pass(passMessage);
+                this.pass(message);
             }
             else {
-                this.fail(failMessage, this.optionalAssertion);
+                if (actualValue) {
+                    message += ' (' + actualValue + ')';
+                }
+                this.fail(message, this.optionalAssertion);
             }
             return this.reset();
+        }
+        return this;
+    }
+
+    /**
+     * Push in a new passing assertion
+     */
+    public pass(message: string): Scenario {
+        if (this.nextLabel) {
+            message = this.nextLabel;
+            this.nextLabel = null;
+        }
+        this.log.push(ConsoleLine.pass('  ✔  ' + message));
+        this.passes.push(message);
+        return this;
+    }
+
+    /**
+     * Push in a new failing assertion
+     */
+    public fail(message: string, isOptional: boolean = false): Scenario {
+        if (this.nextLabel) {
+            message = this.nextLabel;
+            this.nextLabel = null;
+        }
+        this.log.push(ConsoleLine.fail('  ✕  ' + message, isOptional));
+        if (!isOptional) {
+            this.failures.push(message);
         }
         return this;
     }
@@ -286,40 +316,6 @@ export class Scenario {
             this.ignore(true);
             assertions();
             this.ignore(false);
-        }
-        return this;
-    }
-
-    /**
-     * Push in a new passing assertion
-     *
-     * @param {string} message
-     * @returns {Scenario}
-     */
-    public pass(message: string): Scenario {
-        if (this.nextLabel) {
-            message = this.nextLabel;
-            this.nextLabel = null;
-        }
-        this.log.push(ConsoleLine.pass('  ✔  ' + message));
-        this.passes.push(message);
-        return this;
-    }
-
-    /**
-     * Push in a new failing assertion
-     * 
-     * @param message 
-     * @param isOptional 
-     */
-    public fail(message: string, isOptional: boolean = false): Scenario {
-        if (this.nextLabel) {
-            message = this.nextLabel;
-            this.nextLabel = null;
-        }
-        this.log.push(ConsoleLine.fail('  ✕  ' + message, isOptional));
-        if (!isOptional) {
-            this.failures.push(message);
         }
         return this;
     }

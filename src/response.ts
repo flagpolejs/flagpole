@@ -23,7 +23,7 @@ export interface iResponse {
     not(): iResponse
     optional(): iResponse
     ignore(assertions?: boolean | Function): iResponse
-    assert(statement: boolean, passMessage: string, failMessage: string): iResponse
+    assert(statement: boolean, message: string, actualValue?: string): iResponse
     absolutizeUri(uri: string): string
     readonly scenario: Scenario
 }
@@ -87,8 +87,8 @@ export abstract class GenericResponse implements iResponse {
         return this._body;
     }
 
-    public assert(statement: boolean, passMessage, failMessage): iResponse {
-        this.scenario.assert(statement, passMessage, failMessage);
+    public assert(statement: boolean, message: string, actualValue?: string): iResponse {
+        this.scenario.assert(statement, message, actualValue);
         return this;
     }
 

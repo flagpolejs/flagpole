@@ -87,7 +87,7 @@ export declare class Node {
     lessThan(value: number): Node;
     lessThanOrEquals(value: any): Node;
     between(minValue: any, maxValue: any): Node;
-    assert(statement: boolean, passMessage: string, failMessage: string): Node;
+    assert(statement: boolean, message: string, actualValue?: string): Node;
     contains(string: string): Node;
     contain(string: string): Node;
     matches(pattern: RegExp): Node;

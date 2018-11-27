@@ -19,7 +19,7 @@ export interface iResponse {
     not(): iResponse;
     optional(): iResponse;
     ignore(assertions?: boolean | Function): iResponse;
-    assert(statement: boolean, passMessage: string, failMessage: string): iResponse;
+    assert(statement: boolean, message: string, actualValue?: string): iResponse;
     absolutizeUri(uri: string): string;
     readonly scenario: Scenario;
 }
@@ -51,7 +51,7 @@ export declare abstract class GenericResponse implements iResponse {
     getUrl(): string;
     getBody(): string;
     getRoot(): any;
-    assert(statement: boolean, passMessage: any, failMessage: any): iResponse;
+    assert(statement: boolean, message: string, actualValue?: string): iResponse;
     not(): iResponse;
     optional(): iResponse;
     ignore(assertions?: boolean | Function): iResponse;

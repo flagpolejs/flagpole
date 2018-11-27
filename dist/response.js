@@ -33,8 +33,8 @@ class GenericResponse {
     getRoot() {
         return this._body;
     }
-    assert(statement, passMessage, failMessage) {
-        this.scenario.assert(statement, passMessage, failMessage);
+    assert(statement, message, actualValue) {
+        this.scenario.assert(statement, message, actualValue);
         return this;
     }
     not() {
