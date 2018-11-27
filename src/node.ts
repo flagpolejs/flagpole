@@ -407,19 +407,30 @@ export class Node {
         let node: Node = this;
         let scenario: Scenario = (function () {
             if (typeof scenarioOrTitle == 'string') {
+                let path: string = node.getUrl() || '';
                 if (
                     node.isImageElement() ||
-                    (node.typeOfNode == NodeType.StyleAttribute && node.selector == 'background-image')
+                    (node.typeOfNode == NodeType.StyleAttribute && node.selector == 'background-image') ||
+                    /\.(jpe?g|gif|png|svg|bmp|webp|tiff?|psd)$/i.test(path)
                 ) {
                     return node.response.scenario.suite.Image(scenarioOrTitle);
                 }
-                else if (node.isStylesheetElement()) {
+                else if (
+                    node.isStylesheetElement() ||
+                    /\.css$/i.test(path)
+                ) {
                     return node.response.scenario.suite.Stylesheet(scenarioOrTitle);
                 }
-                else if (node.isScriptElement()) {
+                else if (
+                    node.isScriptElement() ||
+                    /\.js$/i.test(path)
+                ) {
                     return node.response.scenario.suite.Script(scenarioOrTitle);
                 }
-                else if (node.isFormElement() || node.isClickable()) {
+                else if (
+                    (node.isFormElement() || node.isClickable()) ||
+                    /\.(html?|php|aspx?|jsp)$/i.test(path)
+                ) {
                     return node.response.scenario.suite.Html(scenarioOrTitle);
                 }
                 else {
