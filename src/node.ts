@@ -1194,8 +1194,11 @@ export class Node {
         return this.equals(value, true);
     }
 
-    public in(arrayOfValues: any[]): Node {
-        let value: any = this.get();
+    /**
+     * See if this string is in the list of enum values
+     */
+    public in(arrayOfValues: string[]): Node {
+        let value: string = this.toString();
         return this.assert(
             arrayOfValues.indexOf(value) >= 0,
             this.name + ' is in list: ' + arrayOfValues.join(',')

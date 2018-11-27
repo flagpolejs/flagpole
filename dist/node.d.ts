@@ -97,5 +97,5 @@ export declare class Node {
     exists(): Node;
     equals(value: any, permissiveMatching?: boolean): Node;
     similarTo(value: any): Node;
-    in(arrayOfValues: any[]): Node;
+    in(arrayOfValues: string[]): Node;
 }

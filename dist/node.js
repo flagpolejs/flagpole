@@ -727,7 +727,7 @@ class Node {
         return this.equals(value, true);
     }
     in(arrayOfValues) {
-        let value = this.get();
+        let value = this.toString();
         return this.assert(arrayOfValues.indexOf(value) >= 0, this.name + ' is in list: ' + arrayOfValues.join(','));
     }
 }
