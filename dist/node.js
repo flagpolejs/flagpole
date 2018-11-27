@@ -726,5 +726,9 @@ class Node {
     similarTo(value) {
         return this.equals(value, true);
     }
+    in(arrayOfValues) {
+        let value = this.get();
+        return this.assert(arrayOfValues.indexOf(value) >= 0, this.name + ' is in list: ' + arrayOfValues.join(','));
+    }
 }
 exports.Node = Node;

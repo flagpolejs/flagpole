@@ -1194,4 +1194,12 @@ export class Node {
         return this.equals(value, true);
     }
 
+    public in(arrayOfValues: any[]): Node {
+        let value: any = this.get();
+        return this.assert(
+            arrayOfValues.indexOf(value) >= 0,
+            this.name + ' is in list: ' + arrayOfValues.join(',')
+        );
+    }
+
 }

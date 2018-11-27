@@ -12,6 +12,9 @@ let homepage = suite.Scenario('Homepage').open('/')
         test.status().equals(200);
         test.headers('content-type').contains('text/html');
 
+        test.select('input[type="submit"]').attribute('value')
+            .in(["Google Search", "Search"]);
+
         test.select('img').each(function (img, index) {
             img.load('Image ' + index).assertions(function (response) {
                 response.length().greaterThan(0);
