@@ -2,7 +2,10 @@ import { Scenario } from "./scenario";
 import { iResponse } from "./response";
 export declare enum NodeType {
     Generic = 0,
-    StyleAttribute = 1,
+    Element = 1,
+    StyleAttribute = 2,
+    Property = 3,
+    Value = 4,
 }
 export declare class Node {
     protected response: iResponse;
@@ -59,9 +62,11 @@ export declare class Node {
     nth(i: number): Node;
     first(): Node;
     last(): Node;
+    slice(start: number, end: number): Node;
     css(key: string): Node;
     attribute(key: string): Node;
     property(key: string): Node;
+    prop(key: string): Node;
     data(key: string): Node;
     val(): Node;
     text(): Node;

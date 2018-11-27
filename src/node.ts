@@ -7,7 +7,10 @@ let $: CheerioStatic = require('cheerio');
 
 export enum NodeType {
     Generic,
-    StyleAttribute
+    Element,
+    StyleAttribute,
+    Property,
+    Value
 }
 
 /**
@@ -235,7 +238,10 @@ export class Node {
      * @param findIn 
      */
     public select(path: string, findIn?: any): Node {
-        return this.response.select(path, findIn);
+        let node: Node = this.response.select(path, findIn);
+        node.typeOfNode = NodeType.Value;
+        node.selector = path;
+        return node;
     }
 
     /**
@@ -451,7 +457,10 @@ export class Node {
      */
 
     public find(selector: string): Node {
-        return this.response.select(selector, this.obj);
+        let node: Node = this.response.select(selector, this.obj);
+        node.selector = selector;
+        node.typeOfNode = NodeType.Element;
+        return node;
     }
 
     public closest(selector: string): Node {
@@ -630,6 +639,18 @@ export class Node {
         );
     }
 
+    public slice(start: number, end: number): Node {
+        let name: string = this.name + ' slice(' + start + (end ? ' to ' + end : '') + ')';
+        if (
+            this.isDomElement() ||
+            this.isArray() ||
+            this.isString()
+        ) {
+            return new Node(this.response, name, this.get().slice(start, end));
+        }
+        return this;
+    }
+
     /**
      * PROPERTIES AND ATTRIBUTES
      */
@@ -661,6 +682,8 @@ export class Node {
         else if (this.response.getLastElement().isDomElement()) {
             text = this.response.getLastElement().get().attr(key);
         }
+        this.typeOfNode = NodeType.Property;
+        this.selector = key;
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
 
@@ -680,7 +703,13 @@ export class Node {
         else if (this.response.getLastElement().isDomElement()) {
             text = this.response.getLastElement().get().prop(key);
         }
+        this.typeOfNode = NodeType.Property;
+        this.selector = key;
         return new Node(this.response, this.name + '[' + key + ']', text);
+    }
+
+    public prop(key: string): Node {
+        return this.property(key);
     }
 
     /**
@@ -699,6 +728,8 @@ export class Node {
         else if (this.response.getLastElement().isDomElement()) {
             text = this.response.getLastElement().get().data(key);
         }
+        this.typeOfNode = NodeType.Property;
+        this.selector = key;
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
 
@@ -713,6 +744,8 @@ export class Node {
         else if (!this.isNullOrUndefined()) {
             text = this.obj;
         }
+        this.typeOfNode = NodeType.Value;
+        this.selector = null;
         return new Node(this.response, 'Value of ' + this.name, text);
     }
 
@@ -1201,7 +1234,8 @@ export class Node {
         let value: string = this.toString();
         return this.assert(
             arrayOfValues.indexOf(value) >= 0,
-            this.name + ' is in list: ' + arrayOfValues.join(',')
+            this.name + ' is in list: ' + arrayOfValues.join(','),
+            value
         );
     }
 

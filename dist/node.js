@@ -7,7 +7,10 @@ let $ = require('cheerio');
 var NodeType;
 (function (NodeType) {
     NodeType[NodeType["Generic"] = 0] = "Generic";
-    NodeType[NodeType["StyleAttribute"] = 1] = "StyleAttribute";
+    NodeType[NodeType["Element"] = 1] = "Element";
+    NodeType[NodeType["StyleAttribute"] = 2] = "StyleAttribute";
+    NodeType[NodeType["Property"] = 3] = "Property";
+    NodeType[NodeType["Value"] = 4] = "Value";
 })(NodeType = exports.NodeType || (exports.NodeType = {}));
 class Node {
     constructor(response, name, obj) {
@@ -149,7 +152,10 @@ class Node {
         }
     }
     select(path, findIn) {
-        return this.response.select(path, findIn);
+        let node = this.response.select(path, findIn);
+        node.typeOfNode = NodeType.Value;
+        node.selector = path;
+        return node;
     }
     headers(key) {
         return this.response.headers(key);
@@ -290,7 +296,10 @@ class Node {
         return scenario;
     }
     find(selector) {
-        return this.response.select(selector, this.obj);
+        let node = this.response.select(selector, this.obj);
+        node.selector = selector;
+        node.typeOfNode = NodeType.Element;
+        return node;
     }
     closest(selector) {
         let name = 'closest ' + selector;
@@ -420,6 +429,15 @@ class Node {
     last() {
         return this.nth((this.obj && this.obj.length) ? (this.obj.length - 1) : -1);
     }
+    slice(start, end) {
+        let name = this.name + ' slice(' + start + (end ? ' to ' + end : '') + ')';
+        if (this.isDomElement() ||
+            this.isArray() ||
+            this.isString()) {
+            return new Node(this.response, name, this.get().slice(start, end));
+        }
+        return this;
+    }
     css(key) {
         let text = null;
         if (this.isDomElement()) {
@@ -441,6 +459,8 @@ class Node {
         else if (this.response.getLastElement().isDomElement()) {
             text = this.response.getLastElement().get().attr(key);
         }
+        this.typeOfNode = NodeType.Property;
+        this.selector = key;
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
     property(key) {
@@ -454,7 +474,12 @@ class Node {
         else if (this.response.getLastElement().isDomElement()) {
             text = this.response.getLastElement().get().prop(key);
         }
+        this.typeOfNode = NodeType.Property;
+        this.selector = key;
         return new Node(this.response, this.name + '[' + key + ']', text);
+    }
+    prop(key) {
+        return this.property(key);
     }
     data(key) {
         let text = null;
@@ -467,6 +492,8 @@ class Node {
         else if (this.response.getLastElement().isDomElement()) {
             text = this.response.getLastElement().get().data(key);
         }
+        this.typeOfNode = NodeType.Property;
+        this.selector = key;
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
     val() {
@@ -477,6 +504,8 @@ class Node {
         else if (!this.isNullOrUndefined()) {
             text = this.obj;
         }
+        this.typeOfNode = NodeType.Value;
+        this.selector = null;
         return new Node(this.response, 'Value of ' + this.name, text);
     }
     text() {
@@ -728,7 +757,7 @@ class Node {
     }
     in(arrayOfValues) {
         let value = this.toString();
-        return this.assert(arrayOfValues.indexOf(value) >= 0, this.name + ' is in list: ' + arrayOfValues.join(','));
+        return this.assert(arrayOfValues.indexOf(value) >= 0, this.name + ' is in list: ' + arrayOfValues.join(','), value);
     }
 }
 exports.Node = Node;

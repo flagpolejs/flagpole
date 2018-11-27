@@ -33,6 +33,8 @@ Flagpole.Suite('iTunes API Tests')
             return track.property('kind').toString() == 'music-video';
         });
 
+        results.find('0.trackExplicitness').in(['notExplicit', 'explicit'])
+
         resultCount.text();
 
     });
