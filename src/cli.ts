@@ -21,28 +21,35 @@ let argv = require('yargs')
         'p': 'path',
         'e': 'env',
         'c': 'config',
-        'd': 'debug'
+        'd': 'debug',
+        'h': 'hide_banner'
     })
     .describe({
         'g': 'Filter only a group of test suites in this subfolder',
         's': 'Specify one or more suites to run',
         'p': 'Specify the folder to look for tests within',
         'e': 'Environment like: dev, staging, prod',
-        'c': 'Path to config file'
+        'c': 'Path to config file',
+        'd': 'Show extra debug info',
+        'h': 'Hide the output banner'
     })
     .array('s')
     .string('g')
     .string('p')
     .string('e')
     .boolean('d')
+    .boolean('h')
     .default('e', function() {
         return 'dev';
     }, 'dev')
     .default('s', function() {
         return [];
     })
-    .default('g', function() {
+    .default('g', function () {
         return '';
+    })
+    .default('h', function () {
+        return false;
     })
     .example('flagpole list', 'To show a list of test suites')
     .example('flagpole run', 'To run all test suites')
@@ -54,7 +61,7 @@ let argv = require('yargs')
     .fail(function (msg, err, yargs) {
         Cli.log(yargs.help());
         Cli.log(msg);
-        Cli.exit(1);
+        Cli.exit(1, false);
     })
     .argv;
 
@@ -63,7 +70,7 @@ process.env.FLAGPOLE_COMMAND = argv._[0];
 if (commands.indexOf(String(process.env.FLAGPOLE_COMMAND)) < 0) {
     Cli.log("Command must be either: " + commands.join(", ") + "\n");
     Cli.log("Example: flagpole run\n");
-    Cli.exit(1);
+    Cli.exit(1, argv.h);
 }
 
 /**
@@ -82,12 +89,12 @@ if (argv.p) {
         // Is it a directory?
         if (!stats.isDirectory()) {
             Cli.log("The path you specified is not a directory.");
-            Cli.exit(1);
+            Cli.exit(1, argv.h);
         }
     }
     else {
         Cli.log("The path you specified did not exist.");
-        Cli.exit(1);
+        Cli.exit(1, argv.h);
     }
 }
 
@@ -106,7 +113,7 @@ if (config.isValid()) {
 // If they specified a command line config that doesn't exist
 else if (argv.c) {
     Cli.log("The config file you specified did not exist.\n");
-    Cli.exit(1);
+    Cli.exit(1, argv.h);
 }
 
 /**
@@ -181,11 +188,11 @@ if (process.env.FLAGPOLE_COMMAND == 'list') {
         Cli.log('Found these test suites:');
         Cli.list(tests.getSuiteNames());
         Cli.log("\n");
-        Cli.exit(0);
+        Cli.exit(0, argv.h);
     }
     else {
         Cli.log("Did not find any tests.\n");
-        Cli.exit(2);
+        Cli.exit(2, argv.h);
     }
 }
 /**
@@ -200,21 +207,21 @@ else if (process.env.FLAGPOLE_COMMAND == 'run') {
         let notExists: string|null = tests.getAnyTestSuitesNotFound(argv.suite)
         if (notExists !== null) {
             Cli.log('Test suite not found: ' + notExists);
-            Cli.exit(1);
+            Cli.exit(1, argv.h);
         }
     }
 
     // Apply filters
-    tests.filterTestSuitesByName(argv.suite);
+    tests.filterTestSuitesByName(argv.suite, argv.h);
 
     // If no matching tests found to run
     if (!tests.foundTestSuites()) {
         Cli.log("Did not find any tests to run.\n");
-        Cli.exit(2);
+        Cli.exit(2, argv.h);
     }
 
     // Run them doggies
-    tests.runAll();
+    tests.runAll(argv.h);
 
 }
 

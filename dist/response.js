@@ -33,9 +33,6 @@ class GenericResponse {
     getRoot() {
         return this._body;
     }
-    select(path, findIn) {
-        return new node_1.Node(this, 'Body', this._body);
-    }
     assert(statement, passMessage, failMessage) {
         this.scenario.assert(statement, passMessage, failMessage);
         return this;

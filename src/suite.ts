@@ -168,27 +168,27 @@ export class Suite {
     }
 
     public Json(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ResponseType.json);
+        return this.Scenario(title, tags).json();
     }
 
     public Image(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ResponseType.image);
+        return this.Scenario(title, tags).image();
     }
 
     public Html(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ResponseType.html);
+        return this.Scenario(title, tags).html();
     }
 
     public Stylesheet(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ResponseType.stylesheet);
+        return this.Scenario(title, tags).stylesheet();
     }
 
     public Script(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ResponseType.script);
+        return this.Scenario(title, tags).script();
     }
 
     public Resource(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).type(ResponseType.resource);
+        return this.Scenario(title, tags).resource();
     }
 
     /**

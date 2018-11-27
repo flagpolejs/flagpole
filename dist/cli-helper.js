@@ -67,7 +67,7 @@ class Tests {
         this.testSuiteStatus[filePath] = null;
     }
     ;
-    onTestExit(filePath, exitCode) {
+    onTestExit(filePath, exitCode, hideBanner) {
         let me = this;
         this.testSuiteStatus[filePath] = exitCode;
         let areDone = Object.keys(this.testSuiteStatus).every(function (filePath) {
@@ -81,7 +81,7 @@ class Tests {
                 Cli.log('Some suites failed.');
                 Cli.log("\n");
             }
-            Cli.exit(areAllPassing ? 0 : 1);
+            Cli.exit(areAllPassing ? 0 : 1, hideBanner);
         }
     }
     ;
@@ -93,7 +93,7 @@ class Tests {
         }
     }
     ;
-    runTestFile(filePath) {
+    runTestFile(filePath, hideBanner) {
         let me = this;
         this.onTestStart(filePath);
         let child = exec('node ' + filePath);
@@ -112,7 +112,7 @@ class Tests {
                 Cli.log(filePath + ' exited with error code ' + exitCode);
                 Cli.log("\n");
             }
-            me.onTestExit(filePath, exitCode);
+            me.onTestExit(filePath, exitCode, hideBanner);
         });
     }
     ;
@@ -129,13 +129,13 @@ class Tests {
     getTestsFolder() {
         return this.testsFolder;
     }
-    runAll() {
+    runAll(hideBanner) {
         let me = this;
         this.suites.forEach(function (test) {
             me.onTestStart(test.filePath);
         });
         this.suites.forEach(function (suite) {
-            me.runTestFile(suite.filePath);
+            me.runTestFile(suite.filePath, hideBanner);
         });
     }
     getAnyTestSuitesNotFound(suiteNames) {
@@ -152,7 +152,7 @@ class Tests {
         });
         return suiteThatDoesNotExist;
     }
-    filterTestSuitesByName(suiteNames) {
+    filterTestSuitesByName(suiteNames, hideBanner) {
         if (suiteNames.length > 0) {
             let filteredSuites = [];
             let me = this;
@@ -163,7 +163,7 @@ class Tests {
                 }
                 else {
                     Cli.log('Could not find test suite: ' + suiteName + "\n");
-                    Cli.exit(3);
+                    Cli.exit(3, hideBanner);
                 }
             });
             me.suites = filteredSuites;
@@ -182,8 +182,10 @@ class Cli {
             Cli.log('  » ' + message);
         });
     }
-    static exit(exitCode) {
-        printHeader();
+    static exit(exitCode, hideBanner) {
+        if (!hideBanner) {
+            printHeader();
+        }
         Cli.consoleLog.forEach(function (message) {
             console.log(message);
         });

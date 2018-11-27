@@ -91,7 +91,7 @@ export class Tests {
         this.testSuiteStatus[filePath] = null;
     };
 
-    private onTestExit(filePath: string, exitCode: number) {
+    private onTestExit(filePath: string, exitCode: number, hideBanner: boolean) {
         let me: Tests = this;
         this.testSuiteStatus[filePath] = exitCode;
         // Are they all done?
@@ -106,7 +106,7 @@ export class Tests {
                 Cli.log('Some suites failed.');
                 Cli.log("\n");
             }
-            Cli.exit(areAllPassing ? 0 : 1);
+            Cli.exit(areAllPassing ? 0 : 1, hideBanner);
         }
     };
 
@@ -128,7 +128,7 @@ export class Tests {
      *
      * @param {string} filePath
      */
-    private runTestFile(filePath: string) {
+    private runTestFile(filePath: string, hideBanner: boolean) {
         let me: Tests = this;
         this.onTestStart(filePath);
 
@@ -152,7 +152,7 @@ export class Tests {
                 Cli.log(filePath + ' exited with error code ' + exitCode);
                 Cli.log("\n");
             }
-            me.onTestExit(filePath, exitCode);
+            me.onTestExit(filePath, exitCode, hideBanner);
         });
 
     };
@@ -173,14 +173,14 @@ export class Tests {
         return this.testsFolder;
     }
 
-    public runAll() {
+    public runAll(hideBanner: boolean) {
         let me: Tests = this;
         // Loop through first and just add them to make sure we are tracking it (avoid race conditions)
         this.suites.forEach(function(test) {
             me.onTestStart(test.filePath);
         });
         this.suites.forEach(function(suite: TestSuiteFile) {
-            me.runTestFile(suite.filePath);
+            me.runTestFile(suite.filePath, hideBanner);
         });
     }
 
@@ -199,7 +199,7 @@ export class Tests {
         return suiteThatDoesNotExist;
     }
 
-    public filterTestSuitesByName(suiteNames: Array<string>) {
+    public filterTestSuitesByName(suiteNames: Array<string>, hideBanner: boolean) {
         // If filtered list was passed in, apply filter
         if (suiteNames.length > 0) {
             // First get all test suites that we found or error
@@ -212,7 +212,7 @@ export class Tests {
                 }
                 else {
                     Cli.log('Could not find test suite: ' + suiteName + "\n");
-                    Cli.exit(3);
+                    Cli.exit(3, hideBanner);
                 }
             });
             me.suites = filteredSuites;
@@ -238,8 +238,10 @@ export class Cli {
         });
     }
 
-    static exit(exitCode: number) {
-        printHeader();
+    static exit(exitCode: number, hideBanner: boolean) {
+        if (!hideBanner) {
+            printHeader();
+        }
         Cli.consoleLog.forEach(function(message: string) {
             console.log(message);
         });

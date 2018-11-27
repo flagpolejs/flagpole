@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 const scenario_1 = require("./scenario");
 const consoleline_1 = require("./consoleline");
-const response_1 = require("./response");
 class Suite {
     constructor(title) {
         this.scenarios = [];
@@ -103,22 +102,22 @@ class Suite {
         return scenario;
     }
     Json(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ResponseType.json);
+        return this.Scenario(title, tags).json();
     }
     Image(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ResponseType.image);
+        return this.Scenario(title, tags).image();
     }
     Html(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ResponseType.html);
+        return this.Scenario(title, tags).html();
     }
     Stylesheet(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ResponseType.stylesheet);
+        return this.Scenario(title, tags).stylesheet();
     }
     Script(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ResponseType.script);
+        return this.Scenario(title, tags).script();
     }
     Resource(title, tags) {
-        return this.Scenario(title, tags).type(response_1.ResponseType.resource);
+        return this.Scenario(title, tags).resource();
     }
     getScenarioByTag(tag) {
         return this.byTag.hasOwnProperty(tag) ?

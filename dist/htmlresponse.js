@@ -24,6 +24,9 @@ class HtmlResponse extends response_1.GenericResponse {
         else {
             obj = $(path);
         }
+        if (obj.length == 0) {
+            obj = null;
+        }
         let element = new node_1.Node(this, path, obj);
         this.setLastElement(path, element);
         element.exists();

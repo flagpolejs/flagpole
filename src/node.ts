@@ -5,6 +5,11 @@ import { Link } from "./link";
 
 let $: CheerioStatic = require('cheerio');
 
+export enum NodeType {
+    Generic,
+    StyleAttribute
+}
+
 /**
  * Various different types of properties that assertions can be made against
  */
@@ -13,6 +18,9 @@ export class Node {
     protected response: iResponse;
     protected name: string;
     protected obj: any;
+
+    protected typeOfNode: NodeType = NodeType.Generic;
+    protected selector: string | null = null;
 
     constructor(response: iResponse, name: string, obj: any) {
         this.response = response;
@@ -394,20 +402,23 @@ export class Node {
         let node: Node = this;
         let scenario: Scenario = (function () {
             if (typeof scenarioOrTitle == 'string') {
-                if (node.isImageElement()) {
-                    return node.response.scenario.Image(scenarioOrTitle);
+                if (
+                    node.isImageElement() ||
+                    (node.typeOfNode == NodeType.StyleAttribute && node.selector == 'background-image')
+                ) {
+                    return node.response.scenario.suite.Image(scenarioOrTitle);
                 }
                 else if (node.isStylesheetElement()) {
-                    return node.response.scenario.Stylesheet(scenarioOrTitle);
+                    return node.response.scenario.suite.Stylesheet(scenarioOrTitle);
                 }
                 else if (node.isScriptElement()) {
-                    return node.response.scenario.Script(scenarioOrTitle);
+                    return node.response.scenario.suite.Script(scenarioOrTitle);
                 }
                 else if (node.isFormElement() || node.isClickable()) {
-                    return node.response.scenario.Html(scenarioOrTitle);
+                    return node.response.scenario.suite.Html(scenarioOrTitle);
                 }
                 else {
-                    return node.response.scenario.Resource(scenarioOrTitle);
+                    return node.response.scenario.suite.Resource(scenarioOrTitle);
                 }
             }
             return scenarioOrTitle;
@@ -629,7 +640,10 @@ export class Node {
         if (this.isDomElement()) {
             text = this.obj.css(key);
         }
-        return new Node(this.response, this.name + '[style][' + key + ']', text);
+        let node: Node = new Node(this.response, this.name + '[style][' + key + ']', text);
+        node.typeOfNode = NodeType.StyleAttribute;
+        node.selector = key;
+        return node;
     }
     
     /**

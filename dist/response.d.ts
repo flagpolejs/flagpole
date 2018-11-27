@@ -34,7 +34,7 @@ export declare enum ResponseType {
 export interface SimplifiedResponse {
     statusCode: number;
     body: string;
-    headers: Array<any>;
+    headers: any;
 }
 export declare abstract class GenericResponse implements iResponse {
     readonly scenario: Scenario;
@@ -45,12 +45,12 @@ export declare abstract class GenericResponse implements iResponse {
     private _lastElement;
     private _lastElementPath;
     abstract getType(): ResponseType;
+    abstract select(path: string, findIn?: any): Node;
     constructor(scenario: Scenario, url: string, simplifiedResponse: SimplifiedResponse);
     absolutizeUri(uri: string): string;
     getUrl(): string;
     getBody(): string;
     getRoot(): any;
-    select(path: string, findIn?: any): Node;
     assert(statement: boolean, passMessage: any, failMessage: any): iResponse;
     not(): iResponse;
     optional(): iResponse;

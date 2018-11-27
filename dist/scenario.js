@@ -91,10 +91,6 @@ class Scenario {
         this.options.headers[key] = value;
         return this;
     }
-    type(type) {
-        this.responseType = type;
-        return this;
-    }
     method(method) {
         this.options.method = method.toUpperCase();
         return this;
@@ -176,12 +172,12 @@ class Scenario {
         return this;
     }
     executeWhenReady() {
-        if (!this.waitToExecute && this._then !== null && this.url !== null) {
+        if (!this.waitToExecute && this.canExecute()) {
             this.execute();
         }
     }
     open(url) {
-        if (!this.start) {
+        if (!this.hasExecuted()) {
             this.url = url;
             this._isMock = false;
             this.executeWhenReady();
@@ -189,7 +185,7 @@ class Scenario {
         return this;
     }
     then(callback) {
-        if (!this.start) {
+        if (!this.hasExecuted()) {
             this._then = callback;
             this.executeWhenReady();
         }
@@ -199,7 +195,7 @@ class Scenario {
         return this.then(callback);
     }
     skip(message) {
-        if (!this.start) {
+        if (!this.hasExecuted()) {
             message = "  »  Skipped" + (message ? ': ' + message : '');
             this.start = Date.now();
             this.log.push(new consoleline_1.ConsoleLine(message + "\n"));
@@ -260,15 +256,34 @@ class Scenario {
             let scenario = this;
             this.requestStart = Date.now();
             this.options.uri = this.suite.buildUrl(this.url);
-            request(this.options, function (error, response, body) {
-                if (!error) {
-                    scenario.processResponse(index_1.Flagpole.toSimplifiedResponse(response, body));
-                }
-                else {
-                    scenario.fail('Failed to load page ' + scenario.url);
-                    scenario.done();
-                }
-            });
+            if (this.responseType == response_1.ResponseType.image) {
+                require('probe-image-size')(this.options.uri, this.options, function (error, result) {
+                    if (!error) {
+                        scenario.processResponse({
+                            statusCode: 200,
+                            body: JSON.stringify(result),
+                            headers: {
+                                'content-type': result.mime
+                            }
+                        });
+                    }
+                    else {
+                        scenario.fail('Failed to load image ' + scenario.url);
+                        scenario.done();
+                    }
+                });
+            }
+            else {
+                request(this.options, function (error, response, body) {
+                    if (!error) {
+                        scenario.processResponse(index_1.Flagpole.toSimplifiedResponse(response, body));
+                    }
+                    else {
+                        scenario.fail('Failed to load ' + scenario.url);
+                        scenario.done();
+                    }
+                });
+            }
         }
     }
     executeMock() {
@@ -284,7 +299,7 @@ class Scenario {
         }
     }
     execute() {
-        if (!this.start && this.url !== null) {
+        if (!this.hasExecuted() && this.url !== null) {
             this.start = Date.now();
             if (this.waitToExecute && this.initialized !== null) {
                 this.log.push(new consoleline_1.ConsoleLine('  »  Waited ' + (this.start - this.initialized) + 'ms'));
@@ -300,27 +315,6 @@ class Scenario {
         this._isMock = true;
         this.executeWhenReady();
         return this;
-    }
-    Scenario(title, tags) {
-        return this.suite.Scenario(title, tags);
-    }
-    Json(title, tags) {
-        return this.suite.Json(title, tags);
-    }
-    Image(title, tags) {
-        return this.suite.Image(title, tags);
-    }
-    Html(title, tags) {
-        return this.suite.Html(title, tags);
-    }
-    Stylesheet(title, tags) {
-        return this.suite.Stylesheet(title, tags);
-    }
-    Script(title, tags) {
-        return this.suite.Script(title, tags);
-    }
-    Resource(title, tags) {
-        return this.suite.Resource(title, tags);
     }
     label(message) {
         this.nextLabel = message;
@@ -345,6 +339,40 @@ class Scenario {
     getRequestLoadTime() {
         return (this.requestLoaded && this.requestStart) ?
             (this.requestLoaded - this.requestStart) : null;
+    }
+    canExecute() {
+        return (!this.hasExecuted() && this.url !== null && this._then !== null);
+    }
+    hasExecuted() {
+        return this.start !== null;
+    }
+    hasFinished() {
+        return this.hasExecuted() && this.end !== null;
+    }
+    setResponseType(type) {
+        if (this.hasExecuted()) {
+            throw new Error('Scenario was already executed. Can not change type.');
+        }
+        this.responseType = type;
+        return this;
+    }
+    image() {
+        return this.setResponseType(response_1.ResponseType.image);
+    }
+    html() {
+        return this.setResponseType(response_1.ResponseType.html);
+    }
+    json() {
+        return this.setResponseType(response_1.ResponseType.json);
+    }
+    script() {
+        return this.setResponseType(response_1.ResponseType.script);
+    }
+    stylesheet() {
+        return this.setResponseType(response_1.ResponseType.stylesheet);
+    }
+    resource() {
+        return this.setResponseType(response_1.ResponseType.resource);
     }
 }
 exports.Scenario = Scenario;

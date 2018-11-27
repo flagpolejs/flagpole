@@ -9,7 +9,7 @@ Flagpole.Suite('iTunes API Tests')
 
 
     .Scenario('See if there are any 2Pac Videos')
-    .open('/search?term=2pac&entity=musicVideo').type('json')
+    .open('/search?term=2pac&entity=musicVideo').json()
     .assertions(function(response) {
 
         response.status().equals('200');

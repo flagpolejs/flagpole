@@ -1,9 +1,15 @@
 import { Scenario } from "./scenario";
 import { iResponse } from "./response";
+export declare enum NodeType {
+    Generic = 0,
+    StyleAttribute = 1,
+}
 export declare class Node {
     protected response: iResponse;
     protected name: string;
     protected obj: any;
+    protected typeOfNode: NodeType;
+    protected selector: string | null;
     constructor(response: iResponse, name: string, obj: any);
     protected isNullOrUndefined(): boolean;
     protected isDomElement(): boolean;

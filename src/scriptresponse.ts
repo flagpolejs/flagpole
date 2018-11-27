@@ -1,5 +1,6 @@
 import { iResponse, GenericResponse, SimplifiedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
+import { Node } from "./node";
 
 export class ScriptResponse extends GenericResponse implements iResponse {
 
@@ -9,6 +10,10 @@ export class ScriptResponse extends GenericResponse implements iResponse {
         this.headers('Content-Type')
             .label('MIME Type matches expected value for JavaScript')
             .matches(/(text|application)\/(javascript|ecmascript)/);
+    }
+
+    public select(path: string): Node {
+        return new Node(this, path, null);
     }
 
     public getType(): ResponseType {

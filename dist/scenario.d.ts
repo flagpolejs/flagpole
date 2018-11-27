@@ -40,7 +40,6 @@ export declare class Scenario {
     }): Scenario;
     headers(headers: {}): Scenario;
     header(key: string, value: any): Scenario;
-    type(type: ResponseType): Scenario;
     method(method: string): Scenario;
     isDone(): boolean;
     subheading(message: string): Scenario;
@@ -66,17 +65,20 @@ export declare class Scenario {
     protected executeMock(): void;
     execute(): Scenario;
     mock(localPath: string): Scenario;
-    Scenario(title: string, tags?: [string]): Scenario;
-    Json(title: string, tags?: [string]): Scenario;
-    Image(title: string, tags?: [string]): Scenario;
-    Html(title: string, tags?: [string]): Scenario;
-    Stylesheet(title: string, tags?: [string]): Scenario;
-    Script(title: string, tags?: [string]): Scenario;
-    Resource(title: string, tags?: [string]): Scenario;
     label(message: string): Scenario;
     getLog(): Array<ConsoleLine>;
     protected getExecutionTime(): number;
     done(): Scenario;
     getUrl(): string | null;
     getRequestLoadTime(): number | null;
+    canExecute(): boolean;
+    hasExecuted(): boolean;
+    hasFinished(): boolean;
+    protected setResponseType(type: ResponseType): Scenario;
+    image(): Scenario;
+    html(): Scenario;
+    json(): Scenario;
+    script(): Scenario;
+    stylesheet(): Scenario;
+    resource(): Scenario;
 }

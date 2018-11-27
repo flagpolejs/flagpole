@@ -39,6 +39,9 @@ export class HtmlResponse extends GenericResponse implements iResponse {
             obj = $(path);
         }
         // Create the property
+        if (obj.length == 0) {
+            obj = null;
+        }
         let element: Node = new Node(this, path, obj);
         this.setLastElement(path, element);
         // Inferred exists assertion

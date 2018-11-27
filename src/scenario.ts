@@ -187,14 +187,6 @@ export class Scenario {
     }
 
     /**
-     * Set the type of request this is. Default is "html" but you can set this to "json" for REST APIs
-     */
-    public type(type: ResponseType): Scenario {
-        this.responseType = type;
-        return this;
-    }
-
-    /**
      * Set the HTTP method of this request
      *
      * @param {string} method
@@ -216,15 +208,15 @@ export class Scenario {
 
     /**
      * Add a subheading log message to buffer
-     *
-     * @param {string} message
-     * @returns {Scenario}
      */
     public subheading(message: string): Scenario {
         this.log.push(new ConsoleLine(message));
         return this;
     }
 
+    /**
+     * Add a neutral line to the output
+     */
     public comment(message: string): Scenario {
         this.log.push(
             ConsoleLine.comment('  »  ' + message)
@@ -333,7 +325,7 @@ export class Scenario {
     }
 
     protected executeWhenReady() {
-        if (!this.waitToExecute && this._then !== null && this.url !== null) {
+        if (!this.waitToExecute && this.canExecute()) {
             this.execute();
         }
     }
@@ -346,7 +338,7 @@ export class Scenario {
      */
     public open(url: string): Scenario {
         // You can only load the url once per scenario
-        if (!this.start) {
+        if (!this.hasExecuted()) {
             this.url = url;
             this._isMock = false;
             this.executeWhenReady();
@@ -359,7 +351,7 @@ export class Scenario {
      */
     public then(callback: Function): Scenario {
         // If it hasn't already been executed
-        if (!this.start) {
+        if (!this.hasExecuted()) {
             this._then = callback;
             this.executeWhenReady();
         }
@@ -379,7 +371,7 @@ export class Scenario {
      * @returns {Scenario}
      */
     public skip(message?: string): Scenario {
-        if (!this.start) {
+        if (!this.hasExecuted()) {
             message = "  »  Skipped" + (message ? ': ' + message : '');
             this.start = Date.now();
             this.log.push(new ConsoleLine(message + "\n"));
@@ -445,15 +437,34 @@ export class Scenario {
             let scenario: Scenario = this;
             this.requestStart = Date.now();
             this.options.uri = this.suite.buildUrl(this.url);
-            request(this.options, function (error, response, body) {
-                if (!error) {
-                    scenario.processResponse(Flagpole.toSimplifiedResponse(response, body));
-                }
-                else {
-                    scenario.fail('Failed to load page ' + scenario.url);
-                    scenario.done();
-                }
-            });
+            if (this.responseType == ResponseType.image) {
+                require('probe-image-size')(this.options.uri, this.options, function(error, result) {
+                    if (!error) {
+                        scenario.processResponse({
+                            statusCode: 200,
+                            body: JSON.stringify(result),
+                            headers: {
+                                'content-type': result.mime
+                            }
+                        });
+                    }
+                    else {
+                        scenario.fail('Failed to load image ' + scenario.url);
+                        scenario.done();
+                    }
+                });
+            }
+            else {
+                request(this.options, function (error, response, body) {
+                    if (!error) {
+                        scenario.processResponse(Flagpole.toSimplifiedResponse(response, body));
+                    }
+                    else {
+                        scenario.fail('Failed to load ' + scenario.url);
+                        scenario.done();
+                    }
+                });
+            }
         }
     }
 
@@ -474,7 +485,7 @@ export class Scenario {
      * Execute this scenario
      */
     public execute(): Scenario {
-        if (!this.start && this.url !== null) {
+        if (!this.hasExecuted() && this.url !== null) {
             this.start = Date.now();
             // If we waited first
             if (this.waitToExecute && this.initialized !== null) {
@@ -496,42 +507,6 @@ export class Scenario {
         this._isMock = true;
         this.executeWhenReady();
         return this;
-    }
-
-    /**
-     * Add a new scenario to the parent suite... this facilitates chaining
-     *
-     * @param {string} title
-     * @param {[string]} tags
-     * @returns {Scenario}
-     * @constructor
-     */
-    public Scenario(title: string, tags?: [string]): Scenario {
-        return this.suite.Scenario(title, tags);
-    }
-
-    public Json(title: string, tags?: [string]): Scenario {
-        return this.suite.Json(title, tags);
-    }
-
-    public Image(title: string, tags?: [string]): Scenario {
-        return this.suite.Image(title, tags);
-    }
-
-    public Html(title: string, tags?: [string]): Scenario {
-        return this.suite.Html(title, tags);
-    }
-
-    public Stylesheet(title: string, tags?: [string]): Scenario {
-        return this.suite.Stylesheet(title, tags);
-    }
-
-    public Script(title: string, tags?: [string]): Scenario {
-        return this.suite.Script(title, tags);
-    }
-
-    public Resource(title: string, tags?: [string]): Scenario {
-        return this.suite.Resource(title, tags);
     }
 
     /**
@@ -583,9 +558,69 @@ export class Scenario {
         return this.url;
     }
 
+    /**
+     * 
+     */
     public getRequestLoadTime(): number | null {
         return (this.requestLoaded && this.requestStart) ?
             (this.requestLoaded - this.requestStart): null;
+    }
+
+    /**
+     * We ready to pull the trigger on this one?
+     */
+    public canExecute(): boolean {
+        return (!this.hasExecuted() && this.url !== null && this._then !== null);
+    }
+
+    /**
+     * Has this scenario already been executed?
+     */
+    public hasExecuted(): boolean {
+        return this.start !== null;
+    }
+
+    /**
+     * Did this scenario finish executing?
+     */
+    public hasFinished(): boolean {
+        return this.hasExecuted() && this.end !== null;
+    }
+
+    /**
+     * SET RESPONSE TYPE
+     */
+
+    protected setResponseType(type: ResponseType): Scenario {
+        if (this.hasExecuted()) {
+            throw new Error('Scenario was already executed. Can not change type.');
+        }
+        this.responseType = type;
+        return this;
+    }
+
+    public image(): Scenario {
+        return this.setResponseType(ResponseType.image);
+    }
+
+    public html(): Scenario {
+        return this.setResponseType(ResponseType.html);
+    }
+
+    public json(): Scenario {
+        return this.setResponseType(ResponseType.json);
+    }
+
+    public script(): Scenario {
+        return this.setResponseType(ResponseType.script);
+    }
+
+    public stylesheet(): Scenario {
+        return this.setResponseType(ResponseType.stylesheet);
+    }
+
+    public resource(): Scenario {
+        return this.setResponseType(ResponseType.resource);
     }
 
 }

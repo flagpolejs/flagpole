@@ -43,7 +43,7 @@ export enum ResponseType {
 export interface SimplifiedResponse {
     statusCode: number
     body: string
-    headers: Array<any>
+    headers: any
 }
 
 export abstract class GenericResponse implements iResponse {
@@ -59,6 +59,7 @@ export abstract class GenericResponse implements iResponse {
     private _lastElementPath: string | null = null;
 
     abstract getType(): ResponseType;
+    abstract select(path: string, findIn?: any): Node;
 
     constructor(scenario: Scenario, url: string, simplifiedResponse: SimplifiedResponse) {
         this.scenario = scenario;
@@ -84,10 +85,6 @@ export abstract class GenericResponse implements iResponse {
 
     public getRoot(): any {
         return this._body;
-    }
-
-    public select(path: string, findIn?: any): Node {
-        return new Node(this, 'Body', this._body);
     }
 
     public assert(statement: boolean, passMessage, failMessage): iResponse {

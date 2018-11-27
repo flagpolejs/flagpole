@@ -4,8 +4,15 @@ const response_1 = require("./response");
 const _1 = require(".");
 const link_1 = require("./link");
 let $ = require('cheerio');
+var NodeType;
+(function (NodeType) {
+    NodeType[NodeType["Generic"] = 0] = "Generic";
+    NodeType[NodeType["StyleAttribute"] = 1] = "StyleAttribute";
+})(NodeType = exports.NodeType || (exports.NodeType = {}));
 class Node {
     constructor(response, name, obj) {
+        this.typeOfNode = NodeType.Generic;
+        this.selector = null;
         this.response = response;
         this.name = name;
         this.obj = obj;
@@ -242,20 +249,21 @@ class Node {
         let node = this;
         let scenario = (function () {
             if (typeof scenarioOrTitle == 'string') {
-                if (node.isImageElement()) {
-                    return node.response.scenario.Image(scenarioOrTitle);
+                if (node.isImageElement() ||
+                    (node.typeOfNode == NodeType.StyleAttribute && node.selector == 'background-image')) {
+                    return node.response.scenario.suite.Image(scenarioOrTitle);
                 }
                 else if (node.isStylesheetElement()) {
-                    return node.response.scenario.Stylesheet(scenarioOrTitle);
+                    return node.response.scenario.suite.Stylesheet(scenarioOrTitle);
                 }
                 else if (node.isScriptElement()) {
-                    return node.response.scenario.Script(scenarioOrTitle);
+                    return node.response.scenario.suite.Script(scenarioOrTitle);
                 }
                 else if (node.isFormElement() || node.isClickable()) {
-                    return node.response.scenario.Html(scenarioOrTitle);
+                    return node.response.scenario.suite.Html(scenarioOrTitle);
                 }
                 else {
-                    return node.response.scenario.Resource(scenarioOrTitle);
+                    return node.response.scenario.suite.Resource(scenarioOrTitle);
                 }
             }
             return scenarioOrTitle;
@@ -417,7 +425,10 @@ class Node {
         if (this.isDomElement()) {
             text = this.obj.css(key);
         }
-        return new Node(this.response, this.name + '[style][' + key + ']', text);
+        let node = new Node(this.response, this.name + '[style][' + key + ']', text);
+        node.typeOfNode = NodeType.StyleAttribute;
+        node.selector = key;
+        return node;
     }
     attribute(key) {
         let text = null;

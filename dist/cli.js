@@ -17,20 +17,24 @@ let argv = require('yargs')
     'p': 'path',
     'e': 'env',
     'c': 'config',
-    'd': 'debug'
+    'd': 'debug',
+    'h': 'hide_banner'
 })
     .describe({
     'g': 'Filter only a group of test suites in this subfolder',
     's': 'Specify one or more suites to run',
     'p': 'Specify the folder to look for tests within',
     'e': 'Environment like: dev, staging, prod',
-    'c': 'Path to config file'
+    'c': 'Path to config file',
+    'd': 'Show extra debug info',
+    'h': 'Hide the output banner'
 })
     .array('s')
     .string('g')
     .string('p')
     .string('e')
     .boolean('d')
+    .boolean('h')
     .default('e', function () {
     return 'dev';
 }, 'dev')
@@ -39,6 +43,9 @@ let argv = require('yargs')
 })
     .default('g', function () {
     return '';
+})
+    .default('h', function () {
+    return false;
 })
     .example('flagpole list', 'To show a list of test suites')
     .example('flagpole run', 'To run all test suites')
@@ -50,14 +57,14 @@ let argv = require('yargs')
     .fail(function (msg, err, yargs) {
     cli_helper_1.Cli.log(yargs.help());
     cli_helper_1.Cli.log(msg);
-    cli_helper_1.Cli.exit(1);
+    cli_helper_1.Cli.exit(1, false);
 })
     .argv;
 process.env.FLAGPOLE_COMMAND = argv._[0];
 if (commands.indexOf(String(process.env.FLAGPOLE_COMMAND)) < 0) {
     cli_helper_1.Cli.log("Command must be either: " + commands.join(", ") + "\n");
     cli_helper_1.Cli.log("Example: flagpole run\n");
-    cli_helper_1.Cli.exit(1);
+    cli_helper_1.Cli.exit(1, argv.h);
 }
 process.env.FLAGPOLE_ENV = argv.e;
 process.env.FLAGPOLE_PATH = cli_helper_1.Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
@@ -66,12 +73,12 @@ if (argv.p) {
         let stats = fs.lstatSync(process.env.FLAGPOLE_PATH);
         if (!stats.isDirectory()) {
             cli_helper_1.Cli.log("The path you specified is not a directory.");
-            cli_helper_1.Cli.exit(1);
+            cli_helper_1.Cli.exit(1, argv.h);
         }
     }
     else {
         cli_helper_1.Cli.log("The path you specified did not exist.");
-        cli_helper_1.Cli.exit(1);
+        cli_helper_1.Cli.exit(1, argv.h);
     }
 }
 process.env.FLAGPOLE_CONFIG_PATH = (argv.c || process.env.FLAGPOLE_PATH + 'flagpole.json');
@@ -84,7 +91,7 @@ if (config.isValid()) {
 }
 else if (argv.c) {
     cli_helper_1.Cli.log("The config file you specified did not exist.\n");
-    cli_helper_1.Cli.exit(1);
+    cli_helper_1.Cli.exit(1, argv.h);
 }
 process.env.FLAGPOLE_TESTS_FOLDER = (function () {
     let path = cli_helper_1.Cli.normalizePath(process.env.FLAGPOLE_PATH || process.cwd());
@@ -142,11 +149,11 @@ if (process.env.FLAGPOLE_COMMAND == 'list') {
         cli_helper_1.Cli.log('Found these test suites:');
         cli_helper_1.Cli.list(tests.getSuiteNames());
         cli_helper_1.Cli.log("\n");
-        cli_helper_1.Cli.exit(0);
+        cli_helper_1.Cli.exit(0, argv.h);
     }
     else {
         cli_helper_1.Cli.log("Did not find any tests.\n");
-        cli_helper_1.Cli.exit(2);
+        cli_helper_1.Cli.exit(2, argv.h);
     }
 }
 else if (process.env.FLAGPOLE_COMMAND == 'run') {
@@ -155,13 +162,13 @@ else if (process.env.FLAGPOLE_COMMAND == 'run') {
         let notExists = tests.getAnyTestSuitesNotFound(argv.suite);
         if (notExists !== null) {
             cli_helper_1.Cli.log('Test suite not found: ' + notExists);
-            cli_helper_1.Cli.exit(1);
+            cli_helper_1.Cli.exit(1, argv.h);
         }
     }
-    tests.filterTestSuitesByName(argv.suite);
+    tests.filterTestSuitesByName(argv.suite, argv.h);
     if (!tests.foundTestSuites()) {
         cli_helper_1.Cli.log("Did not find any tests to run.\n");
-        cli_helper_1.Cli.exit(2);
+        cli_helper_1.Cli.exit(2, argv.h);
     }
-    tests.runAll();
+    tests.runAll(argv.h);
 }
