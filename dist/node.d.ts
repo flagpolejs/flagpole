@@ -72,6 +72,10 @@ export declare class Node {
     trim(): Node;
     toLowerCase(): Node;
     toUpperCase(): Node;
+    decodeURI(): Node;
+    decodeURIComponent(): Node;
+    encodeURI(): Node;
+    encodeURIComponent(): Node;
     replace(search: string | RegExp, replace: string): Node;
     each(callback: Function): Node;
     every(callback: Function): Node;

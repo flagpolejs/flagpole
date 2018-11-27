@@ -515,6 +515,22 @@ class Node {
         let text = this.toString().toUpperCase();
         return new Node(this.response, 'Uppercased text of ' + this.name, text);
     }
+    decodeURI() {
+        let text = decodeURI(this.toString());
+        return new Node(this.response, 'Unescaped text of ' + this.name, text);
+    }
+    decodeURIComponent() {
+        let text = decodeURIComponent(this.toString());
+        return new Node(this.response, 'Unescaped text of ' + this.name, text);
+    }
+    encodeURI() {
+        let text = encodeURI(this.toString());
+        return new Node(this.response, 'Escaped text of ' + this.name, text);
+    }
+    encodeURIComponent() {
+        let text = encodeURIComponent(this.toString());
+        return new Node(this.response, 'Escaped text of ' + this.name, text);
+    }
     replace(search, replace) {
         let text = this.toString().replace(search, replace);
         return new Node(this.response, 'Replaced text of ' + this.name, text);

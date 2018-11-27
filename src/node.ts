@@ -783,6 +783,34 @@ export class Node {
     }
 
     /**
+     * Decodes an encoded string.
+     */
+    public decodeURI(): Node {
+        let text: string = decodeURI(this.toString());
+        return new Node(this.response, 'Unescaped text of ' + this.name, text);
+    }
+
+    public decodeURIComponent(): Node {
+        let text: string = decodeURIComponent(this.toString());
+        return new Node(this.response, 'Unescaped text of ' + this.name, text);
+    }
+
+    /**
+     * Encodes a string. 
+     * This function makes a string portable, so it can be transmitted across any network to any computer that supports ASCII characters.
+     * This function encodes special characters, with the exception of: * @ - _ + . /
+     */
+    public encodeURI(): Node {
+        let text: string = encodeURI(this.toString());
+        return new Node(this.response, 'Escaped text of ' + this.name, text);
+    }
+
+    public encodeURIComponent(): Node {
+        let text: string = encodeURIComponent(this.toString());
+        return new Node(this.response, 'Escaped text of ' + this.name, text);
+    }
+
+    /**
      * Replace the string value
      *
      * @param {string | RegExp} search
