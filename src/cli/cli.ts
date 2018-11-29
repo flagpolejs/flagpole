@@ -39,23 +39,21 @@ let argv = require('yargs')
     .string('e')
     .boolean('d')
     .boolean('h')
-    .default('e', function() {
-        return 'dev';
-    }, 'dev')
-    .default('s', function() {
-        return [];
-    })
-    .default('g', function () {
-        return '';
-    })
-    .default('h', function () {
-        return false;
-    })
+    .default('e', 'dev')
+    .default('s', [])
+    .default('g', '')
+    .default('h', false)
     .example('flagpole list', 'To show a list of test suites')
     .example('flagpole run', 'To run all test suites')
     .example('flagpole run -s smoke', 'To run just the suite called smoke')
     .example('flagpole run -s smoke api', 'Or you can run multiple suites (smoke and api)')
     .example('flagpole run -g basic', 'To run all test suites in the basic group')
+    .example('flagpole init', 'Initialize a new Flagpole project')
+    .example('flagpole add suite', 'Add a new test suite')
+    .example('flagpole add scenario', 'Add a new scenario to a test suite')
+    .example('flagpole login', 'Login to FlagpoleJS.com')
+    .example('flagpole logout', 'Logout of FlagpoleJS.com')
+    .example('flagpole pack', 'Pack this Flagpole project into a zip achive')
     .epilogue('For more information, go to https://github.com/flocasts/flagpole')
     .wrap(Math.min(100, yargs.terminalWidth()))
     .fail(function (msg, err, yargs) {

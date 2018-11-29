@@ -17,7 +17,7 @@
     "node",
     "automation"
   ],
-  "main": "./dist/index.js",
+  "main": "./index.js",
   "homepage": "https://github.com/flocasts/flagpole",
   "repository": "git@github.com:flocasts/flagpole.git",
   "author": "Jason Byrne <jason.byrne@flosports.tv>",
@@ -38,7 +38,7 @@
     "valid-data-url": "^1.0.0",
     "yargs": "^11.0.0"
   },
-  "scripts": {
+  "flo-scripts": {
     "build": "tsc",
     "test": "node tests/test.js",
     "publish": "./publish.sh"
