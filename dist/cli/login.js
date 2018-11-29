@@ -4,7 +4,8 @@ const cli_helper_1 = require("./cli-helper");
 const request = require('request');
 const { prompt } = require('enquirer');
 const keytar = require('keytar');
-const loginEndPoint = 'http://167.99.7.190/login/post_login';
+const loginEndPoint = 'http://www.flagpolejs.com/login/post_login';
+const serviceName = 'Flagpole JS';
 function login() {
     cli_helper_1.printHeader();
     cli_helper_1.printSubheader('Login to FlagpoleJS.com');
@@ -36,7 +37,7 @@ function login() {
             }
             if (response.statusCode == 200) {
                 if (/[a-z0-9]{16}/.test(data)) {
-                    keytar.setPassword('Flagpole JS', answers.email, data);
+                    keytar.setPassword(serviceName, answers.email, data);
                     cli_helper_1.Cli.log('Logged in. Saved to your keychain.');
                     cli_helper_1.Cli.log('');
                     cli_helper_1.Cli.exit(0);
@@ -53,6 +54,10 @@ function login() {
                 cli_helper_1.Cli.exit(1);
             }
         });
+    }).catch(function (err) {
+        cli_helper_1.Cli.log('Error: ' + err);
+        cli_helper_1.Cli.log('');
+        cli_helper_1.Cli.exit(1);
     });
 }
 exports.login = login;

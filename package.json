@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "1.1.9",
+  "version": "1.1.11",
   "description": "Simple and fast DOM integration and REST API testing framework.",
   "keywords": [
     "qa",
@@ -44,6 +44,6 @@
     "publish": "./publish.sh"
   },
   "bin": {
-    "flagpole": "./dist/cli/cli.js"
+    "flagpole": "./cli/cli.js"
   }
 }

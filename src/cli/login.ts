@@ -4,7 +4,8 @@ const request = require('request');
 const { prompt } = require('enquirer');
 const keytar = require('keytar');
 
-const loginEndPoint: string = 'http://167.99.7.190/login/post_login';
+const loginEndPoint: string = 'http://www.flagpolejs.com/login/post_login';
+const serviceName: string = 'Flagpole JS';
 
 export function login() {
 
@@ -45,7 +46,7 @@ export function login() {
                 }
                 if (response.statusCode == 200) {
                     if (/[a-z0-9]{16}/.test(data)) {
-                        keytar.setPassword('Flagpole JS', answers.email, data);
+                        keytar.setPassword(serviceName, answers.email, data);
                         Cli.log('Logged in. Saved to your keychain.');
                         Cli.log('');
                         Cli.exit(0);
@@ -65,6 +66,10 @@ export function login() {
             }
         );
 
-    })
+    }).catch(function (err) {
+        Cli.log('Error: ' + err);
+        Cli.log('');
+        Cli.exit(1);
+    });
 
 }

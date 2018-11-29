@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const cli_helper_1 = require("./cli-helper");
 const fs = require('fs');
-let commands = ['run', 'list', 'init', 'add', 'login', 'logout', 'pack'];
+let commands = ['run', 'list', 'init', 'add', 'login', 'logout', 'deploy', 'pack'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
@@ -47,8 +47,9 @@ let argv = require('yargs')
     .example('flagpole init', 'Initialize a new Flagpole project')
     .example('flagpole add suite', 'Add a new test suite')
     .example('flagpole add scenario', 'Add a new scenario to a test suite')
-    .example('flagpole login', 'Login to FlagpoleJS.com')
-    .example('flagpole logout', 'Logout of FlagpoleJS.com')
+    .example('flagpole login', 'Login to your FlagpoleJS.com account')
+    .example('flagpole logout', 'Logout of your FlagpoleJS.com account')
+    .example('flagpole deploy', 'Send your test project to your FlagpoleJS.com account')
     .example('flagpole pack', 'Pack this Flagpole project into a zip achive')
     .epilogue('For more information, go to https://github.com/flocasts/flagpole')
     .wrap(Math.min(100, yargs.terminalWidth()))
@@ -109,4 +110,7 @@ else if (cli_helper_1.Cli.command == 'pack') {
 }
 else if (cli_helper_1.Cli.command == 'add') {
     require('./add').add();
+}
+else if (cli_helper_1.Cli.command == 'deploy') {
+    require('./deploy').deploy();
 }

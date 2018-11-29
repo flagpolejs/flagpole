@@ -4,6 +4,49 @@ import { config } from "rx";
 const fs = require('fs');
 const archiver = require('archiver');
 
+export function createZipArchive(zipPath: string, callback?: Function) {
+    let zipFile = fs.createWriteStream(zipPath);
+    let archive = archiver('zip', {
+        zlib: { level: 9 }
+    });
+    zipFile.on('close', function () {
+        if (callback) {
+            callback(null, zipPath);
+        }
+        else {
+            Cli.log('Flagpole Zip Archive created.')
+            Cli.list([
+                'File Path: ' + zipPath,
+                'File Size: ' + archive.pointer() + 'bytes',
+                'Contents: ' + Cli.configPath + ' and ' + Cli.testsPath
+            ]);
+            Cli.log('');
+            Cli.exit(0);
+        }
+    });
+    archive.on('warning', function (err) {
+        if (callback) {
+            return callback(err);
+        }
+        if (err.code === 'ENOENT') {
+            // log warning
+        } else {
+            // throw error
+            throw err;
+        }
+    });
+    archive.on('error', function (err) {
+        if (callback) {
+            return callback(err);
+        }
+        throw err;
+    });
+    archive.pipe(zipFile);
+    archive.append(fs.createReadStream(Cli.configPath), { name: 'flagpole.json' });
+    archive.directory(Cli.testsPath, Cli.config.testFolderName);
+    archive.finalize();
+}
+
 
 export function pack() {
 
@@ -29,40 +72,7 @@ export function pack() {
     }
     else {
         // Okay we should be good
-        let zipPath: string = process.cwd() + '/flagpole.zip';
-        let zipFile = fs.createWriteStream(zipPath);
-        let archive = archiver('zip', {
-            zlib: { level: 9 }
-        });
-        zipFile.on('end', function () {
-            Cli.log('Data has been drained');
-            Cli.exit(0);
-        });
-        zipFile.on('close', function () {
-            Cli.log('Flagpole Zip Archive created.')
-            Cli.list([
-                'File Path: ' + zipPath,
-                'File Size: ' + archive.pointer() + 'bytes',
-                'Contents: ' + configPath + ' and ' + testsFolder
-            ]);
-            Cli.log('');
-            Cli.exit(0);
-        });
-        archive.on('warning', function (err) {
-            if (err.code === 'ENOENT') {
-                // log warning
-            } else {
-                // throw error
-                throw err;
-            }
-        });
-        archive.on('error', function (err) {
-            throw err;
-        });
-        archive.pipe(zipFile);
-        archive.append(fs.createReadStream(configPath), { name: 'flagpole.json' });
-        archive.directory(testsFolder, Cli.config.testFolderName);
-        archive.finalize();
+        createZipArchive(process.cwd() + '/flagpole.zip');
     }
 
 }
