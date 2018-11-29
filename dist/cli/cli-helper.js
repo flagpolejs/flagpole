@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-let fs = require('fs');
-let exec = require('child_process').exec;
-let path = require('path');
+const fs = require('fs');
+const exec = require('child_process').exec;
+const path = require('path');
+const ansiAlign = require('ansi-align');
 function printHeader() {
     console.log("\x1b[32m", "\n", `    \x1b[31m$$$$$$$$\\ $$\\                                         $$\\           
     \x1b[31m $$  _____|$$ |                                        $$ |          
@@ -16,12 +17,27 @@ function printHeader() {
     \x1b[34m                         \\$$$$$$  |$$ |                              
     \x1b[34m                          \\______/ \\__|`, "\x1b[0m", "\n");
 }
+exports.printHeader = printHeader;
+function printSubheader(heading) {
+    console.log(ansiAlign.center("\x1b[31m===========================================================================\n" +
+        "\x1b[0m" + heading + "\n" +
+        "\x1b[31m===========================================================================\x1b[0m\n"));
+}
+exports.printSubheader = printSubheader;
 class FlagpoleConfig {
-    constructor() {
-        this.envBase = [];
+    constructor(configData = {}) {
+        this.env = [];
+        this.configPath = configData.configPath || process.cwd() + '/flagpole.json';
+        this.configDir = configData.configDir || process.cwd();
+        this.projectName = configData.project || 'default';
+        this.env = configData.env || [];
+        this.testFolderName = configData.path || 'tests';
+        this.testsPath = Cli.normalizePath(this.configDir + this.testFolderName);
     }
     isValid() {
-        return (typeof this.configDir !== 'undefined');
+        return (typeof this.projectName !== 'undefined' && this.projectName.length > 0 &&
+            typeof this.testsPath !== 'undefined' && fs.existsSync(this.testsPath) &&
+            this.env.length > 0);
     }
 }
 exports.FlagpoleConfig = FlagpoleConfig;
@@ -67,7 +83,7 @@ class Tests {
         this.testSuiteStatus[filePath] = null;
     }
     ;
-    onTestExit(filePath, exitCode, hideBanner) {
+    onTestExit(filePath, exitCode) {
         let me = this;
         this.testSuiteStatus[filePath] = exitCode;
         let areDone = Object.keys(this.testSuiteStatus).every(function (filePath) {
@@ -81,7 +97,7 @@ class Tests {
                 Cli.log('Some suites failed.');
                 Cli.log("\n");
             }
-            Cli.exit(areAllPassing ? 0 : 1, hideBanner);
+            Cli.exit(areAllPassing ? 0 : 1);
         }
     }
     ;
@@ -93,7 +109,7 @@ class Tests {
         }
     }
     ;
-    runTestFile(filePath, hideBanner) {
+    runTestFile(filePath) {
         let me = this;
         this.onTestStart(filePath);
         let child = exec('node ' + filePath);
@@ -112,7 +128,7 @@ class Tests {
                 Cli.log(filePath + ' exited with error code ' + exitCode);
                 Cli.log("\n");
             }
-            me.onTestExit(filePath, exitCode, hideBanner);
+            me.onTestExit(filePath, exitCode);
         });
     }
     ;
@@ -129,13 +145,13 @@ class Tests {
     getTestsFolder() {
         return this.testsFolder;
     }
-    runAll(hideBanner) {
+    runAll() {
         let me = this;
         this.suites.forEach(function (test) {
             me.onTestStart(test.filePath);
         });
         this.suites.forEach(function (suite) {
-            me.runTestFile(suite.filePath, hideBanner);
+            me.runTestFile(suite.filePath);
         });
     }
     getAnyTestSuitesNotFound(suiteNames) {
@@ -152,7 +168,7 @@ class Tests {
         });
         return suiteThatDoesNotExist;
     }
-    filterTestSuitesByName(suiteNames, hideBanner) {
+    filterTestSuitesByName(suiteNames) {
         if (suiteNames.length > 0) {
             let filteredSuites = [];
             let me = this;
@@ -163,7 +179,7 @@ class Tests {
                 }
                 else {
                     Cli.log('Could not find test suite: ' + suiteName + "\n");
-                    Cli.exit(3, hideBanner);
+                    Cli.exit(3);
                 }
             });
             me.suites = filteredSuites;
@@ -182,8 +198,8 @@ class Cli {
             Cli.log('  » ' + message);
         });
     }
-    static exit(exitCode, hideBanner) {
-        if (!hideBanner) {
+    static exit(exitCode) {
+        if (!Cli.hideBanner) {
             printHeader();
         }
         Cli.consoleLog.forEach(function (message) {
@@ -203,25 +219,26 @@ class Cli {
         if (configPath && fs.existsSync(configPath)) {
             let configContent = fs.readFileSync(configPath);
             let configDir = Cli.normalizePath(path.dirname(configPath));
-            let configData = JSON.parse(configContent) || {};
-            config.configDir = configDir;
-            if (configData.hasOwnProperty('path')) {
-                if (/^\//.test(configData.path)) {
-                    config.testsPath = Cli.normalizePath(configData.path);
-                }
-                else if (configData.path == '.') {
-                    config.testsPath = Cli.normalizePath(configDir);
-                }
-                else {
-                    config.testsPath = Cli.normalizePath(configDir + configData.path);
-                }
+            let configData;
+            try {
+                configData = JSON.parse(configContent);
             }
-            if (configData.hasOwnProperty('base')) {
-                config.envBase = configData.base;
+            catch (_a) {
+                configData = {};
             }
+            configData.configPath = configPath;
+            configData.configDir = configDir;
+            config = new FlagpoleConfig(configData);
         }
         return config;
     }
 }
 Cli.consoleLog = [];
+Cli.hideBanner = false;
+Cli.rootPath = __dirname;
+Cli.configPath = __dirname + '/flagpole.json';
+Cli.testsPath = __dirname + '/tests/';
+Cli.environment = 'dev';
+Cli.command = null;
+Cli.commandArg = null;
 exports.Cli = Cli;

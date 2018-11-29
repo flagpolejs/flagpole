@@ -1,3 +1,10 @@
 {
-  "path": "example"
+  "project": "flagpole",
+  "path": "tests",
+  "env": [
+    "stag",
+    "prod",
+    "qa",
+    "rc"
+  ]
 }
