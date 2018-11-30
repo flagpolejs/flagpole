@@ -7,11 +7,7 @@ const keytar = require('keytar');
 const loginEndPoint: string = 'http://www.flagpolejs.com/login/post_login';
 const serviceName: string = 'Flagpole JS';
 
-export function login() {
-
-    printHeader();
-    printSubheader('Login to FlagpoleJS.com');
-
+function promptForLogin() {
     prompt([
         {
             type: 'input',
@@ -62,7 +58,7 @@ export function login() {
                     Cli.log('');
                     Cli.exit(1);
                 }
-                
+
             }
         );
 
@@ -71,5 +67,33 @@ export function login() {
         Cli.log('');
         Cli.exit(1);
     });
+}
+
+export function login() {
+
+    printHeader();
+    printSubheader('Login to FlagpoleJS.com');
+    
+    Cli.log('This site is in early private beta.');
+
+    keytar.findCredentials(serviceName)
+        .then(function (credentials) {
+            if (credentials.length == 0) {
+                promptForLogin();
+            }
+            else {
+                Cli.log('');
+                Cli.log('You are already logged in as ' + credentials[0].account);
+                Cli.log('To sign in with a different account use the command:');
+                Cli.log('flagpole logout');
+                Cli.log('');
+                Cli.exit(0);
+            }
+        })
+        .catch(function (err) {
+            Cli.log(err);
+            Cli.log('');
+            Cli.exit(1);
+        });
 
 }

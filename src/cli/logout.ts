@@ -39,7 +39,9 @@ export function logout() {
 
         })
         .catch(function (err) {
-            console.log(err);
+            Cli.log(err);
+            Cli.log('');
+            Cli.exit(1);
         });
     
 }

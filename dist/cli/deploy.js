@@ -44,7 +44,7 @@ function uploadProject(email, token) {
             if (response.statusCode == 200) {
                 if (body == 'ok') {
                     cli_helper_1.Cli.log('');
-                    cli_helper_1.Cli.log('Deployed.');
+                    cli_helper_1.Cli.log('Project ' + cli_helper_1.Cli.config.projectName + ' was posted to your account on FlagpoleJS.com');
                     cli_helper_1.Cli.log('');
                     cli_helper_1.Cli.exit(0);
                 }
@@ -67,7 +67,7 @@ function uploadProject(email, token) {
 function deploy() {
     cli_helper_1.Cli.hideBanner = true;
     cli_helper_1.printHeader();
-    cli_helper_1.printSubheader('Deploy Project to Flagpole.JS');
+    cli_helper_1.printSubheader('Deploy Project to FlagpoleJS.com');
     keytar.findCredentials(serviceName)
         .then(function (credentials) {
         if (credentials.length == 0) {

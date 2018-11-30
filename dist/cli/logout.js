@@ -30,7 +30,9 @@ function logout() {
         }
     })
         .catch(function (err) {
-        console.log(err);
+        cli_helper_1.Cli.log(err);
+        cli_helper_1.Cli.log('');
+        cli_helper_1.Cli.exit(1);
     });
 }
 exports.logout = logout;

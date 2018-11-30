@@ -129,7 +129,7 @@ function addSuite() {
             Cli.config.env.forEach(function (env: string) {
                 domains += '      ' + env + ": '" + answers['baseDomain_' + env] + "',\n";
             });
-            domains += "   }\n";
+            domains += "   }";
         }
 
         let fileContents: string = "const { Flagpole } = require('flagpole');\n" +
@@ -158,8 +158,8 @@ function addSuite() {
             Cli.log('Created new test suite:');
             Cli.log(suitePath);
             Cli.log('');
-            Cli.log('Scenario added to that suite called:');
-            Cli.log(answers.suiteDescription);
+            Cli.log('Scenario added to that suite:');
+            Cli.log(answers.scenarioDescription);
             Cli.log('');
             Cli.exit(0);
         });
@@ -259,7 +259,7 @@ function addScenario() {
             Cli.log('Appended new scenario to suite:');
             Cli.log(suitePath);
             Cli.log('');
-            Cli.log('Scenario added to that suite called:');
+            Cli.log('Scenario added to that suite:');
             Cli.log(answers.scenarioDescription);
             Cli.log('');
             Cli.exit(0);

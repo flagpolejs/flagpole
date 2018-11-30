@@ -51,7 +51,7 @@ function uploadProject(email: string, token: string) {
             if (response.statusCode == 200) {
                 if (body == 'ok') {
                     Cli.log('');
-                    Cli.log('Deployed.');
+                    Cli.log('Project ' + Cli.config.projectName + ' was posted to your account on FlagpoleJS.com');
                     Cli.log('');
                     Cli.exit(0);
                 }
@@ -78,7 +78,7 @@ export function deploy() {
 
     Cli.hideBanner = true;
     printHeader();
-    printSubheader('Deploy Project to Flagpole.JS');
+    printSubheader('Deploy Project to FlagpoleJS.com');
 
     keytar.findCredentials(serviceName)
         .then(function (credentials) {
