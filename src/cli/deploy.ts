@@ -5,42 +5,65 @@ const keytar = require('keytar');
 const request = require('request');
 const fs = require('fs');
 
-const deployEndPoint: string = 'http://www.flagpolejs.com/package/';
+const deployEndPoint: string = 'http://flagpolejs.com/package/upload/';
 const serviceName: string = 'Flagpole JS';
 
 function uploadProject(email: string, token: string) {
-    createZipArchive(process.cwd() + '/flagpole.zip', function (err: any, fileName: string) {
 
+    createZipArchive(process.cwd() + '/flagpole.zip', function (err: any, fileName: string) {
+        // If the packager returned an error
         if (err) {
             Cli.log('');
             Cli.log('Error: ' + err);
             Cli.log('');
             Cli.exit(1);
         }
-
+        // Make sure the file exists
+        if (!fs.existsSync(fileName)) {
+            Cli.log('');
+            Cli.log('Error generating package.');
+            Cli.log('');
+            Cli.exit(1);
+        }
+        // Okay let's send it then
+        let uri: string = deployEndPoint + Cli.config.projectName + '?email=' + email + '&token=' + token;
         request({
-            method: 'PUT',
+            method: 'POST',
             preambleCRLF: true,
             postambleCRLF: true,
-            uri: deployEndPoint + Cli.config.projectName + '?email=' + email + '&token=' + token,
-            multipart: [
-                { body: fs.createReadStream(fileName) }
-            ]
+            uri: uri,
+            formData: {
+                file: fs.createReadStream(fileName),
+                filetype: 'zip',
+                filename: 'flagpole.zip',
+                email: email,
+                token: token,
+            },
         }, function (err, response, body) {
+            // Error sending
             if (err) {
                 Cli.log('');
                 Cli.log('Error Deploying: ' + err);
                 Cli.log('');
                 Cli.exit(1);
             }
-
+            // Got back a 200
             if (response.statusCode == 200) {
-                Cli.log('');
-                Cli.log('Deployed.');
-                Cli.log('Response: ' + body);
-                Cli.log('');
-                Cli.exit(0);
+                if (body == 'ok') {
+                    Cli.log('');
+                    Cli.log('Deployed.');
+                    Cli.log('');
+                    Cli.exit(0);
+                }
+                else {
+                    Cli.log('');
+                    Cli.log('Error sending: ' + body);
+                    Cli.log(uri);
+                    Cli.log('');
+                    Cli.exit(0);
+                }
             }
+            // Not a 200
             else {
                 Cli.log('');
                 Cli.log('Error Uploading Deploy: ' + err);
@@ -48,8 +71,6 @@ function uploadProject(email: string, token: string) {
                 Cli.exit(1);
             }
         });
-
-        Cli.exit(0);
     });
 
 }
@@ -66,12 +87,14 @@ export function deploy() {
                 Cli.exit(0);
             }
             else {
-                uploadProject(credentials[0].email, credentials[0].password);
+                uploadProject(credentials[0].account, credentials[0].password);
             }
-
         })
         .catch(function (err) {
-            console.log(err);
+            Cli.log('');
+            Cli.log('Error getting credentials from keyhain: ' + err);
+            Cli.log('');
+            Cli.exit(1);
         });
     
 }

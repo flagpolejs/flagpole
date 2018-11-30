@@ -5,7 +5,7 @@ const cli_helper_1 = require("./cli-helper");
 const keytar = require('keytar');
 const request = require('request');
 const fs = require('fs');
-const deployEndPoint = 'http://www.flagpolejs.com/package/';
+const deployEndPoint = 'http://flagpolejs.com/package/upload/';
 const serviceName = 'Flagpole JS';
 function uploadProject(email, token) {
     pack_1.createZipArchive(process.cwd() + '/flagpole.zip', function (err, fileName) {
@@ -15,14 +15,25 @@ function uploadProject(email, token) {
             cli_helper_1.Cli.log('');
             cli_helper_1.Cli.exit(1);
         }
+        if (!fs.existsSync(fileName)) {
+            cli_helper_1.Cli.log('');
+            cli_helper_1.Cli.log('Error generating package.');
+            cli_helper_1.Cli.log('');
+            cli_helper_1.Cli.exit(1);
+        }
+        let uri = deployEndPoint + cli_helper_1.Cli.config.projectName + '?email=' + email + '&token=' + token;
         request({
-            method: 'PUT',
+            method: 'POST',
             preambleCRLF: true,
             postambleCRLF: true,
-            uri: deployEndPoint + cli_helper_1.Cli.config.projectName + '?email=' + email + '&token=' + token,
-            multipart: [
-                { body: fs.createReadStream(fileName) }
-            ]
+            uri: uri,
+            formData: {
+                file: fs.createReadStream(fileName),
+                filetype: 'zip',
+                filename: 'flagpole.zip',
+                email: email,
+                token: token,
+            },
         }, function (err, response, body) {
             if (err) {
                 cli_helper_1.Cli.log('');
@@ -31,11 +42,19 @@ function uploadProject(email, token) {
                 cli_helper_1.Cli.exit(1);
             }
             if (response.statusCode == 200) {
-                cli_helper_1.Cli.log('');
-                cli_helper_1.Cli.log('Deployed.');
-                cli_helper_1.Cli.log('Response: ' + body);
-                cli_helper_1.Cli.log('');
-                cli_helper_1.Cli.exit(0);
+                if (body == 'ok') {
+                    cli_helper_1.Cli.log('');
+                    cli_helper_1.Cli.log('Deployed.');
+                    cli_helper_1.Cli.log('');
+                    cli_helper_1.Cli.exit(0);
+                }
+                else {
+                    cli_helper_1.Cli.log('');
+                    cli_helper_1.Cli.log('Error sending: ' + body);
+                    cli_helper_1.Cli.log(uri);
+                    cli_helper_1.Cli.log('');
+                    cli_helper_1.Cli.exit(0);
+                }
             }
             else {
                 cli_helper_1.Cli.log('');
@@ -44,7 +63,6 @@ function uploadProject(email, token) {
                 cli_helper_1.Cli.exit(1);
             }
         });
-        cli_helper_1.Cli.exit(0);
     });
 }
 function deploy() {
@@ -58,11 +76,14 @@ function deploy() {
             cli_helper_1.Cli.exit(0);
         }
         else {
-            uploadProject(credentials[0].email, credentials[0].password);
+            uploadProject(credentials[0].account, credentials[0].password);
         }
     })
         .catch(function (err) {
-        console.log(err);
+        cli_helper_1.Cli.log('');
+        cli_helper_1.Cli.log('Error getting credentials from keyhain: ' + err);
+        cli_helper_1.Cli.log('');
+        cli_helper_1.Cli.exit(1);
     });
 }
 exports.deploy = deploy;
