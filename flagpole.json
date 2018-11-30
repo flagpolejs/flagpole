@@ -3,15 +3,20 @@
   "path": "tests",
   "environments": {
     "dev": {
-      "name": "dev"
+      "name": "dev",
+      "defaultDomain": "https://www.milesplit.local"
     },
     "prod": {
-      "name": "prod"
+      "name": "prod",
+      "defaultDomain": "https://www.milesplit.com"
     }
   },
   "suites": {
     "test": {
       "name": "test"
+    },
+    "local": {
+      "name": "local"
     }
   }
 }

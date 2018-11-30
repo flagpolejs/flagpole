@@ -8,6 +8,7 @@ class EnvConfig {
     constructor(config, opts) {
         this.config = config;
         this.name = opts.name || '';
+        this.defaultDomain = opts.defaultDomain || '';
     }
 }
 exports.EnvConfig = EnvConfig;
@@ -116,7 +117,8 @@ class FlagpoleConfig {
                 let envs = {};
                 for (let key in config.environments) {
                     envs[key] = {
-                        name: config.environments[key].name
+                        name: config.environments[key].name,
+                        defaultDomain: config.environments[key].defaultDomain
                     };
                 }
                 return envs;

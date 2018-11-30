@@ -28,6 +28,7 @@ export declare class Scenario {
     passed(): boolean;
     jsonBody(jsonObject: any): Scenario;
     body(str: string): Scenario;
+    verifySslCert(verify: boolean): Scenario;
     proxy(proxyUri: string): Scenario;
     timeout(timeout: number): Scenario;
     wait(bool?: boolean): Scenario;

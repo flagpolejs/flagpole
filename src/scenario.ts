@@ -9,6 +9,7 @@ import { ResourceResponse } from "./resourceresponse";
 import { ScriptResponse } from "./scriptresponse";
 import { CssResponse } from "./cssresponse";
 import { Mock } from "./mock";
+import { timingSafeEqual } from "crypto";
 
 let request = require('request');
 
@@ -88,6 +89,17 @@ export class Scenario {
      */
     public body(str: string): Scenario {
         this.options.body = str;
+        return this;
+    }
+
+    /**
+     * Make sure the web page has valid SSL certificate
+     * 
+     * @param verify 
+     */
+    public verifySslCert(verify: boolean): Scenario {
+        this.options.strictSSL = verify;
+        this.options.rejectUnauthorized = verify;
         return this;
     }
 
@@ -457,6 +469,7 @@ export class Scenario {
                     }
                     else {
                         scenario.fail('Failed to load ' + scenario.url);
+                        scenario.comment(error);
                         scenario.done();
                     }
                 });

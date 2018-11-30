@@ -1,6 +1,7 @@
 export declare class EnvConfig {
     protected config: FlagpoleConfig;
     name: string;
+    defaultDomain: string;
     constructor(config: FlagpoleConfig, opts: any);
 }
 export declare class SuiteConfig {

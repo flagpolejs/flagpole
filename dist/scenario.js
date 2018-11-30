@@ -54,6 +54,11 @@ class Scenario {
         this.options.body = str;
         return this;
     }
+    verifySslCert(verify) {
+        this.options.strictSSL = verify;
+        this.options.rejectUnauthorized = verify;
+        return this;
+    }
     proxy(proxyUri) {
         this.options.proxy = proxyUri;
         return this;
@@ -282,6 +287,7 @@ class Scenario {
                     }
                     else {
                         scenario.fail('Failed to load ' + scenario.url);
+                        scenario.comment(error);
                         scenario.done();
                     }
                 });

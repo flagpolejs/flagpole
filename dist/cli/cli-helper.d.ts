@@ -20,7 +20,6 @@ export declare class Cli {
     static configPath: string;
     static config: FlagpoleConfig;
     static testsPath: string;
-    static environment: string;
     static command: string | null;
     static commandArg: string | null;
     static log(message: string): void;

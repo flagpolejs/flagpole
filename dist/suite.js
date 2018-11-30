@@ -3,17 +3,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 const scenario_1 = require("./scenario");
 const consoleline_1 = require("./consoleline");
-const cli_helper_1 = require("./cli/cli-helper");
 class Suite {
     constructor(title) {
         this.scenarios = [];
         this.baseUrl = null;
         this.waitToExecute = false;
-        this.byTag = {};
         this.usingConsoleOutput = true;
         this.callback = null;
+        this._verifySslCert = true;
         this.title = title;
         this.start = Date.now();
+    }
+    verifySslCert(verify) {
+        this._verifySslCert = verify;
+        return this;
     }
     setConsoleOutput(usingConsoleOutput) {
         this.usingConsoleOutput = usingConsoleOutput;
@@ -42,7 +45,7 @@ class Suite {
     print() {
         index_1.Flagpole.heading(this.title);
         index_1.Flagpole.message('» Base URL: ' + this.baseUrl);
-        index_1.Flagpole.message('» Environment: ' + cli_helper_1.Cli.environment);
+        index_1.Flagpole.message('» Environment: ' + index_1.Flagpole.environment);
         index_1.Flagpole.message('» Took ' + this.getDuration() + "ms\n");
         let color = this.passed() ? "\x1b[32m" : "\x1b[31m";
         index_1.Flagpole.message('» Passed? ' + (this.passed() ? 'Yes' : 'No') + "\n", color);
@@ -79,7 +82,7 @@ class Suite {
         });
         return out;
     }
-    Scenario(title, tags) {
+    Scenario(title) {
         let suite = this;
         let scenario = new scenario_1.Scenario(this, title, function () {
             if (suite.isDone()) {
@@ -89,44 +92,30 @@ class Suite {
                 }
             }
         });
+        scenario.verifySslCert(this._verifySslCert);
         if (this.waitToExecute) {
             scenario.wait();
-        }
-        if (typeof tags !== 'undefined') {
-            tags.forEach(function (tag) {
-                suite.byTag.hasOwnProperty(tag) ?
-                    suite.byTag[tag].push(scenario) :
-                    (suite.byTag[tag] = [scenario]);
-            });
         }
         this.scenarios.push(scenario);
         return scenario;
     }
-    Json(title, tags) {
-        return this.Scenario(title, tags).json();
+    Json(title) {
+        return this.Scenario(title).json();
     }
-    Image(title, tags) {
-        return this.Scenario(title, tags).image();
+    Image(title) {
+        return this.Scenario(title).image();
     }
-    Html(title, tags) {
-        return this.Scenario(title, tags).html();
+    Html(title) {
+        return this.Scenario(title).html();
     }
-    Stylesheet(title, tags) {
-        return this.Scenario(title, tags).stylesheet();
+    Stylesheet(title) {
+        return this.Scenario(title).stylesheet();
     }
-    Script(title, tags) {
-        return this.Scenario(title, tags).script();
+    Script(title) {
+        return this.Scenario(title).script();
     }
-    Resource(title, tags) {
-        return this.Scenario(title, tags).resource();
-    }
-    getScenarioByTag(tag) {
-        return this.byTag.hasOwnProperty(tag) ?
-            this.byTag[tag][0] : null;
-    }
-    getAllScenariosByTag(tag) {
-        return this.byTag.hasOwnProperty(tag) ?
-            this.byTag[tag] : [];
+    Resource(title) {
+        return this.Scenario(title).resource();
     }
     base(url) {
         let baseUrl = '';
@@ -134,7 +123,7 @@ class Suite {
             baseUrl = url;
         }
         else if (Object.keys(url).length > 0) {
-            let env = cli_helper_1.Cli.environment || 'dev';
+            let env = index_1.Flagpole.environment || 'dev';
             baseUrl = url[env];
             if (!baseUrl) {
                 baseUrl = url[Object.keys(url)[0]];

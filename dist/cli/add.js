@@ -61,12 +61,13 @@ function addSuite() {
             choices: Object.keys(typesOfTest)
         }
     ];
-    if (cli_helper_1.Cli.config.getEnvironments().length <= 1) {
+    let envs = cli_helper_1.Cli.config.getEnvironments();
+    if (envs.length <= 1) {
         questions.push({
             type: 'input',
             name: 'baseDomain',
             message: 'Base Domain',
-            initial: 'https://www.google.com',
+            initial: envs[0].defaultDomain || 'https://www.google.com',
             result: function (input) {
                 return input.trim();
             },
@@ -76,12 +77,12 @@ function addSuite() {
         });
     }
     else {
-        cli_helper_1.Cli.config.getEnvironments().forEach(function (env) {
+        envs.forEach(function (env) {
             questions.push({
                 type: 'input',
                 name: 'baseDomain_' + env.name,
-                message: 'Base Domain for ' + env,
-                initial: 'https://www.google.com',
+                message: 'Base Domain for ' + env.name,
+                initial: env.defaultDomain || 'https://www.google.com',
                 result: function (input) {
                     return input.trim();
                 },
@@ -257,9 +258,19 @@ function addEnv() {
             validate: function (input) {
                 return /^[a-z0-9]{1,12}$/i.test(input);
             }
+        },
+        {
+            type: 'input',
+            name: 'defaultDomain',
+            message: 'Default Domain (optional)',
+            result: function (input) {
+                return input.trim();
+            }
         }
     ]).then(function (answers) {
-        cli_helper_1.Cli.config.addEnvironment(answers.name);
+        cli_helper_1.Cli.config.addEnvironment(answers.name, {
+            defaultDomain: answers.defaultDomain
+        });
         fs.writeFile(cli_helper_1.Cli.config.getConfigPath(), cli_helper_1.Cli.config.toString(), function (err) {
             if (err) {
                 cli_helper_1.Cli.log('Error creating environment!');

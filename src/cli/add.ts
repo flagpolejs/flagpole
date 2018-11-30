@@ -71,12 +71,13 @@ function addSuite() {
     ];
 
     // Ask for a domain for each env
-    if (Cli.config.getEnvironments().length <= 1) {
+    let envs: EnvConfig[] = Cli.config.getEnvironments();
+    if (envs.length <= 1) {
         questions.push({
             type: 'input',
             name: 'baseDomain',
             message: 'Base Domain',
-            initial: 'https://www.google.com',
+            initial: envs[0].defaultDomain || 'https://www.google.com',
             result: function (input) {
                 return input.trim();
             },
@@ -86,12 +87,12 @@ function addSuite() {
         });
     }
     else {
-        Cli.config.getEnvironments().forEach(function (env: EnvConfig) {
+        envs.forEach(function (env: EnvConfig) {
             questions.push({
                 type: 'input',
                 name: 'baseDomain_' + env.name,
-                message: 'Base Domain for ' + env,
-                initial: 'https://www.google.com',
+                message: 'Base Domain for ' + env.name,
+                initial: env.defaultDomain || 'https://www.google.com',
                 result: function (input) {
                     return input.trim();
                 },
@@ -298,9 +299,19 @@ function addEnv() {
             validate: function (input) {
                 return /^[a-z0-9]{1,12}$/i.test(input);
             }
+        },
+        {
+            type: 'input',
+            name: 'defaultDomain',
+            message: 'Default Domain (optional)',
+            result: function (input) {
+                return input.trim();
+            }
         }
     ]).then(function (answers) {
-        Cli.config.addEnvironment(answers.name);
+        Cli.config.addEnvironment(answers.name, {
+            defaultDomain: answers.defaultDomain
+        });
         fs.writeFile(Cli.config.getConfigPath(), Cli.config.toString(), function (err) {
             if (err) {
                 Cli.log('Error creating environment!');

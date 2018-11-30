@@ -1,4 +1,5 @@
 import { FlagpoleConfig, SuiteConfig } from "./config";
+import { Flagpole } from "..";
 
 const fs = require('fs');
 const exec = require('child_process').exec;
@@ -70,8 +71,8 @@ export class TestRunner {
         this.onTestStart(filePath);
 
         let opts: string = '';
-        if (Cli.environment) {
-            opts += ' -e ' + Cli.environment;
+        if (Flagpole.environment) {
+            opts += ' -e ' + Flagpole.environment;
         }
 
         let child = exec('node ' + filePath + opts);
@@ -135,7 +136,6 @@ export class Cli {
     static configPath: string = __dirname + '/flagpole.json';
     static config: FlagpoleConfig;
     static testsPath: string = __dirname + '/tests/';
-    static environment: string = 'dev';
     static command: string | null = null;
     static commandArg: string | null = null;
 

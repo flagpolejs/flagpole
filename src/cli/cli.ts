@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 import { Cli } from "./cli-helper";
+import { Flagpole } from "..";
 
 const fs = require('fs');
 
@@ -73,7 +74,7 @@ if (commands.indexOf(String(Cli.command)) < 0) {
 /**
  * Settings
  */
-Cli.environment = argv.e;
+Flagpole.environment = argv.e;
 Cli.hideBanner = argv.h;
 Cli.rootPath = Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
 

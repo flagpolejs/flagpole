@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const cli_helper_1 = require("./cli-helper");
+const __1 = require("..");
 function debug(argv) {
     cli_helper_1.Cli.log('DEBUG INFO');
     cli_helper_1.Cli.log('');
@@ -30,7 +31,7 @@ function debug(argv) {
     cli_helper_1.Cli.log('');
     cli_helper_1.Cli.log('Other settings:');
     cli_helper_1.Cli.list([
-        'Environment: ' + cli_helper_1.Cli.environment,
+        'Environment: ' + __1.Flagpole.environment,
         'Root Path: ' + cli_helper_1.Cli.rootPath,
         'Tests Path: ' + cli_helper_1.Cli.testsPath
     ]);

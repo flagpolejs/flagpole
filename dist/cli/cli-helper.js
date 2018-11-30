@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const config_1 = require("./config");
+const __1 = require("..");
 const fs = require('fs');
 const exec = require('child_process').exec;
 const path = require('path');
@@ -56,8 +57,8 @@ class TestRunner {
         let me = this;
         this.onTestStart(filePath);
         let opts = '';
-        if (Cli.environment) {
-            opts += ' -e ' + Cli.environment;
+        if (__1.Flagpole.environment) {
+            opts += ' -e ' + __1.Flagpole.environment;
         }
         let child = exec('node ' + filePath + opts);
         child.stdout.on('data', function (data) {
@@ -151,7 +152,6 @@ Cli.hideBanner = false;
 Cli.rootPath = __dirname;
 Cli.configPath = __dirname + '/flagpole.json';
 Cli.testsPath = __dirname + '/tests/';
-Cli.environment = 'dev';
 Cli.command = null;
 Cli.commandArg = null;
 exports.Cli = Cli;

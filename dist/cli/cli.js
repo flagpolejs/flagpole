@@ -2,6 +2,7 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 const cli_helper_1 = require("./cli-helper");
+const __1 = require("..");
 const fs = require('fs');
 let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'login', 'logout', 'deploy', 'pack', 'about'];
 let yargs = require('yargs');
@@ -62,7 +63,7 @@ if (commands.indexOf(String(cli_helper_1.Cli.command)) < 0) {
     cli_helper_1.Cli.log("Example: flagpole run\n");
     cli_helper_1.Cli.exit(1);
 }
-cli_helper_1.Cli.environment = argv.e;
+__1.Flagpole.environment = argv.e;
 cli_helper_1.Cli.hideBanner = argv.h;
 cli_helper_1.Cli.rootPath = cli_helper_1.Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
 if (argv.p) {

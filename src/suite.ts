@@ -14,13 +14,19 @@ export class Suite {
     protected baseUrl: URL | null = null;
     protected start: number;
     protected waitToExecute: boolean = false;
-    protected byTag: any = {};
     protected usingConsoleOutput: boolean = true;
-    protected callback: Function|null = null;
+    protected callback: Function | null = null;
+
+    protected _verifySslCert: boolean = true;
 
     constructor(title: string) {
         this.title = title;
         this.start = Date.now();
+    }
+
+    public verifySslCert(verify: boolean): Suite {
+        this._verifySslCert = verify;
+        return this;
     }
 
     /**
@@ -87,7 +93,7 @@ export class Suite {
     public print(): Suite {
         Flagpole.heading(this.title);
         Flagpole.message('» Base URL: ' + this.baseUrl);
-        Flagpole.message('» Environment: ' + Cli.environment);
+        Flagpole.message('» Environment: ' + Flagpole.environment);
         Flagpole.message('» Took ' + this.getDuration() + "ms\n");
 
         let color: string = this.passed() ? "\x1b[32m" : "\x1b[31m";
@@ -141,7 +147,7 @@ export class Suite {
      * @returns {Scenario}
      * @constructor
      */
-    public Scenario(title: string, tags?: [string]): Scenario {
+    public Scenario(title: string): Scenario {
         let suite: Suite = this;
         let scenario: Scenario = new Scenario(this, title, function() {
             if (suite.isDone()) {
@@ -153,64 +159,36 @@ export class Suite {
                 }
             }
         });
+        scenario.verifySslCert(this._verifySslCert);
         if (this.waitToExecute) {
             scenario.wait();
-        }
-        if (typeof tags !== 'undefined') {
-            tags.forEach(function(tag: string) {
-                suite.byTag.hasOwnProperty(tag) ?
-                    suite.byTag[tag].push(scenario) :
-                    (suite.byTag[tag] = [scenario]);
-            });
         }
         this.scenarios.push(scenario);
         return scenario;
     }
 
-    public Json(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).json();
+    public Json(title: string): Scenario {
+        return this.Scenario(title).json();
     }
 
-    public Image(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).image();
+    public Image(title: string): Scenario {
+        return this.Scenario(title).image();
     }
 
-    public Html(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).html();
+    public Html(title: string): Scenario {
+        return this.Scenario(title).html();
     }
 
-    public Stylesheet(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).stylesheet();
+    public Stylesheet(title: string): Scenario {
+        return this.Scenario(title).stylesheet();
     }
 
-    public Script(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).script();
+    public Script(title: string): Scenario {
+        return this.Scenario(title).script();
     }
 
-    public Resource(title: string, tags?: [string]): Scenario {
-        return this.Scenario(title, tags).resource();
-    }
-
-    /**
-     * Search scenarios in this suite for one with this tag
-     *
-     * @param {string} tag
-     * @returns {Scenario}
-     */
-    public getScenarioByTag(tag: string): Scenario {
-        return this.byTag.hasOwnProperty(tag) ?
-            this.byTag[tag][0] : null;
-    }
-
-    /**
-     * Search scenarios in this suite and find all of them with this tag
-     *
-     * @param {string} tag
-     * @returns {[Scenario]}
-     */
-    public getAllScenariosByTag(tag: string): [Scenario] {
-        return this.byTag.hasOwnProperty(tag) ?
-            this.byTag[tag] : [];
+    public Resource(title: string): Scenario {
+        return this.Scenario(title).resource();
     }
 
     /**
@@ -225,7 +203,7 @@ export class Suite {
             baseUrl = url;
         }
         else if (Object.keys(url).length > 0) {
-            let env = Cli.environment || 'dev';
+            let env = Flagpole.environment || 'dev';
             baseUrl = url[env];
             // If env didn't match one, just pick the first one
             if (!baseUrl) {
