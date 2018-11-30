@@ -61,6 +61,8 @@ function promptForLogin() {
 function login() {
     cli_helper_1.printHeader();
     cli_helper_1.printSubheader('Login to FlagpoleJS.com');
+    cli_helper_1.Cli.hideBanner = true;
+    cli_helper_1.Cli.log('');
     cli_helper_1.Cli.log('This site is in early private beta.');
     keytar.findCredentials(serviceName)
         .then(function (credentials) {
@@ -70,8 +72,8 @@ function login() {
         else {
             cli_helper_1.Cli.log('');
             cli_helper_1.Cli.log('You are already logged in as ' + credentials[0].account);
-            cli_helper_1.Cli.log('To sign in with a different account use the command:');
-            cli_helper_1.Cli.log('flagpole logout');
+            cli_helper_1.Cli.log('');
+            cli_helper_1.Cli.log('To sign in with a different account use the command: flagpole logout');
             cli_helper_1.Cli.log('');
             cli_helper_1.Cli.exit(0);
         }

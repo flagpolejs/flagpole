@@ -25,7 +25,7 @@ export function logout() {
 
                 keytar.deletePassword(serviceName, credentials[0].account)
                     .then(function (result) {
-                        Cli.log('Logged you out.')
+                        Cli.log('Logged you out of account: ' + credentials[0].account);
                         Cli.log('');
                         Cli.exit(0);
                     })

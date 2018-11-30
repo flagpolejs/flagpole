@@ -7,7 +7,7 @@ const fs = require('fs');
 /**
  * COMMAND LINE ARGUMENTS
  */
-let commands = ['run', 'list', 'init', 'add', 'login', 'logout', 'deploy', 'pack'];
+let commands = ['run', 'list', 'init', 'add', 'login', 'logout', 'deploy', 'pack', 'about'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
@@ -148,4 +148,7 @@ else if (Cli.command == 'add') {
 }
 else if (Cli.command == 'deploy') {
     require('./deploy').deploy();
+}
+else if (Cli.command == 'about') {
+    require('./about').about();
 }

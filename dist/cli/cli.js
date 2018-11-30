@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const cli_helper_1 = require("./cli-helper");
 const fs = require('fs');
-let commands = ['run', 'list', 'init', 'add', 'login', 'logout', 'deploy', 'pack'];
+let commands = ['run', 'list', 'init', 'add', 'login', 'logout', 'deploy', 'pack', 'about'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
@@ -113,4 +113,7 @@ else if (cli_helper_1.Cli.command == 'add') {
 }
 else if (cli_helper_1.Cli.command == 'deploy') {
     require('./deploy').deploy();
+}
+else if (cli_helper_1.Cli.command == 'about') {
+    require('./about').about();
 }
