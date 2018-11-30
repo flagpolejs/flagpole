@@ -1,1 +1,1 @@
-export declare function run(suite?: string[]): void;
+export declare function run(selectedSuites?: string[]): void;

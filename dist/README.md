@@ -120,9 +120,7 @@ That's it! Now start learning more and writing tests!
 
 ## QA Terminology
 
-**Group** A group of suites, which is within Flagpole defined just by grouping suites into subfolders of the tests folder.
-
-**Suite:** A suite is a logical group of tests that you would always want to run together. It is recommended that you create one suite per file in the tests folder.
+**Suite:** A suite is a logical grouping of tests that you would always want to run together. It is recommended that you create one suite per file in the tests folder.
 
 **Scenario:** Within a suite of tests, you will define one or more different scenarios. This would typically define a goal that a user might be trying to accomplish or otherwise the "thing" that the tests in that scenario are trying to prove works. So usually you would have one endpoint or page per scenario. And you would have one or more scenario per page or endpoint.
 
@@ -481,18 +479,6 @@ flagpole run
 **Set the root path where to look for the tests**
 
 flagpole -p path/to/project/tests
-
-**List all tests in a specific group (subfolder)**
-
-flagpole list -g flotrack
-
-**Run all tests in a specific group**
-
-flagpole run -g flotrack
-
-**Run a suite within a group**
-
-flagpole run -s basic/smoke
 
 **Run tests and specify a config file**
 

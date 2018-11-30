@@ -1,37 +1,17 @@
+import { FlagpoleConfig, SuiteConfig } from "./config";
 export declare function printHeader(): void;
 export declare function printSubheader(heading: string): void;
-export declare class FlagpoleConfig {
-    configPath: string;
-    configDir: string;
-    testsPath: string | undefined;
-    env: string[];
-    projectName: string;
-    testFolderName: string;
-    constructor(configData?: any);
-    isValid(): boolean;
-}
-export declare class TestSuiteFile {
-    rootTestsDir: string;
-    filePath: string;
-    fileName: string;
-    name: string;
-    constructor(rootTestsDir: string, dir: string, file: string);
-}
-export declare class Tests {
-    private testsFolder;
+export declare class TestRunner {
     private testSuiteStatus;
     private suites;
-    constructor(testsFolder: string);
+    constructor();
     private onTestStart(filePath);
     private onTestExit(filePath, exitCode);
-    private getTestByName(name);
     private runTestFile(filePath);
-    foundTestSuites(): boolean;
-    getSuiteNames(): Array<string>;
-    getTestsFolder(): string;
-    runAll(): void;
-    getAnyTestSuitesNotFound(suiteNames: Array<string>): string | null;
-    filterTestSuitesByName(suiteNames: Array<string>): void;
+    addSuite(suite: SuiteConfig): void;
+    reset(): void;
+    getSuites(): SuiteConfig[];
+    run(): void;
 }
 export declare class Cli {
     static consoleLog: Array<string>;

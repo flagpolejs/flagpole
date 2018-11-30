@@ -13,8 +13,8 @@ function debug(argv) {
     if (cli_helper_1.Cli.config.isValid()) {
         cli_helper_1.Cli.log('Config Values:');
         cli_helper_1.Cli.list([
-            'Config file directory: ' + cli_helper_1.Cli.config.configDir,
-            'Tests directory: ' + cli_helper_1.Cli.config.testsPath
+            'Config file directory: ' + cli_helper_1.Cli.config.getConfigFolder(),
+            'Tests directory: ' + cli_helper_1.Cli.config.getTestsFolder()
         ]);
     }
     cli_helper_1.Cli.log('');

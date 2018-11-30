@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const config_1 = require("./config");
 const fs = require('fs');
 const exec = require('child_process').exec;
 const path = require('path');
@@ -24,60 +25,10 @@ function printSubheader(heading) {
         "\x1b[31m===========================================================================\x1b[0m\n"));
 }
 exports.printSubheader = printSubheader;
-class FlagpoleConfig {
-    constructor(configData = {}) {
-        this.env = [];
-        this.configPath = configData.configPath || process.cwd() + '/flagpole.json';
-        this.configDir = configData.configDir || process.cwd();
-        this.projectName = configData.project || 'default';
-        this.env = configData.env || [];
-        this.testFolderName = configData.path || 'tests';
-        this.testsPath = Cli.normalizePath(this.configDir + this.testFolderName);
-    }
-    isValid() {
-        return (typeof this.projectName !== 'undefined' && this.projectName.length > 0 &&
-            typeof this.testsPath !== 'undefined' && fs.existsSync(this.testsPath) &&
-            this.env.length > 0);
-    }
-}
-exports.FlagpoleConfig = FlagpoleConfig;
-class TestSuiteFile {
-    constructor(rootTestsDir, dir, file) {
-        this.rootTestsDir = '';
-        this.filePath = '';
-        this.fileName = '';
-        this.name = '';
-        this.rootTestsDir = rootTestsDir;
-        this.filePath = dir + file;
-        this.fileName = file;
-        this.name = dir.replace(this.rootTestsDir, '') + file.split('.').slice(0, -1).join('.');
-    }
-}
-exports.TestSuiteFile = TestSuiteFile;
-class Tests {
-    constructor(testsFolder) {
+class TestRunner {
+    constructor() {
         this.testSuiteStatus = {};
         this.suites = [];
-        this.testsFolder = testsFolder = Cli.normalizePath(testsFolder);
-        let me = this;
-        this.suites = (function () {
-            let tests = [];
-            let findTests = function (dir, isSubFolder = false) {
-                if (fs.existsSync(dir)) {
-                    let files = fs.readdirSync(dir);
-                    files.forEach(function (file) {
-                        if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
-                            tests = findTests(dir + file + '/', true);
-                        }
-                        else if (file.match(/.js$/)) {
-                            tests.push(new TestSuiteFile(me.testsFolder, dir, file));
-                        }
-                    });
-                }
-                return tests;
-            };
-            return findTests(testsFolder);
-        })();
     }
     onTestStart(filePath) {
         this.testSuiteStatus[filePath] = null;
@@ -98,14 +49,6 @@ class Tests {
                 Cli.log("\n");
             }
             Cli.exit(areAllPassing ? 0 : 1);
-        }
-    }
-    ;
-    getTestByName(name) {
-        for (let i = 0; i < this.suites.length; i++) {
-            if (this.suites[i].name == name) {
-                return this.suites[i];
-            }
         }
     }
     ;
@@ -136,61 +79,27 @@ class Tests {
         });
     }
     ;
-    foundTestSuites() {
-        return (this.suites.length > 0);
+    addSuite(suite) {
+        this.suites.push(suite);
     }
-    getSuiteNames() {
-        let list = [];
-        this.suites.forEach(function (test) {
-            list.push(test.name);
-        });
-        return list;
+    reset() {
+        this.suites = [];
     }
-    getTestsFolder() {
-        return this.testsFolder;
+    getSuites() {
+        return this.suites;
     }
-    runAll() {
+    run() {
         let me = this;
+        this.testSuiteStatus = {};
         this.suites.forEach(function (test) {
-            me.onTestStart(test.filePath);
+            me.onTestStart(test.getPath());
         });
         this.suites.forEach(function (suite) {
-            me.runTestFile(suite.filePath);
+            me.runTestFile(suite.getPath());
         });
-    }
-    getAnyTestSuitesNotFound(suiteNames) {
-        let suiteThatDoesNotExist = null;
-        let me = this;
-        suiteNames.every(function (suiteName) {
-            if (typeof me.getTestByName(suiteName) !== 'undefined') {
-                return true;
-            }
-            else {
-                suiteThatDoesNotExist = suiteName;
-                return false;
-            }
-        });
-        return suiteThatDoesNotExist;
-    }
-    filterTestSuitesByName(suiteNames) {
-        if (suiteNames.length > 0) {
-            let filteredSuites = [];
-            let me = this;
-            suiteNames.forEach(function (suiteName) {
-                let testSuite = me.getTestByName(suiteName);
-                if (testSuite) {
-                    filteredSuites.push(testSuite);
-                }
-                else {
-                    Cli.log('Could not find test suite: ' + suiteName + "\n");
-                    Cli.exit(3);
-                }
-            });
-            me.suites = filteredSuites;
-        }
     }
 }
-exports.Tests = Tests;
+exports.TestRunner = TestRunner;
 class Cli {
     static log(message) {
         if (typeof message !== 'undefined') {
@@ -219,7 +128,7 @@ class Cli {
         return path;
     }
     static parseConfigFile(configPath) {
-        let config = new FlagpoleConfig();
+        let config = new config_1.FlagpoleConfig();
         if (configPath && fs.existsSync(configPath)) {
             let configContent = fs.readFileSync(configPath);
             let configDir = Cli.normalizePath(path.dirname(configPath));
@@ -232,7 +141,7 @@ class Cli {
             }
             configData.configPath = configPath;
             configData.configDir = configDir;
-            config = new FlagpoleConfig(configData);
+            config = new config_1.FlagpoleConfig(configData);
         }
         return config;
     }

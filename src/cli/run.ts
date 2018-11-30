@@ -1,29 +1,33 @@
-import { Tests, Cli } from "./cli-helper";
+import { TestRunner, Cli } from "./cli-helper";
+import { SuiteConfig } from "./config";
 
-export function run(suite: string[] = []) {
+export function run(selectedSuites: string[] = []) {
 
-    let tests: Tests = new Tests(Cli.testsPath || process.cwd());
+    let tests: TestRunner = new TestRunner();
+    let suites: SuiteConfig[] = Cli.config.getSuites();
 
-    // Run a specific test suites
-    if (suite.length) {
-        // Do all of these test suites requested actually exist?
-        let notExists: string | null = tests.getAnyTestSuitesNotFound(suite)
-        if (notExists !== null) {
-            Cli.log('Test suite not found: ' + notExists);
-            Cli.exit(1);
-        }
+    // Run only certain suites
+    if (selectedSuites.length) {
+        suites.forEach(function (suite: SuiteConfig) {
+            if (selectedSuites.includes(suite.name)) {
+                tests.addSuite(suite);
+            }
+        });
+    }
+    // Run all tests
+    else {
+        suites.forEach(function (suite: SuiteConfig) {
+            tests.addSuite(suite);
+        });
     }
 
-    // Apply filters
-    tests.filterTestSuitesByName(suite);
-
     // If no matching tests found to run
-    if (!tests.foundTestSuites()) {
-        Cli.log("Did not find any tests to run.\n");
+    if (tests.getSuites().length == 0) {
+        Cli.log("Did not find any test suites to run.\n");
         Cli.exit(2);
     }
 
     // Run them doggies
-    tests.runAll();
+    tests.run();
 
 }

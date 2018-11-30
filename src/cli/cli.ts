@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 'use strict';
-import { Cli, Tests, FlagpoleConfig } from "./cli-helper";
+import { Cli } from "./cli-helper";
 
 const fs = require('fs');
 
 /**
  * COMMAND LINE ARGUMENTS
  */
-let commands = ['run', 'list', 'init', 'add', 'login', 'logout', 'deploy', 'pack', 'about'];
+let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'login', 'logout', 'deploy', 'pack', 'about'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
@@ -17,7 +17,6 @@ let argv = require('yargs')
     .demandCommand(1, 'You must specify a command: ' + commands.join(", "))
     .alias({
         's': 'suite',
-        'g': 'group',
         'p': 'path',
         'e': 'env',
         'c': 'config',
@@ -25,7 +24,6 @@ let argv = require('yargs')
         'h': 'hide_banner'
     })
     .describe({
-        'g': 'Filter only a group of test suites in this subfolder',
         's': 'Specify one or more suites to run',
         'p': 'Specify the folder to look for tests within',
         'e': 'Environment like: dev, staging, prod',
@@ -41,13 +39,12 @@ let argv = require('yargs')
     .boolean('h')
     .default('e', 'dev')
     .default('s', [])
-    .default('g', '')
     .default('h', false)
     .example('flagpole list', 'To show a list of test suites')
     .example('flagpole run', 'To run all test suites')
     .example('flagpole run -s smoke', 'To run just the suite called smoke')
     .example('flagpole run -s smoke api', 'Or you can run multiple suites (smoke and api)')
-    .example('flagpole run -g basic', 'To run all test suites in the basic group')
+    //.example('flagpole run -g basic', 'To run all test suites in the basic group')
     .example('flagpole init', 'Initialize a new Flagpole project')
     .example('flagpole add suite', 'Add a new test suite')
     .example('flagpole add scenario', 'Add a new scenario to a test suite')
@@ -94,7 +91,7 @@ Cli.configPath = (argv.c || Cli.rootPath + 'flagpole.json');
 // If we found a config file at this path
 Cli.config = Cli.parseConfigFile(Cli.configPath);
 if (Cli.config.isValid()) {
-    Cli.testsPath = Cli.config.testsPath || process.cwd() + '/tests/';
+    Cli.testsPath = Cli.config.getTestsFolder() || process.cwd() + '/tests/';
 }
 // If they specified a command line config that doesn't exist
 else if (argv.c) {
@@ -146,9 +143,17 @@ else if (Cli.command == 'pack') {
 else if (Cli.command == 'add') {
     require('./add').add();
 }
+else if (Cli.command == 'rm') {
+    require('./rm').rm();
+}
 else if (Cli.command == 'deploy') {
     require('./deploy').deploy();
 }
 else if (Cli.command == 'about') {
     require('./about').about();
+}
+else if (Cli.command == 'import') {
+    if (Cli.commandArg == 'suite') {
+        require('./import').importSuite();
+    }   
 }

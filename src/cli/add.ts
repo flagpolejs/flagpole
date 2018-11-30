@@ -1,4 +1,5 @@
-import { printHeader, printSubheader, Cli, Tests } from "./cli-helper";
+import { printHeader, printSubheader, Cli } from "./cli-helper";
+import { EnvConfig } from "./config";
 
 const { prompt } = require('enquirer');
 const fs = require('fs');
@@ -9,7 +10,7 @@ const typesOfTest: {} = {
 };
 
 const canAdd: string[] = [
-    'suite', 'scenario'
+    'suite', 'scenario', 'env'
 ];
 
 function addSuite() {
@@ -26,11 +27,11 @@ function addSuite() {
     let questions: any[] = [
         {
             type: 'input',
-            name: 'suiteFileName',
+            name: 'suiteName',
             message: 'Name of Suite',
             initial: 'smoke',
             result: function (input) {
-                return input.trim() + '.js';
+                return input.trim();
             },
             validate: function (input) {
                 return /^[a-z0-9_-]{1,63}$/i.test(input);
@@ -70,7 +71,7 @@ function addSuite() {
     ];
 
     // Ask for a domain for each env
-    if (Cli.config.env.length <= 1) {
+    if (Cli.config.getEnvironments().length <= 1) {
         questions.push({
             type: 'input',
             name: 'baseDomain',
@@ -85,10 +86,10 @@ function addSuite() {
         });
     }
     else {
-        Cli.config.env.forEach(function (env: string) {
+        Cli.config.getEnvironments().forEach(function (env: EnvConfig) {
             questions.push({
                 type: 'input',
-                name: 'baseDomain_' + env,
+                name: 'baseDomain_' + env.name,
                 message: 'Base Domain for ' + env,
                 initial: 'https://www.google.com',
                 result: function (input) {
@@ -118,7 +119,7 @@ function addSuite() {
     prompt(questions).then(function (answers) {
         //Cli.log(JSON.stringify(answers));
 
-        let suitePath: string = Cli.config.testsPath + answers.suiteFileName;
+        let suitePath: string = Cli.config.getTestsFolder() + answers.suiteName + '.js';
         let domains: string = '';
 
         if (answers.baseDomain) {
@@ -126,8 +127,8 @@ function addSuite() {
         }
         else {
             domains += "{\n";
-            Cli.config.env.forEach(function (env: string) {
-                domains += '      ' + env + ": '" + answers['baseDomain_' + env] + "',\n";
+            Cli.config.getEnvironments().forEach(function (env: EnvConfig) {
+                domains += '      ' + env.name + ": '" + answers['baseDomain_' + env.name] + "',\n";
             });
             domains += "   }";
         }
@@ -155,13 +156,28 @@ function addSuite() {
                 Cli.log('');
                 Cli.exit(1);
             }
-            Cli.log('Created new test suite:');
-            Cli.log(suitePath);
-            Cli.log('');
-            Cli.log('Scenario added to that suite:');
-            Cli.log(answers.scenarioDescription);
-            Cli.log('');
-            Cli.exit(0);
+
+            Cli.config.addSuite(answers.suiteName);
+            fs.writeFile(Cli.config.getConfigPath(), Cli.config.toString(), function (err) {
+                if (err) {
+                    Cli.log('Error creating scenario!');
+                    Cli.log('Failed updating config: ' + Cli.config.getConfigPath());
+                    Cli.log('Got Error: ' + err);
+                    Cli.log('');
+                    Cli.exit(1);
+                }
+
+                Cli.log('Created new test suite.');
+                Cli.list([
+                    'Suite file created: ' + suitePath,
+                    'Scenario added: ' + answers.scenarioDescription,
+                    'Config file updated'
+                ]);
+                Cli.log('');
+                Cli.exit(0);
+
+            });
+           
         });
 
     });
@@ -172,8 +188,7 @@ function addScenario() {
 
     printSubheader('Add New Scenaio');
 
-    let tests = new Tests(Cli.testsPath);
-    let suites: string[] = tests.getSuiteNames();
+    let suites: string[] = Cli.config.getSuiteNames();
 
     if (suites.length == 0) {
         Cli.log('');
@@ -240,13 +255,13 @@ function addScenario() {
             "   .assertions(function (response) {\n" +
             "       \n" +
             "   });\n";
-        
+
         if (!fs.existsSync(suitePath)) {
             Cli.log('Something weird happened. Could not find suite:')
             Cli.log(suitePath);
             Cli.exit(2);
         }
-        
+
         fs.appendFile(suitePath, fileContents, function (err) {
             Cli.log('');
             if (err) {
@@ -273,6 +288,43 @@ function addScenario() {
 }
 
 
+function addEnv() {
+    printSubheader('Add New Environment');
+    prompt([
+        {
+            type: 'input',
+            name: 'name',
+            message: 'What do you want to call the environment?',
+            validate: function (input) {
+                return /^[a-z0-9]{1,12}$/i.test(input);
+            }
+        }
+    ]).then(function (answers) {
+        Cli.config.addEnvironment(answers.name);
+        fs.writeFile(Cli.config.getConfigPath(), Cli.config.toString(), function (err) {
+            if (err) {
+                Cli.log('Error creating environment!');
+                Cli.log('Failed updating config: ' + Cli.config.getConfigPath());
+                Cli.log('Got Error: ' + err);
+                Cli.log('');
+                Cli.exit(1);
+            }
+            Cli.log('Added new environment.');
+            Cli.list([
+                'Config file updated'
+            ]);
+            Cli.log('');
+            Cli.exit(0);
+
+        });
+
+    }).catch(function (err) {
+        Cli.log('Error: ' + err);
+        Cli.exit(1);
+    });
+}
+
+
 export function add() {
 
     Cli.hideBanner = true;
@@ -287,6 +339,9 @@ export function add() {
     }
     else if (Cli.commandArg == 'scenario') {
         addScenario();
+    }
+    else if (Cli.commandArg == 'env') {
+        addEnv();
     }
     else {
         addSuite();

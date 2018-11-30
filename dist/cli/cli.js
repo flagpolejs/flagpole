@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const cli_helper_1 = require("./cli-helper");
 const fs = require('fs');
-let commands = ['run', 'list', 'init', 'add', 'login', 'logout', 'deploy', 'pack', 'about'];
+let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'login', 'logout', 'deploy', 'pack', 'about'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
@@ -13,7 +13,6 @@ let argv = require('yargs')
     .demandCommand(1, 'You must specify a command: ' + commands.join(", "))
     .alias({
     's': 'suite',
-    'g': 'group',
     'p': 'path',
     'e': 'env',
     'c': 'config',
@@ -21,7 +20,6 @@ let argv = require('yargs')
     'h': 'hide_banner'
 })
     .describe({
-    'g': 'Filter only a group of test suites in this subfolder',
     's': 'Specify one or more suites to run',
     'p': 'Specify the folder to look for tests within',
     'e': 'Environment like: dev, staging, prod',
@@ -37,13 +35,11 @@ let argv = require('yargs')
     .boolean('h')
     .default('e', 'dev')
     .default('s', [])
-    .default('g', '')
     .default('h', false)
     .example('flagpole list', 'To show a list of test suites')
     .example('flagpole run', 'To run all test suites')
     .example('flagpole run -s smoke', 'To run just the suite called smoke')
     .example('flagpole run -s smoke api', 'Or you can run multiple suites (smoke and api)')
-    .example('flagpole run -g basic', 'To run all test suites in the basic group')
     .example('flagpole init', 'Initialize a new Flagpole project')
     .example('flagpole add suite', 'Add a new test suite')
     .example('flagpole add scenario', 'Add a new scenario to a test suite')
@@ -75,7 +71,7 @@ if (argv.p) {
 cli_helper_1.Cli.configPath = (argv.c || cli_helper_1.Cli.rootPath + 'flagpole.json');
 cli_helper_1.Cli.config = cli_helper_1.Cli.parseConfigFile(cli_helper_1.Cli.configPath);
 if (cli_helper_1.Cli.config.isValid()) {
-    cli_helper_1.Cli.testsPath = cli_helper_1.Cli.config.testsPath || process.cwd() + '/tests/';
+    cli_helper_1.Cli.testsPath = cli_helper_1.Cli.config.getTestsFolder() || process.cwd() + '/tests/';
 }
 else if (argv.c) {
     cli_helper_1.Cli.log("The config file you specified did not exist.\n");
@@ -111,9 +107,17 @@ else if (cli_helper_1.Cli.command == 'pack') {
 else if (cli_helper_1.Cli.command == 'add') {
     require('./add').add();
 }
+else if (cli_helper_1.Cli.command == 'rm') {
+    require('./rm').rm();
+}
 else if (cli_helper_1.Cli.command == 'deploy') {
     require('./deploy').deploy();
 }
 else if (cli_helper_1.Cli.command == 'about') {
     require('./about').about();
+}
+else if (cli_helper_1.Cli.command == 'import') {
+    if (cli_helper_1.Cli.commandArg == 'suite') {
+        require('./import').importSuite();
+    }
 }

@@ -1,6 +1,5 @@
 import { Cli } from "./cli-helper";
 
-
 export function debug(argv) {
     Cli.log('DEBUG INFO');
     Cli.log('');
@@ -13,8 +12,8 @@ export function debug(argv) {
     if (Cli.config.isValid()) {
         Cli.log('Config Values:');
         Cli.list([
-            'Config file directory: ' + Cli.config.configDir,
-            'Tests directory: ' + Cli.config.testsPath
+            'Config file directory: ' + Cli.config.getConfigFolder(),
+            'Tests directory: ' + Cli.config.getTestsFolder()
         ]);
     }
     Cli.log('');

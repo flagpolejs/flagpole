@@ -1,10 +1,17 @@
 {
   "project": "flagpole",
   "path": "tests",
-  "env": [
-    "stag",
-    "prod",
-    "qa",
-    "rc"
-  ]
+  "environments": {
+    "dev": {
+      "name": "dev"
+    },
+    "prod": {
+      "name": "prod"
+    }
+  },
+  "suites": {
+    "test": {
+      "name": "test"
+    }
+  }
 }

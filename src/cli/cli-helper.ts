@@ -1,3 +1,5 @@
+import { FlagpoleConfig, SuiteConfig } from "./config";
+
 const fs = require('fs');
 const exec = require('child_process').exec;
 const path = require('path');
@@ -27,90 +29,13 @@ export function printSubheader(heading: string) {
     );
 }
 
-export class FlagpoleConfig {
+export class TestRunner {
 
-    public configPath: string;
-    public configDir: string;
-    public testsPath: string|undefined;
-    public env: string[] = [];
-    public projectName: string;
-    public testFolderName: string;
-    
-    constructor(configData: any = {}) {
-        this.configPath = configData.configPath || process.cwd() + '/flagpole.json';
-        this.configDir = configData.configDir || process.cwd();
-        this.projectName = configData.project || 'default';
-        this.env = configData.env || [];
-        this.testFolderName = configData.path || 'tests';
-        this.testsPath = Cli.normalizePath(this.configDir + this.testFolderName);
-    }
-
-    public isValid(): boolean {
-        return (
-            typeof this.projectName !== 'undefined' && this.projectName.length > 0 &&
-            typeof this.testsPath !== 'undefined' && fs.existsSync(this.testsPath) &&
-            this.env.length > 0
-        );
-    }
-
-}
-
-export class TestSuiteFile {
-
-    public rootTestsDir: string = '';
-    public filePath: string = '';
-    public fileName: string = '';
-    public name: string = '';
-
-    constructor(rootTestsDir: string, dir: string, file: string) {
-        this.rootTestsDir = rootTestsDir;
-        this.filePath = dir + file;
-        this.fileName = file;
-        this.name = dir.replace(this.rootTestsDir, '') + file.split('.').slice(0, -1).join('.');
-    }
-
-}
-
-export class Tests {
-
-    private testsFolder: string;
     private testSuiteStatus: { [s: string]: number|null; } = {};
-    private suites: Array<TestSuiteFile> = [];
+    private suites: SuiteConfig[] = [];
 
-    constructor(testsFolder: string) {
-
-        this.testsFolder = testsFolder = Cli.normalizePath(testsFolder);
-
-        // Discover all test suites in the specified folder
-        let me: Tests = this;
-        this.suites = (function(): Array<TestSuiteFile> {
-
-            let tests: Array<TestSuiteFile> = [];
-
-            let findTests = function(dir: string, isSubFolder: boolean = false) {
-                // Does this folder exist?
-                if (fs.existsSync(dir)) {
-                    // Read contents
-                    let files = fs.readdirSync(dir);
-                    files.forEach(function(file) {
-                        // Drill into sub-folders, but only once!
-                        if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
-                            tests = findTests(dir + file + '/', true);
-                        }
-                        // Push in any JS files
-                        else if (file.match(/.js$/)) {
-                            tests.push(new TestSuiteFile(me.testsFolder, dir, file));
-                        }
-                    });
-                }
-
-                return tests;
-            };
-
-            return findTests(testsFolder);
-
-        })();
-
+    constructor() {
+        
     }
 
     private onTestStart(filePath: string) {
@@ -118,7 +43,7 @@ export class Tests {
     };
 
     private onTestExit(filePath: string, exitCode: number) {
-        let me: Tests = this;
+        let me: TestRunner = this;
         this.testSuiteStatus[filePath] = exitCode;
         // Are they all done?
         let areDone: boolean = Object.keys(this.testSuiteStatus).every(function(filePath: string) {
@@ -137,25 +62,11 @@ export class Tests {
     };
 
     /**
-     * Find a test with this name in our list of available tests
-     *
-     * @param name: string
-     * @returns {TestSuiteFile}
-     */
-    private getTestByName(name: string) {
-        for (let i=0; i < this.suites.length; i++) {
-            if (this.suites[i].name == name) {
-                return this.suites[i];
-            }
-        }
-    };
-
-    /**
      *
      * @param {string} filePath
      */
     private runTestFile(filePath: string) {
-        let me: Tests = this;
+        let me: TestRunner = this;
         this.onTestStart(filePath);
 
         let opts: string = '';
@@ -188,66 +99,29 @@ export class Tests {
 
     };
 
-    public foundTestSuites(): boolean {
-        return (this.suites.length > 0);
+    public addSuite(suite: SuiteConfig) {
+        this.suites.push(suite);
     }
 
-    public getSuiteNames(): Array<string> {
-        let list: Array<string> = [];
-        this.suites.forEach(function(test: TestSuiteFile) {
-            list.push(test.name);
-        });
-        return list;
+    public reset() {
+        this.suites = [];
     }
 
-    public getTestsFolder(): string {
-        return this.testsFolder;
+    public getSuites(): SuiteConfig[] {
+        return this.suites;
     }
 
-    public runAll() {
-        let me: Tests = this;
+    public run() {
+        let me: TestRunner = this;
+        // Clear previous
+        this.testSuiteStatus = {};
         // Loop through first and just add them to make sure we are tracking it (avoid race conditions)
-        this.suites.forEach(function(test) {
-            me.onTestStart(test.filePath);
+        this.suites.forEach(function (test: SuiteConfig) {
+            me.onTestStart(test.getPath());
         });
-        this.suites.forEach(function(suite: TestSuiteFile) {
-            me.runTestFile(suite.filePath);
+        this.suites.forEach(function(suite: SuiteConfig) {
+            me.runTestFile(suite.getPath());
         });
-    }
-
-    public getAnyTestSuitesNotFound(suiteNames: Array<string>): string|null {
-        let suiteThatDoesNotExist: string|null = null;
-        let me: Tests = this;
-        suiteNames.every(function(suiteName) {
-            if (typeof me.getTestByName(suiteName) !== 'undefined') {
-                return true;
-            }
-            else {
-                suiteThatDoesNotExist = suiteName;
-                return false;
-            }
-        });
-        return suiteThatDoesNotExist;
-    }
-
-    public filterTestSuitesByName(suiteNames: Array<string>) {
-        // If filtered list was passed in, apply filter
-        if (suiteNames.length > 0) {
-            // First get all test suites that we found or error
-            let filteredSuites: Array<TestSuiteFile> = [];
-            let me: Tests = this;
-            suiteNames.forEach(function(suiteName) {
-                let testSuite: TestSuiteFile|undefined = me.getTestByName(suiteName);
-                if (testSuite) {
-                    filteredSuites.push(testSuite);
-                }
-                else {
-                    Cli.log('Could not find test suite: ' + suiteName + "\n");
-                    Cli.exit(3);
-                }
-            });
-            me.suites = filteredSuites;
-        }
     }
 
 }

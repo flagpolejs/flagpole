@@ -1,5 +1,4 @@
-import { Cli, Tests, FlagpoleConfig, printHeader, printSubheader } from "./cli-helper";
-import { config } from "rx";
+import { Cli, printHeader, printSubheader } from "./cli-helper";
 
 const fs = require('fs');
 const archiver = require('archiver');

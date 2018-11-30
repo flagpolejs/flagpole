@@ -33,10 +33,3 @@ suite.Scenario('Test 1')
         });
 
     });
-
-suite.Scenario('See if the API loads')
-   .open('/api')
-   .json()
-   .assertions(function (response) {
-       
-   });

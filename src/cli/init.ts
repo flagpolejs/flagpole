@@ -1,4 +1,5 @@
 import { Cli, printSubheader, printHeader } from "./cli-helper";
+import { FlagpoleConfig } from "./config";
 
 const { prompt } = require('enquirer');
 const fs = require('fs');
@@ -51,8 +52,18 @@ export function init() {
         Cli.hideBanner = true;
         Cli.log('Creating your Flagpole project...')
         let folder: string = process.cwd() + '/' + answers.path;
-        let configFile: string = process.cwd() + '/flagpole.json';
+        let configFilePath: string = process.cwd() + '/flagpole.json';
         let tasks: string[] = [];
+
+        let configFile: FlagpoleConfig = new FlagpoleConfig({
+            configPath: configFilePath,
+            project: answers.project,
+            path: answers.path,
+        });
+        answers.env.forEach(env => {
+            configFile.addEnvironment(env);
+        });
+
         if (!fs.existsSync(folder)) {
             fs.mkdirSync(folder);
             tasks.push('Created tests folder: ' + folder);
@@ -60,9 +71,9 @@ export function init() {
         else {
             tasks.push('Tests folder already existed: ' + folder);
         }
-        fs.writeFile(configFile, JSON.stringify(answers, null, 2), function (err) {
+        fs.writeFile(configFilePath, configFile.toString(), function (err) {
             if (err) {
-                tasks.push('Error creating project config file: ' + configFile);
+                tasks.push('Error creating project config file: ' + configFilePath);
                 Cli.list(tasks);
                 Cli.log('Error creating project!');
                 Cli.exit(1);
@@ -71,13 +82,13 @@ export function init() {
                 Cli.log('');
                 Cli.log('Config options:')
                 Cli.list([
-                    'Project: ' + answers.project,
-                    'Test Path: ' + answers.path,
+                    'Project: ' + configFile.projectName,
+                    'Test Path: ' + configFile.getTestsFolder(),
                     'Environments: ' + answers.env
                 ])
                 Cli.log('');
                 Cli.log('Completed:');
-                tasks.push('Writing project config file: ' + configFile);
+                tasks.push('Writing project config file: ' + configFilePath);
                 Cli.list(tasks);
                 Cli.log('Your Flagpole project was created.');
                 Cli.exit(0);
