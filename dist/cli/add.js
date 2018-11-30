@@ -16,7 +16,7 @@ function addSuite() {
         cli_helper_1.Cli.log('Config file is invalid.');
         cli_helper_1.Cli.exit(1);
     }
-    prompt([
+    let questions = [
         {
             type: 'input',
             name: 'suiteFileName',
@@ -59,8 +59,10 @@ function addSuite() {
             message: 'What type of test is this scenario?',
             initial: 0,
             choices: Object.keys(typesOfTest)
-        },
-        {
+        }
+    ];
+    if (cli_helper_1.Cli.config.env.length <= 1) {
+        questions.push({
             type: 'input',
             name: 'baseDomain',
             message: 'Base Domain',
@@ -71,25 +73,53 @@ function addSuite() {
             validate: function (input) {
                 return /^.{1,63}$/i.test(input);
             }
+        });
+    }
+    else {
+        cli_helper_1.Cli.config.env.forEach(function (env) {
+            questions.push({
+                type: 'input',
+                name: 'baseDomain_' + env,
+                message: 'Base Domain for ' + env,
+                initial: 'https://www.google.com',
+                result: function (input) {
+                    return input.trim();
+                },
+                validate: function (input) {
+                    return /^.{1,63}$/i.test(input);
+                }
+            });
+        });
+    }
+    questions.push({
+        type: 'input',
+        name: 'scenarioPath',
+        message: 'Scenario Start Path',
+        initial: '/',
+        result: function (input) {
+            return input.trim();
         },
-        {
-            type: 'input',
-            name: 'scenarioPath',
-            message: 'Scenario Start Path',
-            initial: '/',
-            result: function (input) {
-                return input.trim();
-            },
-            validate: function (input) {
-                return /^\/.{0,63}$/i.test(input);
-            }
+        validate: function (input) {
+            return /^\/.{0,63}$/i.test(input);
         }
-    ]).then(function (answers) {
+    });
+    prompt(questions).then(function (answers) {
         let suitePath = cli_helper_1.Cli.config.testsPath + answers.suiteFileName;
+        let domains = '';
+        if (answers.baseDomain) {
+            domains = "'" + answers.baseDomain + "'";
+        }
+        else {
+            domains += "{\n";
+            cli_helper_1.Cli.config.env.forEach(function (env) {
+                domains += '      ' + env + ": '" + answers['baseDomain_' + env] + "',\n";
+            });
+            domains += "   }\n";
+        }
         let fileContents = "const { Flagpole } = require('flagpole');\n" +
             "\n" +
             "const suite = Flagpole.Suite('" + answers.suiteDescription + "')\n" +
-            "   .base('" + answers.baseDomain + "');\n" +
+            "   .base(" + domains + ");\n" +
             "\n" +
             "suite.Scenario('" + answers.scenarioDescription + "')\n" +
             "   .open('" + answers.scenarioPath + "')\n" +

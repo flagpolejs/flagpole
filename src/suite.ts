@@ -1,7 +1,7 @@
 import { Flagpole } from "./index";
 import { Scenario } from "./scenario";
 import { ConsoleLine, LogType } from "./consoleline";
-import { ResponseType } from "./response";
+import { Cli } from "./cli/cli-helper";
 
 /**
  * A suite contains many scenarios
@@ -87,7 +87,7 @@ export class Suite {
     public print(): Suite {
         Flagpole.heading(this.title);
         Flagpole.message('» Base URL: ' + this.baseUrl);
-        Flagpole.message('» Environment: ' + process.env.FLAGPOLE_ENV);
+        Flagpole.message('» Environment: ' + Cli.environment);
         Flagpole.message('» Took ' + this.getDuration() + "ms\n");
 
         let color: string = this.passed() ? "\x1b[32m" : "\x1b[31m";
@@ -219,8 +219,25 @@ export class Suite {
      * @param {string} url
      * @returns {Suite}
      */
-    public base(url: string): Suite {
-        this.baseUrl = new URL(url);
+    public base(url: string | any[]): Suite {
+        let baseUrl: string = '';
+        if (typeof url == 'string') {
+            baseUrl = url;
+        }
+        else if (Object.keys(url).length > 0) {
+            let env = Cli.environment || 'dev';
+            baseUrl = url[env];
+            // If env didn't match one, just pick the first one
+            if (!baseUrl) {
+                baseUrl = url[Object.keys(url)[0]];
+            }
+        }
+        if (baseUrl.length > 0) {
+            this.baseUrl = new URL(baseUrl);
+        }
+        else {
+            throw Error('Invalid base url.');
+        }
         return this;
     }
 

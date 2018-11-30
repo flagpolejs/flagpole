@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 const scenario_1 = require("./scenario");
 const consoleline_1 = require("./consoleline");
+const cli_helper_1 = require("./cli/cli-helper");
 class Suite {
     constructor(title) {
         this.scenarios = [];
@@ -41,7 +42,7 @@ class Suite {
     print() {
         index_1.Flagpole.heading(this.title);
         index_1.Flagpole.message('» Base URL: ' + this.baseUrl);
-        index_1.Flagpole.message('» Environment: ' + process.env.FLAGPOLE_ENV);
+        index_1.Flagpole.message('» Environment: ' + cli_helper_1.Cli.environment);
         index_1.Flagpole.message('» Took ' + this.getDuration() + "ms\n");
         let color = this.passed() ? "\x1b[32m" : "\x1b[31m";
         index_1.Flagpole.message('» Passed? ' + (this.passed() ? 'Yes' : 'No') + "\n", color);
@@ -128,7 +129,23 @@ class Suite {
             this.byTag[tag] : [];
     }
     base(url) {
-        this.baseUrl = new URL(url);
+        let baseUrl = '';
+        if (typeof url == 'string') {
+            baseUrl = url;
+        }
+        else if (Object.keys(url).length > 0) {
+            let env = cli_helper_1.Cli.environment || 'dev';
+            baseUrl = url[env];
+            if (!baseUrl) {
+                baseUrl = url[Object.keys(url)[0]];
+            }
+        }
+        if (baseUrl.length > 0) {
+            this.baseUrl = new URL(baseUrl);
+        }
+        else {
+            throw Error('Invalid base url.');
+        }
         return this;
     }
     buildUrl(path) {

@@ -158,7 +158,12 @@ export class Tests {
         let me: Tests = this;
         this.onTestStart(filePath);
 
-        let child = exec('node ' + filePath);
+        let opts: string = '';
+        if (Cli.environment) {
+            opts += ' -e ' + Cli.environment;
+        }
+
+        let child = exec('node ' + filePath + opts);
 
         child.stdout.on('data', function(data) {
             data && Cli.log(data);

@@ -1,5 +1,5 @@
 import { createZipArchive } from "./pack";
-import { Cli } from "./cli-helper";
+import { Cli, printHeader, printSubheader } from "./cli-helper";
 
 const keytar = require('keytar');
 const request = require('request');
@@ -58,7 +58,6 @@ function uploadProject(email: string, token: string) {
                 else {
                     Cli.log('');
                     Cli.log('Error sending: ' + body);
-                    Cli.log(uri);
                     Cli.log('');
                     Cli.exit(0);
                 }
@@ -76,6 +75,10 @@ function uploadProject(email: string, token: string) {
 }
 
 export function deploy() {
+
+    Cli.hideBanner = true;
+    printHeader();
+    printSubheader('Deploy Project to Flagpole.JS');
 
     keytar.findCredentials(serviceName)
         .then(function (credentials) {

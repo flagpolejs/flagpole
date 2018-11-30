@@ -25,7 +25,7 @@ export declare class Suite {
     Resource(title: string, tags?: [string]): Scenario;
     getScenarioByTag(tag: string): Scenario;
     getAllScenariosByTag(tag: string): [Scenario];
-    base(url: string): Suite;
+    base(url: string | any[]): Suite;
     buildUrl(path: string): string;
     execute(): Suite;
     passed(): boolean;

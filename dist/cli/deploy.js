@@ -51,7 +51,6 @@ function uploadProject(email, token) {
                 else {
                     cli_helper_1.Cli.log('');
                     cli_helper_1.Cli.log('Error sending: ' + body);
-                    cli_helper_1.Cli.log(uri);
                     cli_helper_1.Cli.log('');
                     cli_helper_1.Cli.exit(0);
                 }
@@ -66,6 +65,9 @@ function uploadProject(email, token) {
     });
 }
 function deploy() {
+    cli_helper_1.Cli.hideBanner = true;
+    cli_helper_1.printHeader();
+    cli_helper_1.printSubheader('Deploy Project to Flagpole.JS');
     keytar.findCredentials(serviceName)
         .then(function (credentials) {
         if (credentials.length == 0) {

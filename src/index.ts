@@ -1,8 +1,20 @@
 import { ConsoleLine } from "./consoleline";
 import { Suite } from "./suite";
 import { SimplifiedResponse } from "./response";
+import { Cli } from "./cli/cli-helper";
 
 let cheerio = require('cheerio');
+
+// Process command line inputs
+let lastArg: string | null = null;
+let env: string | null = null;
+process.argv.forEach(function (arg) {
+    if (lastArg == '-e') {
+        env = arg;
+        Cli.environment = env;
+    }
+    lastArg = arg;
+});
 
 export class Flagpole {
 
@@ -15,9 +27,6 @@ export class Flagpole {
      */
     static Suite(title: string): Suite {
         let suite: Suite = new Suite(title);
-        if (typeof process.env.FLAGPOLE_BASE_DOMAIN !== 'undefined') {
-            suite.base(String(process.env.FLAGPOLE_BASE_DOMAIN));
-        }
         return suite;
     }
 

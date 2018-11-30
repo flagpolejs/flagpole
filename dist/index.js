@@ -2,13 +2,20 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const consoleline_1 = require("./consoleline");
 const suite_1 = require("./suite");
+const cli_helper_1 = require("./cli/cli-helper");
 let cheerio = require('cheerio');
+let lastArg = null;
+let env = null;
+process.argv.forEach(function (arg) {
+    if (lastArg == '-e') {
+        env = arg;
+        cli_helper_1.Cli.environment = env;
+    }
+    lastArg = arg;
+});
 class Flagpole {
     static Suite(title) {
         let suite = new suite_1.Suite(title);
-        if (typeof process.env.FLAGPOLE_BASE_DOMAIN !== 'undefined') {
-            suite.base(String(process.env.FLAGPOLE_BASE_DOMAIN));
-        }
         return suite;
     }
     static heading(message) {

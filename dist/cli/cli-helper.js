@@ -112,7 +112,11 @@ class Tests {
     runTestFile(filePath) {
         let me = this;
         this.onTestStart(filePath);
-        let child = exec('node ' + filePath);
+        let opts = '';
+        if (Cli.environment) {
+            opts += ' -e ' + Cli.environment;
+        }
+        let child = exec('node ' + filePath + opts);
         child.stdout.on('data', function (data) {
             data && Cli.log(data);
         });
