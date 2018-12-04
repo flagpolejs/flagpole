@@ -7,7 +7,7 @@ function debug(argv) {
     cli_helper_1.Cli.log('');
     cli_helper_1.Cli.log('Config File:');
     cli_helper_1.Cli.list([
-        'Path: ' + cli_helper_1.Cli.configPath,
+        'Path: ' + cli_helper_1.Cli.config.getConfigPath(),
         'Status: ' + (cli_helper_1.Cli.config.isValid() ? 'Loaded' : 'Not Found'),
     ]);
     cli_helper_1.Cli.log('');
@@ -22,9 +22,7 @@ function debug(argv) {
     cli_helper_1.Cli.log('Command Line Arguments:');
     cli_helper_1.Cli.list([
         'Environment: ' + argv.e,
-        'Group: ' + argv.g,
         'Suite: ' + argv.s.join(', '),
-        'Path: ' + argv.p,
         'Config: ' + argv.c,
         'Debug: ' + argv.d
     ]);
@@ -32,8 +30,8 @@ function debug(argv) {
     cli_helper_1.Cli.log('Other settings:');
     cli_helper_1.Cli.list([
         'Environment: ' + __1.Flagpole.environment,
-        'Root Path: ' + cli_helper_1.Cli.rootPath,
-        'Tests Path: ' + cli_helper_1.Cli.testsPath
+        'Root Path: ' + cli_helper_1.Cli.config.getConfigFolder(),
+        'Tests Path: ' + cli_helper_1.Cli.config.getTestsFolder()
     ]);
     cli_helper_1.Cli.log('');
 }

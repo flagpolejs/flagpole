@@ -7,12 +7,21 @@ const canAdd = [
     'env', 'suite'
 ];
 function removeEnv() {
+    cli_helper_1.printHeader();
     cli_helper_1.printSubheader('Remove Environment');
+    let envs = cli_helper_1.Cli.config.getEnvironmentNames();
+    if (envs.length == 0) {
+        cli_helper_1.Cli.log('');
+        cli_helper_1.Cli.log('There are no environments defined in this project.');
+        cli_helper_1.Cli.log('');
+        cli_helper_1.Cli.exit(1);
+    }
     prompt({
         type: 'select',
         name: 'name',
         message: 'Which environment do you want to remove?',
-        choices: cli_helper_1.Cli.config.getEnvironmentNames(),
+        initial: envs.indexOf(cli_helper_1.Cli.commandArg2 || '') || 0,
+        choices: envs,
         validate: function (input) {
             return /^[a-z0-9]{1,12}$/i.test(input);
         }
@@ -39,12 +48,21 @@ function removeEnv() {
     });
 }
 function removeSuite() {
+    cli_helper_1.printHeader();
     cli_helper_1.printSubheader('Remove Suite');
+    let suites = cli_helper_1.Cli.config.getSuiteNames();
+    if (suites.length == 0) {
+        cli_helper_1.Cli.log('');
+        cli_helper_1.Cli.log('There are no suites in this project.');
+        cli_helper_1.Cli.log('');
+        cli_helper_1.Cli.exit(1);
+    }
     prompt({
         type: 'select',
         name: 'name',
         message: 'Which suite do you want to remove?',
-        choices: cli_helper_1.Cli.config.getSuiteNames(),
+        choices: suites,
+        initial: suites.indexOf(cli_helper_1.Cli.commandArg2 || '') || 0,
         validate: function (input) {
             return /^[a-z0-9]{1,12}$/i.test(input);
         }
@@ -72,6 +90,7 @@ function removeSuite() {
     });
 }
 function rm() {
+    cli_helper_1.Cli.hideBanner = true;
     if (cli_helper_1.Cli.commandArg == 'env') {
         removeEnv();
     }

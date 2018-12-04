@@ -49,6 +49,7 @@ export declare abstract class GenericResponse implements iResponse {
     constructor(scenario: Scenario, url: string, simplifiedResponse: SimplifiedResponse);
     absolutizeUri(uri: string): string;
     getUrl(): string;
+    body(): Node;
     getBody(): string;
     getRoot(): any;
     assert(statement: boolean, message: string, actualValue?: string): iResponse;

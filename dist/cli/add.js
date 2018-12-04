@@ -21,7 +21,7 @@ function addSuite() {
             type: 'input',
             name: 'suiteName',
             message: 'Name of Suite',
-            initial: 'smoke',
+            initial: cli_helper_1.Cli.commandArg2 || 'smoke',
             result: function (input) {
                 return input.trim();
             },
@@ -175,7 +175,7 @@ function addScenario() {
             type: 'select',
             name: 'suite',
             message: 'What suite do you want to add it to?',
-            initial: 0,
+            initial: suites.indexOf(cli_helper_1.Cli.commandArg2 || '') || 0,
             choices: suites,
             validate: function (input) {
                 return (input.length > 0);
@@ -213,7 +213,7 @@ function addScenario() {
             }
         }
     ]).then(function (answers) {
-        let suitePath = cli_helper_1.Cli.testsPath + answers.suite + '.js';
+        let suitePath = cli_helper_1.Cli.config.getTestsFolder() + answers.suite + '.js';
         let fileContents = "\n\n" +
             "suite.Scenario('" + answers.scenarioDescription + "')\n" +
             "   .open('" + answers.scenarioPath + "')\n" +
@@ -255,6 +255,7 @@ function addEnv() {
             type: 'input',
             name: 'name',
             message: 'What do you want to call the environment?',
+            initial: cli_helper_1.Cli.commandArg2 || '',
             validate: function (input) {
                 return /^[a-z0-9]{1,12}$/i.test(input);
             }

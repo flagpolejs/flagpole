@@ -1,4 +1,4 @@
-import { printSubheader, Cli } from "./cli-helper";
+import { printSubheader, Cli, printHeader } from "./cli-helper";
 const { prompt } = require('enquirer');
 
 const fs = require('fs');
@@ -8,13 +8,24 @@ const canAdd: string[] = [
 ];
 
 function removeEnv() {
+    printHeader();
     printSubheader('Remove Environment');
+
+    let envs: string[] = Cli.config.getEnvironmentNames();
+
+    if (envs.length == 0) {
+        Cli.log('');
+        Cli.log('There are no environments defined in this project.');
+        Cli.log('');
+        Cli.exit(1);
+    }
 
     prompt({
         type: 'select',
         name: 'name',
         message: 'Which environment do you want to remove?',
-        choices: Cli.config.getEnvironmentNames(),
+        initial: envs.indexOf(Cli.commandArg2 || '') || 0,
+        choices: envs,
         validate: function (input) {
             return /^[a-z0-9]{1,12}$/i.test(input);
         }
@@ -44,13 +55,24 @@ function removeEnv() {
 }
 
 function removeSuite() {
+    printHeader();
     printSubheader('Remove Suite');
+
+    let suites: string[] = Cli.config.getSuiteNames();
+
+    if (suites.length == 0) {
+        Cli.log('');
+        Cli.log('There are no suites in this project.');
+        Cli.log('');
+        Cli.exit(1);
+    }
 
     prompt({
         type: 'select',
         name: 'name',
         message: 'Which suite do you want to remove?',
-        choices: Cli.config.getSuiteNames(),
+        choices: suites,
+        initial: suites.indexOf(Cli.commandArg2 || '') || 0,
         validate: function (input) {
             return /^[a-z0-9]{1,12}$/i.test(input);
         }
@@ -82,6 +104,7 @@ function removeSuite() {
 
 
 export function rm() {
+    Cli.hideBanner = true;
 
     if (Cli.commandArg == 'env') {
         removeEnv();

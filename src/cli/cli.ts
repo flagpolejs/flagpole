@@ -18,7 +18,6 @@ let argv = require('yargs')
     .demandCommand(1, 'You must specify a command: ' + commands.join(", "))
     .alias({
         's': 'suite',
-        'p': 'path',
         'e': 'env',
         'c': 'config',
         'd': 'debug',
@@ -26,15 +25,12 @@ let argv = require('yargs')
     })
     .describe({
         's': 'Specify one or more suites to run',
-        'p': 'Specify the folder to look for tests within',
         'e': 'Environment like: dev, staging, prod',
         'c': 'Path to config file',
         'd': 'Show extra debug info',
         'h': 'Hide the output banner'
     })
     .array('s')
-    .string('g')
-    .string('p')
     .string('e')
     .boolean('d')
     .boolean('h')
@@ -65,6 +61,7 @@ let argv = require('yargs')
 // Enforce limited list of commands
 Cli.command = argv._[0];
 Cli.commandArg = argv._[1];
+Cli.commandArg2 = argv._[2];
 if (commands.indexOf(String(Cli.command)) < 0) {
     Cli.log("Command must be either: " + commands.join(", ") + "\n");
     Cli.log("Example: flagpole run\n");
@@ -79,39 +76,16 @@ Cli.hideBanner = argv.h;
 Cli.rootPath = Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
 
 /**
- * Override default path
- */
-if (argv.p) {
-    require('./path').path();
-}
-
-/**
  * Read the config file in the path
  */
 Cli.configPath = (argv.c || Cli.rootPath + 'flagpole.json');
 // If we found a config file at this path
 Cli.config = Cli.parseConfigFile(Cli.configPath);
-if (Cli.config.isValid()) {
-    Cli.testsPath = Cli.config.getTestsFolder() || process.cwd() + '/tests/';
-}
 // If they specified a command line config that doesn't exist
-else if (argv.c) {
+if (argv.c && !Cli.config.isValid()) {
     Cli.log("The config file you specified did not exist.\n");
     Cli.exit(1);
 }
-
-/**
- * Determine the root tests folder
- */
-Cli.testsPath = (function() {
-    // Get command line args
-    let path: string = Cli.normalizePath(Cli.testsPath || process.cwd() + '/tests/');
-    let group: string = (typeof argv.g !== 'undefined') ? argv.g : '';
-    // Make sure path has trailing slashes
-    path = Cli.normalizePath(path);
-    // Now build our output
-    return path + group;
-})();
 
 /**
  * Show debug info

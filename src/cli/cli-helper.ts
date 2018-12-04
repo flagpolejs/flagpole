@@ -135,9 +135,9 @@ export class Cli {
     static rootPath: string = __dirname;
     static configPath: string = __dirname + '/flagpole.json';
     static config: FlagpoleConfig;
-    static testsPath: string = __dirname + '/tests/';
     static command: string | null = null;
     static commandArg: string | null = null;
+    static commandArg2: string | null = null;
 
     static log(message: string) {
         if (typeof message !== 'undefined') {

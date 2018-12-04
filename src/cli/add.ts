@@ -29,7 +29,7 @@ function addSuite() {
             type: 'input',
             name: 'suiteName',
             message: 'Name of Suite',
-            initial: 'smoke',
+            initial: Cli.commandArg2 || 'smoke',
             result: function (input) {
                 return input.trim();
             },
@@ -206,7 +206,7 @@ function addScenario() {
             type: 'select',
             name: 'suite',
             message: 'What suite do you want to add it to?',
-            initial: 0,
+            initial: suites.indexOf(Cli.commandArg2 || '') ||  0,
             choices: suites,
             validate: function (input) {
                 return (input.length > 0);
@@ -247,7 +247,7 @@ function addScenario() {
 
         //Cli.log(JSON.stringify(answers));
 
-        let suitePath: string = Cli.testsPath + answers.suite + '.js';
+        let suitePath: string = Cli.config.getTestsFolder() + answers.suite + '.js';
 
         let fileContents: string = "\n\n" +
             "suite.Scenario('" + answers.scenarioDescription + "')\n" +
@@ -296,6 +296,7 @@ function addEnv() {
             type: 'input',
             name: 'name',
             message: 'What do you want to call the environment?',
+            initial: Cli.commandArg2 || '',
             validate: function (input) {
                 return /^[a-z0-9]{1,12}$/i.test(input);
             }

@@ -27,6 +27,9 @@ class GenericResponse {
     getUrl() {
         return this._url;
     }
+    body() {
+        return new node_1.Node(this, 'Response Body', this._body);
+    }
     getBody() {
         return this._body;
     }

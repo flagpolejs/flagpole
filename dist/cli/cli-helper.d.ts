@@ -19,9 +19,9 @@ export declare class Cli {
     static rootPath: string;
     static configPath: string;
     static config: FlagpoleConfig;
-    static testsPath: string;
     static command: string | null;
     static commandArg: string | null;
+    static commandArg2: string | null;
     static log(message: string): void;
     static list(list: Array<string>): void;
     static exit(exitCode: number): void;

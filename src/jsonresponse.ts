@@ -8,8 +8,14 @@ export class JsonResponse extends GenericResponse implements iResponse {
 
     constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
         super(scenario, url, response);
-        this.json = JSON.parse(response.body);
-        this.valid();
+        try {
+            this.json = JSON.parse(response.body);
+            this.valid();
+        }
+        catch {
+            this.json = {};
+            this.scenario.assert(false, 'JSON is valid', response.body.substr(0, Math.min(32, response.body.length)));
+        }
     }
 
     public getType(): ResponseType {
@@ -19,7 +25,7 @@ export class JsonResponse extends GenericResponse implements iResponse {
     protected valid(): iResponse {
         return this.assert(
             (typeof this.json === 'object' && this.json  !== null),
-            'JSON is valid', 'JSON is not valid'
+            'JSON is valid'
         );
     }
 

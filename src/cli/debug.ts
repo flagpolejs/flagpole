@@ -6,7 +6,7 @@ export function debug(argv) {
     Cli.log('');
     Cli.log('Config File:');
     Cli.list([
-        'Path: ' + Cli.configPath,
+        'Path: ' + Cli.config.getConfigPath(),
         'Status: ' + (Cli.config.isValid() ? 'Loaded' : 'Not Found'),
     ]);
     Cli.log('');
@@ -21,9 +21,7 @@ export function debug(argv) {
     Cli.log('Command Line Arguments:')
     Cli.list([
         'Environment: ' + argv.e,
-        'Group: ' + argv.g,
         'Suite: ' + argv.s.join(', '),
-        'Path: ' + argv.p,
         'Config: ' + argv.c,
         'Debug: ' + argv.d
     ]);
@@ -31,8 +29,8 @@ export function debug(argv) {
     Cli.log('Other settings:')
     Cli.list([
         'Environment: ' + Flagpole.environment,
-        'Root Path: ' + Cli.rootPath,
-        'Tests Path: ' + Cli.testsPath
+        'Root Path: ' + Cli.config.getConfigFolder(),
+        'Tests Path: ' + Cli.config.getTestsFolder()
     ]);
     Cli.log('');
 

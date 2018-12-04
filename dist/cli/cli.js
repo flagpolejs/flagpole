@@ -14,7 +14,6 @@ let argv = require('yargs')
     .demandCommand(1, 'You must specify a command: ' + commands.join(", "))
     .alias({
     's': 'suite',
-    'p': 'path',
     'e': 'env',
     'c': 'config',
     'd': 'debug',
@@ -22,15 +21,12 @@ let argv = require('yargs')
 })
     .describe({
     's': 'Specify one or more suites to run',
-    'p': 'Specify the folder to look for tests within',
     'e': 'Environment like: dev, staging, prod',
     'c': 'Path to config file',
     'd': 'Show extra debug info',
     'h': 'Hide the output banner'
 })
     .array('s')
-    .string('g')
-    .string('p')
     .string('e')
     .boolean('d')
     .boolean('h')
@@ -58,6 +54,7 @@ let argv = require('yargs')
     .argv;
 cli_helper_1.Cli.command = argv._[0];
 cli_helper_1.Cli.commandArg = argv._[1];
+cli_helper_1.Cli.commandArg2 = argv._[2];
 if (commands.indexOf(String(cli_helper_1.Cli.command)) < 0) {
     cli_helper_1.Cli.log("Command must be either: " + commands.join(", ") + "\n");
     cli_helper_1.Cli.log("Example: flagpole run\n");
@@ -66,24 +63,12 @@ if (commands.indexOf(String(cli_helper_1.Cli.command)) < 0) {
 __1.Flagpole.environment = argv.e;
 cli_helper_1.Cli.hideBanner = argv.h;
 cli_helper_1.Cli.rootPath = cli_helper_1.Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
-if (argv.p) {
-    require('./path').path();
-}
 cli_helper_1.Cli.configPath = (argv.c || cli_helper_1.Cli.rootPath + 'flagpole.json');
 cli_helper_1.Cli.config = cli_helper_1.Cli.parseConfigFile(cli_helper_1.Cli.configPath);
-if (cli_helper_1.Cli.config.isValid()) {
-    cli_helper_1.Cli.testsPath = cli_helper_1.Cli.config.getTestsFolder() || process.cwd() + '/tests/';
-}
-else if (argv.c) {
+if (argv.c && !cli_helper_1.Cli.config.isValid()) {
     cli_helper_1.Cli.log("The config file you specified did not exist.\n");
     cli_helper_1.Cli.exit(1);
 }
-cli_helper_1.Cli.testsPath = (function () {
-    let path = cli_helper_1.Cli.normalizePath(cli_helper_1.Cli.testsPath || process.cwd() + '/tests/');
-    let group = (typeof argv.g !== 'undefined') ? argv.g : '';
-    path = cli_helper_1.Cli.normalizePath(path);
-    return path + group;
-})();
 if (argv.d) {
     require('./debug').debug(argv);
 }

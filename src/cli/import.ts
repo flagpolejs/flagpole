@@ -23,13 +23,13 @@ export function importSuite() {
                 }
                 // Push in any JS files
                 else if (file.match(/.js$/)) {
-                    let name: string = (dir + file).replace(Cli.testsPath, '').replace(/\.js$/i, '');
+                    let name: string = (dir + file).replace(Cli.config.getTestsFolder(), '').replace(/\.js$/i, '');
                     suitesInFolder.push(name);
                 }
             });
         }
     };
-    findSuites(Cli.testsPath);
+    findSuites(Cli.config.getTestsFolder());
 
     // Can't import if they already are in config
     let suitesAvailableToImport: string[] = [];

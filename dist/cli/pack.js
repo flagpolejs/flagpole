@@ -17,7 +17,7 @@ function createZipArchive(zipPath, callback) {
             cli_helper_1.Cli.list([
                 'File Path: ' + zipPath,
                 'File Size: ' + archive.pointer() + 'bytes',
-                'Contents: ' + cli_helper_1.Cli.configPath + ' and ' + cli_helper_1.Cli.testsPath
+                'Contents: ' + cli_helper_1.Cli.configPath + ' and ' + cli_helper_1.Cli.config.getTestsFolder()
             ]);
             cli_helper_1.Cli.log('');
             cli_helper_1.Cli.exit(0);
@@ -41,12 +41,12 @@ function createZipArchive(zipPath, callback) {
     });
     archive.pipe(zipFile);
     archive.append(fs.createReadStream(cli_helper_1.Cli.configPath), { name: 'flagpole.json' });
-    archive.directory(cli_helper_1.Cli.testsPath, cli_helper_1.Cli.config.testFolderName);
+    archive.directory(cli_helper_1.Cli.config.getTestsFolder(), cli_helper_1.Cli.config.testFolderName);
     archive.finalize();
 }
 exports.createZipArchive = createZipArchive;
 function pack() {
-    let testsFolder = cli_helper_1.Cli.testsPath;
+    let testsFolder = cli_helper_1.Cli.config.getTestsFolder();
     let configPath = cli_helper_1.Cli.configPath;
     cli_helper_1.Cli.hideBanner = true;
     cli_helper_1.printHeader();

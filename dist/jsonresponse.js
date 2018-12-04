@@ -5,14 +5,20 @@ const node_1 = require("./node");
 class JsonResponse extends response_1.GenericResponse {
     constructor(scenario, url, response) {
         super(scenario, url, response);
-        this.json = JSON.parse(response.body);
-        this.valid();
+        try {
+            this.json = JSON.parse(response.body);
+            this.valid();
+        }
+        catch (_a) {
+            this.json = {};
+            this.scenario.assert(false, 'JSON is valid', response.body.substr(0, Math.min(32, response.body.length)));
+        }
     }
     getType() {
         return response_1.ResponseType.json;
     }
     valid() {
-        return this.assert((typeof this.json === 'object' && this.json !== null), 'JSON is valid', 'JSON is not valid');
+        return this.assert((typeof this.json === 'object' && this.json !== null), 'JSON is valid');
     }
     getRoot() {
         return this.json;

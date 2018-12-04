@@ -16,14 +16,14 @@ function importSuite() {
                     findSuites(dir + file + '/', true);
                 }
                 else if (file.match(/.js$/)) {
-                    let name = (dir + file).replace(cli_helper_1.Cli.testsPath, '').replace(/\.js$/i, '');
+                    let name = (dir + file).replace(cli_helper_1.Cli.config.getTestsFolder(), '').replace(/\.js$/i, '');
                     suitesInFolder.push(name);
                 }
             });
         }
     }
     ;
-    findSuites(cli_helper_1.Cli.testsPath);
+    findSuites(cli_helper_1.Cli.config.getTestsFolder());
     let suitesAvailableToImport = [];
     let suitesInConfig = cli_helper_1.Cli.config.getSuiteNames();
     suitesInFolder.forEach(function (suiteName) {

@@ -15,8 +15,8 @@
     "test": {
       "name": "test"
     },
-    "local": {
-      "name": "local"
+    "flagpoleapi": {
+      "name": "flagpoleapi"
     }
   }
 }

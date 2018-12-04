@@ -79,6 +79,10 @@ export abstract class GenericResponse implements iResponse {
         return this._url;
     }
 
+    public body(): Node {
+        return new Node(this, 'Response Body', this._body);
+    }
+
     public getBody(): string {
         return this._body;
     }
