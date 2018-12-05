@@ -30,7 +30,7 @@ suite.Scenario('Get a User').open('/api/user/Xuq56dUKoTcL5Y83Ud6j?token=b8256676
    });
 
 
-suite.Scenario('Get a Projects of a User').open('/api/users/Xuq56dUKoTcL5Y83Ud6j/projects?token=b82566769f2ee686953d2c3a4691705e').json()
+suite.Scenario('Get a Projects of a User').open('/api/user/Xuq56dUKoTcL5Y83Ud6j/projects?token=b82566769f2ee686953d2c3a4691705e').json()
    .assertions(function (response) {
       response.status().equals(200);
    });

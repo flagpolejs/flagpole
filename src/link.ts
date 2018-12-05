@@ -1,4 +1,4 @@
-import { Scenario } from "./scenario";
+import { URL } from 'url';
 import { iResponse } from "./response";
 import { Flagpole } from ".";
 

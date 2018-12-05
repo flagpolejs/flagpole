@@ -1,6 +1,7 @@
 import { Scenario } from "./scenario";
 import { iResponse, SimplifiedResponse } from "./response";
 import { Node } from "./node";
+import { URL } from 'url';
 
 /**
  * Responses may be HTML or JSON, so this interface let's us know how to handle either

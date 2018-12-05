@@ -1,6 +1,7 @@
 import { iResponse, GenericResponse, SimplifiedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { Node } from "./node";
+import { URL } from 'url';
 
 export interface ImageProperties {
     width: number,

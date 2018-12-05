@@ -1,7 +1,7 @@
 import { Flagpole } from "./index";
 import { Scenario } from "./scenario";
 import { ConsoleLine, LogType } from "./consoleline";
-import { Cli } from "./cli/cli-helper";
+import { URL } from 'url';
 
 /**
  * A suite contains many scenarios
