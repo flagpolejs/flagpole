@@ -1,11 +1,12 @@
 import { Cli, printSubheader, printHeader } from "./cli-helper";
+import { ClorthoService } from 'clortho-lite';
 
 const request = require('request');
 const { prompt } = require('enquirer');
-const keytar = require('keytar');
 
-const loginEndPoint: string = 'http://www.flagpolejs.com/login/post_login';
+const loginEndPoint: string = 'https://us-central1-flagpolejs-5ea61.cloudfunctions.net/api/token';
 const serviceName: string = 'Flagpole JS';
+const service: ClorthoService = new ClorthoService(serviceName);
 
 function promptForLogin() {
     prompt([
@@ -32,7 +33,7 @@ function promptForLogin() {
 
         request.post(
             loginEndPoint,
-            { form: { email: answers.email, pwd: answers.password } },
+            { body: JSON.stringify({ email: answers.email, password: answers.password }) },
             function (err, response, data) {
                 Cli.log('');
                 if (err) {
@@ -42,10 +43,19 @@ function promptForLogin() {
                 }
                 if (response.statusCode == 200) {
                     if (/[a-z0-9]{16}/.test(data)) {
-                        keytar.setPassword(serviceName, answers.email, data);
-                        Cli.log('Logged in. Saved to your keychain.');
-                        Cli.log('');
-                        Cli.exit(0);
+                        service.set('email', answers.email);
+                        service.set('token', data)
+                            .then(function (value) {
+                                Cli.log('Logged in. Saved to your keychain.');
+                                Cli.log('');
+                                Cli.exit(0);
+                            })
+                            .catch(function (err) {
+                                Cli.log('Error saving credentials to your keychain.');
+                                Cli.log('');
+                                Cli.exit(0);
+                            });
+                        
                     }
                     else {
                         Cli.log('Login failed.');
@@ -78,24 +88,17 @@ export function login() {
     Cli.log('');
     Cli.log('This site is in early private beta.');
 
-    keytar.findCredentials(serviceName)
-        .then(function (credentials) {
-            if (credentials.length == 0) {
-                promptForLogin();
-            }
-            else {
-                Cli.log('');
-                Cli.log('You are already logged in as ' + credentials[0].account);
-                Cli.log('');
-                Cli.log('To sign in with a different account use the command: flagpole logout');
-                Cli.log('');
-                Cli.exit(0);
-            }
+    service.get('email')
+        .then(function (email) {
+            Cli.log('');
+            Cli.log('You are already logged in as ' + email.password);
+            Cli.log('');
+            Cli.log('To sign in with a different account use the command: flagpole logout');
+            Cli.log('');
+            Cli.exit(0);
         })
         .catch(function (err) {
-            Cli.log(err);
-            Cli.log('');
-            Cli.exit(1);
+            promptForLogin();
         });
-
+    
 }

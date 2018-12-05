@@ -9,7 +9,6 @@ import { ResourceResponse } from "./resourceresponse";
 import { ScriptResponse } from "./scriptresponse";
 import { CssResponse } from "./cssresponse";
 import { Mock } from "./mock";
-import { timingSafeEqual } from "crypto";
 
 let request = require('request');
 

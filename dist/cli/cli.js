@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const cli_helper_1 = require("./cli-helper");
 const __1 = require("..");
 const fs = require('fs');
-let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'login', 'logout', 'deploy', 'pack', 'about'];
+let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'pack', 'login', 'logout', 'about'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')

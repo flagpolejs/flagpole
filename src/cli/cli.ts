@@ -8,7 +8,7 @@ const fs = require('fs');
 /**
  * COMMAND LINE ARGUMENTS
  */
-let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'login', 'logout', 'deploy', 'pack', 'about'];
+let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'pack', 'login', 'logout', 'about'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
