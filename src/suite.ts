@@ -1,7 +1,8 @@
 import { Flagpole } from "./index";
 import { Scenario } from "./scenario";
-import { ConsoleLine, LogType } from "./consoleline";
+import { iLogLine, LogLineType, HeadingLine, DecorationLine, CommentLine, LineBreak, CustomLine, ConsoleColor, SubheadingLine, LogLine, HorizontalRule } from "./consoleline";
 import { URL } from 'url';
+import { FlagpoleOutput } from './flagpole';
 
 /**
  * A suite contains many scenarios
@@ -14,7 +15,6 @@ export class Suite {
     protected baseUrl: URL | null = null;
     protected start: number;
     protected waitToExecute: boolean = false;
-    protected usingConsoleOutput: boolean = true;
     protected callback: Function | null = null;
 
     protected _verifySslCert: boolean = true;
@@ -26,17 +26,6 @@ export class Suite {
 
     public verifySslCert(verify: boolean): Suite {
         this._verifySslCert = verify;
-        return this;
-    }
-
-    /**
-     * Whether or not to automatically push output to console. This is really if we are using at command line or not.
-     *
-     * @param {boolean} usingConsoleOutput
-     * @returns {Suite}
-     */
-    public setConsoleOutput(usingConsoleOutput: boolean): Suite {
-        this.usingConsoleOutput = usingConsoleOutput;
         return this;
     }
 
@@ -91,20 +80,66 @@ export class Suite {
      * @returns {Suite}
      */
     public print(): Suite {
-        Flagpole.heading(this.title);
-        Flagpole.message('» Base URL: ' + this.baseUrl);
-        Flagpole.message('» Environment: ' + Flagpole.environment);
-        Flagpole.message('» Took ' + this.getDuration() + "ms\n");
-
-        let color: string = this.passed() ? "\x1b[32m" : "\x1b[31m";
-        Flagpole.message('» Passed? ' + (this.passed() ? 'Yes' : 'No') + "\n", color);
-
-        this.scenarios.forEach(function(scenario) {
-            scenario.getLog().forEach(function(line: ConsoleLine) {
-                line.write();
+        if (Flagpole.logOutput) {
+            this.getLines().forEach(function (line: iLogLine) {
+                if (line.type != LogLineType.Decoration) {
+                    line.print();
+                }
             });
-        });
+        }
+        else {
+            if (Flagpole.getOutput() == FlagpoleOutput.html) {
+                console.log(this.toHTML());
+            }
+            else if (Flagpole.getOutput() == FlagpoleOutput.json) {
+                console.log(JSON.stringify(this.toJson(), null, 2));
+            }
+            else {
+                this.getLines().forEach(function (line: iLogLine) {
+                    line.print();
+                });
+            }
+        }
         return this;
+    }
+
+    public getLines(): iLogLine[] {
+        let lines: iLogLine[] = [];
+        lines.push(new HorizontalRule('='));
+        lines.push(new HeadingLine(this.title));
+        lines.push(new HorizontalRule('='));
+        lines.push(new CommentLine('Base URL: ' + this.baseUrl));
+        lines.push(new CommentLine('Environment: ' + Flagpole.getEnvironment()));
+        lines.push(new CommentLine('Took ' + this.getDuration() + 'ms'));
+
+        let color: ConsoleColor = this.passed() ? ConsoleColor.FgGreen : ConsoleColor.FgRed;
+        lines.push(new CustomLine(' »   Passed? ' + (this.passed() ? 'Yes' : 'No'), color));
+        lines.push(new LineBreak());
+
+        this.scenarios.forEach(function (scenario) {
+            scenario.getLog().forEach(function (line: iLogLine) {
+                lines.push(line);
+            });
+            lines.push(new LineBreak());
+        });
+
+        return lines;
+    }
+
+    public toConsoleString(): string {
+        let text: string = '';
+        this.getLines().forEach(function (line: iLogLine) {
+            text += line.toConsoleString() + "\n";
+        });
+        return text;
+    }
+
+    public toString(): string {
+        let text: string = '';
+        this.getLines().forEach(function (line: iLogLine) {
+            text += line.toString() + "\n";
+        });
+        return text;
     }
 
     /**
@@ -126,17 +161,52 @@ export class Suite {
                 passCount: 0,
                 log: []
             };
-            scenario.getLog().forEach(function(line: ConsoleLine) {
+            scenario.getLog().forEach(function(line: iLogLine) {
                 out.scenarios[index].log.push(line.toJson());
-                if (line.type == LogType.Pass) {
+                if (line.type == LogLineType.Pass) {
                     out.scenarios[index].passCount++;
                 }
-                else if (line.type == LogType.Fail) {
+                else if (line.type == LogLineType.Fail) {
                     out.scenarios[index].failCount++;
                 }
             });
         });
         return out;
+    }
+
+    public toHTML(): string {
+        let html: string = '';
+        html += '<article class="suite">' + "\n";
+        html += new HeadingLine(this.getTitle()).toHTML() + "\n";
+        html += "<aside>\n";
+        html += "<ul>\n";
+        html += new CommentLine('Duartion: ' + this.getDuration() + 'ms').toHTML();
+        html += new CommentLine('Base URL: ' + this.baseUrl).toHTML();
+        html += new CommentLine('Environment: ' + Flagpole.getEnvironment()).toHTML();
+        html += "</ul>\n";
+        html += "</aside>\n";
+        this.scenarios.forEach(function (scenario: Scenario) {
+            html += '<section class="scenario">' + "\n";
+            html += new SubheadingLine(scenario.getTitle()).toHTML() + "\n";
+            html += "<ul>\n";
+            scenario.getLog().forEach(function (line: iLogLine) {
+                if (
+                    line.type == LogLineType.Pass ||
+                    line.type == LogLineType.Fail ||
+                    line.type == LogLineType.Comment
+                ) {
+                    html += line.toHTML();
+                }
+            });
+            html += "</ul>\n";
+            html += "</section>\n";
+        });
+        html += "</article>\n";
+        return html;
+    }
+
+    public getTitle(): string {
+        return this.title;
     }
 
     /**
@@ -151,12 +221,12 @@ export class Suite {
         let suite: Suite = this;
         let scenario: Scenario = new Scenario(this, title, function() {
             if (suite.isDone()) {
-                if (suite.usingConsoleOutput) {
+                if (Flagpole.automaticallyPrintToConsole) {
                     suite.print();
-                    process.exit(
-                        suite.passed() ? 0 : 1
-                    );
                 }
+                process.exit(
+                    suite.passed() ? 0 : 1
+                );
             }
         });
         scenario.verifySslCert(this._verifySslCert);
@@ -203,7 +273,7 @@ export class Suite {
             baseUrl = url;
         }
         else if (Object.keys(url).length > 0) {
-            let env = Flagpole.environment || 'dev';
+            let env = Flagpole.getEnvironment() || 'dev';
             baseUrl = url[env];
             // If env didn't match one, just pick the first one
             if (!baseUrl) {

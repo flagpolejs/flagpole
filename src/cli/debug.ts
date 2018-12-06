@@ -28,7 +28,8 @@ export function debug(argv) {
     Cli.log('');
     Cli.log('Other settings:')
     Cli.list([
-        'Environment: ' + Flagpole.environment,
+        'Environment: ' + Flagpole.getEnvironment(),
+        'Output: ' + Flagpole.getOutput().toString(),
         'Root Path: ' + Cli.config.getConfigFolder(),
         'Tests Path: ' + Cli.config.getTestsFolder()
     ]);

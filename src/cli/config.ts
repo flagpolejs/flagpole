@@ -22,11 +22,13 @@ export class EnvConfig {
 export class SuiteConfig {
 
     protected config: FlagpoleConfig;
+    public id: string;
     public name: string;
-
+    
     constructor(config: FlagpoleConfig, opts: any) {
         this.config = config;
         this.name = opts.name || '';
+        this.id = opts.id || '';
     }
 
     public getPath(): string {
@@ -35,12 +37,33 @@ export class SuiteConfig {
 
 }
 
+export class ProjectConfig {
+
+    protected config: FlagpoleConfig;
+    public id: string = '';
+    public name: string = '';
+    public path: string = '';
+
+    constructor(config: FlagpoleConfig, opts: any) {
+        this.config = config;
+        if (Flagpole.toType(opts) == 'object') {
+            this.id = opts.id || '';
+            this.name = opts.name || '';
+            this.path = opts.path || '';
+        }
+    }
+
+    public hasId(): boolean {
+        return (this.id.length > 0);
+    }
+
+}
+
 export class FlagpoleConfig {
 
     protected configPath: string;
     
-    public projectName: string;
-    public testFolderName: string;
+    public project: ProjectConfig;
     public suites: { [key: string]: SuiteConfig } = {};
     public environments: { [key: string]: EnvConfig } = {};
 
@@ -49,8 +72,7 @@ export class FlagpoleConfig {
         // Implicit (do not show up in the config file output)
         this.configPath = configData.configPath || process.cwd() + '/flagpole.json';
         // Explicit (can be set and show in config file output)
-        this.projectName = configData.project || 'default';
-        this.testFolderName = configData.path || 'tests';
+        this.project = new ProjectConfig(this, configData.project);
         if (Flagpole.toType(configData.suites) == 'object') {
             for (let key in configData.suites) {
                 configData.suites[key]['name'] = key;
@@ -74,7 +96,7 @@ export class FlagpoleConfig {
     }
 
     public getTestsFolder(): string {
-        return Cli.normalizePath(this.getConfigFolder() + '/' + this.testFolderName);
+        return Cli.normalizePath(this.getConfigFolder() + '/' + this.project.path);
     }
 
     public addEnvironment(name: string, opts: {} = {}) {
@@ -136,7 +158,7 @@ export class FlagpoleConfig {
     }
 
     public isValid(): boolean {
-        if (typeof this.projectName == 'undefined' || this.projectName.length == 0) {
+        if (this.project === null || this.project.name.length == 0 || this.project.path.length == 0) {
             return false;
         }
         if (typeof this.getTestsFolder() == 'undefined' || !fs.existsSync(this.getTestsFolder())) {
@@ -151,8 +173,7 @@ export class FlagpoleConfig {
     public toString(): string {
         let config: FlagpoleConfig = this;
         return JSON.stringify({
-            project: this.projectName,
-            path: this.testFolderName,
+            project: this.project,
             environments: (function () {
                 let envs: any = {};
                 for (let key in config.environments) {
@@ -173,6 +194,15 @@ export class FlagpoleConfig {
                 return suites;
             })()
         }, null, 2);
+    }
+
+    public save(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            fs.writeFile(this.getConfigPath(), this.toString(), function (err) {
+                if (err) return reject();
+                resolve();
+            });
+        });
     }
 
 }

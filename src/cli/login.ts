@@ -33,18 +33,24 @@ function promptForLogin() {
 
         request.post(
             loginEndPoint,
-            { body: JSON.stringify({ email: answers.email, password: answers.password }) },
-            function (err, response, data) {
+            {
+                body: JSON.stringify({ email: answers.email, password: answers.password }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            },
+            function (err, response, body) {
                 Cli.log('');
                 if (err) {
                     Cli.log(err);
                     Cli.log('');
                     Cli.exit(1);
                 }
-                if (response.statusCode == 200) {
-                    if (/[a-z0-9]{16}/.test(data)) {
+                if (response.statusCode == 201) {
+                    let json = JSON.parse(body);
+                    if (/[a-z0-9]{16}/.test(json.data.token)) {
                         service.set('email', answers.email);
-                        service.set('token', data)
+                        service.set('token', json.data.token)
                             .then(function (value) {
                                 Cli.log('Logged in. Saved to your keychain.');
                                 Cli.log('');

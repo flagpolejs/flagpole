@@ -1,6 +1,6 @@
 import { Flagpole } from "./index";
 import { Suite } from "./suite";
-import { ConsoleLine } from "./consoleline";
+import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor } from "./consoleline";
 import { JsonResponse } from "./jsonresponse";
 import { HtmlResponse } from "./htmlresponse";
 import { ResponseType, SimplifiedResponse } from "./response";
@@ -20,7 +20,7 @@ export class Scenario {
     public readonly suite: Suite;
 
     protected title: string;
-    protected log: Array<ConsoleLine> = [];
+    protected log: Array<iLogLine> = [];
     protected failures: Array<string> = [];
     protected passes: Array<string> = [];
     protected onDone: Function;
@@ -221,7 +221,7 @@ export class Scenario {
      * Add a subheading log message to buffer
      */
     public subheading(message: string): Scenario {
-        this.log.push(new ConsoleLine(message));
+        this.log.push(new SubheadingLine(message));
         return this;
     }
 
@@ -230,9 +230,9 @@ export class Scenario {
      */
     public comment(message: string): Scenario {
         this.log.push(
-            ConsoleLine.comment('  »  ' + message)
+            new CommentLine(message)
         );
-        this.passes.push(message);
+        //this.passes.push(message);
         return this;
     }
 
@@ -271,7 +271,7 @@ export class Scenario {
             message = this.nextLabel;
             this.nextLabel = null;
         }
-        this.log.push(ConsoleLine.pass('  ✔  ' + message));
+        this.log.push(new PassLine(message));
         this.passes.push(message);
         return this;
     }
@@ -284,7 +284,12 @@ export class Scenario {
             message = this.nextLabel;
             this.nextLabel = null;
         }
-        this.log.push(ConsoleLine.fail('  ✕  ' + message, isOptional));
+        let line: FailLine = new FailLine(message);
+        if (isOptional) {
+            line.color = ConsoleColor.FgMagenta;
+            line.textSuffix = '(Optional)';
+        }
+        this.log.push(line);
         if (!isOptional) {
             this.failures.push(message);
         }
@@ -379,9 +384,9 @@ export class Scenario {
      */
     public skip(message?: string): Scenario {
         if (!this.hasExecuted()) {
-            message = "  »  Skipped" + (message ? ': ' + message : '');
+            message = "Skipped" + (message ? ': ' + message : '');
             this.start = Date.now();
-            this.log.push(new ConsoleLine(message + "\n"));
+            this.log.push(new CommentLine(message));
             this.end = Date.now();
             this.onDone(this);
         }
@@ -497,7 +502,7 @@ export class Scenario {
             this.start = Date.now();
             // If we waited first
             if (this.waitToExecute && this.initialized !== null) {
-                this.log.push(new ConsoleLine('  »  Waited ' + (this.start - this.initialized) + 'ms'));
+                this.log.push(new CommentLine('Waited ' + (this.start - this.initialized) + 'ms'));
             }
             // Execute it
             this._isMock ?
@@ -528,12 +533,16 @@ export class Scenario {
         return this;
     }
 
+    public getTitle(): string {
+        return this.title;
+    }
+
     /**
      * Get the log buffer
      *
      * @returns {Array<ConsoleLine>}
      */
-    public getLog(): Array<ConsoleLine> {
+    public getLog(): Array<iLogLine> {
         return this.log;
     }
 
@@ -554,7 +563,7 @@ export class Scenario {
      */
     public done(): Scenario {
         this.end = Date.now();
-        this.log.push(new ConsoleLine("  » Took " + this.getExecutionTime() + "ms\n"));
+        this.log.push(new CommentLine("Took " + this.getExecutionTime() + 'ms'));
         this.onDone(this);
         return this;
     }

@@ -1,12 +1,51 @@
 import { Suite } from "./suite";
-import { ConsoleLine } from "./consoleline";
 import { SimplifiedResponse } from "./response";
 
 const cheerio = require('cheerio');
 
+export enum FlagpoleOutput {
+    console = 1,
+    text = 2,
+    json = 3,
+    html = 4,
+    csv = 5,
+    tsv = 6,
+    psv = 7
+}
+
 export class Flagpole {
 
-    static environment: string = 'dev';
+    public static automaticallyPrintToConsole: boolean = false;
+    public static quietMode: boolean = false;
+    public static logOutput: boolean = false;
+
+    protected static environment: string = 'dev';
+    protected static output: FlagpoleOutput = FlagpoleOutput.console;
+
+    public static setEnvironment(env: string) {
+        Flagpole.environment = env;
+    }
+
+    public static getEnvironment(): string {
+        return Flagpole.environment;
+    }
+
+    public static setOutput(output: FlagpoleOutput | string) {
+        if (typeof output == 'string') {
+            if (Object.keys(FlagpoleOutput).includes(output)) {
+                if (parseInt(output) > 0) {
+                    Flagpole.output = <FlagpoleOutput> parseInt(output);
+                }
+                else {
+                    Flagpole.output = FlagpoleOutput[output];
+                }
+            }
+        }
+    }
+
+    public static getOutput(): FlagpoleOutput {
+        return Flagpole.output;
+    }
 
     /**
      * Create a new suite
@@ -18,29 +57,6 @@ export class Flagpole {
     static Suite(title: string): Suite {
         let suite: Suite = new Suite(title);
         return suite;
-    }
-
-    /**
-     * Write a big heading like what might go over top of the suite
-     *
-     * @param {string} message
-     */
-    static heading(message: string) {
-        let length: number = Math.max(message.length + 10, 50),
-            padding: number = (length - message.length) / 2;
-        new ConsoleLine('='.repeat(length), "\x1b[33m").write();
-        new ConsoleLine(' '.repeat(padding) + message.toLocaleUpperCase() + ' '.repeat(padding), "\x1b[33m").write();
-        new ConsoleLine('='.repeat(length), "\x1b[33m").write();
-    }
-
-    /**
-     * Write something to console right away
-     *
-     * @param {string} message
-     * @param {string} color
-     */
-    static message(message: string, color?: string) {
-        new ConsoleLine(message, color).write();
     }
 
     /**

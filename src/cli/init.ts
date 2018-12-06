@@ -82,7 +82,7 @@ export function init() {
                 Cli.log('');
                 Cli.log('Config options:')
                 Cli.list([
-                    'Project: ' + configFile.projectName,
+                    'Project: ' + configFile.project.name,
                     'Test Path: ' + configFile.getTestsFolder(),
                     'Environments: ' + answers.env
                 ])

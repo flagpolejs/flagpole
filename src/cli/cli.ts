@@ -2,13 +2,14 @@
 'use strict';
 import { Cli } from "./cli-helper";
 import { Flagpole } from "..";
+import { FlagpoleOutput } from '../flagpole';
 
 const fs = require('fs');
 
 /**
  * COMMAND LINE ARGUMENTS
  */
-let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'pack', 'login', 'logout', 'about'];
+let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'pack', 'login', 'logout', 'deploy', 'about'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
@@ -21,22 +22,33 @@ let argv = require('yargs')
         'e': 'env',
         'c': 'config',
         'd': 'debug',
-        'h': 'hide_banner'
+        'h': 'hide_banner',
+        'o': 'output',
+        'q': 'quiet'
     })
     .describe({
         's': 'Specify one or more suites to run',
         'e': 'Environment like: dev, staging, prod',
         'c': 'Path to config file',
         'd': 'Show extra debug info',
-        'h': 'Hide the output banner'
+        'h': 'Hide the output banner',
+        'o': 'Output: console, text, html, json, csv',
+        'l': 'Log style output, one per line',
+        'q': 'Quiet Mode: Silence all output'
     })
     .array('s')
     .string('e')
     .boolean('d')
     .boolean('h')
+    .boolean('q')
+    .boolean('l')
+    .string('o')
     .default('e', 'dev')
+    .default('o', 'console')
     .default('s', [])
     .default('h', false)
+    .default('q', false)
+    .default('l', false)
     .example('flagpole list', 'To show a list of test suites')
     .example('flagpole run', 'To run all test suites')
     .example('flagpole run -s smoke', 'To run just the suite called smoke')
@@ -71,7 +83,16 @@ if (commands.indexOf(String(Cli.command)) < 0) {
 /**
  * Settings
  */
-Flagpole.environment = argv.e;
+Flagpole.setEnvironment(argv.e);
+Flagpole.setOutput(argv.o);
+if (argv.l) {
+    Flagpole.logOutput = true;
+}
+if (argv.q) {
+    Cli.hideBanner = true;
+    Flagpole.quietMode = true;
+    Flagpole.automaticallyPrintToConsole = false;
+}
 Cli.hideBanner = argv.h;
 Cli.rootPath = Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
 
