@@ -41,20 +41,28 @@ export class ProjectConfig {
 
     protected config: FlagpoleConfig;
     public id: string = '';
-    public name: string = '';
-    public path: string = '';
+    public name: string = 'default';
+    public path: string = 'tests';
 
     constructor(config: FlagpoleConfig, opts: any) {
         this.config = config;
         if (Flagpole.toType(opts) == 'object') {
             this.id = opts.id || '';
-            this.name = opts.name || '';
-            this.path = opts.path || '';
+            this.name = opts.name || 'default';
+            this.path = opts.path || 'tests';
         }
     }
 
     public hasId(): boolean {
         return (this.id.length > 0);
+    }
+
+    public toJson() {
+        return {
+            id: this.id,
+            name: this.name,
+            path: this.path
+        }
     }
 
 }
@@ -173,7 +181,7 @@ export class FlagpoleConfig {
     public toString(): string {
         let config: FlagpoleConfig = this;
         return JSON.stringify({
-            project: this.project,
+            project: this.project.toJson(),
             environments: (function () {
                 let envs: any = {};
                 for (let key in config.environments) {

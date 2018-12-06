@@ -54,8 +54,10 @@ function init() {
         let tasks = [];
         let configFile = new config_1.FlagpoleConfig({
             configPath: configFilePath,
-            project: answers.project,
-            path: answers.path,
+            project: {
+                name: answers.project,
+                path: answers.path
+            }
         });
         answers.env.forEach(env => {
             configFile.addEnvironment(env);
@@ -78,7 +80,7 @@ function init() {
                 cli_helper_1.Cli.log('');
                 cli_helper_1.Cli.log('Config options:');
                 cli_helper_1.Cli.list([
-                    'Project: ' + configFile.projectName,
+                    'Project: ' + configFile.project.name,
                     'Test Path: ' + configFile.getTestsFolder(),
                     'Environments: ' + answers.env
                 ]);

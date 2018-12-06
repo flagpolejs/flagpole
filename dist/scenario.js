@@ -104,12 +104,11 @@ class Scenario {
         return (this.end !== null);
     }
     subheading(message) {
-        this.log.push(new consoleline_1.ConsoleLine(message));
+        this.log.push(new consoleline_1.SubheadingLine(message));
         return this;
     }
     comment(message) {
-        this.log.push(consoleline_1.ConsoleLine.comment('  »  ' + message));
-        this.passes.push(message);
+        this.log.push(new consoleline_1.CommentLine(message));
         return this;
     }
     assert(statement, message, actualValue) {
@@ -139,7 +138,7 @@ class Scenario {
             message = this.nextLabel;
             this.nextLabel = null;
         }
-        this.log.push(consoleline_1.ConsoleLine.pass('  ✔  ' + message));
+        this.log.push(new consoleline_1.PassLine(message));
         this.passes.push(message);
         return this;
     }
@@ -148,7 +147,12 @@ class Scenario {
             message = this.nextLabel;
             this.nextLabel = null;
         }
-        this.log.push(consoleline_1.ConsoleLine.fail('  ✕  ' + message, isOptional));
+        let line = new consoleline_1.FailLine(message);
+        if (isOptional) {
+            line.color = consoleline_1.ConsoleColor.FgMagenta;
+            line.textSuffix = '(Optional)';
+        }
+        this.log.push(line);
         if (!isOptional) {
             this.failures.push(message);
         }
@@ -203,9 +207,9 @@ class Scenario {
     }
     skip(message) {
         if (!this.hasExecuted()) {
-            message = "  »  Skipped" + (message ? ': ' + message : '');
+            message = "Skipped" + (message ? ': ' + message : '');
             this.start = Date.now();
-            this.log.push(new consoleline_1.ConsoleLine(message + "\n"));
+            this.log.push(new consoleline_1.CommentLine(message));
             this.end = Date.now();
             this.onDone(this);
         }
@@ -310,7 +314,7 @@ class Scenario {
         if (!this.hasExecuted() && this.url !== null) {
             this.start = Date.now();
             if (this.waitToExecute && this.initialized !== null) {
-                this.log.push(new consoleline_1.ConsoleLine('  »  Waited ' + (this.start - this.initialized) + 'ms'));
+                this.log.push(new consoleline_1.CommentLine('Waited ' + (this.start - this.initialized) + 'ms'));
             }
             this._isMock ?
                 this.executeMock() :
@@ -328,6 +332,9 @@ class Scenario {
         this.nextLabel = message;
         return this;
     }
+    getTitle() {
+        return this.title;
+    }
     getLog() {
         return this.log;
     }
@@ -337,7 +344,7 @@ class Scenario {
     }
     done() {
         this.end = Date.now();
-        this.log.push(new consoleline_1.ConsoleLine("  » Took " + this.getExecutionTime() + "ms\n"));
+        this.log.push(new consoleline_1.CommentLine("Took " + this.getExecutionTime() + 'ms'));
         this.onDone(this);
         return this;
     }

@@ -22,9 +22,14 @@ export declare class Cli {
     static command: string | null;
     static commandArg: string | null;
     static commandArg2: string | null;
+    static apiDomain: string;
     static log(message: string): void;
     static list(list: Array<string>): void;
     static exit(exitCode: number): void;
     static normalizePath(path: string): string;
     static parseConfigFile(configPath: string): FlagpoleConfig;
+    static getCredentials(): Promise<{
+        email: string;
+        token: string;
+    }>;
 }

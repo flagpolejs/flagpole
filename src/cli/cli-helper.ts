@@ -1,5 +1,7 @@
 import { FlagpoleConfig, SuiteConfig } from "./config";
 import { Flagpole } from "..";
+import { resolve } from 'path';
+import { ClorthoService, iCredentials } from 'clortho-lite';
 
 const fs = require('fs');
 const exec = require('child_process').exec;
@@ -154,6 +156,7 @@ export class Cli {
     static command: string | null = null;
     static commandArg: string | null = null;
     static commandArg2: string | null = null;
+    static apiDomain: string = 'https://us-central1-flagpolejs-5ea61.cloudfunctions.net'
 
     static log(message: string) {
         if (typeof message !== 'undefined') {
@@ -203,6 +206,42 @@ export class Cli {
             config = new FlagpoleConfig(configData);
         }
         return config;
+    }
+
+    static getCredentials(): Promise<{ email: string, token: string }> {
+        const serviceName: string = 'Flagpole JS';
+        const service: ClorthoService = new ClorthoService(serviceName);
+        let token: string;
+        let email: string;
+        return new Promise((resolve, reject) => {
+            Promise.all([
+                new Promise((resolve, reject) => {
+                    service.get('token')
+                        .then(function (credentials: iCredentials) {
+                            token = credentials.password;
+                            resolve();
+                        }).catch(function () {
+                            reject('No saved token.');
+                        })
+                }),
+                new Promise((resolve, reject) => {
+                    service.get('email')
+                        .then(function (credentials: iCredentials) {
+                            email = credentials.password;
+                            resolve();
+                        }).catch(function () {
+                            reject('No saved email.');
+                        })
+                })
+            ]).then(function () {
+                resolve({
+                    email: email,
+                    token: token
+                });
+            }).catch(function (err) {
+                reject('Not logged in. ' + err);
+            });
+        });
     }
     
 }

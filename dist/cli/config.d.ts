@@ -6,14 +6,27 @@ export declare class EnvConfig {
 }
 export declare class SuiteConfig {
     protected config: FlagpoleConfig;
+    id: string;
     name: string;
     constructor(config: FlagpoleConfig, opts: any);
     getPath(): string;
 }
+export declare class ProjectConfig {
+    protected config: FlagpoleConfig;
+    id: string;
+    name: string;
+    path: string;
+    constructor(config: FlagpoleConfig, opts: any);
+    hasId(): boolean;
+    toJson(): {
+        id: string;
+        name: string;
+        path: string;
+    };
+}
 export declare class FlagpoleConfig {
     protected configPath: string;
-    projectName: string;
-    testFolderName: string;
+    project: ProjectConfig;
     suites: {
         [key: string]: SuiteConfig;
     };
@@ -34,4 +47,5 @@ export declare class FlagpoleConfig {
     getSuiteNames(): string[];
     isValid(): boolean;
     toString(): string;
+    save(): Promise<any>;
 }

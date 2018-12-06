@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_1 = require("./node");
+const url_1 = require("url");
 var ResponseType;
 (function (ResponseType) {
     ResponseType[ResponseType["html"] = 0] = "html";
@@ -21,8 +22,8 @@ class GenericResponse {
         this._lastElement = new node_1.Node(this, 'Empty Element', null);
     }
     absolutizeUri(uri) {
-        let baseUrl = new URL(this.scenario.suite.buildUrl(this.scenario.getUrl() || ''));
-        return (new URL(uri, baseUrl.href)).href;
+        let baseUrl = new url_1.URL(this.scenario.suite.buildUrl(this.scenario.getUrl() || ''));
+        return (new url_1.URL(uri, baseUrl.href)).href;
     }
     getUrl() {
         return this._url;
@@ -99,7 +100,7 @@ class GenericResponse {
         return new node_1.Node(this, 'URL', this.getUrl());
     }
     path() {
-        return new node_1.Node(this, 'Path', new URL(this.getUrl()).pathname);
+        return new node_1.Node(this, 'Path', new url_1.URL(this.getUrl()).pathname);
     }
 }
 exports.GenericResponse = GenericResponse;

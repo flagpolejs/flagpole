@@ -1,5 +1,5 @@
 import { Cli, printSubheader, printHeader } from "./cli-helper";
-import { ClorthoService } from 'clortho-lite';
+import { ClorthoService, iCredentials } from 'clortho-lite';
 
 const request = require('request');
 const { prompt } = require('enquirer');
@@ -94,17 +94,15 @@ export function login() {
     Cli.log('');
     Cli.log('This site is in early private beta.');
 
-    service.get('email')
-        .then(function (email) {
-            Cli.log('');
-            Cli.log('You are already logged in as ' + email.password);
-            Cli.log('');
-            Cli.log('To sign in with a different account use the command: flagpole logout');
-            Cli.log('');
-            Cli.exit(0);
-        })
-        .catch(function (err) {
-            promptForLogin();
-        });
+    Cli.getCredentials().then(function (credentials: { email: string, token: string }) {
+        Cli.log('');
+        Cli.log('You are already logged in as ' + credentials.email);
+        Cli.log('');
+        Cli.log('To sign in with a different account use the command: flagpole logout');
+        Cli.log('');
+        Cli.exit(0);
+    }).catch(function () {
+        promptForLogin();
+    });
     
 }

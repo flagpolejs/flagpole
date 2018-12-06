@@ -27,17 +27,23 @@ function promptForLogin() {
         }
     ]).then(function (answers) {
         cli_helper_1.Cli.hideBanner = true;
-        request.post(loginEndPoint, { body: JSON.stringify({ email: answers.email, password: answers.password }) }, function (err, response, data) {
+        request.post(loginEndPoint, {
+            body: JSON.stringify({ email: answers.email, password: answers.password }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }, function (err, response, body) {
             cli_helper_1.Cli.log('');
             if (err) {
                 cli_helper_1.Cli.log(err);
                 cli_helper_1.Cli.log('');
                 cli_helper_1.Cli.exit(1);
             }
-            if (response.statusCode == 200) {
-                if (/[a-z0-9]{16}/.test(data)) {
+            if (response.statusCode == 201) {
+                let json = JSON.parse(body);
+                if (/[a-z0-9]{16}/.test(json.data.token)) {
                     service.set('email', answers.email);
-                    service.set('token', data)
+                    service.set('token', json.data.token)
                         .then(function (value) {
                         cli_helper_1.Cli.log('Logged in. Saved to your keychain.');
                         cli_helper_1.Cli.log('');
@@ -73,16 +79,14 @@ function login() {
     cli_helper_1.Cli.hideBanner = true;
     cli_helper_1.Cli.log('');
     cli_helper_1.Cli.log('This site is in early private beta.');
-    service.get('email')
-        .then(function (email) {
+    cli_helper_1.Cli.getCredentials().then(function (credentials) {
         cli_helper_1.Cli.log('');
-        cli_helper_1.Cli.log('You are already logged in as ' + email.password);
+        cli_helper_1.Cli.log('You are already logged in as ' + credentials.email);
         cli_helper_1.Cli.log('');
         cli_helper_1.Cli.log('To sign in with a different account use the command: flagpole logout');
         cli_helper_1.Cli.log('');
         cli_helper_1.Cli.exit(0);
-    })
-        .catch(function (err) {
+    }).catch(function () {
         promptForLogin();
     });
 }

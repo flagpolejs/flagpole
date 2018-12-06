@@ -1,19 +1,17 @@
 import { createZipArchive } from "./pack";
 import { Cli, printHeader, printSubheader } from "./cli-helper";
 import { ClorthoService, iCredentials } from 'clortho-lite';
-import { request } from 'request';
+
+const request = require('request');
 
 const serviceName: string = 'Flagpole JS';
 const service: ClorthoService = new ClorthoService(serviceName);
 
-const deployEndPoint: string = 'https://us-central1-flagpolejs-5ea61.cloudfunctions.net/api/project/';
+function uploadProject(token: string) {
 
-
-function uploadProject(email: string, token: string) {
-
-    if (Cli.config.project.hasId()) {
+    if (!Cli.config.project.hasId()) {
         request.post(
-            'https://us-central1-flagpolejs-5ea61.cloudfunctions.net/api/project',
+            Cli.apiDomain + '/api/project',
             {
                 body: JSON.stringify({
                     token: token,
@@ -108,14 +106,11 @@ export function deploy() {
     printHeader();
     printSubheader('Deploy Project to FlagpoleJS.com');
 
-    Promise.all([
-        service.get('email'),
-        service.get('token')
-    ]).then(function (credentials: iCredentials[]) {
-        uploadProject(credentials[0].password, credentials[1].password);
+    Cli.getCredentials().then(function (credentials: { email: string, token: string }) {
+        uploadProject(credentials.token);
     }).catch(function (err) {
         Cli.log('');
-        Cli.log('You are not logged in. Must be logged in to deploy.');
+        Cli.log(err + ' Must be logged in to deploy.');
         Cli.log('Use command: flagpole login');
         Cli.log('Create an account at: http://www.flagpolejs.com')
         Cli.log('');

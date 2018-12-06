@@ -41,7 +41,7 @@ function createZipArchive(zipPath, callback) {
     });
     archive.pipe(zipFile);
     archive.append(fs.createReadStream(cli_helper_1.Cli.configPath), { name: 'flagpole.json' });
-    archive.directory(cli_helper_1.Cli.config.getTestsFolder(), cli_helper_1.Cli.config.testFolderName);
+    archive.directory(cli_helper_1.Cli.config.getTestsFolder(), cli_helper_1.Cli.config.project.name);
     archive.finalize();
 }
 exports.createZipArchive = createZipArchive;

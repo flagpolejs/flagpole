@@ -15,11 +15,7 @@ mockRoutes.get('/test2.html')
     });
 
 let suite = Flagpole.Suite('Test')
-    .base('http://test.flagpole')
-    .setConsoleOutput(false)
-    .onDone(function (suite) {
-        suite.print();
-    });
+    .base('http://test.flagpole');
 
 suite.Scenario('Test 1')
     .open('/test.html')

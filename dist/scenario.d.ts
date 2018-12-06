@@ -1,10 +1,10 @@
 import { Suite } from "./suite";
-import { ConsoleLine } from "./consoleline";
+import { iLogLine } from "./consoleline";
 import { ResponseType, SimplifiedResponse } from "./response";
 export declare class Scenario {
     readonly suite: Suite;
     protected title: string;
-    protected log: Array<ConsoleLine>;
+    protected log: Array<iLogLine>;
     protected failures: Array<string>;
     protected passes: Array<string>;
     protected onDone: Function;
@@ -67,7 +67,8 @@ export declare class Scenario {
     execute(): Scenario;
     mock(localPath: string): Scenario;
     label(message: string): Scenario;
-    getLog(): Array<ConsoleLine>;
+    getTitle(): string;
+    getLog(): Array<iLogLine>;
     protected getExecutionTime(): number;
     done(): Scenario;
     getUrl(): string | null;

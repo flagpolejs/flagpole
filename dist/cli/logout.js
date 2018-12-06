@@ -8,13 +8,12 @@ function logout() {
     cli_helper_1.Cli.hideBanner = true;
     cli_helper_1.printHeader();
     cli_helper_1.printSubheader('Logout of FlagpoleJS.com');
-    service.get('email')
-        .then(function (email) {
+    cli_helper_1.Cli.getCredentials().then(function (credentials) {
         cli_helper_1.Cli.log('');
         service.remove('token');
         service.remove('email')
             .then(function (result) {
-            cli_helper_1.Cli.log('Logged you out of account: ' + email.password);
+            cli_helper_1.Cli.log('Logged you out of account: ' + credentials.email);
             cli_helper_1.Cli.log('');
             cli_helper_1.Cli.exit(0);
         })
@@ -23,8 +22,7 @@ function logout() {
             cli_helper_1.Cli.log('');
             cli_helper_1.Cli.exit(1);
         });
-    })
-        .catch(function (err) {
+    }).catch(function () {
         cli_helper_1.Cli.log('');
         cli_helper_1.Cli.log('You were not logged in.');
         cli_helper_1.Cli.log('');

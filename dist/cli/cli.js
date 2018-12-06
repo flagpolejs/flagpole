@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const cli_helper_1 = require("./cli-helper");
 const __1 = require("..");
 const fs = require('fs');
-let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'pack', 'login', 'logout', 'about'];
+let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'pack', 'login', 'logout', 'deploy', 'about'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
@@ -17,22 +17,33 @@ let argv = require('yargs')
     'e': 'env',
     'c': 'config',
     'd': 'debug',
-    'h': 'hide_banner'
+    'h': 'hide_banner',
+    'o': 'output',
+    'q': 'quiet'
 })
     .describe({
     's': 'Specify one or more suites to run',
     'e': 'Environment like: dev, staging, prod',
     'c': 'Path to config file',
     'd': 'Show extra debug info',
-    'h': 'Hide the output banner'
+    'h': 'Hide the output banner',
+    'o': 'Output: console, text, html, json, csv',
+    'l': 'Log style output, one per line',
+    'q': 'Quiet Mode: Silence all output'
 })
     .array('s')
     .string('e')
     .boolean('d')
     .boolean('h')
+    .boolean('q')
+    .boolean('l')
+    .string('o')
     .default('e', 'dev')
+    .default('o', 'console')
     .default('s', [])
     .default('h', false)
+    .default('q', false)
+    .default('l', false)
     .example('flagpole list', 'To show a list of test suites')
     .example('flagpole run', 'To run all test suites')
     .example('flagpole run -s smoke', 'To run just the suite called smoke')
@@ -60,7 +71,16 @@ if (commands.indexOf(String(cli_helper_1.Cli.command)) < 0) {
     cli_helper_1.Cli.log("Example: flagpole run\n");
     cli_helper_1.Cli.exit(1);
 }
-__1.Flagpole.environment = argv.e;
+__1.Flagpole.setEnvironment(argv.e);
+__1.Flagpole.setOutput(argv.o);
+if (argv.l) {
+    __1.Flagpole.logOutput = true;
+}
+if (argv.q) {
+    cli_helper_1.Cli.hideBanner = true;
+    __1.Flagpole.quietMode = true;
+    __1.Flagpole.automaticallyPrintToConsole = false;
+}
 cli_helper_1.Cli.hideBanner = argv.h;
 cli_helper_1.Cli.rootPath = cli_helper_1.Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
 cli_helper_1.Cli.configPath = (argv.c || cli_helper_1.Cli.rootPath + 'flagpole.json');

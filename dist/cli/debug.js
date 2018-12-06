@@ -29,7 +29,8 @@ function debug(argv) {
     cli_helper_1.Cli.log('');
     cli_helper_1.Cli.log('Other settings:');
     cli_helper_1.Cli.list([
-        'Environment: ' + __1.Flagpole.environment,
+        'Environment: ' + __1.Flagpole.getEnvironment(),
+        'Output: ' + __1.Flagpole.getOutput().toString(),
         'Root Path: ' + cli_helper_1.Cli.config.getConfigFolder(),
         'Tests Path: ' + cli_helper_1.Cli.config.getTestsFolder()
     ]);

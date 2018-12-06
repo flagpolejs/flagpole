@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const url_1 = require("url");
 const _1 = require(".");
 const isValidDataUrl = require('valid-data-url');
 class Link {
@@ -8,8 +9,8 @@ class Link {
         this.uri = uri;
     }
     getUri(queryString) {
-        let baseUrl = new URL(this.response.scenario.suite.buildUrl(this.response.scenario.getUrl() || ''));
-        let thisUrl = new URL(this.uri, baseUrl.href);
+        let baseUrl = new url_1.URL(this.response.scenario.suite.buildUrl(this.response.scenario.getUrl() || ''));
+        let thisUrl = new url_1.URL(this.uri, baseUrl.href);
         if (queryString) {
             let type = _1.Flagpole.toType(queryString);
             if (type == 'object') {

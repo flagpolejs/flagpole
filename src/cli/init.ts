@@ -57,8 +57,10 @@ export function init() {
 
         let configFile: FlagpoleConfig = new FlagpoleConfig({
             configPath: configFilePath,
-            project: answers.project,
-            path: answers.path,
+            project: {
+                name: answers.project,
+                path: answers.path
+            }
         });
         answers.env.forEach(env => {
             configFile.addEnvironment(env);

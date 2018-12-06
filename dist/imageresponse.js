@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const response_1 = require("./response");
 const node_1 = require("./node");
+const url_1 = require("url");
 ;
 class ImageResponse extends response_1.GenericResponse {
     constructor(scenario, url, response) {
@@ -26,7 +27,7 @@ class ImageResponse extends response_1.GenericResponse {
         return new node_1.Node(this, 'URL of image', this.imageProperties.url);
     }
     path() {
-        return new node_1.Node(this, 'Path', new URL(this.imageProperties.url).pathname);
+        return new node_1.Node(this, 'Path', new url_1.URL(this.imageProperties.url).pathname);
     }
 }
 exports.ImageResponse = ImageResponse;

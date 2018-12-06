@@ -1,21 +1,42 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const suite_1 = require("./suite");
-const consoleline_1 = require("./consoleline");
 const cheerio = require('cheerio');
+var FlagpoleOutput;
+(function (FlagpoleOutput) {
+    FlagpoleOutput[FlagpoleOutput["console"] = 1] = "console";
+    FlagpoleOutput[FlagpoleOutput["text"] = 2] = "text";
+    FlagpoleOutput[FlagpoleOutput["json"] = 3] = "json";
+    FlagpoleOutput[FlagpoleOutput["html"] = 4] = "html";
+    FlagpoleOutput[FlagpoleOutput["csv"] = 5] = "csv";
+    FlagpoleOutput[FlagpoleOutput["tsv"] = 6] = "tsv";
+    FlagpoleOutput[FlagpoleOutput["psv"] = 7] = "psv";
+})(FlagpoleOutput = exports.FlagpoleOutput || (exports.FlagpoleOutput = {}));
 class Flagpole {
+    static setEnvironment(env) {
+        Flagpole.environment = env;
+    }
+    static getEnvironment() {
+        return Flagpole.environment;
+    }
+    static setOutput(output) {
+        if (typeof output == 'string') {
+            if (Object.keys(FlagpoleOutput).includes(output)) {
+                if (parseInt(output) > 0) {
+                    Flagpole.output = parseInt(output);
+                }
+                else {
+                    Flagpole.output = FlagpoleOutput[output];
+                }
+            }
+        }
+    }
+    static getOutput() {
+        return Flagpole.output;
+    }
     static Suite(title) {
         let suite = new suite_1.Suite(title);
         return suite;
-    }
-    static heading(message) {
-        let length = Math.max(message.length + 10, 50), padding = (length - message.length) / 2;
-        new consoleline_1.ConsoleLine('='.repeat(length), "\x1b[33m").write();
-        new consoleline_1.ConsoleLine(' '.repeat(padding) + message.toLocaleUpperCase() + ' '.repeat(padding), "\x1b[33m").write();
-        new consoleline_1.ConsoleLine('='.repeat(length), "\x1b[33m").write();
-    }
-    static message(message, color) {
-        new consoleline_1.ConsoleLine(message, color).write();
     }
     static toSimplifiedResponse(response, body) {
         return {
@@ -49,5 +70,9 @@ class Flagpole {
         return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLocaleLowerCase();
     }
 }
+Flagpole.automaticallyPrintToConsole = false;
+Flagpole.quietMode = false;
+Flagpole.logOutput = false;
 Flagpole.environment = 'dev';
+Flagpole.output = FlagpoleOutput.console;
 exports.Flagpole = Flagpole;
