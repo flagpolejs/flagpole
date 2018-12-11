@@ -1,11 +1,62 @@
 import { createZipArchive } from "./pack";
 import { Cli, printHeader, printSubheader } from "./cli-helper";
-import { ClorthoService, iCredentials } from 'clortho-lite';
 
 const request = require('request');
+const FormData = require('form-data');
+const fs = require('fs');
 
-const serviceName: string = 'Flagpole JS';
-const service: ClorthoService = new ClorthoService(serviceName);
+const uploadPackage = function(token: string) {
+
+    createZipArchive(process.cwd() + '/flagpole.zip', function (err: any, fileName: string) {
+        // If the packager returned an error
+        if (err) {
+            Cli.log('');
+            Cli.log('Error: ' + err);
+            Cli.log('');
+            Cli.exit(1);
+        }
+        // Make sure the file exists
+        if (!fs.existsSync(fileName)) {
+            Cli.log('');
+            Cli.log('Error generating package.');
+            Cli.log('');
+            Cli.exit(1);
+        }
+        // Okay let's send it then
+        let uri: string = Cli.apiDomain + '/api/project/' + Cli.config.project.id + '/package';
+        request.post({
+            url: uri,
+            formData: {
+                token: token,
+                file: fs.createReadStream(fileName)
+            }
+        }, function (err, response, body) {
+            // Error sending
+            if (err) {
+                Cli.log('');
+                Cli.log('Error Deploying: ' + err);
+                Cli.log('');
+                Cli.exit(1);
+            }
+            // Got back a 202
+            if (response.statusCode == 202) {
+                Cli.log('');
+                Cli.log('Project ' + Cli.config.project.name + ' was posted to your account on FlagpoleJS.com');
+                Cli.log('');
+                Cli.exit(0);
+            }
+            // Not a 202
+            else {
+                Cli.log('');
+                Cli.log('Error Uploading Deploy (' + response.statusCode + ')');
+                Cli.log(body);
+                Cli.log('');
+                Cli.exit(1);
+            }
+        });
+    });
+
+}
 
 function uploadProject(token: string) {
 
@@ -25,78 +76,18 @@ function uploadProject(token: string) {
                 let json = JSON.parse(body);
                 Cli.config.project.id = json.data.id || '';
                 Cli.config.save().then(function () {
-                    
-                }).catch(function () {
-                    
+                    uploadPackage(token);
+                }).catch(function (err) {
+                    Cli.log('');
+                    Cli.log('Error uploading project: ' + err);
+                    Cli.log('');
+                    Cli.exit(1);
                 });
             });
     }
-
-    /*
-
-    createZipArchive(process.cwd() + '/flagpole.zip', function (err: any, fileName: string) {
-        // If the packager returned an error
-        if (err) {
-            Cli.log('');
-            Cli.log('Error: ' + err);
-            Cli.log('');
-            Cli.exit(1);
-        }
-        // Make sure the file exists
-        if (!fs.existsSync(fileName)) {
-            Cli.log('');
-            Cli.log('Error generating package.');
-            Cli.log('');
-            Cli.exit(1);
-        }
-        // Okay let's send it then
-        let uri: string = deployEndPoint + Cli.config.projectName + '?email=' + email + '&token=' + token;
-        request({
-            method: 'POST',
-            preambleCRLF: true,
-            postambleCRLF: true,
-            uri: uri,
-            formData: {
-                file: fs.createReadStream(fileName),
-                filetype: 'zip',
-                filename: 'flagpole.zip',
-                email: email,
-                token: token,
-            },
-        }, function (err, response, body) {
-            // Error sending
-            if (err) {
-                Cli.log('');
-                Cli.log('Error Deploying: ' + err);
-                Cli.log('');
-                Cli.exit(1);
-            }
-            // Got back a 200
-            if (response.statusCode == 200) {
-                if (body == 'ok') {
-                    Cli.log('');
-                    Cli.log('Project ' + Cli.config.projectName + ' was posted to your account on FlagpoleJS.com');
-                    Cli.log('');
-                    Cli.exit(0);
-                }
-                else {
-                    Cli.log('');
-                    Cli.log('Error sending: ' + body);
-                    Cli.log('');
-                    Cli.exit(0);
-                }
-            }
-            // Not a 200
-            else {
-                Cli.log('');
-                Cli.log('Error Uploading Deploy: ' + err);
-                Cli.log('');
-                Cli.exit(1);
-            }
-        });
-    });
-
-    */
+    else {
+        uploadPackage(token);
+    }
 
 }
 

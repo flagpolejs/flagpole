@@ -4,7 +4,7 @@ import { ClorthoService, iCredentials } from 'clortho-lite';
 const request = require('request');
 const { prompt } = require('enquirer');
 
-const loginEndPoint: string = 'https://us-central1-flagpolejs-5ea61.cloudfunctions.net/api/token';
+const loginEndPoint: string = 'https://www.flagpolejs.com/api/token';
 const serviceName: string = 'Flagpole JS';
 const service: ClorthoService = new ClorthoService(serviceName);
 
@@ -43,12 +43,13 @@ function promptForLogin() {
                 Cli.log('');
                 if (err) {
                     Cli.log(err);
+                    Cli.log(body);
                     Cli.log('');
                     Cli.exit(1);
                 }
                 if (response.statusCode == 201) {
                     let json = JSON.parse(body);
-                    if (/[a-z0-9]{16}/.test(json.data.token)) {
+                    if (json.data.token) {
                         service.set('email', answers.email);
                         service.set('token', json.data.token)
                             .then(function (value) {
@@ -65,6 +66,7 @@ function promptForLogin() {
                     }
                     else {
                         Cli.log('Login failed.');
+                        Cli.log(body);
                         Cli.log('');
                         Cli.exit(1);
                     }
