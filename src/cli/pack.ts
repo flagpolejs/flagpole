@@ -42,7 +42,7 @@ export function createZipArchive(zipPath: string, callback?: Function) {
     });
     archive.pipe(zipFile);
     archive.append(fs.createReadStream(Cli.configPath), { name: 'flagpole.json' });
-    archive.directory(Cli.config.getTestsFolder(), Cli.config.project.name);
+    archive.directory(Cli.config.getTestsFolder(), Cli.config.project.path);
     archive.finalize();
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "1.2.16",
+  "version": "1.2.18",
   "description": "Simple and fast DOM integration and REST API testing framework.",
   "files": [
     "dist/",

@@ -13,9 +13,6 @@
   "suites": {
     "flagpoleapi": {
       "name": "flagpoleapi"
-    },
-    "test": {
-      "name": "test"
     }
   }
 }

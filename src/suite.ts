@@ -151,9 +151,11 @@ export class Suite {
         let out: any = {
             title: this.title,
             baseUrl: this.baseUrl,
-            duration: this.getDuration(),
+            summary: {},
             scenarios: []
         };
+        let failCount: number = 0;
+        let passCount: number = 0;
         this.scenarios.forEach(function(scenario, index) {
             out.scenarios[index] = {
                 done: scenario.isDone(),
@@ -165,12 +167,20 @@ export class Suite {
                 out.scenarios[index].log.push(line.toJson());
                 if (line.type == LogLineType.Pass) {
                     out.scenarios[index].passCount++;
+                    passCount++;
                 }
                 else if (line.type == LogLineType.Fail) {
                     out.scenarios[index].failCount++;
+                    failCount++;
                 }
             });
         });
+        out.summary = {
+            passed: (failCount == 0),
+            passCount: passCount,
+            failCount: failCount,
+            duration: this.getDuration()
+        }
         return out;
     }
 
