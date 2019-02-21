@@ -9,6 +9,10 @@ import { ResourceResponse } from "./resourceresponse";
 import { ScriptResponse } from "./scriptresponse";
 import { CssResponse } from "./cssresponse";
 import { Mock } from "./mock";
+import * as puppeteer from "puppeteer";
+import { Response as PuppeteerResponse } from "puppeteer";
+import { Browser } from "./Browser";
+import * as Promise from "bluebird";
 
 let request = require('request');
 
@@ -37,18 +41,29 @@ export class Scenario {
     protected optionalAssertion: boolean = false;
     protected ignoreAssertion: boolean = false;
 
-    protected _then: Function | null = null;
+    protected _thens: Function[] = [];
     protected _isMock: boolean = false;
+    private browser: Browser | null = null;
+    private browserOptions: BrowserOptions | null = null;
 
     protected options: any = {
         method: 'GET',
         headers: {}
     };
 
-    constructor(suite: Suite, title: string, onDone: Function) {
+    constructor(suite: Suite, title: string, browserOptions: BrowserOptions | null, onDone: Function) {
         this.initialized = Date.now();
         this.suite = suite;
         this.title = title;
+
+        const defaultBrowserOptions: BrowserOptions = {
+            headless: true,
+            recordConsole: true,
+            outputConsole: false,
+        };
+
+        this.browserOptions = (!browserOptions) ? null : Object.assign(defaultBrowserOptions, browserOptions);
+
         this.onDone = onDone;
         this.subheading(title);
     }
@@ -364,8 +379,12 @@ export class Scenario {
     public then(callback: Function): Scenario {
         // If it hasn't already been executed
         if (!this.hasExecuted()) {
-            this._then = callback;
-            this.executeWhenReady();
+            this._thens.push(callback);
+
+            // Execute at the next opportunity.
+            setTimeout(() => {
+                this.executeWhenReady();
+            }, 0);
         }
         return this;
     }
@@ -436,10 +455,18 @@ export class Scenario {
         let scenarioType: { name: string, responseObject } = this.getScenarioType();
         this.requestLoaded = Date.now();
         this.pass('Loaded ' + scenarioType.name + ' ' + this.url);
-        if (this._then !== null && this.url !== null) {
-            this._then(
-                new scenarioType.responseObject(this, this.url, simplifiedResponse)
-            );
+        
+        if (this._thens.length > 0 && this.url !== null) {
+            const _thens = this._thens;
+            Promise.mapSeries(_thens, (_then) => {
+                return _then(
+                    new scenarioType.responseObject(this, this.url, simplifiedResponse)
+                );
+            })
+            .then(() => {
+                this.done();
+            });
+            return;
         }
         this.done();
     }
@@ -467,16 +494,44 @@ export class Scenario {
                 });
             }
             else {
-                request(this.options, function (error, response, body) {
-                    if (!error) {
-                        scenario.processResponse(Flagpole.toSimplifiedResponse(response, body));
-                    }
-                    else {
+                if (this.hasBrowser()) {
+                    this.getBrowser()
+                    .open(this.options.uri)
+                    .then((next: { response: puppeteer.Response; body: string; }) => {
+                        const response: puppeteer.Response = next.response;
+                        const body: string = next.body;
+
+                        if (response !== null) {
+                            scenario.processResponse(Flagpole.toSimplifiedResponse({
+                                statusCode: response.status(),
+                                body: body,
+                                headers: response.headers(),
+                            }, body));
+                        } else {
+                            scenario.fail('Failed to load ' + scenario.url);
+                            scenario.comment('No response.');
+                            scenario.done();
+                        }
+
+                        return;
+                    })
+                    .catch((e) => {
                         scenario.fail('Failed to load ' + scenario.url);
-                        scenario.comment(error);
+                        scenario.comment(e);
                         scenario.done();
-                    }
-                });
+                    });
+                } else {
+                    request(this.options, function (error, response, body) {
+                        if (!error) {
+                            scenario.processResponse(Flagpole.toSimplifiedResponse(response, body));
+                        }
+                        else {
+                            scenario.fail('Failed to load ' + scenario.url);
+                            scenario.comment(error);
+                            scenario.done();
+                        }
+                    });
+                }
             }
         }
     }
@@ -506,7 +561,7 @@ export class Scenario {
             }
             // Execute it
             this._isMock ?
-                this.executeMock() :
+                this.executeMock() : 
                 this.executeRequest();
         }
         return this;
@@ -587,7 +642,7 @@ export class Scenario {
      * We ready to pull the trigger on this one?
      */
     public canExecute(): boolean {
-        return (!this.hasExecuted() && this.url !== null && this._then !== null);
+        return (!this.hasExecuted() && this.url !== null && this._thens.length > 0);
     }
 
     /**
@@ -640,4 +695,27 @@ export class Scenario {
         return this.setResponseType(ResponseType.resource);
     }
 
+    public getBrowserOptions(): BrowserOptions {
+        return this.browserOptions || {};
+    }
+
+    public hasBrowser(): boolean {
+        return !!this.browserOptions;
+    }
+
+    public getBrowser(): Browser {
+        if (!this.browser) {
+            this.browser = new Browser(this.getBrowserOptions());
+        }
+
+        return this.browser;
+    }
+}
+
+export interface BrowserOptions {
+    headless?: boolean;
+    recordConsole?: boolean;
+    outputConsole?: boolean;
+    width?: number;
+    height?: number;
 }

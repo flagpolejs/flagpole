@@ -1,0 +1,10 @@
+{
+    "files.exclude": {
+        // Folders
+        ".vscode": true,
+        "node_modules": true,
+        "dist": true
+
+        // Files
+    },
+}

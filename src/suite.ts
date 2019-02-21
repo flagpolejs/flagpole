@@ -1,8 +1,9 @@
 import { Flagpole } from "./index";
-import { Scenario } from "./scenario";
+import { Scenario, BrowserOptions } from "./scenario";
 import { iLogLine, LogLineType, HeadingLine, DecorationLine, CommentLine, LineBreak, CustomLine, ConsoleColor, SubheadingLine, LogLine, HorizontalRule } from "./consoleline";
 import { URL } from 'url';
 import { FlagpoleOutput } from './flagpole';
+import * as puppeteer from "puppeteer";
 
 /**
  * A suite contains many scenarios
@@ -227,9 +228,9 @@ export class Suite {
      * @returns {Scenario}
      * @constructor
      */
-    public Scenario(title: string): Scenario {
+    public Scenario(title: string, browserOptions?: BrowserOptions): Scenario {
         let suite: Suite = this;
-        let scenario: Scenario = new Scenario(this, title, function() {
+        let scenario: Scenario = new Scenario(this, title, browserOptions || null, function() {
             if (suite.isDone()) {
                 if (Flagpole.automaticallyPrintToConsole) {
                     suite.print();
@@ -351,5 +352,4 @@ export class Suite {
             return scenario.failed();
         });
     }
-
 }

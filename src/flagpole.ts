@@ -66,7 +66,11 @@ export class Flagpole {
      * @param body
      * @returns {SimplifiedResponse}
      */
-    static toSimplifiedResponse(response, body): SimplifiedResponse {
+    static toSimplifiedResponse(response: {
+            statusCode: number;
+            body: string;
+            headers: { [name: string]: string; };
+        }, body): SimplifiedResponse {
         return {
             statusCode: response.statusCode,
             body: body,
