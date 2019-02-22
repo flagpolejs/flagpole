@@ -228,9 +228,9 @@ export class Suite {
      * @returns {Scenario}
      * @constructor
      */
-    public Scenario(title: string, browserOptions?: BrowserOptions): Scenario {
+    public Scenario(title: string): Scenario {
         let suite: Suite = this;
-        let scenario: Scenario = new Scenario(this, title, browserOptions || null, function() {
+        let scenario: Scenario = new Scenario(this, title, function() {
             if (suite.isDone()) {
                 if (Flagpole.automaticallyPrintToConsole) {
                     suite.print();

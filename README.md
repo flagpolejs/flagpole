@@ -470,7 +470,7 @@ const suite = Flagpole.Suite('Test Google Search')
         suite.print();
     });
 
-const browserOptions = {
+const browserOpts = {
     headless: true,
     recordConsole: true,
     outputConsole: false,
@@ -478,7 +478,8 @@ const browserOptions = {
     height: 768,
 };
 
-const homepage = suite.Scenario('Homepage', browserOptions)
+const homepage = suite.Scenario('Homepage')
+    .browser(browserOpts)
     .open('/')
     .then((response) => {
         const scenario = response.scenario;

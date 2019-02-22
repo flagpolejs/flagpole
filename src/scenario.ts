@@ -43,7 +43,7 @@ export class Scenario {
 
     protected _thens: Function[] = [];
     protected _isMock: boolean = false;
-    private browser: Browser | null = null;
+    private _browser: Browser | null = null;
     private browserOptions: BrowserOptions | null = null;
 
     protected options: any = {
@@ -51,18 +51,10 @@ export class Scenario {
         headers: {}
     };
 
-    constructor(suite: Suite, title: string, browserOptions: BrowserOptions | null, onDone: Function) {
+    constructor(suite: Suite, title: string, onDone: Function) {
         this.initialized = Date.now();
         this.suite = suite;
         this.title = title;
-
-        const defaultBrowserOptions: BrowserOptions = {
-            headless: true,
-            recordConsole: true,
-            outputConsole: false,
-        };
-
-        this.browserOptions = (!browserOptions) ? null : Object.assign(defaultBrowserOptions, browserOptions);
 
         this.onDone = onDone;
         this.subheading(title);
@@ -704,11 +696,29 @@ export class Scenario {
     }
 
     public getBrowser(): Browser {
-        if (!this.browser) {
-            this.browser = new Browser(this.getBrowserOptions());
+        if (!this._browser) {
+            this._browser = new Browser(this.getBrowserOptions());
         }
 
-        return this.browser;
+        return this._browser;
+    }
+
+    /**
+     * Set browser options.
+     * 
+     * @param {BrowserOptions}
+     * @returns {Scenario}
+     */
+    public browser(browserOptions: BrowserOptions): Scenario {
+        const defaultBrowserOptions: BrowserOptions = {
+            headless: true,
+            recordConsole: true,
+            outputConsole: false,
+        };
+
+        this.browserOptions = (!browserOptions) ? null : Object.assign(defaultBrowserOptions, browserOptions);
+
+        return this;
     }
 }
 
