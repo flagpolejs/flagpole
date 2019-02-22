@@ -9,8 +9,7 @@ import { ResourceResponse } from "./resourceresponse";
 import { ScriptResponse } from "./scriptresponse";
 import { CssResponse } from "./cssresponse";
 import { Mock } from "./mock";
-import * as puppeteer from "puppeteer";
-import { Response as PuppeteerResponse } from "puppeteer";
+import * as puppeteer from "puppeteer-core";
 import { Browser } from "./Browser";
 import * as Promise from "bluebird";
 

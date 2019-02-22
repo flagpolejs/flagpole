@@ -3,7 +3,6 @@ import { Scenario, BrowserOptions } from "./scenario";
 import { iLogLine, LogLineType, HeadingLine, DecorationLine, CommentLine, LineBreak, CustomLine, ConsoleColor, SubheadingLine, LogLine, HorizontalRule } from "./consoleline";
 import { URL } from 'url';
 import { FlagpoleOutput } from './flagpole';
-import * as puppeteer from "puppeteer";
 
 /**
  * A suite contains many scenarios
