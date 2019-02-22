@@ -1,5 +1,5 @@
 import { Flagpole } from "./index";
-import { Scenario } from "./scenario";
+import { Scenario, BrowserOptions } from "./scenario";
 import { iLogLine, LogLineType, HeadingLine, DecorationLine, CommentLine, LineBreak, CustomLine, ConsoleColor, SubheadingLine, LogLine, HorizontalRule } from "./consoleline";
 import { URL } from 'url';
 import { FlagpoleOutput } from './flagpole';
@@ -351,5 +351,4 @@ export class Suite {
             return scenario.failed();
         });
     }
-
 }
