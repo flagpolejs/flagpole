@@ -91,6 +91,11 @@ export class TestRunner {
         if (Flagpole.logOutput) {
             opts += ' -l';
         }
+
+        // Set Flagpole.exitOnDone.  This will typically only be set for tests run
+        // through the cli.
+        opts += ' -x';
+
         opts += ' -o ' + Flagpole.getOutput();
 
         let child = exec('node ' + filePath + opts);

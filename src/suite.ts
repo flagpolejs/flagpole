@@ -234,9 +234,11 @@ export class Suite {
                 if (Flagpole.automaticallyPrintToConsole) {
                     suite.print();
                 }
-                process.exit(
-                    suite.passed() ? 0 : 1
-                );
+                if (Flagpole.exitOnDone) {
+                    process.exit(
+                        suite.passed() ? 0 : 1
+                    );
+                }
             }
         });
         scenario.verifySslCert(this._verifySslCert);
