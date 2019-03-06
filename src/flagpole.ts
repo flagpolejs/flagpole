@@ -21,6 +21,7 @@ export class Flagpole {
 
     protected static environment: string = 'dev';
     protected static output: FlagpoleOutput = FlagpoleOutput.console;
+    public static exitOnDone: boolean = false;
 
     public static setEnvironment(env: string) {
         Flagpole.environment = env;

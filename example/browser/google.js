@@ -2,6 +2,8 @@ const Flagpole = require('../../dist/index.js').Flagpole;
 const bluebird = require('bluebird');
 const Promise = bluebird;
 
+Flagpole.exitOnDone = true;
+
 const suite = Flagpole.Suite('Test Google Search')
     .base('https://www.google.com/')
     .onDone(function (suite) {

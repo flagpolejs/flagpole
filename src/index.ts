@@ -22,6 +22,11 @@ process.argv.forEach(function (arg: string) {
         lastArg = null;
         return;
     }
+    else if (arg == '-x') {
+        Flagpole.exitOnDone = true;
+        lastArg = null;
+        return;
+    }
     lastArg = arg;
 });
 
