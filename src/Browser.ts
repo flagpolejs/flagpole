@@ -81,7 +81,7 @@ export class Browser {
                     });
                 }
     
-                return page.goto(url)
+                return page.goto(url, {waitUntil: 'networkidle2'})
                 .then((response) => {
                     return <puppeteer.Response> response;
                 });
