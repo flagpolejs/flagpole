@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "1.2.21",
+  "version": "1.2.23",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -25,14 +25,14 @@
     "cheerio": "^1.0.0-rc.2",
     "clortho-lite": "^2.0.6",
     "css": "^2.2.4",
-    "enquirer": "^2.1.0",
+    "enquirer": "^2.3.0",
     "form-data": "^2.3.3",
-    "nock": "^10.0.2",
+    "nock": "^10.0.6",
     "probe-image-size": "^4.0.0",
     "puppeteer-core": "1.11.0",
-    "request": "^2.87.0",
+    "request": "^2.88.0",
     "valid-data-url": "^1.0.0",
-    "yargs": "^11.0.0"
+    "yargs": "^11.1.0"
   },
   "keywords": [
     "qa",
@@ -50,12 +50,12 @@
     "automation"
   ],
   "devDependencies": {
-    "@types/bluebird": "^3.5.25",
-    "@types/cheerio": "^0.22.9",
+    "@types/bluebird": "^3.5.26",
+    "@types/cheerio": "^0.22.11",
     "@types/inquirer": "0.0.43",
-    "@types/puppeteer": "^1.12.0",
+    "@types/puppeteer": "^1.12.2",
     "@types/puppeteer-core": "^1.9.0",
     "puppeteer": "1.11.0",
-    "typescript": "^2.8.3"
+    "typescript": "^2.9.2"
   }
 }
