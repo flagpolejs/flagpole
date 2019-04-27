@@ -190,7 +190,7 @@ export class Suite {
         html += new HeadingLine(this.getTitle()).toHTML() + "\n";
         html += "<aside>\n";
         html += "<ul>\n";
-        html += new CommentLine('Duartion: ' + this.getDuration() + 'ms').toHTML();
+        html += new CommentLine('Duration: ' + this.getDuration() + 'ms').toHTML();
         html += new CommentLine('Base URL: ' + this.baseUrl).toHTML();
         html += new CommentLine('Environment: ' + Flagpole.getEnvironment()).toHTML();
         html += "</ul>\n";
