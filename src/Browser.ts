@@ -1,5 +1,4 @@
 import * as puppeteer from "puppeteer-core";
-import { BrowserOptions } from "./scenario";
 
 export class Browser {
     private browserOptions: BrowserOptions = {};
@@ -43,14 +42,21 @@ export class Browser {
 
         return this.dynamicPuppeteer
         .then((puppeteer) => {
-            return puppeteer.launch({
+            const launchOptions = {
                 ignoreHTTPSErrors: true,
                 headless: browserOptions.headless,
                 defaultViewport: {
                     width: browserOptions.width || 800,
                     height: browserOptions.height || 600,
                 },
-            })
+            };
+
+            // Copy any puppeteerLaunchOptions to our launchOptions.
+            if (browserOptions.puppeteerLaunchOptions) {
+                Object.assign(launchOptions, browserOptions.puppeteerLaunchOptions);
+            }
+
+            return puppeteer.launch(launchOptions)
             .then((browser) => {
                 this.browser = browser;
     
@@ -130,4 +136,13 @@ export type ConsoleMessage = {
     type: string;
     text: string;
     source: puppeteer.ConsoleMessage;
+};
+
+export interface BrowserOptions {
+    headless?: boolean;
+    recordConsole?: boolean;
+    outputConsole?: boolean;
+    width?: number;
+    height?: number;
+    puppeteerLaunchOptions?: puppeteer.LaunchOptions;
 };

@@ -10,7 +10,7 @@ import { ScriptResponse } from "./scriptresponse";
 import { CssResponse } from "./cssresponse";
 import { Mock } from "./mock";
 import * as puppeteer from "puppeteer-core";
-import { Browser } from "./Browser";
+import { Browser, BrowserOptions } from "./Browser";
 import * as Promise from "bluebird";
 
 let request = require('request');
@@ -719,12 +719,4 @@ export class Scenario {
 
         return this;
     }
-}
-
-export interface BrowserOptions {
-    headless?: boolean;
-    recordConsole?: boolean;
-    outputConsole?: boolean;
-    width?: number;
-    height?: number;
 }

@@ -1,5 +1,5 @@
 import { Flagpole } from "./index";
-import { Scenario, BrowserOptions } from "./scenario";
+import { Scenario } from "./scenario";
 import { iLogLine, LogLineType, HeadingLine, DecorationLine, CommentLine, LineBreak, CustomLine, ConsoleColor, SubheadingLine, LogLine, HorizontalRule } from "./consoleline";
 import { URL } from 'url';
 import { FlagpoleOutput } from './flagpole';
