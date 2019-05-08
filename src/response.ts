@@ -2,6 +2,7 @@ import { Scenario } from "./scenario";
 import { iResponse, SimplifiedResponse } from "./response";
 import { Node } from "./node";
 import { URL } from 'url';
+import { Cookie } from 'request';
 
 /**
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
@@ -13,6 +14,7 @@ export interface iResponse {
     and(): Node
     loadTime(): Node
     headers(key?: string): Node
+    cookies(key?: string): Node
     label(message: string): iResponse
     setLastElement(path: string | null, element: Node): Node
     getLastElement(): Node
@@ -44,7 +46,8 @@ export enum ResponseType {
 export interface SimplifiedResponse {
     statusCode: number
     body: string
-    headers: any
+    headers: { [key: string]: string },
+    cookies: Cookie[]
 }
 
 export abstract class GenericResponse implements iResponse {
@@ -55,6 +58,7 @@ export abstract class GenericResponse implements iResponse {
     private _statusCode: number;
     private _body: string;
     private _headers: {};
+    private _cookies: Cookie[] = [];
 
     private _lastElement: Node;
     private _lastElementPath: string | null = null;
@@ -68,6 +72,7 @@ export abstract class GenericResponse implements iResponse {
         this._statusCode = simplifiedResponse.statusCode;
         this._body = simplifiedResponse.body;
         this._headers = simplifiedResponse.headers;
+        this._cookies = simplifiedResponse.cookies;
         this._lastElement = new Node(this, 'Empty Element', null);
     }
 
@@ -189,6 +194,29 @@ export abstract class GenericResponse implements iResponse {
         }
         else {
             return new Node(this, 'HTTP Headers', this._headers);
+        }
+    }
+
+    /**
+     * Return a single cookie by key or all cookies in an object
+     * 
+     * @param key 
+     */
+    public cookies(key?: string): Node {
+        if (typeof key !== 'undefined') {
+            let cookie: Cookie | null = null;
+            this._cookies.forEach((c: Cookie) => {
+                if (c.key == key) {
+                    cookie = c;
+                }
+            });
+            let name: string = 'HTTP Cookies[' + key + ']';
+            let value: Node = new Node(this, name, cookie);
+            value.exists();
+            return value;
+        }
+        else {
+            return new Node(this, 'HTTP Cookies', this._cookies);
         }
     }
 

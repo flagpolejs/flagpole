@@ -2,6 +2,7 @@ import { Scenario } from "./scenario";
 import { iResponse, ResponseType } from "./response";
 import { Flagpole } from ".";
 import { Link } from "./link";
+import { Cookie } from 'request';
 
 let $: CheerioStatic = require('cheerio');
 
@@ -144,6 +145,12 @@ export class Node {
                 this.getAttribute('href') !== null
         }
         return false;
+    }
+
+    protected isCookie(): boolean {
+        return (
+            this.obj && this.obj.cookieString
+        )
     }
 
     /**
@@ -767,6 +774,9 @@ export class Node {
         let text: any = null;
         if (this.isDomElement()) {
             text = this.obj.text();
+        }
+        else if (this.isCookie()) {
+            text = (<Cookie>this.obj).value;
         }
         else if (!this.isNullOrUndefined()) {
             text = this.obj.toString();

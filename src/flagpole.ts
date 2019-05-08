@@ -1,5 +1,6 @@
 import { Suite } from "./suite";
 import { SimplifiedResponse } from "./response";
+import { Cookie } from 'request';
 
 const cheerio = require('cheerio');
 
@@ -70,12 +71,16 @@ export class Flagpole {
     static toSimplifiedResponse(response: {
             statusCode: number;
             body: string;
-            headers: { [name: string]: string; };
-        }, body): SimplifiedResponse {
+            headers: { [key: string]: string; };
+        },
+        body: string,
+        cookies?: Cookie[]
+    ): SimplifiedResponse {
         return {
             statusCode: response.statusCode,
             body: body,
             headers: response.headers,
+            cookies: cookies || []
         };
     }
 
@@ -114,7 +119,8 @@ export class Flagpole {
                 return arr[1].toLocaleLowerCase();
             }
         }
-        return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLocaleLowerCase();
+        const match: RegExpMatchArray | null = ({}).toString.call(obj).match(/\s([a-zA-Z]+)/);
+        return match !== null ? match[1].toLocaleLowerCase() : '';
     }
 
 }

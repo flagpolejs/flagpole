@@ -2,7 +2,11 @@ const Flagpole = require('../dist/index.js').Flagpole;
 const nock = require('nock');
 const fs = require('fs');
 
+Flagpole.automaticallyPrintToConsole = true;
+
 let mockRoutes = nock('http://test.flagpole');
+
+console.log('asdfas');
 
 mockRoutes.get('/test.html')
     .reply(200, function (uri, requestBody) {

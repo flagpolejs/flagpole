@@ -1,4 +1,5 @@
 import { SimplifiedResponse } from "./response";
+import { Cookie } from 'request';
 
 
 export class Mock implements SimplifiedResponse {
@@ -6,7 +7,8 @@ export class Mock implements SimplifiedResponse {
     public url: string;
     public statusCode: number = 200;
     public body: string = '';
-    public headers: Array<any> = [];
+    public headers: { [key: string]: string } = {};
+    public cookies: Cookie[] = [];
 
     protected constructor(url: string, body: string) {
         this.url = url;

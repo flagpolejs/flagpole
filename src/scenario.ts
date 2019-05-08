@@ -12,8 +12,9 @@ import { Mock } from "./mock";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./Browser";
 import * as Promise from "bluebird";
+import * as r from "request";
 
-let request = require('request');
+const request = require('request');
 
 /**
  * A scenario contains tests that run against one request
@@ -39,6 +40,7 @@ export class Scenario {
     protected flipAssertion: boolean = false;
     protected optionalAssertion: boolean = false;
     protected ignoreAssertion: boolean = false;
+    protected cookieJar: r.CookieJar;
 
     protected _thens: Function[] = [];
     protected _isMock: boolean = false;
@@ -54,6 +56,7 @@ export class Scenario {
         this.initialized = Date.now();
         this.suite = suite;
         this.title = title;
+        this.cookieJar = new request.jar();
 
         this.onDone = onDone;
         this.subheading(title);
@@ -176,6 +179,24 @@ export class Scenario {
      */
     public auth(authorization: { username: string, password: string }): Scenario {
         this.options.auth = authorization;
+        return this;
+    }
+
+    /**
+     * Set a cookie
+     * 
+     * @param key 
+     * @param value 
+     * @param opts 
+     */
+    public cookie(key: string, value: string, opts?: any): Scenario {
+        let cookie: r.Cookie | undefined = r.cookie(key + '=' + value);
+        if (cookie !== undefined) {
+            this.cookieJar.setCookie(cookie, this.buildUrl(), opts);
+        }
+        else {
+            throw new Error('error setting cookie');
+        }
         return this;
     }
 
@@ -403,6 +424,10 @@ export class Scenario {
         return this;
     }
 
+    protected getCookies(): r.Cookie[] {
+        return this.cookieJar.getCookies(this.options.uri);
+    }
+
     protected getScenarioType(): { name: string, responseObject } {
         if (this.responseType == ResponseType.json) {
             return {
@@ -462,11 +487,16 @@ export class Scenario {
         this.done();
     }
 
+    protected buildUrl(): string {
+        return this.suite.buildUrl(this.url || '');
+    }
+
     protected executeRequest() {
         if (!this.requestStart && this.url !== null) {
             let scenario: Scenario = this;
             this.requestStart = Date.now();
-            this.options.uri = this.suite.buildUrl(this.url);
+            this.options.uri = this.buildUrl();
+            this.options.jar = this.cookieJar;
             if (this.responseType == ResponseType.image) {
                 require('probe-image-size')(this.options.uri, this.options, function(error, result) {
                     if (!error) {
@@ -475,7 +505,8 @@ export class Scenario {
                             body: JSON.stringify(result),
                             headers: {
                                 'content-type': result.mime
-                            }
+                            },
+                            cookies: scenario.getCookies()
                         });
                     }
                     else {
@@ -484,20 +515,24 @@ export class Scenario {
                     }
                 });
             }
-            else {
-                if (this.hasBrowser()) {
-                    this.getBrowser()
+            else if (this.hasBrowser()) {
+                this.getBrowser()
                     .open(this.options.uri)
                     .then((next: { response: puppeteer.Response; body: string; }) => {
                         const response: puppeteer.Response = next.response;
                         const body: string = next.body;
-
                         if (response !== null) {
-                            scenario.processResponse(Flagpole.toSimplifiedResponse({
-                                statusCode: response.status(),
-                                body: body,
-                                headers: response.headers(),
-                            }, body));
+                            scenario.processResponse(
+                                Flagpole.toSimplifiedResponse(
+                                    {
+                                        statusCode: response.status(),
+                                        body: body,
+                                        headers: response.headers(),
+                                    },
+                                    body,
+                                    scenario.getCookies() // this isn't going to work, need to get cookies from Puppeteer
+                                )
+                            );
                         } else {
                             scenario.fail('Failed to load ' + scenario.url);
                             scenario.comment('No response.');
@@ -511,18 +546,24 @@ export class Scenario {
                         scenario.comment(e);
                         scenario.done();
                     });
-                } else {
-                    request(this.options, function (error, response, body) {
-                        if (!error) {
-                            scenario.processResponse(Flagpole.toSimplifiedResponse(response, body));
-                        }
-                        else {
-                            scenario.fail('Failed to load ' + scenario.url);
-                            scenario.comment(error);
-                            scenario.done();
-                        }
-                    });
-                }
+            }
+            else {
+                request(this.options, function (error, response, body) {
+                    if (!error) {
+                        scenario.processResponse(
+                            Flagpole.toSimplifiedResponse(
+                                response,
+                                body,
+                                scenario.getCookies()
+                            )
+                        );
+                    }
+                    else {
+                        scenario.fail('Failed to load ' + scenario.url);
+                        scenario.comment(error);
+                        scenario.done();
+                    }
+                });
             }
         }
     }

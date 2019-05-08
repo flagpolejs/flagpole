@@ -1,5 +1,8 @@
 const { Flagpole } = require('../dist/index.js');
 const request = require('request');
+
+Flagpole.automaticallyPrintToConsole = true;
+
 const suite = Flagpole.Suite('Basic Tests of the API')
    .base({
       dev: 'https://us-central1-flagpolejs-5ea61.cloudfunctions.net',
