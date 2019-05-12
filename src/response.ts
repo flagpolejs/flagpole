@@ -37,7 +37,8 @@ export enum ResponseType {
     image,
     stylesheet,
     script,
-    resource
+    resource,
+    browser
 }
 
 /**

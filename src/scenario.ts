@@ -3,16 +3,17 @@ import { Suite } from "./suite";
 import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor } from "./consoleline";
 import { JsonResponse } from "./jsonresponse";
 import { HtmlResponse } from "./htmlresponse";
-import { ResponseType, SimplifiedResponse } from "./response";
+import { ResponseType, SimplifiedResponse, iResponse } from "./response";
 import { ImageResponse } from "./imageresponse";
 import { ResourceResponse } from "./resourceresponse";
 import { ScriptResponse } from "./scriptresponse";
 import { CssResponse } from "./cssresponse";
 import { Mock } from "./mock";
 import * as puppeteer from "puppeteer-core";
-import { Browser, BrowserOptions } from "./Browser";
+import { Browser, BrowserOptions } from "./browser";
 import * as Promise from "bluebird";
 import * as r from "request";
+import { BrowserResponse } from './browserresponse';
 
 const request = require('request');
 
@@ -41,13 +42,18 @@ export class Scenario {
     protected optionalAssertion: boolean = false;
     protected ignoreAssertion: boolean = false;
     protected cookieJar: r.CookieJar;
+    protected options: any = {};
 
+    protected _browser: Browser | null = null;
     protected _thens: Function[] = [];
     protected _isMock: boolean = false;
-    private _browser: Browser | null = null;
-    private browserOptions: BrowserOptions | null = null;
 
-    protected options: any = {
+    protected defaultBrowserOptions: BrowserOptions = {
+        headless: true,
+        recordConsole: true,
+        outputConsole: false,
+    };
+    protected defaultRequestOptions: any = {
         method: 'GET',
         headers: {}
     };
@@ -57,7 +63,7 @@ export class Scenario {
         this.suite = suite;
         this.title = title;
         this.cookieJar = new request.jar();
-
+        this.options = this.defaultRequestOptions;
         this.onDone = onDone;
         this.subheading(title);
     }
@@ -259,9 +265,13 @@ export class Scenario {
         this.log.push(
             new CommentLine(message)
         );
-        //this.passes.push(message);
         return this;
     }
+    
+    /**
+     * Alias for comment
+     */
+    public echo = this.comment;
 
     /**
      * Assert something is true, with respect to the flipped not()
@@ -363,6 +373,9 @@ export class Scenario {
         return this;
     }
 
+    /**
+     * Execute now if we are able to do so
+     */
     protected executeWhenReady() {
         if (!this.waitToExecute && this.canExecute()) {
             this.execute();
@@ -392,7 +405,6 @@ export class Scenario {
         // If it hasn't already been executed
         if (!this.hasExecuted()) {
             this._thens.push(callback);
-
             // Execute at the next opportunity.
             setTimeout(() => {
                 this.executeWhenReady();
@@ -404,9 +416,7 @@ export class Scenario {
     /**
      * Alias for then()
      */
-    public assertions(callback: Function): Scenario {
-        return this.then(callback);
-    }
+    public assertions = this.then;
 
     /**
      * Skip this scenario completely and mark it done
@@ -424,11 +434,17 @@ export class Scenario {
         return this;
     }
 
+    /**
+     * 
+     */
     protected getCookies(): r.Cookie[] {
         return this.cookieJar.getCookies(this.options.uri);
     }
 
-    protected getScenarioType(): { name: string, responseObject } {
+    /**
+     * 
+     */
+    protected getScenarioType(): { name: string, responseObject: any;  } {
         if (this.responseType == ResponseType.json) {
             return {
                 name: 'REST End Point',
@@ -459,6 +475,12 @@ export class Scenario {
                 responseObject: ResourceResponse
             }
         }
+        else if (this.responseType == ResponseType.browser) {
+            return {
+                name: 'Browser',
+                responseObject: BrowserResponse
+            }
+        }
         else {
             return {
                 name: 'HTML Page',
@@ -468,7 +490,7 @@ export class Scenario {
     }
 
     protected processResponse(simplifiedResponse: SimplifiedResponse) {
-        let scenarioType: { name: string, responseObject } = this.getScenarioType();
+        let scenarioType: { name: string, responseObject: any } = this.getScenarioType();
         this.requestLoaded = Date.now();
         this.pass('Loaded ' + scenarioType.name + ' ' + this.url);
         
@@ -491,79 +513,98 @@ export class Scenario {
         return this.suite.buildUrl(this.url || '');
     }
 
+    public getBrowser(): Browser {
+        this._browser = (this._browser !== null) ? this._browser : new Browser();
+        return this._browser;
+    }
+
+    private executeImageRequest() {
+        const scenario: Scenario = this;
+        require('probe-image-size')(this.options.uri, this.options, function (error, result) {
+            if (!error) {
+                scenario.processResponse({
+                    statusCode: 200,
+                    body: JSON.stringify(result),
+                    headers: {
+                        'content-type': result.mime
+                    },
+                    cookies: scenario.getCookies()
+                });
+            }
+            else {
+                scenario.fail('Failed to load image ' + scenario.url);
+                scenario.done();
+            }
+        });
+    }
+
+    private executeBrowserRequest() {
+        const scenario: Scenario = this;
+        this.getBrowser()
+            .open(this.options)
+            .then((next: { response: puppeteer.Response; body: string; }) => {
+                const response: puppeteer.Response = next.response;
+                const body: string = next.body;
+                if (response !== null) {
+                    scenario.processResponse(
+                        Flagpole.toSimplifiedResponse(
+                            {
+                                statusCode: response.status(),
+                                body: body,
+                                headers: response.headers(),
+                            },
+                            body,
+                            scenario.getCookies() // this isn't going to work, need to get cookies from Puppeteer
+                        )
+                    );
+                }
+                else {
+                    scenario.fail('Failed to load ' + scenario.url);
+                    scenario.comment('No response.');
+                    scenario.done();
+                }
+                return;
+            })
+            .catch((e) => {
+                scenario.fail('Failed to load ' + scenario.url);
+                scenario.comment(e);
+                scenario.done();
+            });
+    }
+
+    private executeDefaultRequest() {
+        const scenario: Scenario = this;
+        request(this.options, function (error, response, body) {
+            if (!error) {
+                scenario.processResponse(
+                    Flagpole.toSimplifiedResponse(
+                        response,
+                        body,
+                        scenario.getCookies()
+                    )
+                );
+            }
+            else {
+                scenario.fail('Failed to load ' + scenario.url);
+                scenario.comment(error);
+                scenario.done();
+            }
+        });
+    }
+
     protected executeRequest() {
         if (!this.requestStart && this.url !== null) {
-            let scenario: Scenario = this;
             this.requestStart = Date.now();
             this.options.uri = this.buildUrl();
             this.options.jar = this.cookieJar;
             if (this.responseType == ResponseType.image) {
-                require('probe-image-size')(this.options.uri, this.options, function(error, result) {
-                    if (!error) {
-                        scenario.processResponse({
-                            statusCode: 200,
-                            body: JSON.stringify(result),
-                            headers: {
-                                'content-type': result.mime
-                            },
-                            cookies: scenario.getCookies()
-                        });
-                    }
-                    else {
-                        scenario.fail('Failed to load image ' + scenario.url);
-                        scenario.done();
-                    }
-                });
+                this.executeImageRequest();
             }
-            else if (this.hasBrowser()) {
-                this.getBrowser()
-                    .open(this.options.uri)
-                    .then((next: { response: puppeteer.Response; body: string; }) => {
-                        const response: puppeteer.Response = next.response;
-                        const body: string = next.body;
-                        if (response !== null) {
-                            scenario.processResponse(
-                                Flagpole.toSimplifiedResponse(
-                                    {
-                                        statusCode: response.status(),
-                                        body: body,
-                                        headers: response.headers(),
-                                    },
-                                    body,
-                                    scenario.getCookies() // this isn't going to work, need to get cookies from Puppeteer
-                                )
-                            );
-                        } else {
-                            scenario.fail('Failed to load ' + scenario.url);
-                            scenario.comment('No response.');
-                            scenario.done();
-                        }
-
-                        return;
-                    })
-                    .catch((e) => {
-                        scenario.fail('Failed to load ' + scenario.url);
-                        scenario.comment(e);
-                        scenario.done();
-                    });
+            else if (this.responseType == ResponseType.browser) {
+                this.executeBrowserRequest();
             }
             else {
-                request(this.options, function (error, response, body) {
-                    if (!error) {
-                        scenario.processResponse(
-                            Flagpole.toSimplifiedResponse(
-                                response,
-                                body,
-                                scenario.getCookies()
-                            )
-                        );
-                    }
-                    else {
-                        scenario.fail('Failed to load ' + scenario.url);
-                        scenario.comment(error);
-                        scenario.done();
-                    }
-                });
+                this.executeDefaultRequest();
             }
         }
     }
@@ -695,69 +736,62 @@ export class Scenario {
      * SET RESPONSE TYPE
      */
 
-    protected setResponseType(type: ResponseType): Scenario {
+    protected setResponseType(type: ResponseType, opts: any = {}): Scenario {
         if (this.hasExecuted()) {
             throw new Error('Scenario was already executed. Can not change type.');
         }
+        this.options = opts;
         this.responseType = type;
         return this;
     }
 
-    public image(): Scenario {
-        return this.setResponseType(ResponseType.image);
+    public image(opts?: any): Scenario {
+        return this.setResponseType(
+            ResponseType.image,
+            Object.assign(this.defaultRequestOptions, opts)
+        );
     }
 
-    public html(): Scenario {
-        return this.setResponseType(ResponseType.html);
+    public html(opts?: any): Scenario {
+        return this.setResponseType(
+            ResponseType.html,
+            Object.assign(this.defaultRequestOptions, opts)
+        );
     }
 
-    public json(): Scenario {
-        return this.setResponseType(ResponseType.json);
+    public json(opts: any = {}): Scenario {
+        return this.setResponseType(
+            ResponseType.json,
+            Object.assign(this.defaultRequestOptions, opts)
+        );
     }
 
-    public script(): Scenario {
-        return this.setResponseType(ResponseType.script);
+    public script(opts: any = {}): Scenario {
+        return this.setResponseType(
+            ResponseType.script,
+            Object.assign(this.defaultRequestOptions, opts)
+        );
     }
 
-    public stylesheet(): Scenario {
-        return this.setResponseType(ResponseType.stylesheet);
+    public stylesheet(opts: any = {}): Scenario {
+        return this.setResponseType(
+            ResponseType.stylesheet,
+            Object.assign(this.defaultRequestOptions, opts)
+        );
     }
 
-    public resource(): Scenario {
-        return this.setResponseType(ResponseType.resource);
+    public resource(opts: any = {}): Scenario {
+        return this.setResponseType(
+            ResponseType.resource,
+            Object.assign(this.defaultRequestOptions, opts)
+        );
     }
 
-    public getBrowserOptions(): BrowserOptions {
-        return this.browserOptions || {};
+    public browser(opts: BrowserOptions = {}): Scenario {
+        return this.setResponseType(
+            ResponseType.browser,
+            Object.assign(this.defaultBrowserOptions, opts)
+        );
     }
 
-    public hasBrowser(): boolean {
-        return !!this.browserOptions;
-    }
-
-    public getBrowser(): Browser {
-        if (!this._browser) {
-            this._browser = new Browser(this.getBrowserOptions());
-        }
-
-        return this._browser;
-    }
-
-    /**
-     * Set browser options.
-     * 
-     * @param {BrowserOptions}
-     * @returns {Scenario}
-     */
-    public browser(browserOptions: BrowserOptions): Scenario {
-        const defaultBrowserOptions: BrowserOptions = {
-            headless: true,
-            recordConsole: true,
-            outputConsole: false,
-        };
-
-        this.browserOptions = (!browserOptions) ? null : Object.assign(defaultBrowserOptions, browserOptions);
-
-        return this;
-    }
 }
