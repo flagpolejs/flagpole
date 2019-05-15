@@ -315,10 +315,10 @@ export class Suite {
         if (this.baseUrl === null) {
             return path;
         }
-        else if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+        else if (/^https?:\/\//.test(path) || /^data:/.test(path)) {
             return path;
         }
-        else if (path.startsWith('/')) {
+        else if (/^\//.test(path)) {
             return this.baseUrl.protocol + '//' + this.baseUrl.host + path;
         }
         return (new URL(path, this.baseUrl.href)).href;
