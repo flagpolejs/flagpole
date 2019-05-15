@@ -1,6 +1,7 @@
 import * as puppeteer from "puppeteer-core";
 import { CookieJar } from 'request';
 import { ElementHandle } from 'puppeteer-core';
+import { Cookie } from 'tough-cookie';
 
 export class Browser {
 
@@ -69,14 +70,12 @@ export class Browser {
         // Ensure the browser opens with a page.
         return browser.pages()
             .then((pages) => {
-                if (pages.length > 0) {
-                    return pages[0];
-                }
-                return browser.newPage();
+                return (pages.length > 0) ?
+                    pages[0] : browser.newPage();
             });
     }
 
-    private onPageReady(browser: Browser, page: puppeteer.Page): Promise<puppeteer.Response> {
+    private async onPageReady(browser: Browser, page: puppeteer.Page): Promise<puppeteer.Response> {
         browser.page = page;
         // Must have a uri
         if (typeof browser.opts.uri == 'undefined') {
@@ -94,6 +93,21 @@ export class Browser {
                     source: consoleMesssage
                 });
             });
+        }
+        // Set cookies
+        if (typeof browser.opts.jar != 'undefined') {
+            let cookies: puppeteer.SetCookie[] = [];
+            browser.opts.jar.getCookies(browser.opts.uri).forEach((cookie: Cookie) => {
+                cookies.push({
+                    name: cookie.key,
+                    value: cookie.value,
+                    domain: cookie.domain || undefined,
+                    path: cookie.path || '/',
+                    httpOnly: cookie.httpOnly,
+                    secure: cookie.secure
+                });
+            });
+            page.setCookie(...cookies);
         }
         // Open page
         return page.goto(
