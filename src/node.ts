@@ -124,8 +124,30 @@ export class Node {
 
     protected isImageElement(): boolean {
         if (this.isDomElement()) {
-            return this.getTagName() === 'img' && 
-                this.getAttribute('src') !== null;
+            return (
+                this.getTagName() === 'img' && this.getAttribute('src') !== null
+            );
+        }
+        return false;
+    }
+
+    protected isVideoElement(): boolean {
+        if (this.isDomElement()) {
+            return (
+                (this.getTagName() === 'video' && this.getAttribute('src') !== null) ||
+                (this.getTagName() === 'source' && this.getAttribute('src') !== null && /video/i.test(this.getAttribute('type') || ''))
+            );
+        }
+        return false;
+    }
+
+    protected isAudioElement(): boolean {
+        if (this.isDomElement()) {
+            return (
+                (this.getTagName() === 'audio' && this.getAttribute('src') !== null) ||
+                (this.getTagName() === 'bgsound' && this.getAttribute('src') !== null) ||
+                (this.getTagName() === 'source' && this.getAttribute('src') !== null && /video/i.test(this.getAttribute('type') || ''))
+            );
         }
         return false;
     }
@@ -421,6 +443,12 @@ export class Node {
                     /\.(jpe?g|gif|png|svg|bmp|webp|tiff?|psd)$/i.test(path)
                 ) {
                     return node.response.scenario.suite.Image(scenarioOrTitle);
+                }
+                else if (
+                    node.isVideoElement() ||
+                    /\.(mp[245]|og[gv]|m3u8?|mov|mpe?g|avi|flv|f4v|webm|vp[89]|wmv|m4[vp]|ts)$/i.test(path)
+                ) {
+                    return node.response.scenario.suite.Video(scenarioOrTitle);
                 }
                 else if (
                     node.isStylesheetElement() ||

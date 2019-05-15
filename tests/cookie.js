@@ -5,11 +5,9 @@ Flagpole.automaticallyPrintToConsole = true;
 const suite = Flagpole.Suite('Basic Smoke Test of Site')
     .base('https://www.milesplit.com');
 
-suite.Scenario('Homepage Loads')
-    .open('/')
+suite.Scenario('Not logged in test')
     .html()
-    .cookie('flagpole', 'yes')
+    .open('/')
     .assertions(function (response) {
-        response.cookies('unique_id').text().echo().length().greaterThan(0);
-        response.cookies('flagpole').text().equals('yes');
+        response.not().select('strong.hello');
     });

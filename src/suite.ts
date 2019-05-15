@@ -257,6 +257,10 @@ export class Suite {
         return this.Scenario(title).image();
     }
 
+    public Video(title: string): Scenario {
+        return this.Scenario(title).video();
+    }
+
     public Html(title: string): Scenario {
         return this.Scenario(title).html();
     }

@@ -14,6 +14,7 @@ import { Browser, BrowserOptions } from "./browser";
 import * as Promise from "bluebird";
 import * as r from "request";
 import { BrowserResponse } from './browserresponse';
+import { VideoResource } from './videoresource';
 
 const request = require('request');
 
@@ -457,6 +458,12 @@ export class Scenario {
                 responseObject: ImageResponse
             }
         }
+        else if (this.responseType == ResponseType.video) {
+            return {
+                name: 'Video',
+                responseObject: VideoResource
+            }
+        }
         else if (this.responseType == ResponseType.script) {
             return {
                 name: 'Script',
@@ -748,6 +755,13 @@ export class Scenario {
     public image(opts?: any): Scenario {
         return this.setResponseType(
             ResponseType.image,
+            Object.assign(this.defaultRequestOptions, opts)
+        );
+    }
+
+    public video(opts?: any): Scenario {
+        return this.setResponseType(
+            ResponseType.video,
             Object.assign(this.defaultRequestOptions, opts)
         );
     }
