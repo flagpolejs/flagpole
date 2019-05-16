@@ -1,4 +1,4 @@
-import { iResponse, SimplifiedResponse, GenericResponse, ResponseType } from "./response";
+import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { Node } from "./node";
 
@@ -6,8 +6,12 @@ export class JsonResponse extends GenericResponse implements iResponse {
 
     protected json: {};
 
-    constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
-        super(scenario, url, response);
+    public get typeName(): string {
+        return 'JSON';
+    }
+
+    constructor(scenario: Scenario, response: NormalizedResponse) {
+        super(scenario, response);
         try {
             this.json = JSON.parse(response.body);
             this.valid();

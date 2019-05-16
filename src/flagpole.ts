@@ -1,6 +1,4 @@
 import { Suite } from "./suite";
-import { SimplifiedResponse } from "./response";
-import { Cookie } from 'request';
 
 const cheerio = require('cheerio');
 
@@ -59,29 +57,6 @@ export class Flagpole {
     static Suite(title: string): Suite {
         let suite: Suite = new Suite(title);
         return suite;
-    }
-
-    /**
-     * Convert the full response object into just the essentials
-     *
-     * @param response
-     * @param body
-     * @returns {SimplifiedResponse}
-     */
-    static toSimplifiedResponse(response: {
-            statusCode: number;
-            body: string;
-            headers: { [key: string]: string; };
-        },
-        body: string,
-        cookies?: Cookie[]
-    ): SimplifiedResponse {
-        return {
-            statusCode: response.statusCode,
-            body: body,
-            headers: response.headers,
-            cookies: cookies || []
-        };
     }
 
     /**

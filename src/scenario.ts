@@ -1,20 +1,12 @@
 import { Flagpole } from "./index";
 import { Suite } from "./suite";
 import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor } from "./consoleline";
-import { JsonResponse } from "./jsonresponse";
-import { HtmlResponse } from "./htmlresponse";
-import { ResponseType, SimplifiedResponse, iResponse } from "./response";
-import { ImageResponse } from "./imageresponse";
-import { ResourceResponse } from "./resourceresponse";
-import { ScriptResponse } from "./scriptresponse";
-import { CssResponse } from "./cssresponse";
-import { Mock } from "./mock";
+import { ResponseType, NormalizedResponse, iResponse, GenericResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
 import * as Promise from "bluebird";
 import * as r from "request";
-import { BrowserResponse } from './browserresponse';
-import { VideoResource } from './videoresource';
+import { createResponse } from './responsefactory';
 
 const request = require('request');
 
@@ -36,6 +28,8 @@ export class Scenario {
     protected requestStart: number | null = null;
     protected requestLoaded: number | null = null;
     protected responseType: ResponseType = ResponseType.html;
+    protected redirectCount: number = 0;
+    protected finalUrl: string | null = null;
     protected url: string | null = null;
     protected waitToExecute: boolean = false;
     protected nextLabel: string | null = null;
@@ -44,6 +38,7 @@ export class Scenario {
     protected ignoreAssertion: boolean = false;
     protected cookieJar: r.CookieJar;
     protected options: any = {};
+    protected _followRedirect: boolean | Function | null = null;
 
     protected _browser: Browser | null = null;
     protected _thens: Function[] = [];
@@ -174,7 +169,7 @@ export class Scenario {
      * @param onRedirect 
      */
     public followRedirect(onRedirect: boolean | Function): Scenario {
-        this.options.followRedirect = onRedirect;
+        this._followRedirect = onRedirect;
         return this;
     }
 
@@ -445,68 +440,18 @@ export class Scenario {
     /**
      * 
      */
-    protected getScenarioType(): { name: string, responseObject: any;  } {
-        if (this.responseType == ResponseType.json) {
-            return {
-                name: 'REST End Point',
-                responseObject: JsonResponse
-            }
-        }
-        else if (this.responseType == ResponseType.image) {
-            return {
-                name: 'Image',
-                responseObject: ImageResponse
-            }
-        }
-        else if (this.responseType == ResponseType.video) {
-            return {
-                name: 'Video',
-                responseObject: VideoResource
-            }
-        }
-        else if (this.responseType == ResponseType.script) {
-            return {
-                name: 'Script',
-                responseObject: ScriptResponse
-            }
-        }
-        else if (this.responseType == ResponseType.stylesheet) {
-            return {
-                name: 'Stylesheet',
-                responseObject: CssResponse
-            }
-        }
-        else if (this.responseType == ResponseType.resource) {
-            return {
-                name: 'Resource',
-                responseObject: ResourceResponse
-            }
-        }
-        else if (this.responseType == ResponseType.browser) {
-            return {
-                name: 'Browser',
-                responseObject: BrowserResponse
-            }
-        }
-        else {
-            return {
-                name: 'HTML Page',
-                responseObject: HtmlResponse
-            }
-        }
+    public getResponseType(): ResponseType {
+        return this.responseType;
     }
 
-    protected processResponse(simplifiedResponse: SimplifiedResponse) {
-        let scenarioType: { name: string, responseObject: any } = this.getScenarioType();
+    protected processResponse(r: NormalizedResponse) {
+        const response: iResponse = createResponse(this, r);
         this.requestLoaded = Date.now();
-        this.pass('Loaded ' + scenarioType.name + ' ' + this.url);
-        
+        this.pass('Loaded ' + response.typeName + ' ' + this.url);
         if (this._thens.length > 0 && this.url !== null) {
             const _thens = this._thens;
             Promise.mapSeries(_thens, (_then) => {
-                return _then(
-                    new scenarioType.responseObject(this, this.url, simplifiedResponse)
-                );
+                return _then(response);
             })
             .then(() => {
                 this.done();
@@ -529,14 +474,13 @@ export class Scenario {
         const scenario: Scenario = this;
         require('probe-image-size')(this.options.uri, this.options, function (error, result) {
             if (!error) {
-                scenario.processResponse({
-                    statusCode: 200,
-                    body: JSON.stringify(result),
-                    headers: {
-                        'content-type': result.mime
-                    },
-                    cookies: scenario.getCookies()
-                });
+                scenario.finalUrl = scenario.getUrl();
+                scenario.processResponse(
+                    NormalizedResponse.fromProbeImage(
+                        result,
+                        scenario.getCookies()
+                    )
+                );
             }
             else {
                 scenario.fail('Failed to load image ' + scenario.url);
@@ -544,7 +488,7 @@ export class Scenario {
             }
         });
     }
-
+                    
     private executeBrowserRequest() {
         const scenario: Scenario = this;
         this.getBrowser()
@@ -553,13 +497,10 @@ export class Scenario {
                 const response: puppeteer.Response = next.response;
                 const body: string = next.body;
                 if (response !== null) {
+                    scenario.finalUrl = response.url();
                     scenario.processResponse(
-                        Flagpole.toSimplifiedResponse(
-                            {
-                                statusCode: response.status(),
-                                body: body,
-                                headers: response.headers(),
-                            },
+                        NormalizedResponse.fromPuppeteer(
+                            response,
                             body,
                             scenario.getCookies() // this isn't going to work, need to get cookies from Puppeteer
                         )
@@ -581,10 +522,20 @@ export class Scenario {
 
     private executeDefaultRequest() {
         const scenario: Scenario = this;
-        request(this.options, function (error, response, body) {
+        this.options.followRedirect = (this._followRedirect === null) ?
+            (response: any) => {
+                const url = require('url');
+                scenario.finalUrl = response.request.href;
+                if (response.headers.location) {
+                    scenario.finalUrl = url.resolve(response.headers.location, response.request.href);
+                }
+                scenario.redirectCount++;
+                return true;
+            } : this._followRedirect;
+        request(this.options, function (error: string, response: any, body: string) {
             if (!error) {
                 scenario.processResponse(
-                    Flagpole.toSimplifiedResponse(
+                    NormalizedResponse.fromRequest(
                         response,
                         body,
                         scenario.getCookies()
@@ -618,9 +569,9 @@ export class Scenario {
 
     protected executeMock() {
         if (!this.requestStart && this.url !== null) {
-            let scenario: Scenario = this;
+            const scenario: Scenario = this;
             this.requestStart = Date.now();
-            Mock.loadLocalFile(this.url).then(function (mock: Mock) {
+            NormalizedResponse.fromLocalFile(this.url).then((mock: NormalizedResponse) => {
                 scenario.processResponse(mock);
             }).catch(function () {
                 scenario.fail('Failed to load page ' + scenario.url);
@@ -708,6 +659,10 @@ export class Scenario {
      */
     public getUrl(): string | null {
         return this.url;
+    }
+
+    public getFinalUrl(): string | null {
+        return this.finalUrl;
     }
 
     /**

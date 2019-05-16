@@ -1,13 +1,17 @@
 import { Scenario } from "./scenario";
 import { Node } from "./node";
-import { iResponse, SimplifiedResponse, GenericResponse, ResponseType } from "./response";
-import { Browser } from './Browser';
+import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
+import { Browser } from './browser';
 import { Page } from 'puppeteer';
 
 export class BrowserResponse extends GenericResponse implements iResponse {
 
-    constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
-        super(scenario, url, response);
+    constructor(scenario: Scenario, response: NormalizedResponse) {
+        super(scenario, response);
+    }
+
+    public get typeName(): string {
+        return 'Browser';
     }
 
     /**

@@ -7,7 +7,8 @@ const suite = Flagpole.Suite('Basic Smoke Test of Site')
 
 suite.Scenario('Not logged in test')
     .html()
-    .open('/')
+    .open('/athletes/3888271/stats')
     .assertions(function (response) {
         response.not().select('strong.hello');
+        response.comment(response.scenario.getFinalUrl());
     });
