@@ -20,6 +20,7 @@ export class Scenario {
     protected onDone: Function;
     protected onReject: Function = () => { };
     protected onResolve: Function = () => { };
+    protected onFinally: Function = () => { };
 
     protected title: string;
     protected log: Array<iLogLine> = [];
@@ -670,6 +671,7 @@ export class Scenario {
             this.onReject(err);
         }
         // Finally
+        this.onFinally(this);
         this.onDone(this);
         return this;
     }
@@ -683,7 +685,7 @@ export class Scenario {
     }
 
     public finally(callback: Function) {
-        this.onDone = callback;
+        this.onFinally = callback;
     }
 
     /**
