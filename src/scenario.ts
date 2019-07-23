@@ -17,15 +17,14 @@ export class Scenario {
 
     public readonly suite: Suite;
 
-    protected promise: Promise<Scenario>;
-    protected resolve: Function;
-    protected reject: Function;
+    protected onDone: Function;
+    protected onReject: Function = () => { };
+    protected onResolve: Function = () => { };
 
     protected title: string;
     protected log: Array<iLogLine> = [];
     protected failures: Array<string> = [];
     protected passes: Array<string> = [];
-    protected onDone: Function;
     protected initialized: number | null = null;
     protected start: number | null = null;
     protected end: number | null = null;
@@ -67,10 +66,6 @@ export class Scenario {
         this.options = this.defaultRequestOptions;
         this.onDone = onDone;
         this.subheading(title);
-        this.promise = new Promise((resolve, reject) => {
-            me.resolve = resolve;
-            me.reject = reject;
-        });
     }
 
     /**
@@ -406,9 +401,8 @@ export class Scenario {
     /**
      * Set the callback for the assertions to run after the request has a response
      */
-    public then(callback: Function): Promise<Scenario> {
-        this.assertions(callback);
-        return this.promise;
+    public then(callback: Function): Scenario {
+        return this.assertions(callback);
     }
 
     /**
@@ -466,11 +460,12 @@ export class Scenario {
         this.pass('Loaded ' + response.typeName + ' ' + this.url);
         if (this._thens.length > 0 && this.url !== null) {
             const _thens = this._thens;
-            scenario.echo('Number of thens ' + _thens.length);
             Bluebird.mapSeries(_thens, (_then) => {
-                scenario.echo('Numb thens ' + _thens.length);
-                this.done();
                 return _then(response);
+            }).then(() => {
+                this.done();
+            }).catch((err) => {
+                this.done(err);
             });
             return;
         }
@@ -500,8 +495,7 @@ export class Scenario {
             }
             else {
                 scenario.fail('Failed to load image ' + scenario.url);
-                scenario.done();
-                scenario.reject('Failed to load image');
+                scenario.done('Failed to load image');
             }
         });
     }
@@ -526,8 +520,7 @@ export class Scenario {
                 else {
                     scenario.fail('Failed to load ' + scenario.url);
                     scenario.comment('No response.');
-                    scenario.done();
-                    scenario.reject('Failed to load');
+                    scenario.done('Failed to load');
                 }
                 return;
             })
@@ -563,8 +556,7 @@ export class Scenario {
             else {
                 scenario.fail('Failed to load ' + scenario.url);
                 scenario.comment(error);
-                scenario.done();
-                scenario.reject('Failed to load');
+                scenario.done('Failed to load');
             }
         });
     }
@@ -594,8 +586,7 @@ export class Scenario {
                 scenario.processResponse(mock);
             }).catch(function () {
                 scenario.fail('Failed to load page ' + scenario.url);
-                scenario.done();
-                scenario.reject();
+                scenario.done('Failed to load page');
             });
         }
     }
@@ -667,12 +658,32 @@ export class Scenario {
      *
      * @returns {Scenario}
      */
-    public done(): Scenario {
+    public done(err: any = null): Scenario {
         this.end = Date.now();
         this.log.push(new CommentLine("Took " + this.getExecutionTime() + 'ms'));
+        // Resolve or reject, like scenario is a promise
+        if (err === null) {
+            this.onResolve(this)
+        }
+        else {
+            this.fail(err);
+            this.onReject(err);
+        }
+        // Finally
         this.onDone(this);
-        this.resolve(this);
         return this;
+    }
+
+    public catch(callback: Function) {
+        this.onReject = callback;
+    }
+
+    public success(callback: Function) {
+        this.onResolve = callback;
+    }
+
+    public finally(callback: Function) {
+        this.onDone = callback;
     }
 
     /**

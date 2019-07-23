@@ -7,7 +7,7 @@ const closeDialogHelper = require("../util/closeDialogHelper");
 const launchOptionsHelper = require("../util/launchOptionsHelper");
 const testConstants = require("../util/test-constants");
 
-const EVENT_STREAM_NAME = 'AUTOMATION-WRESTLING-TEST';
+const EVENT_STREAM_NAME = 'AUTOMATION-WRESTLING-TESTT';
 const SPORT_NAME = 'FloWrestling';
 
 Flagpole.exitOnDone = true;
@@ -18,7 +18,6 @@ const wrestlingTest = function() {
             .base('https://floscorecard-staging.firebaseapp.com')
             .onDone(() => {
                 suite.print();
-                resolve();
             })
 
         const browserOpts = {
@@ -32,8 +31,8 @@ const wrestlingTest = function() {
         launchOptionsHelper.puppeteerLaunchOptions(browserOpts, process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD);
 
         const login = suite.Scenario(SPORT_NAME)
-        .browser(browserOpts)
-        .open('/')
+            .browser(browserOpts)
+            .open('/')
         .then((response) => {
             response.assert(response.status() == 200, 'Homepage Status 200');
         })
@@ -117,6 +116,9 @@ const wrestlingTest = function() {
         })
         .then(function () {
             resolve();
+        })
+        .catch((err) => {
+            reject(err);
         });
     });
 }
