@@ -423,6 +423,9 @@ export class Scenario {
                 this.executeWhenReady();
             }, 0);
         }
+        else {
+            throw new Error('Scenario already executed.');
+        }
         return this;
     }
 
@@ -457,16 +460,17 @@ export class Scenario {
     }
 
     protected processResponse(r: NormalizedResponse) {
+        const scenario: Scenario = this;
         const response: iResponse = createResponse(this, r);
         this.requestLoaded = Date.now();
         this.pass('Loaded ' + response.typeName + ' ' + this.url);
         if (this._thens.length > 0 && this.url !== null) {
             const _thens = this._thens;
+            scenario.echo('Number of thens ' + _thens.length);
             Bluebird.mapSeries(_thens, (_then) => {
-                return _then(response);
-            })
-            .then(() => {
+                scenario.echo('Numb thens ' + _thens.length);
                 this.done();
+                return _then(response);
             });
             return;
         }
@@ -493,7 +497,6 @@ export class Scenario {
                         scenario.getCookies()
                     )
                 );
-                scenario.resolve(scenario);
             }
             else {
                 scenario.fail('Failed to load image ' + scenario.url);
@@ -519,7 +522,6 @@ export class Scenario {
                             scenario.getCookies() // this isn't going to work, need to get cookies from Puppeteer
                         )
                     );
-                    scenario.resolve(scenario);
                 }
                 else {
                     scenario.fail('Failed to load ' + scenario.url);
@@ -557,7 +559,6 @@ export class Scenario {
                         scenario.getCookies()
                     )
                 );
-                scenario.resolve(scenario);
             }
             else {
                 scenario.fail('Failed to load ' + scenario.url);
@@ -591,7 +592,6 @@ export class Scenario {
             this.requestStart = Date.now();
             NormalizedResponse.fromLocalFile(this.url).then((mock: NormalizedResponse) => {
                 scenario.processResponse(mock);
-                scenario.resolve(scenario);
             }).catch(function () {
                 scenario.fail('Failed to load page ' + scenario.url);
                 scenario.done();
@@ -671,6 +671,7 @@ export class Scenario {
         this.end = Date.now();
         this.log.push(new CommentLine("Took " + this.getExecutionTime() + 'ms'));
         this.onDone(this);
+        this.resolve(this);
         return this;
     }
 
