@@ -2,7 +2,6 @@ let Flagpole = require('../../dist/index.js').Flagpole;
 
 Flagpole.Suite('iTunes API Tests')
     .base('https://itunes.apple.com')
-    .setConsoleOutput(false)
     .onDone(function (suite) {
         suite.print();
     })

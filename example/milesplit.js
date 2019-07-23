@@ -2,7 +2,6 @@ let Flagpole = require('../dist/index.js').Flagpole;
 
 let suite = Flagpole.Suite('Test MileSplit')
     .base('https://www.milesplit.com')
-    .setConsoleOutput(false)
     .onDone(function (suite) {
         suite.print();
     });

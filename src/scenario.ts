@@ -4,7 +4,7 @@ import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor
 import { ResponseType, NormalizedResponse, iResponse, GenericResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
-import * as Promise from "bluebird";
+import * as Bluebird from "bluebird";
 import * as r from "request";
 import { createResponse } from './responsefactory';
 
@@ -17,11 +17,15 @@ export class Scenario {
 
     public readonly suite: Suite;
 
+    protected onDone: Function;
+    protected onReject: Function = () => { };
+    protected onResolve: Function = () => { };
+    protected onFinally: Function = () => { };
+
     protected title: string;
     protected log: Array<iLogLine> = [];
     protected failures: Array<string> = [];
     protected passes: Array<string> = [];
-    protected onDone: Function;
     protected initialized: number | null = null;
     protected start: number | null = null;
     protected end: number | null = null;
@@ -55,6 +59,7 @@ export class Scenario {
     };
 
     constructor(suite: Suite, title: string, onDone: Function) {
+        const me: Scenario = this;
         this.initialized = Date.now();
         this.suite = suite;
         this.title = title;
@@ -398,6 +403,13 @@ export class Scenario {
      * Set the callback for the assertions to run after the request has a response
      */
     public then(callback: Function): Scenario {
+        return this.assertions(callback);
+    }
+
+    /**
+     * 
+     */
+    public assertions(callback: Function): Scenario {
         // If it hasn't already been executed
         if (!this.hasExecuted()) {
             this._thens.push(callback);
@@ -406,13 +418,11 @@ export class Scenario {
                 this.executeWhenReady();
             }, 0);
         }
+        else {
+            throw new Error('Scenario already executed.');
+        }
         return this;
     }
-
-    /**
-     * Alias for then()
-     */
-    public assertions = this.then;
 
     /**
      * Skip this scenario completely and mark it done
@@ -445,16 +455,18 @@ export class Scenario {
     }
 
     protected processResponse(r: NormalizedResponse) {
+        const scenario: Scenario = this;
         const response: iResponse = createResponse(this, r);
         this.requestLoaded = Date.now();
         this.pass('Loaded ' + response.typeName + ' ' + this.url);
         if (this._thens.length > 0 && this.url !== null) {
             const _thens = this._thens;
-            Promise.mapSeries(_thens, (_then) => {
+            Bluebird.mapSeries(_thens, (_then) => {
                 return _then(response);
-            })
-            .then(() => {
+            }).then(() => {
                 this.done();
+            }).catch((err) => {
+                this.done(err);
             });
             return;
         }
@@ -484,7 +496,7 @@ export class Scenario {
             }
             else {
                 scenario.fail('Failed to load image ' + scenario.url);
-                scenario.done();
+                scenario.done('Failed to load image');
             }
         });
     }
@@ -509,7 +521,7 @@ export class Scenario {
                 else {
                     scenario.fail('Failed to load ' + scenario.url);
                     scenario.comment('No response.');
-                    scenario.done();
+                    scenario.done('Failed to load');
                 }
                 return;
             })
@@ -545,7 +557,7 @@ export class Scenario {
             else {
                 scenario.fail('Failed to load ' + scenario.url);
                 scenario.comment(error);
-                scenario.done();
+                scenario.done('Failed to load');
             }
         });
     }
@@ -575,7 +587,7 @@ export class Scenario {
                 scenario.processResponse(mock);
             }).catch(function () {
                 scenario.fail('Failed to load page ' + scenario.url);
-                scenario.done();
+                scenario.done('Failed to load page');
             });
         }
     }
@@ -647,11 +659,33 @@ export class Scenario {
      *
      * @returns {Scenario}
      */
-    public done(): Scenario {
+    public done(err: any = null): Scenario {
         this.end = Date.now();
         this.log.push(new CommentLine("Took " + this.getExecutionTime() + 'ms'));
+        // Resolve or reject, like scenario is a promise
+        if (err === null) {
+            this.onResolve(this)
+        }
+        else {
+            this.fail(err);
+            this.onReject(err);
+        }
+        // Finally
+        this.onFinally(this);
         this.onDone(this);
         return this;
+    }
+
+    public catch(callback: Function) {
+        this.onReject = callback;
+    }
+
+    public success(callback: Function) {
+        this.onResolve = callback;
+    }
+
+    public finally(callback: Function) {
+        this.onFinally = callback;
     }
 
     /**

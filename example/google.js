@@ -2,7 +2,6 @@ let Flagpole = require('../dist/index.js').Flagpole;
 
 let suite = Flagpole.Suite('Test Google')
     .base('http://www.google.com')
-    .setConsoleOutput(false)
     .onDone(function (suite) {
         suite.print();
     });

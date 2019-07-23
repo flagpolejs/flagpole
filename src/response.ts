@@ -48,7 +48,6 @@ export enum ResponseType {
 
 export class NormalizedResponse {
 
-    public url: string = '';
     public body: string = '';
     public statusCode: number = 0;
     public statusMessage: string = '';
@@ -64,7 +63,6 @@ export class NormalizedResponse {
         r.headers = <{ [key: string]: string }>response.headers;
         r.body = body;
         r.cookies = cookies;
-        r.url = response.headers.location || '';
         return r;
     }
 
@@ -75,7 +73,7 @@ export class NormalizedResponse {
         r.headers = response.headers();
         r.body = body;
         r.cookies = cookies;
-        r.url = response.url();
+        //r.url = response.url();
         return r;
     }
 
@@ -98,7 +96,7 @@ export class NormalizedResponse {
                     return reject(err);
                 }
                 r.body = data.toString();
-                r.url = path;
+                //r.url = path;
                 resolve(r);
             });
         });
@@ -131,10 +129,6 @@ export abstract class GenericResponse implements iResponse {
 
     public getUrl(): string {
         return this.scenario.getUrl() || '';
-    }
-
-    public getResponseUrl(): string {
-        return this._response.url;
     }
 
     public body(): Node {
