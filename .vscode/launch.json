@@ -18,6 +18,12 @@
             "request": "launch",
             "name": "Example - Browser (Google)",
             "program": "${workspaceFolder}/example/browser/google.js",
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Example - UIAT",
+            "program": "${workspaceFolder}/example/browser/uiat-sample.js",
         }
     ]
 }

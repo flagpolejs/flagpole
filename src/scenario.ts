@@ -4,7 +4,7 @@ import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor
 import { ResponseType, NormalizedResponse, iResponse, GenericResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
-import * as Promise from "bluebird";
+import * as Bluebird from "bluebird";
 import * as r from "request";
 import { createResponse } from './responsefactory';
 
@@ -16,6 +16,10 @@ const request = require('request');
 export class Scenario {
 
     public readonly suite: Suite;
+
+    protected promise: Promise<Scenario>;
+    protected resolve: Function;
+    protected reject: Function;
 
     protected title: string;
     protected log: Array<iLogLine> = [];
@@ -55,6 +59,7 @@ export class Scenario {
     };
 
     constructor(suite: Suite, title: string, onDone: Function) {
+        const me: Scenario = this;
         this.initialized = Date.now();
         this.suite = suite;
         this.title = title;
@@ -62,6 +67,10 @@ export class Scenario {
         this.options = this.defaultRequestOptions;
         this.onDone = onDone;
         this.subheading(title);
+        this.promise = new Promise((resolve, reject) => {
+            me.resolve = resolve;
+            me.reject = reject;
+        });
     }
 
     /**
@@ -397,7 +406,15 @@ export class Scenario {
     /**
      * Set the callback for the assertions to run after the request has a response
      */
-    public then(callback: Function): Scenario {
+    public then(callback: Function): Promise<Scenario> {
+        this.assertions(callback);
+        return this.promise;
+    }
+
+    /**
+     * 
+     */
+    public assertions(callback: Function): Scenario {
         // If it hasn't already been executed
         if (!this.hasExecuted()) {
             this._thens.push(callback);
@@ -408,11 +425,6 @@ export class Scenario {
         }
         return this;
     }
-
-    /**
-     * Alias for then()
-     */
-    public assertions = this.then;
 
     /**
      * Skip this scenario completely and mark it done
@@ -450,7 +462,7 @@ export class Scenario {
         this.pass('Loaded ' + response.typeName + ' ' + this.url);
         if (this._thens.length > 0 && this.url !== null) {
             const _thens = this._thens;
-            Promise.mapSeries(_thens, (_then) => {
+            Bluebird.mapSeries(_thens, (_then) => {
                 return _then(response);
             })
             .then(() => {
@@ -481,10 +493,12 @@ export class Scenario {
                         scenario.getCookies()
                     )
                 );
+                scenario.resolve(scenario);
             }
             else {
                 scenario.fail('Failed to load image ' + scenario.url);
                 scenario.done();
+                scenario.reject('Failed to load image');
             }
         });
     }
@@ -505,11 +519,13 @@ export class Scenario {
                             scenario.getCookies() // this isn't going to work, need to get cookies from Puppeteer
                         )
                     );
+                    scenario.resolve(scenario);
                 }
                 else {
                     scenario.fail('Failed to load ' + scenario.url);
                     scenario.comment('No response.');
                     scenario.done();
+                    scenario.reject('Failed to load');
                 }
                 return;
             })
@@ -541,11 +557,13 @@ export class Scenario {
                         scenario.getCookies()
                     )
                 );
+                scenario.resolve(scenario);
             }
             else {
                 scenario.fail('Failed to load ' + scenario.url);
                 scenario.comment(error);
                 scenario.done();
+                scenario.reject('Failed to load');
             }
         });
     }
@@ -573,9 +591,11 @@ export class Scenario {
             this.requestStart = Date.now();
             NormalizedResponse.fromLocalFile(this.url).then((mock: NormalizedResponse) => {
                 scenario.processResponse(mock);
+                scenario.resolve(scenario);
             }).catch(function () {
                 scenario.fail('Failed to load page ' + scenario.url);
                 scenario.done();
+                scenario.reject();
             });
         }
     }
