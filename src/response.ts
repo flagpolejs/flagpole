@@ -1,13 +1,16 @@
 import { Scenario } from "./scenario";
-import { iResponse, SimplifiedResponse } from "./response";
 import { Node } from "./node";
 import { URL } from 'url';
 import { Cookie } from 'request';
+import { IncomingMessage } from 'http';
+import * as puppeteer from "puppeteer-core";
+
 
 /**
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
  */
 export interface iResponse {
+    typeName: string,
     getType(): ResponseType
     select(path: string, findIn?: any): Node
     status(): Node
@@ -37,42 +40,85 @@ export enum ResponseType {
     image,
     stylesheet,
     script,
-    resource
+    video,
+    audio,
+    resource,
+    browser
 }
 
-/**
- * This is named confusing, but it represents the original response we get from the http request
- */
-export interface SimplifiedResponse {
-    statusCode: number
-    body: string
-    headers: { [key: string]: string },
-    cookies: Cookie[]
+export class NormalizedResponse {
+
+    public body: string = '';
+    public statusCode: number = 0;
+    public statusMessage: string = '';
+    public headers: { [key: string]: string } = {};
+    public cookies: Cookie[] = []
+
+    private constructor() { }
+
+    static fromRequest(response: IncomingMessage, body: string, cookies: Cookie[]): NormalizedResponse {
+        const r = new NormalizedResponse();
+        r.statusCode = response.statusCode || 0;
+        r.statusMessage = response.statusMessage || '';
+        r.headers = <{ [key: string]: string }>response.headers;
+        r.body = body;
+        r.cookies = cookies;
+        return r;
+    }
+
+    static fromPuppeteer(response: puppeteer.Response, body: string, cookies: Cookie[]): NormalizedResponse {
+        const r = new NormalizedResponse();
+        r.statusCode = response.status();
+        r.statusMessage = response.statusText();
+        r.headers = response.headers();
+        r.body = body;
+        r.cookies = cookies;
+        //r.url = response.url();
+        return r;
+    }
+
+    static fromProbeImage(response: any, cookies: Cookie[]): NormalizedResponse {
+        const r = new NormalizedResponse();
+        r.headers = {
+            'content-type': response.mime
+        };
+        r.body = JSON.stringify(response);
+        return r;
+    }
+
+    static fromLocalFile(relativePath: string): Promise<NormalizedResponse> {
+        const r = new NormalizedResponse();
+        let fs = require('fs');
+        let path: string = __dirname + '/' + relativePath;
+        return new Promise((resolve, reject) => {
+            fs.readFile(path, function (err, data) {
+                if (err) {
+                    return reject(err);
+                }
+                r.body = data.toString();
+                //r.url = path;
+                resolve(r);
+            });
+        });
+    }
+
 }
 
 export abstract class GenericResponse implements iResponse {
 
     public readonly scenario: Scenario;
 
-    private _url: string;
-    private _statusCode: number;
-    private _body: string;
-    private _headers: {};
-    private _cookies: Cookie[] = [];
-
+    private _response: NormalizedResponse;
     private _lastElement: Node;
     private _lastElementPath: string | null = null;
 
     abstract getType(): ResponseType;
+    abstract get typeName(): string;
     abstract select(path: string, findIn?: any): Node;
 
-    constructor(scenario: Scenario, url: string, simplifiedResponse: SimplifiedResponse) {
+    constructor(scenario: Scenario, response: NormalizedResponse) {
         this.scenario = scenario;
-        this._url = url;
-        this._statusCode = simplifiedResponse.statusCode;
-        this._body = simplifiedResponse.body;
-        this._headers = simplifiedResponse.headers;
-        this._cookies = simplifiedResponse.cookies;
+        this._response = response;
         this._lastElement = new Node(this, 'Empty Element', null);
     }
 
@@ -82,19 +128,19 @@ export abstract class GenericResponse implements iResponse {
     }
 
     public getUrl(): string {
-        return this._url;
+        return this.scenario.getUrl() || '';
     }
 
     public body(): Node {
-        return new Node(this, 'Response Body', this._body);
+        return new Node(this, 'Response Body', this._response.body);
     }
 
     public getBody(): string {
-        return this._body;
+        return this._response.body;
     }
 
     public getRoot(): any {
-        return this._body;
+        return this._response.body;
     }
 
     public assert(statement: boolean, message: string, actualValue?: string): iResponse {
@@ -186,14 +232,14 @@ export abstract class GenericResponse implements iResponse {
     public headers(key?: string): Node {
         if (typeof key !== 'undefined') {
             // Try first as they put it in the test, then try all lowercase
-            key = typeof this._headers[key] !== 'undefined' ? key : key.toLowerCase();
+            key = typeof this._response.headers[key] !== 'undefined' ? key : key.toLowerCase();
             let name: string = 'HTTP Headers[' + key + ']';
-            let value: Node = new Node(this, name, this._headers[key]);
+            let value: Node = new Node(this, name, this._response.headers[key]);
             value.exists();
             return value;
         }
         else {
-            return new Node(this, 'HTTP Headers', this._headers);
+            return new Node(this, 'HTTP Headers', this._response.headers);
         }
     }
 
@@ -205,7 +251,7 @@ export abstract class GenericResponse implements iResponse {
     public cookies(key?: string): Node {
         if (typeof key !== 'undefined') {
             let cookie: Cookie | null = null;
-            this._cookies.forEach((c: Cookie) => {
+            this._response.cookies.forEach((c: Cookie) => {
                 if (c.key == key) {
                     cookie = c;
                 }
@@ -216,7 +262,7 @@ export abstract class GenericResponse implements iResponse {
             return value;
         }
         else {
-            return new Node(this, 'HTTP Cookies', this._cookies);
+            return new Node(this, 'HTTP Cookies', this._response.cookies);
         }
     }
 
@@ -226,14 +272,14 @@ export abstract class GenericResponse implements iResponse {
      * @returns {Node}
      */
     public status(): Node {
-        return new Node(this, 'HTTP Status', this._statusCode);
+        return new Node(this, 'HTTP Status', this._response.statusCode);
     }
 
     /**
      * Length of the response body
      */
     public length(): Node {
-        return new Node(this, 'Length of Response Body', this._body.length);
+        return new Node(this, 'Length of Response Body', this._response.body.length);
     }
 
     /**

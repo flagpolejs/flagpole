@@ -2,15 +2,18 @@ import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./
 import { Scenario } from "./scenario";
 import { Node } from "./node";
 
-export class ResourceResponse extends GenericResponse implements iResponse {
+export class VideoResource extends GenericResponse implements iResponse {
 
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
         this.status().between(200, 299);
+        this.headers('Content-Type')
+            .label('MIME Type matches expected value for video')
+            .matches(/(video|mpegurl)/i);
     }
 
     public get typeName(): string {
-        return 'Resource';
+        return 'Video';
     }
 
     public select(path: string): Node {
@@ -18,7 +21,7 @@ export class ResourceResponse extends GenericResponse implements iResponse {
     }
 
     public getType(): ResponseType {
-        return ResponseType.resource;
+        return ResponseType.script;
     }
 
 }

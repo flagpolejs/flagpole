@@ -1,4 +1,4 @@
-import { iResponse, GenericResponse, SimplifiedResponse, ResponseType } from "./response";
+import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { Node } from "./node";
 import { URL } from 'url';
@@ -18,11 +18,15 @@ export class ImageResponse extends GenericResponse implements iResponse {
 
     protected imageProperties: ImageProperties;
 
-    constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
-        super(scenario, url, response);
+    constructor(scenario: Scenario, response: NormalizedResponse) {
+        super(scenario, response);
         this.imageProperties = JSON.parse(response.body);
         this.label('MIME Type matches expected value for an image')
             .select('mime').startsWith('image/');
+    }
+
+    public get typeName(): string {
+        return 'Image';
     }
 
     public select(propertyName: string): Node {

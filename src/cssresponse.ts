@@ -1,4 +1,4 @@
-import { iResponse, GenericResponse, SimplifiedResponse, ResponseType } from "./response";
+import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { Node } from "./node";
 
@@ -8,12 +8,16 @@ export class CssResponse extends GenericResponse implements iResponse {
 
     protected css: any;
 
-    constructor(scenario: Scenario, url: string, response: SimplifiedResponse) {
-        super(scenario, url, response);
+    constructor(scenario: Scenario, response: NormalizedResponse) {
+        super(scenario, response);
         this.status().between(200, 299);
         //this.headers('Content-Type').similarTo('text/css');
         this.css = css.parse(this.getBody(), { silent: true });
         this.validate();
+    }
+
+    public get typeName(): string {
+        return 'Stylesheet';
     }
 
     public select(path: string): Node {

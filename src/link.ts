@@ -38,39 +38,39 @@ export class Link {
     }
 
     public isData(): boolean {
-        return (this.uri.startsWith('data:'));
+        return (/^data:/.test(this.uri));
     }
 
     public isAnchor(): boolean {
-        return this.uri.startsWith('#');
+        return /^#/.test(this.uri);
     }
 
     public isEmail(): boolean {
-        return this.uri.startsWith('mailto:')
+        return /^mailto:/.test(this.uri)
     }
 
     public isPhone(): boolean {
-        return (this.uri.startsWith('tel:') || this.uri.startsWith('callto:') || this.uri.startsWith('wtai:'));
+        return /^(tel|callto|wtai):/.test(this.uri);
     }
 
     public isTextMessage(): boolean {
-        return (this.uri.startsWith('sms:') || this.uri.startsWith('mms:'));
+        return /^(sms|mms):/.test(this.uri);
     }
 
     public isGeo(): boolean {
-        return (this.uri.startsWith('geo:') || this.uri.startsWith('geopoint:'));
+        return /^(geo|geopoint):/.test(this.uri);
     }
 
     public isScript(): boolean {
-        return (this.uri.startsWith('javascript:'));
+        return /^(javascript):/.test(this.uri);
     }
 
     public isAppStore(): boolean {
-        return (this.uri.startsWith('market:') || this.uri.startsWith('itms:') || this.uri.startsWith('itms-apps:'));
+        return /^(market|itms|itms-apps):/.test(this.uri);
     }
 
     public isFtp(): boolean {
-        return (this.uri.startsWith('ftp:'));
+        return /^(ftp):/.test(this.uri);
     }
 
     public isNonNavigation(): boolean {
@@ -82,7 +82,7 @@ export class Link {
             this.uri.length > 0 &&
             !this.isAnchor() &&
             (
-                this.uri.startsWith('?') ||
+                /^\?/.test(this.uri) ||
                 /^https?:\/\//i.test(this.uri) ||
                 /^\//i.test(this.uri) ||
                 !/^[a-z-]{1,10}:/i.test(this.uri)
