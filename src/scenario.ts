@@ -17,7 +17,7 @@ export class Scenario {
 
     public readonly suite: Suite;
 
-    protected onDone: Function;
+    protected notifySuiteOnCompleted: Function;
     protected onReject: Function = () => { };
     protected onResolve: Function = () => { };
     protected onFinally: Function = () => { };
@@ -58,14 +58,14 @@ export class Scenario {
         headers: {}
     };
 
-    constructor(suite: Suite, title: string, onDone: Function) {
+    constructor(suite: Suite, title: string, notifySuiteOnCompleted: Function) {
         const me: Scenario = this;
         this.initialized = Date.now();
         this.suite = suite;
         this.title = title;
         this.cookieJar = new request.jar();
         this.options = this.defaultRequestOptions;
-        this.onDone = onDone;
+        this.notifySuiteOnCompleted = notifySuiteOnCompleted;
         this.subheading(title);
     }
 
@@ -403,13 +403,6 @@ export class Scenario {
      * Set the callback for the assertions to run after the request has a response
      */
     public then(callback: Function): Scenario {
-        return this.assertions(callback);
-    }
-
-    /**
-     * 
-     */
-    public assertions(callback: Function): Scenario {
         // If it hasn't already been executed
         if (!this.hasExecuted()) {
             this._thens.push(callback);
@@ -423,6 +416,11 @@ export class Scenario {
         }
         return this;
     }
+    
+    /**
+     * Backwards compatible alias
+     */
+    public assertions = this.then;
 
     /**
      * Skip this scenario completely and mark it done
@@ -435,7 +433,7 @@ export class Scenario {
             this.start = Date.now();
             this.log.push(new CommentLine(message));
             this.end = Date.now();
-            this.onDone(this);
+            this.notifySuiteOnCompleted(this);
         }
         return this;
     }
@@ -460,17 +458,16 @@ export class Scenario {
         this.requestLoaded = Date.now();
         this.pass('Loaded ' + response.typeName + ' ' + this.url);
         if (this._thens.length > 0 && this.url !== null) {
-            const _thens = this._thens;
-            Bluebird.mapSeries(_thens, (_then) => {
+            Bluebird.mapSeries(scenario._thens, (_then) => {
                 return _then(response);
             }).then(() => {
-                this.done();
+                scenario.done();
             }).catch((err) => {
-                this.done(err);
+                scenario.done(err);
             });
             return;
         }
-        this.done();
+        scenario.done();
     }
 
     protected buildUrl(): string {
@@ -659,33 +656,39 @@ export class Scenario {
      *
      * @returns {Scenario}
      */
-    public done(err: any = null): Scenario {
-        this.end = Date.now();
-        this.log.push(new CommentLine("Took " + this.getExecutionTime() + 'ms'));
-        // Resolve or reject, like scenario is a promise
-        if (err === null) {
-            this.onResolve(this)
+    protected done(err: any = null): Scenario {
+        // Only run this once
+        if (this.end === null) {
+            this.end = Date.now();
+            this.log.push(new CommentLine("Took " + this.getExecutionTime() + 'ms'));
+            // Resolve or reject, like scenario is a promise
+            if (err === null) {
+                this.onResolve(this)
+            }
+            else {
+                this.fail(err);
+                this.onReject(err);
+            }
+            // Finally
+            this.onFinally(this);
+            this.notifySuiteOnCompleted(this);
         }
-        else {
-            this.fail(err);
-            this.onReject(err);
-        }
-        // Finally
-        this.onFinally(this);
-        this.onDone(this);
         return this;
     }
 
-    public catch(callback: Function) {
+    public catch(callback: Function): Scenario {
         this.onReject = callback;
+        return this;
     }
 
-    public success(callback: Function) {
+    public success(callback: Function): Scenario {
         this.onResolve = callback;
+        return this;
     }
 
-    public finally(callback: Function) {
+    public finally(callback: Function): Scenario {
         this.onFinally = callback;
+        return this;
     }
 
     /**
@@ -695,6 +698,9 @@ export class Scenario {
         return this.url;
     }
 
+    /**
+     * URL after redirects
+     */
     public getFinalUrl(): string | null {
         return this.finalUrl;
     }

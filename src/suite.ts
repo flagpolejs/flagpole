@@ -3,6 +3,7 @@ import { Scenario } from "./scenario";
 import { iLogLine, LogLineType, HeadingLine, DecorationLine, CommentLine, LineBreak, CustomLine, ConsoleColor, SubheadingLine, LogLine, HorizontalRule } from "./consoleline";
 import { URL } from 'url';
 import { FlagpoleOutput } from './flagpole';
+import * as Bluebird from "bluebird";
 
 /**
  * A suite contains many scenarios
@@ -11,11 +12,16 @@ export class Suite {
 
     public scenarios: Array<Scenario> = [];
 
+    protected onReject: Function = () => { };
+    protected onResolve: Function = () => { };
+    protected onFinally: Function = () => { };
+    protected _thens: Function[] = [];
+
     protected title: string;
     protected baseUrl: URL | null = null;
     protected start: number;
+    protected end: number | null = null;
     protected waitToExecute: boolean = false;
-    protected callback: Function | null = null;
 
     protected _verifySslCert: boolean = true;
 
@@ -24,19 +30,42 @@ export class Suite {
         this.start = Date.now();
     }
 
+    /**
+     * Runs after each scenario completes (whether pass or fail)
+     */
+    private scenarioEnded() {
+        const suite: Suite = this;
+        //console.log(this.end);
+        // Is every scenario completed? And only run it once
+        if (this.isDone()) {
+            // Save time ended
+            this.end = Date.now();
+            // Resolve as if we were a promise
+            if (this.failed()) {
+                this.onReject(this);
+            }
+            else {
+                this._thens.forEach((_then) => {
+                    _then(suite);
+                });
+                suite.onResolve(suite);
+            }
+            // Fire this regardless of pass or fails
+            this.onFinally(this);
+            // Should we print automatically?
+            (Flagpole.automaticallyPrintToConsole) && this.print();
+            // Should we exit on complete?
+            if (Flagpole.exitOnDone) {
+                process.exit(
+                    this.passed() ? 0 : 1
+                );
+            }
+        }
+    }
+
     public verifySslCert(verify: boolean): Suite {
         this._verifySslCert = verify;
         return this;
-    }
-
-    /**
-     *
-     * @param {Function} callback
-     * @returns {Suite}
-     */
-    public onDone(callback: Function): Suite {
-        this.callback = callback;
-        return this
     }
 
     /**
@@ -56,13 +85,9 @@ export class Suite {
      * @returns {boolean}
      */
     public isDone(): boolean {
-        let isDone: boolean =  this.scenarios.every(function(scenario) {
+        return this.scenarios.every(function(scenario) {
             return scenario.isDone();
         });
-        if (isDone && this.callback) {
-            this.callback(this);
-        }
-        return isDone;
     }
 
     /**
@@ -71,7 +96,9 @@ export class Suite {
      * @returns {number}
      */
     public getDuration(): number {
-        return Date.now() - this.start;
+        return (this.end === null) ?
+            Date.now() - this.start :
+            this.end - this.start;
     }
 
     /**
@@ -228,23 +255,15 @@ export class Suite {
      * @constructor
      */
     public Scenario(title: string): Scenario {
-        let suite: Suite = this;
-        let scenario: Scenario = new Scenario(this, title, function() {
-            if (suite.isDone()) {
-                if (Flagpole.automaticallyPrintToConsole) {
-                    suite.print();
-                }
-                if (Flagpole.exitOnDone) {
-                    process.exit(
-                        suite.passed() ? 0 : 1
-                    );
-                }
-            }
+        const suite: Suite = this;
+        const scenario: Scenario = new Scenario(this, title, () => {
+            suite.scenarioEnded();
         });
+        // Some local tests fail with SSL verify on, so may have been disabled on this suite
         scenario.verifySslCert(this._verifySslCert);
-        if (this.waitToExecute) {
-            scenario.wait();
-        }
+        // Should we hold off on executing?
+        (this.waitToExecute) && scenario.wait();
+        // Add this to our collection of scenarios
         this.scenarios.push(scenario);
         return scenario;
     }
@@ -357,4 +376,28 @@ export class Suite {
             return scenario.failed();
         });
     }
+
+    public catch(callback: Function): Suite {
+        this.onReject = callback;
+        return this;
+    }
+
+    public success(callback: Function): Suite {
+        this.onResolve = callback;
+        return this;
+    }
+
+    public finally(callback: Function): Suite {
+        this.onFinally = callback;
+        return this;
+    }
+
+    public then(callback: Function): Suite {
+        this._thens.push(callback);
+        return this;
+    }
+
+    // Alias for backward compatibility
+    public onDone = this.finally;
+
 }
