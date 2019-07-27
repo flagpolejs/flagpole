@@ -1,7 +1,7 @@
 import { Flagpole } from "./index";
 import { Suite } from "./suite";
 import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor } from "./consoleline";
-import { ResponseType, NormalizedResponse, iResponse, GenericResponse } from "./response";
+import { ResponseType, NormalizedResponse, iResponse, GenericResponse, iAssertionContext } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
 import * as Bluebird from "bluebird";
@@ -458,8 +458,16 @@ export class Scenario {
         this.requestLoaded = Date.now();
         this.pass('Loaded ' + response.typeName + ' ' + this.url);
         if (this._thens.length > 0 && this.url !== null) {
+            let context: iAssertionContext = {
+                response: response,
+                scenario: scenario,
+                suite: scenario.suite,
+                browser: (this.responseType == ResponseType.browser) && scenario.getBrowser(),
+                page: null
+            };
             Bluebird.mapSeries(scenario._thens, (_then) => {
-                return _then(response);
+                context.page = context.browser && scenario.getBrowser().getPage();
+                return _then.call(context, response, context);
             }).then(() => {
                 scenario.done();
             }).catch((err) => {

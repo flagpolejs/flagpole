@@ -14,7 +14,7 @@ const suite = Flagpole.Suite('Test Google Search')
     })
     .finally((suite) => {
         console.log('suite finally');
-        //suite.print();
+        suite.print();
     });
 
 const browserOpts = {
@@ -28,24 +28,24 @@ const browserOpts = {
 suite.Scenario('Homepage')
     .browser(browserOpts)
     .open('/')
-    .then((response) => {
-        response.assert(response.scenario.getBrowser().has404() === false, "Has no 404 errors.");
+    .then(function (response) {
+        response.assert(this.browser.has404() === false, "Has no 404 errors.");
         response.status().equals(200);
     })
-    .then((response) => {
-        const page = response.scenario.getBrowser().getPage();
-
-        return Promise.mapSeries([
-            () => page.type('input[name="q"]', 'Flagpole QA Testing Framework'),
-            () => page.evaluate(() => document.querySelector('input[type="submit"]').click()),
-        ], (func) => func());
-
+    .then(function () {
+        return this.page.type('input[name="q"]', 'Flagpole QA Testing Framework');
+    })
+    .then(function () {
+        return this.page.evaluate(() => document.querySelector('input[type="submit"]').click());
     })
     .then((response) => {
-        response.status().equals(200);
+        return response.label('loaded results page').status().equals(200);
     })
     .then(() => {
         console.log('scenario last then');
+        return new Promise((resolve) => {
+            setTimeout(resolve, 3000);
+        });
     })
     .success(() => {
         console.log('scenario success');

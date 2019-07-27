@@ -27,6 +27,7 @@ suite.Scenario('Homepage').open('/')
         response.headers('content-type').contains('text/html');
     })
     .then((response) => {
+        console.log(this);
         const coverImages = response.select('section.topStories figure img');
         coverImages.length().echo();
         coverImages.each(function (image, index) {

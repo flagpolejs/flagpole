@@ -1,9 +1,20 @@
 import { Scenario } from "./scenario";
+import { Suite } from "./suite";
 import { Node } from "./node";
 import { URL } from 'url';
 import { Cookie } from 'request';
 import { IncomingMessage } from 'http';
 import * as puppeteer from "puppeteer-core";
+import { Browser } from './browser';
+import { Page } from 'puppeteer-core';
+
+export interface iAssertionContext {
+    response: iResponse,
+    scenario: Scenario,
+    suite: Suite,
+    browser: null | boolean | Browser,
+    page: null | boolean | Page
+}
 
 
 /**
