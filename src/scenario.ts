@@ -301,10 +301,22 @@ export class Scenario {
         return this;
     }
 
-    public asyncAssert(callback: Function, message: string, actualValue?: string): Promise<Scenario> {
+    public asyncAssert(callback: Function, message: string, actualValue?: string): Promise<any> {
         return new Promise((resolve) => {
             this.assert(callback(), message, actualValue);
             resolve();
+        });
+    }
+
+    public assertResolves(promise: Promise<any>, message, actualValue?: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            promise.then(() => {
+                this.assert(true, message, actualValue);
+                resolve();
+            }).catch(() => {
+                this.assert(false, message, actualValue);
+                reject();
+            })
         });
     }
 

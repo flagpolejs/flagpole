@@ -36,12 +36,10 @@ suite.Scenario('Homepage')
         }, 'Address field is ' + address);
     })
     .then(function () {
-        return new Promise((resolve) => {
-            this.page.waitForSelector(paths.selectAddressButton, { timeout: 1000 }).finally(() => {
-                this.response.assert(true, 'Address selector dropdown showed up');
-                resolve();
-            });
-        });
+        return this.scenario.assertResolves(
+            this.page.waitForSelector(paths.selectAddressButton, { timeout: 2000 }),
+            'Address selection dropdown shows up'
+        );
     })
     .then(function () {
         this.response.comment('Select the address and click submit');
@@ -52,23 +50,29 @@ suite.Scenario('Homepage')
     })
     .then(function () {
         this.response.comment('Wait for results');
-        return this.page.waitForSelector(paths.orlandoRestaurantResults, { timeout: 10000 });
+        return this.scenario.assertResolves(
+            this.page.waitForSelector(paths.orlandoRestaurantResults, { timeout: 10000 }),
+            'Restaurant results show up'
+        );
     })
     .then(async function () {
         const results = await this.page.$$(paths.orlandoRestaurantResults);
         return this.scenario.asyncAssert(() => {
-            return results.length > 0
-        }, 'Restaurant results found');
+            return results.length > 5
+        }, 'There are more than five restaurants to choose from');
     })
     .then(function () {
         this.response.comment('Click on first result');
         return this.page.click(paths.orlandoRestaurantResults);
     })
     .then(async function () {
-        return this.page.waitForSelector(paths.restaurantHeader, { timeout: 1000 });
+        this.response.comment('Waiting for restaurant page to load');
+        return this.scenario.assertResolves(
+            this.page.waitForSelector(paths.restaurantHeader, { timeout: 1000 }),
+            'Found restaurant page header'
+        );
     })
     .then(async function () {
-        this.response.comment('Restaurant page loaded');
         const text = await this.page.$eval(paths.restaurantHeader, el => el.textContent);
         return this.scenario.asyncAssert(() => {
             return text.trim().length > 0
