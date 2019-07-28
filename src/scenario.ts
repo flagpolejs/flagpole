@@ -279,9 +279,9 @@ export class Scenario {
      * Assert something is true, with respect to the flipped not()
      * Also respect ignore assertions flag
      */
-    public assert(statement: boolean, message: string, actualValue?: string): Scenario {
+    public assert(assertion: boolean, message: string, actualValue?: string): Scenario {
         if (!this.ignoreAssertion) {
-            let passed: boolean = this.flipAssertion ? !statement : !!statement;
+            let passed: boolean = this.flipAssertion ? !assertion : !!assertion;
             if (this.flipAssertion) {
                 message = 'NOT: ' + message;
             }
@@ -302,14 +302,18 @@ export class Scenario {
         return this;
     }
 
-    public asyncAssert(callback: Function, message: string, actualValue?: string): Promise<any> {
+    public asyncAssert(assertion: Function | boolean, message: string, actualValue?: string): Promise<any> {
         return new Promise((resolve) => {
-            this.assert(callback(), message, actualValue);
+            this.assert(
+                typeof assertion == 'function' ? assertion() : assertion,
+                message,
+                actualValue
+            );
             resolve();
         });
     }
 
-    public assertResolves(promise: Promise<any>, message, actualValue?: string): Promise<any> {
+    public resolves(promise: Promise<any>, message: string, actualValue?: string): Promise<any> {
         return new Promise((resolve, reject) => {
             promise.then(() => {
                 this.assert(true, message, actualValue);
@@ -317,6 +321,18 @@ export class Scenario {
             }).catch(() => {
                 this.assert(false, message, actualValue);
                 reject();
+            })
+        });
+    }
+
+    public rejects(promise: Promise<any>, message: string, actualValue?: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            promise.then(() => {
+                this.assert(false, message, actualValue);
+                reject();
+            }).catch(() => {
+                this.assert(true, message, actualValue);
+                resolve();
             })
         });
     }
@@ -502,7 +518,19 @@ export class Scenario {
                 suite: scenario.suite,
                 browser: (this.responseType == ResponseType.browser) && scenario.getBrowser(),
                 page: null,
-                result: null
+                result: null,
+                assert: function () {
+                    return scenario.assert.apply(scenario, arguments);
+                },
+                asyncAssert: function () {
+                    return scenario.asyncAssert.apply(scenario, arguments);
+                },
+                resolves: function () {
+                    return scenario.resolves.apply(scenario, arguments);
+                },
+                rejects: function () {
+                    return scenario.rejects.apply(scenario, arguments);
+                }
             };
             let lastReturnValue: any = null;
             Bluebird.mapSeries(scenario._thens, (_then, index) => {

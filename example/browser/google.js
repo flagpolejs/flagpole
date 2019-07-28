@@ -19,9 +19,9 @@ const browserOpts = {
 suite.Scenario('Google Search for Flagpole')
     .browser(browserOpts)
     .open('/')
-    .then(function (response) {
-        response.assert(this.browser.has404() === false, "Has no 404 errors.");
-        response.status().equals(200);
+    .then(function () {
+        this.assert(this.browser.has404() === false, "Has no 404 errors.");
+        this.response.status().equals(200);
     })
     .then(async function () {
         return await this.response.asyncSelect('input[name="q"]');

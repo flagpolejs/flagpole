@@ -14,7 +14,11 @@ export interface iAssertionContext {
     suite: Suite,
     browser: null | boolean | Browser,
     page: null | boolean | Page
-    result: any
+    result: any,
+    assert: Function,
+    asyncAssert: Function,
+    resolves: Function,
+    rejects: Function
 }
 
 

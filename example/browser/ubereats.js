@@ -31,12 +31,10 @@ suite.Scenario('Homepage')
     })
     .then(async function () {
         const value = await this.page.$eval(paths.addressInput, el => el.value);
-        return this.scenario.asyncAssert(() => {
-            return value == address;
-        }, 'Address field is ' + address);
+        return this.asyncAssert(value == address, 'Address field is ' + address);
     })
     .then(function () {
-        return this.scenario.assertResolves(
+        return this.resolves(
             this.page.waitForSelector(paths.selectAddressButton, { timeout: 2000 }),
             'Address selection dropdown shows up'
         );
@@ -47,33 +45,28 @@ suite.Scenario('Homepage')
     .then(function () {
         return this.page.click(paths.submitButton);
     })
-    .then(function () {
-        this.response.comment('Wait for results');
-        return this.scenario.assertResolves(
+    .then('Wait for results', function () {
+        return this.resolves(
             this.page.waitForSelector(paths.orlandoRestaurantResults, { timeout: 10000 }),
             'Restaurant results show up'
         );
     })
     .then(async function () {
         const results = await this.page.$$(paths.orlandoRestaurantResults);
-        return this.scenario.asyncAssert(() => {
+        return this.asyncAssert(() => {
             return results.length > 5
         }, 'There are more than five restaurants to choose from');
     })
-    .then(function () {
-        this.response.comment('Click on first result');
+    .then('Click on first result', function () {
         return this.page.click(paths.orlandoRestaurantResults);
     })
-    .then(async function () {
-        this.response.comment('Waiting for restaurant page to load');
-        return this.scenario.assertResolves(
+    .then('Waiting for restaurant page to load', async function () {
+        return this.resolves(
             this.page.waitForSelector(paths.restaurantHeader, { timeout: 1000 }),
             'Found restaurant page header'
         );
     })
     .then(async function () {
         const text = await this.page.$eval(paths.restaurantHeader, el => el.textContent);
-        return this.scenario.asyncAssert(() => {
-            return text.trim().length > 0
-        }, 'Has restaurant name: ' + text);
+        return this.asyncAssert(text.trim().length > 0, 'Has restaurant name: ' + text);
     });
