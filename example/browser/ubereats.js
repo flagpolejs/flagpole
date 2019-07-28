@@ -3,9 +3,7 @@ Flagpole.exitOnDone = true;
 
 const suite = Flagpole.Suite('Uber Eats Sample Test')
     .base('https://www.ubereats.com/')
-    .finally((suite) => {
-        suite.print();
-    });
+    .finally(() => { suite.print(); });
 
 const paths = {
     addressInput: 'div[aria-label="enter address"] input',
@@ -17,8 +15,7 @@ const paths = {
 
 const address = '2180 W State Rd 434, Longwood, FL 32779'
 
-suite.Scenario('Homepage')
-    .browser({ headless: false })
+suite.Browser('Start on homepage and find local restaurants', { headless: false })
     .open('/')
     .then(function () {
         return this.response.asyncSelect(paths.addressInput);

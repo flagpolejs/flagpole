@@ -268,32 +268,36 @@ export class Suite {
         return scenario;
     }
 
-    public Json(title: string): Scenario {
-        return this.Scenario(title).json();
+    public Json(title: string, opts: any = {}): Scenario {
+        return this.Scenario(title).json(opts);
     }
 
-    public Image(title: string): Scenario {
-        return this.Scenario(title).image();
+    public Image(title: string, opts: any = {}): Scenario {
+        return this.Scenario(title).image(opts);
     }
 
-    public Video(title: string): Scenario {
-        return this.Scenario(title).video();
+    public Video(title: string, opts: any = {}): Scenario {
+        return this.Scenario(title).video(opts);
     }
 
-    public Html(title: string): Scenario {
-        return this.Scenario(title).html();
+    public Html(title: string, opts: any = {}): Scenario {
+        return this.Scenario(title).html(opts);
     }
 
-    public Stylesheet(title: string): Scenario {
-        return this.Scenario(title).stylesheet();
+    public Stylesheet(title: string, opts: any = {}): Scenario {
+        return this.Scenario(title).stylesheet(opts);
     }
 
-    public Script(title: string): Scenario {
-        return this.Scenario(title).script();
+    public Script(title: string, opts: any = {}): Scenario {
+        return this.Scenario(title).script(opts);
     }
 
-    public Resource(title: string): Scenario {
-        return this.Scenario(title).resource();
+    public Resource(title: string, opts: any = {}): Scenario {
+        return this.Scenario(title).resource(opts);
+    }
+
+    public Browser(title: string, opts: any = {}): Scenario {
+        return this.Scenario(title).browser(opts);
     }
 
     /**
