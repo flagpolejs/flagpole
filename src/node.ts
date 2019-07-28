@@ -43,7 +43,21 @@ export class Node {
      * Is this node a DOM Element?
      */
     protected isDomElement(): boolean {
-        return (Flagpole.toType(this.obj) == 'cheerio');
+        return this.getType() == 'cheerio';
+    }
+
+    /**
+     * Is a string representing a browser selector path
+     */
+    protected isBrowserSelector(): boolean {
+        return this.getType() == 'browserselector';
+    }
+
+    /**
+     * Is a Puppeteer Element Handle object
+     */
+    protected isElementHandle(): boolean {
+        return this.getType() == 'elementhandle';
     }
 
     public tagName(): Node {
@@ -186,21 +200,21 @@ export class Node {
      * 
      */
     protected isArray(): boolean {
-        return Flagpole.toType(this.obj) == 'array';
+        return this.getType()  == 'array';
     }
 
     /**
      * 
      */
     protected isString(): boolean {
-        return Flagpole.toType(this.obj) == 'string';
+        return this.getType() == 'string';
     }
 
     /**
      * 
      */
     protected isObject(): boolean {
-        return Flagpole.toType(this.obj) == 'object';
+        return this.getType() == 'object';
     }
 
     /**
@@ -335,14 +349,6 @@ export class Node {
      */
     public echo(): Node {
         this.comment(this.name + ' = ' + this.obj);
-        return this;
-    }
-
-    /**
-     * For debugging, just spit out this object's type
-     */
-    public typeof(): Node {
-        this.comment('typeof ' + this.name + ' = ' + Flagpole.toType(this.obj));
         return this;
     }
 
@@ -822,7 +828,11 @@ export class Node {
     }
 
     public type(): Node {
-        return new Node(this.response, 'Type of ' + this.name, Flagpole.toType(this.obj));
+        return new Node(this.response, 'Type of ' + this.name, this.getType());
+    }
+
+    protected getType(): string {
+        return Flagpole.toType(this.obj);
     }
 
     /**
@@ -931,7 +941,7 @@ export class Node {
                 );
             });
         }
-        else if (Flagpole.toType(this.obj) == 'object') {
+        else if (this.getType() == 'object') {
             let obj: {} = this.obj;
             this.obj.keys().forEach(function (key) {
                 callback(
@@ -940,7 +950,7 @@ export class Node {
                 );
             });
         }
-        else if (Flagpole.toType(this.obj) == 'string') {
+        else if (this.getType() == 'string') {
             this.obj.toString().trim().split(' ').forEach(function (word, index) {
                 callback(
                     new Node(response, name + '[' + index + ']', word),
@@ -1148,6 +1158,9 @@ export class Node {
         if (this.isArray()) {
             contains = (this.obj.indexOf(string) >= 0);
         }
+        else if (this.isBrowserSelector()) {
+            contains = (this.toString().indexOf(string) >= 0);
+        }
         else if (this.isObject()) {
             contains = (this.obj.hasOwnProperty(string));
         }
@@ -1223,7 +1236,7 @@ export class Node {
      * @param {string} type
      */
     public is(type: string): Node {
-        let myType: string = Flagpole.toType(this.obj);
+        const myType: string = this.getType();
         return this.assert((myType == type.toLocaleLowerCase()),
             this.name + ' is type ' + type, 
             myType
@@ -1233,16 +1246,33 @@ export class Node {
     /**
      * Does this element exist?
      */
-    public exists(): Node {
-        let exists: boolean = false;
+
+    private _exists(): boolean {
         if (this.isDomElement()) {
-            exists = (this.obj.length > 0);
+            return (this.obj.length > 0);
         }
         else if (!this.isNullOrUndefined()) {
-            exists = true;
+            return true;
+        }
+        return false;
+    }
+    
+    public exists(message?: string): Node {
+        return this.assert(this._exists(),
+            message || this.name + ' exists'
+        );
+    }
+
+    public async asyncExists(message?: string): Promise<Node> {
+        let exists: boolean = this._exists();
+        if (this.isBrowserSelector() && this.response.scenario) {
+            const page = await this.response.scenario.getBrowser().getPage();
+            if (page !== null) {
+                exists = (await page.$$(this.toString())).length > 0;
+            }
         }
         return this.assert(exists,
-            this.name + ' exists'
+            message || this.name + ' exists'
         );
     }
 

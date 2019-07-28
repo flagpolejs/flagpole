@@ -25,12 +25,15 @@ const browserOpts = {
     height: 768,
 };
 
-suite.Scenario('Homepage')
+suite.Scenario('Google Search for Flagpole')
     .browser(browserOpts)
     .open('/')
     .then(function (response) {
         response.assert(this.browser.has404() === false, "Has no 404 errors.");
         response.status().equals(200);
+    })
+    .then(async function () {
+        return await this.response.asyncSelect('input[name="q"]');
     })
     .then(function () {
         return this.page.type('input[name="q"]', 'Flagpole QA Testing Framework');
@@ -41,11 +44,11 @@ suite.Scenario('Homepage')
     .then((response) => {
         return response.label('loaded results page').status().equals(200);
     })
+    .then(async function () {
+        return (await this.page.$$('#search')).screenshot({ path: 'screenshot.png' });
+    })
     .then(() => {
         console.log('scenario last then');
-        return new Promise((resolve) => {
-            setTimeout(resolve, 3000);
-        });
     })
     .success(() => {
         console.log('scenario success');

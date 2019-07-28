@@ -301,6 +301,13 @@ export class Scenario {
         return this;
     }
 
+    public asyncAssert(callback: Function, message: string, actualValue?: string): Promise<Scenario> {
+        return new Promise((resolve) => {
+            this.assert(callback(), message, actualValue);
+            resolve();
+        });
+    }
+
     /**
      * Push in a new passing assertion
      */
@@ -809,6 +816,18 @@ export class Scenario {
             ResponseType.browser,
             Object.assign(this.defaultBrowserOptions, opts)
         );
+    }
+
+    public pause(millis: number): Scenario {
+        this.then(() => {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    this.echo('Paused ' + millis + ' milliseconds');
+                    resolve();
+                }, millis);
+            });
+        });
+        return this;
     }
 
 }

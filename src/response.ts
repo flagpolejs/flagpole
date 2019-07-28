@@ -24,6 +24,7 @@ export interface iResponse {
     typeName: string,
     getType(): ResponseType
     select(path: string, findIn?: any): Node
+    asyncSelect(path: string, findIn?: any): Promise<Node>
     status(): Node
     and(): Node
     loadTime(): Node
@@ -131,6 +132,10 @@ export abstract class GenericResponse implements iResponse {
         this.scenario = scenario;
         this._response = response;
         this._lastElement = new Node(this, 'Empty Element', null);
+    }
+
+    public async asyncSelect(path: string, findIn?: any): Promise<Node> {
+        return this.select(path, findIn);
     }
 
     public absolutizeUri(uri: string): string {
