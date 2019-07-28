@@ -2,25 +2,30 @@ let Flagpole = require('../dist/index.js').Flagpole;
 
 Flagpole.Suite('Smoke Tests')
     .base('http://www.stackoverflow.com')
-    .onDone(function(suite) {
+    .finally(function (suite) {
         suite.print();
     })
-
-    .Scenario('Homepage').open('/').assertions(function(test) {
-        test.status().equals(200)
+    .Html('Homepage').open('/')
+    .then('Do basic homepage tests', function () {
+        this.response.status().equals(200)
             .headers('content-type').contains('text/html')
             .select('title').text().contains('Stack Overflow')
             .select('link')
-            .not().select('frameset')
+            .not().select('frameset');
+    })
+    .then('Test the top navigation bar', function () {
+        this.response
             .label('Top bar and call to actions exists')
-            .comment('TOP BAR')
             .select('.top-bar').find('.-ctas').length().greaterThan(0)
             .label('Login Link exists')
             .and().find('a.login-link')
             .and().first().text().similarTo('Log in')
             .label('Sign up link exists')
             .select('a.login-link').nth(1)
-            .and().text().similarTo('Sign Up')
+            .and().text().similarTo('Sign Up');
+    })
+    .then('There should be questions', function () {
+        this.response
             .select('.question-summary')
             .and().length().greaterThan(5)
             .select('.question-summary').first()
@@ -29,17 +34,19 @@ Flagpole.Suite('Smoke Tests')
             .select('.question-summary').nth(2)
             .and().find('.status span').exists()
             .and().text().parseInt().greaterThanOrEquals(0);
-
-        test.select('img').each(function (img, index) {
-            img.load('Image ' + index).assertions(function () { });
+    })
+    .then('Test that each image exists', function () {
+        this.response.select('img').each(function (img, index) {
+            img.load('Image ' + index, true);
         });
-
-        test.select('link[rel="stylesheet"]').each(function (link, index) {
-            link.load('Stylesheet ' + index).assertions(function () { });
+    })
+    .then('Test that the stylesheets exist', function () {
+        this.response.select('link[rel="stylesheet"]').each(function (link, index) {
+            link.load('Stylesheet ' + index, true);
         });
-
-        test.select('script[src]').each(function (script, index) {
-            script.load('Script ' + index).assertions(function () { });
-        });
-
-    });
+    })
+    .then('Test that the javascript files exist', function () {
+        this.response.select('script[src]').each(function (script, index) {
+            script.load('Script ' + index, true);
+        })
+    })

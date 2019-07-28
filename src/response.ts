@@ -14,6 +14,7 @@ export interface iAssertionContext {
     suite: Suite,
     browser: null | boolean | Browser,
     page: null | boolean | Page
+    result: any
 }
 
 

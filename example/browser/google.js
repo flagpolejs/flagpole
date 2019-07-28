@@ -6,16 +6,7 @@ Flagpole.exitOnDone = true;
 
 const suite = Flagpole.Suite('Test Google Search')
     .base('https://www.google.com/')
-    .then(() => {
-        console.log('suite then');
-    })
-    .success(() => {
-        console.log('suite success');
-    })
-    .finally((suite) => {
-        console.log('suite finally');
-        suite.print();
-    });
+    .finally(() => { suite.print() });
 
 const browserOpts = {
     headless: false,
@@ -43,19 +34,4 @@ suite.Scenario('Google Search for Flagpole')
     })
     .then((response) => {
         return response.label('loaded results page').status().equals(200);
-    })
-    .then(async function () {
-        return (await this.page.$$('#search')).screenshot({ path: 'screenshot.png' });
-    })
-    .then(() => {
-        console.log('scenario last then');
-    })
-    .success(() => {
-        console.log('scenario success');
-    })
-    .catch(() => {
-        console.log('scenario catch');
-    })
-    .finally(() => {
-        console.log('scenario finally');
     });

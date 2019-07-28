@@ -46,6 +46,7 @@ export class Scenario {
 
     protected _browser: Browser | null = null;
     protected _thens: Function[] = [];
+    protected _thensMessage: Array<string | null> = [];
     protected _isMock: boolean = false;
 
     protected defaultBrowserOptions: BrowserOptions = {
@@ -421,10 +422,28 @@ export class Scenario {
     /**
      * Set the callback for the assertions to run after the request has a response
      */
-    public then(callback: Function): Scenario {
+    public then(a: Function | string, b?: Function): Scenario {
+        const callback: Function = (() => {
+            if (typeof b == 'function') {
+                return b;
+            }
+            else if (typeof a == 'function') {
+                return a;
+            }
+            else {
+                throw new Error('No callback provided.');
+            }
+        })();
+        const message: string | null = (function () {
+            if (typeof a == 'string' && a.trim().length > 0) {
+                return a;
+            }
+            return null;
+        })();
         // If it hasn't already been executed
         if (!this.hasExecuted()) {
             this._thens.push(callback);
+            this._thensMessage.push(message);
             // Execute at the next opportunity.
             setTimeout(() => {
                 this.executeWhenReady();
@@ -482,11 +501,17 @@ export class Scenario {
                 scenario: scenario,
                 suite: scenario.suite,
                 browser: (this.responseType == ResponseType.browser) && scenario.getBrowser(),
-                page: null
+                page: null,
+                result: null
             };
-            Bluebird.mapSeries(scenario._thens, (_then) => {
+            let lastReturnValue: any = null;
+            Bluebird.mapSeries(scenario._thens, (_then, index) => {
+                const comment: string | null = scenario._thensMessage[index];
+                comment !== null && this.comment(comment)
                 context.page = context.browser && scenario.getBrowser().getPage();
-                return _then.call(context, response, context);
+                context.result = lastReturnValue;
+                lastReturnValue = _then.call(context, response, context);
+                return lastReturnValue;
             }).then(() => {
                 scenario.done();
             }).catch((err) => {

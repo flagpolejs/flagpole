@@ -26,7 +26,7 @@ suite.Scenario('Homepage')
     .then(function () {
         return this.page.click(paths.addressInput);
     })
-    .then(function () {
+    .then('Typing in the address', function () {
         return this.page.type(paths.addressInput, address);
     })
     .then(async function () {
@@ -41,8 +41,7 @@ suite.Scenario('Homepage')
             'Address selection dropdown shows up'
         );
     })
-    .then(function () {
-        this.response.comment('Select the address and click submit');
+    .then('Select the address and click submit', function () {
         return this.page.click(paths.selectAddressButton);
     })
     .then(function () {
