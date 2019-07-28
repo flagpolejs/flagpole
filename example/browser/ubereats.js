@@ -60,7 +60,7 @@ suite.Scenario('Homepage')
     .then('Click on first result', function () {
         return this.page.click(paths.orlandoRestaurantResults);
     })
-    .then('Waiting for restaurant page to load', async function () {
+    .then('Waiting for restaurant page to load', function () {
         return this.resolves(
             this.page.waitForSelector(paths.restaurantHeader, { timeout: 1000 }),
             'Found restaurant page header'
