@@ -1,26 +1,10 @@
 import { Scenario } from "./scenario";
-import { Suite } from "./suite";
+import { NodeElement } from "./nodeelement";
 import { Node } from "./node";
 import { URL } from 'url';
 import { Cookie } from 'request';
 import { IncomingMessage } from 'http';
 import * as puppeteer from "puppeteer-core";
-import { Browser } from './browser';
-import { Page } from 'puppeteer-core';
-
-export interface iAssertionContext {
-    response: iResponse,
-    scenario: Scenario,
-    suite: Suite,
-    browser: null | boolean | Browser,
-    page: null | boolean | Page
-    result: any,
-    assert: Function,
-    asyncAssert: Function,
-    resolves: Function,
-    rejects: Function
-}
-
 
 /**
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
@@ -28,27 +12,29 @@ export interface iAssertionContext {
 export interface iResponse {
     typeName: string,
     getType(): ResponseType
-    select(path: string, findIn?: any): Node
-    asyncSelect(path: string, findIn?: any): Promise<Node>
+    asyncSelect(path: string, findIn?: any): Promise<NodeElement>
+    asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]>
     status(): Node
-    and(): Node
     loadTime(): Node
     headers(key?: string): Node
     cookies(key?: string): Node
+    getRoot(): any
+    getBody(): string
+    getUrl(): string
+    absolutizeUri(uri: string): string
+    readonly scenario: Scenario
+    // to be deprecated
+    select(path: string, findIn?: any): Node
+    and(): Node
     label(message: string): iResponse
     setLastElement(path: string | null, element: Node): Node
     getLastElement(): Node
     getLastElementPath(): string | null
-    getRoot(): any
-    getBody(): string
-    getUrl(): string
     comment(message: string): iResponse
     not(): iResponse
     optional(): iResponse
     ignore(assertions?: boolean | Function): iResponse
     assert(statement: boolean, message: string, actualValue?: string): iResponse
-    absolutizeUri(uri: string): string
-    readonly scenario: Scenario
 }
 
 export enum ResponseType {
@@ -133,14 +119,13 @@ export abstract class GenericResponse implements iResponse {
     abstract get typeName(): string;
     abstract select(path: string, findIn?: any): Node;
 
+    abstract asyncSelect(path: string, findIn?: any): Promise<NodeElement>;
+    abstract asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]>;
+
     constructor(scenario: Scenario, response: NormalizedResponse) {
         this.scenario = scenario;
         this._response = response;
         this._lastElement = new Node(this, 'Empty Element', null);
-    }
-
-    public async asyncSelect(path: string, findIn?: any): Promise<Node> {
-        return this.select(path, findIn);
     }
 
     public absolutizeUri(uri: string): string {

@@ -1,12 +1,13 @@
 import { Flagpole } from "./index";
 import { Suite } from "./suite";
 import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor } from "./consoleline";
-import { ResponseType, NormalizedResponse, iResponse, GenericResponse, iAssertionContext } from "./response";
+import { ResponseType, NormalizedResponse, iResponse, GenericResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
 import * as Bluebird from "bluebird";
 import * as r from "request";
 import { createResponse } from './responsefactory';
+import { AssertionContext } from './assertioncontext';
 
 const request = require('request');
 
@@ -512,31 +513,11 @@ export class Scenario {
         this.requestLoaded = Date.now();
         this.pass('Loaded ' + response.typeName + ' ' + this.url);
         if (this._thens.length > 0 && this.url !== null) {
-            let context: iAssertionContext = {
-                response: response,
-                scenario: scenario,
-                suite: scenario.suite,
-                browser: (this.responseType == ResponseType.browser) && scenario.getBrowser(),
-                page: null,
-                result: null,
-                assert: function () {
-                    return scenario.assert.apply(scenario, arguments);
-                },
-                asyncAssert: function () {
-                    return scenario.asyncAssert.apply(scenario, arguments);
-                },
-                resolves: function () {
-                    return scenario.resolves.apply(scenario, arguments);
-                },
-                rejects: function () {
-                    return scenario.rejects.apply(scenario, arguments);
-                }
-            };
             let lastReturnValue: any = null;
             Bluebird.mapSeries(scenario._thens, (_then, index) => {
+                const context: AssertionContext = new AssertionContext(scenario, response);
                 const comment: string | null = scenario._thensMessage[index];
                 comment !== null && this.comment(comment)
-                context.page = context.browser && scenario.getBrowser().getPage();
                 context.result = lastReturnValue;
                 lastReturnValue = _then.call(context, response, context);
                 return lastReturnValue;

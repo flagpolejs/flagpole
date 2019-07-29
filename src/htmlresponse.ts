@@ -2,6 +2,8 @@ import { Flagpole } from "./index";
 import { Scenario } from "./scenario";
 import { Node } from "./node";
 import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
+import { NodeElement } from './nodeelement';
+import { AssertionContext } from './assertioncontext';
 
 let cheerio: CheerioAPI = require('cheerio');
 let $: CheerioStatic;
@@ -51,6 +53,41 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         // Inferred exists assertion
         element.exists();
         return element;
+    }
+
+    public asyncSelect(path: string, findIn?: any): Promise<NodeElement> {
+        return new Promise((resolve, reject) => {
+            const selection: Cheerio = (Flagpole.toType(findIn) == 'cheerio') ?
+                findIn.find(path) :
+                $(path);
+            if (selection.length > 0) {
+                resolve(new NodeElement(selection.eq(0), new AssertionContext(this.scenario, this)));
+            }
+            else {
+                reject(`Could not find element at ${path}`);
+            }
+        });
+    }
+
+    public asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]> {
+        const response: iResponse = this;
+        return new Promise((resolve, reject) => {
+            const elements: Cheerio = (Flagpole.toType(findIn) == 'cheerio') ?
+                findIn.find(path) :
+                $(path);
+            if (elements.length > 0) {
+                const nodeElements: NodeElement[] = [];
+                elements.each((i: number) => {
+                    nodeElements.push(
+                        new NodeElement($(elements.get(i)), new AssertionContext(response.scenario, response))
+                    );
+                });
+                resolve(nodeElements);
+            }
+            else {
+                reject(`Could not find element at ${path}`);
+            }
+        });
     }
 
 }

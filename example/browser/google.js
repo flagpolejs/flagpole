@@ -1,7 +1,4 @@
 const Flagpole = require('../../dist/index.js').Flagpole;
-const bluebird = require('bluebird');
-const Promise = bluebird;
-
 Flagpole.exitOnDone = true;
 
 const suite = Flagpole.Suite('Test Google Search')
@@ -16,22 +13,24 @@ const browserOpts = {
     height: 768,
 };
 
-suite.Scenario('Google Search for Flagpole')
-    .browser(browserOpts)
+const searchTerm = 'Flagpole QA Testing Framework';
+const paths = {
+    queryInput: 'input[name="q"]',
+    submitButton: 'input[value="Google Search"]',
+    searchResultsItem: '#search div.g'
+}
+
+suite.Browser('Google Search for Flagpole', browserOpts)
     .open('/')
-    .then(function () {
-        this.assert(this.browser.has404() === false, "Has no 404 errors.");
-        this.response.status().equals(200);
-    })
     .then(async function () {
-        return await this.response.asyncSelect('input[name="q"]');
-    })
-    .then(function () {
-        return this.page.type('input[name="q"]', 'Flagpole QA Testing Framework');
-    })
-    .then(function () {
-        return this.page.evaluate(() => document.querySelector('input[type="submit"]').click());
-    })
-    .then((response) => {
-        return response.label('loaded results page').status().equals(200);
+        this.assert('Landing Page HTTP Status is 200', this.response.status()).equals(200);
+        await this.assert('Wait for search input box', this.exists(paths.queryInput)).resolves();
+        await this.page.type(paths.queryInput, searchTerm);
+        this.assert('Search term matches what we typed', await this.val(paths.queryInput)).equals(searchTerm);
+        await this.assert('Search button exists', this.exists(paths.submitButton)).resolves();
+        await this.click(paths.submitButton);
+        await this.page.waitForNavigation();
+        await this.assert('Search results found', this.exists(paths.searchResultsItem)).resolves();
+        await this.comment(await (await this.select('#searchform')).getClassName());
+        return this.pause(1);
     });

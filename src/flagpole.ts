@@ -85,6 +85,13 @@ export class Flagpole {
         else if (obj instanceof cheerio) {
             return 'cheerio';
         }
+        else if (!!obj &&
+            (typeof obj === 'object' || typeof obj === 'function') &&
+            typeof obj.then === 'function' &&
+            typeof obj.catch === 'function'
+        ) {
+            return 'promise';
+        }
         else if (obj && obj.constructor && obj.constructor.name) {
             return obj.constructor.name.toLocaleLowerCase();
         }

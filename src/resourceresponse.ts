@@ -17,6 +17,18 @@ export class ResourceResponse extends GenericResponse implements iResponse {
         return new Node(this, path, null);
     }
 
+    public asyncSelect(path: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            reject('Generic Resource does not support select.');
+        });
+    }
+
+    public asyncSelectAll(path: string): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            reject('Generic Resource does not support selectAll.');
+        });
+    }
+
     public getType(): ResponseType {
         return ResponseType.resource;
     }

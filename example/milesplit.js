@@ -4,22 +4,21 @@ let suite = Flagpole.Suite('Test MileSplit')
     .base('https://www.milesplit.com')
     .finally(() => { suite.print(); });
 
-suite.Scenario('Test MileSplit Hompage').open('/')
-    .then((response) => {
-        response.status().equals(200);
-        response.headers('content-type').contains('text/html');
+suite.Html('Test MileSplit Hompage').open('/')
+    .then('Load up homepage and verify response', function () {
+        this.assert('HTTP Status is 200', this.response.status()).equals(200);
+        this.assert('Content type is HTML', this.response.headers('content-type')).contains('text/html');
     })
-    .then('Look for images in top stories', (response) => {
-        const coverImages = response.select('section.topStories figure img');
-        coverImages.length().greaterThan(4);
+    .then('Look for images in top stories', async function () {
+        const coverImages = await this.selectAll('section.topStories figure img');
+        this.assert('There should be at least 4 top stories', coverImages.length)
+            .greaterThanOrEquals(4);
         return coverImages;
     })
-    .then(function () {
-        this.result.each(function (image, index) {
-            image.load('Cover Image #' + (index + 1))
-                .then((img) => {
-                    img.select('width').equals(620);
-                    img.select('height').equals(349);
-                });
+    .then(async function (response, context) {
+        const coverImages = await this.result;
+        coverImages.forEach(async function (element, i) {
+            context.comment(await element.getAttribute('src'));
         });
+        await this.comment(await (await this.select('.topStories')).getClassName());
     });

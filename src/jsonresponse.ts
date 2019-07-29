@@ -65,4 +65,36 @@ export class JsonResponse extends GenericResponse implements iResponse {
         return element;
     }
 
+    public asyncSelect(path: string, findIn?: any): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const args: Array<string> = path.split('.');
+            let obj: any = findIn || this.json;
+            if (args.every(function (value: string) {
+                obj = obj[value];
+                return (typeof obj !== 'undefined');
+            })) {
+                resolve(obj);
+            }
+            else {
+                reject('Could not find that property.')
+            }
+        });
+    }
+
+    public asyncSelectAll(path: string, findIn?: any): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const args: Array<string> = path.split('.');
+            let obj: any = findIn || this.json;
+            if (args.every(function (value: string) {
+                obj = obj[value];
+                return (typeof obj !== 'undefined');
+            })) {
+                resolve([ obj ]);
+            }
+            else {
+                reject('Could not find that property.')
+            }
+        });
+    }
+
 }

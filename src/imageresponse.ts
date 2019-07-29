@@ -36,6 +36,22 @@ export class ImageResponse extends GenericResponse implements iResponse {
         return new Node(this, propertyName, value);
     }
 
+    public asyncSelect(propertyName: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            typeof this.imageProperties[propertyName] !== 'undefined' ?
+                resolve(this.imageProperties[propertyName]) :
+                reject(`Property ${propertyName} not found in image response`);
+        });
+    }
+
+    public asyncSelectAll(propertyName: string): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            typeof this.imageProperties[propertyName] !== 'undefined' ?
+                resolve([ this.imageProperties[propertyName] ]) :
+                reject(`Property ${propertyName} not found in image response`);
+        });
+    }
+
     public getType(): ResponseType {
         return ResponseType.image;
     }

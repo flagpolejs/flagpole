@@ -1,3 +1,7 @@
+/**
+ *  TO BE DEPRECATED 
+ */
+
 import { Scenario } from "./scenario";
 import { iResponse, ResponseType } from "./response";
 import { Flagpole } from ".";

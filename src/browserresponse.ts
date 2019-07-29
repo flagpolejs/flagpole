@@ -1,8 +1,10 @@
 import { Scenario } from "./scenario";
+import { NodeElement } from "./nodeelement";
 import { Node } from "./node";
 import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
 import { Browser } from './browser';
 import { Page, ElementHandle } from 'puppeteer';
+import { AssertionContext } from './assertioncontext';
 
 export class BrowserSelector {
 
@@ -51,16 +53,44 @@ export class BrowserResponse extends GenericResponse implements iResponse {
         return element;
     }
 
-    public async asyncSelect(path: string, findIn?: any): Promise<Node> {
-        const page = await this.scenario.getBrowser().getPage();
-        let obj: ElementHandle<Element> | null = null;
-        if (page !== null) {
-            obj = await page.$(path);
-        }
-        const element: Node = new Node(this, path, obj);
-        this.setLastElement(path, element);
-        element.exists();
-        return element;
+    public asyncSelect(path: string, findIn?: any): Promise<NodeElement> {
+        const response: iResponse = this;
+        const page: Page | null = this.scenario.getBrowser().getPage();
+        return new Promise((resolve, reject) => {
+            if (page !== null) {
+                page.$(path)
+                    .then((el: ElementHandle<Element> | null) => {
+                        (el !== null) ?
+                            resolve(new NodeElement(el, new AssertionContext(response.scenario, response))) :
+                            reject(`No element matching ${path} was found`);
+                    })
+                    .catch(reject);
+            }
+            else {
+                reject('No browser page found, so could not select.');
+            }
+        })
+    }
+
+    public asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]> {
+        const response: iResponse = this;
+        const page: Page | null = this.scenario.getBrowser().getPage();
+        return new Promise((resolve, reject) => {
+            if (page !== null) {
+                page.$$(path)
+                    .then((elements: ElementHandle<Element>[]) => {
+                        const nodeElements: NodeElement[] = [];
+                        elements.forEach((el: ElementHandle<Element>) => {
+                            nodeElements.push(new NodeElement(el, new AssertionContext(response.scenario, response)));
+                        });
+                        resolve(nodeElements);
+                    })
+                    .catch(reject);
+            }
+            else {
+                reject('No browser page found, so could not select.');
+            }
+        })
     }
 
     public get browser(): Browser {
