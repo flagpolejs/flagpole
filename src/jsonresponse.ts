@@ -13,7 +13,6 @@ export class JsonResponse extends GenericResponse implements iResponse {
 
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
-        console.log('test');
         try {
             this.json = JSON.parse(response.body);
             this.valid();
