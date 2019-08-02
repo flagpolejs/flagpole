@@ -84,6 +84,19 @@ export class BrowserResponse extends GenericResponse implements iResponse {
         return nodeElements;
     }
 
+    public async evaluate(context: any, callback: Function): Promise<any> {
+        if (this.page !== null) {
+            const functionName: string = `flagpole_${Date.now()}`;
+            const jsToInject: string = `window.${functionName} = ${callback}`;
+            await this.page.addScriptTag({ content: jsToInject });
+            const result = await this.page.evaluate(({ functionName }) => {
+                return window[functionName]();
+            }, { functionName });
+            return result;
+        }
+        throw new Error('Page is null');
+    }
+
     public get browser(): Browser {
         return this.scenario.getBrowser();
     }

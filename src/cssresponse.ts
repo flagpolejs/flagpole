@@ -24,6 +24,10 @@ export class CssResponse extends GenericResponse implements iResponse {
         return new Node(this, path, null);
     }
 
+    public async evaluate(context: any, callback: Function): Promise<any> {
+        throw new Error('Evaluate does not support stylesheets.');
+    }
+
     public async asyncSelect(path: string): Promise<any | null> {
         throw new Error('CSS Response does not yet support select');
     }

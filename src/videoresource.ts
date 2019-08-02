@@ -20,6 +20,10 @@ export class VideoResource extends GenericResponse implements iResponse {
         return new Node(this, path, null);
     }
 
+    public async evaluate(context: any, callback: Function): Promise<any> {
+        throw new Error('Evaluate does not support video resources.');
+    }
+
     public async asyncSelect(path: string): Promise<any | null> {
         throw new Error('Video Response does not yet support select');
     }

@@ -1,18 +1,24 @@
 let Flagpole = require('../dist/index.js').Flagpole;
 
-Flagpole.Suite('Smoke Tests')
+Flagpole.Suite('Stack Overflow')
     .base('http://www.stackoverflow.com')
     .finally(function (suite) {
         suite.print();
     })
     .html('Homepage').open('/')
-    .next('Do basic homepage tests', function () {
-        this.response.status().equals(200)
-            .headers('content-type').contains('text/html')
-            .select('title').text().contains('Stack Overflow')
-            .select('link')
-            .not().select('frameset');
+    .next('Check basic parameters', async function (response) {
+        this.assert(response.status()).equals(200);
+        this.assert(response.headers('content-type')).contains('text/html');
+        this.assert('Title tag contains name of site', await this.text('title')).contains('Stack Overflow');
+        this.comment(await this.evaluate(function ($) {
+            this.comment('test');
+            return $('div').length;
+        }));
+
+        this.text('title')
+
     })
+    /*
     .next('Test the top navigation bar', function () {
         this.response
             .label('Top bar and call to actions exists')
@@ -50,3 +56,4 @@ Flagpole.Suite('Smoke Tests')
             script.load('Script ' + index, true);
         })
     })
+    */

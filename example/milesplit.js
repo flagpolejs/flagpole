@@ -32,7 +32,7 @@ suite.html('Test MileSplit Hompage').open('/')
     })
     .next('Click first meet and load it', async function () {
         const firstMeetCoverage = await this.select('.meetCoverage article a');
-        firstMeetCoverage.click('Load first meet', function (response) {
-            this.comment('hi');
-        });
+        //firstMeetCoverage.click('Load first meet', function (response) {
+        //    this.comment('hi');
+        //});
     });

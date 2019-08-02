@@ -17,6 +17,10 @@ export class ResourceResponse extends GenericResponse implements iResponse {
         return new Node(this, path, null);
     }
 
+    public async evaluate(context: any, callback: Function): Promise<any> {
+        throw new Error('Evaluate does not support generic resources.');
+    }
+
     public async asyncSelect(path: string): Promise<any | null> {
         throw new Error('Generic Response does not yet support select');
     }

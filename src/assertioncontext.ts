@@ -6,6 +6,7 @@ import { Page, ElementHandle } from 'puppeteer';
 import { Assertion } from './assertion';
 import { reject } from 'bluebird';
 import { NodeElement } from './nodeelement';
+import { HtmlResponse } from './htmlresponse';
 
 export class AssertionContext {
 
@@ -82,7 +83,13 @@ export class AssertionContext {
         if (this._isBrowserRequest && this.page !== null) {
             return this.page.type(path, textToType, opts);
         }
-        return new Promise((resolve, reject ) => { reject('Can not type into this element.') });;
+        else if (this._isHtmlRequest) {
+            const htmlResponse = this.response as HtmlResponse;
+            return htmlResponse.evaluate(this, function ($) {
+                $(path).val(textToType);
+            });
+        }
+        throw new Error('Can not type into this element.');
     }
 
     public async text(path: string): Promise<string | null> {
@@ -92,7 +99,17 @@ export class AssertionContext {
                 return await this.page.evaluate(el => el.textContent, el);
             }
         }
+        else if (this._isHtmlRequest) {
+            const element: NodeElement | null = await this.select(path);
+            if (element !== null) {
+                return await element.getText();
+            }
+        }
         return null;
+    }
+
+    public async evaluate(callback: Function): Promise<any> {
+        return await this.response.evaluate(this, callback);
     }
 
     public exists(path: string, opts: any = {}): Promise<any> {

@@ -66,6 +66,10 @@ export class JsonResponse extends GenericResponse implements iResponse {
         return element;
     }
 
+    public async evaluate(context: any, callback: Function): Promise<any> {
+        return callback.apply(context, [ this.json ]);
+    }
+
     public async asyncSelect(path: string, findIn?: any): Promise<any | null> {
         const args: Array<string> = path.split('.');
         let obj: any = findIn || this.json;

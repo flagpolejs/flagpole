@@ -22,6 +22,7 @@ export interface iResponse {
     getBody(): string
     getUrl(): string
     absolutizeUri(uri: string): string
+    evaluate(context: any, callback: Function): Promise<any>
     readonly scenario: Scenario
     // to be deprecated
     select(path: string, findIn?: any): Node
@@ -121,6 +122,7 @@ export abstract class GenericResponse implements iResponse {
 
     abstract asyncSelect(path: string, findIn?: any): Promise<any | null>;
     abstract asyncSelectAll(path: string, findIn?: any): Promise<any[]>;
+    abstract evaluate(context: any, callback: Function): Promise<any>;
 
     constructor(scenario: Scenario, response: NormalizedResponse) {
         this.scenario = scenario;

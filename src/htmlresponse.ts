@@ -27,6 +27,10 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         return $;
     }
 
+    public async evaluate(context: any, callback: Function): Promise<any> {
+        return callback.apply(context, [ $ ]);
+    }
+
     /**
      * Select the html element at this CSS Selector or XPath
      *

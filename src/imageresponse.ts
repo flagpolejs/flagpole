@@ -36,6 +36,10 @@ export class ImageResponse extends GenericResponse implements iResponse {
         return new Node(this, propertyName, value);
     }
 
+    public async evaluate(context: any, callback: Function): Promise<any> {
+        throw new Error('Evaluate does not support images.');
+    }
+
     public async asyncSelect(propertyName: string): Promise<any> {
         return typeof this.imageProperties[propertyName] !== 'undefined' ?
             this.imageProperties[propertyName] :

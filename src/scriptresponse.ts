@@ -20,6 +20,10 @@ export class ScriptResponse extends GenericResponse implements iResponse {
         return new Node(this, path, null);
     }
 
+    public async evaluate(context: any, callback: Function): Promise<any> {
+        throw new Error('Evaluate does not support script resources.');
+    }
+
     public async asyncSelect(path: string): Promise<any | null> {
         throw new Error('Script Response does not yet support select');
     }

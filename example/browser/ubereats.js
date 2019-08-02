@@ -15,7 +15,7 @@ const paths = {
 
 const address = '2180 W State Rd 434, Longwood, FL 32779'
 
-suite.Browser('Start on homepage and find local restaurants', { headless: false })
+suite.browser('Start on homepage and find local restaurants', { headless: false })
     .open('/')
     .next('Go to front page, type in an address, and click search', async function () {
         await this.assert('Address input box is visible', this.visible(paths.addressInput)).resolves();

@@ -37,4 +37,11 @@ suite.browser('Google Search for Flagpole', browserOpts)
         await this.assert('Search results found', this.exists(paths.searchResultsItem)).resolves();
         await this.comment(await (await this.select('#searchform')).getClassName());
         return this.pause(1);
+    })
+    .next('see if evalulate works', async function () {
+        const divCount = await this.evaluate(function () {
+            return document.querySelectorAll('div').length;
+        });
+        this.comment(`There are ${divCount} divs in this page`);
+        this.assert('There are more than one divs in it', divCount).greaterThan(0);
     });
