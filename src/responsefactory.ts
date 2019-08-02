@@ -8,6 +8,7 @@ import { ScriptResponse } from './scriptresponse';
 import { VideoResource } from './videoresource';
 import { Scenario } from './scenario';
 import { NormalizedResponse, iResponse, ResponseType } from './response';
+import { ExtJSResponse } from './extjsresponse';
 
 export function createResponse(scenario: Scenario, response: NormalizedResponse): iResponse {
     const type: ResponseType = scenario.responseType;
@@ -17,6 +18,9 @@ export function createResponse(scenario: Scenario, response: NormalizedResponse)
     }
     else if (type == ResponseType.browser) {
         className = BrowserResponse;
+    }
+    else if (type == ResponseType.extjs) {
+        className = ExtJSResponse;
     }
     else if (type == ResponseType.stylesheet) {
         className = CssResponse;

@@ -47,7 +47,8 @@ export enum ResponseType {
     video,
     audio,
     resource,
-    browser
+    browser,
+    extjs
 }
 
 export class NormalizedResponse {

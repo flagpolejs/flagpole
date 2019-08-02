@@ -281,6 +281,11 @@ export class Suite {
         return this.Scenario(title).browser(opts);
     }
 
+    public extjs = this.ExtJS;
+    public ExtJS(title: string, opts: any = {}): Scenario {
+        return this.Scenario(title).extjs(opts);
+    }
+
     /**
      * Set the base url, which is typically the domain. All scenarios will run relative to it
      *

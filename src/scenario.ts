@@ -650,6 +650,19 @@ export class Scenario {
     }
 
     /**
+     * Set scenario response type to extjs, which will use Puppeteer 
+     * 
+     * @param opts 
+     */
+    public extjs(opts: BrowserOptions = {}): Scenario {
+        // Uses browser options because it will leverage Puppeteer
+        return this._setResponseType(
+            ResponseType.extjs,
+            { ...this._defaultBrowserOptions, ...opts }
+        );
+    }
+
+    /**
      * Add a delay callback into the chain that waits for this number of milliseconds
      * 
      * @param millis 
@@ -816,7 +829,10 @@ export class Scenario {
             if (this._responseType == ResponseType.image) {
                 this._executeImageRequest();
             }
-            else if (this._responseType == ResponseType.browser) {
+            else if (
+                this._responseType == ResponseType.browser ||
+                this._responseType == ResponseType.extjs
+            ) {
                 this._executeBrowserRequest();
             }
             else {
