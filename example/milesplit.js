@@ -29,4 +29,10 @@ suite.html('Test MileSplit Hompage').open('/')
     .next('Verify CSS', async function () {
         const css = await this.selectAll('link[rel="stylesheet"]');
         css.forEach(stylesheet => stylesheet.load());
+    })
+    .next('Click first meet and load it', async function () {
+        const firstMeetCoverage = await this.select('.meetCoverage article a');
+        firstMeetCoverage.click('Load first meet', function (response) {
+            this.comment('hi');
+        });
     });

@@ -190,7 +190,7 @@ export class Suite {
         html += "</aside>\n";
         this.scenarios.forEach(function (scenario: Scenario) {
             html += '<section class="scenario">' + "\n";
-            html += new SubheadingLine(scenario.getTitle()).toHTML() + "\n";
+            html += new SubheadingLine(scenario.title).toHTML() + "\n";
             html += "<ul>\n";
             scenario.getLog().forEach(function (line: iLogLine) {
                 if (

@@ -22,11 +22,22 @@ export class Scenario {
         return this._responseType;
     }
 
+    public get title(): string {
+        return this._title;
+    }
+
+    public set title(newTitle: string) {
+        if (this.hasExecuted()) {
+            throw new Error("Can not change the scenario's title after execution has started.");
+        }
+        this._title = newTitle;
+    }
+
+    protected _title: string;
     protected _notifySuiteOnProgress: Function;
     protected _onReject: Function = () => { };
     protected _onResolve: Function = () => { };
     protected _onFinally: Function = () => { };
-    protected _title: string;
     protected _log: Array<iLogLine> = [];
     protected _failures: Array<string> = [];
     protected _passes: Array<string> = [];
@@ -77,12 +88,11 @@ export class Scenario {
     }
 
     constructor(suite: Suite, title: string, notifySuiteOnProgress: Function) {
-        this._title = title;
+        this.suite = suite;
         this._cookieJar = new request.jar();
         this._options = this._defaultRequestOptions;
         this._notifySuiteOnProgress = notifySuiteOnProgress;
-        this.suite = suite;
-        this.subheading(title);
+        this._title = title;
     }
 
     /**
@@ -435,6 +445,7 @@ export class Scenario {
         if (!this.hasExecuted() && this._url !== null) {
             this._timeScenarioExecuted = Date.now();
             this._notifySuiteOnProgress(this);
+            this.subheading(this.title);
             // If we waited first
             if (this._waitToExecute) {
                 this._log.push(new CommentLine(`Waited ${this.executionDuration}ms`));
@@ -466,10 +477,6 @@ export class Scenario {
     public label(message: string): Scenario {
         this._nextLabel = message;
         return this;
-    }
-
-    public getTitle(): string {
-        return this._title;
     }
 
     /**

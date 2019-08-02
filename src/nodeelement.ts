@@ -5,6 +5,7 @@ import { Link } from './link';
 import { Scenario } from './scenario';
 import { ResponseType, iResponse } from './response';
 import { AssertionContext } from './assertioncontext';
+import { format } from 'url';
 
 export class NodeElement extends ProtoValue {
 
@@ -122,10 +123,10 @@ export class NodeElement extends ProtoValue {
                 else if (['form'].indexOf(tagName) >= 0) {
                     return this.getAttribute('action') || this._context.scenario.getUrl();
                 }
+                else if (['source'].indexOf(tagName) >= 0) {
+                    return this.getAttribute('src');
+                }
             }
-        }
-        else if (this.isString()) {
-            return this.toString().trim().replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
         }
         return null;
     }
@@ -339,6 +340,22 @@ export class NodeElement extends ProtoValue {
         return null;
     }
 
+    public async submit(a?: string | Function, b?: Function): Promise<Scenario> {
+        throw new Error('This is not working yet.');
+    }
+
+    public async click(a?: string | Function, b?: Function): Promise<Scenario> {
+        // If this is a link tag, treat it the same as load
+        if (await this.isLinkTag()) {
+            return await this.load(a, b);
+        }
+        // Is this a button?
+        if (await this.isButtonTag()) {
+
+        }
+        throw Error('This is not a clickable element.');
+    }
+
     /**
      * Load the URL from this NodeElement if it has something to load
      * This is used to create a lambda scenario
@@ -346,40 +363,15 @@ export class NodeElement extends ProtoValue {
      * @param a 
      */
     public async load(a?: string | Function, b?: Function): Promise<Scenario> {
-        const element: NodeElement = this;
-        const srcPath: string | null = await element.getUrl();
-        const link: Link = new Link(element._context.response, srcPath || '');
-        const title: string = typeof a == 'string' ? a : `Load ${srcPath}`;
-        const callback: Function = (function () {
-            // Handle overloading
-            if (typeof b == 'function') {
-                return b;
-            }
-            else if (typeof a == 'function') {
-                return a;
-            }
-            // No callback was set, so just create a blank one
-            else {
-                return function () { };
-            }
-        })();
-        const scenario: Scenario = element._context.suite.Scenario(title);
+        const link: Link = await this._getLink();
+        const scenario: Scenario = await this._createLambdaScenario(a, b);
         // Is this link one that we can actually load?
         if (link.isNavigation()) {
-            const scenarioType: string = await element.getLambdaScenarioType();
-            const uri: string = link.getUri();
-            // Get the options or just pass the default
-            const opts: any = (
-                (scenarioType == 'browser' && element._context.scenario.responseType == ResponseType.browser) ||
-                scenarioType != 'browser'
-            ) ? element._context.scenario.getRequestOptions() : {};
-            // Initialize the scenario
-            scenario[scenarioType](opts);
-            // Set our callback
-            scenario.next(callback);
-            // Done. Execute it asynchronously
+            // Set a better title
+            scenario.title = (typeof a == 'string') ? a : `Load ${link.getUri()}`;
+            // Execute it asynchronously
             setTimeout(() => {
-                scenario.open(uri);
+                scenario.open(link.getUri());
             }, 1);
         }
         else {
@@ -388,7 +380,7 @@ export class NodeElement extends ProtoValue {
         return scenario;
     }
 
-    public async getLambdaScenarioType(): Promise<string> {
+    private async _getLambdaScenarioType(): Promise<string> {
         if (
             (await this.isFormTag()) || (await this.isClickable())
         ) {
@@ -412,5 +404,41 @@ export class NodeElement extends ProtoValue {
             return 'resource';
         }
     }
+
+    private async _getLink(): Promise<Link> {
+        const srcPath: string | null = await this.getUrl();
+        return new Link(this._context.response, srcPath || '');
+    }
+
+    private async _createLambdaScenario(a: any, b: any): Promise<Scenario> {
+        const title: string = typeof a == 'string' ? a : this._path;
+        const scenario: Scenario = this._context.suite.Scenario(title);
+        const scenarioType: string = await this._getLambdaScenarioType();
+        const callback: Function = (function () {
+            // Handle overloading
+            if (typeof b == 'function') {
+                return b;
+            }
+            else if (typeof a == 'function') {
+                return a;
+            }
+            // No callback was set, so just create a blank one
+            else {
+                return function () { };
+            }
+        })();
+        // Get the options or just pass the default
+        const opts: any = (
+            (scenarioType == 'browser' && this._context.scenario.responseType == ResponseType.browser) ||
+            scenarioType != 'browser'
+        ) ? this._context.scenario.getRequestOptions() : {};
+        // Initialize the scenario
+        scenario[scenarioType](opts);
+        // Apply the callback
+        scenario.next(callback);
+        // Return it
+        return scenario;
+    }
+
 
 }

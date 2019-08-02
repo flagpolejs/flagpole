@@ -5,6 +5,7 @@ import { Browser } from './browser';
 import { Page, ElementHandle } from 'puppeteer';
 import { Assertion } from './assertion';
 import { reject } from 'bluebird';
+import { NodeElement } from './nodeelement';
 
 export class AssertionContext {
 
@@ -13,6 +14,10 @@ export class AssertionContext {
 
     private get _isBrowserRequest(): boolean {
         return this._scenario.responseType == ResponseType.browser;
+    }
+
+    private get _isHtmlRequest(): boolean {
+        return this._scenario.responseType == ResponseType.html;
     }
 
     public result: any;
@@ -112,6 +117,36 @@ export class AssertionContext {
 
     public selectAll(path: string, findIn?: any): Promise<any[]> {
         return this.response.asyncSelectAll(path, findIn);
+    }
+
+    public async focus(path: string): Promise<any> {
+        if (this._isBrowserRequest && this.page !== null) {
+            return await this.page.focus(path);
+        }
+        throw new Error('This type of request does not support focus.')
+    }
+
+    public async hover(path: string): Promise<any> {
+        if (this._isBrowserRequest && this.page !== null) {
+            return await this.page.hover(path);
+        }
+        throw new Error('This type of request does not support hover.')
+    }
+
+    public async submit(path: string): Promise<any> {
+        if (this._isBrowserRequest && this.page !== null) {
+            const form = await this.page.$(path);
+            return await this.page.evaluate(form => form.submit(), form);
+        }
+        else if (this._isHtmlRequest) {
+            const form: NodeElement | null = await this.select(path);
+            if (form !== null) {
+                return await form.submit();
+            }
+        }
+        else {
+            throw new Error('Could not submit.')
+        }
     }
 
     public click(path: string): Promise<any> {
