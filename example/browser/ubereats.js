@@ -17,7 +17,7 @@ const address = '2180 W State Rd 434, Longwood, FL 32779'
 
 suite.Browser('Start on homepage and find local restaurants', { headless: false })
     .open('/')
-    .then('Go to front page, type in an address, and click search', async function () {
+    .next('Go to front page, type in an address, and click search', async function () {
         await this.assert('Address input box is visible', this.visible(paths.addressInput)).resolves();
         await this.click(paths.addressInput);
         await this.type(paths.addressInput, address);
@@ -29,14 +29,14 @@ suite.Browser('Start on homepage and find local restaurants', { headless: false 
         await this.click(paths.selectAddressButton);
         await this.click(paths.submitButton);
     })
-    .then('Review restaurant results page and click a restaurant', async function () {
+    .next('Review restaurant results page and click a restaurant', async function () {
         await this.page.waitForNavigation();
         await this.visible(paths.orlandoRestaurantResults, { timeout: 10000 });
         this.assert('More than 5 restaurants in results', (await this.selectAll(paths.orlandoRestaurantResults)).length)
             .greaterThan(5);
         await this.assert('Click on first restaurant', this.click(paths.orlandoRestaurantResults)).resolves();
     })
-    .then('View restaurant page and verify expected content', async function () {
+    .next('View restaurant page and verify expected content', async function () {
         await this.assert('Restaurant header exists', this.exists(paths.restaurantHeader, { timeout: 2000 })).resolves();
         this.assert('Restaurant has a name', (await this.text(paths.restaurantHeader)).trim().length)
             .greaterThan(0);
