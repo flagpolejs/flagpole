@@ -55,49 +55,43 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         return element;
     }
 
-    public asyncSelect(path: string, findIn?: any): Promise<NodeElement> {
-        return new Promise((resolve, reject) => {
-            const selection: Cheerio = (Flagpole.toType(findIn) == 'cheerio') ?
-                findIn.find(path) :
-                $(path);
-            if (selection.length > 0) {
-                resolve(
+    public async asyncSelect(path: string, findIn?: any): Promise<NodeElement | null> {
+        const selection: Cheerio = (Flagpole.toType(findIn) == 'cheerio') ?
+            findIn.find(path) :
+            $(path);
+        if (selection.length > 0) {
+            return new NodeElement(
+                selection.eq(0),
+                new AssertionContext(this.scenario, this),
+                path
+            );
+        }
+        else {
+            return null;
+        }
+    }
+
+    public async asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]> {
+        const response: iResponse = this;
+        const elements: Cheerio = (Flagpole.toType(findIn) == 'cheerio') ?
+            findIn.find(path) :
+            $(path);
+        if (elements.length > 0) {
+            const nodeElements: NodeElement[] = [];
+            elements.each((i: number) => {
+                nodeElements.push(
                     new NodeElement(
-                        selection.eq(0),
-                        new AssertionContext(this.scenario, this),
+                        $(elements.get(i)),
+                        new AssertionContext(response.scenario, response),
                         path
                     )
                 );
-            }
-            else {
-                reject(`Could not find element at ${path}`);
-            }
-        });
-    }
-
-    public asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]> {
-        const response: iResponse = this;
-        return new Promise((resolve, reject) => {
-            const elements: Cheerio = (Flagpole.toType(findIn) == 'cheerio') ?
-                findIn.find(path) :
-                $(path);
-            if (elements.length > 0) {
-                const nodeElements: NodeElement[] = [];
-                elements.each((i: number) => {
-                    nodeElements.push(
-                        new NodeElement(
-                            $(elements.get(i)),
-                            new AssertionContext(response.scenario, response),
-                            path
-                        )
-                    );
-                });
-                resolve(nodeElements);
-            }
-            else {
-                reject(`Could not find element at ${path}`);
-            }
-        });
+            });
+            return nodeElements;
+        }
+        else {
+            return [];
+        }
     }
 
 }

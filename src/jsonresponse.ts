@@ -1,6 +1,7 @@
 import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { Node } from "./node";
+import { NodeElement } from './nodeelement';
 
 export class JsonResponse extends GenericResponse implements iResponse {
 
@@ -66,36 +67,32 @@ export class JsonResponse extends GenericResponse implements iResponse {
         return element;
     }
 
-    public asyncSelect(path: string, findIn?: any): Promise<any> {
-        return new Promise((resolve, reject) => {
-            const args: Array<string> = path.split('.');
-            let obj: any = findIn || this.json;
-            if (args.every(function (value: string) {
-                obj = obj[value];
-                return (typeof obj !== 'undefined');
-            })) {
-                resolve(obj);
-            }
-            else {
-                reject('Could not find that property.')
-            }
-        });
+    public async asyncSelect(path: string, findIn?: any): Promise<any | null> {
+        const args: Array<string> = path.split('.');
+        let obj: any = findIn || this.json;
+        if (args.every(function (value: string) {
+            obj = obj[value];
+            return (typeof obj !== 'undefined');
+        })) {
+            return obj;
+        }
+        else {
+            return null;
+        }
     }
 
-    public asyncSelectAll(path: string, findIn?: any): Promise<any> {
-        return new Promise((resolve, reject) => {
-            const args: Array<string> = path.split('.');
-            let obj: any = findIn || this.json;
-            if (args.every(function (value: string) {
-                obj = obj[value];
-                return (typeof obj !== 'undefined');
-            })) {
-                resolve(obj);
-            }
-            else {
-                reject('Could not find that property.')
-            }
-        });
+    public async asyncSelectAll(path: string, findIn?: any): Promise<any[]> {
+        const args: Array<string> = path.split('.');
+        let obj: any = findIn || this.json;
+        if (args.every(function (value: string) {
+            obj = obj[value];
+            return (typeof obj !== 'undefined');
+        })) {
+            return [ obj ];
+        }
+        else {
+            return [];
+        }
     }
 
 }

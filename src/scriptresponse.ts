@@ -20,16 +20,12 @@ export class ScriptResponse extends GenericResponse implements iResponse {
         return new Node(this, path, null);
     }
 
-    public asyncSelect(path: string): Promise<any> {
-        return new Promise((resolve, reject) => {
-            reject('Script does not support select.');
-        });
+    public async asyncSelect(path: string): Promise<any | null> {
+        throw new Error('Script Response does not yet support select');
     }
 
-    public asyncSelectAll(path: string): Promise<any[]> {
-        return new Promise((resolve, reject) => {
-            reject('Script does not support selectAll.');
-        });
+    public async asyncSelectAll(path: string): Promise<any[]> {
+        throw new Error('Script Response does not yet support selectAll');
     }
 
     public getType(): ResponseType {

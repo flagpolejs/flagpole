@@ -53,52 +53,35 @@ export class BrowserResponse extends GenericResponse implements iResponse {
         return element;
     }
 
-    public asyncSelect(path: string, findIn?: any): Promise<NodeElement> {
+    public async asyncSelect(path: string, findIn?: any): Promise<NodeElement | null> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
-        return new Promise((resolve, reject) => {
-            if (page !== null) {
-                page.$(path)
-                    .then((el: ElementHandle<Element> | null) => {
-                        (el !== null) ?
-                            resolve(
-                                new NodeElement(el, new AssertionContext(response.scenario, response), path)
-                            ) :
-                            reject(`No element matching ${path} was found`);
-                    })
-                    .catch(reject);
+        if (page !== null) {
+            const el: ElementHandle<Element> | null = await page.$(path);
+            if (el !== null) {
+                return new NodeElement(el, new AssertionContext(response.scenario, response), path);
             }
-            else {
-                reject('No browser page found, so could not select.');
-            }
-        })
+        }
+        return null;
     }
 
-    public asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]> {
+    public async asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
-        return new Promise((resolve, reject) => {
-            if (page !== null) {
-                page.$$(path)
-                    .then((elements: ElementHandle<Element>[]) => {
-                        const nodeElements: NodeElement[] = [];
-                        elements.forEach((el: ElementHandle<Element>) => {
-                            nodeElements.push(
-                                new NodeElement(
-                                    el,
-                                    new AssertionContext(response.scenario, response),
-                                    path
-                                )
-                            );
-                        });
-                        resolve(nodeElements);
-                    })
-                    .catch(reject);
-            }
-            else {
-                reject('No browser page found, so could not select.');
-            }
-        })
+        const nodeElements: NodeElement[] = [];
+        if (page !== null) {
+            const elements: ElementHandle[] = await page.$$(path);
+            elements.forEach((el: ElementHandle<Element>) => {
+                nodeElements.push(
+                    new NodeElement(
+                        el,
+                        new AssertionContext(response.scenario, response),
+                        path
+                    )
+                );
+            });
+        }
+        return nodeElements;
     }
 
     public get browser(): Browser {

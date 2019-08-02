@@ -12,17 +12,23 @@ suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
     })
     .next('Verify the data', async function () {
         const resultCount = await this.select('resultCount');
-        const results = await this.selectAll('results');
-        const firstTrack = results[0];
-        this.assert('Results is an array', results).is('array');
-        this.assert('Result Count field is greater than 0', resultCount).greaterThan(0);
-        this.assert('Results Count field matches results length', resultCount).equals(results.length);
-        this.assert('Every result is a music video', results)
+        const searchResults = await this.select('results');
+        this.assert('Results is an array', searchResults).is('array');
+        this.assert('Results array length is greater than 0', searchResults.length).greaterThan(0);
+        this.assert('Result Count field is greater than 0', searchResults).greaterThan(0);
+        this.assert('Results Count field matches results length', resultCount)
+            .equals(searchResults.length);
+        this.assert('Every result is a music video', searchResults)
             .every(result => { return result['kind'] == 'music-video'; });
-        this.assert('No items are books', results)
+        this.assert('No items are books', searchResults)
             .none(result => { return result['wrapperType'] == 'book'; });
-        this.assert('Some tracks are clean version', results)
+        this.assert('Some tracks are clean version', searchResults)
             .some(result => { return result['trackExplicitness'] == 'notExplicit'; });
+        return searchResults;
+    })
+    .next('Verify first track looks right', async function () {
+        const searchResults = await this.result;
+        const firstTrack = searchResults[0];
         this.assert('Track millimeters value is a number', firstTrack['trackTimeMillis']).is('number');
         this.assert('Track number is between 1 and number of tracks', firstTrack['trackNumber'])
             .between(1, firstTrack['trackCount']);

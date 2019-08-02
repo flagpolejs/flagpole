@@ -12,8 +12,8 @@ import * as puppeteer from "puppeteer-core";
 export interface iResponse {
     typeName: string,
     getType(): ResponseType
-    asyncSelect(path: string, findIn?: any): Promise<NodeElement>
-    asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]>
+    asyncSelect(path: string, findIn?: any): Promise<any | null>
+    asyncSelectAll(path: string, findIn?: any): Promise<any[]>
     status(): Node
     loadTime(): Node
     headers(key?: string): Node
@@ -119,8 +119,8 @@ export abstract class GenericResponse implements iResponse {
     abstract get typeName(): string;
     abstract select(path: string, findIn?: any): Node;
 
-    abstract asyncSelect(path: string, findIn?: any): Promise<NodeElement>;
-    abstract asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]>;
+    abstract asyncSelect(path: string, findIn?: any): Promise<any | null>;
+    abstract asyncSelectAll(path: string, findIn?: any): Promise<any[]>;
 
     constructor(scenario: Scenario, response: NormalizedResponse) {
         this.scenario = scenario;
