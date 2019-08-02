@@ -1,12 +1,15 @@
 import { ProtoValue } from './value';
 import { JSHandle } from 'puppeteer';
 import { Flagpole } from '.';
+import { Link } from './link';
+import { Scenario } from './scenario';
+import { ResponseType, iResponse } from './response';
 
 export class NodeElement extends ProtoValue {
 
     public async isFormTag(): Promise<boolean> {
         if (this.isCheerioElement() || this.isPuppeteerElement()) {
-            return await this.getTagName() === 'form';
+            return (await this.getTagName()) == 'form';
         }
         return false;
     }
@@ -154,6 +157,10 @@ export class NodeElement extends ProtoValue {
         return null;
     }
 
+    public async hasAttribute(key: string): Promise<boolean> {
+        return (await this.getAttribute(key)) !== null;
+    }
+
     public async getAttribute(key: string): Promise<any> {
         if (this.isCheerioElement()) {
             return (typeof this._input.get(0).attribs[key] !== 'undefined') ?
@@ -182,6 +189,10 @@ export class NodeElement extends ProtoValue {
             return this._input[key];
         }
         return null;
+    }
+
+    public async hasData(key: string): Promise<boolean> {
+        return (await this.getData(key)) !== null;
     }
 
     public async getData(key: string): Promise<any> {
@@ -288,6 +299,80 @@ export class NodeElement extends ProtoValue {
             return new NodeElement((<Cheerio>this._input).parent(selector), this._context);
         }
         return null;
+    }
+
+    /**
+     * Load the URL from this NodeElement if it has something to load
+     * This is used to create a lambda scenario
+     * 
+     * @param a 
+     */
+    public async load(a?: string | Function, b?: Function): Promise<Scenario> {
+        const element: NodeElement = this;
+        const srcPath: string | null = await element.getUrl();
+        const link: Link = new Link(element._context.response, srcPath || '');
+        const title: string = typeof a == 'string' ? a : `Load ${srcPath}`;
+        const callback: Function = (function () {
+            // Handle overloading
+            if (typeof b == 'function') {
+                return b;
+            }
+            else if (typeof a == 'function') {
+                return a;
+            }
+            // No callback was set, so just create a blank one
+            else {
+                return function () { };
+            }
+        })();
+        const scenario: Scenario = element._context.suite.Scenario(title);
+        // Is this link one that we can actually load?
+        if (link.isNavigation()) {
+            const scenarioType: string = await element.getLambdaScenarioType();
+            const uri: string = link.getUri();
+            // Get the options or just pass the default
+            const opts: any = (
+                (scenarioType == 'browser' && element._context.scenario.responseType == ResponseType.browser) ||
+                scenarioType != 'browser'
+            ) ? element._context.scenario.getRequestOptions() : {};
+            // Initialize the scenario
+            scenario[scenarioType](opts);
+            // Set our callback
+            scenario.next(callback);
+            // Done. Execute it asynchronously
+            setTimeout(() => {
+                scenario.open(uri);
+            }, 1);
+        }
+        else {
+            scenario.skip('Not a navigational link');
+        }
+        return scenario;
+    }
+
+    public async getLambdaScenarioType(): Promise<string> {
+        if (
+            (await this.isFormTag()) || (await this.isClickable())
+        ) {
+            // Assume if we are already in browser mode, we want to stay there
+            return (this._context.scenario.responseType == ResponseType.browser) ?
+                'browser' : 'html';
+        }
+        else if (await this.isImageTag()) {
+            return 'image';
+        }
+        else if (await this.isStylesheetTag()) {
+            return 'stylesheet';
+        }
+        else if (await this.isScriptTag()) {
+            return 'script';
+        }
+        else if (await this.isVideoTag()) {
+            return 'video'
+        }
+        else {
+            return 'resource';
+        }
     }
 
 }

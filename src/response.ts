@@ -292,7 +292,7 @@ export abstract class GenericResponse implements iResponse {
      * Load time of request to response
      */
     public loadTime(): Node {
-        return new Node(this, 'Load Time', this.scenario.getRequestLoadTime());
+        return new Node(this, 'Load Time', this.scenario.requestDuration);
     }
 
     /**

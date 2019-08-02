@@ -73,9 +73,13 @@ export class Link {
         return /^(ftp):/.test(this.uri);
     }
 
+    /*
     public isNonNavigation(): boolean {
-        return /^(gopher|archie|veronica|telnet|file|nntp|news|irc|spdy|rtmp|rtp|tcp|udp):\/\//i.test(this.uri);
+        return (
+            /^(gopher|archie|veronica|telnet|file|nntp|news|irc|spdy|rtmp|rtp|tcp|udp):\/\//i.test(this.uri)
+        );
     }
+    */
 
     public isNavigation(): boolean {
         return (

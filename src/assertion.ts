@@ -1,6 +1,5 @@
 import { AssertionContext } from './assertioncontext';
 import { Value } from './value';
-import { Flagpole } from '.';
 
 export class Assertion {
 
@@ -223,6 +222,42 @@ export class Assertion {
     public echo(): Assertion {
         this._context.scenario.comment(`Echo: ${this._assertValue.toString()}`);
         return this;
+    }
+
+    public none(callback: Function): boolean {
+        let bool: boolean = false;
+        if (this._assertValue.isArray()) {
+            const arr: Array<any> = this._assertValue.get();
+            bool = arr.every((value: any, index: number, array: any[]) => {
+                return !callback(value, index, array);
+            });
+        }
+        this._assert(bool, 'None');
+        return bool;
+    }
+
+    public every(callback: Function): boolean {
+        let bool: boolean = false;
+        if (this._assertValue.isArray()) {
+            const arr: Array<any> = this._assertValue.get();
+            bool = arr.every((value: any, index: number, array: any[]) => {
+                return callback(value, index, array);
+            });
+        }
+        this._assert(bool, 'Every');
+        return bool;
+    }
+
+    public some(callback: Function): boolean {
+        let bool: boolean = false;
+        if (this._assertValue.isArray()) {
+            const arr: Array<any> = this._assertValue.get();
+            bool = arr.some((value: any, index: number, array: any[]) => {
+                return callback(value, index, array);
+            });
+        }
+        this._assert(bool, 'Some');
+        return bool;
     }
 
 }

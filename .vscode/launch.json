@@ -18,6 +18,12 @@
             "request": "launch",
             "name": "Example - Browser (Google)",
             "program": "${workspaceFolder}/example/browser/google.js",
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Example - MileSplit",
+            "program": "${workspaceFolder}/example/milesplit.js",
         }
     ]
 }

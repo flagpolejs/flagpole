@@ -1,4 +1,3 @@
-import { Flagpole } from "./index";
 import { Suite } from "./suite";
 import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor } from "./consoleline";
 import { ResponseType, NormalizedResponse, iResponse, GenericResponse } from "./response";
@@ -10,6 +9,7 @@ import { createResponse } from './responsefactory';
 import { AssertionContext } from './assertioncontext';
 
 const request = require('request');
+const probeImage = require('probe-image-size');
 
 /**
  * A scenario contains tests that run against one request
@@ -18,82 +18,91 @@ export class Scenario {
 
     public readonly suite: Suite;
 
-    protected notifySuiteOnCompleted: Function;
-    protected onReject: Function = () => { };
-    protected onResolve: Function = () => { };
-    protected onFinally: Function = () => { };
+    public get responseType(): ResponseType {
+        return this._responseType;
+    }
 
-    protected title: string;
-    protected log: Array<iLogLine> = [];
-    protected failures: Array<string> = [];
-    protected passes: Array<string> = [];
-    protected initialized: number | null = null;
-    protected start: number | null = null;
-    protected end: number | null = null;
-    protected requestStart: number | null = null;
-    protected requestLoaded: number | null = null;
-    protected responseType: ResponseType = ResponseType.html;
-    protected redirectCount: number = 0;
-    protected finalUrl: string | null = null;
-    protected url: string | null = null;
-    protected waitToExecute: boolean = false;
-    protected nextLabel: string | null = null;
-    protected flipAssertion: boolean = false;
-    protected optionalAssertion: boolean = false;
-    protected ignoreAssertion: boolean = false;
-    protected cookieJar: r.CookieJar;
-    protected options: any = {};
+    protected _notifySuiteOnProgress: Function;
+    protected _onReject: Function = () => { };
+    protected _onResolve: Function = () => { };
+    protected _onFinally: Function = () => { };
+    protected _title: string;
+    protected _log: Array<iLogLine> = [];
+    protected _failures: Array<string> = [];
+    protected _passes: Array<string> = [];
+    protected _timeScenarioInitialized: number = Date.now();
+    protected _timeScenarioExecuted: number | null = null;
+    protected _timeScenarioFinished: number | null = null;
+    protected _timeRequestStarted: number | null = null;
+    protected _timeRequestLoaded: number | null = null;
+    protected _responseType: ResponseType = ResponseType.html;
+    protected _redirectCount: number = 0;
+    protected _finalUrl: string | null = null;
+    protected _url: string | null = null;
+    protected _waitToExecute: boolean = false;
+    protected _nextLabel: string | null = null;
+    protected _flipAssertion: boolean = false;
+    protected _optionalAssertion: boolean = false;
+    protected _ignoreAssertion: boolean = false;
+    protected _cookieJar: r.CookieJar;
+    protected _options: any = {};
     protected _followRedirect: boolean | Function | null = null;
-
     protected _browser: Browser | null = null;
     protected _thens: Function[] = [];
     protected _thensMessage: Array<string | null> = [];
     protected _isMock: boolean = false;
-
-    protected defaultBrowserOptions: BrowserOptions = {
+    protected _defaultBrowserOptions: BrowserOptions = {
         headless: true,
         recordConsole: true,
         outputConsole: false,
     };
-    protected defaultRequestOptions: any = {
+    protected _defaultRequestOptions: any = {
         method: 'GET',
         headers: {}
     };
 
-    constructor(suite: Suite, title: string, notifySuiteOnCompleted: Function) {
-        const me: Scenario = this;
-        this.initialized = Date.now();
+    public get totalDuration(): number | null {
+        return this._timeScenarioFinished !== null ?
+            (this._timeScenarioFinished - this._timeScenarioInitialized) : null;
+    }
+
+    public get executionDuration(): number | null {
+        return this._timeScenarioFinished !== null && this._timeScenarioExecuted !== null ?
+            (this._timeScenarioFinished - this._timeScenarioExecuted) : null;
+    }
+
+    public get requestDuration(): number | null {
+        return (this._timeRequestStarted !== null && this._timeRequestLoaded !== null) ?
+            (this._timeRequestLoaded - this._timeRequestStarted) : null;
+    }
+
+    constructor(suite: Suite, title: string, notifySuiteOnProgress: Function) {
+        this._title = title;
+        this._cookieJar = new request.jar();
+        this._options = this._defaultRequestOptions;
+        this._notifySuiteOnProgress = notifySuiteOnProgress;
         this.suite = suite;
-        this.title = title;
-        this.cookieJar = new request.jar();
-        this.options = this.defaultRequestOptions;
-        this.notifySuiteOnCompleted = notifySuiteOnCompleted;
         this.subheading(title);
     }
 
     /**
      * Did any assertions in this scenario fail?
-     *
-     * @returns {boolean}
      */
     public failed(): boolean {
-        return (this.failures.length > 0);
+        return (this._failures.length > 0);
     }
 
     /**
      * Did all assertions in this scenario pass? This also requires that the scenario has completed
-     *
-     * @returns {boolean}
      */
     public passed(): boolean {
-        return !!(this.end && this.failures.length == 0);
+        return !!(this.hasFinished() && this._failures.length == 0);
     }
 
     /**
-     * Set body to submit
+     * Set body to submit as JSON object
      * 
      * @param jsonObject 
-     * @returns {Scenario}
      */
     public jsonBody(jsonObject: any): Scenario {
         this.header('Content-Type', 'application/json');
@@ -101,53 +110,45 @@ export class Scenario {
     }
 
     /**
-     * 
-     * @param str 
+     * Set body to submit as raw string
      */
     public body(str: string): Scenario {
-        this.options.body = str;
+        this._options.body = str;
         return this;
     }
 
     /**
      * Make sure the web page has valid SSL certificate
-     * 
-     * @param verify 
      */
     public verifySslCert(verify: boolean): Scenario {
-        this.options.strictSSL = verify;
-        this.options.rejectUnauthorized = verify;
+        this._options.strictSSL = verify;
+        this._options.rejectUnauthorized = verify;
         return this;
     }
 
     /**
-     * 
-     * @param proxyUri 
+     * Set the proxy URL for the request
      */
     public proxy(proxyUri: string): Scenario {
-        this.options.proxy = proxyUri;
+        this._options.proxy = proxyUri;
         return this;
     }
 
     /**
      * Set the timeout for how long the request should wait for a response
-     *
-     * @param {number} timeout
-     * @returns {Scenario}
      */
     public timeout(timeout: number): Scenario {
-        this.options.timeout = timeout;
+        this._options.timeout = timeout;
         return this;
     }
 
     /**
      * Do not run this scenario until execute() is called
-     *
-     * @param {boolean} bool
-     * @returns {Scenario}
+     * 
+     * @param bool 
      */
     public wait(bool: boolean = true): Scenario {
-        this.waitToExecute = bool;
+        this._waitToExecute = bool;
         return this;
     }
 
@@ -155,23 +156,24 @@ export class Scenario {
      * Set the form options that will be submitted with the request
      *
      * @param form
-     * @returns {Scenario}
      */
     public form(form: {}): Scenario {
-        this.options.form = form;
+        this._options.form = form;
         return this;
     }
 
     /**
+     * Maximum number of redirects to allow
      * 
      * @param n 
      */
     public maxRedirects(n: number): Scenario {
-        this.options.maxRedirects = n;
+        this._options.maxRedirects = n;
         return this;
     }
 
     /**
+     * Should we follow redirects? This can be boolean or a function callback which returns boolean
      * 
      * @param onRedirect 
      */
@@ -184,10 +186,9 @@ export class Scenario {
      * Set the basic authentication headers to be sent with this request
      *
      * @param authorization
-     * @returns {Scenario}
      */
     public auth(authorization: { username: string, password: string }): Scenario {
-        this.options.auth = authorization;
+        this._options.auth = authorization;
         return this;
     }
 
@@ -201,7 +202,7 @@ export class Scenario {
     public cookie(key: string, value: string, opts?: any): Scenario {
         let cookie: r.Cookie | undefined = r.cookie(key + '=' + value);
         if (cookie !== undefined) {
-            this.cookieJar.setCookie(cookie, this.buildUrl(), opts);
+            this._cookieJar.setCookie(cookie, this._buildUrl(), opts);
         }
         else {
             throw new Error('error setting cookie');
@@ -213,10 +214,9 @@ export class Scenario {
      * Set the full list of headers to submit with this request
      *
      * @param headers
-     * @returns {Scenario}
      */
     public headers(headers: {}): Scenario {
-        this.options.headers = Object.assign(this.options.headers, headers);
+        this._options.headers = { ...this._options.headers, ...headers };
         return this;
     }
 
@@ -225,11 +225,10 @@ export class Scenario {
      *
      * @param {string} key
      * @param value
-     * @returns {Scenario}
      */
     public header(key: string, value: any): Scenario {
-        this.options.headers = this.options.headers || {};
-        this.options.headers[key] = value;
+        this._options.headers = this._options.headers || {};
+        this._options.headers[key] = value;
         return this;
     }
 
@@ -237,56 +236,42 @@ export class Scenario {
      * Set the HTTP method of this request
      *
      * @param {string} method
-     * @returns {Scenario}
      */
     public method(method: string): Scenario {
-        this.options.method = method.toUpperCase();
+        this._options.method = method.toUpperCase();
         return this;
-    }
-
-    /**
-     * Has this scenario completed?
-     *
-     * @returns {boolean}
-     */
-    public isDone(): boolean {
-        return (this.end !== null);
     }
 
     /**
      * Add a subheading log message to buffer
      */
     public subheading(message: string): Scenario {
-        this.log.push(new SubheadingLine(message));
+        this._log.push(new SubheadingLine(message));
         return this;
     }
 
     /**
      * Add a neutral line to the output
      */
+    public echo = this.comment;
     public comment(message: string): Scenario {
-        this.log.push(
+        this._log.push(
             new CommentLine(message)
         );
         return this;
     }
-    
-    /**
-     * Alias for comment
-     */
-    public echo = this.comment;
 
     /**
      * Assert something is true, with respect to the flipped not()
      * Also respect ignore assertions flag
      */
     public assert(assertion: boolean, message: string, actualValue?: string): Scenario {
-        if (!this.ignoreAssertion) {
-            let passed: boolean = this.flipAssertion ? !assertion : !!assertion;
-            if (this.flipAssertion) {
+        if (!this._ignoreAssertion) {
+            let passed: boolean = this._flipAssertion ? !assertion : !!assertion;
+            if (this._flipAssertion) {
                 message = 'NOT: ' + message;
             }
-            if (this.optionalAssertion) {
+            if (this._optionalAssertion) {
                 message += ' - Optional';
             }
             if (passed) {
@@ -296,58 +281,23 @@ export class Scenario {
                 if (actualValue) {
                     message += ' (' + actualValue + ')';
                 }
-                this.fail(message, this.optionalAssertion);
+                this.fail(message, this._optionalAssertion);
             }
-            return this.reset();
+            return this._reset();
         }
         return this;
-    }
-
-    public asyncAssert(assertion: Function | boolean, message: string, actualValue?: string): Promise<any> {
-        return new Promise((resolve) => {
-            this.assert(
-                typeof assertion == 'function' ? assertion() : assertion,
-                message,
-                actualValue
-            );
-            resolve();
-        });
-    }
-
-    public resolves(promise: Promise<any>, message: string, actualValue?: string): Promise<any> {
-        return new Promise((resolve, reject) => {
-            promise.then(() => {
-                this.assert(true, message, actualValue);
-                resolve();
-            }).catch(() => {
-                this.assert(false, message, actualValue);
-                reject();
-            })
-        });
-    }
-
-    public rejects(promise: Promise<any>, message: string, actualValue?: string): Promise<any> {
-        return new Promise((resolve, reject) => {
-            promise.then(() => {
-                this.assert(false, message, actualValue);
-                reject();
-            }).catch(() => {
-                this.assert(true, message, actualValue);
-                resolve();
-            })
-        });
     }
 
     /**
      * Push in a new passing assertion
      */
     public pass(message: string): Scenario {
-        if (this.nextLabel) {
-            message = this.nextLabel;
-            this.nextLabel = null;
+        if (this._nextLabel) {
+            message = this._nextLabel;
+            this._nextLabel = null;
         }
-        this.log.push(new PassLine(message));
-        this.passes.push(message);
+        this._log.push(new PassLine(message));
+        this._passes.push(message);
         return this;
     }
 
@@ -355,28 +305,19 @@ export class Scenario {
      * Push in a new failing assertion
      */
     public fail(message: string, isOptional: boolean = false): Scenario {
-        if (this.nextLabel) {
-            message = this.nextLabel;
-            this.nextLabel = null;
+        if (this._nextLabel) {
+            message = this._nextLabel;
+            this._nextLabel = null;
         }
         let line: FailLine = new FailLine(message);
         if (isOptional) {
             line.color = ConsoleColor.FgMagenta;
             line.textSuffix = '(Optional)';
         }
-        this.log.push(line);
+        this._log.push(line);
         if (!isOptional) {
-            this.failures.push(message);
+            this._failures.push(message);
         }
-        return this;
-    }
-
-    /**
-     * Clear out any previous settings
-     */
-    protected reset(): Scenario {
-        this.flipAssertion = false;
-        this.optionalAssertion = false;
         return this;
     }
 
@@ -384,7 +325,7 @@ export class Scenario {
      * Flip the next assertion
      */
     public not(): Scenario {
-        this.flipAssertion = true;
+        this._flipAssertion = true;
         return this;
     }
 
@@ -392,16 +333,16 @@ export class Scenario {
     * Consider the next set of tests optional, until the next selector
     */
     public optional(): Scenario {
-        this.optionalAssertion = true;
+        this._optionalAssertion = true;
         return this;
     }
 
     /**
-     * Ignore assertions until further notice
+     * Ignore assertions until further notice. This is created to prevent automatic assertions from firing.
      */
     public ignore(assertions: boolean | Function = true): Scenario {
         if (typeof assertions == 'boolean') {
-            this.ignoreAssertion = assertions;
+            this._ignoreAssertion = assertions;
         }
         else if (typeof assertions == 'function') {
             this.ignore(true);
@@ -412,26 +353,16 @@ export class Scenario {
     }
 
     /**
-     * Execute now if we are able to do so
-     */
-    protected executeWhenReady() {
-        if (!this.waitToExecute && this.canExecute()) {
-            this.execute();
-        }
-    }
-
-    /**
      * Set the URL that this scenario will hit
      *
      * @param {string} url
-     * @returns {Scenario}
      */
     public open(url: string): Scenario {
         // You can only load the url once per scenario
         if (!this.hasExecuted()) {
-            this.url = url;
+            this._url = url;
             this._isMock = false;
-            this.executeWhenReady();
+            this._executeWhenReady();
         }
         return this;
     }
@@ -439,7 +370,9 @@ export class Scenario {
     /**
      * Set the callback for the assertions to run after the request has a response
      */
-    public then(a: Function | string, b?: Function): Scenario {
+    //public then = this.assertions;  // this was causing problems because Node thought it was a real promise
+    public next = this.assertions;
+    public assertions(a: Function | string, b?: Function): Scenario {
         const callback: Function = (() => {
             if (typeof b == 'function') {
                 return b;
@@ -463,7 +396,7 @@ export class Scenario {
             this._thensMessage.push(message);
             // Execute at the next opportunity.
             setTimeout(() => {
-                this.executeWhenReady();
+                this._executeWhenReady();
             }, 0);
         }
         else {
@@ -471,199 +404,45 @@ export class Scenario {
         }
         return this;
     }
-    
-    /**
-     * Backwards compatible alias
-     */
-    public assertions = this.then;
 
     /**
      * Skip this scenario completely and mark it done
-     *
-     * @returns {Scenario}
      */
     public skip(message?: string): Scenario {
-        if (!this.hasExecuted()) {
-            message = "Skipped" + (message ? ': ' + message : '');
-            this.start = Date.now();
-            this.log.push(new CommentLine(message));
-            this.end = Date.now();
-            this.notifySuiteOnCompleted(this);
+        if (this.hasExecuted()) {
+            throw new Error(`Can't skip Scenario since it already started executing.`);
         }
+        message = "Skipped" + (message ? ': ' + message : '');
+        this._timeScenarioExecuted = Date.now();
+        this._log.push(new CommentLine(message));
+        this._timeScenarioFinished = Date.now();
+        this._notifySuiteOnProgress(this);
         return this;
     }
 
     /**
-     * 
+     * Get the browser object for a browser request
      */
-    protected getCookies(): r.Cookie[] {
-        return this.cookieJar.getCookies(this.options.uri);
-    }
-
-    /**
-     * 
-     */
-    public getResponseType(): ResponseType {
-        return this.responseType;
-    }
-
-    protected processResponse(r: NormalizedResponse) {
-        const scenario: Scenario = this;
-        const response: iResponse = createResponse(this, r);
-        this.requestLoaded = Date.now();
-        this.pass('Loaded ' + response.typeName + ' ' + this.url);
-        if (this._thens.length > 0 && this.url !== null) {
-            let lastReturnValue: any = null;
-            Bluebird.mapSeries(scenario._thens, (_then, index) => {
-                const context: AssertionContext = new AssertionContext(scenario, response);
-                const comment: string | null = scenario._thensMessage[index];
-                comment !== null && this.comment(comment)
-                context.result = lastReturnValue;
-                lastReturnValue = _then.call(context, response, context);
-                return lastReturnValue;
-            }).then(() => {
-                scenario.done();
-            }).catch((err) => {
-                scenario.done(err);
-            });
-            return;
-        }
-        scenario.done();
-    }
-
-    protected buildUrl(): string {
-        return this.suite.buildUrl(this.url || '');
-    }
-
     public getBrowser(): Browser {
         this._browser = (this._browser !== null) ? this._browser : new Browser();
         return this._browser;
-    }
-
-    private executeImageRequest() {
-        const scenario: Scenario = this;
-        require('probe-image-size')(this.options.uri, this.options, function (error, result) {
-            if (!error) {
-                scenario.finalUrl = scenario.getUrl();
-                scenario.processResponse(
-                    NormalizedResponse.fromProbeImage(
-                        result,
-                        scenario.getCookies()
-                    )
-                );
-            }
-            else {
-                scenario.fail('Failed to load image ' + scenario.url);
-                scenario.done('Failed to load image');
-            }
-        });
-    }
-                    
-    private executeBrowserRequest() {
-        const scenario: Scenario = this;
-        this.getBrowser()
-            .open(this.options)
-            .then((next: { response: puppeteer.Response; body: string; }) => {
-                const response: puppeteer.Response = next.response;
-                const body: string = next.body;
-                if (response !== null) {
-                    scenario.finalUrl = response.url();
-                    scenario.processResponse(
-                        NormalizedResponse.fromPuppeteer(
-                            response,
-                            body,
-                            scenario.getCookies() // this isn't going to work, need to get cookies from Puppeteer
-                        )
-                    );
-                }
-                else {
-                    scenario.fail('Failed to load ' + scenario.url);
-                    scenario.comment('No response.');
-                    scenario.done('Failed to load');
-                }
-                return;
-            })
-            .catch((e) => {
-                scenario.fail('Failed to load ' + scenario.url);
-                scenario.comment(e);
-                scenario.done();
-            });
-    }
-
-    private executeDefaultRequest() {
-        const scenario: Scenario = this;
-        this.options.followRedirect = (this._followRedirect === null) ?
-            (response: any) => {
-                const url = require('url');
-                scenario.finalUrl = response.request.href;
-                if (response.headers.location) {
-                    scenario.finalUrl = url.resolve(response.headers.location, response.request.href);
-                }
-                scenario.redirectCount++;
-                return true;
-            } : this._followRedirect;
-        request(this.options, function (error: string, response: any, body: string) {
-            if (!error) {
-                scenario.processResponse(
-                    NormalizedResponse.fromRequest(
-                        response,
-                        body,
-                        scenario.getCookies()
-                    )
-                );
-            }
-            else {
-                scenario.fail('Failed to load ' + scenario.url);
-                scenario.comment(error);
-                scenario.done('Failed to load');
-            }
-        });
-    }
-
-    protected executeRequest() {
-        if (!this.requestStart && this.url !== null) {
-            this.requestStart = Date.now();
-            this.options.uri = this.buildUrl();
-            this.options.jar = this.cookieJar;
-            if (this.responseType == ResponseType.image) {
-                this.executeImageRequest();
-            }
-            else if (this.responseType == ResponseType.browser) {
-                this.executeBrowserRequest();
-            }
-            else {
-                this.executeDefaultRequest();
-            }
-        }
-    }
-
-    protected executeMock() {
-        if (!this.requestStart && this.url !== null) {
-            const scenario: Scenario = this;
-            this.requestStart = Date.now();
-            NormalizedResponse.fromLocalFile(this.url).then((mock: NormalizedResponse) => {
-                scenario.processResponse(mock);
-            }).catch(function () {
-                scenario.fail('Failed to load page ' + scenario.url);
-                scenario.done('Failed to load page');
-            });
-        }
     }
 
     /**
      * Execute this scenario
      */
     public execute(): Scenario {
-        if (!this.hasExecuted() && this.url !== null) {
-            this.start = Date.now();
+        if (!this.hasExecuted() && this._url !== null) {
+            this._timeScenarioExecuted = Date.now();
+            this._notifySuiteOnProgress(this);
             // If we waited first
-            if (this.waitToExecute && this.initialized !== null) {
-                this.log.push(new CommentLine('Waited ' + (this.start - this.initialized) + 'ms'));
+            if (this._waitToExecute) {
+                this._log.push(new CommentLine(`Waited ${this.executionDuration}ms`));
             }
             // Execute it
             this._isMock ?
-                this.executeMock() : 
-                this.executeRequest();
+                this._executeMock() : 
+                this._executeRequest();
         }
         return this;
     }
@@ -672,9 +451,9 @@ export class Scenario {
      * Fake response from local file for testing
      */
     public mock(localPath: string): Scenario {
-        this.url = localPath;
+        this._url = localPath;
         this._isMock = true;
-        this.executeWhenReady();
+        this._executeWhenReady();
         return this;
     }
 
@@ -685,12 +464,12 @@ export class Scenario {
      * @returns {Scenario}
      */
     public label(message: string): Scenario {
-        this.nextLabel = message;
+        this._nextLabel = message;
         return this;
     }
 
     public getTitle(): string {
-        return this.title;
+        return this._title;
     }
 
     /**
@@ -699,56 +478,22 @@ export class Scenario {
      * @returns {Array<ConsoleLine>}
      */
     public getLog(): Array<iLogLine> {
-        return this.log;
+        return this._log;
     }
 
-    /**
-     * Find the total execution time of this scenario
-     *
-     * @returns {number}
-     */
-    protected getExecutionTime(): number {
-        return (this.end !== null && this.start !== null) ?
-            (this.end - this.start) : 0;
-    }
-
-    /**
-     * Mark this scenario as completed
-     *
-     * @returns {Scenario}
-     */
-    protected done(err: any = null): Scenario {
-        // Only run this once
-        if (this.end === null) {
-            this.end = Date.now();
-            this.log.push(new CommentLine("Took " + this.getExecutionTime() + 'ms'));
-            // Resolve or reject, like scenario is a promise
-            if (err === null) {
-                this.onResolve(this)
-            }
-            else {
-                this.fail(err);
-                this.onReject(err);
-            }
-            // Finally
-            this.onFinally(this);
-            this.notifySuiteOnCompleted(this);
-        }
-        return this;
-    }
-
-    public catch(callback: Function): Scenario {
-        this.onReject = callback;
+    public catch = this.error;
+    public error(callback: Function): Scenario {
+        this._onReject = callback;
         return this;
     }
 
     public success(callback: Function): Scenario {
-        this.onResolve = callback;
+        this._onResolve = callback;
         return this;
     }
 
     public finally(callback: Function): Scenario {
-        this.onFinally = callback;
+        this._onFinally = callback;
         return this;
     }
 
@@ -756,116 +501,154 @@ export class Scenario {
      * Get the url
      */
     public getUrl(): string | null {
-        return this.url;
+        return this._url;
     }
 
     /**
      * URL after redirects
      */
     public getFinalUrl(): string | null {
-        return this.finalUrl;
-    }
-
-    /**
-     * 
-     */
-    public getRequestLoadTime(): number | null {
-        return (this.requestLoaded && this.requestStart) ?
-            (this.requestLoaded - this.requestStart): null;
+        return this._finalUrl;
     }
 
     /**
      * We ready to pull the trigger on this one?
      */
     public canExecute(): boolean {
-        return (!this.hasExecuted() && this.url !== null && this._thens.length > 0);
+        return (
+            !this.hasExecuted() &&
+            this._url !== null &&
+            this._thens.length > 0
+        );
     }
 
     /**
      * Has this scenario already been executed?
      */
     public hasExecuted(): boolean {
-        return this.start !== null;
+        return (this._timeScenarioExecuted !== null);
     }
 
     /**
      * Did this scenario finish executing?
      */
     public hasFinished(): boolean {
-        return this.hasExecuted() && this.end !== null;
+        return (
+            this.hasExecuted() &&
+            this._timeScenarioFinished !== null
+        );
     }
 
     /**
-     * SET RESPONSE TYPE
+     * Retrieve the options that itialized the request in this scenaior
      */
-
-    protected setResponseType(type: ResponseType, opts: any = {}): Scenario {
-        if (this.hasExecuted()) {
-            throw new Error('Scenario was already executed. Can not change type.');
-        }
-        this.options = opts;
-        this.responseType = type;
-        return this;
+    public getRequestOptions(): any {
+        return this._options;
     }
 
+    /**
+     * Set scenario response type to image
+     * 
+     * @param opts 
+     */
     public image(opts?: any): Scenario {
-        return this.setResponseType(
+        return this._setResponseType(
             ResponseType.image,
-            Object.assign(this.defaultRequestOptions, opts)
+            { ...this._defaultRequestOptions, ...opts }
         );
     }
 
+    /**
+     * Set scenario response type to video
+     * 
+     * @param opts 
+     */
     public video(opts?: any): Scenario {
-        return this.setResponseType(
+        return this._setResponseType(
             ResponseType.video,
-            Object.assign(this.defaultRequestOptions, opts)
+            { ...this._defaultRequestOptions, ...opts }
         );
     }
 
+    /**
+     * Set scenario response type to html/DOM
+     * 
+     * @param opts 
+     */
     public html(opts?: any): Scenario {
-        return this.setResponseType(
+        return this._setResponseType(
             ResponseType.html,
-            Object.assign(this.defaultRequestOptions, opts)
+            { ...this._defaultRequestOptions, ...opts }
         );
     }
 
+    /**
+     * Set scenario response type to JSON/REST API
+     * 
+     * @param opts 
+     */
     public json(opts: any = {}): Scenario {
-        return this.setResponseType(
+        return this._setResponseType(
             ResponseType.json,
-            Object.assign(this.defaultRequestOptions, opts)
+            { ...this._defaultRequestOptions, ...opts }
         );
     }
 
+    /**
+     * Set scenario response type to script
+     * 
+     * @param opts 
+     */
     public script(opts: any = {}): Scenario {
-        return this.setResponseType(
+        return this._setResponseType(
             ResponseType.script,
-            Object.assign(this.defaultRequestOptions, opts)
+            { ...this._defaultRequestOptions, ...opts }
         );
     }
 
+    /**
+     * Set scenario response type to stylesheet
+     * 
+     * @param opts 
+     */
     public stylesheet(opts: any = {}): Scenario {
-        return this.setResponseType(
+        return this._setResponseType(
             ResponseType.stylesheet,
-            Object.assign(this.defaultRequestOptions, opts)
+            { ...this._defaultRequestOptions, ...opts }
         );
     }
 
+    /**
+     * Set scenario response type to generic resource
+     * 
+     * @param opts 
+     */
     public resource(opts: any = {}): Scenario {
-        return this.setResponseType(
+        return this._setResponseType(
             ResponseType.resource,
-            Object.assign(this.defaultRequestOptions, opts)
+            { ...this._defaultRequestOptions, ...opts }
         );
     }
 
+    /**
+     * Set scenario response type to browser, which will use Puppeteer 
+     * 
+     * @param opts 
+     */
     public browser(opts: BrowserOptions = {}): Scenario {
-        return this.setResponseType(
+        return this._setResponseType(
             ResponseType.browser,
-            Object.assign(this.defaultBrowserOptions, opts)
+            { ...this._defaultBrowserOptions, ...opts }
         );
     }
 
+    /**
+     * Add a delay callback into the chain that waits for this number of milliseconds
+     * 
+     * @param millis 
+     */
     public pause(millis: number): Scenario {
-        this.then(() => {
+        this.next(() => {
             return new Promise((resolve) => {
                 setTimeout(() => {
                     this.echo('Paused ' + millis + ' milliseconds');
@@ -873,6 +656,215 @@ export class Scenario {
                 }, millis);
             });
         });
+        return this;
+    }
+
+    /**
+     * Clear out any previous settings
+     */
+    protected _reset(): Scenario {
+        this._flipAssertion = false;
+        this._optionalAssertion = false;
+        return this;
+    }
+
+    /**
+     * Get the cookie jar for this url
+     */
+    protected _getCookies(): r.Cookie[] {
+        return this._cookieJar.getCookies(this._options.uri);
+    }
+
+    /**
+     * Handle the normalized response once the request comes back
+     * 
+     * @param r 
+     */
+    protected _processResponse(r: NormalizedResponse) {
+        const scenario: Scenario = this;
+        const response: iResponse = createResponse(this, r);
+        const context: AssertionContext = new AssertionContext(scenario, response);
+        this._timeRequestLoaded = Date.now();
+        this.pass('Loaded ' + response.typeName + ' ' + this._url);
+        let lastReturnValue: any = null;
+        // Execute all the assertion callbacks one by one
+        Bluebird.mapSeries(scenario._thens, (_then, index) => {
+            const comment: string | null = scenario._thensMessage[index];
+            comment !== null && this.comment(comment)
+            context.result = lastReturnValue;
+            lastReturnValue = _then.apply(context, [response, context]);
+            return lastReturnValue;
+        }).then(() => {
+            scenario._markScenarioCompleted();
+        }).catch((err) => {
+            scenario._markScenarioCompleted(err);
+        });
+    }
+
+    /**
+     * 
+     */
+    protected _buildUrl(): string {
+        return this.suite.buildUrl(this._url || '');
+    }
+
+    /**
+     * Set the type of response this scenario is and the options
+     * 
+     * @param type 
+     * @param opts 
+     */
+    protected _setResponseType(type: ResponseType, opts: any = {}): Scenario {
+        if (this.hasExecuted()) {
+            throw new Error('Scenario was already executed. Can not change type.');
+        }
+        this._options = opts;
+        this._responseType = type;
+        return this;
+    }
+
+    private _executeImageRequest() {
+        const scenario: Scenario = this;
+        probeImage(this._options.uri, this._options)
+            .then(result => {
+                const response: NormalizedResponse = NormalizedResponse.fromProbeImage(
+                    result,
+                    scenario._getCookies()
+                );
+                scenario._finalUrl = scenario.getUrl();
+                scenario._processResponse(response);
+            })
+            .catch(ex => {
+                scenario.fail('Failed to load image ' + scenario._url);
+                scenario._markScenarioCompleted('Failed to load image');
+            });
+    }
+
+    private _executeBrowserRequest() {
+        const scenario: Scenario = this;
+        this.getBrowser()
+            .open(this._options)
+            .then((next: { response: puppeteer.Response; body: string; }) => {
+                const response: puppeteer.Response = next.response;
+                const body: string = next.body;
+                if (response !== null) {
+                    scenario._finalUrl = response.url();
+                    scenario._processResponse(
+                        NormalizedResponse.fromPuppeteer(
+                            response,
+                            body,
+                            scenario._getCookies() // this isn't going to work, need to get cookies from Puppeteer
+                        )
+                    );
+                }
+                else {
+                    scenario._markScenarioCompleted(`Failed to load ${scenario._url}`);
+                }
+                return;
+            })
+            .catch((e) => {
+                scenario.fail('Failed to load ' + scenario._url);
+                scenario.comment(e);
+                scenario._markScenarioCompleted();
+            });
+    }
+
+    private _executeDefaultRequest() {
+        const scenario: Scenario = this;
+        this._options.followRedirect = (this._followRedirect === null) ?
+            (response: any) => {
+                const url = require('url');
+                scenario._finalUrl = response.request.href;
+                if (response.headers.location) {
+                    scenario._finalUrl = url.resolve(response.headers.location, response.request.href);
+                }
+                scenario._redirectCount++;
+                return true;
+            } : this._followRedirect;
+        request(this._options, function (error: string, response: any, body: string) {
+            if (!error) {
+                scenario._processResponse(
+                    NormalizedResponse.fromRequest(
+                        response,
+                        body,
+                        scenario._getCookies()
+                    )
+                );
+            }
+            else {
+                scenario.comment(error);
+                scenario._markScenarioCompleted(`Failed to load ${scenario._url}`);
+            }
+        });
+    }
+
+    /**
+     * Used by all request types to kick off the request
+     */
+    protected _executeRequest() {
+        if (!this._timeRequestStarted && this._url !== null) {
+            this._timeRequestStarted = Date.now();
+            this._options.uri = this._buildUrl();
+            this._options.jar = this._cookieJar;
+            if (this._responseType == ResponseType.image) {
+                this._executeImageRequest();
+            }
+            else if (this._responseType == ResponseType.browser) {
+                this._executeBrowserRequest();
+            }
+            else {
+                this._executeDefaultRequest();
+            }
+        }
+    }
+
+    /**
+     * 
+     */
+    protected _executeMock() {
+        if (!this._timeRequestStarted && this._url !== null) {
+            const scenario: Scenario = this;
+            this._timeRequestStarted = Date.now();
+            NormalizedResponse.fromLocalFile(this._url)
+                .then((mock: NormalizedResponse) => {
+                    scenario._processResponse(mock);
+                }).catch(function () {
+                    scenario._markScenarioCompleted(`Failed to load page ${scenario._url}`);
+                });
+        }
+    }
+
+    /**
+     * Execute now if we are able to do so
+     */
+    protected _executeWhenReady() {
+        if (!this._waitToExecute && this.canExecute()) {
+            this.execute();
+        }
+    }
+
+    /**
+     * Mark this scenario as completed
+     *
+     * @returns {Scenario}
+     */
+    protected _markScenarioCompleted(err?: string): Scenario {
+        // Only run this once
+        if (!this.hasFinished()) {
+            this._timeScenarioFinished = Date.now();
+            this._log.push(new CommentLine(`Took ${this.executionDuration}ms`));
+            // Resolve or reject, like scenario is a promise
+            if (typeof err !== 'string') {
+                this._onResolve(this)
+            }
+            else {
+                this.fail(err);
+                this._onReject(err);
+            }
+            // Finally
+            this._onFinally(this);
+            this._notifySuiteOnProgress(this);
+        }
         return this;
     }
 

@@ -10,7 +10,7 @@ import { Scenario } from './scenario';
 import { NormalizedResponse, iResponse, ResponseType } from './response';
 
 export function createResponse(scenario: Scenario, response: NormalizedResponse): iResponse {
-    const type: ResponseType = scenario.getResponseType();
+    const type: ResponseType = scenario.responseType;
     let className;
     if (type == ResponseType.html) {
         className = HtmlResponse;

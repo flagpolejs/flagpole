@@ -12,7 +12,7 @@ export class AssertionContext {
     private _response: iResponse;
 
     private get _isBrowserRequest(): boolean {
-        return this._scenario.getResponseType() == ResponseType.browser;
+        return this._scenario.responseType == ResponseType.browser;
     }
 
     public result: any;

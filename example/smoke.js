@@ -5,15 +5,15 @@ Flagpole.Suite('Smoke Tests')
     .finally(function (suite) {
         suite.print();
     })
-    .Html('Homepage').open('/')
-    .then('Do basic homepage tests', function () {
+    .html('Homepage').open('/')
+    .next('Do basic homepage tests', function () {
         this.response.status().equals(200)
             .headers('content-type').contains('text/html')
             .select('title').text().contains('Stack Overflow')
             .select('link')
             .not().select('frameset');
     })
-    .then('Test the top navigation bar', function () {
+    .next('Test the top navigation bar', function () {
         this.response
             .label('Top bar and call to actions exists')
             .select('.top-bar').find('.-ctas').length().greaterThan(0)
@@ -24,7 +24,7 @@ Flagpole.Suite('Smoke Tests')
             .select('a.login-link').nth(1)
             .and().text().similarTo('Sign Up');
     })
-    .then('There should be questions', function () {
+    .next('There should be questions', function () {
         this.response
             .select('.question-summary')
             .and().length().greaterThan(5)
@@ -35,17 +35,17 @@ Flagpole.Suite('Smoke Tests')
             .and().find('.status span').exists()
             .and().text().parseInt().greaterThanOrEquals(0);
     })
-    .then('Test that each image exists', function () {
+    .next('Test that each image exists', function () {
         this.response.select('img').each(function (img, index) {
             img.load('Image ' + index, true);
         });
     })
-    .then('Test that the stylesheets exist', function () {
+    .next('Test that the stylesheets exist', function () {
         this.response.select('link[rel="stylesheet"]').each(function (link, index) {
             link.load('Stylesheet ' + index, true);
         });
     })
-    .then('Test that the javascript files exist', function () {
+    .next('Test that the javascript files exist', function () {
         this.response.select('script[src]').each(function (script, index) {
             script.load('Script ' + index, true);
         })

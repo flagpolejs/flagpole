@@ -3,7 +3,6 @@ import { Scenario } from "./scenario";
 import { iLogLine, LogLineType, HeadingLine, DecorationLine, CommentLine, LineBreak, CustomLine, ConsoleColor, SubheadingLine, LogLine, HorizontalRule } from "./consoleline";
 import { URL } from 'url';
 import { FlagpoleOutput } from './flagpole';
-import * as Bluebird from "bluebird";
 
 /**
  * A suite contains many scenarios
@@ -12,55 +11,30 @@ export class Suite {
 
     public scenarios: Array<Scenario> = [];
 
-    protected onReject: Function = () => { };
-    protected onResolve: Function = () => { };
-    protected onFinally: Function = () => { };
+    public get totalDuration(): number | null {
+        return this._timeSuiteFinished !== null ?
+            (this._timeSuiteFinished - this._timeSuiteInitialized) : null;
+    }
+
+    public get executionDuration(): number | null {
+        return this._timeSuiteExecuted !== null && this._timeSuiteFinished !== null ?
+            (this._timeSuiteFinished - this._timeSuiteExecuted) : null;
+    }
+
+    protected _onReject: Function = () => { };
+    protected _onResolve: Function = () => { };
+    protected _onFinally: Function = () => { };
     protected _thens: Function[] = [];
-
-    protected title: string;
-    protected baseUrl: URL | null = null;
-    protected start: number;
-    protected end: number | null = null;
-    protected waitToExecute: boolean = false;
-
+    protected _title: string;
+    protected _baseUrl: URL | null = null;
+    protected _timeSuiteInitialized: number = Date.now();
+    protected _timeSuiteExecuted: number | null = null;
+    protected _timeSuiteFinished: number | null = null;
+    protected _waitToExecute: boolean = false;
     protected _verifySslCert: boolean = true;
 
     constructor(title: string) {
-        this.title = title;
-        this.start = Date.now();
-    }
-
-    /**
-     * Runs after each scenario completes (whether pass or fail)
-     */
-    private scenarioEnded() {
-        const suite: Suite = this;
-        //console.log(this.end);
-        // Is every scenario completed? And only run it once
-        if (this.isDone()) {
-            // Save time ended
-            this.end = Date.now();
-            // Resolve as if we were a promise
-            if (this.failed()) {
-                this.onReject(this);
-            }
-            else {
-                this._thens.forEach((_then) => {
-                    _then(suite);
-                });
-                suite.onResolve(suite);
-            }
-            // Fire this regardless of pass or fails
-            this.onFinally(this);
-            // Should we print automatically?
-            (Flagpole.automaticallyPrintToConsole) && this.print();
-            // Should we exit on complete?
-            if (Flagpole.exitOnDone) {
-                process.exit(
-                    this.passed() ? 0 : 1
-                );
-            }
-        }
+        this._title = title;
     }
 
     public verifySslCert(verify: boolean): Suite {
@@ -75,30 +49,22 @@ export class Suite {
      * @returns {Suite}
      */
     public wait(bool: boolean = true): Suite {
-        this.waitToExecute = bool;
+        this._waitToExecute = bool;
         return this;
     }
 
     /**
-     * Have all of the scenarios in this suite completed?
-     *
-     * @returns {boolean}
+     * Did this suite start running yet?
      */
-    public isDone(): boolean {
-        return this.scenarios.every(function(scenario) {
-            return scenario.isDone();
-        });
+    public hasExecuted(): boolean {
+        return this._timeSuiteExecuted !== null;
     }
 
     /**
-     * How long has this been running?
-     *
-     * @returns {number}
+     * Has this suite finished running?
      */
-    public getDuration(): number {
-        return (this.end === null) ?
-            Date.now() - this.start :
-            this.end - this.start;
+    public hasFinished(): boolean {
+        return this._timeSuiteFinished !== null;
     }
 
     /**
@@ -133,11 +99,11 @@ export class Suite {
     public getLines(): iLogLine[] {
         let lines: iLogLine[] = [];
         lines.push(new HorizontalRule('='));
-        lines.push(new HeadingLine(this.title));
+        lines.push(new HeadingLine(this._title));
         lines.push(new HorizontalRule('='));
-        lines.push(new CommentLine('Base URL: ' + this.baseUrl));
+        lines.push(new CommentLine('Base URL: ' + this._baseUrl));
         lines.push(new CommentLine('Environment: ' + Flagpole.getEnvironment()));
-        lines.push(new CommentLine('Took ' + this.getDuration() + 'ms'));
+        lines.push(new CommentLine('Took ' + this.executionDuration + 'ms'));
 
         let color: ConsoleColor = this.passed() ? ConsoleColor.FgGreen : ConsoleColor.FgRed;
         lines.push(new CustomLine(' »   Passed? ' + (this.passed() ? 'Yes' : 'No'), color));
@@ -176,8 +142,8 @@ export class Suite {
      */
     public toJson(): any {
         let out: any = {
-            title: this.title,
-            baseUrl: this.baseUrl,
+            title: this._title,
+            baseUrl: this._baseUrl,
             summary: {},
             scenarios: []
         };
@@ -185,7 +151,7 @@ export class Suite {
         let passCount: number = 0;
         this.scenarios.forEach(function(scenario, index) {
             out.scenarios[index] = {
-                done: scenario.isDone(),
+                done: scenario.hasFinished(),
                 failCount: 0,
                 passCount: 0,
                 log: []
@@ -206,7 +172,7 @@ export class Suite {
             passed: (failCount == 0),
             passCount: passCount,
             failCount: failCount,
-            duration: this.getDuration()
+            duration: this.executionDuration
         }
         return out;
     }
@@ -217,8 +183,8 @@ export class Suite {
         html += new HeadingLine(this.getTitle()).toHTML() + "\n";
         html += "<aside>\n";
         html += "<ul>\n";
-        html += new CommentLine('Duration: ' + this.getDuration() + 'ms').toHTML();
-        html += new CommentLine('Base URL: ' + this.baseUrl).toHTML();
+        html += new CommentLine('Duration: ' + this.executionDuration + 'ms').toHTML();
+        html += new CommentLine('Base URL: ' + this._baseUrl).toHTML();
         html += new CommentLine('Environment: ' + Flagpole.getEnvironment()).toHTML();
         html += "</ul>\n";
         html += "</aside>\n";
@@ -243,7 +209,7 @@ export class Suite {
     }
 
     public getTitle(): string {
-        return this.title;
+        return this._title;
     }
 
     /**
@@ -254,48 +220,63 @@ export class Suite {
      * @returns {Scenario}
      * @constructor
      */
+    public scenario = this.Scenario;
     public Scenario(title: string): Scenario {
         const suite: Suite = this;
-        const scenario: Scenario = new Scenario(this, title, () => {
-            suite.scenarioEnded();
+        const scenario: Scenario = new Scenario(this, title, (thisScenario) => {
+            suite._onScenarioProgress(thisScenario);
         });
         // Some local tests fail with SSL verify on, so may have been disabled on this suite
         scenario.verifySslCert(this._verifySslCert);
         // Should we hold off on executing?
-        (this.waitToExecute) && scenario.wait();
+        (this._waitToExecute) && scenario.wait();
         // Add this to our collection of scenarios
         this.scenarios.push(scenario);
         return scenario;
     }
-
+    
+    /**
+     * Create a new JSON/REST API Scenario
+     */
+    public json = this.Json;
     public Json(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).json(opts);
     }
 
+    /**
+     * 
+     */
+    public image = this.Image;
     public Image(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).image(opts);
     }
 
+    public video = this.Video;
     public Video(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).video(opts);
     }
 
+    public html = this.Html;
     public Html(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).html(opts);
     }
 
+    public stylesheet = this.Stylesheet;
     public Stylesheet(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).stylesheet(opts);
     }
 
+    public script = this.Script;
     public Script(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).script(opts);
     }
 
+    public resource = this.Resource;
     public Resource(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).resource(opts);
     }
 
+    public browser = this.Browser;
     public Browser(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).browser(opts);
     }
@@ -320,7 +301,7 @@ export class Suite {
             }
         }
         if (baseUrl.length > 0) {
-            this.baseUrl = new URL(baseUrl);
+            this._baseUrl = new URL(baseUrl);
         }
         else {
             throw Error('Invalid base url.');
@@ -335,16 +316,16 @@ export class Suite {
      * @returns {string}
      */
     public buildUrl(path: string): string {
-        if (this.baseUrl === null) {
+        if (this._baseUrl === null) {
             return path;
         }
         else if (/^https?:\/\//.test(path) || /^data:/.test(path)) {
             return path;
         }
         else if (/^\//.test(path)) {
-            return this.baseUrl.protocol + '//' + this.baseUrl.host + path;
+            return this._baseUrl.protocol + '//' + this._baseUrl.host + path;
         }
-        return (new URL(path, this.baseUrl.href)).href;
+        return (new URL(path, this._baseUrl.href)).href;
     }
 
     /**
@@ -353,6 +334,10 @@ export class Suite {
      * @returns {Suite}
      */
     public execute(): Suite {
+        if (this.hasExecuted()) {
+            throw new Error(`Suite already executed.`)
+        }
+        this._timeSuiteExecuted = Date.now();
         this.scenarios.forEach(function(scenario) {
             scenario.execute();
         });
@@ -372,8 +357,6 @@ export class Suite {
 
     /**
      * Did any scenario in this suite fail?
-     *
-     * @returns {boolean}
      */
     public failed(): boolean {
         return this.scenarios.some(function(scenario) {
@@ -381,27 +364,89 @@ export class Suite {
         });
     }
 
+    /**
+     * This callback runs once the suite is done, if it failed
+     * 
+     * @param callback 
+     */
     public catch(callback: Function): Suite {
-        this.onReject = callback;
+        this._onReject = callback;
         return this;
     }
 
+    /**
+     * This callback runs once the suite is done, if it passed
+     * 
+     * @param callback 
+     */
     public success(callback: Function): Suite {
-        this.onResolve = callback;
+        this._onResolve = callback;
         return this;
     }
 
+    /**
+     * This callback will run once everything else is completed, whether pass or fail
+     */
+    public onDone = this.finally;
     public finally(callback: Function): Suite {
-        this.onFinally = callback;
+        this._onFinally = callback;
         return this;
     }
 
-    public then(callback: Function): Suite {
+    /**
+     * This callback runs once all the scenarios are complete, but before suite is marked done
+     * 
+     * @param callback 
+     */
+    public next(callback: Function): Suite {
         this._thens.push(callback);
         return this;
     }
 
-    // Alias for backward compatibility
-    public onDone = this.finally;
+    /**
+* Have all of the scenarios in this suite completed?
+*/
+    private _haveAllScenariosFinished(): boolean {
+        return this.scenarios.every(function (scenario) {
+            return scenario.hasFinished();
+        });
+    }
+
+    /**
+     * Runs when a scenario's status changes
+     */
+    private _onScenarioProgress(scenario: Scenario) {
+        const suite: Suite = this;
+        // This scenario is executing
+        if (scenario.hasExecuted() && !this.hasExecuted()) {
+            this._timeSuiteExecuted = Date.now();
+        }
+        // Is every scenario completed? And only run it once
+        if (this._haveAllScenariosFinished() && !this.hasFinished()) {
+            // Save time ended
+            this._timeSuiteFinished = Date.now();
+            // Resolve as if we were a promise
+            if (this.failed()) {
+                this._onReject(this);
+            }
+            else {
+                this._thens.forEach((_then) => {
+                    _then(suite);
+                });
+                suite._onResolve(suite);
+            }
+            // Fire this regardless of pass or fails
+            this._onFinally(this);
+            // Should we print automatically?
+            (Flagpole.automaticallyPrintToConsole) && this.print();
+            // Should we exit on complete?
+            if (Flagpole.exitOnDone) {
+                process.exit(
+                    this.passed() ? 0 : 1
+                );
+            }
+        }
+    }
+    
 
 }

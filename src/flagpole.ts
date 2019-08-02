@@ -54,6 +54,7 @@ export class Flagpole {
      * @returns {Suite}
      * @constructor
      */
+    static suite = Flagpole.Suite;
     static Suite(title: string): Suite {
         let suite: Suite = new Suite(title);
         return suite;

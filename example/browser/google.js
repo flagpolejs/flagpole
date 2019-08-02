@@ -20,9 +20,9 @@ const paths = {
     searchResultsItem: '#search div.g'
 }
 
-suite.Browser('Google Search for Flagpole', browserOpts)
+suite.browser('Google Search for Flagpole', browserOpts)
     .open('/')
-    .then(async function () {
+    .next(async function () {
         this.assert('Landing Page HTTP Status is 200', this.response.status()).equals(200);
         await this.assert('Wait for search input box', this.exists(paths.queryInput)).resolves();
         await this.page.type(paths.queryInput, searchTerm);
