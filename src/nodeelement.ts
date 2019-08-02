@@ -1,11 +1,19 @@
 import { ProtoValue } from './value';
-import { JSHandle } from 'puppeteer';
+import { JSHandle, Page, ElementHandle } from 'puppeteer';
 import { Flagpole } from '.';
 import { Link } from './link';
 import { Scenario } from './scenario';
 import { ResponseType, iResponse } from './response';
+import { AssertionContext } from './assertioncontext';
 
 export class NodeElement extends ProtoValue {
+
+    protected _path: string;
+
+    constructor(input: any, context: AssertionContext, path?: string) {
+        super(input, context);
+        this._path = path || '';
+    }
 
     public async isFormTag(): Promise<boolean> {
         if (this.isCheerioElement() || this.isPuppeteerElement()) {
@@ -240,16 +248,46 @@ export class NodeElement extends ProtoValue {
         return null;
     }
 
+    /**
+     * Fill out the form with this data.
+     * TODO: This method is only partially working, needs more testing and to be completed.
+     * 
+     * @param formData 
+     */
     public async fillForm(formData: any): Promise<any> {
+        const element: NodeElement = this;
         const isForm: boolean = await this.isFormTag();
-        return new Promise((resolve, reject) => {
+        return new Promise(async function(resolve, reject) {
             if (isForm) {
-                if (this.isCheerioElement()) {
+                if (element.isCheerioElement()) {
+                    const form: Cheerio = element._input;
                     for (let name in formData) {
                         const value = formData[name];
-                        // TODO: Fill in the child values 
+                        form.find(`[name="${name}"]`).val(value);
                     }
                 }
+                else if (element.isPuppeteerElement()) {
+                    const page: Page | null = element._context.page;
+                    if (page !== null) {
+                        for (let name in formData) {
+                            const value: any = formData[name];
+                            const selector: string = `${element._path} [name="${name}"]`;
+                            const input: ElementHandle | null = await page.$(selector);
+                            if (input !== null) {
+                                const tagName = (await (await input.getProperty('tagName')).jsonValue()).toLowerCase();
+                                const inputType = (await (await input.getProperty('type')).jsonValue()).toLowerCase();
+                                await page.focus(selector);
+                                if (tagName == 'select') {
+                                    await page.select(selector, value);
+                                } 
+                                else if (tagName == 'input') {
+                                    await page.type(selector, value);
+                                }
+                            }
+                        }
+                    }
+                }
+                resolve(element);
             }
             else {
                 reject('This is not a form element.');
@@ -266,21 +304,21 @@ export class NodeElement extends ProtoValue {
 
     public async getNext(selector?: string): Promise<NodeElement | null> {
         if (this.isCheerioElement()) {
-            return new NodeElement((<Cheerio>this._input).next(selector), this._context);
+            return new NodeElement((<Cheerio>this._input).next(selector), this._context, selector);
         }
         return null;
     }
 
     public async getPrevious(selector?: string): Promise<NodeElement | null> {
         if (this.isCheerioElement()) {
-            return new NodeElement((<Cheerio>this._input).prev(selector), this._context);
+            return new NodeElement((<Cheerio>this._input).prev(selector), this._context, selector);
         }
         return null;
     }
 
     public async getSiblings(selector?: string): Promise<NodeElement | null> {
         if (this.isCheerioElement()) {
-            return new NodeElement((<Cheerio>this._input).siblings(selector), this._context);
+            return new NodeElement((<Cheerio>this._input).siblings(selector), this._context, selector);
         }
         return null;
     }
@@ -288,7 +326,7 @@ export class NodeElement extends ProtoValue {
     public async getClosest(selector?: string): Promise<NodeElement | null> {
         if (this.isCheerioElement()) {
             if (typeof selector != 'undefined') {
-                return new NodeElement((<Cheerio>this._input).closest(selector), this._context);
+                return new NodeElement((<Cheerio>this._input).closest(selector), this._context, selector);
             }
         }
         return null;
@@ -296,7 +334,7 @@ export class NodeElement extends ProtoValue {
 
     public async getParent(selector?: string): Promise<NodeElement | null> {
         if (this.isCheerioElement()) {
-            return new NodeElement((<Cheerio>this._input).parent(selector), this._context);
+            return new NodeElement((<Cheerio>this._input).parent(selector), this._context, selector);
         }
         return null;
     }

@@ -25,7 +25,11 @@ suite.browser('Google Search for Flagpole', browserOpts)
     .next(async function () {
         this.assert('Landing Page HTTP Status is 200', this.response.status()).equals(200);
         await this.assert('Wait for search input box', this.exists(paths.queryInput)).resolves();
-        await this.page.type(paths.queryInput, searchTerm);
+        //await this.page.type(paths.queryInput, searchTerm);
+        const form = await this.select('form');
+        await form.fillForm({
+            q: searchTerm
+        });
         this.assert('Search term matches what we typed', await this.val(paths.queryInput)).equals(searchTerm);
         await this.assert('Search button exists', this.exists(paths.submitButton)).resolves();
         await this.click(paths.submitButton);

@@ -25,4 +25,8 @@ suite.html('Test MileSplit Hompage').open('/')
                 this.assert('Width is 620', await this.select('width')).equals(620);
             });
         });
+    })
+    .next('Verify CSS', async function () {
+        const css = await this.selectAll('link[rel="stylesheet"]');
+        css.forEach(stylesheet => stylesheet.load());
     });

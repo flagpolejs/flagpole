@@ -61,7 +61,9 @@ export class BrowserResponse extends GenericResponse implements iResponse {
                 page.$(path)
                     .then((el: ElementHandle<Element> | null) => {
                         (el !== null) ?
-                            resolve(new NodeElement(el, new AssertionContext(response.scenario, response))) :
+                            resolve(
+                                new NodeElement(el, new AssertionContext(response.scenario, response), path)
+                            ) :
                             reject(`No element matching ${path} was found`);
                     })
                     .catch(reject);
@@ -81,7 +83,13 @@ export class BrowserResponse extends GenericResponse implements iResponse {
                     .then((elements: ElementHandle<Element>[]) => {
                         const nodeElements: NodeElement[] = [];
                         elements.forEach((el: ElementHandle<Element>) => {
-                            nodeElements.push(new NodeElement(el, new AssertionContext(response.scenario, response)));
+                            nodeElements.push(
+                                new NodeElement(
+                                    el,
+                                    new AssertionContext(response.scenario, response),
+                                    path
+                                )
+                            );
                         });
                         resolve(nodeElements);
                     })

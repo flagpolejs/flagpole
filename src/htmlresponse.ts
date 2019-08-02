@@ -61,7 +61,13 @@ export class HtmlResponse extends GenericResponse implements iResponse {
                 findIn.find(path) :
                 $(path);
             if (selection.length > 0) {
-                resolve(new NodeElement(selection.eq(0), new AssertionContext(this.scenario, this)));
+                resolve(
+                    new NodeElement(
+                        selection.eq(0),
+                        new AssertionContext(this.scenario, this),
+                        path
+                    )
+                );
             }
             else {
                 reject(`Could not find element at ${path}`);
@@ -79,7 +85,11 @@ export class HtmlResponse extends GenericResponse implements iResponse {
                 const nodeElements: NodeElement[] = [];
                 elements.each((i: number) => {
                     nodeElements.push(
-                        new NodeElement($(elements.get(i)), new AssertionContext(response.scenario, response))
+                        new NodeElement(
+                            $(elements.get(i)),
+                            new AssertionContext(response.scenario, response),
+                            path
+                        )
                     );
                 });
                 resolve(nodeElements);
