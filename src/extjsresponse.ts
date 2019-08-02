@@ -8,6 +8,14 @@ import { AssertionContext } from './assertioncontext';
 
 export class ExtJSResponse extends GenericResponse implements iResponse {
 
+    public get browser(): Browser {
+        return this.scenario.getBrowser();
+    }
+
+    public get page(): Page | null {
+        return this.scenario.getBrowser().getPage();
+    }
+
     public get typeName(): string {
         return 'ExtJS';
     }
@@ -20,6 +28,12 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
         return ResponseType.extjs;
     }
 
+    /**
+     * Returns one element based on the path selected.
+     * 
+     * @param path 
+     * @param findIn 
+     */
     public async asyncSelect(path: string, findIn?: any): Promise<NodeElement | null> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
@@ -32,6 +46,12 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
         return null;
     }
 
+    /**
+     * Returns an array of elements that match the selection path
+     * 
+     * @param path 
+     * @param findIn 
+     */
     public async asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
@@ -51,6 +71,12 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
         return nodeElements;
     }
 
+    /**
+     * Runs the code in callback within the context of the browser.
+     * 
+     * @param context 
+     * @param callback 
+     */
     public async evaluate(context: any, callback: Function): Promise<any> {
         if (this.page !== null) {
             const functionName: string = `flagpole_${Date.now()}`;
@@ -74,14 +100,6 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
      */
     public select(path: string, findIn?: any): Node {
         throw new Error('This is not supported in ExtJS');
-    }
-
-    public get browser(): Browser {
-        return this.scenario.getBrowser();
-    }
-
-    public get page(): Page | null {
-        return this.scenario.getBrowser().getPage();
     }
 
 }
