@@ -24,7 +24,7 @@ export class Assertion {
     public equals(value: any): boolean {
         const thisValue = this._assertValue.get();
         const bool: boolean = thisValue == value;
-        this._assert(bool, `${thisValue} equals ${value}`);
+        this._assert(bool, `${thisValue} equals ${value}`, value);
         return bool;
     }
 
