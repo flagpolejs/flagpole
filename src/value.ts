@@ -27,12 +27,10 @@ export abstract class ProtoValue {
         return Flagpole.isNullOrUndefined(this._input);
     }
 
-    public isCheerioElement(): boolean {
-        return this.toType() == 'cheerio';
-    }
-
-    public isPuppeteerElement(): boolean {
-        return this.toType() == 'elementhandle';
+    public hasProperty(key: string): boolean {
+        return this._input &&
+            this._input.hasOwnProperty &&
+            this._input.hasOwnProperty(key);
     }
 
     public isPromise(): boolean {
@@ -51,14 +49,16 @@ export abstract class ProtoValue {
         return this.toType() == 'object';
     }
 
-    protected isCookie(): boolean {
+    public isCookie(): boolean {
         return this._input && this._input.cookieString;
     }
 
-    public hasProperty(key: string): boolean {
-        return this._input &&
-            this._input.hasOwnProperty &&
-            this._input.hasOwnProperty(key);
+    protected _isCheerioElement(): boolean {
+        return this.toType() == 'cheerio';
+    }
+
+    protected _isPuppeteerElement(): boolean {
+        return this.toType() == 'elementhandle';
     }
 
 }

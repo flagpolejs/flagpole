@@ -13,14 +13,6 @@ export class Assertion {
         this._message = typeof message == 'undefined' ? null : message;
     }
 
-    private _assert(statement: boolean, defaultMessage: string, actualValue?: any) {
-        this._context.scenario.assert(
-            statement,
-            this._message || defaultMessage,
-            actualValue
-        );
-    }
-
     public equals(value: any): boolean {
         const thisValue = this._assertValue.get();
         const bool: boolean = thisValue == value;
@@ -258,6 +250,14 @@ export class Assertion {
         }
         this._assert(bool, 'Some');
         return bool;
+    }
+
+    private _assert(statement: boolean, defaultMessage: string, actualValue?: any) {
+        this._context.scenario.assert(
+            statement,
+            this._message || defaultMessage,
+            actualValue
+        );
     }
 
 }

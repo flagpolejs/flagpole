@@ -10,13 +10,13 @@ let $: CheerioStatic;
 
 export class HtmlResponse extends GenericResponse implements iResponse {
 
+    public get typeName(): string {
+        return 'HTML';
+    }
+
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
         $ = cheerio.load(response.body);
-    }
-
-    public get typeName(): string {
-        return 'HTML';
     }
 
     public getType(): ResponseType {
@@ -29,34 +29,6 @@ export class HtmlResponse extends GenericResponse implements iResponse {
 
     public async evaluate(context: any, callback: Function): Promise<any> {
         return callback.apply(context, [ $ ]);
-    }
-
-    /**
-     * Select the html element at this CSS Selector or XPath
-     *
-     * @param {string} path
-     * @param findIn
-     * @returns {Node}
-     */
-    public select(path: string, findIn?: any): Node {
-        let obj: any = null;
-        // If findIn is a cheerio object, then look in it
-        if (Flagpole.toType(findIn) == 'cheerio') {
-            obj = findIn.find(path);
-        }
-        // Otheriwse use top level context
-        else {
-            obj = $(path);
-        }
-        // Create the property
-        if (obj.length == 0) {
-            obj = null;
-        }
-        let element: Node = new Node(this, path, obj);
-        this.setLastElement(path, element);
-        // Inferred exists assertion
-        element.exists();
-        return element;
     }
 
     public async asyncSelect(path: string, findIn?: any): Promise<NodeElement | null> {
@@ -96,6 +68,35 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         else {
             return [];
         }
+    }
+
+    /**
+     * DEPRECATED
+     * Select the html element at this CSS Selector or XPath
+     *
+     * @param {string} path
+     * @param findIn
+     * @returns {Node}
+     */
+    public select(path: string, findIn?: any): Node {
+        let obj: any = null;
+        // If findIn is a cheerio object, then look in it
+        if (Flagpole.toType(findIn) == 'cheerio') {
+            obj = findIn.find(path);
+        }
+        // Otheriwse use top level context
+        else {
+            obj = $(path);
+        }
+        // Create the property
+        if (obj.length == 0) {
+            obj = null;
+        }
+        let element: Node = new Node(this, path, obj);
+        this.setLastElement(path, element);
+        // Inferred exists assertion
+        element.exists();
+        return element;
     }
 
 }

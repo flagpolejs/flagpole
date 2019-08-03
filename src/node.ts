@@ -7,6 +7,7 @@ import { iResponse, ResponseType } from "./response";
 import { Flagpole } from ".";
 import { Link } from "./link";
 import { Cookie } from 'request';
+import { AssertionContext } from './assertioncontext';
 
 let $: CheerioStatic = require('cheerio');
 
@@ -369,7 +370,7 @@ export class Node {
         let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         // If this was a link, click it and then run the resulting scenaior
         if (this.isLinkElement()) {
-            let link: Link = new Link(this.response, this.getAttribute('href') || '').validate();
+            const link: Link = new Link(this.getAttribute('href') || '', this.response.getAssertionContext());
             (link.isNavigation()) ?
                 scenario.open(link.getUri()) :
                 scenario.skip('Not a navigation link');
@@ -395,8 +396,7 @@ export class Node {
      */
     public submit(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
         let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
-        let link: Link = new Link(this.response, this.getUrl() || '')
-            .validate();
+        let link: Link = new Link(this.getUrl() || '', this.response.getAssertionContext());
         if (this.isFormElement() && link.isNavigation()) {
             let uri: string;
             let method: string = this.getAttribute('method') || 'get';
@@ -493,9 +493,9 @@ export class Node {
     }
 
     public load(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
-        let relativePath: string | null = this.getUrl();
-        let link: Link = new Link(this.response, relativePath || '').validate();
-        let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
+        const relativePath: string | null = this.getUrl();
+        const link: Link = new Link(relativePath || '', this.response.getAssertionContext());
+        const scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         if (relativePath === null) {
             scenario.skip('No URL to load');
         }

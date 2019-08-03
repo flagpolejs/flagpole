@@ -6,53 +6,30 @@ import { Browser } from './browser';
 import { Page, ElementHandle } from 'puppeteer';
 import { AssertionContext } from './assertioncontext';
 
-export class BrowserSelector {
-
-    public readonly path: string;
-    public readonly response: iResponse;
-
-    constructor(path: string, response: iResponse) {
-        this.path = path;
-        this.response = response;
-    }
-
-    public toString() {
-        return this.path;
-    }
-
-}
-
 export class BrowserResponse extends GenericResponse implements iResponse {
-
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
-    }
 
     public get typeName(): string {
         return 'Browser';
     }
 
-    /**
-     * 
-     */
+    public get browser(): Browser {
+        return this.scenario.getBrowser();
+    }
+
+    public get page(): Page | null {
+        return this.scenario.getBrowser().getPage();
+    }
+
     public getType(): ResponseType {
         return ResponseType.browser;
     }
 
     /**
-     * This does nothing so far
-     *
-     * @param {string} path
-     * @param findIn
-     * @returns {Node}
+     * Select the first matching element
+     * 
+     * @param path 
+     * @param findIn 
      */
-    public select(path: string, findIn?: any): Node {
-        const obj: BrowserSelector = new BrowserSelector(path, this);
-        const element: Node = new Node(this, path, obj);
-        this.setLastElement(path, element);
-        return element;
-    }
-
     public async asyncSelect(path: string, findIn?: any): Promise<NodeElement | null> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
@@ -65,6 +42,12 @@ export class BrowserResponse extends GenericResponse implements iResponse {
         return null;
     }
 
+    /**
+     * Select all matching elements
+     * 
+     * @param path 
+     * @param findIn 
+     */
     public async asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
@@ -84,25 +67,26 @@ export class BrowserResponse extends GenericResponse implements iResponse {
         return nodeElements;
     }
 
+    /**
+     * Runt his code in the browser
+     */
     public async evaluate(context: any, callback: Function): Promise<any> {
         if (this.page !== null) {
             const functionName: string = `flagpole_${Date.now()}`;
             const jsToInject: string = `window.${functionName} = ${callback}`;
             await this.page.addScriptTag({ content: jsToInject });
-            const result = await this.page.evaluate(({ functionName }) => {
+            return await this.page.evaluate(functionName => {
                 return window[functionName]();
-            }, { functionName });
-            return result;
+            }, functionName);
         }
-        throw new Error('Page is null');
+        throw new Error('Cannot evaluate code becuase page is null.');
     }
 
-    public get browser(): Browser {
-        return this.scenario.getBrowser();
-    }
-
-    public get page(): Page | null {
-        return this.scenario.getBrowser().getPage();
+    /**
+     * DEPRECATED
+     */
+    public select(path: string, findIn?: any): Node {
+        throw new Error('Deprecated. Select is longer supported.');
     }
 
 }

@@ -5,6 +5,8 @@ import { URL } from 'url';
 import { Cookie } from 'request';
 import { IncomingMessage } from 'http';
 import * as puppeteer from "puppeteer-core";
+import { Assertion } from './assertion';
+import { AssertionContext } from './assertioncontext';
 
 /**
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
@@ -18,13 +20,14 @@ export interface iResponse {
     loadTime(): Node
     headers(key?: string): Node
     cookies(key?: string): Node
-    getRoot(): any
     getBody(): string
     getUrl(): string
     absolutizeUri(uri: string): string
     evaluate(context: any, callback: Function): Promise<any>
+    getAssertionContext(): AssertionContext
     readonly scenario: Scenario
     // to be deprecated
+    getRoot(): any
     select(path: string, findIn?: any): Node
     and(): Node
     label(message: string): iResponse
@@ -129,6 +132,10 @@ export abstract class GenericResponse implements iResponse {
         this.scenario = scenario;
         this._response = response;
         this._lastElement = new Node(this, 'Empty Element', null);
+    }
+
+    public getAssertionContext(): AssertionContext {
+        return new AssertionContext(this.scenario, this);
     }
 
     public absolutizeUri(uri: string): string {

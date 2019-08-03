@@ -1,24 +1,32 @@
 import { URL } from 'url';
 import { iResponse } from "./response";
 import { Flagpole } from ".";
+import { AssertionContext } from './assertioncontext';
 
 const isValidDataUrl = require('valid-data-url');
 
 export class Link {
 
-    protected response: iResponse;
-    protected uri: string;
+    protected _context: AssertionContext;
+    protected _uri: string;
 
-    constructor(response: iResponse, uri: string) {
-        this.response = response;
-        this.uri = uri;
+    constructor(uri: string, context: AssertionContext) {
+        this._uri = uri;
+        this._context = context;
     }
 
+    /**
+     * Get full URL including host, optionally add query string
+     * 
+     * @param queryString 
+     */
     public getUri(queryString?: any): string {
-        let baseUrl: URL = new URL(this.response.scenario.suite.buildUrl(this.response.scenario.getUrl() || ''));
-        let thisUrl: URL = new URL(this.uri, baseUrl.href);
-        if (queryString) {
-            let type: string = Flagpole.toType(queryString);
+        const baseUrl: URL = new URL(
+            this._context.suite.buildUrl(this._context.scenario.getUrl() || '')
+        );
+        const thisUrl: URL = new URL(this._uri, baseUrl.href);
+        if (typeof queryString != 'undefined') {
+            const type: string = Flagpole.toType(queryString);
             if (type == 'object') {
                 for (let key in queryString) {
                     thisUrl.searchParams.append(key, queryString[key]);
@@ -34,43 +42,43 @@ export class Link {
     }
 
     public isValidDataUri(): boolean {
-        return isValidDataUrl(this.uri);
+        return isValidDataUrl(this._uri);
     }
 
     public isData(): boolean {
-        return (/^data:/.test(this.uri));
+        return (/^data:/.test(this._uri));
     }
 
     public isAnchor(): boolean {
-        return /^#/.test(this.uri);
+        return /^#/.test(this._uri);
     }
 
     public isEmail(): boolean {
-        return /^mailto:/.test(this.uri)
+        return /^mailto:/.test(this._uri)
     }
 
     public isPhone(): boolean {
-        return /^(tel|callto|wtai):/.test(this.uri);
+        return /^(tel|callto|wtai):/.test(this._uri);
     }
 
     public isTextMessage(): boolean {
-        return /^(sms|mms):/.test(this.uri);
+        return /^(sms|mms):/.test(this._uri);
     }
 
     public isGeo(): boolean {
-        return /^(geo|geopoint):/.test(this.uri);
+        return /^(geo|geopoint):/.test(this._uri);
     }
 
     public isScript(): boolean {
-        return /^(javascript):/.test(this.uri);
+        return /^(javascript):/.test(this._uri);
     }
 
     public isAppStore(): boolean {
-        return /^(market|itms|itms-apps):/.test(this.uri);
+        return /^(market|itms|itms-apps):/.test(this._uri);
     }
 
     public isFtp(): boolean {
-        return /^(ftp):/.test(this.uri);
+        return /^(ftp):/.test(this._uri);
     }
 
     /*
@@ -83,33 +91,14 @@ export class Link {
 
     public isNavigation(): boolean {
         return (
-            this.uri.length > 0 &&
+            this._uri.length > 0 &&
             !this.isAnchor() &&
             (
-                /^\?/.test(this.uri) ||
-                /^https?:\/\//i.test(this.uri) ||
-                /^\//i.test(this.uri) ||
-                !/^[a-z-]{1,10}:/i.test(this.uri)
+                /^\?/.test(this._uri) ||                // Starts with a question mark
+                /^https?:\/\//i.test(this._uri) ||      // Starts with http:// or https://
+                /^\//i.test(this._uri)                  // Starts with as slash
             )
         );
-    }
-
-    public validate(): Link {
-        if (this.isAnchor()) {
-            let anchorName: string = this.uri.substr(1);
-            this.response.assert(
-                this.response.getRoot()('a[name="' + anchorName + '"]').length > 0,
-                'Anchor link has a matching anchor (' + anchorName + ')',
-                'No anchor mathed the link (' + anchorName + ')'
-            );
-        }
-        else if (this.isData()) {
-            this.response.assert(
-                this.isValidDataUri(),
-                'Is valid data URL', 'Is not valid data URL'
-            );
-        }
-        return this;
     }
 
 }
