@@ -136,10 +136,10 @@ function addSuite() {
 
         let fileContents: string = "const { Flagpole } = require('flagpole');\n" +
             "\n" +
-            "const suite = Flagpole." + typesOfTest[answers.type] + "('" + answers.suiteDescription + "')\n" +
+            "const suite = Flagpole.suite('" + answers.suiteDescription + "')\n" +
             "   .base(" + domains + ");\n" +
             "\n" +
-            "suite.Scenario('" + answers.scenarioDescription + "')\n" +
+            "suite." + typesOfTest[answers.type] + "('" + answers.scenarioDescription + "')\n" +
             "   .open('" + answers.scenarioPath + "')\n" +
             "   .next(async function (response, context) {\n" +
             "       \n" +
