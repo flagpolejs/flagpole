@@ -32,7 +32,8 @@ suite.browser('Google Search for Flagpole', browserOpts)
         });
         this.assert('Search term matches what we typed', await this.val(paths.queryInput)).equals(searchTerm);
         await this.assert('Search button exists', this.exists(paths.submitButton)).resolves();
-        await this.click(paths.submitButton);
+        //await this.click(paths.submitButton);
+        await form.submit();
         await this.page.waitForNavigation();
         await this.assert('Search results found', this.exists(paths.searchResultsItem)).resolves();
         await this.comment(await (await this.select('#searchform')).getClassName());

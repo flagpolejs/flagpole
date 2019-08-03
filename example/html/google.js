@@ -40,7 +40,9 @@ const homepage = suite.html('Homepage').open('/')
         await form.fillForm({
             q: 'milesplit'
         });
-        const searchInputBox = await this.select('input[name="q"]');
-        this.assert('Search input box should have the value we typed', await searchInputBox.getValue())
-            .equals('milesplit');
+        form.submit('Submit form and check results page', async function () {
+            const searchInputBox = await this.select('input[name="q"]');
+            this.assert('Search input box should have the value we typed', await searchInputBox.getValue())
+                .equals('milesplit');
+        });
     });

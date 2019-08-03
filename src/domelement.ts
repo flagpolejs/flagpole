@@ -232,7 +232,31 @@ export class DOMElement extends ProtoValue {
             return await this._context.page.evaluate(form => form.submit(), this.get());
         }
         else if (this._isCheerioElement()) {
-            
+            const link: Link = await this._getLink();
+            const scenario: Scenario = await this._createLambdaScenario(a, b);
+            const method = ((await this.getAttribute('method')) || 'get').toLowerCase();
+            // If there is a URL we can submit the form to
+            if (link.isNavigation()) {
+                let uri: string;
+                scenario.method(method);
+                if (method == 'get') {
+                    uri = link.getUri(this.get().serializeArray());
+                }
+                else {
+                    const formDataArray: { name: string, value: string }[] = this.get().serializeArray();
+                    const formData: any = {};
+                    uri = link.getUri();
+                    formDataArray.forEach(function (input: any) {
+                        formData[input.name] = input.value;
+                    });
+                    scenario.form(formData)
+                }
+                return scenario.open(uri);
+            }
+            // Not a valid URL to submit form to
+            else {
+                return scenario.skip('Nothing to submit');
+            }
         }
         throw new Error('This is not supported yet.');
     }
