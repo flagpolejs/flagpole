@@ -20,10 +20,24 @@ export class Assertion {
         return bool;
     }
 
+    public notEquals(value: any): boolean {
+        const thisValue = this._assertValue.get();
+        const bool: boolean = thisValue != value;
+        this._assert(bool, `${thisValue} does not equal ${value}`, value);
+        return bool;
+    }
+
     public is(type: string): boolean {
         const myType: string = this._assertValue.toType();
         const bool: boolean = (myType == type.toLocaleLowerCase());
         this._assert(bool, `Is type ${type}`, myType);
+        return bool;
+    }
+
+    public isNot(type: string): boolean {
+        const myType: string = this._assertValue.toType();
+        const bool: boolean = (myType != type.toLocaleLowerCase());
+        this._assert(bool, `Is not type ${type}`, myType);
         return bool;
     }
 
