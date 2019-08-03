@@ -1,5 +1,4 @@
 import { Scenario } from "./scenario";
-import { NodeElement } from "./nodeelement";
 import { Node } from "./node";
 import { URL } from 'url';
 import { Cookie } from 'request';

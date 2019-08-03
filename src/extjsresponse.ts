@@ -1,5 +1,5 @@
 import { Scenario } from "./scenario";
-import { NodeElement } from "./nodeelement";
+import { DOMElement } from "./domelement";
 import { Node } from "./node";
 import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
 import { Browser } from './browser';
@@ -34,13 +34,13 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
      * @param path 
      * @param findIn 
      */
-    public async asyncSelect(path: string, findIn?: any): Promise<NodeElement | null> {
+    public async asyncSelect(path: string, findIn?: any): Promise<DOMElement | null> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
         if (page !== null) {
             const el: ElementHandle<Element> | null = await page.$(path);
             if (el !== null) {
-                return new NodeElement(el, new AssertionContext(response.scenario, response), path);
+                return new DOMElement(el, new AssertionContext(response.scenario, response), path);
             }
         }
         return null;
@@ -52,15 +52,15 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
      * @param path 
      * @param findIn 
      */
-    public async asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]> {
+    public async asyncSelectAll(path: string, findIn?: any): Promise<DOMElement[]> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
-        const nodeElements: NodeElement[] = [];
+        const nodeElements: DOMElement[] = [];
         if (page !== null) {
             const elements: ElementHandle[] = await page.$$(path);
             elements.forEach((el: ElementHandle<Element>) => {
                 nodeElements.push(
-                    new NodeElement(
+                    new DOMElement(
                         el,
                         new AssertionContext(response.scenario, response),
                         path

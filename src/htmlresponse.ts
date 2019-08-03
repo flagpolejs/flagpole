@@ -2,7 +2,7 @@ import { Flagpole } from "./index";
 import { Scenario } from "./scenario";
 import { Node } from "./node";
 import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
-import { NodeElement } from './nodeelement';
+import { DOMElement } from './domelement';
 import { AssertionContext } from './assertioncontext';
 
 let cheerio: CheerioAPI = require('cheerio');
@@ -31,12 +31,12 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         return callback.apply(context, [ $ ]);
     }
 
-    public async asyncSelect(path: string, findIn?: any): Promise<NodeElement | null> {
+    public async asyncSelect(path: string, findIn?: any): Promise<DOMElement | null> {
         const selection: Cheerio = (Flagpole.toType(findIn) == 'cheerio') ?
             findIn.find(path) :
             $(path);
         if (selection.length > 0) {
-            return new NodeElement(
+            return new DOMElement(
                 selection.eq(0),
                 new AssertionContext(this.scenario, this),
                 path
@@ -47,16 +47,16 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         }
     }
 
-    public async asyncSelectAll(path: string, findIn?: any): Promise<NodeElement[]> {
+    public async asyncSelectAll(path: string, findIn?: any): Promise<DOMElement[]> {
         const response: iResponse = this;
         const elements: Cheerio = (Flagpole.toType(findIn) == 'cheerio') ?
             findIn.find(path) :
             $(path);
         if (elements.length > 0) {
-            const nodeElements: NodeElement[] = [];
+            const nodeElements: DOMElement[] = [];
             elements.each((i: number) => {
                 nodeElements.push(
-                    new NodeElement(
+                    new DOMElement(
                         $(elements.get(i)),
                         new AssertionContext(response.scenario, response),
                         path

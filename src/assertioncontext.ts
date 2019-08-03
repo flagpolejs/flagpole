@@ -5,7 +5,7 @@ import { Browser } from './browser';
 import { Page, ElementHandle } from 'puppeteer';
 import { Assertion } from './assertion';
 import { reject } from 'bluebird';
-import { NodeElement } from './nodeelement';
+import { DOMElement } from './domelement';
 import { HtmlResponse } from './htmlresponse';
 
 export class AssertionContext {
@@ -100,7 +100,7 @@ export class AssertionContext {
             }
         }
         else if (this._isHtmlRequest) {
-            const element: NodeElement | null = await this.select(path);
+            const element: DOMElement | null = await this.select(path);
             if (element !== null) {
                 return await element.getText();
             }
@@ -156,7 +156,7 @@ export class AssertionContext {
             return await this.page.evaluate(form => form.submit(), form);
         }
         else if (this._isHtmlRequest) {
-            const form: NodeElement | null = await this.select(path);
+            const form: DOMElement | null = await this.select(path);
             if (form !== null) {
                 return await form.submit();
             }

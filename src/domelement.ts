@@ -5,7 +5,7 @@ import { Scenario } from './scenario';
 import { ResponseType } from './response';
 import { AssertionContext } from './assertioncontext';
 
-export class NodeElement extends ProtoValue {
+export class DOMElement extends ProtoValue {
 
     protected _path: string;
 
@@ -139,7 +139,7 @@ export class NodeElement extends ProtoValue {
      * @param formData 
      */
     public async fillForm(formData: any): Promise<any> {
-        const element: NodeElement = this;
+        const element: DOMElement = this;
         const isForm: boolean = await this._isFormTag();
         if (isForm) {
             if (element._isCheerioElement()) {
@@ -177,46 +177,46 @@ export class NodeElement extends ProtoValue {
         }
     }
 
-    public async getChildren(selector?: string): Promise<NodeElement[]> {
+    public async getChildren(selector?: string): Promise<DOMElement[]> {
         if (this._isCheerioElement()) {
             return this._input.children(selector);
         }
         throw new Error(`getChildren is not supported with ${this.toType()}.`);
     }
 
-    public async getNext(selector?: string): Promise<NodeElement | null> {
+    public async getNext(selector?: string): Promise<DOMElement | null> {
         if (this._isCheerioElement()) {
-            return new NodeElement((<Cheerio>this._input).next(selector), this._context, selector);
+            return new DOMElement((<Cheerio>this._input).next(selector), this._context, selector);
         }
         throw new Error(`getNext is not supported with ${this.toType()}.`);
     }
 
-    public async getPrevious(selector?: string): Promise<NodeElement | null> {
+    public async getPrevious(selector?: string): Promise<DOMElement | null> {
         if (this._isCheerioElement()) {
-            return new NodeElement((<Cheerio>this._input).prev(selector), this._context, selector);
+            return new DOMElement((<Cheerio>this._input).prev(selector), this._context, selector);
         }
         throw new Error(`getPrevious is not supported with ${this.toType()}.`);
     }
 
-    public async getSiblings(selector?: string): Promise<NodeElement | null> {
+    public async getSiblings(selector?: string): Promise<DOMElement | null> {
         if (this._isCheerioElement()) {
-            return new NodeElement((<Cheerio>this._input).siblings(selector), this._context, selector);
+            return new DOMElement((<Cheerio>this._input).siblings(selector), this._context, selector);
         }
         throw new Error(`getSiblings is not supported with ${this.toType()}.`);
     }
 
-    public async getClosest(selector?: string): Promise<NodeElement | null> {
+    public async getClosest(selector?: string): Promise<DOMElement | null> {
         if (this._isCheerioElement()) {
             if (typeof selector != 'undefined') {
-                return new NodeElement((<Cheerio>this._input).closest(selector), this._context, selector);
+                return new DOMElement((<Cheerio>this._input).closest(selector), this._context, selector);
             }
         }
         throw new Error(`getClosest is not supported with ${this.toType()}.`);
     }
 
-    public async getParent(selector?: string): Promise<NodeElement | null> {
+    public async getParent(selector?: string): Promise<DOMElement | null> {
         if (this._isCheerioElement()) {
-            return new NodeElement((<Cheerio>this._input).parent(selector), this._context, selector);
+            return new DOMElement((<Cheerio>this._input).parent(selector), this._context, selector);
         }
         throw new Error(`getParent is not supported with ${this.toType()}.`);
     }

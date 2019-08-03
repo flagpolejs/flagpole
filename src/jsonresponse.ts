@@ -1,7 +1,6 @@
 import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { Node } from "./node";
-import { NodeElement } from './nodeelement';
 
 export class JsonResponse extends GenericResponse implements iResponse {
 
