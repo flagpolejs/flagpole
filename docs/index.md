@@ -24,8 +24,8 @@ Flagpole has a rich CLI that can be used to list tests, run tests, create new su
 First thing we need to do is install Flagpole with npm. Go into the root of your project and run this:
 
 ```bash
-npm i -g flagpole
-npm i flagpole
+npm i flagpole -g
+npm i flagpole --save-dev
 ```
 
 The above command installs it both locally (within the project) and globally. This is a little annoying that we have to do both. But we do. Globally is so that the command "flagpole" will run. The second one is so that your test suites can find it.
@@ -113,4 +113,6 @@ And if we did everything right, then you should see something like:
 
 ```
 
-That's it! Now start learning more and writing tests!
+That's it for now, but will have more coming and links to our blog posts for getting started.
+
+In the meantime, see the [examples folder in the repo](https://github.com/flocasts/flagpole/tree/master/example).
