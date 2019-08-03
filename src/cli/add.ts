@@ -6,7 +6,8 @@ const fs = require('fs');
 
 const typesOfTest: {} = {
     'HTML Page': 'html',
-    'REST API (JSON Format)': 'json'
+    'REST API (JSON Format)': 'json',
+    'Browser (Puppeteer)': 'browser'
 };
 
 const canAdd: string[] = [
@@ -14,7 +15,6 @@ const canAdd: string[] = [
 ];
 
 function addSuite() {
-
 
     printSubheader('Add New Suite');
 
@@ -136,13 +136,12 @@ function addSuite() {
 
         let fileContents: string = "const { Flagpole } = require('flagpole');\n" +
             "\n" +
-            "const suite = Flagpole.Suite('" + answers.suiteDescription + "')\n" +
+            "const suite = Flagpole." + typesOfTest[answers.type] + "('" + answers.suiteDescription + "')\n" +
             "   .base(" + domains + ");\n" +
             "\n" +
             "suite.Scenario('" + answers.scenarioDescription + "')\n" +
             "   .open('" + answers.scenarioPath + "')\n" +
-            "   ." + typesOfTest[answers.type] + "()\n" +
-            "   .assertions(function (response) {\n" +
+            "   .next(async function (response, context) {\n" +
             "       \n" +
             "   });\n";
 
@@ -250,10 +249,9 @@ function addScenario() {
         let suitePath: string = Cli.config.getTestsFolder() + answers.suite + '.js';
 
         let fileContents: string = "\n\n" +
-            "suite.Scenario('" + answers.scenarioDescription + "')\n" +
+            "suite." + typesOfTest[answers.type] + "('" + answers.scenarioDescription + "')\n" +
             "   .open('" + answers.scenarioPath + "')\n" +
-            "   ." + typesOfTest[answers.type] + "()\n" +
-            "   .assertions(function (response) {\n" +
+            "   .next(async function (response, context) {\n" +
             "       \n" +
             "   });\n";
 
