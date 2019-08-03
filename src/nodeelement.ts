@@ -221,11 +221,27 @@ export class NodeElement extends ProtoValue {
         throw new Error(`getParent is not supported with ${this.toType()}.`);
     }
 
-    public async submit(a?: string | Function, b?: Function): Promise<Scenario> {
+    public async submit(a?: string | Function, b?: Function): Promise<any> {
+        if (!this._isFormTag()) {
+            throw new Error('You can only use .submit() with a form element.');
+        }
+        if (this._isPuppeteerElement()) {
+            if (this._context.page === null) {
+                throw new Error('Page was null');
+            } 
+            return await this._context.page.evaluate(form => form.submit(), this.get());
+        }
+        else if (this._isCheerioElement()) {
+            
+        }
         throw new Error('This is not supported yet.');
     }
 
-    public async click(a?: string | Function, b?: Function): Promise<Scenario> {
+    public async click(a?: string | Function, b?: Function): Promise<any> {
+        if (this._isPuppeteerElement()) {
+            return await this._context.click(this._path);
+        }
+
         // If this is a link tag, treat it the same as load
         if (await this._isLinkTag()) {
             return await this.load(a, b);

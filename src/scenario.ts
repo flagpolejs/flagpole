@@ -11,6 +11,13 @@ import { AssertionContext } from './assertioncontext';
 const request = require('request');
 const probeImage = require('probe-image-size');
 
+export enum ScenarioStatusEvent {
+    beforeExecute,
+    executionProgress,
+    afterExecute,
+    finished
+}
+
 /**
  * A scenario contains tests that run against one request
  */
@@ -34,10 +41,12 @@ export class Scenario {
     }
 
     protected _title: string;
-    protected _notifySuiteOnProgress: Function;
+    protected _subscribers: Function[] = [];
     protected _onReject: Function = () => { };
     protected _onResolve: Function = () => { };
     protected _onFinally: Function = () => { };
+    protected _onBefore: Function = () => { };
+    protected _onAfter: Function = () => { };
     protected _log: Array<iLogLine> = [];
     protected _failures: Array<string> = [];
     protected _passes: Array<string> = [];
@@ -87,12 +96,20 @@ export class Scenario {
             (this._timeRequestLoaded - this._timeRequestStarted) : null;
     }
 
-    constructor(suite: Suite, title: string, notifySuiteOnProgress: Function) {
+    constructor(suite: Suite, title: string) {
         this.suite = suite;
         this._cookieJar = new request.jar();
         this._options = this._defaultRequestOptions;
-        this._notifySuiteOnProgress = notifySuiteOnProgress;
         this._title = title;
+    }
+
+    /**
+     * PubSub Subscription
+     * 
+     * @param callback 
+     */
+    public subscribe(callback: Function) {
+        this._subscribers.push(callback);
     }
 
     /**
@@ -423,10 +440,13 @@ export class Scenario {
             throw new Error(`Can't skip Scenario since it already started executing.`);
         }
         message = "Skipped" + (message ? ': ' + message : '');
+        this._publish(ScenarioStatusEvent.beforeExecute);
         this._timeScenarioExecuted = Date.now();
+        this._publish(ScenarioStatusEvent.executionProgress);
         this._log.push(new CommentLine(message));
+        this._publish(ScenarioStatusEvent.afterExecute);
         this._timeScenarioFinished = Date.now();
-        this._notifySuiteOnProgress(this);
+        this._publish(ScenarioStatusEvent.finished);
         return this;
     }
 
@@ -443,14 +463,15 @@ export class Scenario {
      */
     public execute(): Scenario {
         if (!this.hasExecuted() && this._url !== null) {
+            this._publish(ScenarioStatusEvent.beforeExecute);
             this._timeScenarioExecuted = Date.now();
-            this._notifySuiteOnProgress(this);
             this.subheading(this.title);
             // If we waited first
             if (this._waitToExecute) {
                 this._log.push(new CommentLine(`Waited ${this.executionDuration}ms`));
             }
             // Execute it
+            this._publish(ScenarioStatusEvent.executionProgress);
             this._isMock ?
                 this._executeMock() : 
                 this._executeRequest();
@@ -496,6 +517,16 @@ export class Scenario {
 
     public success(callback: Function): Scenario {
         this._onResolve = callback;
+        return this;
+    }
+
+    public before(callback: Function): Scenario {
+        this._onBefore = callback;
+        return this;
+    }
+
+    public after(callback: Function): Scenario {
+        this._onAfter = callback;
         return this;
     }
 
@@ -697,6 +728,7 @@ export class Scenario {
 
     /**
      * Handle the normalized response once the request comes back
+     * This will loop through each next
      * 
      * @param r 
      */
@@ -708,6 +740,7 @@ export class Scenario {
         this.pass('Loaded ' + response.typeName + ' ' + this._url);
         let lastReturnValue: any = null;
         // Execute all the assertion callbacks one by one
+        this._publish(ScenarioStatusEvent.executionProgress);
         Bluebird.mapSeries(scenario._thens, (_then, index) => {
             const comment: string | null = scenario._thensMessage[index];
             comment !== null && this.comment(comment)
@@ -719,6 +752,7 @@ export class Scenario {
         }).catch((err) => {
             scenario._markScenarioCompleted(err);
         });
+        this._publish(ScenarioStatusEvent.executionProgress);
     }
 
     /**
@@ -876,6 +910,7 @@ export class Scenario {
         if (!this.hasFinished()) {
             this._timeScenarioFinished = Date.now();
             this._log.push(new CommentLine(`Took ${this.executionDuration}ms`));
+            this._publish(ScenarioStatusEvent.afterExecute);
             // Resolve or reject, like scenario is a promise
             if (typeof err !== 'string') {
                 this._onResolve(this)
@@ -885,10 +920,29 @@ export class Scenario {
                 this._onReject(err);
             }
             // Finally
-            this._onFinally(this);
-            this._notifySuiteOnProgress(this);
+            this._publish(ScenarioStatusEvent.finished);
         }
         return this;
+    }
+
+    /**
+     * PubSub Publish
+     * 
+     * @param statusEvent 
+     */
+    protected _publish(statusEvent: ScenarioStatusEvent) {
+        this._subscribers.forEach((callback: Function) => {
+            callback(this, statusEvent);
+        });
+        if (statusEvent == ScenarioStatusEvent.beforeExecute) {
+            this._onBefore(this);
+        }
+        else if (statusEvent == ScenarioStatusEvent.afterExecute) {
+            this._onAfter(this);
+        }
+        else if (statusEvent == ScenarioStatusEvent.finished) {
+            this._onFinally(this);
+        }
     }
 
 }

@@ -1,8 +1,16 @@
 import { Flagpole } from "./index";
-import { Scenario } from "./scenario";
+import { Scenario, ScenarioStatusEvent } from "./scenario";
 import { iLogLine, LogLineType, HeadingLine, DecorationLine, CommentLine, LineBreak, CustomLine, ConsoleColor, SubheadingLine, LogLine, HorizontalRule } from "./consoleline";
 import { URL } from 'url';
 import { FlagpoleOutput } from './flagpole';
+
+export enum SuiteStatusEvent {
+    beforeAllExecute,
+    beforeEachExecute,
+    afterEachExecute,
+    afterAllExecute,
+    finished
+}
 
 /**
  * A suite contains many scenarios
@@ -20,10 +28,14 @@ export class Suite {
         return this._timeSuiteExecuted !== null && this._timeSuiteFinished !== null ?
             (this._timeSuiteFinished - this._timeSuiteExecuted) : null;
     }
-
+    protected _subscribers: Function[] = [];
     protected _onReject: Function = () => { };
     protected _onResolve: Function = () => { };
     protected _onFinally: Function = () => { };
+    protected _onBeforeAll: Function = () => { }
+    protected _onAfterAll: Function = () => { }
+    protected _onBeforeEach: Function = () => { }
+    protected _onAfterEach: Function = () => { }
     protected _thens: Function[] = [];
     protected _title: string;
     protected _baseUrl: URL | null = null;
@@ -37,6 +49,18 @@ export class Suite {
         this._title = title;
     }
 
+    /**
+     * PubSub Subscription
+     * 
+     * @param callback 
+     */
+    public subscribe(callback: Function) {
+        this._subscribers.push(callback);
+    }
+
+    /**
+     * Turn on or off SSL verification
+     */
     public verifySslCert(verify: boolean): Suite {
         this._verifySslCert = verify;
         return this;
@@ -223,8 +247,10 @@ export class Suite {
     public scenario = this.Scenario;
     public Scenario(title: string): Scenario {
         const suite: Suite = this;
-        const scenario: Scenario = new Scenario(this, title, (thisScenario) => {
-            suite._onScenarioProgress(thisScenario);
+        const scenario: Scenario = new Scenario(this, title);
+        // Notify suite on any changes to scenario
+        scenario.subscribe((thisScenario, status) => {
+            this._onScenarioStatusChange(thisScenario, status)
         });
         // Some local tests fail with SSL verify on, so may have been disabled on this suite
         scenario.verifySslCert(this._verifySslCert);
@@ -393,8 +419,29 @@ export class Suite {
      * This callback will run once everything else is completed, whether pass or fail
      */
     public onDone = this.finally;
+    public after = this.finally;
     public finally(callback: Function): Suite {
         this._onFinally = callback;
+        return this;
+    }
+
+    /**
+     * This callback will run right before the tests start to execute
+     * 
+     * @param callback 
+     */
+    public before(callback: Function): Suite {
+        this._onBeforeAll = callback;
+        return this;
+    }
+
+    public beforeEach(callback: Function): Suite {
+        this._onBeforeEach = callback;
+        return this;
+    }
+
+    public afterEach(callback: Function): Suite {
+        this._onAfterEach = callback;
         return this;
     }
 
@@ -420,38 +467,75 @@ export class Suite {
     /**
      * Runs when a scenario's status changes
      */
-    private _onScenarioProgress(scenario: Scenario) {
+    private _onScenarioStatusChange(scenario: Scenario, statusEvent: ScenarioStatusEvent) {
         const suite: Suite = this;
-        // This scenario is executing
+        // This scenario is executing, suite was not previously executing
         if (scenario.hasExecuted() && !this.hasExecuted()) {
             this._timeSuiteExecuted = Date.now();
         }
-        // Is every scenario completed? And only run it once
-        if (this._haveAllScenariosFinished() && !this.hasFinished()) {
-            // Save time ended
-            this._timeSuiteFinished = Date.now();
-            // Resolve as if we were a promise
-            if (this.failed()) {
-                this._onReject(this);
+        // This scenario has finished
+        if (statusEvent = ScenarioStatusEvent.finished) {
+            // Is every scenario completed? And only run it once
+            if (this._haveAllScenariosFinished() && !this.hasFinished()) {
+                // All scenarios are done
+                this._publish(SuiteStatusEvent.afterAllExecute);
+                // Save time ended
+                this._timeSuiteFinished = Date.now();
+                // Resolve as if we were a promise
+                if (this.failed()) {
+                    this._onReject(this);
+                }
+                else {
+                    this._thens.forEach((_then) => {
+                        _then(suite);
+                    });
+                    suite._onResolve(suite);
+                }
+                // Fire this regardless of pass or fails
+                this._publish(SuiteStatusEvent.finished);
+                // Should we print automatically?
+                (Flagpole.automaticallyPrintToConsole) && this.print();
+                // Should we exit on complete?
+                if (Flagpole.exitOnDone) {
+                    process.exit(
+                        this.passed() ? 0 : 1
+                    );
+                }
             }
-            else {
-                this._thens.forEach((_then) => {
-                    _then(suite);
-                });
-                suite._onResolve(suite);
+        }
+        // After Execute
+        else if (statusEvent == ScenarioStatusEvent.afterExecute) {
+            this._onAfterEach(scenario);
+            this._publish(SuiteStatusEvent.afterEachExecute);
+        }
+        // Before Execute
+        else if (statusEvent == ScenarioStatusEvent.beforeExecute) {
+            if (!this.hasExecuted()) {
+                this._publish(SuiteStatusEvent.beforeAllExecute);
             }
-            // Fire this regardless of pass or fails
-            this._onFinally(this);
-            // Should we print automatically?
-            (Flagpole.automaticallyPrintToConsole) && this.print();
-            // Should we exit on complete?
-            if (Flagpole.exitOnDone) {
-                process.exit(
-                    this.passed() ? 0 : 1
-                );
-            }
+            this._onBeforeEach(scenario);
+            this._publish(SuiteStatusEvent.beforeEachExecute);
         }
     }
     
+    /**
+     * PubSub Publish
+     * 
+     * @param statusEvent 
+     */
+    protected _publish(statusEvent: SuiteStatusEvent) {
+        this._subscribers.forEach((callback: Function) => {
+            callback(this, statusEvent);
+        });
+        if (statusEvent == SuiteStatusEvent.beforeAllExecute) {
+            this._onBeforeAll(this);
+        }
+        else if (statusEvent == SuiteStatusEvent.afterAllExecute) {
+            this._onAfterAll(this);
+        }
+        else if (statusEvent == SuiteStatusEvent.finished) {
+            this._onFinally(this);
+        }
+    }
 
 }
