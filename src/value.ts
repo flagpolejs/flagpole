@@ -5,14 +5,28 @@ export abstract class ProtoValue {
 
     protected _input: any;
     protected _context: AssertionContext;
+    protected _name: string | null;
 
-    constructor(input: any, context: AssertionContext) {
+    public get $(): any {
+        return this._input;
+    }
+
+    public get name(): string {
+        return this._name || 'it';
+    }
+
+    constructor(input: any, context: AssertionContext, name?: string) {
         this._input = input;
         this._context = context;
+        this._name = name || null;
     }
 
     public get(): any {
         return this._input;
+    }
+
+    public toArray(): any[] {
+        return this.isArray() ? this._input : [this._input];
     }
 
     public toString(): string {
@@ -20,14 +34,14 @@ export abstract class ProtoValue {
     }
 
     public toType(): string {
-        return Flagpole.toType(this._input);
+        return String(Flagpole.toType(this._input));
     }
 
     public isNullOrUndefined(): boolean {
         return Flagpole.isNullOrUndefined(this._input);
     }
 
-    public hasProperty(key: string): boolean {
+    public async hasProperty(key: string): Promise<boolean> {
         return this._input &&
             this._input.hasOwnProperty &&
             this._input.hasOwnProperty(key);
@@ -53,6 +67,10 @@ export abstract class ProtoValue {
         return this._input && this._input.cookieString;
     }
 
+    public isFlagpoleNodeElement(): boolean {
+        return this.toType() == 'node';
+    }
+
     protected _isCheerioElement(): boolean {
         return this.toType() == 'cheerio';
     }
@@ -65,25 +83,34 @@ export abstract class ProtoValue {
 
 export class Value extends ProtoValue {
 
-    public trim(): Value {
-        this._input = String(this._input).trim();
-        return this;
+    public async getProperty(key: string): Promise<any> {
+        if (!this.isNullOrUndefined() && this.hasProperty(key)) {
+            const thisValue: any = this.get();
+            return this._input[key];
+        }
+        return undefined;
     }
 
-    public length(): Value {
-        this._input = this._input && this._input.length ?
-            this._input.length : 0;
-        return this;
+    public async hasProperty(key: string): Promise<boolean> {
+        const thisValue: any = this.get();
+        return (thisValue && thisValue.hasOwnProperty(key));
     }
 
-    public parseInt(): Value {
-        this._input = parseInt(String(this._input));
-        return this;
+    public forEach(callback: Function) {
+        const thisValue: any = this.get();
+        if (thisValue && thisValue.forEach) {
+            return thisValue.forEach(callback);
+        }
+        throw new Error(`${this.name} does not have a forEach method.`);
     }
 
-    public parseFloat(): Value {
-        this._input = parseFloat(String(this._input));
-        return this;
+    public get length(): Value {
+        const thisValue: any = this.get();
+        return new Value(
+            (thisValue && thisValue.length) ? thisValue.length : 0,
+            this._context,
+            `Length of ${this._name}`
+        );
     }
 
 }

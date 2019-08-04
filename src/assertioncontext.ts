@@ -7,6 +7,7 @@ import { Assertion } from './assertion';
 import { reject } from 'bluebird';
 import { DOMElement } from './domelement';
 import { HtmlResponse } from './htmlresponse';
+import { Value } from './value';
 
 export class AssertionContext {
 
@@ -92,17 +93,17 @@ export class AssertionContext {
         throw new Error('Can not type into this element.');
     }
 
-    public async text(path: string): Promise<string | null> {
+    public async text(path: string): Promise<Value | null> {
         if (this._isBrowserRequest && this.page !== null) {
             const el: ElementHandle<Element> | null = await this.page.$(path);
             if (el !== null) {
-                return await this.page.evaluate(el => el.textContent, el);
+                return new Value(await this.page.evaluate(el => el.textContent, el), this, path);
             }
         }
         else if (this._isHtmlRequest) {
             const element: DOMElement | null = await this.select(path);
             if (element !== null) {
-                return await element.getText();
+                return new Value(await element.getText(), this, path);
             }
         }
         return null;

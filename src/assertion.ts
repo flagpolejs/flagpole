@@ -1,11 +1,17 @@
 import { AssertionContext } from './assertioncontext';
 import { Value } from './value';
+import { Flagpole } from '.';
 
 export class Assertion {
 
     private _context: AssertionContext;
     private _assertValue: Value;
+    private _compareValue: any;
     private _message: string | null;
+
+    public static async create(context: AssertionContext, thisValue: any, message?: string): Promise<Assertion> {
+        return new Assertion(context, thisValue, message);
+    }
 
     constructor(context: AssertionContext, thisValue: any, message?: string) {
         this._context = context;
@@ -13,168 +19,216 @@ export class Assertion {
         this._message = typeof message == 'undefined' ? null : message;
     }
 
+    public exactly(value: any): boolean {
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = thisValue === thatValue;
+        this._assert(bool, `${this._getSubject()} is exactly ${thatValue}`, thatValue);
+        return bool;
+    }
+
     public equals(value: any): boolean {
-        const thisValue = this._assertValue.get();
-        const bool: boolean = thisValue == value;
-        this._assert(bool, `${thisValue} equals ${value}`, value);
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = thisValue == thatValue;
+        this._assert(bool, `${this._getSubject()} equals ${thatValue}`, thisValue);
         return bool;
     }
 
     public notEquals(value: any): boolean {
-        const thisValue = this._assertValue.get();
-        const bool: boolean = thisValue != value;
-        this._assert(bool, `${thisValue} does not equal ${value}`, value);
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = thisValue != thatValue;
+        this._assert(bool, `${this._getSubject()} does not equal ${thatValue}`, thisValue);
         return bool;
     }
 
-    public is(type: string): boolean {
-        const myType: string = this._assertValue.toType();
-        const bool: boolean = (myType == type.toLocaleLowerCase());
-        this._assert(bool, `Is type ${type}`, myType);
+    public notExactly(value: any): boolean {
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = thisValue !== thatValue;
+        this._assert(bool, `${this._getSubject()} is not exactly ${thatValue}`, thisValue);
         return bool;
     }
 
-    public isNot(type: string): boolean {
-        const myType: string = this._assertValue.toType();
-        const bool: boolean = (myType != type.toLocaleLowerCase());
-        this._assert(bool, `Is not type ${type}`, myType);
+    public isSimilarTo(value: any): boolean {
+        const thisValue = String(this._getCompareValue(this._assertValue.get())).trim().toLowerCase();
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = thisValue == String(thatValue).trim().toLowerCase();
+        this._assert(bool, `${this._getSubject()} is similar to ${thatValue}`, thisValue);
         return bool;
     }
 
-    public greaterThan(value: number): boolean {
-        const thisVal: number = this._assertValue.parseFloat().get();
-        const bool: boolean = thisVal > value;
-        this._assert(bool, `${thisVal} is greater than ${value}`, thisVal);
+    public is(value: any): boolean {
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thisType: string = Flagpole.toType(thisValue);
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = (thisType == String(thatValue).toLowerCase());
+        this._assert(bool, `${this._getSubject()} is type ${thatValue}`, thisType);
+        return bool;
+    }
+
+    public isNot(value: any): boolean {
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thisType: string = Flagpole.toType(thisValue);
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = (thisType != String(thatValue).toLowerCase());
+        this._assert(bool, `${this._getSubject()} is not type ${thatValue}`, thisType);
+        return bool;
+    }
+
+    public greaterThan(value: any): boolean {
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = parseFloat(thisValue) > parseFloat(thatValue);
+        this._assert(bool, `${this._getSubject()} is greater than ${thatValue}`, thisValue);
         return bool;
     }
 
     public greaterThanOrEquals(value: any): boolean {
-        const thisVal: number = this._assertValue.parseFloat().get();
-        const bool: boolean = thisVal >= value;
-        this._assert(bool, `${thisVal} is greater than or equal to ${value}`, thisVal);
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = parseFloat(thisValue) >= parseFloat(thatValue);
+        this._assert(bool, `${this._getSubject()} is greater than or equal to ${thatValue}`, thisValue);
         return bool;
     }
 
     public lessThan(value: any): boolean {
-        const thisVal: number = this._assertValue.parseFloat().get();
-        const bool: boolean = thisVal < value;
-        this._assert(bool, `${thisVal} is less than ${value}`, thisVal);
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = parseFloat(thisValue) < parseFloat(thatValue);
+        this._assert(bool, `${this._getSubject()} is less than ${thatValue}`, thisValue);
         return bool;
     }
 
     public lessThanOrEquals(value: any): boolean {
-        const thisVal: number = this._assertValue.parseFloat().get();
-        const bool: boolean = thisVal <= value;
-        this._assert(bool, `${thisVal} is less than or equal to ${value}`, thisVal);
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        const bool: boolean = parseFloat(thisValue) <= parseFloat(thatValue);
+        this._assert(bool, `${this._getSubject()} is less than or equal to ${thatValue}`, thisValue);
         return bool;
     }
 
-    public between(min: number, max: number): boolean {
-        const thisVal: number = this._assertValue.parseFloat().get();
-        const bool: boolean = thisVal >= min && thisVal <= max;
-        this._assert(bool, `${thisVal} is between ${min} and ${max}`, thisVal);
+    public between(min: any, max: any): boolean {
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatMin: number = parseFloat(this._getCompareValue(min));
+        const thatMax: number = parseFloat(this._getCompareValue(max));
+        const bool: boolean = parseFloat(thisValue) >= thatMin && parseFloat(thisValue) <= thatMax;
+        this._assert(bool, `${this._getSubject()} is between ${min} and ${max}`, thisValue);
         return bool;
     }
 
-    public matches(pattern: RegExp): boolean {
-        const thisVal: string = this._assertValue.toString();
-        const bool: boolean = pattern.test(thisVal);
-        this._assert(bool, `Matches ${String(pattern)}`, thisVal);
+    public matches(value: any): boolean {
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        const pattern = Flagpole.toType(value) == 'regexp' ? thatValue : new RegExp(value);
+        const bool: boolean = pattern.test(thisValue);
+        this._assert(bool, `${this._getSubject()} matches ${String(pattern)}`, thisValue);
         return bool;
     }
 
     public contains(value: any): boolean {
         let bool: boolean = false;
-        const thisValue: any = this._assertValue.get();
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
         if (this._assertValue.isNullOrUndefined()) {
-            bool = thisValue === value;
+            bool = thisValue === thatValue;
         }
-        if (this._assertValue.isArray()) {
-            bool = thisValue.indexOf(value) >= 0;
+        else if (this._assertValue.isArray()) {
+            bool = thisValue.indexOf(thatValue) >= 0;
         }
         else if (this._assertValue.isObject()) {
-            bool = this._assertValue.hasProperty(value);
+            bool = typeof this._assertValue[thatValue] !== 'undefined';
         }
         else {
-            bool = (this._assertValue.toString().indexOf(value) >= 0)
+            bool = (this._assertValue.toString().indexOf(thatValue) >= 0)
         }
-        this._assert(bool, `Contains ${value}`, thisValue);
+        this._assert(bool, `${this._getSubject()} contains ${thatValue}`, thisValue);
         return bool;
     }
 
     public startsWith(value: any): boolean {
         let bool: boolean = false;
-        if (this._assertValue.isArray()) {
-            bool = this._assertValue.get()[0] == value;
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        if (Flagpole.toType(thisValue) == 'array') {
+            bool = thisValue[0] == value;
         }
-        if (!this._assertValue.isNullOrUndefined()) {
-            bool = this._assertValue.toString().indexOf(value) === 0
+        if (!Flagpole.isNullOrUndefined(thisValue)) {
+            bool = String(thisValue).indexOf(thatValue) === 0
         }
-        this._assert(bool, `Starts with ${value}`, this._assertValue.toString());
+        this._assert(bool, `${this._getSubject()} starts with ${thatValue}`, String(thisValue));
         return bool;
     }
 
     public endsWith(value: any): boolean {
         let bool: boolean = false;
-        if (this._assertValue.isArray()) {
-            bool = this._assertValue.get()[0] == value;
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const thatValue = this._getCompareValue(value);
+        if (Flagpole.toType(thisValue) == 'array') {
+            bool = thisValue[thisValue.length - 1] == thatValue;
         }
-        if (!this._assertValue.isNullOrUndefined()) {
-            const thisVal: string = this._assertValue.toString();
-            const thatVal: string = String(value);
-            bool = thisVal.indexOf(value) === thisVal.length - thatVal.length
+        if (!Flagpole.isNullOrUndefined(thisValue)) {
+            bool = String(thisValue).substr(0, String(thisValue).length - String(thatValue).length) == thatValue;
         }
-        this._assert(bool, `Starts with ${value}`, this._assertValue.toString());
+        this._assert(bool, `${this._getSubject()} ends with ${thatValue}`, this._assertValue.toString());
         return bool;
     }
 
     public in(values: any[]) {
-        const thisVal: any = this._assertValue.get();
-        let bool: boolean = values.indexOf(thisVal) >= 0;
-        this._assert(bool, `Is in list:  ${values.join(', ')}`);
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        let bool: boolean = values.indexOf(thisValue) >= 0;
+        this._assert(bool, `${this._getSubject()} is in list: ${values.join(', ')}`);
         return bool;
     }
 
     public like(value: any) {
-        const thisVal: any = this._assertValue.toString().toLowerCase().trim();
-        const thatVal: any = String(value).toLowerCase().trim();
+        const thisVal: any = String(this._getCompareValue(this._assertValue)).toLowerCase().trim();
+        const thatVal: any = String(this._compareValue(value)).toLowerCase().trim();
         const bool: boolean = thisVal == thatVal;
-        this._assert(bool, `${thisVal} is like ${thatVal}`);
+        this._assert(bool, `${this._getSubject()} is like ${thatVal}`, thisVal);
         return bool;
     }
 
     public isTrue() {
-        const thisVal: any = this._assertValue.get();
-        const bool: boolean = thisVal === true;
-        this._assert(bool, 'Is true');
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const bool: boolean = thisValue === true;
+        this._assert(bool, `${this._getSubject()} is true`, thisValue);
         return bool;
     }
 
     public isTruthy() {
-        const thisVal: any = this._assertValue.get();
-        const bool: boolean = !!thisVal;
-        this._assert(bool, 'Is truthy');
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const bool: boolean = !!thisValue;
+        this._assert(bool, `${this._getSubject()} is truthy`, thisValue);
         return bool;
     }
 
     public isFalse() {
-        const thisVal: any = this._assertValue.get();
-        const bool: boolean = thisVal === false;
-        this._assert(bool, 'Is false');
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const bool: boolean = thisValue === false;
+        this._assert(bool, `${this._getSubject()} is false`, thisValue);
         return bool;
     }
 
     public isFalsy() {
-        const thisVal: any = this._assertValue.get();
-        const bool: boolean = !thisVal;
-        this._assert(bool, 'Is falsy');
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const bool: boolean = !thisValue;
+        this._assert(bool, `${this._getSubject()} is falsy`, thisValue);
+        return bool;
+    }
+
+    public exists() {
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        const bool: boolean = !Flagpole.isNullOrUndefined(thisValue);
+        this._assert(bool, `${this._getSubject()} exists`, thisValue);
         return bool;
     }
 
     public resolves(continueOnReject: boolean = false): Promise<any> {
         return new Promise((resolve, reject) => {
             const result = (bool: boolean) => {
-                this._assert(bool, 'Resolved');
+                this._assert(bool, `${this._getSubject()} resolved`);
                 if (bool) {
                     resolve();
                 }
@@ -196,7 +250,7 @@ export class Assertion {
     public rejects(continueOnReject: boolean = false): Promise<any> {
         return new Promise((resolve, reject) => {
             const result = (bool: boolean) => {
-                this._assert(bool, 'Rejected');
+                this._assert(bool, `${this._getSubject()} rejected`);
                 if (bool) {
                     resolve();
                 }
@@ -232,38 +286,57 @@ export class Assertion {
 
     public none(callback: Function): boolean {
         let bool: boolean = false;
-        if (this._assertValue.isArray()) {
-            const arr: Array<any> = this._assertValue.get();
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        if (Flagpole.toType(thisValue) == 'array') {
+            const arr: Array<any> = thisValue;
             bool = arr.every((value: any, index: number, array: any[]) => {
                 return !callback(value, index, array);
             });
         }
-        this._assert(bool, 'None');
+        this._assert(bool, `${this._getSubject()} none were true`);
         return bool;
     }
 
     public every(callback: Function): boolean {
         let bool: boolean = false;
-        if (this._assertValue.isArray()) {
-            const arr: Array<any> = this._assertValue.get();
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        if (Flagpole.toType(thisValue) == 'array') {
+            const arr: Array<any> = thisValue;
             bool = arr.every((value: any, index: number, array: any[]) => {
                 return callback(value, index, array);
             });
         }
-        this._assert(bool, 'Every');
+        this._assert(bool, `${this._getSubject()} all were true`);
         return bool;
     }
 
     public some(callback: Function): boolean {
         let bool: boolean = false;
-        if (this._assertValue.isArray()) {
-            const arr: Array<any> = this._assertValue.get();
+        const thisValue = this._getCompareValue(this._assertValue.get());
+        if (Flagpole.toType(thisValue) == 'array') {
+            const arr: Array<any> = thisValue;
             bool = arr.some((value: any, index: number, array: any[]) => {
                 return callback(value, index, array);
             });
         }
-        this._assert(bool, 'Some');
+        this._assert(bool, `${this._getSubject()} some were true`);
         return bool;
+    }
+
+    public async resolvesTo(): Promise<any> {
+        const message: string | undefined = this._message || undefined;
+        const context: AssertionContext = this._context;
+        const promise: Promise<any> = this._assertValue.get();
+        if (!this._assertValue.isPromise()) {
+            throw new Error(`${this._getSubject()} is not a promise.`)
+        }
+        return new Promise(async function (resolve, reject) {
+            promise.then((value: any) => {
+                resolve(Assertion.create(context, value, message));
+            }).catch((ex) => {
+                resolve(Assertion.create(context, ex, message));
+            });
+        });
     }
 
     private _assert(statement: boolean, defaultMessage: string, actualValue?: any) {
@@ -272,6 +345,36 @@ export class Assertion {
             this._message || defaultMessage,
             actualValue
         );
+    }
+
+    private _getCompareValue(value: any): any {
+        if (Flagpole.toType(value) == 'value') {
+            return value.get();
+        }
+        else {
+            return value;
+        }
+    }
+
+    private _getSubject(): string {
+        const assertValue = this._assertValue.get();
+        let name: string;
+        if (assertValue && assertValue.getName) {
+            name = assertValue.getName();
+        }
+        else if (assertValue && assertValue.name) {
+            name = assertValue.name;
+        }
+        else {
+            name = String(assertValue);
+        }
+        // If the name is too long, truncate it
+        if (String(name).length > 64) {
+            name = name.substr(0, 61) + '...';
+        }
+        // Return it
+        return (Flagpole.isNullOrUndefined(name) || String(name).length == 0) ?
+            'It' : String(name);
     }
 
 }

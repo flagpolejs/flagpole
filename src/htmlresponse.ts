@@ -36,10 +36,8 @@ export class HtmlResponse extends GenericResponse implements iResponse {
             findIn.find(path) :
             $(path);
         if (selection.length > 0) {
-            return new DOMElement(
-                selection.eq(0),
-                new AssertionContext(this.scenario, this),
-                path
+            return await DOMElement.create(
+                selection.eq(0), this.getAssertionContext(), null, path
             );
         }
         else {
@@ -54,12 +52,10 @@ export class HtmlResponse extends GenericResponse implements iResponse {
             $(path);
         if (elements.length > 0) {
             const nodeElements: DOMElement[] = [];
-            elements.each((i: number) => {
+            await elements.each(async function (i: number) {
                 nodeElements.push(
-                    new DOMElement(
-                        $(elements.get(i)),
-                        new AssertionContext(response.scenario, response),
-                        path
+                    await DOMElement.create(
+                        $(elements.get(i)), response.getAssertionContext(), `${path} [${i}]`, path
                     )
                 );
             });

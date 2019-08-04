@@ -86,6 +86,9 @@ export class Flagpole {
         else if (obj instanceof cheerio) {
             return 'cheerio';
         }
+        else if (obj instanceof RegExp) {
+            return 'regexp';
+        }
         else if (!!obj &&
             (typeof obj === 'object' || typeof obj === 'function') &&
             typeof obj.then === 'function' &&
@@ -94,16 +97,16 @@ export class Flagpole {
             return 'promise';
         }
         else if (obj && obj.constructor && obj.constructor.name) {
-            return obj.constructor.name.toLocaleLowerCase();
+            return String(obj.constructor.name).toLocaleLowerCase();
         }
         else if (obj && obj.constructor && obj.constructor.toString) {
             let arr = obj.constructor.toString().match(/function\s*(\w+)/);
             if (arr && arr.length == 2) {
-                return arr[1].toLocaleLowerCase();
+                return String(arr[1]).toLocaleLowerCase();
             }
         }
         const match: RegExpMatchArray | null = ({}).toString.call(obj).match(/\s([a-zA-Z]+)/);
-        return match !== null ? match[1].toLocaleLowerCase() : '';
+        return match !== null ? String(match[1]).toLocaleLowerCase() : '';
     }
 
 }

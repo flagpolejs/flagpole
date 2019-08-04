@@ -292,7 +292,7 @@ export class Scenario {
      * Assert something is true, with respect to the flipped not()
      * Also respect ignore assertions flag
      */
-    public assert(assertion: boolean, message: string, actualValue?: string): Scenario {
+    public assert(assertion: boolean, message: string, actualValue?: any): Scenario {
         if (!this._ignoreAssertion) {
             let passed: boolean = this._flipAssertion ? !assertion : !!assertion;
             if (this._flipAssertion) {
@@ -305,8 +305,8 @@ export class Scenario {
                 this.pass(message);
             }
             else {
-                if (actualValue) {
-                    message += ' (' + actualValue + ')';
+                if (typeof actualValue != 'undefined') {
+                    message += ' (' + String(actualValue) + ')';
                 }
                 this.fail(message, this._optionalAssertion);
             }
@@ -750,6 +750,7 @@ export class Scenario {
         }).then(() => {
             scenario._markScenarioCompleted();
         }).catch((err) => {
+            scenario.fail(err);
             scenario._markScenarioCompleted(err);
         });
         this._publish(ScenarioStatusEvent.executionProgress);

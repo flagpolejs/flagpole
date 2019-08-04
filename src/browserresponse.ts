@@ -36,7 +36,9 @@ export class BrowserResponse extends GenericResponse implements iResponse {
         if (page !== null) {
             const el: ElementHandle<Element> | null = await page.$(path);
             if (el !== null) {
-                return new DOMElement(el, new AssertionContext(response.scenario, response), path);
+                return await DOMElement.create(
+                    el, this.getAssertionContext(), null, path
+                );
             }
         }
         return null;
@@ -51,20 +53,17 @@ export class BrowserResponse extends GenericResponse implements iResponse {
     public async asyncSelectAll(path: string, findIn?: any): Promise<DOMElement[]> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
-        const nodeElements: DOMElement[] = [];
+        const domElements: DOMElement[] = [];
         if (page !== null) {
             const elements: ElementHandle[] = await page.$$(path);
-            elements.forEach((el: ElementHandle<Element>) => {
-                nodeElements.push(
-                    new DOMElement(
-                        el,
-                        new AssertionContext(response.scenario, response),
-                        path
-                    )
+            await elements.forEach(async function (el: ElementHandle<Element>, i: number) {
+                const domElement = await DOMElement.create(
+                    el, response.getAssertionContext(), `${path} [${i}]`, path
                 );
+                domElements.push(domElement);
             });
         }
-        return nodeElements;
+        return domElements;
     }
 
     /**

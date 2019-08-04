@@ -5,6 +5,7 @@ import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./
 import { Browser } from './browser';
 import { Page, ElementHandle } from 'puppeteer';
 import { AssertionContext } from './assertioncontext';
+import { Flagpole } from '.';
 
 export class ExtJSResponse extends GenericResponse implements iResponse {
 
@@ -29,7 +30,7 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
     }
 
     /**
-     * Returns one element based on the path selected.
+     * Select the first matching element
      * 
      * @param path 
      * @param findIn 
@@ -40,14 +41,16 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
         if (page !== null) {
             const el: ElementHandle<Element> | null = await page.$(path);
             if (el !== null) {
-                return new DOMElement(el, new AssertionContext(response.scenario, response), path);
+                return await DOMElement.create(
+                    el, this.getAssertionContext(), null, path
+                );
             }
         }
         return null;
     }
 
     /**
-     * Returns an array of elements that match the selection path
+     * Select all matching elements
      * 
      * @param path 
      * @param findIn 
@@ -55,20 +58,17 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
     public async asyncSelectAll(path: string, findIn?: any): Promise<DOMElement[]> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
-        const nodeElements: DOMElement[] = [];
+        const domElements: DOMElement[] = [];
         if (page !== null) {
             const elements: ElementHandle[] = await page.$$(path);
-            elements.forEach((el: ElementHandle<Element>) => {
-                nodeElements.push(
-                    new DOMElement(
-                        el,
-                        new AssertionContext(response.scenario, response),
-                        path
-                    )
+            await elements.forEach(async function (el: ElementHandle<Element>, i: number) {
+                const domElement = await DOMElement.create(
+                    el, response.getAssertionContext(), `${path} [${i}]`, path
                 );
+                domElements.push(domElement);
             });
         }
-        return nodeElements;
+        return domElements;
     }
 
     /**

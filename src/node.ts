@@ -65,6 +65,10 @@ export class Node {
         return this.getType() == 'elementhandle';
     }
 
+    public getName(): string {
+        return this.name;
+    }
+
     public tagName(): Node {
         return new Node(this.response, 'Tag of ' + this.name, this.getTagName());
     }
@@ -1240,7 +1244,7 @@ export class Node {
      * @param {string} type
      */
     public is(type: string): Node {
-        const myType: string = this.getType();
+        const myType: string = String(this.getType());
         return this.assert((myType == type.toLocaleLowerCase()),
             this.name + ' is type ' + type, 
             myType
