@@ -1,10 +1,8 @@
-import { Scenario } from "./scenario";
 import { DOMElement } from "./domelement";
 import { Node } from "./node";
-import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
+import { iResponse, GenericResponse, ResponseType } from "./response";
 import { Browser } from './browser';
 import { Page, ElementHandle } from 'puppeteer';
-import { AssertionContext } from './assertioncontext';
 
 export class BrowserResponse extends GenericResponse implements iResponse {
 

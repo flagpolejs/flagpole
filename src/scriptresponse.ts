@@ -1,6 +1,7 @@
 import { iResponse, GenericResponse, ResponseType, NormalizedResponse } from "./response";
 import { Scenario } from "./scenario";
 import { Node } from "./node";
+import { Value } from './value';
 
 export class ScriptResponse extends GenericResponse implements iResponse {
 
@@ -24,11 +25,11 @@ export class ScriptResponse extends GenericResponse implements iResponse {
         throw new Error('Evaluate does not support script resources.');
     }
 
-    public async asyncSelect(path: string): Promise<any | null> {
+    public async asyncSelect(path: string): Promise<Value> {
         throw new Error('Script Response does not yet support select');
     }
 
-    public async asyncSelectAll(path: string): Promise<any[]> {
+    public async asyncSelectAll(path: string): Promise<Value[]> {
         throw new Error('Script Response does not yet support selectAll');
     }
 

@@ -77,17 +77,17 @@ export class Flagpole {
      * @returns {string}
      */
     static toType(obj: any): string {
-        if (typeof obj === "undefined") {
+        if (typeof obj === 'undefined') {
             return 'undefined';
         }
         else if (obj === null) {
             return 'null';
         }
+        else if (obj === NaN) {
+            return 'nan';
+        }
         else if (obj instanceof cheerio) {
             return 'cheerio';
-        }
-        else if (obj instanceof RegExp) {
-            return 'regexp';
         }
         else if (!!obj &&
             (typeof obj === 'object' || typeof obj === 'function') &&
@@ -105,6 +105,7 @@ export class Flagpole {
                 return String(arr[1]).toLocaleLowerCase();
             }
         }
+        // This confusing mess gets deep typeof
         const match: RegExpMatchArray | null = ({}).toString.call(obj).match(/\s([a-zA-Z]+)/);
         return match !== null ? String(match[1]).toLocaleLowerCase() : '';
     }

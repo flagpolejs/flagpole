@@ -26,9 +26,17 @@ suite.html('Test MileSplit Hompage').open('/')
             });
         });
     })
-    .next('Verify CSS', async function () {
+    .next('Verify CSS', async function (response, context) {
         const css = await this.selectAll('link[rel="stylesheet"]');
-        css.forEach(stylesheet => stylesheet.load());
+        css.forEach(stylesheet => {
+            stylesheet.load(async function () {
+                const body = await this.select('body');
+                if (!body.isNull()) {
+                    const background = await body.getProperty('background');
+                    context.comment(background.toString());
+                }
+            });
+        });
     })
     .next('Click first meet and load it', async function () {
         const firstMeetCoverage = await this.select('.meetCoverage article a');

@@ -23,8 +23,9 @@ const paths = {
 suite.browser('Google Search for Flagpole', browserOpts)
     .open('/')
     .next(async function () {
-        this.assert('Landing Page HTTP Status is 200', this.response.status()).equals(200);
-        await this.assert('Wait for search input box', this.exists(paths.queryInput)).resolves();
+        this.assert(this.response.status()).equals(200);
+        (await this.assert(this.select(paths.queryInput)).resolvesTo())
+            .isNot(null);
         //await this.page.type(paths.queryInput, searchTerm);
         const form = await this.select('form');
         await form.fillForm({

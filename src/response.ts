@@ -6,6 +6,9 @@ import { IncomingMessage } from 'http';
 import * as puppeteer from "puppeteer-core";
 import { Assertion } from './assertion';
 import { AssertionContext } from './assertioncontext';
+import { Value } from './value';
+import { DOMElement } from './domelement';
+import { CSSRule } from './cssrule';
 
 /**
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
@@ -13,8 +16,8 @@ import { AssertionContext } from './assertioncontext';
 export interface iResponse {
     typeName: string,
     getType(): ResponseType
-    asyncSelect(path: string, findIn?: any): Promise<any | null>
-    asyncSelectAll(path: string, findIn?: any): Promise<any[]>
+    asyncSelect(path: string, findIn?: any): Promise<Value | DOMElement | CSSRule | null>
+    asyncSelectAll(path: string, findIn?: any): Promise<Array<Value | DOMElement | CSSRule>>
     status(): Node
     loadTime(): Node
     headers(key?: string): Node

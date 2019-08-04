@@ -8,10 +8,8 @@ const suite = Flagpole.Suite('Test Google')
 
 const homepage = suite.html('Homepage').open('/')
     .next('Test basic HTTP headers', async function (response, context) {
-        this.assert(response.status())
-            .equals(200);
-        this.assert(response.headers('content-type'))
-            .contains('text/html');
+        this.assert(response.status()).equals(200);
+        this.assert(response.headers('content-type')).contains('text/html');
     })
    
     .next(async function (response, context) {

@@ -2,6 +2,7 @@ import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./
 import { Scenario } from "./scenario";
 import { Node } from "./node";
 import { URL } from 'url';
+import { Value } from './value';
 
 export interface ImageProperties {
     width: number,
@@ -40,16 +41,19 @@ export class ImageResponse extends GenericResponse implements iResponse {
         throw new Error('Evaluate does not support images.');
     }
 
-    public async asyncSelect(propertyName: string): Promise<any> {
-        return typeof this.imageProperties[propertyName] !== 'undefined' ?
-            this.imageProperties[propertyName] :
-            null;
+    public async asyncSelect(propertyName: string): Promise<Value> {
+        return new Value(
+            typeof this.imageProperties[propertyName] !== 'undefined' ?
+                this.imageProperties[propertyName] :
+                null,
+            this.getAssertionContext(),
+            `${propertyName} of Image`
+        )
     }
 
-    public async asyncSelectAll(propertyName: string): Promise<any[]> {
-        return typeof this.imageProperties[propertyName] !== 'undefined' ?
-            [ this.imageProperties[propertyName] ] :
-            [];
+    public async asyncSelectAll(propertyName: string): Promise<Value[]> {
+        const value: Value = await this.asyncSelect(propertyName);
+        return value.isNull() ? [] : [value];
     }
 
     public getType(): ResponseType {

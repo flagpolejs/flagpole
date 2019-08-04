@@ -21,10 +21,6 @@ export abstract class ProtoValue {
         this._name = name || null;
     }
 
-    public get(): any {
-        return this._input;
-    }
-
     public toArray(): any[] {
         return this.isArray() ? this._input : [this._input];
     }
@@ -41,10 +37,12 @@ export abstract class ProtoValue {
         return Flagpole.isNullOrUndefined(this._input);
     }
 
-    public async hasProperty(key: string): Promise<boolean> {
-        return this._input &&
-            this._input.hasOwnProperty &&
-            this._input.hasOwnProperty(key);
+    public isUndefined(): boolean {
+        return this.toType() == 'undefined';
+    }
+
+    public isNull(): boolean {
+        return this._input === null;
     }
 
     public isPromise(): boolean {
@@ -63,6 +61,18 @@ export abstract class ProtoValue {
         return this.toType() == 'object';
     }
 
+    public isNumber(): boolean {
+        return this.toType() == 'number' && this._input !== NaN;
+    }
+
+    public isNumeric(): boolean {
+        return !isNaN(this._input);
+    }
+
+    public isNaN(): boolean {
+        return this._input === NaN;
+    }
+
     public isCookie(): boolean {
         return this._input && this._input.cookieString;
     }
@@ -71,12 +81,22 @@ export abstract class ProtoValue {
         return this.toType() == 'node';
     }
 
-    protected _isCheerioElement(): boolean {
+    public isRegularExpression(): boolean {
+        return this.toType() == 'regexp';
+    }
+
+    public isCheerioElement(): boolean {
         return this.toType() == 'cheerio';
     }
 
-    protected _isPuppeteerElement(): boolean {
+    public isPuppeteerElement(): boolean {
         return this.toType() == 'elementhandle';
+    }
+
+    public async hasProperty(key: string): Promise<boolean> {
+        return this._input &&
+            this._input.hasOwnProperty &&
+            this._input.hasOwnProperty(key);
     }
 
 }
@@ -85,27 +105,19 @@ export class Value extends ProtoValue {
 
     public async getProperty(key: string): Promise<any> {
         if (!this.isNullOrUndefined() && this.hasProperty(key)) {
-            const thisValue: any = this.get();
+            const thisValue: any = this.$;
             return this._input[key];
         }
         return undefined;
     }
 
     public async hasProperty(key: string): Promise<boolean> {
-        const thisValue: any = this.get();
+        const thisValue: any = this.$;
         return (thisValue && thisValue.hasOwnProperty(key));
     }
 
-    public forEach(callback: Function) {
-        const thisValue: any = this.get();
-        if (thisValue && thisValue.forEach) {
-            return thisValue.forEach(callback);
-        }
-        throw new Error(`${this.name} does not have a forEach method.`);
-    }
-
     public get length(): Value {
-        const thisValue: any = this.get();
+        const thisValue: any = this.$;
         return new Value(
             (thisValue && thisValue.length) ? thisValue.length : 0,
             this._context,

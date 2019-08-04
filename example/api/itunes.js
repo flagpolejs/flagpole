@@ -28,8 +28,9 @@ suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
     })
     .next('Verify first track looks right', async function () {
         const searchResults = await this.result;
-        const firstTrack = searchResults[0];
-        this.assert('Track millimeters value is a number', firstTrack['trackTimeMillis']).is('number');
-        this.assert('Track number is between 1 and number of tracks', firstTrack['trackNumber'])
-            .between(1, firstTrack['trackCount']);
+        const firstTrack = searchResults.$[0];
+        this.assert('Track millimeters value is a number', firstTrack.trackTimeMillis)
+            .is('number');
+        this.assert('Track number is between 1 and number of tracks', firstTrack.trackNumber)
+            .between(1, firstTrack.trackCount);
     });

@@ -32,13 +32,13 @@ suite.browser('Start on homepage and find local restaurants', { headless: false 
     .next('Review restaurant results page and click a restaurant', async function () {
         await this.page.waitForNavigation();
         await this.visible(paths.orlandoRestaurantResults, { timeout: 10000 });
-        this.assert('More than 5 restaurants in results', (await this.selectAll(paths.orlandoRestaurantResults)).length)
-            .greaterThan(5);
+        const restaurants = await this.selectAll(paths.orlandoRestaurantResults);
+        this.assert('More than 5 restaurants in results', restaurants.length).greaterThan(5);
         await this.assert('Click on first restaurant', this.click(paths.orlandoRestaurantResults)).resolves();
     })
     .next('View restaurant page and verify expected content', async function () {
         await this.assert('Restaurant header exists', this.exists(paths.restaurantHeader, { timeout: 2000 })).resolves();
-        this.assert('Restaurant has a name', (await this.text(paths.restaurantHeader)).trim().length)
+        this.assert('Restaurant has a name', (await this.text(paths.restaurantHeader)).length)
             .greaterThan(0);
         return this.pause(1);
     });

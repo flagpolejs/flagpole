@@ -37,14 +37,14 @@ export class DOMElement extends ProtoValue {
     }
 
     public async getClassName(): Promise<Value> {
-        if (this._isCheerioElement()) {
+        if (this.isCheerioElement()) {
             return this._wrapAsValue(
                 (typeof this._input.get(0).attribs['class'] !== 'undefined') ?
                     this._input.get(0).attribs['class'] : null,
                 `Class Name of ${this.name}`
             );
         }
-        else if (this._isPuppeteerElement()) {
+        else if (this.isPuppeteerElement()) {
             const classHandle: JSHandle = await this._input.getProperty('className');
             return this._wrapAsValue(
                 await classHandle.jsonValue(), `Class Name of ${this.name}`
@@ -54,10 +54,10 @@ export class DOMElement extends ProtoValue {
     }
 
     public async hasClassName(className: string): Promise<boolean> {
-        if (this._isCheerioElement()) {
+        if (this.isCheerioElement()) {
             return this._input.hasClass(className)
         }
-        else if (this._isPuppeteerElement()) {
+        else if (this.isPuppeteerElement()) {
             const classHandle: JSHandle = await this._input.getProperty('className');
             const classString: string = await classHandle.jsonValue();
             return (classString.split(' ').indexOf(className) >= 0)
@@ -86,10 +86,10 @@ export class DOMElement extends ProtoValue {
 
     public async getProperty(key: string): Promise<Value> {
         const name: string = `${this.name} -> ${key}`;
-        if (this._isCheerioElement()) {
+        if (this.isCheerioElement()) {
             return this._wrapAsValue(this._input.prop(key), name);
         }
-        else if (this._isPuppeteerElement()) {
+        else if (this.isPuppeteerElement()) {
             const handle: JSHandle = await this._input.getProperty(key);
             return this._wrapAsValue(await handle.jsonValue(), name);
         }
@@ -102,10 +102,10 @@ export class DOMElement extends ProtoValue {
 
     public async getData(key: string): Promise<Value> {
         const name: string = `${this.name} -> ${key}`;
-        if (this._isCheerioElement()) {
+        if (this.isCheerioElement()) {
             return this._wrapAsValue(this._input.data(key), name);
         }
-        else if (this._isPuppeteerElement()) {
+        else if (this.isPuppeteerElement()) {
             const handle: JSHandle = await this._input.getProperty(key);
             return this._wrapAsValue(await handle.jsonValue(), name);
         }
@@ -114,10 +114,10 @@ export class DOMElement extends ProtoValue {
 
     public async getValue(): Promise<Value> {
         const name: string = `Value of ${this.name}`;
-        if (this._isCheerioElement()) {
+        if (this.isCheerioElement()) {
             return this._wrapAsValue(this._input.val(), name);
         }
-        else if (this._isPuppeteerElement()) {
+        else if (this.isPuppeteerElement()) {
             const handle: JSHandle = await this._input.getProperty('value');
             return this._wrapAsValue(await handle.jsonValue(), name);
         }
@@ -126,10 +126,10 @@ export class DOMElement extends ProtoValue {
 
     public async getText(): Promise<Value> {
         const name: string = `Text of ${this.name}`;
-        if (this._isCheerioElement()) {
+        if (this.isCheerioElement()) {
             return this._wrapAsValue(this._input.text(), name);
         }
-        else if (this._isPuppeteerElement()) {
+        else if (this.isPuppeteerElement()) {
             const handle: JSHandle = await this._input.getProperty('textContent');
             return this._wrapAsValue(await handle.jsonValue(), name);
         }
@@ -146,14 +146,14 @@ export class DOMElement extends ProtoValue {
         const element: DOMElement = this;
         const isForm: boolean = await this._isFormTag();
         if (isForm) {
-            if (element._isCheerioElement()) {
+            if (element.isCheerioElement()) {
                 const form: Cheerio = element._input;
                 for (let name in formData) {
                     const value = formData[name];
                     form.find(`[name="${name}"]`).val(value);
                 }
             }
-            else if (element._isPuppeteerElement()) {
+            else if (element.isPuppeteerElement()) {
                 const page: Page | null = element._context.page;
                 if (page !== null) {
                     for (let name in formData) {
@@ -185,13 +185,13 @@ export class DOMElement extends ProtoValue {
         if (!this._isFormTag()) {
             throw new Error('You can only use .submit() with a form element.');
         }
-        if (this._isPuppeteerElement()) {
+        if (this.isPuppeteerElement()) {
             if (this._context.page === null) {
                 throw new Error('Page was null');
             } 
-            return await this._context.page.evaluate(form => form.submit(), this.get());
+            return await this._context.page.evaluate(form => form.submit(), this.$);
         }
-        else if (this._isCheerioElement()) {
+        else if (this.isCheerioElement()) {
             const link: Link = await this._getLink();
             const scenario: Scenario = await this._createLambdaScenario(a, b);
             const method = ((await this._getAttribute('method')) || 'get').toString().toLowerCase();
@@ -200,10 +200,10 @@ export class DOMElement extends ProtoValue {
                 let uri: string;
                 scenario.method(method);
                 if (method == 'get') {
-                    uri = link.getUri(this.get().serializeArray());
+                    uri = link.getUri(this.$.serializeArray());
                 }
                 else {
-                    const formDataArray: { name: string, value: string }[] = this.get().serializeArray();
+                    const formDataArray: { name: string, value: string }[] = this.$.serializeArray();
                     const formData: any = {};
                     uri = link.getUri();
                     formDataArray.forEach(function (input: any) {
@@ -222,7 +222,7 @@ export class DOMElement extends ProtoValue {
     }
 
     public async click(a?: string | Function, b?: Function): Promise<any> {
-        if (this._isPuppeteerElement()) {
+        if (this.isPuppeteerElement()) {
             return await this._context.click(this._path);
         }
 
@@ -262,14 +262,14 @@ export class DOMElement extends ProtoValue {
     }
 
     private async _isFormTag(): Promise<boolean> {
-        if (this._isCheerioElement() || this._isPuppeteerElement()) {
+        if (this.isCheerioElement() || this.isPuppeteerElement()) {
             return (await this._getTagName()) == 'form';
         }
         return false;
     }
 
     private async _isButtonTag(): Promise<boolean> {
-        if (this._isCheerioElement() || this._isPuppeteerElement()) {
+        if (this.isCheerioElement() || this.isPuppeteerElement()) {
             const tagName: string = await this._getTagName();
             const type: string | null = await this._getAttribute('type');
             return (
@@ -281,7 +281,7 @@ export class DOMElement extends ProtoValue {
     }
 
     private async _isLinkTag(): Promise<boolean> {
-        if (this._isCheerioElement() || this._isPuppeteerElement()) {
+        if (this.isCheerioElement() || this.isPuppeteerElement()) {
             return (
                 await this._getTagName() === 'a' &&
                 await this._getAttribute('href') !== null
@@ -291,7 +291,7 @@ export class DOMElement extends ProtoValue {
     }
 
     private async _isImageTag(): Promise<boolean> {
-        if (this._isCheerioElement() || this._isPuppeteerElement()) {
+        if (this.isCheerioElement() || this.isPuppeteerElement()) {
             return (
                 await this._getTagName() === 'img' &&
                 await this._getAttribute('src') !== null
@@ -301,7 +301,7 @@ export class DOMElement extends ProtoValue {
     }
 
     private async _isVideoTag(): Promise<boolean> {
-        if (this._isCheerioElement() || this._isPuppeteerElement()) {
+        if (this.isCheerioElement() || this.isPuppeteerElement()) {
             const tagName: string = await this._getTagName();
             const src: string | null = await this._getAttribute('src');
             const type: string | null = await this._getAttribute('type');
@@ -314,7 +314,7 @@ export class DOMElement extends ProtoValue {
     }
 
     private async _isAudioTag(): Promise<boolean> {
-        if (this._isCheerioElement() || this._isPuppeteerElement()) {
+        if (this.isCheerioElement() || this.isPuppeteerElement()) {
             const tagName: string = await this._getTagName();
             const src: string | null = await this._getAttribute('src');
             const type: string | null = await this._getAttribute('type');
@@ -328,7 +328,7 @@ export class DOMElement extends ProtoValue {
     }
 
     private async _isScriptTag(): Promise<boolean> {
-        if (this._isCheerioElement() || this._isPuppeteerElement()) {
+        if (this.isCheerioElement() || this.isPuppeteerElement()) {
             return (
                 await this._getTagName() === 'script' &&
                 await this._getAttribute('src') !== null
@@ -338,7 +338,7 @@ export class DOMElement extends ProtoValue {
     }
 
     private async _isStylesheetTag(): Promise<boolean> {
-        if (this._isCheerioElement() || this._isPuppeteerElement()) {
+        if (this.isCheerioElement() || this.isPuppeteerElement()) {
             return (
                 await this._getTagName() === 'link' &&
                 await this._getAttribute('href') !== null &&
@@ -357,7 +357,7 @@ export class DOMElement extends ProtoValue {
 
     private async _getUrl(): Promise<string | null> {
         const tagName: string = await this._getTagName();
-        if (this._isCheerioElement() || this._isPuppeteerElement()) {
+        if (this.isCheerioElement() || this.isPuppeteerElement()) {
             if (tagName !== null) {
                 if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(tagName) >= 0) {
                     return this._getAttribute('src');
@@ -441,10 +441,10 @@ export class DOMElement extends ProtoValue {
     }
 
     private async _getTagName(): Promise<string> {
-        if (this._isCheerioElement()) {
+        if (this.isCheerioElement()) {
             return this._input.get(0).tagName.toLowerCase();
         }
-        else if (this._isPuppeteerElement()) {
+        else if (this.isPuppeteerElement()) {
             const handle: JSHandle = await this._input.getProperty('tagName');
             return String(await handle.jsonValue()).toLowerCase();
         }
@@ -452,11 +452,11 @@ export class DOMElement extends ProtoValue {
     }
 
     private async _getAttribute(key: string): Promise<string | null> {
-        if (this._isCheerioElement()) {
+        if (this.isCheerioElement()) {
             return (typeof this._input.get(0).attribs[key] !== 'undefined') ?
                 this._input.get(0).attribs[key] : null;
         }
-        else if (this._isPuppeteerElement()) {
+        else if (this.isPuppeteerElement()) {
             const handle: JSHandle = await this._input.getProperty(key);
             return await handle.jsonValue();
         }

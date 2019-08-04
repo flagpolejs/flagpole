@@ -9,27 +9,16 @@ Flagpole.Suite('Stack Overflow')
     .next('Check basic parameters', async function (response) {
         this.assert(response.status()).equals(200);
         this.assert(response.headers('content-type')).contains('text/html');
-        this.assert('Title tag contains name of site', await this.text('title')).contains('Stack Overflow');
-        this.comment(await this.evaluate(function ($) {
-            this.comment('test');
-            return $('div').length;
-        }));
-
-        this.text('title')
-
+        this.assert(await this.text('title')).contains('Stack Overflow');
+    })
+    .next('Test the top navigation bar', async function () {
+        this.assert((await this.selectAll('.top-bar .-ctas')).length)
+            .greaterThan(0);
+        const loginLink = await this.select('a.login-link');
+        this.assert(loginLink).exists();
+        this.assert(await loginLink.getText()).isSimilarTo('Log In');
     })
     /*
-    .next('Test the top navigation bar', function () {
-        this.response
-            .label('Top bar and call to actions exists')
-            .select('.top-bar').find('.-ctas').length().greaterThan(0)
-            .label('Login Link exists')
-            .and().find('a.login-link')
-            .and().first().text().similarTo('Log in')
-            .label('Sign up link exists')
-            .select('a.login-link').nth(1)
-            .and().text().similarTo('Sign Up');
-    })
     .next('There should be questions', function () {
         this.response
             .select('.question-summary')

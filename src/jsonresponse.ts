@@ -76,7 +76,7 @@ export class JsonResponse extends GenericResponse implements iResponse {
      * @param path 
      * @param findIn 
      */
-    public async asyncSelect(path: string, findIn?: any): Promise<any | null> {
+    public async asyncSelect(path: string, findIn?: any): Promise<Value> {
         const selectPath: string[] = this._getSelectPath(path);
         // Start searching on either the find in json or the root json
         let selection: any = findIn || this.json;
@@ -92,7 +92,7 @@ export class JsonResponse extends GenericResponse implements iResponse {
         );
     }
 
-    public async asyncSelectAll(path: string, findIn?: any): Promise<any[]> {
+    public async asyncSelectAll(path: string, findIn?: any): Promise<Value[]> {
         // Was there a wildcard anywhere in it?
         if (path.indexOf('*') >= 0) {
             const selectPath: string[] = this._getSelectPath(path);
@@ -104,7 +104,7 @@ export class JsonResponse extends GenericResponse implements iResponse {
         }
         // If no wildcard then it is the same as a regular select because there can only be one match
         else {
-            return [(await this.select(path, findIn))];
+            return [(await this.asyncSelect(path, findIn))];
         }
     }
 
