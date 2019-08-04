@@ -32,7 +32,7 @@ const homepage = suite.html('Homepage').open('/')
     }) 
     .next(async function() {
         const form = await this.select('form');
-        this.assert('Should be a form', form).notEquals(null);
+        this.assert('Should be a form', form).not.equals(null);
         this.assert('Form action attribute should be /search', await form.getAttribute('action'))
             .equals('/search');
         await form.fillForm({

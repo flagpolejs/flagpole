@@ -1,5 +1,5 @@
 import { Suite } from "./suite";
-import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor } from "./consoleline";
+import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor, WarningLine } from "./consoleline";
 import { ResponseType, NormalizedResponse, iResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
@@ -289,6 +289,7 @@ export class Scenario {
     }
 
     /**
+     * DEPRECATED
      * Assert something is true, with respect to the flipped not()
      * Also respect ignore assertions flag
      */
@@ -339,7 +340,7 @@ export class Scenario {
         let line: FailLine = new FailLine(message);
         if (isOptional) {
             line.color = ConsoleColor.FgMagenta;
-            line.textSuffix = '(Optional)';
+            line.textSuffix = ' - Optional';
         }
         this._log.push(line);
         if (!isOptional) {
@@ -348,18 +349,27 @@ export class Scenario {
         return this;
     }
 
+    public warning(message: string): Scenario {
+        this._log.push(new WarningLine(message));
+        return this;
+    }
+
     /**
+     * DEPRECATED
      * Flip the next assertion
      */
     public not(): Scenario {
+        this.warning('Scenario.not is a deprecated method.');
         this._flipAssertion = true;
         return this;
     }
 
     /**
+     * DEPRECATED
     * Consider the next set of tests optional, until the next selector
     */
     public optional(): Scenario {
+        this.warning('Scenario.optional is a deprecated method.');
         this._optionalAssertion = true;
         return this;
     }

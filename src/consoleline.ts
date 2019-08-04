@@ -2,6 +2,11 @@ import { Flagpole } from '.';
 import { FlagpoleOutput } from './flagpole';
 
 export enum ConsoleColor {
+
+    Bold = "\u001b[1m",
+    Underlined = "\u001b[4m",
+    Reversed = "\u001b[7m",
+
     Reset = "\x1b[0m",
     Bright = "\x1b[1m",
     Dim = "\x1b[2m",
@@ -19,6 +24,15 @@ export enum ConsoleColor {
     FgCyan = "\x1b[36m",
     FgWhite = "\x1b[37m",
 
+    FgBrightBlack = "\x1b[30;1m",
+    FgBrightRed = "\x1b[31;1m",
+    FgBrightGreen = "\x1b[32;1m",
+    FgBrightYellow = "\x1b[33;1m",
+    FgBrightBlue = "\x1b[34;1m",
+    FgBrightMagenta = "\x1b[35;1m",
+    FgBrightCyan = "\x1b[36;1m",
+    FgBrightWhite = "\x1b[37;1m",
+
     BgBlack = "\x1b[40m",
     BgRed = "\x1b[41m",
     BgGreen = "\x1b[42m",
@@ -26,7 +40,17 @@ export enum ConsoleColor {
     BgBlue = "\x1b[44m",
     BgMagenta = "\x1b[45m",
     BgCyan = "\x1b[46m",
-    BgWhite = "\x1b[47m"
+    BgWhite = "\x1b[47m",
+
+    BgBrightBlack = "\x1b[40;1m",
+    BgBrightRed = "\x1b[41;1m",
+    BgBrightGreen = "\x1b[42;1m",
+    BgBrightYellow = "\x1b[43;1m",
+    BgBrightBlue = "\x1b[44;1m",
+    BgBrightMagenta = "\x1b[45;1m",
+    BgBrightCyan = "\x1b[46;1m",
+    BgBrightWhite = "\x1b[47;1m"
+
 }
 
 export enum LogLineType {
@@ -35,7 +59,8 @@ export enum LogLineType {
     Comment,
     Heading,
     Subheading,
-    Decoration
+    Decoration,
+    Warning
 }
 
 export interface iLogLine {
@@ -292,6 +317,19 @@ export class FailLine extends LogLine implements iLogLine {
         super(message);
         this.color = ConsoleColor.FgRed;
         this.type = LogLineType.Fail;
+    }
+
+}
+
+
+export class WarningLine extends LogLine implements iLogLine {
+
+    public textPrefix: string = '  !   Warning: ';
+
+    constructor(message: string) {
+        super(message);
+        this.color = ConsoleColor.FgBrightYellow;
+        this.type = LogLineType.Warning;
     }
 
 }

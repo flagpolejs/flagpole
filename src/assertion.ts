@@ -9,6 +9,11 @@ export class Assertion {
         return this;
     }
 
+    public get optional(): Assertion {
+        this._optional = true;
+        return this;
+    }
+
     public get resolvesTo(): Promise<any> {
         if (Flagpole.toType(this._input) != 'promise') {
             throw new Error(`${this._getSubject()} is not a promise.`)
@@ -30,6 +35,7 @@ export class Assertion {
     private _compareValue: any;
     private _message: string | null;
     private _not: boolean = false;
+    private _optional: boolean = false;
 
     public static async create(context: AssertionContext, thisValue: any, message?: string): Promise<Assertion> {
         return new Assertion(context, thisValue, message);
@@ -80,6 +86,20 @@ export class Assertion {
                 `${this._getSubject()} is not similar to ${thatValue}` :
                 `${this._getSubject()} is similar to ${thatValue}`,
             thisValue
+        );
+        return bool;
+    }
+
+    public like(value: any) {
+        const thisVal: any = String(this._getCompareValue(this._input)).toLowerCase().trim();
+        const thatVal: any = String(this._compareValue(value)).toLowerCase().trim();
+        const bool: boolean = this._eval(thisVal == thatVal);
+        this._assert(
+            bool,
+            this._not ?
+                `${this._getSubject()} is not like ${thatVal}` :
+                `${this._getSubject()} is like ${thatVal}`,
+            thisVal
         );
         return bool;
     }
@@ -268,20 +288,6 @@ export class Assertion {
         return bool;
     }
 
-    public like(value: any) {
-        const thisVal: any = String(this._getCompareValue(this._input)).toLowerCase().trim();
-        const thatVal: any = String(this._compareValue(value)).toLowerCase().trim();
-        const bool: boolean = this._eval(thisVal == thatVal);
-        this._assert(
-            bool,
-            this._not ?
-                `${this._getSubject()} is not like ${thatVal}` :
-                `${this._getSubject()} is like ${thatVal}`,
-            thisVal
-        );
-        return bool;
-    }
-
     public isTrue() {
         const thisValue = this._getCompareValue(this._input);
         const bool: boolean = this._eval(thisValue === true);
@@ -462,11 +468,19 @@ export class Assertion {
     }
 
     private _assert(statement: boolean, defaultMessage: string, actualValue?: any) {
-        this._context.scenario.assert(
-            statement,
-            this._message || defaultMessage,
-            actualValue
-        );
+        // Assertion passes
+        if (!!statement) {
+            const message: string = this._message || defaultMessage;
+            this._context.scenario.pass(message);
+        }
+        // Assertion fails
+        else {
+            let message: string = (this._message || defaultMessage);
+            if (typeof actualValue != 'undefined') {
+                message += ` (${String(actualValue)})`
+            }
+            this._context.scenario.fail(message, this._optional);
+        }
     }
 
     private _getCompareValue(value: any): any {
