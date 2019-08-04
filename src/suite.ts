@@ -28,6 +28,11 @@ export class Suite {
         return this._timeSuiteExecuted !== null && this._timeSuiteFinished !== null ?
             (this._timeSuiteFinished - this._timeSuiteExecuted) : null;
     }
+
+    public get title(): string {
+        return this._title;
+    }
+
     protected _subscribers: Function[] = [];
     protected _onReject: Function = () => { };
     protected _onResolve: Function = () => { };
@@ -120,6 +125,9 @@ export class Suite {
         return this;
     }
 
+    /**
+     * Get raw output line objects
+     */
     public getLines(): iLogLine[] {
         let lines: iLogLine[] = [];
         lines.push(new HorizontalRule('='));
@@ -143,6 +151,9 @@ export class Suite {
         return lines;
     }
 
+    /**
+     * Get ASCII formatted string with colors from output lines, ready to go to console
+     */
     public toConsoleString(): string {
         let text: string = '';
         this.getLines().forEach(function (line: iLogLine) {
@@ -151,6 +162,9 @@ export class Suite {
         return text;
     }
 
+    /**
+     * Get string without any ASCII colors
+     */
     public toString(): string {
         let text: string = '';
         this.getLines().forEach(function (line: iLogLine) {
@@ -201,10 +215,13 @@ export class Suite {
         return out;
     }
 
+    /**
+     * Create HTML output for results
+     */
     public toHTML(): string {
         let html: string = '';
         html += '<article class="suite">' + "\n";
-        html += new HeadingLine(this.getTitle()).toHTML() + "\n";
+        html += new HeadingLine(this.title).toHTML() + "\n";
         html += "<aside>\n";
         html += "<ul>\n";
         html += new CommentLine('Duration: ' + this.executionDuration + 'ms').toHTML();
@@ -230,10 +247,6 @@ export class Suite {
         });
         html += "</article>\n";
         return html;
-    }
-
-    public getTitle(): string {
-        return this._title;
     }
 
     /**
@@ -270,55 +283,77 @@ export class Suite {
     }
 
     /**
-     * 
+     * Create a new Image Scenario
      */
     public image = this.Image;
     public Image(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).image(opts);
     }
 
+    /**
+     * Create a new Video Scenario
+     */
     public video = this.Video;
     public Video(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).video(opts);
     }
 
+    /**
+     * Create a new HTML/DOM Scenario
+     */
     public html = this.Html;
     public Html(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).html(opts);
     }
 
+    /**
+     * Create a new CSS Scenario
+     */
     public stylesheet = this.Stylesheet;
     public Stylesheet(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).stylesheet(opts);
     }
 
+    /**
+     * Create a new Script Scenario
+     */
     public script = this.Script;
     public Script(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).script(opts);
     }
 
+    /**
+     * Create a generic resource scenario
+     */
     public resource = this.Resource;
     public Resource(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).resource(opts);
     }
 
+    /**
+     * Create a Browser/Puppeteer Scenario
+     */
     public browser = this.Browser;
     public Browser(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).browser(opts);
     }
 
+    /**
+     * Create an ExtJS Scenario
+     */
     public extjs = this.ExtJS;
     public ExtJS(title: string, opts: any = {}): Scenario {
         return this.Scenario(title).extjs(opts);
     }
 
     /**
-     * Set the base url, which is typically the domain. All scenarios will run relative to it
+     * Set the base url, which is typically the domain. All scenarios will run relative to it.
+     * Argument can also be an object where the key is the environment and the value is the base url.
      *
-     * @param {string} url
+     * @param {string | {}} url
      * @returns {Suite}
      */
-    public base(url: string | any[]): Suite {
+    public base(url: string | {}): Suite {
         let baseUrl: string = '';
         if (typeof url == 'string') {
             baseUrl = url;
@@ -390,9 +425,59 @@ export class Suite {
      * Did any scenario in this suite fail?
      */
     public failed(): boolean {
-        return this.scenarios.some(function(scenario) {
+        return this.scenarios.some(function (scenario) {
             return scenario.failed();
         });
+    }
+
+    /**
+     * This callback will run right before the first scenario starts to execute
+     * 
+     * @param callback 
+     */
+    public before(callback: Function): Suite {
+        this._onBeforeAll = callback;
+        return this;
+    }
+
+    /**
+     * Set callback that will run before each Scenario starts executing
+     * 
+     * @param callback 
+     */
+    public beforeEach(callback: Function): Suite {
+        this._onBeforeEach = callback;
+        return this;
+    }
+
+    /**
+     * Set callback that will run after each Scenario completes execution
+     * 
+     * @param callback 
+     */
+    public afterEach(callback: Function): Suite {
+        this._onAfterEach = callback;
+        return this;
+    }
+
+    /**
+     * This callback runs once all the scenarios are complete, but before suite is marked done
+     * 
+     * @param callback 
+     */
+    public next(callback: Function): Suite {
+        this._thens.push(callback);
+        return this;
+    }
+
+    /**
+     * Set callback to run after all scenarios complete
+     * 
+     * @param callback 
+     */
+    public after(callback: Function): Suite {
+        this._onAfterAll = callback;
+        return this;
     }
 
     /**
@@ -419,45 +504,14 @@ export class Suite {
      * This callback will run once everything else is completed, whether pass or fail
      */
     public onDone = this.finally;
-    public after = this.finally;
     public finally(callback: Function): Suite {
         this._onFinally = callback;
         return this;
     }
 
     /**
-     * This callback will run right before the tests start to execute
-     * 
-     * @param callback 
-     */
-    public before(callback: Function): Suite {
-        this._onBeforeAll = callback;
-        return this;
-    }
-
-    public beforeEach(callback: Function): Suite {
-        this._onBeforeEach = callback;
-        return this;
-    }
-
-    public afterEach(callback: Function): Suite {
-        this._onAfterEach = callback;
-        return this;
-    }
-
-    /**
-     * This callback runs once all the scenarios are complete, but before suite is marked done
-     * 
-     * @param callback 
-     */
-    public next(callback: Function): Suite {
-        this._thens.push(callback);
-        return this;
-    }
-
-    /**
-* Have all of the scenarios in this suite completed?
-*/
+    * Have all of the scenarios in this suite completed?
+    */
     private _haveAllScenariosFinished(): boolean {
         return this.scenarios.every(function (scenario) {
             return scenario.hasFinished();

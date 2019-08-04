@@ -1,6 +1,6 @@
 import { Suite } from "./suite";
 import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor } from "./consoleline";
-import { ResponseType, NormalizedResponse, iResponse, GenericResponse } from "./response";
+import { ResponseType, NormalizedResponse, iResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
 import * as Bluebird from "bluebird";
@@ -38,6 +38,21 @@ export class Scenario {
             throw new Error("Can not change the scenario's title after execution has started.");
         }
         this._title = newTitle;
+    }
+
+    public get totalDuration(): number | null {
+        return this._timeScenarioFinished !== null ?
+            (this._timeScenarioFinished - this._timeScenarioInitialized) : null;
+    }
+
+    public get executionDuration(): number | null {
+        return this._timeScenarioFinished !== null && this._timeScenarioExecuted !== null ?
+            (this._timeScenarioFinished - this._timeScenarioExecuted) : null;
+    }
+
+    public get requestDuration(): number | null {
+        return (this._timeRequestStarted !== null && this._timeRequestLoaded !== null) ?
+            (this._timeRequestLoaded - this._timeRequestStarted) : null;
     }
 
     protected _title: string;
@@ -80,21 +95,6 @@ export class Scenario {
         method: 'GET',
         headers: {}
     };
-
-    public get totalDuration(): number | null {
-        return this._timeScenarioFinished !== null ?
-            (this._timeScenarioFinished - this._timeScenarioInitialized) : null;
-    }
-
-    public get executionDuration(): number | null {
-        return this._timeScenarioFinished !== null && this._timeScenarioExecuted !== null ?
-            (this._timeScenarioFinished - this._timeScenarioExecuted) : null;
-    }
-
-    public get requestDuration(): number | null {
-        return (this._timeRequestStarted !== null && this._timeRequestLoaded !== null) ?
-            (this._timeRequestLoaded - this._timeRequestStarted) : null;
-    }
 
     constructor(suite: Suite, title: string) {
         this.suite = suite;
@@ -491,7 +491,8 @@ export class Scenario {
 
     /**
      * Override the next test's default pass/fail message with something custom and more human readable
-     *
+     * DEPRECATED
+     * 
      * @param {string} message
      * @returns {Scenario}
      */
@@ -509,27 +510,48 @@ export class Scenario {
         return this._log;
     }
 
+    /**
+     * Callback when someting in the scenario throws an error
+     */
     public catch = this.error;
     public error(callback: Function): Scenario {
         this._onReject = callback;
         return this;
     }
 
+    /**
+     * Callback after scenario completes if successful
+     * 
+     * @param callback 
+     */
     public success(callback: Function): Scenario {
         this._onResolve = callback;
         return this;
     }
 
+    /**
+     * callback just before the scenario starts to execute
+     * 
+     * @param callback 
+     */
     public before(callback: Function): Scenario {
         this._onBefore = callback;
         return this;
     }
 
+    /**
+     * callback just after the scenario completes
+     */
     public after(callback: Function): Scenario {
         this._onAfter = callback;
         return this;
     }
 
+    /**
+     * callback at the very end, whether pass or fail
+     * 
+     * @param callback 
+     */
     public finally(callback: Function): Scenario {
         this._onFinally = callback;
         return this;
@@ -694,20 +716,17 @@ export class Scenario {
     }
 
     /**
-     * Add a delay callback into the chain that waits for this number of milliseconds
+     * Waits for this number of milliseconds
      * 
      * @param millis 
      */
-    public pause(millis: number): Scenario {
-        this.next(() => {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    this.echo('Paused ' + millis + ' milliseconds');
-                    resolve();
-                }, millis);
-            });
+    public pause(millis: number): Promise<void> {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                this.echo('Paused ' + millis + ' milliseconds');
+                resolve();
+            }, millis);
         });
-        return this;
     }
 
     /**
@@ -757,7 +776,7 @@ export class Scenario {
     }
 
     /**
-     * 
+     * Build URL for this scenario, relative to the Suite's base
      */
     protected _buildUrl(): string {
         return this.suite.buildUrl(this._url || '');
@@ -778,6 +797,9 @@ export class Scenario {
         return this;
     }
 
+    /**
+     * Start an image scenario
+     */
     private _executeImageRequest() {
         const scenario: Scenario = this;
         probeImage(this._options.uri, this._options)
@@ -795,6 +817,9 @@ export class Scenario {
             });
     }
 
+    /**
+     * Start a browser scenario
+     */
     private _executeBrowserRequest() {
         const scenario: Scenario = this;
         this.getBrowser()
@@ -824,6 +849,9 @@ export class Scenario {
             });
     }
 
+    /**
+     * Start a regular request scenario
+     */
     private _executeDefaultRequest() {
         const scenario: Scenario = this;
         this._options.followRedirect = (this._followRedirect === null) ?
@@ -877,7 +905,7 @@ export class Scenario {
     }
 
     /**
-     * 
+     * Start a mock scenario, which will load a local file
      */
     protected _executeMock() {
         if (!this._timeRequestStarted && this._url !== null) {

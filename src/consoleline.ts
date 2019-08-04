@@ -50,7 +50,7 @@ export interface iLogLine {
     toCsv(): string
     toTsv(): string
     toPsv(): string
-    print()
+    print(): void
 }
 
 export abstract class LogLine implements iLogLine {
