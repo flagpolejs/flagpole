@@ -24,8 +24,7 @@ suite.browser('Google Search for Flagpole', browserOpts)
     .open('/')
     .next(async function () {
         this.assert(this.response.status()).equals(200);
-        (await this.assert(this.select(paths.queryInput)).resolvesTo())
-            .isNot(null);
+        (await this.assert(this.select(paths.queryInput)).resolvesTo).not.is(null);
         //await this.page.type(paths.queryInput, searchTerm);
         const form = await this.select('form');
         await form.fillForm({
