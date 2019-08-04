@@ -1,5 +1,5 @@
 import { Suite } from "./suite";
-import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor, WarningLine } from "./consoleline";
+import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor, WarningLine, OptionalFailLine } from "./consoleline";
 import { ResponseType, NormalizedResponse, iResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
@@ -7,6 +7,7 @@ import * as Bluebird from "bluebird";
 import * as r from "request";
 import { createResponse } from './responsefactory';
 import { AssertionContext } from './assertioncontext';
+import { AssertionResult } from './assertionresult';
 
 const request = require('request');
 const probeImage = require('probe-image-size');
@@ -63,8 +64,8 @@ export class Scenario {
     protected _onBefore: Function = () => { };
     protected _onAfter: Function = () => { };
     protected _log: Array<iLogLine> = [];
-    protected _failures: Array<string> = [];
-    protected _passes: Array<string> = [];
+    protected _failures: Array<AssertionResult> = [];
+    protected _passes: Array<AssertionResult> = [];
     protected _timeScenarioInitialized: number = Date.now();
     protected _timeScenarioExecuted: number | null = null;
     protected _timeScenarioFinished: number | null = null;
@@ -75,9 +76,7 @@ export class Scenario {
     protected _finalUrl: string | null = null;
     protected _url: string | null = null;
     protected _waitToExecute: boolean = false;
-    protected _nextLabel: string | null = null;
     protected _flipAssertion: boolean = false;
-    protected _optionalAssertion: boolean = false;
     protected _ignoreAssertion: boolean = false;
     protected _cookieJar: r.CookieJar;
     protected _options: any = {};
@@ -299,17 +298,14 @@ export class Scenario {
             if (this._flipAssertion) {
                 message = 'NOT: ' + message;
             }
-            if (this._optionalAssertion) {
-                message += ' - Optional';
-            }
             if (passed) {
-                this.pass(message);
+                this.logResult(AssertionResult.pass(message));
             }
             else {
                 if (typeof actualValue != 'undefined') {
                     message += ' (' + String(actualValue) + ')';
                 }
-                this.fail(message, this._optionalAssertion);
+                this.logResult(AssertionResult.fail(message));
             }
             return this._reset();
         }
@@ -319,37 +315,23 @@ export class Scenario {
     /**
      * Push in a new passing assertion
      */
-    public pass(message: string): Scenario {
-        if (this._nextLabel) {
-            message = this._nextLabel;
-            this._nextLabel = null;
+    public logResult(result: AssertionResult): Scenario {
+        // Log into passes and failures
+        if (result.passed) {
+            this._passes.push(result);
+            this._log.push(new PassLine(result.message));
         }
-        this._log.push(new PassLine(message));
-        this._passes.push(message);
-        return this;
-    }
-
-    /**
-     * Push in a new failing assertion
-     */
-    public fail(message: string, isOptional: boolean = false): Scenario {
-        if (this._nextLabel) {
-            message = this._nextLabel;
-            this._nextLabel = null;
+        else if (!result.isOptional) {
+            this._failures.push(result);
+            this._log.push(new FailLine(result.message));
         }
-        let line: FailLine = new FailLine(message);
-        if (isOptional) {
-            line.color = ConsoleColor.FgMagenta;
-            line.textSuffix = ' - Optional';
-        }
-        this._log.push(line);
-        if (!isOptional) {
-            this._failures.push(message);
+        else {
+            this._log.push(new OptionalFailLine(result.message));
         }
         return this;
     }
 
-    public warning(message: string): Scenario {
+    public logWarning(message: string): Scenario {
         this._log.push(new WarningLine(message));
         return this;
     }
@@ -359,19 +341,17 @@ export class Scenario {
      * Flip the next assertion
      */
     public not(): Scenario {
-        this.warning('Scenario.not is a deprecated method.');
+        this.logWarning('Scenario.not is a deprecated method.');
         this._flipAssertion = true;
         return this;
     }
 
     /**
      * DEPRECATED
-    * Consider the next set of tests optional, until the next selector
-    */
+     * Consider the next set of tests optional, until the next selector
+     */
     public optional(): Scenario {
-        this.warning('Scenario.optional is a deprecated method.');
-        this._optionalAssertion = true;
-        return this;
+        return this.logWarning('Scenario.optional is no longer supported.');
     }
 
     /**
@@ -507,8 +487,7 @@ export class Scenario {
      * @returns {Scenario}
      */
     public label(message: string): Scenario {
-        this._nextLabel = message;
-        return this;
+        return this.logWarning('Support for Scenario.label has been removed.');
     }
 
     /**
@@ -744,7 +723,6 @@ export class Scenario {
      */
     protected _reset(): Scenario {
         this._flipAssertion = false;
-        this._optionalAssertion = false;
         return this;
     }
 
@@ -766,7 +744,7 @@ export class Scenario {
         const response: iResponse = createResponse(this, r);
         const context: AssertionContext = new AssertionContext(scenario, response);
         this._timeRequestLoaded = Date.now();
-        this.pass('Loaded ' + response.typeName + ' ' + this._url);
+        this.logResult(AssertionResult.pass('Loaded ' + response.typeName + ' ' + this._url));
         let lastReturnValue: any = null;
         // Execute all the assertion callbacks one by one
         this._publish(ScenarioStatusEvent.executionProgress);
@@ -779,7 +757,7 @@ export class Scenario {
         }).then(() => {
             scenario._markScenarioCompleted();
         }).catch((err) => {
-            scenario.fail(err);
+            scenario.logResult(AssertionResult.fail(err));
             scenario._markScenarioCompleted(err);
         });
         this._publish(ScenarioStatusEvent.executionProgress);
@@ -822,7 +800,7 @@ export class Scenario {
                 scenario._processResponse(response);
             })
             .catch(ex => {
-                scenario.fail('Failed to load image ' + scenario._url);
+                scenario.logResult(AssertionResult.fail('Failed to load image ' + scenario._url));
                 scenario._markScenarioCompleted('Failed to load image');
             });
     }
@@ -853,7 +831,7 @@ export class Scenario {
                 return;
             })
             .catch((e) => {
-                scenario.fail('Failed to load ' + scenario._url);
+                scenario.logResult(AssertionResult.fail('Failed to load ' + scenario._url));
                 scenario.comment(e);
                 scenario._markScenarioCompleted();
             });
@@ -955,7 +933,7 @@ export class Scenario {
                 this._onResolve(this)
             }
             else {
-                this.fail(err);
+                this.logResult(AssertionResult.fail(err));
                 this._onReject(err);
             }
             // Finally

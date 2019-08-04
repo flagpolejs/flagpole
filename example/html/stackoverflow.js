@@ -16,7 +16,7 @@ Flagpole.Suite('Stack Overflow')
             .greaterThan(0);
         const loginLink = await this.select('a.login-link');
         this.assert(loginLink).exists();
-        this.assert(await loginLink.getText()).isSimilarTo('Log In');
+        this.assert(await loginLink.getText()).like('Log In');
     })
     /*
     .next('There should be questions', function () {

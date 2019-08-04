@@ -59,8 +59,7 @@ export enum LogLineType {
     Comment,
     Heading,
     Subheading,
-    Decoration,
-    Warning
+    Decoration
 }
 
 export interface iLogLine {
@@ -321,6 +320,19 @@ export class FailLine extends LogLine implements iLogLine {
 
 }
 
+export class OptionalFailLine extends LogLine implements iLogLine {
+
+    public textPrefix: string = '  ✕  ';
+
+    constructor(message: string) {
+        super(message);
+        this.color = ConsoleColor.FgMagenta;
+        this.type = LogLineType.Comment;
+        this.textSuffix = '[Optional]'
+    }
+
+}
+
 
 export class WarningLine extends LogLine implements iLogLine {
 
@@ -329,7 +341,7 @@ export class WarningLine extends LogLine implements iLogLine {
     constructor(message: string) {
         super(message);
         this.color = ConsoleColor.FgBrightYellow;
-        this.type = LogLineType.Warning;
+        this.type = LogLineType.Comment;
     }
 
 }

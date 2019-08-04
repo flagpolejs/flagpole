@@ -22,8 +22,10 @@ export class ImageResponse extends GenericResponse implements iResponse {
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
         this.imageProperties = JSON.parse(response.body);
-        this.label('MIME Type matches expected value for an image')
-            .select('mime').startsWith('image/');
+        this.getAssertionContext().assert(
+            'MIME Type matches expected value for an image',
+            this.imageProperties.mime
+        ).startsWith('image/');
     }
 
     public get typeName(): string {

@@ -1,19 +1,73 @@
 import { AssertionContext } from './assertioncontext';
 import { Value } from './value';
 import { Flagpole } from '.';
+import { AssertionResult } from './assertionresult';
 
 export class Assertion {
 
+    /**
+     * Creates a new assertion with the same value and settings, just no result
+     */
+    public get and(): Assertion {
+        const assertion: Assertion = new Assertion(this._context, this._input, this._message);
+        this._not && assertion.not;
+        this._optional && assertion.optional;
+        return assertion;
+    }
+
+    /**
+     * Creates a new assertion with the type of this one
+     */
+    public get type(): Assertion {
+        const type: Value = new Value(
+            Flagpole.toType(this._getCompareValue(this._input)),
+            this._context,
+            `Type of ${this._getSubject()}`
+        );
+        const assertion: Assertion = new Assertion(this._context, type, this._message);
+        this._not && assertion.not;
+        this._optional && assertion.optional;
+        return assertion;
+    }
+
+    /**
+     * Creates a new assertion with the lengh of this one
+     */
+    public get length(): Assertion {
+        const length: number = (() => {
+            const thisValue: any = this._getCompareValue(this._input);
+            return thisValue && thisValue.length ?
+                thisValue.length : 0;
+        })();
+        const assertion: Assertion = new Assertion(
+            this._context,
+            new Value(length, this._context, `Length of ${this._getSubject()}`),
+            this._message
+        );
+        this._not && assertion.not;
+        this._optional && assertion.optional;
+        return assertion;
+    }
+
+    /**
+     * Flips the expected assertion evaluation
+     */
     public get not(): Assertion {
         this._not = true;
         return this;
     }
 
+    /**
+     * Marks this assertion optional if it fails
+     */
     public get optional(): Assertion {
         this._optional = true;
         return this;
     }
 
+    /**
+     * Unsure of this one... but purpose is to create a new assertion based on the resolved value if input is a promise
+     */
     public get resolvesTo(): Promise<any> {
         if (Flagpole.toType(this._input) != 'promise') {
             throw new Error(`${this._getSubject()} is not a promise.`)
@@ -32,22 +86,22 @@ export class Assertion {
 
     private _context: AssertionContext;
     private _input: any;
-    private _compareValue: any;
     private _message: string | null;
     private _not: boolean = false;
     private _optional: boolean = false;
+    private _result: AssertionResult | null = null;
 
     public static async create(context: AssertionContext, thisValue: any, message?: string): Promise<Assertion> {
         return new Assertion(context, thisValue, message);
     }
 
-    constructor(context: AssertionContext, thisValue: any, message?: string) {
+    constructor(context: AssertionContext, thisValue: any, message?: string | null) {
         this._context = context;
         this._input = thisValue;;
         this._message = typeof message == 'undefined' ? null : message;
     }
 
-    public exactly(value: any): boolean {
+    public exactly(value: any): Assertion {
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
         const bool: boolean = this._eval(thisValue === thatValue);
@@ -58,10 +112,10 @@ export class Assertion {
                 `${this._getSubject()} is exactly ${thatValue}`,
             thatValue
         );
-        return bool;
+        return this;
     }
 
-    public equals(value: any): boolean {
+    public equals(value: any): Assertion {
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
         const bool: boolean = this._eval(thisValue == thatValue);
@@ -72,27 +126,12 @@ export class Assertion {
                 `${this._getSubject()} equals ${thatValue}`,
             thisValue
         );
-        return bool;
+        return this;
     }
 
-    public isSimilarTo(value: any): boolean {
-        const thisValue = String(this._getCompareValue(this._input)).trim().toLowerCase();
-        const thatValue = this._getCompareValue(value);
-        const strThatValue: string = String(thatValue).trim().toLowerCase();
-        const bool: boolean = this._eval(thisValue == strThatValue);
-        this._assert(
-            bool,
-            this._not ?
-                `${this._getSubject()} is not similar to ${thatValue}` :
-                `${this._getSubject()} is similar to ${thatValue}`,
-            thisValue
-        );
-        return bool;
-    }
-
-    public like(value: any) {
+    public like(value: any): Assertion {
         const thisVal: any = String(this._getCompareValue(this._input)).toLowerCase().trim();
-        const thatVal: any = String(this._compareValue(value)).toLowerCase().trim();
+        const thatVal: any = String(this._getCompareValue(value)).toLowerCase().trim();
         const bool: boolean = this._eval(thisVal == thatVal);
         this._assert(
             bool,
@@ -101,25 +140,10 @@ export class Assertion {
                 `${this._getSubject()} is like ${thatVal}`,
             thisVal
         );
-        return bool;
+        return this;
     }
 
-    public is(value: any): boolean {
-        const thisValue = this._getCompareValue(this._input);
-        const thisType: string = Flagpole.toType(thisValue);
-        const thatValue = String(this._getCompareValue(value)).toLowerCase();
-        const bool: boolean = this._eval(thisType == thatValue);
-        this._assert(
-            bool,
-            this._not ? 
-                `${this._getSubject()} is not type ${thatValue}` :
-                `${this._getSubject()} is type ${thatValue}`,
-            thisType
-        );
-        return bool;
-    }
-
-    public greaterThan(value: any): boolean {
+    public greaterThan(value: any): Assertion {
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
         const bool: boolean = this._eval(parseFloat(thisValue) > parseFloat(thatValue));
@@ -130,10 +154,10 @@ export class Assertion {
                 `${this._getSubject()} is greater than ${thatValue}`,
             thisValue
         );
-        return bool;
+        return this;
     }
 
-    public greaterThanOrEquals(value: any): boolean {
+    public greaterThanOrEquals(value: any): Assertion {
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
         const bool: boolean = this._eval(parseFloat(thisValue) >= parseFloat(thatValue));
@@ -144,10 +168,10 @@ export class Assertion {
                 `${this._getSubject()} is greater than or equal to ${thatValue}`,
             thisValue
         );
-        return bool;
+        return this;
     }
 
-    public lessThan(value: any): boolean {
+    public lessThan(value: any): Assertion {
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
         const bool: boolean = this._eval(parseFloat(thisValue) < parseFloat(thatValue));
@@ -158,10 +182,10 @@ export class Assertion {
                 `${this._getSubject()} is less than ${thatValue}`,
             thisValue
         );
-        return bool;
+        return this;
     }
 
-    public lessThanOrEquals(value: any): boolean {
+    public lessThanOrEquals(value: any): Assertion {
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
         const bool: boolean = this._eval(parseFloat(thisValue) <= parseFloat(thatValue));
@@ -172,10 +196,10 @@ export class Assertion {
                 `${this._getSubject()} is less than or equal to ${thatValue}`,
             thisValue
         );
-        return bool;
+        return this;
     }
 
-    public between(min: any, max: any): boolean {
+    public between(min: any, max: any): Assertion {
         const thisValue = this._getCompareValue(this._input);
         const thatMin: number = parseFloat(this._getCompareValue(min));
         const thatMax: number = parseFloat(this._getCompareValue(max));
@@ -190,10 +214,10 @@ export class Assertion {
                 `${this._getSubject()} is between ${min} and ${max}`,
             thisValue
         );
-        return bool;
+        return this;
     }
 
-    public matches(value: any): boolean {
+    public matches(value: any): Assertion {
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
         const pattern = Flagpole.toType(value) == 'regexp' ? thatValue : new RegExp(value);
@@ -205,10 +229,10 @@ export class Assertion {
                 `${this._getSubject()} matches ${String(pattern)}`,
             thisValue
         );
-        return bool;
+        return this;
     }
 
-    public contains(value: any): boolean {
+    public contains(value: any): Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
@@ -230,10 +254,10 @@ export class Assertion {
                 `${this._getSubject()} does not contain ${thatValue}` :
                 `${this._getSubject()} contains ${thatValue}`,
             thisValue);
-        return bool;
+        return this;
     }
 
-    public startsWith(value: any): boolean {
+    public startsWith(value: any): Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
@@ -250,10 +274,10 @@ export class Assertion {
                 `${this._getSubject()} starts with ${thatValue}`,
             String(thisValue)
         );
-        return bool;
+        return this;
     }
 
-    public endsWith(value: any): boolean {
+    public endsWith(value: any): Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
@@ -272,10 +296,10 @@ export class Assertion {
                 `${this._getSubject()} ends with ${thatValue}`,
             String(this._input)
         );
-        return bool;
+        return this;
     }
 
-    public in(values: any[]) {
+    public in(values: any[]): Assertion {
         const thisValue = this._getCompareValue(this._input);
         let bool: boolean = this._eval(values.indexOf(thisValue) >= 0);
         this._assert(
@@ -285,63 +309,27 @@ export class Assertion {
                 `${this._getSubject()} is in list: ${values.join(', ')}`,
             thisValue
         );
-        return bool;
+        return this;
     }
 
-    public isTrue() {
+    public includes(value: any): Assertion {
         const thisValue = this._getCompareValue(this._input);
-        const bool: boolean = this._eval(thisValue === true);
+        const thatValue = String(this._getCompareValue(value));
+        let bool: boolean = this._eval(
+            thisValue && thisValue.indexOf &&
+            thisValue.indexOf(thatValue) >= 0
+        );
         this._assert(
             bool,
             this._not ?
-                `${this._getSubject()} is not true` :
-                `${this._getSubject()} is true`,
+                `${this._getSubject()} does not include ${thatValue}` :
+                `${this._getSubject()} includes ${thatValue}`,
             thisValue
         );
-        return bool;
+        return this;
     }
 
-    public isTruthy() {
-        const thisValue = this._getCompareValue(this._input);
-        const bool: boolean = this._eval(!!thisValue);
-        this._assert(
-            bool,
-            this._not ?
-                `${this._getSubject()} is not truthy` :
-                `${this._getSubject()} is truthy`,
-            thisValue
-        );
-        return bool;
-    }
-
-    public isFalse() {
-        const thisValue = this._getCompareValue(this._input);
-        const bool: boolean = this._eval(thisValue === false);
-        this._assert(
-            bool, 
-            this._not ?
-                `${this._getSubject()} is not false` :
-                `${this._getSubject()} is false`,
-            thisValue
-        );
-        return bool;
-    }
-
-    public isFalsey = this.isFalsy;
-    public isFalsy() {
-        const thisValue = this._getCompareValue(this._input);
-        const bool: boolean = this._eval(!thisValue);
-        this._assert(
-            bool,
-            this._not ?
-                `${this._getSubject()} is not falsy` :
-                `${this._getSubject()} is falsy`,
-            thisValue
-        );
-        return bool;
-    }
-
-    public exists() {
+    public exists(): Assertion {
         const thisValue = this._getCompareValue(this._input);
         const bool: boolean = this._eval(!Flagpole.isNullOrUndefined(thisValue));
         this._assert(
@@ -351,10 +339,11 @@ export class Assertion {
                 `${this._getSubject()} exists`,
             thisValue
         );
-        return bool;
+        return this;
     }
 
-    public resolves(continueOnReject: boolean = false): Promise<any> {
+    public resolves(continueOnReject: boolean = false): Promise<Assertion> {
+        const assertion: Assertion = this;
         return new Promise((resolve, reject) => {
             const result = (bool: boolean) => {
                 this._assert(
@@ -364,10 +353,10 @@ export class Assertion {
                         `${this._getSubject()} was resolved`
                 );
                 if (bool) {
-                    resolve();
+                    resolve(assertion);
                 }
                 else {
-                    continueOnReject ? resolve() : reject();
+                    continueOnReject ? resolve(assertion) : reject();
                 }
             }
             if (Flagpole.toType(this._input) == 'promise') {
@@ -382,6 +371,7 @@ export class Assertion {
     }
 
     public rejects(continueOnReject: boolean = false): Promise<any> {
+        const assertion: Assertion = this;
         return new Promise((resolve, reject) => {
             const result = (bool: boolean) => {
                 this._assert(
@@ -391,10 +381,10 @@ export class Assertion {
                         `${this._getSubject()} was rejected`
                 );
                 if (bool) {
-                    resolve();
+                    resolve(assertion);
                 }
                 else {
-                    continueOnReject ? resolve() : reject();
+                    continueOnReject ? resolve(assertion) : reject();
                 }
             }
             if (Flagpole.toType(this._input) == 'promise') {
@@ -408,12 +398,7 @@ export class Assertion {
         });
     }
 
-    public message(message: string): Assertion {
-        this._message = message;
-        return this;
-    }
-
-    public none(callback: Function): boolean {
+    public none(callback: Function): Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
         if (Flagpole.toType(thisValue) == 'array') {
@@ -428,10 +413,10 @@ export class Assertion {
                 `${this._getSubject()} some were true` :
                 `${this._getSubject()} none were true`
         );
-        return bool;
+        return this;
     }
 
-    public every(callback: Function): boolean {
+    public every(callback: Function): Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
         if (Flagpole.toType(thisValue) == 'array') {
@@ -446,10 +431,10 @@ export class Assertion {
                 `${this._getSubject()} not all were true` :
                 `${this._getSubject()} all were true`
         );
-        return bool;
+        return this;
     }
 
-    public some(callback: Function): boolean {
+    public some(callback: Function): Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
         if (Flagpole.toType(thisValue) == 'array') {
@@ -464,14 +449,18 @@ export class Assertion {
                 `${this._getSubject()} none were true` :
                 `${this._getSubject()} some were true`
         );
-        return bool;
+        return this;
     }
 
     private _assert(statement: boolean, defaultMessage: string, actualValue?: any) {
+        // Result is immutable, so only let them assert once
+        if (this._result !== null) {
+            throw new Error('Assertion result is immutable.');
+        }
         // Assertion passes
         if (!!statement) {
             const message: string = this._message || defaultMessage;
-            this._context.scenario.pass(message);
+            this._result = AssertionResult.pass(message);
         }
         // Assertion fails
         else {
@@ -479,8 +468,12 @@ export class Assertion {
             if (typeof actualValue != 'undefined') {
                 message += ` (${String(actualValue)})`
             }
-            this._context.scenario.fail(message, this._optional);
+            this._result = this._optional ?
+                AssertionResult.failOptional(message) :
+                AssertionResult.fail(message);
         }
+        // Log this result
+        this._context.scenario.logResult(this._result);
     }
 
     private _getCompareValue(value: any): any {
@@ -493,12 +486,22 @@ export class Assertion {
     }
 
     private _getSubject(): string {
+        const type: string = Flagpole.toType(this._input);
         let name: string;
-        if (this._input && this._input.getName) {
-            name = this._input.getName();
-        }
-        else if (this._input && this._input.name) {
+        if (this._input && this._input.name) {
             name = this._input.name;
+        }
+        else if (type == 'array') {
+            name = 'Array';
+        }
+        else if (type == 'object') {
+            name = 'Object';
+        }
+        else if (type == 'domelement') {
+            name = 'DOM Element';
+        }
+        else if (type == 'cssrule') {
+            name = 'CSS Rule';
         }
         else {
             name = String(this._input);

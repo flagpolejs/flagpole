@@ -13,7 +13,7 @@ suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
     .next('Verify the data', async function () {
         const resultCount = await this.select('resultCount');
         const searchResults = await this.select('results');
-        this.assert('Results is an array', searchResults).is('array');
+        this.assert('Results is an array', searchResults).type.equals('array');
         this.assert('Results array length is greater than 0', searchResults.length).greaterThan(0);
         this.assert('Result Count field is greater than 0', resultCount).greaterThan(0);
         this.assert('Results Count field matches results length', resultCount)
@@ -30,7 +30,7 @@ suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
         const searchResults = await this.result;
         const firstTrack = searchResults.$[0];
         this.assert('Track millimeters value is a number', firstTrack.trackTimeMillis)
-            .is('number');
+            .type.equals('number');
         this.assert('Track number is between 1 and number of tracks', firstTrack.trackNumber)
             .between(1, firstTrack.trackCount);
     });

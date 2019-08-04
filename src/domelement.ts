@@ -70,6 +70,70 @@ export class DOMElement extends ProtoValue {
         return this._wrapAsValue(tagName, `Tag Name of ${this.name}`);
     }
 
+    public async getInnerText(): Promise<Value> {
+        if (this.isPuppeteerElement() && this._context.page !== null) {
+            return this._wrapAsValue(
+                await this._context.page.evaluate(e => e.innerText, this.$),
+                `Inner Text of ${this.name}`
+            );
+        }
+        else if (this.isCheerioElement()) {
+            return this._wrapAsValue(
+                this._input.text(),
+                `Inner Text of ${this.name}`
+            );
+        }
+        throw new Error(`getInnerText is not supported with ${this.toType()}.`);
+    }
+
+    public async getInnerHtml(): Promise<Value> {
+        if (this.isPuppeteerElement() && this._context.page !== null) {
+            return this._wrapAsValue(
+                await this._context.page.evaluate(e => e.innerHTML, this.$),
+                `Inner Html of ${this.name}`
+            );
+        }
+        else if (this.isCheerioElement()) {
+            return this._wrapAsValue(
+                this._input.html(),
+                `Inner Html of ${this.name}`
+            );
+        }
+        throw new Error(`getInnerHtml is not supported with ${this.toType()}.`);
+    }
+
+    public async getOuterText(): Promise<Value> {
+        if (this.isPuppeteerElement() && this._context.page !== null) {
+            return this._wrapAsValue(
+                await this._context.page.evaluate(e => e.outerText, this.$),
+                `Outer Text of ${this.name}`
+            );
+        }
+        else if (this.isCheerioElement()) {
+            return this._wrapAsValue(
+                this._input.text(),
+                `Outer Text of ${this.name}`
+            );
+        }
+        throw new Error(`getInnerText is not supported with ${this.toType()}.`);
+    }
+
+    public async getOuterHtml(): Promise<Value> {
+        if (this.isPuppeteerElement() && this._context.page !== null) {
+            return this._wrapAsValue(
+                await this._context.page.evaluate(e => e.outerHTML, this.$),
+                `Outer Html of ${this.name}`
+            );
+        }
+        else if (this.isCheerioElement()) {
+            return this._wrapAsValue(
+                this._context.response.getRoot().html(this._input),
+                `Outer Html of ${this.name}`
+            );
+        }
+        throw new Error(`getInnerHtml is not supported with ${this.toType()}.`);
+    }
+
     public async hasAttribute(key: string): Promise<boolean> {
         return (await this._getAttribute(key)) !== null;
     }

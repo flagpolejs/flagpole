@@ -10,6 +10,8 @@ const homepage = suite.html('Homepage').open('/')
     .next('Test basic HTTP headers', async function (response, context) {
         this.assert(response.status()).equals(200);
         this.assert(response.headers('content-type')).contains('text/html');
+        this.assert('hello').length.equals(5);
+        this.assert(5).type.equals('number');
     })
    
     .next(async function (response, context) {
@@ -19,6 +21,7 @@ const homepage = suite.html('Homepage').open('/')
     }) 
     .next('Verify all images load', async function () {
         const images = await this.selectAll('img');
+        this.assert(images).length.greaterThan(0);
         this.assert('Should be at least one image on the page', images.length)
             .greaterThan(0);
         

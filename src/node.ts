@@ -7,7 +7,7 @@ import { iResponse, ResponseType } from "./response";
 import { Flagpole } from ".";
 import { Link } from "./link";
 import { Cookie } from 'request';
-import { AssertionContext } from './assertioncontext';
+import { AssertionResult } from './assertionresult';
 
 let $: CheerioStatic = require('cheerio');
 
@@ -24,24 +24,35 @@ export enum NodeType {
  */
 export class Node {
 
-    protected response: iResponse;
-    protected name: string;
-    protected obj: any;
+    public get $(): any {
+        return this._input;
+    }
 
-    protected typeOfNode: NodeType = NodeType.Generic;
-    protected selector: string | null = null;
+    public get name(): string {
+        return this._name;
+    }
+
+    public get response(): iResponse {
+        return this._response;
+    }
+
+    protected _response: iResponse;
+    protected _name: string;
+    protected _input: any;
+    protected _typeOfNode: NodeType = NodeType.Generic;
+    protected _selector: string | null = null;
 
     constructor(response: iResponse, name: string, obj: any) {
-        this.response = response;
-        this.name = name;
-        this.obj = obj;
+        this._response = response;
+        this._name = name;
+        this._input = obj;
     }
 
     /**
     * Test the raw object to see if its nullish
     */
     protected isNullOrUndefined(): boolean {
-        return Flagpole.isNullOrUndefined(this.obj);
+        return Flagpole.isNullOrUndefined(this.$);
     }
 
     /**
@@ -75,15 +86,15 @@ export class Node {
 
     protected getTagName(): string | null {
         if (this.isDomElement()) {
-            return this.obj.get(0).tagName;
+            return this.$.get(0).tagName;
         }
         return null;
     }
 
     protected getAttribute(name: string): string | null {
         if (this.isDomElement()) {
-            return (typeof this.obj.get(0).attribs[name] !== 'undefined') ?
-                this.obj.get(0).attribs[name] : null;
+            return (typeof this.$.get(0).attribs[name] !== 'undefined') ?
+                this.$.get(0).attribs[name] : null;
         }
         return null;
     }
@@ -194,7 +205,7 @@ export class Node {
 
     protected isCookie(): boolean {
         return (
-            this.obj && this.obj.cookieString
+            this.$ && this.$.cookieString
         )
     }
 
@@ -231,7 +242,7 @@ export class Node {
      * @param key 
      */
     protected hasProperty(key: string): boolean {
-        return this.obj.hasOwnProperty && this.obj.hasOwnProperty(key);
+        return this.$.hasOwnProperty && this.$.hasOwnProperty(key);
     }
 
     /**
@@ -240,7 +251,9 @@ export class Node {
      * @param {string} message
      */
     protected pass(message: string): Scenario {
-        return this.response.scenario.pass(message);
+        return this.response.scenario.logResult(
+            AssertionResult.pass(message)
+        );
     }
 
     /**
@@ -249,7 +262,9 @@ export class Node {
      * @param {string} message
      */
     protected fail(message: string): Scenario {
-        return this.response.scenario.fail(message);
+        return this.response.scenario.logResult(
+            AssertionResult.fail(message)
+        );
     }
 
     /**
@@ -258,14 +273,14 @@ export class Node {
     public get(index?: number): any {
         if (typeof index !== 'undefined') {
             if (this.isArray()) {
-                return this.obj[index];
+                return this.$[index];
             }
             else if (this.isDomElement()) {
-                return this.obj.eq(index);
+                return this.$.eq(index);
             }
         }
         // Still here? return it all
-        return this.obj;
+        return this.$;
     }
 
     /**
@@ -273,13 +288,13 @@ export class Node {
     */
     public toString(): string {
         if (this.isDomElement()) {
-            return (this.obj.text() || this.obj.val()).toString();
+            return (this.$.text() || this.$.val()).toString();
         }
-        else if (!this.isNullOrUndefined() && this.obj.toString) {
-            return this.obj.toString();
+        else if (!this.isNullOrUndefined() && this.$.toString) {
+            return this.$.toString();
         }
         else {
-            return String(this.obj);
+            return String(this.$);
         }
     }
 
@@ -291,8 +306,8 @@ export class Node {
      */
     public select(path: string, findIn?: any): Node {
         let node: Node = this.response.select(path, findIn);
-        node.typeOfNode = NodeType.Value;
-        node.selector = path;
+        node._typeOfNode = NodeType.Value;
+        node._selector = path;
         return node;
     }
 
@@ -357,7 +372,7 @@ export class Node {
      * For debugging, just spit out a value
      */
     public echo(): Node {
-        this.comment(this.name + ' = ' + this.obj);
+        this.comment(this.name + ' = ' + this.$);
         return this;
     }
 
@@ -381,7 +396,7 @@ export class Node {
         }
         // If this was a button and it has a form to submit... submit that form
         else if (this.isButtonElement()) {
-            let formNode: Node = new Node(this.response, 'form', this.obj.parents('form'));
+            let formNode: Node = new Node(this.response, 'form', this.$.parents('form'));
             (this.attribute('type').toString().toLowerCase() === 'submit' || !formNode.isFormElement()) ?
                 formNode.submit(scenario) : 
                 scenario.skip('Button does not submit anything');
@@ -407,11 +422,11 @@ export class Node {
             scenario.method(method);
             // Submit form values in query string
             if (method == 'get') {
-                uri = link.getUri(this.obj.serializeArray());
+                uri = link.getUri(this.$.serializeArray());
             }
             // Submit form in multi-part form data
             else {
-                let formDataArray: { name: string, value: string }[] = this.obj.serializeArray();
+                let formDataArray: { name: string, value: string }[] = this.$.serializeArray();
                 let formData: any = {};
                 uri = link.getUri();
                 formDataArray.forEach(function (input: any) {
@@ -431,7 +446,7 @@ export class Node {
         if (this.isFormElement()) {
             this.comment('Filling out form');
             if (Flagpole.toType(formData) === 'object') {
-                let form: Cheerio = this.obj;
+                let form: Cheerio = this.$;
                 for (let name in formData) {
                     this.assert(
                         form.find('[name="' + name + '"]').val(formData[name]).val() == formData[name],
@@ -453,7 +468,7 @@ export class Node {
                 let path: string = node.getUrl() || '';
                 if (
                     node.isImageElement() ||
-                    (node.typeOfNode == NodeType.StyleAttribute && node.selector == 'background-image') ||
+                    (node._typeOfNode == NodeType.StyleAttribute && node._selector == 'background-image') ||
                     /\.(jpe?g|gif|png|svg|bmp|webp|tiff?|psd)$/i.test(path)
                 ) {
                     return node.response.scenario.suite.Image(scenarioOrTitle);
@@ -517,9 +532,9 @@ export class Node {
      */
 
     public find(selector: string): Node {
-        let node: Node = this.response.select(selector, this.obj);
-        node.selector = selector;
-        node.typeOfNode = NodeType.Element;
+        let node: Node = this.response.select(selector, this.$);
+        node._selector = selector;
+        node._typeOfNode = NodeType.Element;
         return node;
     }
 
@@ -674,10 +689,10 @@ export class Node {
         let obj: any = null;
         if (i >= 0) {
             if (this.isArray()) {
-                obj = this.obj[i];
+                obj = this.$[i];
             } 
             else if (this.isDomElement()) {
-                obj = this.obj.eq(i);
+                obj = this.$.eq(i);
             }
         }
         return this.response.setLastElement(null, new Node(this.response, this.name + '[' + i + ']', obj));
@@ -695,7 +710,7 @@ export class Node {
      */
     public last(): Node {
         return this.nth(
-            (this.obj && this.obj.length) ? (this.obj.length - 1) : -1
+            (this.$ && this.$.length) ? (this.$.length - 1) : -1
         );
     }
 
@@ -718,11 +733,11 @@ export class Node {
     public css(key: string): Node {
         let text: any = null;
         if (this.isDomElement()) {
-            text = this.obj.css(key);
+            text = this.$.css(key);
         }
         let node: Node = new Node(this.response, this.name + '[style][' + key + ']', text);
-        node.typeOfNode = NodeType.StyleAttribute;
-        node.selector = key;
+        node._typeOfNode = NodeType.StyleAttribute;
+        node._selector = key;
         return node;
     }
     
@@ -734,16 +749,16 @@ export class Node {
     public attribute(key: string): Node {
         let text: any = null;
         if (this.isDomElement()) {
-            text = this.obj.attr(key);
+            text = this.$.attr(key);
         }
-        else if (!Flagpole.isNullOrUndefined(this.obj) && this.hasProperty(key)) {
-            text = this.obj[key];
+        else if (!Flagpole.isNullOrUndefined(this.$) && this.hasProperty(key)) {
+            text = this.$[key];
         }
         else if (this.response.getLastElement().isDomElement()) {
             text = this.response.getLastElement().get().attr(key);
         }
-        this.typeOfNode = NodeType.Property;
-        this.selector = key;
+        this._typeOfNode = NodeType.Property;
+        this._selector = key;
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
 
@@ -755,16 +770,16 @@ export class Node {
     public property(key: string): Node {
         let text: any;
         if (this.isDomElement()) {
-            text = this.obj.prop(key);
+            text = this.$.prop(key);
         }
         else if (!this.isNullOrUndefined() && this.hasProperty(key)) {
-            text = this.obj[key];
+            text = this.$[key];
         }
         else if (this.response.getLastElement().isDomElement()) {
             text = this.response.getLastElement().get().prop(key);
         }
-        this.typeOfNode = NodeType.Property;
-        this.selector = key;
+        this._typeOfNode = NodeType.Property;
+        this._selector = key;
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
 
@@ -780,16 +795,16 @@ export class Node {
     public data(key: string): Node {
         let text: any = null;
         if (this.isDomElement()) {
-            text = this.obj.data(key);
+            text = this.$.data(key);
         }
         else if (!this.isNullOrUndefined() && this.hasProperty(key)) {
-            text = this.obj[key];
+            text = this.$[key];
         }
         else if (this.response.getLastElement().isDomElement()) {
             text = this.response.getLastElement().get().data(key);
         }
-        this.typeOfNode = NodeType.Property;
-        this.selector = key;
+        this._typeOfNode = NodeType.Property;
+        this._selector = key;
         return new Node(this.response, this.name + '[' + key + ']', text);
     }
 
@@ -799,13 +814,13 @@ export class Node {
     public val(): Node {
         let text: any = null;
         if (this.isDomElement()) {
-            text = this.obj.val();
+            text = this.$.val();
         }
         else if (!this.isNullOrUndefined()) {
-            text = this.obj;
+            text = this.$;
         }
-        this.typeOfNode = NodeType.Value;
-        this.selector = null;
+        this._typeOfNode = NodeType.Value;
+        this._selector = null;
         return new Node(this.response, 'Value of ' + this.name, text);
     }
 
@@ -815,13 +830,13 @@ export class Node {
     public text(): Node {
         let text: any = null;
         if (this.isDomElement()) {
-            text = this.obj.text();
+            text = this.$.text();
         }
         else if (this.isCookie()) {
-            text = (<Cookie>this.obj).value;
+            text = (<Cookie>this.$).value;
         }
         else if (!this.isNullOrUndefined()) {
-            text = this.obj.toString();
+            text = this.$.toString();
         }
         return new Node(this.response, 'Text of ' + this.name, text);
     }
@@ -830,8 +845,8 @@ export class Node {
      * Find the number of elements in array or length of a string
      */
     public length(): Node {
-        let count: number = (this.obj && this.obj.length) ?
-            this.obj.length : 0;
+        let count: number = (this.$ && this.$.length) ?
+            this.$.length : 0;
         return new Node(this.response, 'Length of ' + this.name, count);
     }
 
@@ -840,7 +855,7 @@ export class Node {
     }
 
     protected getType(): string {
-        return Flagpole.toType(this.obj);
+        return Flagpole.toType(this.$);
     }
 
     /**
@@ -933,7 +948,7 @@ export class Node {
         let name: string = this.name;
         let response: iResponse = this.response;
         if (this.isDomElement()) {
-            this.obj.each(function (index, el) {
+            this.$.each(function (index, el) {
                 el = $(el);
                 callback(
                     new Node(response, name + '[' + index + ']', el), 
@@ -942,7 +957,7 @@ export class Node {
             });
         }
         else if (this.isArray()) {
-            this.obj.forEach(function (el, index) {
+            this.$.forEach(function (el, index) {
                 callback(
                     new Node(response, name + '[' + index + ']', el),
                     index
@@ -950,8 +965,8 @@ export class Node {
             });
         }
         else if (this.getType() == 'object') {
-            let obj: {} = this.obj;
-            this.obj.keys().forEach(function (key) {
+            let obj: {} = this.$;
+            this.$.keys().forEach(function (key) {
                 callback(
                     new Node(response, name + '[' + key + ']', obj[key]),
                     key
@@ -959,7 +974,7 @@ export class Node {
             });
         }
         else if (this.getType() == 'string') {
-            this.obj.toString().trim().split(' ').forEach(function (word, index) {
+            this.$.toString().trim().split(' ').forEach(function (word, index) {
                 callback(
                     new Node(response, name + '[' + index + ']', word),
                     index
@@ -981,7 +996,7 @@ export class Node {
         let node: Node = this;
         this.response.ignore(function () {
             if (node.isDomElement()) {
-                node.obj.each(function (index, el) {
+                node.$.each(function (index, el) {
                     el = $(el);
                     let element: Node = new Node(response, name + '[' + index + ']', el);
                     if (!callback(element)) {
@@ -990,22 +1005,22 @@ export class Node {
                 });
             }
             else if (node.isArray()) {
-                every = node.obj.every(function (el, index) {
+                every = node.$.every(function (el, index) {
                     return callback(
                         new Node(response, name + '[' + index + ']', el)
                     );
                 });
             }
             else if (node.isObject()) {
-                let obj: {} = node.obj;
-                every = node.obj.keys().every(function (key) {
+                let obj: {} = node.$;
+                every = node.$.keys().every(function (key) {
                     return callback(
                         new Node(response, name + '[' + key + ']', obj[key])
                     );
                 });
             }
             else if (node.isString()) {
-                every = node.obj.toString().trim().split(' ').every(function (word, index) {
+                every = node.$.toString().trim().split(' ').every(function (word, index) {
                     return callback(
                         new Node(response, name + '[' + index + ']', word)
                     );
@@ -1030,7 +1045,7 @@ export class Node {
         let node: Node = this;
         this.response.ignore(function () {
             if (node.isDomElement()) {
-                node.obj.each(function (index, el) {
+                node.$.each(function (index, el) {
                     el = $(el);
                     let element: Node = new Node(response, name + '[' + index + ']', el);
                     if (callback(element)) {
@@ -1039,22 +1054,22 @@ export class Node {
                 });
             }
             else if (node.isArray()) {
-                some = node.obj.some(function (el, index) {
+                some = node.$.some(function (el, index) {
                     return callback(
                         new Node(response, name + '[' + index + ']', el)
                     );
                 });
             }
             else if (node.isObject()) {
-                let obj: {} = node.obj;
-                some = node.obj.keys().some(function (key) {
+                let obj: {} = node.$;
+                some = node.$.keys().some(function (key) {
                     return callback(
                         new Node(response, name + '[' + key + ']', obj[key])
                     );
                 });
             }
             else if (node.isString()) {
-                some = node.obj.toString().trim().split(' ').some(function (word, index) {
+                some = node.$.toString().trim().split(' ').some(function (word, index) {
                     return callback(
                         new Node(response, name + '[' + index + ']', word)
                     );
@@ -1087,7 +1102,7 @@ export class Node {
      */
     public hasClass(className: string): Node {
         if (this.isDomElement()) {
-            this.assert(this.obj.hasClass(className),
+            this.assert(this.$.hasClass(className),
                 this.name + ' has class ' + className
             );
         }
@@ -1100,8 +1115,8 @@ export class Node {
     * @param {number} value
     */
     public greaterThan(value: number): Node {
-        return this.assert(this.obj > value,
-            this.name + ' is greater than ' + value + ' (' + this.obj + ')'
+        return this.assert(this.$ > value,
+            this.name + ' is greater than ' + value + ' (' + this.$ + ')'
         );
     }
 
@@ -1111,8 +1126,8 @@ export class Node {
      * @param value
      */
     public greaterThanOrEquals(value: any): Node {
-        return this.assert(this.obj >= value,
-            this.name + ' is greater than or equal to ' + value + ' (' + this.obj + ')'
+        return this.assert(this.$ >= value,
+            this.name + ' is greater than or equal to ' + value + ' (' + this.$ + ')'
         );
     }
 
@@ -1122,8 +1137,8 @@ export class Node {
      * @param {number} value
      */
     public lessThan(value: number): Node {
-        return this.assert(this.obj < value,
-            this.name + ' is less than ' + value + ' (' + this.obj + ')'
+        return this.assert(this.$ < value,
+            this.name + ' is less than ' + value + ' (' + this.$ + ')'
         );
     }
 
@@ -1133,14 +1148,14 @@ export class Node {
      * @param value
      */
     public lessThanOrEquals(value: any): Node {
-        return this.assert(this.obj <= value,
-            this.name + ' is less than or equal to ' + value + ' (' + this.obj + ')'
+        return this.assert(this.$ <= value,
+            this.name + ' is less than or equal to ' + value + ' (' + this.$ + ')'
         );
     }
 
     public between(minValue: any, maxValue: any): Node {
-        return this.assert(this.obj >= minValue && this.obj <= maxValue,
-            this.name + ' is between ' + minValue + ' and ' + maxValue + ' (' + this.obj + ')'
+        return this.assert(this.$ >= minValue && this.$ <= maxValue,
+            this.name + ' is between ' + minValue + ' and ' + maxValue + ' (' + this.$ + ')'
         );
     }
 
@@ -1164,13 +1179,13 @@ export class Node {
     public contains(string: string): Node {
         let contains: boolean = false;
         if (this.isArray()) {
-            contains = (this.obj.indexOf(string) >= 0);
+            contains = (this.$.indexOf(string) >= 0);
         }
         else if (this.isBrowserSelector()) {
             contains = (this.toString().indexOf(string) >= 0);
         }
         else if (this.isObject()) {
-            contains = (this.obj.hasOwnProperty(string));
+            contains = (this.$.hasOwnProperty(string));
         }
         else if (!this.isNullOrUndefined()) {
             contains = (this.toString().indexOf(string) >= 0);
@@ -1257,7 +1272,7 @@ export class Node {
 
     private _exists(): boolean {
         if (this.isDomElement()) {
-            return (this.obj.length > 0);
+            return (this.$.length > 0);
         }
         else if (!this.isNullOrUndefined()) {
             return true;
