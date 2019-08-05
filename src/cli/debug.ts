@@ -1,4 +1,4 @@
-import { Cli } from "./cli-helper";
+import { Cli } from './cli';
 import { Flagpole } from "..";
 
 export function debug(argv) {
@@ -29,7 +29,7 @@ export function debug(argv) {
     Cli.log('Other settings:')
     Cli.list([
         'Environment: ' + Flagpole.getEnvironment(),
-        'Output: ' + Flagpole.getOutput().toString(),
+        'Output: ' + Flagpole.output.toString(),
         'Root Path: ' + Cli.config.getConfigFolder(),
         'Tests Path: ' + Cli.config.getTestsFolder()
     ]);

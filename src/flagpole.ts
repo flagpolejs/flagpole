@@ -9,18 +9,27 @@ export enum FlagpoleOutput {
     html = 4,
     csv = 5,
     tsv = 6,
-    psv = 7
+    psv = 7,
+    browser = 8
 }
 
 export class Flagpole {
 
     public static automaticallyPrintToConsole: boolean = false;
     public static quietMode: boolean = false;
+
+    /**
+     * This indicates we are printing log style output where we should ignore any decorative stuff
+     */
     public static logOutput: boolean = false;
 
+    protected static _output: FlagpoleOutput = FlagpoleOutput.console;
     protected static environment: string = 'dev';
-    protected static output: FlagpoleOutput = FlagpoleOutput.console;
     public static exitOnDone: boolean = false;
+
+    public static get output(): FlagpoleOutput {
+        return this._output;
+    }
 
     public static setEnvironment(env: string) {
         Flagpole.environment = env;
@@ -34,17 +43,17 @@ export class Flagpole {
         if (typeof output == 'string') {
             if (Object.keys(FlagpoleOutput).includes(output)) {
                 if (parseInt(output) > 0) {
-                    Flagpole.output = <FlagpoleOutput> parseInt(output);
+                    Flagpole._output = <FlagpoleOutput> parseInt(output);
                 }
                 else {
-                    Flagpole.output = FlagpoleOutput[output];
+                    Flagpole._output = FlagpoleOutput[output];
                 }
             }
         }
     }
 
-    public static getOutput(): FlagpoleOutput {
-        return Flagpole.output;
+    static exit(passed: boolean) {
+        process.exit(passed ? 0 : 1);
     }
 
     /**

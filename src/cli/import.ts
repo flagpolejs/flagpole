@@ -1,4 +1,5 @@
-import { printSubheader, Cli, printHeader } from './cli-helper';
+import { printSubheader, printHeader } from './cli-helper';
+import { Cli } from './cli';
 
 const { prompt } = require('enquirer');
 const fs = require('fs');

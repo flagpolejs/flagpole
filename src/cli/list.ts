@@ -1,4 +1,5 @@
-import { Cli, printSubheader, printHeader } from "./cli-helper";
+import { printSubheader, printHeader } from "./cli-helper";
+import { Cli } from './cli';
 
 export function list(suite: string[] = []) {
 

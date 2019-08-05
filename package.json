@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -8,10 +8,10 @@
   ],
   "main": "./dist/index.js",
   "bin": {
-    "flagpole": "./dist/cli/cli.js"
+    "flagpole": "./dist/cli/main.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp src/cli/*.html dist/cli/",
     "test": "node tests/test.js"
   },
   "homepage": "https://github.com/flocasts/flagpole",
@@ -28,9 +28,11 @@
     "enquirer": "^2.3.0",
     "form-data": "^2.3.3",
     "nock": "^10.0.6",
+    "open": "^6.4.0",
     "probe-image-size": "^4.0.0",
     "puppeteer-core": "1.11.0",
     "request": "^2.88.0",
+    "tmp": "^0.1.0",
     "valid-data-url": "^1.0.0",
     "yargs": "^11.1.0"
   },

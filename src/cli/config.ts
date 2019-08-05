@@ -1,4 +1,4 @@
-import { Cli } from "./cli-helper";
+import { Cli } from './cli';
 import { Flagpole } from "..";
 
 const fs = require('fs');

@@ -1,14 +1,21 @@
-import { FlagpoleConfig, SuiteConfig } from "./config";
 import { Flagpole } from "..";
-import { resolve } from 'path';
-import { ClorthoService, iCredentials } from 'clortho-lite';
 
-const fs = require('fs');
-const exec = require('child_process').exec;
-const path = require('path');
 const ansiAlign = require('ansi-align');
 
 export function printHeader() {
+    if (Flagpole.quietMode) {
+        return;
+    }
+    console.log('\u001b[0m \u001b[37m^\u001b[0m ');
+    console.log('\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[37;1m\u001b[1m   F L A G P O L E   J S');
+    console.log('\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[47m                 \u001b[0m');
+    console.log('\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[238m   Version 2.0');
+    console.log('\u001b[0m \u001b[47m \u001b[0m \u001b[47m                         \u001b[0m');
+    console.log('\u001b[0m \u001b[47m \u001b[0m \u001b[41m                         \u001b[0m');
+    console.log('\u001b[0m \u001b[47m \u001b[0m ');
+}
+
+export function printOldHeader() {
     if (Flagpole.quietMode) {
         return;
     }
@@ -33,220 +40,10 @@ export function printSubheader(heading: string) {
     if (!Flagpole.quietMode) {
         console.log(
             ansiAlign.center(
-                "\x1b[31m===========================================================================\n" +
+                "\x1b[31m===========================================================================\x1b[0m\n" +
                 "\x1b[0m" + heading + "\n" +
                 "\x1b[31m===========================================================================\x1b[0m\n"
             )
         );
     }
-}
-
-export class TestRunner {
-
-    private testSuiteStatus: { [s: string]: number|null; } = {};
-    private suites: SuiteConfig[] = [];
-
-    constructor() {
-        
-    }
-
-    private onTestStart(filePath: string) {
-        this.testSuiteStatus[filePath] = null;
-    };
-
-    private onTestExit(filePath: string, exitCode: number) {
-        let me: TestRunner = this;
-        this.testSuiteStatus[filePath] = exitCode;
-        // Are they all done?
-        let areDone: boolean = Object.keys(this.testSuiteStatus).every(function(filePath: string) {
-            return (me.testSuiteStatus[filePath] !== null);
-        });
-        let areAllPassing: boolean = Object.keys(this.testSuiteStatus).every(function(filePath: string) {
-            return (me.testSuiteStatus[filePath] === 0);
-        });
-        if (areDone) {
-            if (!areAllPassing) {
-                Cli.log('Some suites failed.');
-                Cli.log("\n");
-            }
-            Cli.exit(areAllPassing ? 0 : 1);
-        }
-    };
-
-    /**
-     *
-     * @param {string} filePath
-     */
-    private runTestFile(filePath: string) {
-        let me: TestRunner = this;
-        this.onTestStart(filePath);
-
-        let opts: string = '';
-        if (Flagpole.getEnvironment()) {
-            opts += ' -e ' + Flagpole.getEnvironment();
-        }
-        if (Flagpole.quietMode) {
-            opts += ' -q';
-        }
-        if (Flagpole.logOutput) {
-            opts += ' -l';
-        }
-
-        // Set Flagpole.exitOnDone.  This will typically only be set for tests run
-        // through the cli.
-        opts += ' -x';
-
-        opts += ' -o ' + Flagpole.getOutput();
-
-        let child = exec('node ' + filePath + opts);
-
-        child.stdout.on('data', function(data) {
-            data && Cli.log(data);
-        });
-
-        child.stderr.on('data', function(data) {
-            data && Cli.log(data);
-        });
-
-        child.on('error', function(data) {
-            data && Cli.log(data);
-        });
-
-        child.on('exit', function(exitCode) {
-            if (exitCode > 0) {
-                Cli.log('FAILED TEST SUITE:');
-                Cli.log(filePath + ' exited with error code ' + exitCode);
-                Cli.log("\n");
-            }
-            me.onTestExit(filePath, exitCode);
-        });
-
-    };
-
-    public addSuite(suite: SuiteConfig) {
-        this.suites.push(suite);
-    }
-
-    public reset() {
-        this.suites = [];
-    }
-
-    public getSuites(): SuiteConfig[] {
-        return this.suites;
-    }
-
-    public run() {
-        let me: TestRunner = this;
-        // Clear previous
-        this.testSuiteStatus = {};
-        // Loop through first and just add them to make sure we are tracking it (avoid race conditions)
-        this.suites.forEach(function (test: SuiteConfig) {
-            me.onTestStart(test.getPath());
-        });
-        this.suites.forEach(function(suite: SuiteConfig) {
-            me.runTestFile(suite.getPath());
-        });
-    }
-
-}
-
-
-export class Cli {
-
-    static consoleLog: Array<string> = [];
-    static hideBanner: boolean = false;
-    static rootPath: string = __dirname;
-    static configPath: string = __dirname + '/flagpole.json';
-    static config: FlagpoleConfig;
-    static command: string | null = null;
-    static commandArg: string | null = null;
-    static commandArg2: string | null = null;
-    static apiDomain: string = 'https://us-central1-flagpolejs-5ea61.cloudfunctions.net'
-
-    static log(message: string) {
-        if (typeof message !== 'undefined') {
-            Cli.consoleLog.push(message.replace(/\n$/, ''));
-        }
-    }
-
-    static list(list: Array<string>) {
-        list.forEach(function(message: string) {
-            Cli.log('  » ' + message);
-        });
-    }
-
-    static exit(exitCode: number) {
-        if (!Cli.hideBanner) {
-            printHeader();
-        }
-        Cli.consoleLog.forEach(function(message: string) {
-            console.log(message);
-        });
-        process.exit(exitCode);
-    };
-
-    static normalizePath(path: string): string {
-        if (path) {
-            path = (path.match(/\/$/) ? path : path + '/');
-        }
-        return path;
-    }
-
-    static parseConfigFile(configPath: string): FlagpoleConfig {
-        let config: FlagpoleConfig = new FlagpoleConfig();
-        // Does path exist?
-        if (configPath && fs.existsSync(configPath)) {
-            // Read the file
-            let configContent: string = fs.readFileSync(configPath);
-            let configDir: string = Cli.normalizePath(path.dirname(configPath));
-            let configData: any;
-            try {
-                configData = JSON.parse(configContent);
-            }
-            catch {
-                configData = {};
-            }
-            configData.configPath = configPath;
-            configData.configDir = configDir;
-            config = new FlagpoleConfig(configData);
-        }
-        return config;
-    }
-
-    static getCredentials(): Promise<{ email: string, token: string }> {
-        const serviceName: string = 'Flagpole JS';
-        const service: ClorthoService = new ClorthoService(serviceName);
-        let token: string;
-        let email: string;
-        return new Promise((resolve, reject) => {
-            Promise.all([
-                new Promise((resolve, reject) => {
-                    service.get('token')
-                        .then(function (credentials: iCredentials) {
-                            token = credentials.password;
-                            resolve();
-                        }).catch(function () {
-                            reject('No saved token.');
-                        })
-                }),
-                new Promise((resolve, reject) => {
-                    service.get('email')
-                        .then(function (credentials: iCredentials) {
-                            email = credentials.password;
-                            resolve();
-                        }).catch(function () {
-                            reject('No saved email.');
-                        })
-                })
-            ]).then(function () {
-                resolve({
-                    email: email,
-                    token: token
-                });
-            }).catch(function (err) {
-                reject('Not logged in. ' + err);
-            });
-        });
-    }
-    
 }

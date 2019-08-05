@@ -1,4 +1,5 @@
-import { Cli, printHeader, printSubheader } from "./cli-helper";
+import { printHeader, printSubheader } from "./cli-helper";
+import { Cli } from './cli';
 
 const fs = require('fs');
 const archiver = require('archiver');

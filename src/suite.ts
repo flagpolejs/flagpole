@@ -1,8 +1,7 @@
 import { Flagpole } from "./index";
 import { Scenario, ScenarioStatusEvent } from "./scenario";
-import { iLogLine, LogLineType, HeadingLine, DecorationLine, CommentLine, LineBreak, CustomLine, ConsoleColor, SubheadingLine, LogLine, HorizontalRule } from "./consoleline";
 import { URL } from 'url';
-import { FlagpoleOutput } from './flagpole';
+import { FlagpoleReport } from './flagpolereport';
 
 export enum SuiteStatusEvent {
     beforeAllExecute,
@@ -18,6 +17,10 @@ export enum SuiteStatusEvent {
 export class Suite {
 
     public scenarios: Array<Scenario> = [];
+
+    public get baseUrl(): URL | null {
+        return this._baseUrl;
+    }
 
     public get totalDuration(): number | null {
         return this._timeSuiteFinished !== null ?
@@ -101,152 +104,12 @@ export class Suite {
      *
      * @returns {Suite}
      */
-    public print(): Suite {
-        if (Flagpole.logOutput) {
-            this.getLines().forEach(function (line: iLogLine) {
-                if (line.type != LogLineType.Decoration) {
-                    line.print();
-                }
+    public print(exitAfterPrint: boolean = true): void {
+        const report: FlagpoleReport = new FlagpoleReport(this);
+        report.print()
+            .then(() => {
+                exitAfterPrint && Flagpole.exit(this.passed())
             });
-        }
-        else {
-            if (Flagpole.getOutput() == FlagpoleOutput.html) {
-                console.log(this.toHTML());
-            }
-            else if (Flagpole.getOutput() == FlagpoleOutput.json) {
-                console.log(JSON.stringify(this.toJson(), null, 2));
-            }
-            else {
-                this.getLines().forEach(function (line: iLogLine) {
-                    line.print();
-                });
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Get raw output line objects
-     */
-    public getLines(): iLogLine[] {
-        let lines: iLogLine[] = [];
-        lines.push(new HorizontalRule('='));
-        lines.push(new HeadingLine(this._title));
-        lines.push(new HorizontalRule('='));
-        lines.push(new CommentLine('Base URL: ' + this._baseUrl));
-        lines.push(new CommentLine('Environment: ' + Flagpole.getEnvironment()));
-        lines.push(new CommentLine('Took ' + this.executionDuration + 'ms'));
-
-        let color: ConsoleColor = this.passed() ? ConsoleColor.FgGreen : ConsoleColor.FgRed;
-        lines.push(new CustomLine(' »   Passed? ' + (this.passed() ? 'Yes' : 'No'), color));
-        lines.push(new LineBreak());
-
-        this.scenarios.forEach(function (scenario) {
-            scenario.getLog().forEach(function (line: iLogLine) {
-                lines.push(line);
-            });
-            lines.push(new LineBreak());
-        });
-
-        return lines;
-    }
-
-    /**
-     * Get ASCII formatted string with colors from output lines, ready to go to console
-     */
-    public toConsoleString(): string {
-        let text: string = '';
-        this.getLines().forEach(function (line: iLogLine) {
-            text += line.toConsoleString() + "\n";
-        });
-        return text;
-    }
-
-    /**
-     * Get string without any ASCII colors
-     */
-    public toString(): string {
-        let text: string = '';
-        this.getLines().forEach(function (line: iLogLine) {
-            text += line.toString() + "\n";
-        });
-        return text;
-    }
-
-    /**
-     * Get JSON output
-     *
-     * @returns {any}
-     */
-    public toJson(): any {
-        let out: any = {
-            title: this._title,
-            baseUrl: this._baseUrl,
-            summary: {},
-            scenarios: []
-        };
-        let failCount: number = 0;
-        let passCount: number = 0;
-        this.scenarios.forEach(function(scenario, index) {
-            out.scenarios[index] = {
-                done: scenario.hasFinished(),
-                failCount: 0,
-                passCount: 0,
-                log: []
-            };
-            scenario.getLog().forEach(function(line: iLogLine) {
-                out.scenarios[index].log.push(line.toJson());
-                if (line.type == LogLineType.Pass) {
-                    out.scenarios[index].passCount++;
-                    passCount++;
-                }
-                else if (line.type == LogLineType.Fail) {
-                    out.scenarios[index].failCount++;
-                    failCount++;
-                }
-            });
-        });
-        out.summary = {
-            passed: (failCount == 0),
-            passCount: passCount,
-            failCount: failCount,
-            duration: this.executionDuration
-        }
-        return out;
-    }
-
-    /**
-     * Create HTML output for results
-     */
-    public toHTML(): string {
-        let html: string = '';
-        html += '<article class="suite">' + "\n";
-        html += new HeadingLine(this.title).toHTML() + "\n";
-        html += "<aside>\n";
-        html += "<ul>\n";
-        html += new CommentLine('Duration: ' + this.executionDuration + 'ms').toHTML();
-        html += new CommentLine('Base URL: ' + this._baseUrl).toHTML();
-        html += new CommentLine('Environment: ' + Flagpole.getEnvironment()).toHTML();
-        html += "</ul>\n";
-        html += "</aside>\n";
-        this.scenarios.forEach(function (scenario: Scenario) {
-            html += '<section class="scenario">' + "\n";
-            html += new SubheadingLine(scenario.title).toHTML() + "\n";
-            html += "<ul>\n";
-            scenario.getLog().forEach(function (line: iLogLine) {
-                if (
-                    line.type == LogLineType.Pass ||
-                    line.type == LogLineType.Fail ||
-                    line.type == LogLineType.Comment
-                ) {
-                    html += line.toHTML();
-                }
-            });
-            html += "</ul>\n";
-            html += "</section>\n";
-        });
-        html += "</article>\n";
-        return html;
     }
 
     /**
@@ -548,12 +411,11 @@ export class Suite {
                 // Fire this regardless of pass or fails
                 this._publish(SuiteStatusEvent.finished);
                 // Should we print automatically?
-                (Flagpole.automaticallyPrintToConsole) && this.print();
-                // Should we exit on complete?
-                if (Flagpole.exitOnDone) {
-                    process.exit(
-                        this.passed() ? 0 : 1
-                    );
+                if (Flagpole.automaticallyPrintToConsole) {
+                    this.print(Flagpole.exitOnDone);
+                }
+                else {
+                    Flagpole.exitOnDone && Flagpole.exit(this.passed());
                 }
             }
         }

@@ -11,8 +11,8 @@
     }
   },
   "suites": {
-    "flagpoleapi": {
-      "name": "flagpoleapi"
+    "smoke": {
+      "name": "smoke"
     }
   }
 }

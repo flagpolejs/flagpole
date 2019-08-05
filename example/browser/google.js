@@ -1,9 +1,8 @@
 const Flagpole = require('../../dist/index.js').Flagpole;
-Flagpole.exitOnDone = true;
 
 const suite = Flagpole.Suite('Test Google Search')
     .base('https://www.google.com/')
-    .finally(() => { suite.print() });
+    .finally(suite => suite.print());
 
 const browserOpts = {
     headless: false,
@@ -31,7 +30,8 @@ suite.browser('Google Search for Flagpole', browserOpts)
             q: searchTerm
         });
         this.assert('Search term matches what we typed', await this.val(paths.queryInput)).equals(searchTerm);
-        await this.assert('Search button exists', this.exists(paths.submitButton)).resolves();
+        const button = await this.select(paths.submitButton);
+        this.assert(button).exists();
         //await this.click(paths.submitButton);
         await form.submit();
         await this.page.waitForNavigation();

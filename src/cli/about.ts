@@ -1,4 +1,5 @@
-import { Cli, printHeader, printSubheader } from "./cli-helper";
+import { printHeader, printSubheader } from "./cli-helper";
+import { Cli } from './cli';
 
 
 export function about() {
@@ -13,7 +14,9 @@ export function about() {
     Cli.list([
         'Jason Byrne',
         'Russell Brewer',
-        'Arianne Archer'
+        'Arianne Archer',
+        'Karl Snyder',
+        'Alex Pierce'
     ])
     Cli.log('');
     Cli.log('More info: http://www.flagpolejs.com');

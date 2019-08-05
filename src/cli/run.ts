@@ -1,5 +1,6 @@
-import { TestRunner, Cli } from "./cli-helper";
+import { Cli } from './cli';
 import { SuiteConfig } from "./config";
+import { TestRunner } from './testrunner';
 
 export function run(selectedSuites: string[] = []) {
 

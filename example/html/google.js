@@ -21,7 +21,7 @@ const homepage = suite.html('Homepage').open('/')
     }) 
     .next('Verify all images load', async function () {
         const images = await this.selectAll('img');
-        this.assert(images).length.greaterThan(0);
+        this.assert(images).length.greaterThan(0).and.lessThan(99);
         this.assert('Should be at least one image on the page', images.length)
             .greaterThan(0);
         

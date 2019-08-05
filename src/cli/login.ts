@@ -1,5 +1,6 @@
-import { Cli, printSubheader, printHeader } from "./cli-helper";
+import { printSubheader, printHeader } from "./cli-helper";
 import { ClorthoService, iCredentials } from 'clortho-lite';
+import { Cli } from './cli';
 
 const request = require('request');
 const { prompt } = require('enquirer');

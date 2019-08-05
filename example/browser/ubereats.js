@@ -1,5 +1,4 @@
 const Flagpole = require('../../dist/index.js').Flagpole;
-Flagpole.exitOnDone = true;
 
 const suite = Flagpole.Suite('Uber Eats Sample Test')
     .base('https://www.ubereats.com/')

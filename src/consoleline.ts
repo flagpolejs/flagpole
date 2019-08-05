@@ -57,6 +57,7 @@ export enum LogLineType {
     Pass,
     Fail,
     Comment,
+    Detail,
     Heading,
     Subheading,
     Decoration
@@ -104,7 +105,7 @@ export abstract class LogLine implements iLogLine {
     public print() {
         if (!Flagpole.quietMode) {
             let line: string = '';
-            let style: FlagpoleOutput = Flagpole.getOutput();
+            let style: FlagpoleOutput = Flagpole.output;
             if (style == FlagpoleOutput.text) {
                 line = this.toString();
             }
@@ -234,7 +235,7 @@ export class HorizontalRule extends LogLine implements iLogLine {
     }
 
     protected getMergedString(): string {
-        let text: string = this.message;
+        let text: string = this.message.trim();
         let reps: number = Math.ceil(LogLine.targetLineLength / text.length);
         return text.repeat(reps);
     }
@@ -333,7 +334,6 @@ export class OptionalFailLine extends LogLine implements iLogLine {
 
 }
 
-
 export class WarningLine extends LogLine implements iLogLine {
 
     public textPrefix: string = '  !   Warning: ';
@@ -342,6 +342,22 @@ export class WarningLine extends LogLine implements iLogLine {
         super(message);
         this.color = ConsoleColor.FgBrightYellow;
         this.type = LogLineType.Comment;
+    }
+
+}
+
+export class DetailLine extends LogLine implements iLogLine {
+
+    public textPrefix: string = '  +    ';
+
+    constructor(message: string) {
+        super(message);
+        this.color = ConsoleColor.FgBrightYellow;
+        this.type = LogLineType.Comment;
+    }
+
+    public toHTML(): string {
+        return `<li class="${this.getClassName()}"><blockquote class="code">${this.message}</blockquote></li>`;
     }
 
 }

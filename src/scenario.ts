@@ -1,5 +1,5 @@
 import { Suite } from "./suite";
-import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor, WarningLine, OptionalFailLine } from "./consoleline";
+import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor, WarningLine, OptionalFailLine, DetailLine } from "./consoleline";
 import { ResponseType, NormalizedResponse, iResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
@@ -63,7 +63,7 @@ export class Scenario {
     protected _onFinally: Function = () => { };
     protected _onBefore: Function = () => { };
     protected _onAfter: Function = () => { };
-    protected _log: Array<iLogLine> = [];
+    protected _log: iLogLine[] = [];
     protected _failures: Array<AssertionResult> = [];
     protected _passes: Array<AssertionResult> = [];
     protected _timeScenarioInitialized: number = Date.now();
@@ -100,6 +100,15 @@ export class Scenario {
         this._cookieJar = new request.jar();
         this._options = this._defaultRequestOptions;
         this._title = title;
+    }
+
+    /**
+     * Get log
+     */
+    public async getLog(): Promise<iLogLine[]> {
+        let output: iLogLine[] = [];
+        output = this._log;
+        return output;
     }
 
     /**
@@ -331,6 +340,11 @@ export class Scenario {
         return this;
     }
 
+    /**
+     * Put in a non-fatal warning message, like a deprecation
+     * 
+     * @param message 
+     */
     public logWarning(message: string): Scenario {
         this._log.push(new WarningLine(message));
         return this;
@@ -488,15 +502,6 @@ export class Scenario {
      */
     public label(message: string): Scenario {
         return this.logWarning('Support for Scenario.label has been removed.');
-    }
-
-    /**
-     * Get the log buffer
-     *
-     * @returns {Array<ConsoleLine>}
-     */
-    public getLog(): Array<iLogLine> {
-        return this._log;
     }
 
     /**

@@ -1,4 +1,5 @@
-import { Cli, printSubheader, printHeader } from "./cli-helper";
+import { printSubheader, printHeader } from "./cli-helper";
+import { Cli } from './cli';
 import { FlagpoleConfig } from "./config";
 
 const { prompt } = require('enquirer');

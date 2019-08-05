@@ -9,7 +9,11 @@ export class Assertion {
      * Creates a new assertion with the same value and settings, just no result
      */
     public get and(): Assertion {
-        const assertion: Assertion = new Assertion(this._context, this._input, this._message);
+        const assertion: Assertion = new Assertion(
+            this._context,
+            this._input,
+            this._message ? `&& ${this._message}` : null
+        );
         this._not && assertion.not;
         this._optional && assertion.optional;
         return assertion;
@@ -336,8 +340,7 @@ export class Assertion {
             bool, 
             this._not ?
                 `${this._getSubject()} does not exist` :
-                `${this._getSubject()} exists`,
-            thisValue
+                `${this._getSubject()} exists`
         );
         return this;
     }
@@ -465,7 +468,7 @@ export class Assertion {
         // Assertion fails
         else {
             let message: string = (this._message || defaultMessage);
-            if (typeof actualValue != 'undefined') {
+            if (typeof actualValue != 'undefined' && actualValue != '') {
                 message += ` (${String(actualValue)})`
             }
             this._result = this._optional ?

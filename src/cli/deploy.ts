@@ -1,5 +1,6 @@
 import { createZipArchive } from "./pack";
-import { Cli, printHeader, printSubheader } from "./cli-helper";
+import { printHeader, printSubheader } from "./cli-helper";
+import { Cli } from './cli';
 
 const request = require('request');
 const FormData = require('form-data');
