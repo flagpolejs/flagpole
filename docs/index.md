@@ -331,7 +331,7 @@ This alone does nothing, since it just creates the assertion object with the val
 
 All methods return the Assertion itself, unless otherwise noted.
 
-#### between
+#### between(min: number, max: number): Assertion
 
 Works for numbers, but also casts strings to numbers for the compare. Tests if this value is between the minimum and maximum.
 
@@ -339,7 +339,7 @@ Works for numbers, but also casts strings to numbers for the compare. Tests if t
 this.assert(myValue).between(0, 10);
 ```
 
-#### contains
+#### contains(value: string): Assertion
 
 Tests whether the input value contains the argument. This works for strings, arrays, and even for objects. If it's an object, it checks if a property exists with that value.
 
@@ -347,7 +347,7 @@ Tests whether the input value contains the argument. This works for strings, arr
 this.assert('foobar').contains('foo');
 ```
 
-#### endsWith
+#### endsWith(value: string): Assertion
 
 Tests whether the input value ends with the argument. Also works with arrays, testing whether the argument is the last value of the array.
 
@@ -355,7 +355,7 @@ Tests whether the input value ends with the argument. Also works with arrays, te
 this.assert('foobar').endsWith('bar');
 ```
 
-#### equals
+#### equals(value: any): Assertion
 
 This be used with any types of values. It uses a rough (double equals) equality versus the exactly method that uses a precise (triple equals) equality.
 
@@ -363,7 +363,7 @@ This be used with any types of values. It uses a rough (double equals) equality 
 this.assert(myValue).equals(5);
 ```
 
-#### every
+#### every(callback: Function): Assertion
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that every one is true.
 
@@ -373,7 +373,7 @@ this.assert(['eminem', 'dre', 'ice cube']).every((rapper) => {
 })
 ```
 
-#### exactly
+#### exactly(value: any): Assertion
 
 This asserts an exact match with precise (triple equals) equality.
 
@@ -381,7 +381,7 @@ This asserts an exact match with precise (triple equals) equality.
 this.assert(myValue).exactly(5);
 ```
 
-#### exists
+#### exists(): Assertion
 
 Tests whether the input value is not null or undefined. This works well for selecting a DOM Element and then testing if it actually existed (since it returns null if not).
 
@@ -389,7 +389,7 @@ Tests whether the input value is not null or undefined. This works well for sele
 this.assert(await this.select('article')).exists();
 ```
 
-#### greaterThan
+#### greaterThan(value: number): Assertion
 
 Works for numbers, but also casts strings to numbers for the compare.
 
@@ -397,7 +397,7 @@ Works for numbers, but also casts strings to numbers for the compare.
 this.assert(myValue).greaterThan(5);
 ```
 
-#### greaterThanOrEquals
+#### greaterThanOrEquals(value: number): Assertion
 
 Works for numbers, but also casts strings to numbers for the compare.
 
@@ -405,7 +405,7 @@ Works for numbers, but also casts strings to numbers for the compare.
 this.assert(myValue).greaterThanOrEquals(5);
 ```
 
-#### in
+#### in(listOfValues: any[]): Assertion
 
 Tests whether the input value is in the array of possible values.
 
@@ -413,7 +413,7 @@ Tests whether the input value is in the array of possible values.
 this.assert('2pac').in(['2pac', 'biggie', 'daz']);
 ```
 
-#### includes
+#### includes(value: any): Assertion
 
 Tests whether the input array includes the argument.
 
@@ -421,7 +421,7 @@ Tests whether the input array includes the argument.
 this.assert(['2pac', 'biggie', 'daz']).includes('2pac');
 ```
 
-#### lessThan
+#### lessThan(value: number): Assertion
 
 Works for numbers, but also casts strings to numbers for the compare.
 
@@ -429,7 +429,7 @@ Works for numbers, but also casts strings to numbers for the compare.
 this.assert(myValue).lessThan(5);
 ```
 
-#### lessThanOrEquals
+#### lessThanOrEquals(value: number): Assertion
 
 Works for numbers, but also casts strings to numbers for the compare.
 
@@ -437,7 +437,7 @@ Works for numbers, but also casts strings to numbers for the compare.
 this.assert(myValue).lessThanOrEquals(5);
 ```
 
-#### like
+#### like(value: string): Assertion
 
 Like is a more fuzzy match. It ignores type differences and also trims whitespace and compares strings all lowercase. So it indicates the values are similar, but not necessarily equal.
 
@@ -445,7 +445,7 @@ Like is a more fuzzy match. It ignores type differences and also trims whitespac
 this.assert(myValue).like('FooBar');
 ```
 
-#### matches
+#### matches(pattern: RegExp | string): Assertion
 
 Regular express compare of strings.
 
@@ -453,7 +453,7 @@ Regular express compare of strings.
 this.assert(myValue).matches(/^[a-z0-9]{3,32}$/i);
 ```
 
-#### none
+#### none(callback: Function): Assertion
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that none are true.
 
@@ -463,7 +463,7 @@ this.assert(['2pac', 'biggie', 'daz']).none((rapper) => {
 })
 ```
 
-#### rejects
+#### rejects(): Assertion
 
 Tests whether the input promise rejects.
 
@@ -471,7 +471,7 @@ Tests whether the input promise rejects.
 await this.assert(myPromise).rejects();
 ```
 
-#### resolves
+#### resolves(): Assertion
 
 Tests whether the input promise resolves.
 
@@ -479,7 +479,7 @@ Tests whether the input promise resolves.
 await this.assert(myPromise).resolves();
 ```
 
-#### some
+#### some(callback: Function): Assertion
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that at least one is true.
 
@@ -489,7 +489,7 @@ this.assert(['dre', 'snoop', '2pac']).some((rapper) => {
 })
 ```
 
-#### startsWith
+#### startsWith(value: string): Assertion
 
 Tests whether the input value starts with the argument. Also works with arrays, testing whether the argument is the first value of the array.
 
@@ -501,7 +501,7 @@ this.assert(['foo', 'bar']).startsWith('foo');
 
 In addition to the methods to make the assertions, you can change them by chaining these properties.
 
-#### length
+#### length: Assertion
 
 This causes the assertion to evaluate the length of the input value, rather than the actual value. This works for anything that supports length including strings and arrays. For other things it will cast the input to a string and evaluate it.
 
@@ -509,7 +509,7 @@ This causes the assertion to evaluate the length of the input value, rather than
 this.assert('foobar').length.equals(6);
 ```
 
-#### not
+#### not: Assertion
 
 Flips the assertion to be the negative of itself.
 
@@ -517,7 +517,7 @@ Flips the assertion to be the negative of itself.
 this.assert(5).not.equals(6);
 ```
 
-#### optional
+#### optional: Assertion
 
 This makes the assertion consider optional, meaning its failure won't cause the entire scenario to fail. If it passes, it will be listed as a pass. If it fails, it will be shown as failing in a special type of comment. That way you can see it, but not hold up the deploy because of it.
 
@@ -525,7 +525,7 @@ This makes the assertion consider optional, meaning its failure won't cause the 
 this.assert(5).optional.equals(6);
 ```
 
-#### type
+#### type: Assertion
 
 This causes the assertion to evaluate the type of the value, rather than the actual input value. The type will always be a lowercase string. It is a smart typeof that can tell things like 'promise' and 'regexp' that might otherewise evaluate to plain old object.
 
@@ -535,27 +535,23 @@ this.assert(5).type.equals('number');
 
 ## Suite
 
+A Suite is essentially a collection of test Scenarios. You will be able to choose which suite or suites you want to run, so it's important to think how you want to group them.
+
 ### Methods
 
-#### after(callback: Function)
-
-*returns Suite*
+#### after(callback: Function): Suite
 
 Hit this callback after all Scenarios finish executing.
 
 `suite.after(() => { })`
 
-#### afterEach(callback: Function)
-
-*returns Suite*
+#### afterEach(callback: Function): Suite
 
 Hit this callback after each Scenario finishes executing.
 
 `suite.afterEach(() => { })`
 
-#### base(parms: string | {})
-
-*returns Suite*
+#### base(parms: string | {}): Suite
 
 Set the base URL that all Scenarios in this Suite will use as its starting point.
 
@@ -573,175 +569,135 @@ suite.base({
 })
 ```
 
-#### before(callback: Function)
-
-*returns Suite*
+#### before(callback: Function): Suite
 
 Hit this callback before the first Scenario starts executing.
 
 `suite.before(() => { })`
 
-#### beforeEach(callback: Function)
-
-*returns Suite*
+#### beforeEach(callback: Function): Suite
 
 Hit this callback before each Scenario starts executing.
 
 `suite.beforeEach(() => { })`
 
-#### browser(title: string, opts: any = {})
-
-*returns Scenario*
+#### browser(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the Browser request type. This will run a version of Chrominium with Puppeteer. 
 
 `suite.browser('User Sign Up Work Flow', { headless: true, width: 1280, height: 800 })`
 
-#### buildUrl(path: string)
-
-*returns string*
+#### buildUrl(path: string): string
 
 Creates a fully qualified URL based on the input string. This will be relative to the Suite's base.
 
 `suite.buildUrl('/index.html')`
 
-#### catch(callback: Function)
-
-*returns Suite*
+#### catch(callback: Function): Suite
 
 Hit this callback after the Suite completes if there is an error or failure in any Scenario.
 
 `suite.catch(() => { })`
 
-#### execute()
-
-*returns Suite*
+#### execute(): Suite
 
 If this string was told to wait() to execute, this will kick it off. This method will trigger the execute to then be called on each Scenario in the Suite.
 
 `suite.execute()`
 
-#### extjs(title: string, opts: any = {})
-
-*returns Scenario*
+#### extjs(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the ExtJS request type. This will use Puppeteer just like the browser variety. The only difference is that it has Ext specific select methods and other helper methods to dig into this framework's custom internals.
 
 `suite.extjs('User Sign Up Work Flow', { headless: true, width: 1280, height: 800 })`
 
-#### failed()
-
-*returns boolean*
+#### failed(): boolean
 
 Did this Suite (or any of its Scenarios) fail? If the Suite is not yet completed (or hasn't started yet) this will be false, unless any Scenario has already failed.
 
 `suite.failed()`
 
-#### finally(callback: Function)
-
-*returns Suite*
+#### finally(callback: Function): Suite
 
 Hit this callback after all Scenarios finish executing and after the Suite has been marked completed. This is the final step.
 
 `suite.finally(() => { })`
 
-#### html(title: string, opts: any = {})
-
-*returns Scenario*
+#### html(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the HTML/DOM Only request type. This will use Cheerio to grab the HTML and load it into a jQuery-like DOM that we can test against. We can fake a browser here, allowing form completion, clicks, etc. However, it just is not a full browser so does not have JavaScript and won't work on SPAs, unless they have server side rendering as well.
 
 `suite.html('Homepage Test')`
 
-#### image(title: string, opts: any = {})
-
-*returns Scenario*
+#### image(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the Image request type. This will use probe-image-size library to grab only the first few bytes of the image (not download the entire thing). This allows us to quickly test the basic properties.
 
 `suite.image('Make sure image loads and is correct width')`
 
-#### json(title: string, opts: any = {})
-
-*returns Scenario*
+#### json(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the JSON/API End Point request type.
 
 `suite.json('Articles API Test')`
 
-#### next(callback: Function)
-
-*returns Suite*
+#### next(callback: Function): Suite
 
 Hit this callback after all Scenarios finish executing, but before Suite has been marked as completed. There can be multiple nexts.
 
 `suite.next(() => { })`
 
-#### passed()
-
-*returns boolean*
+#### passed(): boolean
 
 Did this Suite (and all of its Scenarios) complete and all were passing?
 
 `suite.passed()`
 
-#### print(exitAfterPrint: boolean = true)
-
-*returns void*
+#### print(exitAfterPrint: boolean = true): void
 
 Prints the results from the test execution to the console. This is often run inside the finally callback. If you leave the default argument as true, the process will terminate after it prints. So be sure to set that to false if you don't want it to do so.
 
 `suite.finally(suite => suite.print(false))`
 
-#### resource(title: string, opts: any = {})
-
-*returns Scenario*
+#### resource(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the Generic Resource request type. This is any other random type of file. You can test the file size, mime type, content, HTTP status, etc.
 
 `suite.resource('Make sure this file loads')`
 
-#### script(title: string, opts: any = {})
-
-*returns Scenario*
+#### script(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the Script request type. It doesn't currently do anything more than load it. You can test the file size, mime type, HTTP Status, and such... so it may have some use but does not currently validate the JS.
 
 `suite.script('Make sure JS file loads')`
 
-#### subscribe(callback: Function)
+#### subscribe(callback: Function): void
 
 Adds this callback to a PubSub subscription to get notified on any updates with the execute of thie Suite.
 
+This will probably return a handle to be able to unsubscribe later, but it doesn't return anything yet.
+
 `suite.callback((suite: Suite, status: SuiteStatusEvent) => {  });`
 
-#### success(callback: Function)
-
-*returns Suite*
+#### success(callback: Function): Suite
 
 Hit this callback after all Scenarios finish executing if all Scenarios passed. This happens following after and next, but before finally.
 
 `suite.success(() => { })`
 
-#### verifySslCert(verify: boolean)
-
-*returns this: Suite*
+#### verifySslCert(verify: boolean): Suite
 
 Tells the request not to worry about verifying any SSL certs for HTTPS requests. This is helpful for local environments that may not have a valid cert. This value is passed on to any Scenarios created in this Suite, so you don't have to set it each time.
 
 `suite.verifySslCert(false)`
 
-#### video(title: string, opts: any = {})
-
-*returns Scenario*
+#### video(title: string, opts: any = {}): Suite
 
 Creates a new Scenario of the Video request type.
 
 `suite.video('Make sure video loads')`
 
-#### wait(verify: boolean = true)
-
-*returns this: Suite*
+#### wait(verify: boolean = true): Suite
 
 Tells this suite not to execute right away. Will not execute any scenarios until .execute() is called. This wait value gets passed to any Scenarios created under this Suite, so that you don't have to set it each time.
 
