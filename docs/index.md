@@ -541,9 +541,107 @@ This is the context that each set of next callbacks within a Scenario operate wi
 
 [ working on it ]
 
+#### assert(value: any): Assertion
+
+Creates an assertion with the input value.
+
+```
+this.assert(await this.select('article.topStory h1'))
+```
+
+#### comment(message: string)
+
+Add a comment to the Scenario output.
+
+#### evaluate(callback: Function): Promise<any>
+
+Passes this function off to the underlying response to run it in the context of that type. 
+
+For example, if this is a browser type the callback will be handed off to Puppeteer and actually run within the browser. Like this...
+
+```
+const url = await this.evaluate(() => {
+  return window.location.href;
+});
+```
+
+As you can see, you can not only execute the code in that browser's context, but you can reach in and return values from it.
+
+If this is a Cheerio html type scenario, you can execute against the raw Cheerio jQuery-like DOM parser.
+
+```
+const loginText = await this.evaluate(($) => {
+  return $('a.login').first('span').text();
+});
+```
+
+For a REST API response this is less useful perhaps, but you are passed the JSON response to do something with like this.
+
+```
+const loginText = await this.evaluate((json) => {
+  return json.meta.totalResults;
+});
+```
+
+In theory, with any of these types, you could also manipulate the response with this method.
+
+#### pause(milleseconds: number): Promise<void>
+
+Delay the execution by this much
+
+```
+await this.pause(1000);
+```
+
+#### select(path: string): Promise<DOMElement | CSSRule | Value | null>
+
+Select the element or value at the given path. What this actually does varies by the type of scenario. 
+
+Browser and Html tests both return DOMElement. Stylesheet requests return CSSRule and JSON/REST scenarios return a Value.
+
+Note it returns only one element. If multiple match the path then it returns the first. If none match then it returns null.
+
+```
+const firstArticle = await this.select('section.topStories article');
+```
+
+#### selectAll(path: string): Promise<DOMElement[] | CSSRule[] | Value[] || []>
+
+Select the elements or values at the given path. What this actually does varies by the type of scenario. Browser and Html tests both return DOMElement. Stylesheet requests return CSSRule and JSON/REST scenarios return a Value.
+
+This always returns an array. It will be an empty array if nothing matched. The array elements themselves will be the same object types that you'd have gotten from `.select(path)`.
+
+```
+const articles = await this.selectAll('section.topStories article');
+```
+
 ### Properties 
 
-[ working on it ]
+#### browser: Browser | null
+
+The Browser object that we can use the interact with Pupetter or null if this is not a browser type Scenario.
+
+#### page: Puppeteer.Page | null
+
+The Page object from the Puppeteer browser instance. This will be null if not a browser scenario or for some reason Puppeteer fails to load it. You can use this to interact directly with Puppeteer (see the Puppeteer API for that) it is very useful for things that Flagpole does not directly implement through sugar syntax wrappers.
+
+#### response: iResponse
+
+The response from the request. This will vary based on the type of Scenario, but some underlying properties are constant in the interface. 
+
+This is often used to pull something like the load time, HTTP Status, headers, mime type, raw response body, etc.
+
+#### result: any
+
+If you chain multiple next callbacks together in a Scenario, you can return a value from one and then pull it into the following. To do this you will use `this.result` to grab that previously returned value. You may find that it is wrapped in a promise and then do `await this.result` to handle that.
+
+#### scenario: Scenario
+
+A reference to the calling Scenario.
+
+#### suite: Suite
+
+The parent Suite of this Scenario.
 
 ## CSSRule
 
@@ -567,7 +665,17 @@ This object contains elements within the DOM for Puppeteer browser scenarios or 
 
 ### Properties 
 
-[ working on it ]
+#### $: any (readonly)
+
+This is a quick way to get the underlying value within this wrapper object. So that will typically be either an ElementHandle if a browser test or a Cheerio object if an html test.
+
+#### name: string (readonly)
+
+Get a friendly name for this DOMElement, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
+
+#### path: string (readonly)
+
+The selector requested to query this DOMElement.
 
 ## Scenario
 
@@ -579,8 +687,27 @@ A scenario is a collection of tests. It is a child of a Suite.
 
 ### Properties 
 
-[ working on it ]
+#### executionDuration: number | null
 
+The total time between when the Scenario was started executing and when it finished running. Null if it has not yet completed.
+
+#### responseDuration: number | null
+
+The total time between when the Scenario's request went out and when the response back back. Null if it the request has not yet returned a response.
+
+#### responseType: ResponseType (readonly, enum)
+
+The type of Scenario this is, the type of request we'll make and the response we'll expect back.
+
+*Possible Values: html, json, image, stylesheet, script, video, audio, resource, browser, extjs*
+
+#### title: string
+
+Title of the Scenario as it will be printed on reports.
+
+#### totalDuration: number | null
+
+The total time between when the Scenario was initialized and when it finished running. Null if it has not yet completed.
 
 ## Suite
 
