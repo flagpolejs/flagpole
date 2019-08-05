@@ -19,7 +19,7 @@ Flagpole is designed for portability, so that you can run it locally within your
 
 Flagpole has a rich CLI that can be used to list tests, run tests, create new suites or scenarios, etc.
 
-## Getting Started
+# Getting Started
 
 First thing we need to do is install Flagpole with npm. Go into the root of your project and run this:
 
@@ -85,18 +85,6 @@ And if we did everything right, then you should see something like:
 
 ```text
 
-     $$$$$$$$\ $$\                                         $$\           
-     $$  _____|$$ |                                        $$ |          
-     $$ |      $$ | $$$$$$\   $$$$$$\   $$$$$$\   $$$$$$\  $$ | $$$$$$\  
-     $$$$$\    $$ | \____$$\ $$  __$$\ $$  __$$\ $$  __$$\ $$ |$$  __$$\ 
-     $$  __|   $$ | $$$$$$$ |$$ /  $$ |$$ /  $$ |$$ /  $$ |$$ |$$$$$$$$ |
-     $$ |      $$ |$$  __$$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |$$   ____|
-     $$ |      $$ |\$$$$$$$ |\$$$$$$$ |$$$$$$$  |\$$$$$$  |$$ |\$$$$$$$\ 
-     \__|      \__| \_______| \____$$ |$$  ____/  \______/ \__| \_______|
-                             $$\   $$ |$$ |                              
-                             \$$$$$$  |$$ |                              
-                              \______/ \__|  
-
  ================================================== 
                     HELLO WORLD                    
  ================================================== 
@@ -109,10 +97,227 @@ And if we did everything right, then you should see something like:
  Just getting a test to run 
    ✔  Loaded HTML Page / 
    ✔  HTTP Status equals 200 
-   » Took 1382ms
+   »  Took 1382ms
 
 ```
 
-That's it for now, but will have more coming and links to our blog posts for getting started.
+Documentation is below, but also see the [examples folder in the repo](https://github.com/flocasts/flagpole/tree/master/example) and there will be blog posts coming up.
 
-In the meantime, see the [examples folder in the repo](https://github.com/flocasts/flagpole/tree/master/example).
+# Flagpole 2.0 Developer Docs
+
+## Assertions
+
+Create an assertion within your scenario's "next" blocks like this:
+
+```
+this.assert(myValue)
+```
+
+This alone does nothing, since it just creates the assertion object with the value you want to assert against. But it hasn't actually asserted anything. So use one of the methods below.
+
+### Methods
+
+#### between
+
+Works for numbers, but also casts strings to numbers for the compare. Tests if this value is between the minimum and maximum.
+
+```
+this.assert(myValue).between(0, 10);
+```
+
+#### contains
+
+Tests whether the input value contains the argument. This works for strings, arrays, and even for objects. If it's an object, it checks if a property exists with that value.
+
+```
+this.assert('foobar').contains('foo');
+```
+
+#### endsWith
+
+Tests whether the input value ends with the argument. Also works with arrays, testing whether the argument is the last value of the array.
+
+```
+this.assert('foobar').endsWith('bar');
+```
+
+#### equals
+
+This be used with any types of values. It uses a rough (double equals) equality versus the exactly method that uses a precise (triple equals) equality.
+
+```
+this.assert(myValue).equals(5);
+```
+
+#### every
+
+Loops throught the input value, which should be an array, and checks them against the callback function to be sure that every one is true.
+
+```
+this.assert(['eminem', 'dre', 'ice cube']).every((rapper) => {
+  return rapper.indexOf('e') >= 0;
+})
+```
+
+#### exactly
+
+This asserts an exact match with precise (triple equals) equality.
+
+```
+this.assert(myValue).exactly(5);
+```
+
+#### exists
+
+Tests whether the input value is not null or undefined. This works well for selecting a DOM Element and then testing if it actually existed (since it returns null if not).
+
+```
+this.assert(await this.select('article')).exists();
+```
+
+#### greaterThan
+
+Works for numbers, but also casts strings to numbers for the compare.
+
+```
+this.assert(myValue).greaterThan(5);
+```
+
+#### greaterThanOrEquals
+
+Works for numbers, but also casts strings to numbers for the compare.
+
+```
+this.assert(myValue).greaterThanOrEquals(5);
+```
+
+#### in
+
+Tests whether the input value is in the array of possible values.
+
+```
+this.assert('2pac').in(['2pac', 'biggie', 'daz']);
+```
+
+#### includes
+
+Tests whether the input array includes the argument.
+
+```
+this.assert(['2pac', 'biggie', 'daz']).includes('2pac');
+```
+
+#### lessThan
+
+Works for numbers, but also casts strings to numbers for the compare.
+
+```
+this.assert(myValue).lessThan(5);
+```
+
+#### lessThanOrEquals
+
+Works for numbers, but also casts strings to numbers for the compare.
+
+```
+this.assert(myValue).lessThanOrEquals(5);
+```
+
+#### like
+
+Like is a more fuzzy match. It ignores type differences and also trims whitespace and compares strings all lowercase. So it indicates the values are similar, but not necessarily equal.
+
+```
+this.assert(myValue).like('FooBar');
+```
+
+#### matches
+
+Regular express compare of strings.
+
+```
+this.assert(myValue).matches(/^[a-z0-9]{3,32}$/i);
+```
+
+#### none
+
+Loops throught the input value, which should be an array, and checks them against the callback function to be sure that none are true.
+
+```
+this.assert(['2pac', 'biggie', 'daz']).none((rapper) => {
+  return rapper == 'snoop';
+})
+```
+
+#### rejects
+
+Tests whether the input promise rejects.
+
+```
+await this.assert(myPromise).rejects();
+```
+
+#### resolves
+
+Tests whether the input promise resolves.
+
+```
+await this.assert(myPromise).resolves();
+```
+
+#### some
+
+Loops throught the input value, which should be an array, and checks them against the callback function to be sure that at least one is true.
+
+```
+this.assert(['dre', 'snoop', '2pac']).some((rapper) => {
+  return rapper.indexOf('e') >= 0;
+})
+```
+
+#### startsWith
+
+Tests whether the input value starts with the argument. Also works with arrays, testing whether the argument is the first value of the array.
+
+```
+this.assert(['foo', 'bar']).startsWith('foo');
+```
+
+### Properties
+
+In addition to the methods to make the assertions, you can change them by chaining these properties.
+
+#### length
+
+This causes the assertion to evaluate the length of the input value, rather than the actual value. This works for anything that supports length including strings and arrays. For other things it will cast the input to a string and evaluate it.
+
+```
+this.assert('foobar').length.equals(6);
+```
+
+#### not
+
+Flips the assertion to be the negative of itself.
+
+```
+this.assert(5).not.equals(6);
+```
+
+#### optional
+
+This makes the assertion consider optional, meaning its failure won't cause the entire scenario to fail. If it passes, it will be listed as a pass. If it fails, it will be shown as failing in a special type of comment. That way you can see it, but not hold up the deploy because of it.
+
+```
+this.assert(5).optional.equals(6);
+```
+
+#### type
+
+This causes the assertion to evaluate the type of the value, rather than the actual input value. The type will always be a lowercase string. It is a smart typeof that can tell things like 'promise' and 'regexp' that might otherewise evaluate to plain old object.
+
+```
+this.assert(5).type.equals('number');
+```
+
+
+
