@@ -113,6 +113,12 @@ Create an assertion within your scenario's "next" blocks like this:
 this.assert(myValue)
 ```
 
+You can also specify a message first, to override Flagpole's attempt at creating a default assertion method. That way it is really descriptive of what that assertion checks for.
+
+```
+this.assert('Make sure my value is a number', myValue)
+```
+
 This alone does nothing, since it just creates the assertion object with the value you want to assert against. But it hasn't actually asserted anything. So use one of the methods below.
 
 ### Methods
