@@ -533,6 +533,55 @@ This causes the assertion to evaluate the type of the value, rather than the act
 this.assert(5).type.equals('number');
 ```
 
+## AssertionContext
+
+This is the context that each set of next callbacks within a Scenario operate with as the "this" value. It gives you all the handy methods and properties that you need.
+
+### Methods
+
+[ working on it ]
+
+### Properties 
+
+[ working on it ]
+
+## CSSRule
+
+This object contains declarations for a given CSS selector. You would get this within the context of a Stylesheet scenario. This would come from a this.select('#myElement') type selector from the AssertionContext.
+
+### Methods
+
+[ working on it ]
+
+### Properties 
+
+[ working on it ]
+
+## DOMElement
+
+This object contains elements within the DOM for Puppeteer browser scenarios or Cheerio HTML scenarios. You typically get this element by way of this.select('css selector path') from the AssertionContext.
+
+### Methods
+
+[ working on it ]
+
+### Properties 
+
+[ working on it ]
+
+## Scenario
+
+A scenario is a collection of tests. It is a child of a Suite.
+
+### Methods
+
+[ working on it ]
+
+### Properties 
+
+[ working on it ]
+
+
 ## Suite
 
 A Suite is essentially a collection of test Scenarios. You will be able to choose which suite or suites you want to run, so it's important to think how you want to group them.
@@ -721,5 +770,14 @@ The title of this suite, which is specified in the constructor.
 
 The total amount of time, in milliseconds, between when the Suite was initialized and when it was completed.
 
+## Value
 
+This object is the result of queried properties on a DOMElement, CSSRule, or from this.select('property') on a JSON/REST or Image type scenario. It is a wrapper of the actual underlying value that lets you do some nice things.
 
+### Methods
+
+[ working on it ]
+
+### Properties 
+
+[ working on it ]
