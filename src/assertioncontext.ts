@@ -70,63 +70,55 @@ export class AssertionContext {
         });
     }
 
-    public async val(path: string): Promise<string | null> {
+    public async type(path: string, textToType: string, opts: any = {}): Promise<any> {
         if (this._isBrowserRequest && this.page !== null) {
-            const el: ElementHandle<Element> | null = await this.page.$(path);
-            if (el !== null) {
-                return await this.page.evaluate(el => el.value, el);
-            }
-        }
-        return null;
-    }
-
-    public type(path: string, textToType: string, opts: any = {}): Promise<any> {
-        if (this._isBrowserRequest && this.page !== null) {
-            return this.page.type(path, textToType, opts);
+            return await this.page.type(path, textToType, opts);
         }
         else if (this._isHtmlRequest) {
             const htmlResponse = this.response as HtmlResponse;
-            return htmlResponse.evaluate(this, function ($) {
+            return await htmlResponse.evaluate(this, function ($) {
                 $(path).val(textToType);
             });
         }
         throw new Error('Can not type into this element.');
     }
 
-    public async text(path: string): Promise<Value | null> {
-        if (this._isBrowserRequest && this.page !== null) {
-            const el: ElementHandle<Element> | null = await this.page.$(path);
-            if (el !== null) {
-                return new Value(await this.page.evaluate(el => el.textContent, el), this, path);
-            }
-        }
-        else if (this._isHtmlRequest) {
-            const element: DOMElement | null = await this.select(path);
-            if (element !== null) {
-                return new Value(await element.getText(), this, path);
-            }
-        }
-        return null;
-    }
-
     public async evaluate(callback: Function): Promise<any> {
         return await this.response.evaluate(this, callback);
     }
 
-    public exists(path: string, opts: any = {}): Promise<any> {
-        if (this._isBrowserRequest && this.page !== null) {
-            const defaultOpts = { timeout: 100 };
-            return this.page.waitForSelector(path, { ...defaultOpts, ...opts });
-        }
-        return this.select(path);
+    public async waitFor(path: string, opts: any = {}): Promise<DOMElement | null> {
+        const context = this;
+        return new Promise(async function (resolve) {
+            if (context._isBrowserRequest && context.page !== null) {
+                const defaultOpts = { timeout: 100 };
+                const element = await context.page.waitForSelector(path, { ...defaultOpts, ...opts });
+                resolve(DOMElement.create(element, context, path, path));
+            }
+            else if (context._isHtmlRequest) {
+                const element = await context.select(path);
+                if (element !== null) {
+                    resolve(element);
+                }
+                else {
+                    // Does this serve any real purpose though? Only way it would become available is if we manipulated DOM ourself
+                    setTimeout(async function () {
+                        resolve(await context.select(path));
+                    }, opts.timeout || 100);
+                }
+            }
+            else {
+                throw new Error('waitFor is not available in this context');
+            }
+        });
     }
 
-    public visible(path: string, opts: any = {}): Promise<any> {
+    public async visible(path: string, opts: any = {}): Promise<any> {
         if (this._isBrowserRequest && this.page !== null) {
             const defaultOpts = { visible: true, timeout: 100 };
-            return this.exists(path, { ...defaultOpts, ...opts });
+            return this.page.waitForSelector(path, { ...defaultOpts, ...opts });
         }
-        return this.select(path);
+        throw new Error('visible is not available in this context');
     }
 
     public select(path: string, findIn?: any): Promise<any> {
@@ -162,9 +154,7 @@ export class AssertionContext {
                 return await form.submit();
             }
         }
-        else {
-            throw new Error('Could not submit.')
-        }
+        throw new Error('Could not submit.')
     }
 
     public click(path: string): Promise<any> {
