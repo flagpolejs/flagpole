@@ -42,9 +42,9 @@ You should be able to run the flagpole command now, which will give you instruct
 flagpole
 ```
 
-Pretty colors, eh?
+Pretty colors, eh? Now let's initialize our project.
 
-Now let's initialize our project
+If you prefer to watch, rather than read, here is a [video walkthrough](https://www.youtube.com/watch?v=d29m9eg7AV4) of getting started.
 
 ```bash
 flagpole init
