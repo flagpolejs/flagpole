@@ -2,9 +2,7 @@ const Flagpole = require('../../dist/index.js').Flagpole;
 
 const suite = Flagpole.Suite('Test Google')
     .base('http://www.google.com')
-    .finally(function (suite) {
-        suite.print();
-    });
+    .finally(suite => suite.print());
 
 const homepage = suite.html('Homepage').open('/')
     .next('Test basic HTTP headers', async function (response, context) {

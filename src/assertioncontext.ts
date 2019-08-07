@@ -87,7 +87,7 @@ export class AssertionContext {
         return await this.response.evaluate(this, callback);
     }
 
-    public async waitFor(path: string, opts: any = {}): Promise<DOMElement | null> {
+    public async exists(path: string, opts: any = {}): Promise<any> {
         const context = this;
         return new Promise(async function (resolve) {
             if (context._isBrowserRequest && context.page !== null) {
@@ -96,16 +96,7 @@ export class AssertionContext {
                 resolve(DOMElement.create(element, context, path, path));
             }
             else if (context._isHtmlRequest) {
-                const element = await context.select(path);
-                if (element !== null) {
-                    resolve(element);
-                }
-                else {
-                    // Does this serve any real purpose though? Only way it would become available is if we manipulated DOM ourself
-                    setTimeout(async function () {
-                        resolve(await context.select(path));
-                    }, opts.timeout || 100);
-                }
+                return await context.select(path);
             }
             else {
                 throw new Error('waitFor is not available in this context');
@@ -116,7 +107,8 @@ export class AssertionContext {
     public async visible(path: string, opts: any = {}): Promise<any> {
         if (this._isBrowserRequest && this.page !== null) {
             const defaultOpts = { visible: true, timeout: 100 };
-            return this.page.waitForSelector(path, { ...defaultOpts, ...opts });
+            const element = await this.page.waitForSelector(path, { ...defaultOpts, ...opts });
+            return DOMElement.create(element, this, path, path);
         }
         throw new Error('visible is not available in this context');
     }

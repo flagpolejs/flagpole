@@ -58,19 +58,22 @@ export class Scenario {
 
     protected _title: string;
     protected _subscribers: Function[] = [];
-    protected _onReject: Function = () => { };
-    protected _onResolve: Function = () => { };
-    protected _onFinally: Function = () => { };
-    protected _onBefore: Function = () => { };
-    protected _onAfter: Function = () => { };
+    protected _nextCallbacks: Function[] = [];
+    protected _nextMessages: Array<string | null> = [];
+    protected _beforeCallbacks: Function[] = [];
+    protected _afterCallbacks: Function[] = [];
+    protected _finallyCallbacks: Function[] = [];
+    protected _errorCallbacks: Function[] = [];
+    protected _failureCallbacks: Function[] = [];
+    protected _successCallbacks: Function[] = [];
     protected _log: iLogLine[] = [];
     protected _failures: Array<AssertionResult> = [];
     protected _passes: Array<AssertionResult> = [];
     protected _timeScenarioInitialized: number = Date.now();
     protected _timeScenarioExecuted: number | null = null;
-    protected _timeScenarioFinished: number | null = null;
     protected _timeRequestStarted: number | null = null;
     protected _timeRequestLoaded: number | null = null;
+    protected _timeScenarioFinished: number | null = null;
     protected _responseType: ResponseType = ResponseType.html;
     protected _redirectCount: number = 0;
     protected _finalUrl: string | null = null;
@@ -82,8 +85,6 @@ export class Scenario {
     protected _options: any = {};
     protected _followRedirect: boolean | Function | null = null;
     protected _browser: Browser | null = null;
-    protected _thens: Function[] = [];
-    protected _thensMessage: Array<string | null> = [];
     protected _isMock: boolean = false;
     protected _defaultBrowserOptions: BrowserOptions = {
         headless: true,
@@ -402,8 +403,8 @@ export class Scenario {
      * Set the callback for the assertions to run after the request has a response
      */
     //public then = this.assertions;  // this was causing problems because Node thought it was a real promise
-    public next = this.assertions;
-    public assertions(a: Function | string, b?: Function): Scenario {
+    public assertions = this.next;
+    public next(a: Function | string, b?: Function): Scenario {
         const callback: Function = (() => {
             if (typeof b == 'function') {
                 return b;
@@ -423,8 +424,8 @@ export class Scenario {
         })();
         // If it hasn't already been executed
         if (!this.hasExecuted()) {
-            this._thens.push(callback);
-            this._thensMessage.push(message);
+            this._nextCallbacks.push(callback);
+            this._nextMessages.push(message);
             // Execute at the next opportunity.
             setTimeout(() => {
                 this._executeWhenReady();
@@ -439,18 +440,16 @@ export class Scenario {
     /**
      * Skip this scenario completely and mark it done
      */
-    public skip(message?: string): Scenario {
+    public async skip(message?: string): Promise<Scenario> {
         if (this.hasExecuted()) {
             throw new Error(`Can't skip Scenario since it already started executing.`);
         }
+        await this._fireBefore();
         message = "Skipped" + (message ? ': ' + message : '');
-        this._publish(ScenarioStatusEvent.beforeExecute);
-        this._timeScenarioExecuted = Date.now();
         this._publish(ScenarioStatusEvent.executionProgress);
         this._log.push(new CommentLine(message));
-        this._publish(ScenarioStatusEvent.afterExecute);
-        this._timeScenarioFinished = Date.now();
-        this._publish(ScenarioStatusEvent.finished);
+        await this._fireAfter();
+        await this._fireFinally();
         return this;
     }
 
@@ -465,10 +464,9 @@ export class Scenario {
     /**
      * Execute this scenario
      */
-    public execute(): Scenario {
+    public async execute(): Promise<Scenario> {
         if (!this.hasExecuted() && this._url !== null) {
-            this._publish(ScenarioStatusEvent.beforeExecute);
-            this._timeScenarioExecuted = Date.now();
+            await this._fireBefore();
             this.subheading(this.title);
             // If we waited first
             if (this._waitToExecute) {
@@ -509,7 +507,7 @@ export class Scenario {
      */
     public catch = this.error;
     public error(callback: Function): Scenario {
-        this._onReject = callback;
+        this._errorCallbacks.push(callback);
         return this;
     }
 
@@ -519,7 +517,7 @@ export class Scenario {
      * @param callback 
      */
     public success(callback: Function): Scenario {
-        this._onResolve = callback;
+        this._successCallbacks.push(callback);
         return this;
     }
 
@@ -529,7 +527,7 @@ export class Scenario {
      * @param callback 
      */
     public before(callback: Function): Scenario {
-        this._onBefore = callback;
+        this._beforeCallbacks.push(callback);
         return this;
     }
 
@@ -537,7 +535,7 @@ export class Scenario {
      * callback just after the scenario completes
      */
     public after(callback: Function): Scenario {
-        this._onAfter = callback;
+        this._afterCallbacks.push(callback);
         return this;
     }
 
@@ -547,7 +545,7 @@ export class Scenario {
      * @param callback 
      */
     public finally(callback: Function): Scenario {
-        this._onFinally = callback;
+        this._finallyCallbacks.push(callback);
         return this;
     }
 
@@ -572,7 +570,7 @@ export class Scenario {
         return (
             !this.hasExecuted() &&
             this._url !== null &&
-            this._thens.length > 0
+            this._nextCallbacks.length > 0
         );
     }
 
@@ -753,8 +751,8 @@ export class Scenario {
         let lastReturnValue: any = null;
         // Execute all the assertion callbacks one by one
         this._publish(ScenarioStatusEvent.executionProgress);
-        Bluebird.mapSeries(scenario._thens, (_then, index) => {
-            const comment: string | null = scenario._thensMessage[index];
+        Bluebird.mapSeries(scenario._nextCallbacks, (_then, index) => {
+            const comment: string | null = scenario._nextMessages[index];
             comment !== null && this.comment(comment)
             context.result = lastReturnValue;
             lastReturnValue = _then.apply(context, [response, context]);
@@ -762,7 +760,6 @@ export class Scenario {
         }).then(() => {
             scenario._markScenarioCompleted();
         }).catch((err) => {
-            scenario.logResult(AssertionResult.fail(err));
             scenario._markScenarioCompleted(err);
         });
         this._publish(ScenarioStatusEvent.executionProgress);
@@ -804,9 +801,8 @@ export class Scenario {
                 scenario._finalUrl = scenario.getUrl();
                 scenario._processResponse(response);
             })
-            .catch(ex => {
-                scenario.logResult(AssertionResult.fail('Failed to load image ' + scenario._url));
-                scenario._markScenarioCompleted('Failed to load image');
+            .catch(err => {
+                scenario._markScenarioCompleted(`Failed to load image ${scenario._url}`, err);
             });
     }
 
@@ -835,11 +831,7 @@ export class Scenario {
                 }
                 return;
             })
-            .catch((e) => {
-                scenario.logResult(AssertionResult.fail('Failed to load ' + scenario._url));
-                scenario.comment(e);
-                scenario._markScenarioCompleted();
-            });
+            .catch(err => scenario._markScenarioCompleted(`Failed to load ${scenario._url}`, err));
     }
 
     /**
@@ -857,8 +849,8 @@ export class Scenario {
                 scenario._redirectCount++;
                 return true;
             } : this._followRedirect;
-        request(this._options, function (error: string, response: any, body: string) {
-            if (!error) {
+        request(this._options, function (err: string, response: any, body: string) {
+            if (!err) {
                 scenario._processResponse(
                     NormalizedResponse.fromRequest(
                         response,
@@ -868,8 +860,7 @@ export class Scenario {
                 );
             }
             else {
-                scenario.comment(error);
-                scenario._markScenarioCompleted(`Failed to load ${scenario._url}`);
+                scenario._markScenarioCompleted(`Failed to load ${scenario._url}`, err);
             }
         });
     }
@@ -907,8 +898,8 @@ export class Scenario {
             NormalizedResponse.fromLocalFile(this._url)
                 .then((mock: NormalizedResponse) => {
                     scenario._processResponse(mock);
-                }).catch(function () {
-                    scenario._markScenarioCompleted(`Failed to load page ${scenario._url}`);
+                }).catch(err => {
+                    scenario._markScenarioCompleted(`Failed to load page ${scenario._url}`, err);
                 });
         }
     }
@@ -927,44 +918,137 @@ export class Scenario {
      *
      * @returns {Scenario}
      */
-    protected _markScenarioCompleted(err?: string): Scenario {
+    protected async _markScenarioCompleted(errorMessage: string | null = null, errorDetails?: string): Promise<Scenario> {
         // Only run this once
         if (!this.hasFinished()) {
-            this._timeScenarioFinished = Date.now();
+            await this._fireAfter();
             this._log.push(new CommentLine(`Took ${this.executionDuration}ms`));
-            this._publish(ScenarioStatusEvent.afterExecute);
-            // Resolve or reject, like scenario is a promise
-            if (typeof err !== 'string') {
-                this._onResolve(this)
+            // Scenario completed without an error (could be pass or fail)
+            if (errorMessage === null) {
+                this.passed ?
+                    await this._fireSuccess() :
+                    await this._fireFailure();
             }
+            // Scenario compelted with an error
             else {
-                this.logResult(AssertionResult.fail(err));
-                this._onReject(err);
+                this.logResult(AssertionResult.fail(errorMessage));
+                await this._fireError(errorDetails || errorMessage);
             }
             // Finally
-            this._publish(ScenarioStatusEvent.finished);
+            await this._fireFinally();
         }
         return this;
     }
 
     /**
-     * PubSub Publish
+     * Run the before execution and wait for any response.
+     */
+    protected _fireBefore(): Promise<void> {
+        const scenario = this;
+        this._timeScenarioExecuted = Date.now();
+        return new Promise((resolve, reject) => {
+            // Do all of the befores first, so they can do setup, and then actually execute
+            Bluebird.mapSeries(this._beforeCallbacks, (_then, index) => {
+                return _then.apply(scenario, [scenario]);
+            }).then(() => {
+                // Then do notifications
+                this._publish(ScenarioStatusEvent.beforeExecute);                
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    /**
+     * Run after execution and wait for any response
+     */
+    protected _fireAfter(): Promise<void> {
+        const scenario = this;
+        this._timeScenarioFinished = Date.now();
+        return new Promise((resolve, reject) => {
+            // Do all of the afters first, so they can tear down, and then mark it as finished
+            Bluebird.mapSeries(this._afterCallbacks, (_then, index) => {
+                return _then.apply(scenario, [scenario]);
+            }).then(() => {
+                this._publish(ScenarioStatusEvent.afterExecute);
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    protected _fireSuccess(): Promise<void> {
+        const scenario = this;
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._successCallbacks, (_then, index) => {
+                return _then.apply(scenario, [scenario]);
+            }).then(() => {
+                this._publish(ScenarioStatusEvent.finished);
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    protected _fireFailure(): Promise<void> {
+        const scenario = this;
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._failureCallbacks, (_then, index) => {
+                return _then.apply(scenario, [scenario]);
+            }).then(() => {
+                this._publish(ScenarioStatusEvent.finished);
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    protected _fireError(error: string): Promise<void> {
+        const scenario = this;
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._errorCallbacks, (_then) => {
+                return _then.apply(scenario, [error]);
+            }).then(() => {
+                this._publish(ScenarioStatusEvent.finished);
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    protected _fireFinally(): Promise<void> {
+        const scenario = this;
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._finallyCallbacks, (_then, index) => {
+                return _then.apply(scenario, [scenario]);
+            }).then(() => {
+                this._publish(ScenarioStatusEvent.finished);
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    /**
+     * PubSub Publish: To any subscribers, just listening for updates (no interupt)
      * 
      * @param statusEvent 
      */
-    protected _publish(statusEvent: ScenarioStatusEvent) {
-        this._subscribers.forEach((callback: Function) => {
-            callback(this, statusEvent);
+    protected async _publish(statusEvent: ScenarioStatusEvent) {
+        const scenario = this;
+        this._subscribers.forEach(async function (callback: Function) {
+            callback(scenario, statusEvent);
         });
-        if (statusEvent == ScenarioStatusEvent.beforeExecute) {
-            this._onBefore(this);
-        }
-        else if (statusEvent == ScenarioStatusEvent.afterExecute) {
-            this._onAfter(this);
-        }
-        else if (statusEvent == ScenarioStatusEvent.finished) {
-            this._onFinally(this);
-        }
     }
 
 }

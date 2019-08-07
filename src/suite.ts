@@ -2,6 +2,7 @@ import { Flagpole } from "./index";
 import { Scenario, ScenarioStatusEvent } from "./scenario";
 import { URL } from 'url';
 import { FlagpoleReport } from './flagpolereport';
+import * as Bluebird from "bluebird";
 
 export enum SuiteStatusEvent {
     beforeAllExecute,
@@ -37,14 +38,14 @@ export class Suite {
     }
 
     protected _subscribers: Function[] = [];
-    protected _onReject: Function = () => { };
-    protected _onResolve: Function = () => { };
-    protected _onFinally: Function = () => { };
-    protected _onBeforeAll: Function = () => { }
-    protected _onAfterAll: Function = () => { }
-    protected _onBeforeEach: Function = () => { }
-    protected _onAfterEach: Function = () => { }
-    protected _thens: Function[] = [];
+    protected _errorCallbacks: Function[] = [];
+    protected _successCallbacks: Function[] = [];
+    protected _failureCallbacks: Function[] = [];
+    protected _finallyCallbacks: Function[] = [];
+    protected _beforeAllCallbacks: Function[] = [];
+    protected _afterAllCallbacks: Function[] = [];
+    protected _beforeEachCallbacks: Function[] = [];
+    protected _afterEachCallbacks: Function[] = [];
     protected _title: string;
     protected _baseUrl: URL | null = null;
     protected _timeSuiteInitialized: number = Date.now();
@@ -125,8 +126,17 @@ export class Suite {
         const suite: Suite = this;
         const scenario: Scenario = new Scenario(this, title);
         // Notify suite on any changes to scenario
-        scenario.subscribe((thisScenario, status) => {
-            this._onScenarioStatusChange(thisScenario, status)
+        scenario.before((scenario) => {
+            return this._onBeforeScenarioExecutes(scenario);
+        });
+        scenario.after((scenario) => {
+            return this._onAfterScenarioExecutes(scenario);
+        });
+        scenario.error((errorMessage: string) => {
+            return this._fireError(errorMessage);
+        });
+        scenario.finally(() => {
+            return this._onAfterScenarioFinished(scenario);
         });
         // Some local tests fail with SSL verify on, so may have been disabled on this suite
         scenario.verifySslCert(this._verifySslCert);
@@ -299,7 +309,7 @@ export class Suite {
      * @param callback 
      */
     public before(callback: Function): Suite {
-        this._onBeforeAll = callback;
+        this._beforeAllCallbacks.push(callback);
         return this;
     }
 
@@ -309,7 +319,7 @@ export class Suite {
      * @param callback 
      */
     public beforeEach(callback: Function): Suite {
-        this._onBeforeEach = callback;
+        this._beforeEachCallbacks.push(callback);
         return this;
     }
 
@@ -319,17 +329,7 @@ export class Suite {
      * @param callback 
      */
     public afterEach(callback: Function): Suite {
-        this._onAfterEach = callback;
-        return this;
-    }
-
-    /**
-     * This callback runs once all the scenarios are complete, but before suite is marked done
-     * 
-     * @param callback 
-     */
-    public next(callback: Function): Suite {
-        this._thens.push(callback);
+        this._afterEachCallbacks.push(callback);
         return this;
     }
 
@@ -339,17 +339,17 @@ export class Suite {
      * @param callback 
      */
     public after(callback: Function): Suite {
-        this._onAfterAll = callback;
+        this._afterAllCallbacks.push(callback);
         return this;
     }
 
     /**
-     * This callback runs once the suite is done, if it failed
+     * This callback runs once the suite is done, if it errored
      * 
      * @param callback 
      */
     public catch(callback: Function): Suite {
-        this._onReject = callback;
+        this._errorCallbacks.push(callback);
         return this;
     }
 
@@ -359,7 +359,15 @@ export class Suite {
      * @param callback 
      */
     public success(callback: Function): Suite {
-        this._onResolve = callback;
+        this._successCallbacks.push(callback);
+        return this;
+    }
+
+    /** 
+     * This callback runs once the suite is done, if it failed
+     */
+    public failure(callback: Function): Suite {
+        this._failureCallbacks.push(callback);
         return this;
     }
 
@@ -368,7 +376,7 @@ export class Suite {
      */
     public onDone = this.finally;
     public finally(callback: Function): Suite {
-        this._onFinally = callback;
+        this._finallyCallbacks.push(callback);
         return this;
     }
 
@@ -381,77 +389,163 @@ export class Suite {
         });
     }
 
-    /**
-     * Runs when a scenario's status changes
-     */
-    private _onScenarioStatusChange(scenario: Scenario, statusEvent: ScenarioStatusEvent) {
+    private _fireBeforeAll(): Promise<void> {
         const suite: Suite = this;
+        this._timeSuiteExecuted = Date.now();
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._beforeAllCallbacks, (_then) => {
+                return _then.apply(suite, [suite]);
+            }).then(() => {
+                this._publish(SuiteStatusEvent.beforeAllExecute);
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    private _fireBeforeEach(scenario: Scenario): Promise<void> {
+        const suite: Suite = this;
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._beforeEachCallbacks, (_then) => {
+                return _then.apply(suite, [scenario]);
+            }).then(() => {
+                this._publish(SuiteStatusEvent.beforeEachExecute);
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    private _fireAfterEach(scenario: Scenario): Promise<void> {
+        const suite: Suite = this;
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._afterEachCallbacks, (_then) => {
+                return _then.apply(suite, [scenario]);
+            }).then(() => {
+                this._publish(SuiteStatusEvent.afterEachExecute);
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    private _fireAfterAll(): Promise<void> {
+        const suite: Suite = this;
+        this._timeSuiteFinished = Date.now();
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._afterAllCallbacks, (_then) => {
+                return _then.apply(suite, [suite]);
+            }).then(() => {
+                this._publish(SuiteStatusEvent.afterAllExecute);
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    private _fireSuccess(): Promise<void> {
+        const suite: Suite = this;
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._successCallbacks, (_then) => {
+                return _then.apply(suite, [suite]);
+            }).then(() => {
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    private _fireFailure(): Promise<void> {
+        const suite: Suite = this;
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._failureCallbacks, (_then) => {
+                return _then.apply(suite, [suite]);
+            }).then(() => {
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    private _fireError(errorMessage: string): Promise<void> {
+        const suite: Suite = this;
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._errorCallbacks, (_then) => {
+                return _then.apply(suite, [errorMessage]);
+            }).then(() => {
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    private _fireFinally(): Promise<void> {
+        const suite: Suite = this;
+        return new Promise((resolve, reject) => {
+            // Do all all fthe finally callbacks first
+            Bluebird.mapSeries(this._finallyCallbacks, (_then) => {
+                return _then.apply(suite, [suite]);
+            }).then(() => {
+                this._publish(SuiteStatusEvent.finished);
+                resolve();
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    private async _onBeforeScenarioExecutes(scenario: Scenario): Promise<Scenario> {
         // This scenario is executing, suite was not previously executing
         if (scenario.hasExecuted() && !this.hasExecuted()) {
-            this._timeSuiteExecuted = Date.now();
+            await this._fireBeforeAll();
         }
-        // This scenario has finished
-        if (statusEvent = ScenarioStatusEvent.finished) {
-            // Is every scenario completed? And only run it once
-            if (this._haveAllScenariosFinished() && !this.hasFinished()) {
-                // All scenarios are done
-                this._publish(SuiteStatusEvent.afterAllExecute);
-                // Save time ended
-                this._timeSuiteFinished = Date.now();
-                // Resolve as if we were a promise
-                if (this.failed()) {
-                    this._onReject(this);
-                }
-                else {
-                    this._thens.forEach((_then) => {
-                        _then(suite);
-                    });
-                    suite._onResolve(suite);
-                }
-                // Fire this regardless of pass or fails
-                this._publish(SuiteStatusEvent.finished);
-                // Should we print automatically?
-                if (Flagpole.automaticallyPrintToConsole) {
-                    this.print(Flagpole.exitOnDone);
-                }
-                else {
-                    Flagpole.exitOnDone && Flagpole.exit(this.passed());
-                }
+        await this._fireBeforeEach(scenario);
+        return scenario;
+    }
+
+    private async _onAfterScenarioExecutes(scenario: Scenario): Promise<Scenario> {
+        await this._fireAfterEach(scenario);
+        return scenario;
+    }
+
+    private async _onAfterScenarioFinished(scenario: Scenario): Promise<void> {
+        // Is every scenario completed? And only run it once
+        if (this._haveAllScenariosFinished() && !this.hasFinished()) {
+            await this._fireAfterAll();
+            // Success or failure?
+            this.passed() ?
+                await this._fireSuccess() :
+                await this._fireFailure();
+            // All Done
+            await this._fireFinally();
+            // Should we print automatically?
+            if (Flagpole.automaticallyPrintToConsole) {
+                this.print(Flagpole.exitOnDone);
             }
-        }
-        // After Execute
-        else if (statusEvent == ScenarioStatusEvent.afterExecute) {
-            this._onAfterEach(scenario);
-            this._publish(SuiteStatusEvent.afterEachExecute);
-        }
-        // Before Execute
-        else if (statusEvent == ScenarioStatusEvent.beforeExecute) {
-            if (!this.hasExecuted()) {
-                this._publish(SuiteStatusEvent.beforeAllExecute);
+            else {
+                Flagpole.exitOnDone && Flagpole.exit(this.passed());
             }
-            this._onBeforeEach(scenario);
-            this._publish(SuiteStatusEvent.beforeEachExecute);
         }
     }
-    
-    /**
-     * PubSub Publish
-     * 
-     * @param statusEvent 
-     */
+
     protected _publish(statusEvent: SuiteStatusEvent) {
         this._subscribers.forEach((callback: Function) => {
             callback(this, statusEvent);
         });
-        if (statusEvent == SuiteStatusEvent.beforeAllExecute) {
-            this._onBeforeAll(this);
-        }
-        else if (statusEvent == SuiteStatusEvent.afterAllExecute) {
-            this._onAfterAll(this);
-        }
-        else if (statusEvent == SuiteStatusEvent.finished) {
-            this._onFinally(this);
-        }
     }
 
 }

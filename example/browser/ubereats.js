@@ -17,10 +17,12 @@ const address = '2180 W State Rd 434, Longwood, FL 32779'
 suite.browser('Start on homepage and find local restaurants', { headless: false })
     .open('/')
     .next('Go to front page, type in an address, and click search', async function () {
-        await this.assert('Address input box is visible', this.visible(paths.addressInput)).resolves();
+        const addressInput = await this.visible(paths.addressInput);
+        await this.assert('Address input box is visible', addressInput).exists();
         await this.click(paths.addressInput);
         await this.type(paths.addressInput, address);
-        this.assert('Address field matches what was typed', await this.val(paths.addressInput)).equals(address);
+        this.comment(Flagpole.toType(addressInput));
+        this.assert('Address field matches what was typed', await addressInput.getValue()).equals(address);
         await this.assert(
             'Address selection dropdown shows up',
             this.exists(paths.selectAddressButton, { timeout: 2000 })
@@ -36,9 +38,9 @@ suite.browser('Start on homepage and find local restaurants', { headless: false 
         await this.assert('Click on first restaurant', this.click(paths.orlandoRestaurantResults)).resolves();
     })
     .next('View restaurant page and verify expected content', async function () {
-        await this.assert('Restaurant header exists', this.exists(paths.restaurantHeader, { timeout: 2000 })).resolves();
-        this.assert('Restaurant has a name', (await this.text(paths.restaurantHeader)).length)
-            .greaterThan(0);
+        const header = await this.exists(paths.restaurantHeader, { timeout: 2000 });
+        await this.assert('Restaurant header exists', header).exists();
+        this.assert('Restaurant has a name', await header.getText()).length.greaterThan(0);
         return this.pause(1);
     });
     
