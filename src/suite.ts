@@ -308,7 +308,8 @@ export class Suite {
      * 
      * @param callback 
      */
-    public before(callback: Function): Suite {
+    public before = this.beforeAll;
+    public beforeAll(callback: Function): Suite {
         this._beforeAllCallbacks.push(callback);
         return this;
     }
@@ -338,7 +339,8 @@ export class Suite {
      * 
      * @param callback 
      */
-    public after(callback: Function): Suite {
+    public after = this.afterAll;
+    public afterAll(callback: Function): Suite {
         this._afterAllCallbacks.push(callback);
         return this;
     }

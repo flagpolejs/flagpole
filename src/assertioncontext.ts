@@ -121,20 +121,6 @@ export class AssertionContext {
         return this.response.asyncSelectAll(path, findIn);
     }
 
-    public async focus(path: string): Promise<any> {
-        if (this._isBrowserRequest && this.page !== null) {
-            return await this.page.focus(path);
-        }
-        throw new Error('This type of request does not support focus.')
-    }
-
-    public async hover(path: string): Promise<any> {
-        if (this._isBrowserRequest && this.page !== null) {
-            return await this.page.hover(path);
-        }
-        throw new Error('This type of request does not support hover.')
-    }
-
     public async submit(path: string): Promise<any> {
         if (this._isBrowserRequest && this.page !== null) {
             const form = await this.page.$(path);

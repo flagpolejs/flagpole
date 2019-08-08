@@ -304,8 +304,19 @@ Prints out simply what version of Flagpole CLI is installed.
 flagpole -v
 ```
 
+# Flagpole 2.0 Events
 
-# Flagpole 2.0 Developer Docs
+* Suite.beforeAll
+* Suite.beforeEach
+* Scenario.before
+* Suite.afterEach
+* Scenario.after
+* Scenario.success | Scenario.failure | Scenario.error
+* Scenario.finally
+* Suite.afterAll
+* Suite.finally
+
+# Flagpole 2.0 Class Definitions
 
 Here are the detailed documentation of the different methods you'll interact with in Flagpole.
 
@@ -339,7 +350,7 @@ Works for numbers, but also casts strings to numbers for the compare. Tests if t
 this.assert(myValue).between(0, 10);
 ```
 
-#### contains(value: string): Assertion
+#### contains(value: any): Assertion
 
 Tests whether the input value contains the argument. This works for strings, arrays, and even for objects. If it's an object, it checks if a property exists with that value.
 
@@ -347,7 +358,7 @@ Tests whether the input value contains the argument. This works for strings, arr
 this.assert('foobar').contains('foo');
 ```
 
-#### endsWith(value: string): Assertion
+#### endsWith(value: any): Assertion
 
 Tests whether the input value ends with the argument. Also works with arrays, testing whether the argument is the last value of the array.
 
@@ -489,7 +500,7 @@ this.assert(['dre', 'snoop', '2pac']).some((rapper) => {
 })
 ```
 
-#### startsWith(value: string): Assertion
+#### startsWith(value: any): Assertion
 
 Tests whether the input value starts with the argument. Also works with arrays, testing whether the argument is the first value of the array.
 
@@ -539,8 +550,6 @@ This is the context that each set of next callbacks within a Scenario operate wi
 
 ### Methods
 
-[ working on it ]
-
 #### assert(value: any): Assertion
 
 Creates an assertion with the input value.
@@ -548,6 +557,23 @@ Creates an assertion with the input value.
 ```
 this.assert(await this.select('article.topStory h1'))
 ```
+
+#### click(path: string): Promise<void | Scenario>
+
+Issues a click on the selected element. This works on both browser and html types. For browser, the click event will be passed through to the underlying browser. For html scenarios, it will navigate a link or submit a form, if you click on a submit button or a link.
+
+```
+await this.click('input[name="q"]');
+```
+
+For html types, the promise will return a new dynamic scenario that will load the resulting page navigation.
+
+```
+(await this.click('a.login')).next(fuction() {
+  this.assert(response.status()).equals(200);
+});
+```
+
 
 #### comment(message: string)
 
@@ -585,6 +611,14 @@ const loginText = await this.evaluate((json) => {
 
 In theory, with any of these types, you could also manipulate the response with this method.
 
+#### exists(path: string, opts: any): Promise<DOMElement>
+
+Test if an element exists at that path. For a browser scenario it will wait a certain timeout (default 100ms) for the element to show up. If you want it to wait longer, set the timeout value in the opts argument. For HTML tests it just does a select.
+
+```
+const button = await this.exists('a.submit', { timeout: 2000 });
+```
+
 #### pause(milleseconds: number): Promise<void>
 
 Delay the execution by this much
@@ -613,6 +647,38 @@ This always returns an array. It will be an empty array if nothing matched. The 
 
 ```
 const articles = await this.selectAll('section.topStories article');
+```
+
+#### submit(path: string): Promise<void | Scenario>
+
+Submits the form, if the selected element is a form. This works on both browser and html types. For browser, it will do whatever submitting the form would do in the browser window. For html scenarios, it will serialize the form input and then submit it, navigating to the next page.
+
+```
+await this.click('input[name="q"]');
+```
+
+For html types, the promise will return a new dynamic scenario that will load the resulting page navigation.
+
+```
+(await this.submit('form.search')).next(fuction() {
+  this.assert(response.status()).equals(200);
+});
+```
+
+#### type(path: string, textToType: string, opts: any): Promise<void>
+
+Type this text into the selected path. For browser scenarios this will be emulating literally typing into the browser. For HTML scenarios it set the value of that element.
+
+```
+await this.type('input[name="q"]', 'who shot 2pac?');
+```
+
+#### visible(path: string, opts: any): Promise<DOMElement>
+
+Checks if an element at this selector is visible. This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change that with the timeout setting in opts.
+
+```
+const button = await this.visible('button[type="submit"]', { timeout: 200 });
 ```
 
 ### Properties 
