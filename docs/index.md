@@ -754,7 +754,110 @@ This object contains elements within the DOM for Puppeteer browser scenarios or 
 
 ### Methods
 
-[ working on it ]
+#### getClassName(): Promise<Value>
+
+Get the class name of this element. If there are multiple classes then they will be space delimited.
+
+```
+const className = await someElement.getClassName();
+```
+
+#### getData(key: string): Promise<Value>
+
+Get data property by this key from the current element. Value will contain null if it does not.
+
+```
+this.assert(await element.getData('athlete-id')).equals(123);
+```
+
+#### getInnerHtml(): Promise<Value>
+
+Get the child HTML tags that are between the opening and closing tag of this element.
+
+```
+const html = await someElement.getInnerHtml();
+```
+
+#### getInnerText(): Promise<Value>
+
+Get the text inside the opening and closing tags of the given element.
+
+```
+const text = await someElement.getInnerText();
+```
+
+#### getOuterHtml(): Promise<Value>
+
+Get the HTML string of the current element and all of its child elemenets from the opening of the tag to the ending of the tag.
+
+```
+const html = await someElement.getOuterHtml();
+```
+
+#### getProperty(key: string): Promise<Value>
+
+Get property by this key from the current element. Value will contain null if it does not.
+
+```
+this.assert(await input.hasProperty('checked')).equals(true);
+```
+
+#### getTagName(): Promise<Value>
+
+Get the HTML tag of this element. 
+
+```
+const tagName = await someElement.getTagName();
+```
+
+#### getText(): Promise<Value>
+
+Get the textContent of this element. This is slightly different from getInnerText()  and here is a [StackOverflow question](https://stackoverflow.com/questions/35213147/difference-between-textcontent-vs-innertext) about that so I don't have to repeat it.
+
+```
+const text = await div.getText();
+```
+
+#### getValue(): Promise<Value>
+
+Get the value of this element. This is normally used with form elements.
+
+```
+const searchTerm = await input.getValue();
+```
+
+#### hasAttribute(key: string): Promise<Value>
+
+Does this element have an attribute by this name?
+
+```
+this.assert(await img.hasAttribute('src')).equals(true);
+```
+
+#### hasClassName(className: string): Promise<Value>
+
+Does this element have the given class? The value will contain boolean.
+
+```
+this.assert(await element.hasClassName('heading')).equals(true);
+```
+
+#### hasData(key: string): Promise<Value>
+
+Does this element have a data property by this name?
+
+```
+this.assert(await element.hasData('athlete-id')).equals(true);
+```
+
+#### hasProperty(key: string): Promise<Value>
+
+Does this element have a property by this name?
+
+```
+this.assert(await input.hasProperty('readonly')).equals(true);
+```
+
 
 ### Properties 
 

@@ -93,7 +93,7 @@ export abstract class ProtoValue {
         return this.toType() == 'elementhandle';
     }
 
-    public async hasProperty(key: string): Promise<boolean> {
+    public async hasProperty(key: string): Promise<Value> {
         return this._input &&
             this._input.hasOwnProperty &&
             this._input.hasOwnProperty(key);
@@ -111,7 +111,7 @@ export class Value extends ProtoValue {
         return undefined;
     }
 
-    public async hasProperty(key: string): Promise<boolean> {
+    public async hasProperty(key: string): Promise<Value> {
         const thisValue: any = this.$;
         return (thisValue && thisValue.hasOwnProperty(key));
     }

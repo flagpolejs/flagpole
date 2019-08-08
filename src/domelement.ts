@@ -53,14 +53,20 @@ export class DOMElement extends ProtoValue {
         throw new Error(`getClassName is not supported with ${this.toType()}.`);
     }
 
-    public async hasClassName(className: string): Promise<boolean> {
+    public async hasClassName(className: string): Promise<Value> {
         if (this.isCheerioElement()) {
-            return this._input.hasClass(className)
+            return this._wrapAsValue(
+                this._input.hasClass(className),
+                `${this.name} has class ${className}`
+            )
         }
         else if (this.isPuppeteerElement()) {
             const classHandle: JSHandle = await this._input.getProperty('className');
             const classString: string = await classHandle.jsonValue();
-            return (classString.split(' ').indexOf(className) >= 0)
+            return this._wrapAsValue(
+                (classString.split(' ').indexOf(className) >= 0),
+                `${this.name} has class ${className}`
+            )
         }
         throw new Error(`hasClassName is not supported with ${this.toType()}.`);
     }
@@ -134,8 +140,11 @@ export class DOMElement extends ProtoValue {
         throw new Error(`getInnerHtml is not supported with ${this.toType()}.`);
     }
 
-    public async hasAttribute(key: string): Promise<boolean> {
-        return (await this._getAttribute(key)) !== null;
+    public async hasAttribute(key: string): Promise<Value> {
+        return this._wrapAsValue(
+            (await this._getAttribute(key)) != null,
+            `${this.name} has attribute ${key}`
+        );
     }
 
     public async getAttribute(key: string): Promise<Value> {
@@ -144,8 +153,11 @@ export class DOMElement extends ProtoValue {
         return this._wrapAsValue(attr, name);
     }
 
-    public async hasProperty(key: string): Promise<boolean> {
-        return (await this.getProperty(key)) !== null;
+    public async hasProperty(key: string): Promise<Value> {
+        return this._wrapAsValue(
+            !(await this.getProperty(key)).isNull(),
+            `Does ${this.name} have property ${key}?`
+        );
     }
 
     public async getProperty(key: string): Promise<Value> {
@@ -160,8 +172,11 @@ export class DOMElement extends ProtoValue {
         throw new Error(`getProperty is not supported with ${this.toType()}.`);
     }
 
-    public async hasData(key: string): Promise<boolean> {
-        return (await this.getData(key)) !== null;
+    public async hasData(key: string): Promise<Value> {
+        return this._wrapAsValue(
+            !(await this.getData(key)).isNull(),
+            `${this.name} has data ${key}`
+        );
     }
 
     public async getData(key: string): Promise<Value> {
