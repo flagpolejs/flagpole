@@ -342,7 +342,7 @@ This alone does nothing, since it just creates the assertion object with the val
 
 All methods return the Assertion itself, unless otherwise noted.
 
-#### between(min: number, max: number): Assertion
+#### `between(min: number, max: number): Assertion`
 
 Works for numbers, but also casts strings to numbers for the compare. Tests if this value is between the minimum and maximum.
 
@@ -350,7 +350,7 @@ Works for numbers, but also casts strings to numbers for the compare. Tests if t
 this.assert(myValue).between(0, 10);
 ```
 
-#### contains(value: any): Assertion
+#### `contains(value: any): Assertion`
 
 Tests whether the input value contains the argument. This works for strings, arrays, and even for objects. If it's an object, it checks if a property exists with that value.
 
@@ -358,7 +358,7 @@ Tests whether the input value contains the argument. This works for strings, arr
 this.assert('foobar').contains('foo');
 ```
 
-#### endsWith(value: any): Assertion
+#### `endsWith(value: any): Assertion`
 
 Tests whether the input value ends with the argument. Also works with arrays, testing whether the argument is the last value of the array.
 
@@ -366,7 +366,7 @@ Tests whether the input value ends with the argument. Also works with arrays, te
 this.assert('foobar').endsWith('bar');
 ```
 
-#### equals(value: any): Assertion
+#### `equals(value: any): Assertion`
 
 This be used with any types of values. It uses a rough (double equals) equality versus the exactly method that uses a precise (triple equals) equality.
 
@@ -374,7 +374,7 @@ This be used with any types of values. It uses a rough (double equals) equality 
 this.assert(myValue).equals(5);
 ```
 
-#### every(callback: Function): Assertion
+#### `every(callback: Function): Assertion`
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that every one is true.
 
@@ -384,7 +384,7 @@ this.assert(['eminem', 'dre', 'ice cube']).every((rapper) => {
 })
 ```
 
-#### exactly(value: any): Assertion
+#### `exactly(value: any): Assertion`
 
 This asserts an exact match with precise (triple equals) equality.
 
@@ -392,7 +392,7 @@ This asserts an exact match with precise (triple equals) equality.
 this.assert(myValue).exactly(5);
 ```
 
-#### exists(): Assertion
+#### `exists(): Assertion`
 
 Tests whether the input value is not null or undefined. This works well for selecting a DOM Element and then testing if it actually existed (since it returns null if not).
 
@@ -400,7 +400,7 @@ Tests whether the input value is not null or undefined. This works well for sele
 this.assert(await this.select('article')).exists();
 ```
 
-#### greaterThan(value: number): Assertion
+#### `greaterThan(value: number): Assertion`
 
 Works for numbers, but also casts strings to numbers for the compare.
 
@@ -408,7 +408,7 @@ Works for numbers, but also casts strings to numbers for the compare.
 this.assert(myValue).greaterThan(5);
 ```
 
-#### greaterThanOrEquals(value: number): Assertion
+#### `greaterThanOrEquals(value: number): Assertion`
 
 Works for numbers, but also casts strings to numbers for the compare.
 
@@ -416,7 +416,7 @@ Works for numbers, but also casts strings to numbers for the compare.
 this.assert(myValue).greaterThanOrEquals(5);
 ```
 
-#### in(listOfValues: any[]): Assertion
+#### `in(listOfValues: any[]): Assertion`
 
 Tests whether the input value is in the array of possible values.
 
@@ -424,7 +424,7 @@ Tests whether the input value is in the array of possible values.
 this.assert('2pac').in(['2pac', 'biggie', 'daz']);
 ```
 
-#### includes(value: any): Assertion
+#### `includes(value: any): Assertion`
 
 Tests whether the input array includes the argument.
 
@@ -432,7 +432,7 @@ Tests whether the input array includes the argument.
 this.assert(['2pac', 'biggie', 'daz']).includes('2pac');
 ```
 
-#### lessThan(value: number): Assertion
+#### `lessThan(value: number): Assertion`
 
 Works for numbers, but also casts strings to numbers for the compare.
 
@@ -440,7 +440,7 @@ Works for numbers, but also casts strings to numbers for the compare.
 this.assert(myValue).lessThan(5);
 ```
 
-#### lessThanOrEquals(value: number): Assertion
+#### `lessThanOrEquals(value: number): Assertion`
 
 Works for numbers, but also casts strings to numbers for the compare.
 
@@ -448,7 +448,7 @@ Works for numbers, but also casts strings to numbers for the compare.
 this.assert(myValue).lessThanOrEquals(5);
 ```
 
-#### like(value: string): Assertion
+#### `like(value: string): Assertion`
 
 Like is a more fuzzy match. It ignores type differences and also trims whitespace and compares strings all lowercase. So it indicates the values are similar, but not necessarily equal.
 
@@ -456,7 +456,7 @@ Like is a more fuzzy match. It ignores type differences and also trims whitespac
 this.assert(myValue).like('FooBar');
 ```
 
-#### matches(pattern: RegExp | string): Assertion
+#### `matches(pattern: RegExp | string): Assertion`
 
 Regular express compare of strings.
 
@@ -464,7 +464,7 @@ Regular express compare of strings.
 this.assert(myValue).matches(/^[a-z0-9]{3,32}$/i);
 ```
 
-#### none(callback: Function): Assertion
+#### `none(callback: Function): Assertion`
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that none are true.
 
@@ -474,7 +474,7 @@ this.assert(['2pac', 'biggie', 'daz']).none((rapper) => {
 })
 ```
 
-#### rejects(): Assertion
+#### `rejects(): Assertion`
 
 Tests whether the input promise rejects.
 
@@ -482,7 +482,7 @@ Tests whether the input promise rejects.
 await this.assert(myPromise).rejects();
 ```
 
-#### resolves(): Assertion
+#### `resolves(): Assertion`
 
 Tests whether the input promise resolves.
 
@@ -490,7 +490,7 @@ Tests whether the input promise resolves.
 await this.assert(myPromise).resolves();
 ```
 
-#### some(callback: Function): Assertion
+#### `some(callback: Function): Assertion`
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that at least one is true.
 
@@ -500,7 +500,7 @@ this.assert(['dre', 'snoop', '2pac']).some((rapper) => {
 })
 ```
 
-#### startsWith(value: any): Assertion
+#### `startsWith(value: any): Assertion`
 
 Tests whether the input value starts with the argument. Also works with arrays, testing whether the argument is the first value of the array.
 
@@ -512,7 +512,7 @@ this.assert(['foo', 'bar']).startsWith('foo');
 
 In addition to the methods to make the assertions, you can change them by chaining these properties.
 
-#### length: Assertion
+#### `length: Assertion`
 
 This causes the assertion to evaluate the length of the input value, rather than the actual value. This works for anything that supports length including strings and arrays. For other things it will cast the input to a string and evaluate it.
 
@@ -520,7 +520,7 @@ This causes the assertion to evaluate the length of the input value, rather than
 this.assert('foobar').length.equals(6);
 ```
 
-#### not: Assertion
+#### `not: Assertion`
 
 Flips the assertion to be the negative of itself.
 
@@ -528,7 +528,7 @@ Flips the assertion to be the negative of itself.
 this.assert(5).not.equals(6);
 ```
 
-#### optional: Assertion
+#### `optional: Assertion`
 
 This makes the assertion consider optional, meaning its failure won't cause the entire scenario to fail. If it passes, it will be listed as a pass. If it fails, it will be shown as failing in a special type of comment. That way you can see it, but not hold up the deploy because of it.
 
@@ -536,7 +536,7 @@ This makes the assertion consider optional, meaning its failure won't cause the 
 this.assert(5).optional.equals(6);
 ```
 
-#### type: Assertion
+#### `type: Assertion`
 
 This causes the assertion to evaluate the type of the value, rather than the actual input value. The type will always be a lowercase string. It is a smart typeof that can tell things like 'promise' and 'regexp' that might otherewise evaluate to plain old object.
 
@@ -550,7 +550,7 @@ This is the context that each set of next callbacks within a Scenario operate wi
 
 ### Methods
 
-#### assert(value: any): Assertion
+#### `assert(value: any): Assertion`
 
 Creates an assertion with the input value.
 
@@ -558,7 +558,7 @@ Creates an assertion with the input value.
 this.assert(await this.select('article.topStory h1'))
 ```
 
-#### click(path: string): Promise<void | Scenario>
+#### `click(path: string): Promise<void | Scenario>`
 
 Issues a click on the selected element. This works on both browser and html types. For browser, the click event will be passed through to the underlying browser. For html scenarios, it will navigate a link or submit a form, if you click on a submit button or a link.
 
@@ -575,11 +575,11 @@ For html types, the promise will return a new dynamic scenario that will load th
 ```
 
 
-#### comment(message: string)
+#### `comment(message: string)`
 
 Add a comment to the Scenario output.
 
-#### evaluate(callback: Function): Promise<any>
+#### `evaluate(callback: Function): Promise<any>`
 
 Passes this function off to the underlying response to run it in the context of that type. 
 
@@ -611,7 +611,7 @@ const loginText = await this.evaluate((json) => {
 
 In theory, with any of these types, you could also manipulate the response with this method.
 
-#### exists(path: string, opts: any): Promise<DOMElement>
+#### `exists(path: string, opts: any): Promise<DOMElement>`
 
 Test if an element exists at that path. For a browser scenario it will wait a certain timeout (default 100ms) for the element to show up. If you want it to wait longer, set the timeout value in the opts argument. For HTML tests it just does a select.
 
@@ -619,7 +619,7 @@ Test if an element exists at that path. For a browser scenario it will wait a ce
 const button = await this.exists('a.submit', { timeout: 2000 });
 ```
 
-#### pause(milleseconds: number): Promise<void>
+#### `pause(milleseconds: number): Promise<void>`
 
 Delay the execution by this much
 
@@ -627,7 +627,7 @@ Delay the execution by this much
 await this.pause(1000);
 ```
 
-#### select(path: string): Promise<DOMElement | CSSRule | Value | null>
+#### `select(path: string): Promise<DOMElement | CSSRule | Value | null>`
 
 Select the element or value at the given path. What this actually does varies by the type of scenario. 
 
@@ -639,7 +639,7 @@ Note it returns only one element. If multiple match the path then it returns the
 const firstArticle = await this.select('section.topStories article');
 ```
 
-#### selectAll(path: string): Promise<DOMElement[] | CSSRule[] | Value[] || []>
+#### `selectAll(path: string): Promise<DOMElement[] | CSSRule[] | Value[] || []>`
 
 Select the elements or values at the given path. What this actually does varies by the type of scenario. Browser and Html tests both return DOMElement. Stylesheet requests return CSSRule and JSON/REST scenarios return a Value.
 
@@ -649,7 +649,7 @@ This always returns an array. It will be an empty array if nothing matched. The 
 const articles = await this.selectAll('section.topStories article');
 ```
 
-#### submit(path: string): Promise<void | Scenario>
+#### `submit(path: string): Promise<void | Scenario>`
 
 Submits the form, if the selected element is a form. This works on both browser and html types. For browser, it will do whatever submitting the form would do in the browser window. For html scenarios, it will serialize the form input and then submit it, navigating to the next page.
 
@@ -665,7 +665,7 @@ For html types, the promise will return a new dynamic scenario that will load th
 });
 ```
 
-#### type(path: string, textToType: string, opts: any): Promise<void>
+#### `type(path: string, textToType: string, opts: any): Promise<void>`
 
 Type this text into the selected path. For browser scenarios this will be emulating literally typing into the browser. For HTML scenarios it set the value of that element.
 
@@ -673,7 +673,7 @@ Type this text into the selected path. For browser scenarios this will be emulat
 await this.type('input[name="q"]', 'who shot 2pac?');
 ```
 
-#### visible(path: string, opts: any): Promise<DOMElement>
+#### `visible(path: string, opts: any): Promise<DOMElement>`
 
 Checks if an element at this selector is visible. This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change that with the timeout setting in opts.
 
@@ -683,29 +683,29 @@ const button = await this.visible('button[type="submit"]', { timeout: 200 });
 
 ### Properties 
 
-#### browser: Browser | null
+#### `browser: Browser | null`
 
 The Browser object that we can use the interact with Pupetter or null if this is not a browser type Scenario.
 
-#### page: Puppeteer.Page | null
+#### `page: Puppeteer.Page | null`
 
 The Page object from the Puppeteer browser instance. This will be null if not a browser scenario or for some reason Puppeteer fails to load it. You can use this to interact directly with Puppeteer (see the Puppeteer API for that) it is very useful for things that Flagpole does not directly implement through sugar syntax wrappers.
 
-#### response: iResponse
+#### `response: iResponse`
 
 The response from the request. This will vary based on the type of Scenario, but some underlying properties are constant in the interface. 
 
 This is often used to pull something like the load time, HTTP Status, headers, mime type, raw response body, etc.
 
-#### result: any
+#### `result: any`
 
 If you chain multiple next callbacks together in a Scenario, you can return a value from one and then pull it into the following. To do this you will use `this.result` to grab that previously returned value. You may find that it is wrapped in a promise and then do `await this.result` to handle that.
 
-#### scenario: Scenario
+#### `scenario: Scenario`
 
 A reference to the calling Scenario.
 
-#### suite: Suite
+#### `suite: Suite`
 
 The parent Suite of this Scenario.
 
@@ -715,7 +715,7 @@ This object contains declarations for a given CSS selector. You would get this w
 
 ### Methods
 
-#### hasProperty(key: string): Promise<boolean> 
+#### `hasProperty(key: string): Promise<boolean>`
 
 Test whether this rule has the given CSS property.
 
@@ -724,7 +724,7 @@ const rule = await this.select('body');
 this.assert(await rule.hasProperty('background')).equals(true);
 ```
 
-#### getProperty(key: string): Promise<Value | null> 
+#### `getProperty(key: string): Promise<Value | null> `
 
 Get the matching property for this CSS Rule. Returns null if the property does not exist.
 
@@ -735,15 +735,15 @@ this.assert(await rule.getProperty('background')).equals('#ffffff');
 
 ### Properties 
 
-#### $: any (readonly)
+#### `$: any` (readonly)
 
 This is a quick way to get the underlying value within this wrapper object.
 
-#### path: string (readonly)
+#### `path: string` (readonly)
 
 The selector path that was used to query this rule.
 
-#### name: string (readonly)
+#### `name: string` (readonly)
 
 Get a friendly name for this Value, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
 
@@ -754,7 +754,7 @@ This object contains elements within the DOM for Puppeteer browser scenarios or 
 
 ### Methods
 
-#### getClassName(): Promise<Value>
+#### `getClassName(): Promise<Value>`
 
 Get the class name of this element. If there are multiple classes then they will be space delimited.
 
@@ -762,7 +762,7 @@ Get the class name of this element. If there are multiple classes then they will
 const className = await someElement.getClassName();
 ```
 
-#### getData(key: string): Promise<Value>
+#### `getData(key: string): Promise<Value>`
 
 Get data property by this key from the current element. Value will contain null if it does not.
 
@@ -770,7 +770,7 @@ Get data property by this key from the current element. Value will contain null 
 this.assert(await element.getData('athlete-id')).equals(123);
 ```
 
-#### getInnerHtml(): Promise<Value>
+#### `getInnerHtml(): Promise<Value>`
 
 Get the child HTML tags that are between the opening and closing tag of this element.
 
@@ -778,7 +778,7 @@ Get the child HTML tags that are between the opening and closing tag of this ele
 const html = await someElement.getInnerHtml();
 ```
 
-#### getInnerText(): Promise<Value>
+#### `getInnerText(): Promise<Value>`
 
 Get the text inside the opening and closing tags of the given element.
 
@@ -786,7 +786,7 @@ Get the text inside the opening and closing tags of the given element.
 const text = await someElement.getInnerText();
 ```
 
-#### getOuterHtml(): Promise<Value>
+#### `getOuterHtml(): Promise<Value>`
 
 Get the HTML string of the current element and all of its child elemenets from the opening of the tag to the ending of the tag.
 
@@ -794,7 +794,7 @@ Get the HTML string of the current element and all of its child elemenets from t
 const html = await someElement.getOuterHtml();
 ```
 
-#### getProperty(key: string): Promise<Value>
+#### `getProperty(key: string): Promise<Value>`
 
 Get property by this key from the current element. Value will contain null if it does not.
 
@@ -802,7 +802,7 @@ Get property by this key from the current element. Value will contain null if it
 this.assert(await input.hasProperty('checked')).equals(true);
 ```
 
-#### getTagName(): Promise<Value>
+#### `getTagName(): Promise<Value>`
 
 Get the HTML tag of this element. 
 
@@ -810,7 +810,7 @@ Get the HTML tag of this element.
 const tagName = await someElement.getTagName();
 ```
 
-#### getText(): Promise<Value>
+#### `getText(): Promise<Value>`
 
 Get the textContent of this element. This is slightly different from getInnerText()  and here is a [StackOverflow question](https://stackoverflow.com/questions/35213147/difference-between-textcontent-vs-innertext) about that so I don't have to repeat it.
 
@@ -818,7 +818,7 @@ Get the textContent of this element. This is slightly different from getInnerTex
 const text = await div.getText();
 ```
 
-#### getValue(): Promise<Value>
+#### `getValue(): Promise<Value>`
 
 Get the value of this element. This is normally used with form elements.
 
@@ -826,7 +826,7 @@ Get the value of this element. This is normally used with form elements.
 const searchTerm = await input.getValue();
 ```
 
-#### hasAttribute(key: string): Promise<Value>
+#### `hasAttribute(key: string): Promise<Value>`
 
 Does this element have an attribute by this name?
 
@@ -834,7 +834,7 @@ Does this element have an attribute by this name?
 this.assert(await img.hasAttribute('src')).equals(true);
 ```
 
-#### hasClassName(className: string): Promise<Value>
+#### `hasClassName(className: string): Promise<Value>`
 
 Does this element have the given class? The value will contain boolean.
 
@@ -842,7 +842,7 @@ Does this element have the given class? The value will contain boolean.
 this.assert(await element.hasClassName('heading')).equals(true);
 ```
 
-#### hasData(key: string): Promise<Value>
+#### `hasData(key: string): Promise<Value>`
 
 Does this element have a data property by this name?
 
@@ -850,7 +850,7 @@ Does this element have a data property by this name?
 this.assert(await element.hasData('athlete-id')).equals(true);
 ```
 
-#### hasProperty(key: string): Promise<Value>
+#### `hasProperty(key: string): Promise<Value>`
 
 Does this element have a property by this name?
 
@@ -861,15 +861,15 @@ this.assert(await input.hasProperty('readonly')).equals(true);
 
 ### Properties 
 
-#### $: any (readonly)
+#### `$: any` (readonly)
 
 This is a quick way to get the underlying value within this wrapper object. So that will typically be either an ElementHandle if a browser test or a Cheerio object if an html test.
 
-#### name: string (readonly)
+#### `name: string` (readonly)
 
 Get a friendly name for this DOMElement, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
 
-#### path: string (readonly)
+#### `path: string` (readonly)
 
 The selector requested to query this DOMElement.
 
@@ -883,25 +883,25 @@ A scenario is a collection of tests. It is a child of a Suite.
 
 ### Properties 
 
-#### executionDuration: number | null
+#### `executionDuration: number | null`
 
 The total time between when the Scenario was started executing and when it finished running. Null if it has not yet completed.
 
-#### responseDuration: number | null
+#### `responseDuration: number | null`
 
 The total time between when the Scenario's request went out and when the response back back. Null if it the request has not yet returned a response.
 
-#### responseType: ResponseType (readonly, enum)
+#### `responseType: ResponseType (readonly, enum)`
 
 The type of Scenario this is, the type of request we'll make and the response we'll expect back.
 
 *Possible Values: html, json, image, stylesheet, script, video, audio, resource, browser, extjs*
 
-#### title: string
+#### `title: string`
 
 Title of the Scenario as it will be printed on reports.
 
-#### totalDuration: number | null
+#### `totalDuration: number | null`
 
 The total time between when the Scenario was initialized and when it finished running. Null if it has not yet completed.
 
@@ -911,19 +911,19 @@ A Suite is essentially a collection of test Scenarios. You will be able to choos
 
 ### Methods
 
-#### after(callback: Function): Suite
+#### `afterAll(callback: Function): Suite`
 
 Hit this callback after all Scenarios finish executing.
 
-`suite.after(() => { })`
+`suite.afterAll(() => { })`
 
-#### afterEach(callback: Function): Suite
+#### `afterEach(callback: Function): Suite`
 
 Hit this callback after each Scenario finishes executing.
 
 `suite.afterEach(() => { })`
 
-#### base(parms: string | {}): Suite
+#### `base(parms: string | {}): Suite`
 
 Set the base URL that all Scenarios in this Suite will use as its starting point.
 
@@ -941,109 +941,109 @@ suite.base({
 })
 ```
 
-#### before(callback: Function): Suite
+#### `beforeAll(callback: Function): Suite`
 
 Hit this callback before the first Scenario starts executing.
 
-`suite.before(() => { })`
+`suite.beforeAll(() => { })`
 
-#### beforeEach(callback: Function): Suite
+#### `beforeEach(callback: Function): Suite`
 
 Hit this callback before each Scenario starts executing.
 
 `suite.beforeEach(() => { })`
 
-#### browser(title: string, opts: any = {}): Scenario
+#### `browser(title: string, opts: any = {}): Scenario`
 
 Creates a new Scenario of the Browser request type. This will run a version of Chrominium with Puppeteer. 
 
 `suite.browser('User Sign Up Work Flow', { headless: true, width: 1280, height: 800 })`
 
-#### buildUrl(path: string): string
+#### `buildUrl(path: string): string`
 
 Creates a fully qualified URL based on the input string. This will be relative to the Suite's base.
 
 `suite.buildUrl('/index.html')`
 
-#### catch(callback: Function): Suite
+#### `catch(callback: Function): Suite`
 
 Hit this callback after the Suite completes if there is an error or failure in any Scenario.
 
 `suite.catch(() => { })`
 
-#### execute(): Suite
+#### `execute(): Suite`
 
 If this string was told to wait() to execute, this will kick it off. This method will trigger the execute to then be called on each Scenario in the Suite.
 
 `suite.execute()`
 
-#### extjs(title: string, opts: any = {}): Scenario
+#### `extjs(title: string, opts: any = {}): Scenario`
 
 Creates a new Scenario of the ExtJS request type. This will use Puppeteer just like the browser variety. The only difference is that it has Ext specific select methods and other helper methods to dig into this framework's custom internals.
 
 `suite.extjs('User Sign Up Work Flow', { headless: true, width: 1280, height: 800 })`
 
-#### failed(): boolean
+#### `failed(): boolean`
 
 Did this Suite (or any of its Scenarios) fail? If the Suite is not yet completed (or hasn't started yet) this will be false, unless any Scenario has already failed.
 
 `suite.failed()`
 
-#### finally(callback: Function): Suite
+#### `finally(callback: Function): Suite`
 
 Hit this callback after all Scenarios finish executing and after the Suite has been marked completed. This is the final step.
 
 `suite.finally(() => { })`
 
-#### html(title: string, opts: any = {}): Scenario
+#### `html(title: string, opts: any = {}): Scenario`
 
 Creates a new Scenario of the HTML/DOM Only request type. This will use Cheerio to grab the HTML and load it into a jQuery-like DOM that we can test against. We can fake a browser here, allowing form completion, clicks, etc. However, it just is not a full browser so does not have JavaScript and won't work on SPAs, unless they have server side rendering as well.
 
 `suite.html('Homepage Test')`
 
-#### image(title: string, opts: any = {}): Scenario
+#### `image(title: string, opts: any = {}): Scenario`
 
 Creates a new Scenario of the Image request type. This will use probe-image-size library to grab only the first few bytes of the image (not download the entire thing). This allows us to quickly test the basic properties.
 
 `suite.image('Make sure image loads and is correct width')`
 
-#### json(title: string, opts: any = {}): Scenario
+#### `json(title: string, opts: any = {}): Scenario`
 
 Creates a new Scenario of the JSON/API End Point request type.
 
 `suite.json('Articles API Test')`
 
-#### next(callback: Function): Suite
+#### `next(callback: Function): Suite`
 
 Hit this callback after all Scenarios finish executing, but before Suite has been marked as completed. There can be multiple nexts.
 
 `suite.next(() => { })`
 
-#### passed(): boolean
+#### `passed(): boolean`
 
 Did this Suite (and all of its Scenarios) complete and all were passing?
 
 `suite.passed()`
 
-#### print(exitAfterPrint: boolean = true): void
+#### `print(exitAfterPrint: boolean = true): void`
 
 Prints the results from the test execution to the console. This is often run inside the finally callback. If you leave the default argument as true, the process will terminate after it prints. So be sure to set that to false if you don't want it to do so.
 
 `suite.finally(suite => suite.print(false))`
 
-#### resource(title: string, opts: any = {}): Scenario
+#### `resource(title: string, opts: any = {}): Scenario`
 
 Creates a new Scenario of the Generic Resource request type. This is any other random type of file. You can test the file size, mime type, content, HTTP status, etc.
 
 `suite.resource('Make sure this file loads')`
 
-#### script(title: string, opts: any = {}): Scenario
+#### `script(title: string, opts: any = {}): Scenario`
 
 Creates a new Scenario of the Script request type. It doesn't currently do anything more than load it. You can test the file size, mime type, HTTP Status, and such... so it may have some use but does not currently validate the JS.
 
 `suite.script('Make sure JS file loads')`
 
-#### subscribe(callback: Function): void
+#### `subscribe(callback: Function): void`
 
 Adds this callback to a PubSub subscription to get notified on any updates with the execute of thie Suite.
 
@@ -1051,25 +1051,25 @@ This will probably return a handle to be able to unsubscribe later, but it doesn
 
 `suite.callback((suite: Suite, status: SuiteStatusEvent) => {  });`
 
-#### success(callback: Function): Suite
+#### `success(callback: Function): Suite`
 
 Hit this callback after all Scenarios finish executing if all Scenarios passed. This happens following after and next, but before finally.
 
 `suite.success(() => { })`
 
-#### verifySslCert(verify: boolean): Suite
+#### `verifySslCert(verify: boolean): Suite`
 
 Tells the request not to worry about verifying any SSL certs for HTTPS requests. This is helpful for local environments that may not have a valid cert. This value is passed on to any Scenarios created in this Suite, so you don't have to set it each time.
 
 `suite.verifySslCert(false)`
 
-#### video(title: string, opts: any = {}): Suite
+#### `video(title: string, opts: any = {}): Suite`
 
 Creates a new Scenario of the Video request type.
 
 `suite.video('Make sure video loads')`
 
-#### wait(verify: boolean = true): Suite
+#### `wait(verify: boolean = true): Suite`
 
 Tells this suite not to execute right away. Will not execute any scenarios until .execute() is called. This wait value gets passed to any Scenarios created under this Suite, so that you don't have to set it each time.
 
@@ -1077,19 +1077,19 @@ Tells this suite not to execute right away. Will not execute any scenarios until
 
 ### Properties
 
-#### baseUrl: string
+#### `baseUrl: string`
 
 The base URL tha tis being used to execute Scenarios in this Suite. It will come from the settings in the .base() method and what environment is selected.
 
-#### executionDuration: number | null
+#### `executionDuration: number | null`
 
 The amount of time, in milliseconds, between when the first Scenario in the Suite started to execute and when the last one was completed.
 
-#### title: string
+#### `title: string`
 
 The title of this suite, which is specified in the constructor.
 
-#### totalDuration: number | null
+#### `totalDuration: number | null`
 
 The total amount of time, in milliseconds, between when the Suite was initialized and when it was completed.
 
@@ -1099,85 +1099,85 @@ This object is the result of queried properties on a DOMElement, CSSRule, or fro
 
 ### Methods
 
-#### getProperty(key: string): Promise<any>
+#### `getProperty(key: string): Promise<Value>`
 
 Get the property of this input value with the key. If there is no such property then it will return null. This is an async method.
 
-#### hasProperty(key: string): Promise<boolean>
+#### `hasProperty(key: string): Promise<Value>`
 
 If this element is an object of some sort, does it have the property matching key? Note this is an async function.
 
-#### isNullOrUndefined(): boolean
+#### `isNullOrUndefined(): boolean`
 
 Self explanatory.
 
-#### isUndefined(): boolean
+#### `isUndefined(): boolean`
 
 Self explanatory.
 
-#### isNull(): boolean
+#### `isNull(): boolean`
 
 Is this input value literally null.
 
-#### isPromise(): boolean
+#### `isPromise(): boolean`
 
 Self explanatory.
 
-#### isArray(): boolean
+#### `isArray(): boolean`
 
 Self explanatory.
 
-#### isCookie(): boolean
+#### `isCookie(): boolean`
 
 Self explanatory.
 
-#### isRegularExpression(): boolean
+#### `isRegularExpression(): boolean`
 
 Is the input value a regular expression pattern (RegExp type).
 
-#### isNaN(): boolean
+#### `isNaN(): boolean`
 
 Is this input value literally the JavaScript value of NaN.
 
-#### isNumber(): boolean
+#### `isNumber(): boolean`
 
 Is this input value of type number? NaN will return false.
 
-#### isNumeric(): boolean
+#### `isNumeric(): boolean`
 
 Is the input value numeric, even if it is a string or something else for its actual type.
 
-#### isObject(): boolean
+#### `isObject(): boolean`
 
 Self explanatory.
 
-#### isString(): boolean
+#### `isString(): boolean`
 
 Self explanatory.
 
-#### toArray(): any[]
+#### `toArray(): any[]`
 
 Converts the input value into an array. If it's not already an array then it just wraps it in an array.
 
-#### toString(): string
+#### `toString(): string`
 
 Casts the input value as a string. 
 
-#### toType(): string
+#### `toType(): string`
 
 Grabs the type of the input value. It will be all lowercase and is a deep type look up, beyond a normal typeof.
 
 ### Properties 
 
-#### $: any (readonly)
+#### `$: any` (readonly)
 
 This is a quick way to get the underlying value within this wrapper object.
 
-#### length: number (readonly)
+#### `length: number` (readonly)
 
 Get the length of the input value. This could be the number of characters in a string-like value or the number of elements if it's an array.
 
-#### name: string (readonly)
+#### `name: string` (readonly)
 
 Get a friendly name for this Value, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
 
