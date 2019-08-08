@@ -19,17 +19,33 @@ export class ImageResponse extends GenericResponse implements iResponse {
 
     protected imageProperties: ImageProperties;
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
-        this.imageProperties = JSON.parse(response.body);
-        this.getAssertionContext().assert(
-            'MIME Type matches expected value for an image',
-            this.imageProperties.mime
-        ).startsWith('image/');
+    public get length(): Value {
+        return this._wrapAsValue(this.imageProperties.length, 'Image Size');
+    }
+
+    public get url(): Value {
+        return this._wrapAsValue(this.imageProperties.url, 'URL of Image');
+    }
+
+    public get path(): Value {
+        return this._wrapAsValue(new URL(this.imageProperties.url).pathname, 'URL Path of Image');
+    }
+
+    public get type(): ResponseType {
+        return ResponseType.image;
     }
 
     public get typeName(): string {
         return 'Image';
+    }
+
+    constructor(scenario: Scenario, response: NormalizedResponse) {
+        super(scenario, response);
+        this.imageProperties = JSON.parse(response.body);
+        this.context.assert(
+            'MIME Type matches expected value for an image',
+            this.imageProperties.mime
+        ).startsWith('image/');
     }
 
     public select(propertyName: string): Node {
@@ -48,7 +64,7 @@ export class ImageResponse extends GenericResponse implements iResponse {
             typeof this.imageProperties[propertyName] !== 'undefined' ?
                 this.imageProperties[propertyName] :
                 null,
-            this.getAssertionContext(),
+            this.context,
             `${propertyName} of Image`
         )
     }
@@ -56,22 +72,6 @@ export class ImageResponse extends GenericResponse implements iResponse {
     public async asyncSelectAll(propertyName: string): Promise<Value[]> {
         const value: Value = await this.asyncSelect(propertyName);
         return value.isNull() ? [] : [value];
-    }
-
-    public getType(): ResponseType {
-        return ResponseType.image;
-    }
-
-    public length(): Node {
-        return new Node(this, 'Size of image', this.imageProperties.length);
-    }
-
-    public url(): Node {
-        return new Node(this, 'URL of image', this.imageProperties.url);
-    }
-
-    public path(): Node {
-        return new Node(this, 'Path', new URL(this.imageProperties.url).pathname);
     }
 
 }

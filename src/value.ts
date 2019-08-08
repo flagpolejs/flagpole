@@ -99,6 +99,10 @@ export abstract class ProtoValue {
             this._input.hasOwnProperty(key);
     }
 
+    protected _wrapAsValue(data: any, name: string): Value {
+        return new Value(data, this._context, name);
+    }
+
 }
 
 export class Value extends ProtoValue {

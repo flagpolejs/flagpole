@@ -515,10 +515,6 @@ export class DOMElement extends ProtoValue {
         return scenario;
     }
 
-    private _wrapAsValue(data: any, name: string): Value {
-        return new Value(data, this._context, name);
-    }
-
     private async _getTagName(): Promise<string> {
         if (this.isCheerioElement()) {
             return this._input.get(0).tagName.toLowerCase();

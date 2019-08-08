@@ -14,19 +14,23 @@ import { CSSRule } from './cssrule';
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
  */
 export interface iResponse {
+    type: ResponseType,
     typeName: string,
-    getType(): ResponseType
+    httpStatusCode: Value,
+    httpStatusMessage: Value,
+    body: Value,
+    jsonBody: Value,
+    url: Value,
+    finalUrl: Value,
+    length: Value,
+    loadTime: Value,
+    context: AssertionContext,
     asyncSelect(path: string, findIn?: any): Promise<Value | DOMElement | CSSRule | null>
     asyncSelectAll(path: string, findIn?: any): Promise<Array<Value | DOMElement | CSSRule>>
-    status(): Node
-    loadTime(): Node
     headers(key?: string): Node
     cookies(key?: string): Node
-    getBody(): string
-    getUrl(): string
     absolutizeUri(uri: string): string
     evaluate(context: any, callback: Function): Promise<any>
-    getAssertionContext(): AssertionContext
     readonly scenario: Scenario
     // to be deprecated
     getRoot(): any
@@ -119,16 +123,59 @@ export abstract class GenericResponse implements iResponse {
     public readonly scenario: Scenario;
 
     private _response: NormalizedResponse;
+    // DREPRECATED
     private _lastElement: Node;
     private _lastElementPath: string | null = null;
 
-    abstract getType(): ResponseType;
+    abstract get type(): ResponseType;
     abstract get typeName(): string;
-    abstract select(path: string, findIn?: any): Node;
 
     abstract asyncSelect(path: string, findIn?: any): Promise<any | null>;
     abstract asyncSelectAll(path: string, findIn?: any): Promise<any[]>;
     abstract evaluate(context: any, callback: Function): Promise<any>;
+    // Deprecated
+    abstract select(path: string, findIn?: any): Node;
+
+    public get httpStatusCode(): Value {
+        return this._wrapAsValue(this._response.statusCode, 'HTTP Status Code');
+    }
+
+    public get httpStatusMessage(): Value {
+        return this._wrapAsValue(this._response.statusMessage, 'HTTP Status Message');
+    }
+
+    public get body(): Value {
+        return this._wrapAsValue(this._response.body, 'Raw Response Body');
+    }
+
+    public get length(): Value {
+        return this._wrapAsValue(this._response.body.length, 'Length of Response Body');
+    }
+
+    public get jsonBody(): Value {
+        try {
+            const json = JSON.parse(this._response.body);
+            return this._wrapAsValue(json, 'JSON Response');
+        } catch (ex) {
+            return this._wrapAsValue(null, 'JSON Response');
+        }
+    }
+
+    public get url(): Value {
+        return this._wrapAsValue(this.scenario.getUrl(), 'Request URL');
+    }
+
+    public get finalUrl(): Value {
+        return this._wrapAsValue(this.scenario.getFinalUrl(), 'Response URL (after redirects)');
+    }
+
+    public get loadTime(): Value {
+        return this._wrapAsValue(this.scenario.requestDuration, 'Request to Response Load Time');
+    }
+
+    public get context(): AssertionContext {
+        return new AssertionContext(this.scenario, this);
+    }
 
     constructor(scenario: Scenario, response: NormalizedResponse) {
         this.scenario = scenario;
@@ -136,29 +183,68 @@ export abstract class GenericResponse implements iResponse {
         this._lastElement = new Node(this, 'Empty Element', null);
     }
 
-    public getAssertionContext(): AssertionContext {
-        return new AssertionContext(this.scenario, this);
-    }
-
     public absolutizeUri(uri: string): string {
         let baseUrl: URL = new URL(this.scenario.suite.buildUrl(this.scenario.getUrl() || ''));
         return (new URL(uri, baseUrl.href)).href;
     }
 
-    public getUrl(): string {
-        return this.scenario.getUrl() || '';
-    }
-
-    public body(): Node {
-        return new Node(this, 'Response Body', this._response.body);
-    }
-
-    public getBody(): string {
-        return this._response.body;
-    }
-
     public getRoot(): any {
         return this._response.body;
+    }
+
+    /**
+     * Return a single header by key or all headers in an object
+     *
+     * @param {string} key
+     * @returns {Node}
+     */
+    public headers(key?: string): Node {
+        if (typeof key !== 'undefined') {
+            // Try first as they put it in the test, then try all lowercase
+            key = typeof this._response.headers[key] !== 'undefined' ? key : key.toLowerCase();
+            let name: string = 'HTTP Headers[' + key + ']';
+            let value: Node = new Node(this, name, this._response.headers[key]);
+            value.exists();
+            return value;
+        }
+        else {
+            return new Node(this, 'HTTP Headers', this._response.headers);
+        }
+    }
+
+    /**
+     * Return a single cookie by key or all cookies in an object
+     * 
+     * @param key 
+     */
+    public cookies(key?: string): Node {
+        if (typeof key !== 'undefined') {
+            let cookie: Cookie | null = null;
+            this._response.cookies.forEach((c: Cookie) => {
+                if (c.key == key) {
+                    cookie = c;
+                }
+            });
+            let name: string = 'HTTP Cookies[' + key + ']';
+            let value: Node = new Node(this, name, cookie);
+            value.exists();
+            return value;
+        }
+        else {
+            return new Node(this, 'HTTP Cookies', this._response.cookies);
+        }
+    }
+
+    protected _wrapAsValue(data: any, name: string): Value {
+        return new Value(data, this.context, name);
+    }
+
+    /**
+     * !!!EVERYTHING BELOW THIS POINT IS DEPRECATED!!
+     */
+
+    public status(): Node {
+        return new Node(this, 'HTTP Status Code', this.httpStatusCode);
     }
 
     public assert(statement: boolean, message: string, actualValue?: string): iResponse {
@@ -239,86 +325,6 @@ export abstract class GenericResponse implements iResponse {
      */
     public and(): Node {
         return this.getLastElement();
-    }
-
-    /**
-     * Return a single header by key or all headers in an object
-     *
-     * @param {string} key
-     * @returns {Node}
-     */
-    public headers(key?: string): Node {
-        if (typeof key !== 'undefined') {
-            // Try first as they put it in the test, then try all lowercase
-            key = typeof this._response.headers[key] !== 'undefined' ? key : key.toLowerCase();
-            let name: string = 'HTTP Headers[' + key + ']';
-            let value: Node = new Node(this, name, this._response.headers[key]);
-            value.exists();
-            return value;
-        }
-        else {
-            return new Node(this, 'HTTP Headers', this._response.headers);
-        }
-    }
-
-    /**
-     * Return a single cookie by key or all cookies in an object
-     * 
-     * @param key 
-     */
-    public cookies(key?: string): Node {
-        if (typeof key !== 'undefined') {
-            let cookie: Cookie | null = null;
-            this._response.cookies.forEach((c: Cookie) => {
-                if (c.key == key) {
-                    cookie = c;
-                }
-            });
-            let name: string = 'HTTP Cookies[' + key + ']';
-            let value: Node = new Node(this, name, cookie);
-            value.exists();
-            return value;
-        }
-        else {
-            return new Node(this, 'HTTP Cookies', this._response.cookies);
-        }
-    }
-
-    /**
-     * Get the http status
-     *
-     * @returns {Node}
-     */
-    public status(): Node {
-        return new Node(this, 'HTTP Status', this._response.statusCode);
-    }
-
-    /**
-     * Length of the response body
-     */
-    public length(): Node {
-        return new Node(this, 'Length of Response Body', this._response.body.length);
-    }
-
-    /**
-     * Load time of request to response
-     */
-    public loadTime(): Node {
-        return new Node(this, 'Load Time', this.scenario.requestDuration);
-    }
-
-    /**
-     * Get URL of the current page
-     */
-    public url(): Node {
-        return new Node(this, 'URL', this.getUrl());
-    }
-
-    /**
-     * Get the path of the current page
-     */
-    public path(): Node {
-        return new Node(this, 'Path', new URL(this.getUrl()).pathname);
     }
 
 }

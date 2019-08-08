@@ -6,7 +6,7 @@ let suite = Flagpole.Suite('Test iTunes API')
 
 suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
     .next('Check response code and headers', function () {
-        this.assert('HTTP Status is 200', this.response.status()).equals(200);
+        this.assert('HTTP Status is 200', this.response.httpStatusCode).equals(200);
         this.assert(this.response.headers('Content-Type')).contains('text/javascript');
         this.assert('Response body is greater than 0', this.response.length()).greaterThan(0);
     })

@@ -1,5 +1,5 @@
 /**
- *  TO BE DEPRECATED 
+ *  THIS WHOLE CLASS WILL BE DEPRECATED 
  */
 
 import { Scenario } from "./scenario";
@@ -115,10 +115,10 @@ export class Node {
             }
         }
         else if (this.isString()) {
-            if (this.response.getType() == ResponseType.json) {
+            if (this.response.type == ResponseType.json) {
                 return this.toString().trim();
             }
-            else if (this.response.getType() == ResponseType.html) {
+            else if (this.response.type == ResponseType.html) {
                 return this.toString().trim().replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
             }
         }
@@ -320,20 +320,6 @@ export class Node {
     }
 
     /**
-     * 
-     */
-    public status(): Node {
-        return this.response.status();
-    }
-
-    /**
-     * 
-     */
-    public loadTime(): Node {
-        return this.response.loadTime();
-    }
-
-    /**
     * Gets back to the last element selected
     */
     public and(): Node {
@@ -389,7 +375,7 @@ export class Node {
         let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         // If this was a link, click it and then run the resulting scenaior
         if (this.isLinkElement()) {
-            const link: Link = new Link(this.getAttribute('href') || '', this.response.getAssertionContext());
+            const link: Link = new Link(this.getAttribute('href') || '', this.response.context);
             (link.isNavigation()) ?
                 scenario.open(link.getUri()) :
                 scenario.skip('Not a navigation link');
@@ -415,7 +401,7 @@ export class Node {
      */
     public submit(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
         let scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
-        let link: Link = new Link(this.getUrl() || '', this.response.getAssertionContext());
+        let link: Link = new Link(this.getUrl() || '', this.response.context);
         if (this.isFormElement() && link.isNavigation()) {
             let uri: string;
             let method: string = this.getAttribute('method') || 'get';
@@ -513,7 +499,7 @@ export class Node {
 
     public load(scenarioOrTitle: string | Scenario, impliedAssertion: boolean = false): Scenario {
         const relativePath: string | null = this.getUrl();
-        const link: Link = new Link(relativePath || '', this.response.getAssertionContext());
+        const link: Link = new Link(relativePath || '', this.response.context);
         const scenario: Scenario = this.getLambdaScenario(scenarioOrTitle, impliedAssertion);
         if (relativePath === null) {
             scenario.skip('No URL to load');

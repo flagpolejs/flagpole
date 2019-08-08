@@ -14,13 +14,13 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         return 'HTML';
     }
 
+    public get type(): ResponseType {
+        return ResponseType.html;
+    }
+
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
         $ = cheerio.load(response.body);
-    }
-
-    public getType(): ResponseType {
-        return ResponseType.html;
     }
 
     public getRoot(): any {
@@ -37,7 +37,7 @@ export class HtmlResponse extends GenericResponse implements iResponse {
             $(path);
         if (selection.length > 0) {
             return await DOMElement.create(
-                selection.eq(0), this.getAssertionContext(), null, path
+                selection.eq(0), this.context, null, path
             );
         }
         else {
@@ -55,7 +55,7 @@ export class HtmlResponse extends GenericResponse implements iResponse {
             await elements.each(async function (i: number) {
                 nodeElements.push(
                     await DOMElement.create(
-                        $(elements.get(i)), response.getAssertionContext(), `${path} [${i}]`, path
+                        $(elements.get(i)), response.context, `${path} [${i}]`, path
                     )
                 );
             });

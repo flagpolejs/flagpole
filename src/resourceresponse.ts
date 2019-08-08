@@ -5,9 +5,13 @@ import { Value } from './value';
 
 export class ResourceResponse extends GenericResponse implements iResponse {
 
+    public get type(): ResponseType {
+        return ResponseType.resource;
+    }
+
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
-        this.status().between(200, 299);
+        this.context.assert(this.httpStatusCode).between(200, 299);
     }
 
     public get typeName(): string {
@@ -28,10 +32,6 @@ export class ResourceResponse extends GenericResponse implements iResponse {
 
     public async asyncSelectAll(path: string): Promise<Value[]> {
         throw new Error('Generic Response does not yet support selectAll');
-    }
-
-    public getType(): ResponseType {
-        return ResponseType.resource;
     }
 
 }

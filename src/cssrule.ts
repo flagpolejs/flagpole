@@ -35,8 +35,11 @@ export class CSSRule extends ProtoValue {
         this._path = path || '';
     }
 
-    public async hasProperty(key: string): Promise<boolean> {
-        return (await this.getProperty(key)) !== null;
+    public async hasProperty(key: string): Promise<Value> {
+        return this._wrapAsValue(
+            (await this.getProperty(key)) !== null,
+            `${this.name} has property ${key}`
+        );
     }
 
     public async getProperty(key: string): Promise<Value> {

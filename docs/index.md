@@ -858,7 +858,6 @@ Does this element have a property by this name?
 this.assert(await input.hasProperty('readonly')).equals(true);
 ```
 
-
 ### Properties 
 
 #### `$: any` (readonly)
@@ -872,6 +871,76 @@ Get a friendly name for this DOMElement, which may be something like the selecto
 #### `path: string` (readonly)
 
 The selector requested to query this DOMElement.
+
+## GenericResponse
+
+This is actually an abtract class, which is extended by the specific response object of each scenario type. But there are a number of common properties and methods.
+
+### Methods
+
+#### `body: Value` 
+
+The string value of the raw HTTP response body.
+
+```
+this.assert(response.body).contains('flosports');
+```
+
+#### `finalUrl: Value` 
+
+The string value of the final URL of the response, after any redirects.
+
+```
+this.assert(response.finalUrl).contains('google.com');
+```
+
+#### `httpStatusCode: Value` 
+
+The numeric value of the HTTP Status Code of the Response.
+
+```
+this.assert(response.httpStatusCode).equals(200);
+```
+
+#### `httpStatusMessage: Value` 
+
+The string value of the HTTP Status Message of the Response.
+
+```
+this.assert(response.httpStatusMessage).like('OK');
+```
+
+#### `jsonBody: Value` 
+
+The JSON body of the response. If the response body was not in a valid JSON format this will be a null value.
+
+```
+this.assert(response.jsonBody).not.equals(null);
+```
+
+#### `length: Value` 
+
+The numeric value of the length of the HTTP Response body.
+
+```
+this.assert(response.length).greaterThan(0);
+```
+
+#### `loadTime: Value` 
+
+The numeric value of the time in millseconds that it took between when the request was made and when the response came back.
+
+```
+this.assert(response.loadTime).lessThan(1000);
+```
+
+#### `url: Value` 
+
+The string value of the requested URL of the Scenario.
+
+```
+this.assert(response.url).contains('google.com');
+```
 
 ## Scenario
 

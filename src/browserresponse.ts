@@ -18,7 +18,7 @@ export class BrowserResponse extends GenericResponse implements iResponse {
         return this.scenario.getBrowser().getPage();
     }
 
-    public getType(): ResponseType {
+    public get type(): ResponseType {
         return ResponseType.browser;
     }
 
@@ -35,7 +35,7 @@ export class BrowserResponse extends GenericResponse implements iResponse {
             const el: ElementHandle<Element> | null = await page.$(path);
             if (el !== null) {
                 return await DOMElement.create(
-                    el, this.getAssertionContext(), null, path
+                    el, this.context, null, path
                 );
             }
         }
@@ -56,7 +56,7 @@ export class BrowserResponse extends GenericResponse implements iResponse {
             const elements: ElementHandle[] = await page.$$(path);
             await elements.forEach(async function (el: ElementHandle<Element>, i: number) {
                 const domElement = await DOMElement.create(
-                    el, response.getAssertionContext(), `${path} [${i}]`, path
+                    el, response.context, `${path} [${i}]`, path
                 );
                 domElements.push(domElement);
             });

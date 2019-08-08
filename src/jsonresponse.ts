@@ -5,37 +5,27 @@ import { Value } from './value';
 
 export class JsonResponse extends GenericResponse implements iResponse {
 
-    protected json: {};
+    protected _json: {};
 
     public get typeName(): string {
         return 'JSON';
     }
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
-        try {
-            this.json = JSON.parse(response.body);
-            this.valid();
-        }
-        catch {
-            this.json = {};
-            this.scenario.assert(false, 'JSON is valid', response.body.substr(0, Math.min(32, response.body.length)));
-        }
-    }
-
-    public getType(): ResponseType {
+    public get type(): ResponseType {
         return ResponseType.json;
     }
 
-    protected valid(): iResponse {
-        return this.assert(
-            (typeof this.json === 'object' && this.json  !== null),
-            'JSON is valid'
-        );
+    constructor(scenario: Scenario, response: NormalizedResponse) {
+        super(scenario, response);
+        const json = this.jsonBody;
+        (json !== null) ?
+            this.assert(true, 'JSON is valid') :
+            this.assert(false, 'JSON is valid', response.body.substr(0, Math.min(32, response.body.length)));
+        this._json = json || {};
     }
 
     public getRoot(): any {
-        return this.json;
+        return this._json;
     }
 
     /**
@@ -47,7 +37,7 @@ export class JsonResponse extends GenericResponse implements iResponse {
      */
     public select(path: string, findIn?: any): Node {
         let args: Array<string> = path.split('.');
-        let obj: any = findIn || this.json;
+        let obj: any = findIn || this._json;
         let response: iResponse = this;
         let element: Node;
         if (args.every(function(value: string) {
@@ -67,7 +57,7 @@ export class JsonResponse extends GenericResponse implements iResponse {
     }
 
     public async evaluate(context: any, callback: Function): Promise<any> {
-        return callback.apply(context, [ this.json ]);
+        return callback.apply(context, [ this._json ]);
     }
 
     /**
@@ -79,15 +69,14 @@ export class JsonResponse extends GenericResponse implements iResponse {
     public async asyncSelect(path: string, findIn?: any): Promise<Value> {
         const selectPath: string[] = this._getSelectPath(path);
         // Start searching on either the find in json or the root json
-        let selection: any = findIn || this.json;
+        let selection: any = findIn || this._json;
         // If we find a value that matches all
         selectPath.every((part: string) => {
             selection = selection[part];
             return (typeof selection !== 'undefined');
         });
-        return new Value(
+        return this._wrapAsValue(
             (typeof selection != undefined) ? selection : null,
-            this.getAssertionContext(),
             path
         );
     }
@@ -96,7 +85,7 @@ export class JsonResponse extends GenericResponse implements iResponse {
         // Was there a wildcard anywhere in it?
         if (path.indexOf('*') >= 0) {
             const selectPath: string[] = this._getSelectPath(path);
-            let selection: any = findIn || this.json;
+            let selection: any = findIn || this._json;
             let matches: any[] = [];
             // Loop through each part of selection path
             // TODO: Wildcard path for JSON

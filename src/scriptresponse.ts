@@ -5,16 +5,20 @@ import { Value } from './value';
 
 export class ScriptResponse extends GenericResponse implements iResponse {
 
+    public get typeName(): string {
+        return 'Script';
+    }
+
+    public get type(): ResponseType {
+        return ResponseType.script;
+    }
+
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
-        this.status().between(200, 299);
+        this.context.assert(this.httpStatusCode).between(200, 299);
         this.headers('Content-Type')
             .label('MIME Type matches expected value for JavaScript')
             .matches(/(text|application)\/(javascript|ecmascript)/);
-    }
-
-    public get typeName(): string {
-        return 'Script';
     }
 
     public select(path: string): Node {
@@ -31,10 +35,6 @@ export class ScriptResponse extends GenericResponse implements iResponse {
 
     public async asyncSelectAll(path: string): Promise<Value[]> {
         throw new Error('Script Response does not yet support selectAll');
-    }
-
-    public getType(): ResponseType {
-        return ResponseType.script;
     }
 
 }

@@ -11,16 +11,20 @@ export class CssResponse extends GenericResponse implements iResponse {
 
     protected css: any;
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
-        this.status().between(200, 299);
-        //this.headers('Content-Type').similarTo('text/css');
-        this.css = css.parse(this.getBody(), { silent: true });
-        this.validate();
-    }
-
     public get typeName(): string {
         return 'Stylesheet';
+    }
+
+    public get type(): ResponseType {
+        return ResponseType.stylesheet;
+    }
+
+    constructor(scenario: Scenario, response: NormalizedResponse) {
+        super(scenario, response);
+        this.context.assert(this.httpStatusCode).between(200, 299);
+        //this.headers('Content-Type').similarTo('text/css');
+        this.css = css.parse(this.body, { silent: true });
+        this.validate();
     }
 
     public select(path: string): Node {
@@ -46,7 +50,7 @@ export class CssResponse extends GenericResponse implements iResponse {
                 }
                 return (matchingRule !== null);
             });
-            return CSSRule.create(matchingRule, this.getAssertionContext(), `CSS Rule for ${path}`, path);
+            return CSSRule.create(matchingRule, this.context, `CSS Rule for ${path}`, path);
         }
         throw new Error('CSS is invalid');
     }
@@ -59,7 +63,7 @@ export class CssResponse extends GenericResponse implements iResponse {
                 if (rule.type == 'rule' && rule.selectors) {
                     rule.selectors.forEach((selector: any) => {
                         if (selector == path) {
-                            const cssRule: CSSRule = CSSRule.create(rule, this.getAssertionContext(), `CSS Rule for ${path}`, path);
+                            const cssRule: CSSRule = CSSRule.create(rule, this.context, `CSS Rule for ${path}`, path);
                             matchingRules.push(cssRule);
                         }
                     });
@@ -68,10 +72,6 @@ export class CssResponse extends GenericResponse implements iResponse {
             return matchingRules;
         }
         throw new Error('CSS is invalid');
-    }
-
-    public getType(): ResponseType {
-        return ResponseType.stylesheet;
     }
 
     protected validate() {

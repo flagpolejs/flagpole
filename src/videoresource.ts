@@ -4,16 +4,20 @@ import { Node } from "./node";
 
 export class VideoResource extends GenericResponse implements iResponse {
 
+    public get typeName(): string {
+        return 'Video';
+    }
+
+    public get type(): ResponseType {
+        return ResponseType.video;
+    }
+
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
-        this.status().between(200, 299);
+        this.context.assert(this.httpStatusCode).between(200, 299);
         this.headers('Content-Type')
             .label('MIME Type matches expected value for video')
             .matches(/(video|mpegurl)/i);
-    }
-
-    public get typeName(): string {
-        return 'Video';
     }
 
     public select(path: string): Node {
@@ -30,10 +34,6 @@ export class VideoResource extends GenericResponse implements iResponse {
 
     public async asyncSelectAll(path: string): Promise<any[]> {
         throw new Error('Video Response does not yet support selectAll');
-    }
-
-    public getType(): ResponseType {
-        return ResponseType.script;
     }
 
 }
