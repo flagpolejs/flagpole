@@ -701,6 +701,18 @@ This is often used to pull something like the load time, HTTP Status, headers, m
 
 If you chain multiple next callbacks together in a Scenario, you can return a value from one and then pull it into the following. To do this you will use `this.result` to grab that previously returned value. You may find that it is wrapped in a promise and then do `await this.result` to handle that.
 
+```
+.next(await function() {
+  const articles = this.selectAll('article');
+  this.assert(articles.length).greaterThan(0);
+  return articles;
+})
+.next(await function() {
+  const articles = await this.result;
+  this.comment(await articles[0].getAttribute('id'));
+})
+```
+
 #### `scenario: Scenario`
 
 A reference to the calling Scenario.
