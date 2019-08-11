@@ -95,7 +95,7 @@ export abstract class LogLine implements iLogLine {
     }
 
     protected getMergedString(): string {
-        return (this.textPrefix + ' ' + this.message + ' ' + this.textSuffix);
+        return `${this.textPrefix} ${this.message} ${this.textSuffix}`;
     }
 
     protected getClassName(): string {
@@ -141,8 +141,8 @@ export abstract class LogLine implements iLogLine {
     }
 
     public toCsv(): string {
-        return '"' + this.timestamp.toUTCString() + '","' + this.getClassName() + '","' +
-            this.textPrefix + '","' + this.message + '","' + this.textSuffix + '"';
+        return `"${this.timestamp.toUTCString()}","${this.getClassName()}","` +
+            `${this.textPrefix}","${this.message}","${this.textSuffix}"`;
     }
 
     public toTsv(): string {
@@ -151,8 +151,7 @@ export abstract class LogLine implements iLogLine {
     }
 
     public toPsv(): string {
-        return this.timestamp.toUTCString() + "|" + this.getClassName() + "|" +
-            this.textPrefix + "|" + this.message + "|" + this.textSuffix;
+        return `${this.timestamp.toUTCString()}|${this.getClassName()}|${this.textPrefix}|${this.message}|${this.textSuffix}`;
     }
 
     public toString(): string {
@@ -160,8 +159,8 @@ export abstract class LogLine implements iLogLine {
     }
 
     public toHTML(): string {
-        return '<li class="' + this.getClassName() + '">' + this.message +
-            (this.textSuffix.length > 0 ? ' <span class="note">' + this.textSuffix + '</span>' : '') +
+        return `<li class="${this.getClassName()}">${this.message}` +
+            (this.textSuffix.length > 0 ? ` <span class="note">${this.textSuffix}</span>` : '') +
             "</li>\n";
     }
 
@@ -189,7 +188,7 @@ export class HeadingLine extends LogLine implements iLogLine {
     }
 
     public toHTML(): string {
-        return '<h2 class="' + this.getClassName() + '">' + this.message + '</h2>';
+        return `<h2 class="${this.getClassName()}">${this.message}</h2>`;
     }
 
 }
@@ -203,7 +202,7 @@ export class SubheadingLine extends LogLine implements iLogLine {
     }
 
     public toHTML(): string {
-        return '<h3 class="' + this.getClassName() + '">' + this.message + '</h2>';
+        return `<h3 class="${this.getClassName()}">${this.message}</h3>`;
     }
 
 }
@@ -217,7 +216,7 @@ export class DecorationLine extends LogLine implements iLogLine {
     }
 
     public toHTML(): string {
-        return '<div class="' + this.getClassName() + '">' + this.message + '</div>';
+        return `<div class="${this.getClassName()}">${this.message}</div>`;
     }
 
     public toJson(): string {
@@ -259,7 +258,7 @@ export class CustomLine extends LogLine implements iLogLine {
     }
 
     public toHTML(): string {
-        return '<div class="' + this.getClassName() + '">' + this.message + '</div>';
+        return `<div class="${this.getClassName()}">${this.message}</div>`;
     }
 
     public toJson(): string {

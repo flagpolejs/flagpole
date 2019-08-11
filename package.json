@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.0.11",
+  "version": "2.0.12",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -12,7 +12,8 @@
   },
   "scripts": {
     "build": "tsc && cp src/cli/*.html dist/cli/",
-    "test": "node tests/test.js"
+    "test": "node tests/test.js",
+    "publish": "tsc && cp src/cli/*.html dist/cli/ && npm publish"
   },
   "homepage": "https://github.com/flocasts/flagpole",
   "repository": "git@github.com:flocasts/flagpole.git",

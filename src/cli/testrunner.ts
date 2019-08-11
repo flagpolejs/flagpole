@@ -144,9 +144,19 @@ export class TestRunner {
         });
         const suites = this.getSuites();
         let output: string = '';
-        suites.forEach((suite: SuiteExecution) => {
-            output += suite.output + "\n";
-        });
+        if (Flagpole.output == FlagpoleOutput.json) {
+            output = '{ "suites": [';
+            suites.forEach((suite: SuiteExecution) => {
+                //output += `{ "properties: { "name":"${suite.config.name}"}, "scenarios:" [ ${suite.output} ]}`;
+                output += suite.output + "\n";
+            });
+            output += ']}';
+        }
+        else {
+            suites.forEach((suite: SuiteExecution) => {
+                output += suite.output + "\n";
+            });
+        }
         if (Flagpole.output == FlagpoleOutput.browser) {
             const open = require('open');
             const fs = require('fs');
@@ -164,7 +174,7 @@ export class TestRunner {
         }
         else {
             Cli.log(output);
-            if (!areAllPassing) {
+            if (!areAllPassing && Flagpole.output == FlagpoleOutput.console) {
                 Cli.log('Some suites failed.');
             }
             Cli.exit(areAllPassing ? 0 : 1);
