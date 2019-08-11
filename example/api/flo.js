@@ -381,7 +381,7 @@ sites.forEach(site => {
     suite.json(`${site.name} - Stripe Products`)
         .open(`/api/products?provider=stripe&site_id=${site.id}`)
         .next(async function (response) {
-            this.assert(response.httpStatusCode).equals(200);
+            this.assert(response.statusCode).equals(200);
             this.assert(response.loadTime).optional.lessThan(THRESHOLD_LOAD_TIME);
             const total = await this.select('meta.total');
             const data = await this.select('data');
@@ -397,7 +397,7 @@ sites.forEach(site => {
     suite.json(`${site.name} - Widget - Most Watched`)
         .open(`/api/widgets/most-watched?site_id=${site.id}`)
         .next(async function (response) {
-            this.assert(response.httpStatusCode).equals(200);
+            this.assert(response.statusCode).equals(200);
             this.assert(response.loadTime).optional.lessThan(THRESHOLD_LOAD_TIME);
             const videos = await this.select('data.videos');
             this.assert(videos.length).greaterThan(0);

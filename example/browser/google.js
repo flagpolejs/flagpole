@@ -22,7 +22,7 @@ const paths = {
 suite.browser('Google Search for Flagpole', browserOpts)
     .open('/')
     .next(async function () {
-        this.assert(this.response.httpStatusCode).equals(200);
+        this.assert(this.response.statusCode).equals(200);
         (await this.assert(this.select(paths.queryInput)).resolvesTo).not.equals(null);
         //await this.page.type(paths.queryInput, searchTerm);
         const form = await this.select('form');

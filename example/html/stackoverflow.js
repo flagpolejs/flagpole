@@ -7,7 +7,7 @@ Flagpole.Suite('Stack Overflow')
     })
     .html('Homepage').open('/')
     .next('Check basic parameters', async function (response) {
-        this.assert(response.httpStatusCode).equals(200);
+        this.assert(response.statusCode).equals(200);
         this.assert(response.header('content-type')).contains('text/html');
         const title = await this.select('title');
         this.assert(await title.getText()).contains('Stack Overflow');

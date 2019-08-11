@@ -6,7 +6,7 @@ let suite = Flagpole.Suite('Test MileSplit')
 
 suite.html('Test MileSplit Hompage').open('/')
     .next('Load up homepage and verify response', function () {
-        this.assert('HTTP Status is 200', this.response.httpStatusCode).equals(200);
+        this.assert('HTTP Status is 200', this.response.statusCode).equals(200);
         this.assert('Content type is HTML', this.response.header('content-type')).contains('text/html');
     })
     .next('Look for images in top stories', async function () {

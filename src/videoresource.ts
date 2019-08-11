@@ -13,7 +13,7 @@ export class VideoResource extends GenericResponse implements iResponse {
 
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
-        this.context.assert('HTTP Status OK', this.httpStatusCode).between(200, 299);
+        this.context.assert('HTTP Status OK', this.statusCode).between(200, 299);
         this.context.assert('MIME Type matches expected value for video', this.header('Content-Type')).matches(/(video|mpegurl)/i);
     }
 

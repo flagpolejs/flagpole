@@ -6,7 +6,7 @@ const suite = Flagpole.Suite('Test Google')
 
 const homepage = suite.html('Homepage').open('/')
     .next('Test basic HTTP headers', async function (response, context) {
-        this.assert(response.httpStatusCode).equals(200);
+        this.assert(response.statusCode).equals(200);
         this.assert(response.header('content-type')).contains('text/html');
         this.assert('hello').length.equals(5);
         this.assert(5).type.equals('number');

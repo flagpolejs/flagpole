@@ -570,7 +570,7 @@ For html types, the promise will return a new dynamic scenario that will load th
 
 ```
 (await this.click('a.login')).next(fuction() {
-  this.assert(response.httpStatusCode.equals(200);
+  this.assert(response.statusCode.equals(200);
 });
 ```
 
@@ -661,7 +661,7 @@ For html types, the promise will return a new dynamic scenario that will load th
 
 ```
 (await this.submit('form.search')).next(fuction() {
-  this.assert(response.httpStatusCode.equals(200);
+  this.assert(response.statusCode.equals(200);
 });
 ```
 
@@ -937,22 +937,6 @@ Value object containing the key-value pair of all the response headers.
 this.assert(this.response.headers).contains('session');
 ```
 
-#### `httpStatusCode: Value` 
-
-The numeric value of the HTTP Status Code of the Response.
-
-```
-this.assert(response.httpStatusCode).equals(200);
-```
-
-#### `httpStatusMessage: Value` 
-
-The string value of the HTTP Status Message of the Response.
-
-```
-this.assert(response.httpStatusMessage).like('OK');
-```
-
 #### `jsonBody: Value` 
 
 The JSON body of the response. If the response body was not in a valid JSON format this will be a null value.
@@ -975,6 +959,22 @@ The numeric value of the time in millseconds that it took between when the reque
 
 ```
 this.assert(response.loadTime).lessThan(1000);
+```
+
+#### `statusCode: Value` 
+
+The numeric value of the HTTP Status Code of the Response.
+
+```
+this.assert(response.statusCode).equals(200);
+```
+
+#### `statusMessage: Value` 
+
+The string value of the HTTP Status Message of the Response.
+
+```
+this.assert(response.statusMessage).like('OK');
 ```
 
 #### `url: Value` 

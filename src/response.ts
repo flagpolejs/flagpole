@@ -15,8 +15,8 @@ import { CSSRule } from './cssrule';
 export interface iResponse {
     type: ResponseType,
     typeName: string,
-    httpStatusCode: Value,
-    httpStatusMessage: Value,
+    statusCode: Value,
+    statusMessage: Value,
     body: Value,
     jsonBody: Value,
     url: Value,
@@ -119,11 +119,11 @@ export abstract class GenericResponse implements iResponse {
     abstract asyncSelectAll(path: string, findIn?: any): Promise<any[]>;
     abstract evaluate(context: any, callback: Function): Promise<any>;
 
-    public get httpStatusCode(): Value {
+    public get statusCode(): Value {
         return this._wrapAsValue(this._response.statusCode, 'HTTP Status Code');
     }
 
-    public get httpStatusMessage(): Value {
+    public get statusMessage(): Value {
         return this._wrapAsValue(this._response.statusMessage, 'HTTP Status Message');
     }
 

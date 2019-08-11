@@ -14,7 +14,7 @@ export class ScriptResponse extends GenericResponse implements iResponse {
 
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
-        this.context.assert(this.httpStatusCode).between(200, 299);
+        this.context.assert(this.statusCode).between(200, 299);
         this.context.assert('MIME Type matches expected value for JavaScript', this.header('Content-Type')).matches(/(text|application)\/(javascript|ecmascript)/);
     }
 
