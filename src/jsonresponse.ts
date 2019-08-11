@@ -1,7 +1,8 @@
 import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
-import { Node } from "./node";
 import { Value } from './value';
+
+const jmespath = require('jmespath');
 
 export class JsonResponse extends GenericResponse implements iResponse {
 
@@ -17,43 +18,13 @@ export class JsonResponse extends GenericResponse implements iResponse {
 
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
-        const json = this.jsonBody;
-        (json !== null) ?
-            this.assert(true, 'JSON is valid') :
-            this.assert(false, 'JSON is valid', response.body.substr(0, Math.min(32, response.body.length)));
+        const json = this.jsonBody.$;
+        this.context.assert('JSON is valid', json).type.not.equals('null')
         this._json = json || {};
     }
 
     public getRoot(): any {
         return this._json;
-    }
-
-    /**
-     * Select a json property in this response body
-     *
-     * @param {string} path
-     * @param findIn
-     * @returns {Node}
-     */
-    public select(path: string, findIn?: any): Node {
-        let args: Array<string> = path.split('.');
-        let obj: any = findIn || this._json;
-        let response: iResponse = this;
-        let element: Node;
-        if (args.every(function(value: string) {
-                obj = obj[value];
-                return (typeof obj !== 'undefined');
-            })) {
-            element = new Node(response, path, obj);
-        }
-        else {
-            element = new Node(response, path, undefined);
-        }
-        // Create the property
-        this.setLastElement(path, element);
-        // Inferred exists assertion
-        element.exists();
-        return element;
     }
 
     public async evaluate(context: any, callback: Function): Promise<any> {
@@ -67,6 +38,7 @@ export class JsonResponse extends GenericResponse implements iResponse {
      * @param findIn 
      */
     public async asyncSelect(path: string, findIn?: any): Promise<Value> {
+        /*
         const selectPath: string[] = this._getSelectPath(path);
         // Start searching on either the find in json or the root json
         let selection: any = findIn || this._json;
@@ -79,22 +51,14 @@ export class JsonResponse extends GenericResponse implements iResponse {
             (typeof selection != undefined) ? selection : null,
             path
         );
+        */
+        const searchIn = findIn || this._json;
+        const selection = jmespath.search(searchIn, path);
+        return this._wrapAsValue(selection, path);
     }
 
     public async asyncSelectAll(path: string, findIn?: any): Promise<Value[]> {
-        // Was there a wildcard anywhere in it?
-        if (path.indexOf('*') >= 0) {
-            const selectPath: string[] = this._getSelectPath(path);
-            let selection: any = findIn || this._json;
-            let matches: any[] = [];
-            // Loop through each part of selection path
-            // TODO: Wildcard path for JSON
-            throw new Error('Flagpole does not yet support wildcard paths.');
-        }
-        // If no wildcard then it is the same as a regular select because there can only be one match
-        else {
-            return [(await this.asyncSelect(path, findIn))];
-        }
+        throw new Error('selectAll() is not supported by JSON scenarios, please use select()');
     }
 
     private _getSelectPath(path: string): string[] {

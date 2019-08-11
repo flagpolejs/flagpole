@@ -570,7 +570,7 @@ For html types, the promise will return a new dynamic scenario that will load th
 
 ```
 (await this.click('a.login')).next(fuction() {
-  this.assert(response.status()).equals(200);
+  this.assert(response.httpStatusCode.equals(200);
 });
 ```
 
@@ -661,7 +661,7 @@ For html types, the promise will return a new dynamic scenario that will load th
 
 ```
 (await this.submit('form.search')).next(fuction() {
-  this.assert(response.status()).equals(200);
+  this.assert(response.httpStatusCode.equals(200);
 });
 ```
 
@@ -890,6 +890,24 @@ This is actually an abtract class, which is extended by the specific response ob
 
 ### Methods
 
+#### `cookie(key: string): Value`
+
+Select a specific cookie by key. Will return a Value object with the Cookie object inside.
+
+```
+this.assert(this.response.cookie("jwt_token")).exists();
+```
+
+#### `header(key: string): Value`
+
+Select a specific header by key value.
+
+```
+this.assert(this.response.header("content-type")).contains('html');
+```
+
+### Properties
+
 #### `body: Value` 
 
 The string value of the raw HTTP response body.
@@ -898,12 +916,25 @@ The string value of the raw HTTP response body.
 this.assert(response.body).contains('flosports');
 ```
 
+#### `cookies: Value` 
+
+Value object containing an array of all the cookies.
+
+
 #### `finalUrl: Value` 
 
 The string value of the final URL of the response, after any redirects.
 
 ```
 this.assert(response.finalUrl).contains('google.com');
+```
+
+#### `headers: Value` 
+
+Value object containing the key-value pair of all the response headers.
+
+```
+this.assert(this.response.headers).contains('session');
 ```
 
 #### `httpStatusCode: Value` 

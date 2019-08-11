@@ -36,6 +36,16 @@ export class DOMElement extends ProtoValue {
         this._path = path || '';
     }
 
+    public toString(): string {
+        if (this.isCheerioElement()) {
+            return this._context.response.getRoot().html(this._input);
+        }
+        else if (this.isPuppeteerElement()) {
+            return String(this.path);
+        }
+        return '';
+    }
+
     public async getClassName(): Promise<Value> {
         if (this.isCheerioElement()) {
             return this._wrapAsValue(

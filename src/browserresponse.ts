@@ -1,5 +1,4 @@
 import { DOMElement } from "./domelement";
-import { Node } from "./node";
 import { iResponse, GenericResponse, ResponseType } from "./response";
 import { Browser } from './browser';
 import { Page, ElementHandle } from 'puppeteer';

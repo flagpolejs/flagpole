@@ -1,6 +1,5 @@
 import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
-import { Node } from "./node";
 import { Flagpole } from '.';
 import { Value } from './value';
 import { CSSRule } from './cssrule';
@@ -22,13 +21,14 @@ export class CssResponse extends GenericResponse implements iResponse {
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
         this.context.assert(this.httpStatusCode).between(200, 299);
-        //this.headers('Content-Type').similarTo('text/css');
-        this.css = css.parse(this.body, { silent: true });
+        this.context.assert(this.header('Content-Type')).contains('text/css');
+        try {
+            this.css = css.parse(this.body.$, { silent: true });
+        }
+        catch (ex) {
+            this.css = null;
+        }
         this.validate();
-    }
-
-    public select(path: string): Node {
-        return new Node(this, path, null);
     }
 
     public async evaluate(context: any, callback: Function): Promise<any> {
@@ -75,16 +75,16 @@ export class CssResponse extends GenericResponse implements iResponse {
     }
 
     protected validate() {
-        this.assert(
+        this.context.assert(
+            'CSS is valid',
             (
+                this.css &&
                 this.css.type == 'stylesheet' &&
                 this.css.stylesheet &&
                 this.css.stylesheet.parsingErrors &&
                 this.css.stylesheet.parsingErrors.length === 0
-            ),
-            'CSS is valid',
-            'CSS is not valid'
-        );
+            )
+        ).equals(true);
     }
 
 }

@@ -7,9 +7,10 @@ Flagpole.Suite('Stack Overflow')
     })
     .html('Homepage').open('/')
     .next('Check basic parameters', async function (response) {
-        this.assert(response.status()).equals(200);
-        this.assert(response.headers('content-type')).contains('text/html');
-        this.assert(await this.text('title')).contains('Stack Overflow');
+        this.assert(response.httpStatusCode).equals(200);
+        this.assert(response.header('content-type')).contains('text/html');
+        const title = await this.select('title');
+        this.assert(await title.getText()).contains('Stack Overflow');
     })
     .next('Test the top navigation bar', async function () {
         this.assert((await this.selectAll('.top-bar .-ctas')).length)

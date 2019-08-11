@@ -1,6 +1,5 @@
 import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
-import { Node } from "./node";
 import { URL } from 'url';
 import { Value } from './value';
 
@@ -46,13 +45,6 @@ export class ImageResponse extends GenericResponse implements iResponse {
             'MIME Type matches expected value for an image',
             this.imageProperties.mime
         ).startsWith('image/');
-    }
-
-    public select(propertyName: string): Node {
-        let image: ImageResponse = this;
-        let value: any = typeof this.imageProperties[propertyName] !== 'undefined' ?
-            this.imageProperties[propertyName] : null;
-        return new Node(this, propertyName, value);
     }
 
     public async evaluate(context: any, callback: Function): Promise<any> {

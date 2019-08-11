@@ -6,14 +6,15 @@ const suite = Flagpole.Suite('Test Google')
 
 const homepage = suite.html('Homepage').open('/')
     .next('Test basic HTTP headers', async function (response, context) {
-        this.assert(response.status()).equals(200);
-        this.assert(response.headers('content-type')).contains('text/html');
+        this.assert(response.httpStatusCode).equals(200);
+        this.assert(response.header('content-type')).contains('text/html');
         this.assert('hello').length.equals(5);
         this.assert(5).type.equals('number');
     })
    
     .next(async function (response, context) {
         const submitButton = await this.select('input[type="submit"]');
+        this.comment(submitButton);
         this.assert(await submitButton.getAttribute('value'))
             .in(["Google Search", "Search"]);
     }) 
@@ -26,7 +27,7 @@ const homepage = suite.html('Homepage').open('/')
         images.forEach(async function (img, index) {
             (await img.load('Image ' + index))
                 .next(function (response) {
-                    this.assert(response.length()).greaterThan(0);
+                    this.assert(response.length).greaterThan(0);
                 });
         });
         

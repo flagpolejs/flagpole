@@ -1,5 +1,4 @@
 import { Scenario } from "./scenario";
-import { Node } from "./node";
 import { URL } from 'url';
 import { Cookie } from 'request';
 import { IncomingMessage } from 'http';
@@ -25,26 +24,16 @@ export interface iResponse {
     length: Value,
     loadTime: Value,
     context: AssertionContext,
+    headers: Value,
+    cookies: Value,
+    getRoot(): any,
     asyncSelect(path: string, findIn?: any): Promise<Value | DOMElement | CSSRule | null>
     asyncSelectAll(path: string, findIn?: any): Promise<Array<Value | DOMElement | CSSRule>>
-    headers(key?: string): Node
-    cookies(key?: string): Node
+    header(key?: string): Value
+    cookie(key?: string): Value
     absolutizeUri(uri: string): string
     evaluate(context: any, callback: Function): Promise<any>
     readonly scenario: Scenario
-    // to be deprecated
-    getRoot(): any
-    select(path: string, findIn?: any): Node
-    and(): Node
-    label(message: string): iResponse
-    setLastElement(path: string | null, element: Node): Node
-    getLastElement(): Node
-    getLastElementPath(): string | null
-    comment(message: string): iResponse
-    not(): iResponse
-    optional(): iResponse
-    ignore(assertions?: boolean | Function): iResponse
-    assert(statement: boolean, message: string, actualValue?: string): iResponse
 }
 
 export enum ResponseType {
@@ -123,18 +112,12 @@ export abstract class GenericResponse implements iResponse {
     public readonly scenario: Scenario;
 
     private _response: NormalizedResponse;
-    // DREPRECATED
-    private _lastElement: Node;
-    private _lastElementPath: string | null = null;
 
     abstract get type(): ResponseType;
     abstract get typeName(): string;
-
     abstract asyncSelect(path: string, findIn?: any): Promise<any | null>;
     abstract asyncSelectAll(path: string, findIn?: any): Promise<any[]>;
     abstract evaluate(context: any, callback: Function): Promise<any>;
-    // Deprecated
-    abstract select(path: string, findIn?: any): Node;
 
     public get httpStatusCode(): Value {
         return this._wrapAsValue(this._response.statusCode, 'HTTP Status Code');
@@ -150,6 +133,14 @@ export abstract class GenericResponse implements iResponse {
 
     public get length(): Value {
         return this._wrapAsValue(this._response.body.length, 'Length of Response Body');
+    }
+
+    public get headers(): Value {
+        return this._wrapAsValue(this._response.headers, 'HTTP Headers');
+    }
+
+    public get cookies(): Value {
+        return this._wrapAsValue(this._response.cookies, 'HTTP Cookies');
     }
 
     public get jsonBody(): Value {
@@ -180,7 +171,6 @@ export abstract class GenericResponse implements iResponse {
     constructor(scenario: Scenario, response: NormalizedResponse) {
         this.scenario = scenario;
         this._response = response;
-        this._lastElement = new Node(this, 'Empty Element', null);
     }
 
     public absolutizeUri(uri: string): string {
@@ -196,20 +186,16 @@ export abstract class GenericResponse implements iResponse {
      * Return a single header by key or all headers in an object
      *
      * @param {string} key
-     * @returns {Node}
+     * @returns {Value}
      */
-    public headers(key?: string): Node {
-        if (typeof key !== 'undefined') {
-            // Try first as they put it in the test, then try all lowercase
-            key = typeof this._response.headers[key] !== 'undefined' ? key : key.toLowerCase();
-            let name: string = 'HTTP Headers[' + key + ']';
-            let value: Node = new Node(this, name, this._response.headers[key]);
-            value.exists();
-            return value;
-        }
-        else {
-            return new Node(this, 'HTTP Headers', this._response.headers);
-        }
+    public header(key: string): Value {
+        // Try first as they put it in the test, then try all lowercase
+        key = typeof this._response.headers[key] !== 'undefined' ? key : key.toLowerCase();
+        const headerValue: any = this._response.headers[key];
+        return this._wrapAsValue(
+            typeof headerValue == 'undefined' ? null : headerValue,
+            'HTTP Headers[' + key + ']'
+        );
     }
 
     /**
@@ -217,114 +203,21 @@ export abstract class GenericResponse implements iResponse {
      * 
      * @param key 
      */
-    public cookies(key?: string): Node {
-        if (typeof key !== 'undefined') {
-            let cookie: Cookie | null = null;
-            this._response.cookies.forEach((c: Cookie) => {
-                if (c.key == key) {
-                    cookie = c;
-                }
-            });
-            let name: string = 'HTTP Cookies[' + key + ']';
-            let value: Node = new Node(this, name, cookie);
-            value.exists();
-            return value;
-        }
-        else {
-            return new Node(this, 'HTTP Cookies', this._response.cookies);
-        }
+    public cookie(key: string): Value {
+        let cookie: Cookie | null = null;
+        this._response.cookies.forEach((c: Cookie) => {
+            if (c.key == key) {
+                cookie = c;
+            }
+        });
+        return this._wrapAsValue(
+            cookie,
+            'HTTP Cookies[' + key + ']'
+        );
     }
 
     protected _wrapAsValue(data: any, name: string): Value {
         return new Value(data, this.context, name);
-    }
-
-    /**
-     * !!!EVERYTHING BELOW THIS POINT IS DEPRECATED!!
-     */
-
-    public status(): Node {
-        return new Node(this, 'HTTP Status Code', this.httpStatusCode);
-    }
-
-    public assert(statement: boolean, message: string, actualValue?: string): iResponse {
-        this.scenario.assert(statement, message, actualValue);
-        return this;
-    }
-
-    public not(): iResponse {
-        this.scenario.not();
-        return this;
-    }
-
-    public optional(): iResponse {
-        this.scenario.optional();
-        return this;
-    }
-
-    public ignore(assertions: boolean | Function = true): iResponse {
-        this.scenario.ignore(assertions);
-        return this;
-    }
-
-    /**
-     * Set human readable label to override normal assertion message for next test
-     *
-     * @param {string} message
-     * @returns {iResponse}
-     */
-    public label(message: string): iResponse {
-        this.scenario.label(message);
-        return this;
-    }
-
-    /**
-         * Add a console comment
-         *
-         * @param {string} message
-         * @returns {iResponse}
-         */
-    public comment(message: string): iResponse {
-        this.scenario.comment(message);
-        return this;
-    }
-
-    /**
-     * Set last element
-     * 
-     * @param path 
-     * @param element 
-     */
-    public setLastElement(path: string | null, element: Node): Node {
-        this._lastElement = element;
-        this._lastElementPath = path;
-        return element;
-    }
-
-    /**
-     * Get or set last element
-     *
-     * @param {Node} property
-     * @returns {Node}
-     */
-    public getLastElement(): Node {
-        return this._lastElement || new Node(this, 'Empty Element', []);
-    }
-
-    /**
-     * Last selected/traversed path
-     */
-    public getLastElementPath(): string | null {
-        return this._lastElementPath;
-    }
-
-    /**
-     * Return last element
-     *
-     * @returns {Node}
-     */
-    public and(): Node {
-        return this.getLastElement();
     }
 
 }

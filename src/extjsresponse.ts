@@ -1,6 +1,5 @@
 import { Scenario } from "./scenario";
 import { DOMElement } from "./domelement";
-import { Node } from "./node";
 import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
 import { Browser } from './browser';
 import { Page, ElementHandle } from 'puppeteer';
@@ -88,18 +87,6 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
             return result;
         }
         throw new Error('Page is null');
-    }
-
-    /**
-     * DEPRECATED IN 2.0
-     * Jen, don't bother with this
-     *
-     * @param {string} path
-     * @param findIn
-     * @returns {Node}
-     */
-    public select(path: string, findIn?: any): Node {
-        throw new Error('This is not supported in ExtJS');
     }
 
 }

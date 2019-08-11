@@ -1,6 +1,5 @@
 import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
-import { Node } from "./node";
 import { Value } from './value';
 
 export class ResourceResponse extends GenericResponse implements iResponse {
@@ -16,10 +15,6 @@ export class ResourceResponse extends GenericResponse implements iResponse {
 
     public get typeName(): string {
         return 'Resource';
-    }
-
-    public select(path: string): Node {
-        return new Node(this, path, null);
     }
 
     public async evaluate(context: any, callback: Function): Promise<any> {

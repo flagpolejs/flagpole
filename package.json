@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -27,6 +27,7 @@
     "css": "^2.2.4",
     "enquirer": "^2.3.0",
     "form-data": "^2.3.3",
+    "jmespath": "^0.15.0",
     "nock": "^10.0.6",
     "open": "^6.4.0",
     "probe-image-size": "^4.0.0",

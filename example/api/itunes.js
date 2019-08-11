@@ -7,15 +7,15 @@ let suite = Flagpole.Suite('Test iTunes API')
 suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
     .next('Check response code and headers', function () {
         this.assert('HTTP Status is 200', this.response.httpStatusCode).equals(200);
-        this.assert(this.response.headers('Content-Type')).contains('text/javascript');
-        this.assert('Response body is greater than 0', this.response.length()).greaterThan(0);
+        this.assert(this.response.header('Content-Type')).contains('text/javascript');
+        this.assert('Response body is greater than 0', this.response.length).greaterThan(0);
     })
     .next('Verify the data', async function () {
         const resultCount = await this.select('resultCount');
         const searchResults = await this.select('results');
-        this.assert('Results is an array', searchResults).type.equals('array');
-        this.assert('Results array length is greater than 0', searchResults.length).greaterThan(0);
-        this.assert('Result Count field is greater than 0', resultCount).greaterThan(0);
+        this.assert(searchResults).type.equals('array');
+        this.assert(searchResults.length).greaterThan(0);
+        this.assert(resultCount).greaterThan(0);
         this.assert('Results Count field matches results length', resultCount)
             .equals(searchResults.length);
         this.assert('Every result is a music video', searchResults)

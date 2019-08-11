@@ -26,6 +26,13 @@ export abstract class ProtoValue {
     }
 
     public toString(): string {
+        const type: string = Flagpole.toType(this._input);
+        if (this._input && this._input.value) {
+            return String(this._input.value);
+        }
+        else if (type == 'object') {
+            return String(Object.keys(this._input));
+        }
         return String(this._input);
     }
 
@@ -94,9 +101,14 @@ export abstract class ProtoValue {
     }
 
     public async hasProperty(key: string): Promise<Value> {
-        return this._input &&
-            this._input.hasOwnProperty &&
-            this._input.hasOwnProperty(key);
+        return this._wrapAsValue(
+            (
+                this._input &&
+                this._input.hasOwnProperty &&
+                this._input.hasOwnProperty(key)
+            ),
+            `${this.name} has property ${key}`
+        );
     }
 
     protected _wrapAsValue(data: any, name: string): Value {

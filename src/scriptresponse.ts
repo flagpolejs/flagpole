@@ -1,6 +1,5 @@
 import { iResponse, GenericResponse, ResponseType, NormalizedResponse } from "./response";
 import { Scenario } from "./scenario";
-import { Node } from "./node";
 import { Value } from './value';
 
 export class ScriptResponse extends GenericResponse implements iResponse {
@@ -16,13 +15,7 @@ export class ScriptResponse extends GenericResponse implements iResponse {
     constructor(scenario: Scenario, response: NormalizedResponse) {
         super(scenario, response);
         this.context.assert(this.httpStatusCode).between(200, 299);
-        this.headers('Content-Type')
-            .label('MIME Type matches expected value for JavaScript')
-            .matches(/(text|application)\/(javascript|ecmascript)/);
-    }
-
-    public select(path: string): Node {
-        return new Node(this, path, null);
+        this.context.assert('MIME Type matches expected value for JavaScript', this.header('Content-Type')).matches(/(text|application)\/(javascript|ecmascript)/);
     }
 
     public async evaluate(context: any, callback: Function): Promise<any> {

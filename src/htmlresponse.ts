@@ -1,6 +1,5 @@
 import { Flagpole } from "./index";
 import { Scenario } from "./scenario";
-import { Node } from "./node";
 import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
 import { DOMElement } from './domelement';
 import { AssertionContext } from './assertioncontext';
@@ -64,35 +63,6 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         else {
             return [];
         }
-    }
-
-    /**
-     * DEPRECATED
-     * Select the html element at this CSS Selector or XPath
-     *
-     * @param {string} path
-     * @param findIn
-     * @returns {Node}
-     */
-    public select(path: string, findIn?: any): Node {
-        let obj: any = null;
-        // If findIn is a cheerio object, then look in it
-        if (Flagpole.toType(findIn) == 'cheerio') {
-            obj = findIn.find(path);
-        }
-        // Otheriwse use top level context
-        else {
-            obj = $(path);
-        }
-        // Create the property
-        if (obj.length == 0) {
-            obj = null;
-        }
-        let element: Node = new Node(this, path, obj);
-        this.setLastElement(path, element);
-        // Inferred exists assertion
-        element.exists();
-        return element;
     }
 
 }
