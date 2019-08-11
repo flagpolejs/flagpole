@@ -25,6 +25,13 @@ export abstract class ProtoValue {
         return this.isArray() ? this._input : [this._input];
     }
 
+    public valueOf(): any {
+        if (this.isNumeric()) {
+            return parseFloat(this._input);
+        }
+        return this._input;
+    }
+
     public toString(): string {
         const type: string = Flagpole.toType(this._input);
         if (this._input && this._input.value) {

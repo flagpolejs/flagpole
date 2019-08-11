@@ -15,6 +15,8 @@ suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
         const searchResults = await this.select('results');
         this.assert(searchResults).type.equals('array');
         this.assert(searchResults.length).greaterThan(0);
+        this.comment(searchResults.length);
+        this.comment((searchResults.length > 0));
         this.assert(resultCount).greaterThan(0);
         this.assert('Results Count field matches results length', resultCount)
             .equals(searchResults.length);
