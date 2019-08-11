@@ -3,9 +3,7 @@ import { Cli } from './cli';
 import { Flagpole } from '..';
 import { FlagpoleOutput } from '../flagpole';
 
-const fs = require('fs');
 const exec = require('child_process').exec;
-const path = require('path');
 
 export class SuiteExecution {
 
@@ -69,7 +67,7 @@ export class SuiteExecution {
         });
         // When child process exists
         child.on('exit', function (exitCode: number) {
-            if (exitCode > 0) {
+            if (exitCode > 0 && Flagpole.output == FlagpoleOutput.console) {
                 suite._output.push('FAILED TEST SUITE:');
                 suite._output.push(filePath + ' exited with error code ' + exitCode);
                 suite._output.push("\n");
