@@ -3,7 +3,6 @@ import { URL } from 'url';
 import { Cookie } from 'request';
 import { IncomingMessage } from 'http';
 import * as puppeteer from "puppeteer-core";
-import { Assertion } from './assertion';
 import { AssertionContext } from './assertioncontext';
 import { Value } from './value';
 import { DOMElement } from './domelement';

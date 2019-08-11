@@ -68,7 +68,7 @@ export class Suite {
     }
 
     /**
-     * Turn on or off SSL verification
+     * Turn on or off SSL verification for any new scenarios added to suite
      */
     public verifySslCert(verify: boolean): Suite {
         this._verifySslCert = verify;

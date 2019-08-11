@@ -298,31 +298,6 @@ export class Scenario {
     }
 
     /**
-     * DEPRECATED
-     * Assert something is true, with respect to the flipped not()
-     * Also respect ignore assertions flag
-     */
-    public assert(assertion: boolean, message: string, actualValue?: any): Scenario {
-        if (!this._ignoreAssertion) {
-            let passed: boolean = this._flipAssertion ? !assertion : !!assertion;
-            if (this._flipAssertion) {
-                message = 'NOT: ' + message;
-            }
-            if (passed) {
-                this.logResult(AssertionResult.pass(message));
-            }
-            else {
-                if (typeof actualValue != 'undefined') {
-                    message += ' (' + String(actualValue) + ')';
-                }
-                this.logResult(AssertionResult.fail(message));
-            }
-            return this._reset();
-        }
-        return this;
-    }
-
-    /**
      * Push in a new passing assertion
      */
     public logResult(result: AssertionResult): Scenario {
@@ -349,24 +324,6 @@ export class Scenario {
     public logWarning(message: string): Scenario {
         this._log.push(new WarningLine(message));
         return this;
-    }
-
-    /**
-     * DEPRECATED
-     * Flip the next assertion
-     */
-    public not(): Scenario {
-        this.logWarning('Scenario.not is a deprecated method.');
-        this._flipAssertion = true;
-        return this;
-    }
-
-    /**
-     * DEPRECATED
-     * Consider the next set of tests optional, until the next selector
-     */
-    public optional(): Scenario {
-        return this.logWarning('Scenario.optional is no longer supported.');
     }
 
     /**
@@ -489,17 +446,6 @@ export class Scenario {
         this._isMock = true;
         this._executeWhenReady();
         return this;
-    }
-
-    /**
-     * Override the next test's default pass/fail message with something custom and more human readable
-     * DEPRECATED
-     * 
-     * @param {string} message
-     * @returns {Scenario}
-     */
-    public label(message: string): Scenario {
-        return this.logWarning('Support for Scenario.label has been removed.');
     }
 
     /**

@@ -1,12 +1,12 @@
 import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { Value } from './value';
-
-const jmespath = require('jmespath');
+import { iJPath, jPath } from './jpath';
 
 export class JsonResponse extends GenericResponse implements iResponse {
 
     protected _json: {};
+    protected _jPath: iJPath | undefined;
 
     public get typeName(): string {
         return 'JSON';
@@ -38,22 +38,12 @@ export class JsonResponse extends GenericResponse implements iResponse {
      * @param findIn 
      */
     public async asyncSelect(path: string, findIn?: any): Promise<Value> {
-        /*
-        const selectPath: string[] = this._getSelectPath(path);
-        // Start searching on either the find in json or the root json
-        let selection: any = findIn || this._json;
-        // If we find a value that matches all
-        selectPath.every((part: string) => {
-            selection = selection[part];
-            return (typeof selection !== 'undefined');
-        });
-        return this._wrapAsValue(
-            (typeof selection != undefined) ? selection : null,
-            path
-        );
-        */
+        await this.loadJmesPath();
+        if (typeof this._jPath == 'undefined') {
+            throw new Error('Could not load jmespath');
+        }
         const searchIn = findIn || this._json;
-        const selection = jmespath.search(searchIn, path);
+        const selection = await this._jPath.search(searchIn, path);
         return this._wrapAsValue(selection, path);
     }
 
@@ -61,15 +51,25 @@ export class JsonResponse extends GenericResponse implements iResponse {
         throw new Error('selectAll() is not supported by JSON scenarios, please use select()');
     }
 
-    private _getSelectPath(path: string): string[] {
-        // Replace [ and ] and space with .
-        path = path.replace(/[\[\] ]/g, '.');
-        // Remove quotes
-        path = path.replace(/['"]/g, '');
-        // Fix the situation where ]. will create .. (remove any cases of multiple dots)
-        path = path.replace(/\.{2,}/g, '.');
-        // Get array of each part
-        return path.split('.');
+    private async loadJmesPath(): Promise<any> {
+        // We haven't tried to load query engines yet
+        if (typeof this._jPath == 'undefined') {
+            // Try importing jmespath
+            return import('jmespath')
+                // Got it, so save it and return it
+                .then(jpath => {
+                    this._jPath = jpath;
+                    return this._jPath;
+                })
+                // Couldn't load jmespath, so set it to null
+                .catch((e) => {
+                    this._jPath = new jPath();
+                    return this._jPath;
+                });
+        }
+        else {
+            return this._jPath;
+        }
     }
 
 }

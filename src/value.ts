@@ -26,9 +26,6 @@ export abstract class ProtoValue {
     }
 
     public valueOf(): any {
-        if (this.isNumeric()) {
-            return parseFloat(this._input);
-        }
         return this._input;
     }
 
