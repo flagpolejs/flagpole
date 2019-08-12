@@ -46,6 +46,8 @@ export class Suite {
     protected _afterAllCallbacks: Function[] = [];
     protected _beforeEachCallbacks: Function[] = [];
     protected _afterEachCallbacks: Function[] = [];
+    protected _beforeAllPromise: Promise<void>;
+    protected _beforeAllResolver: Function = () => { };
     protected _title: string;
     protected _baseUrl: URL | null = null;
     protected _timeSuiteInitialized: number = Date.now();
@@ -56,6 +58,9 @@ export class Suite {
 
     constructor(title: string) {
         this._title = title;
+        this._beforeAllPromise = new Promise((resolve) => {
+            this._beforeAllResolver = resolve;
+        });
     }
 
     /**
@@ -124,7 +129,9 @@ export class Suite {
     public scenario = this.Scenario;
     public Scenario(title: string): Scenario {
         const suite: Suite = this;
-        const scenario: Scenario = new Scenario(this, title);
+        const scenario: Scenario = new Scenario(this, title, (scenario) => {
+            return this._onAfterScenarioFinished(scenario);
+        });
         // Notify suite on any changes to scenario
         scenario.before((scenario) => {
             return this._onBeforeScenarioExecutes(scenario);
@@ -134,9 +141,6 @@ export class Suite {
         });
         scenario.error((errorMessage: string) => {
             return this._fireError(errorMessage);
-        });
-        scenario.finally(() => {
-            return this._onAfterScenarioFinished(scenario);
         });
         // Some local tests fail with SSL verify on, so may have been disabled on this suite
         scenario.verifySslCert(this._verifySslCert);
@@ -395,11 +399,11 @@ export class Suite {
         const suite: Suite = this;
         this._timeSuiteExecuted = Date.now();
         return new Promise((resolve, reject) => {
-            // Do all all fthe finally callbacks first
             Bluebird.mapSeries(this._beforeAllCallbacks, (_then) => {
-                return _then.apply(suite, [suite]);
+                return _then(suite);
             }).then(() => {
                 this._publish(SuiteStatusEvent.beforeAllExecute);
+                this._beforeAllResolver();
                 resolve();
             }).catch((err) => {
                 reject(err);
@@ -515,6 +519,7 @@ export class Suite {
         if (scenario.hasExecuted() && !this.hasExecuted()) {
             await this._fireBeforeAll();
         }
+        await this._beforeAllResolved();
         await this._fireBeforeEach(scenario);
         return scenario;
     }
@@ -542,6 +547,17 @@ export class Suite {
                 Flagpole.exitOnDone && Flagpole.exit(this.passed());
             }
         }
+    }
+
+    protected async _beforeAllResolved(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this._beforeAllPromise.then(() => {
+                resolve(true);
+            })
+            .catch((ex) => {
+                reject(ex);
+            });
+        });
     }
 
     protected _publish(statusEvent: SuiteStatusEvent) {

@@ -66,6 +66,7 @@ export class Scenario {
     protected _errorCallbacks: Function[] = [];
     protected _failureCallbacks: Function[] = [];
     protected _successCallbacks: Function[] = [];
+    protected _onCompletedCallback: (scenario: Scenario) => void;
     protected _log: iLogLine[] = [];
     protected _failures: Array<AssertionResult> = [];
     protected _passes: Array<AssertionResult> = [];
@@ -96,11 +97,12 @@ export class Scenario {
         headers: {}
     };
 
-    constructor(suite: Suite, title: string) {
+    constructor(suite: Suite, title: string, onCompletedCallback: (scenario: Scenario) => void) {
         this.suite = suite;
         this._cookieJar = new request.jar();
         this._options = this._defaultRequestOptions;
         this._title = title;
+        this._onCompletedCallback = onCompletedCallback;
     }
 
     /**
@@ -401,12 +403,13 @@ export class Scenario {
         if (this.hasExecuted()) {
             throw new Error(`Can't skip Scenario since it already started executing.`);
         }
+        const scenario = this;
         await this._fireBefore();
         message = "Skipped" + (message ? ': ' + message : '');
-        this._publish(ScenarioStatusEvent.executionProgress);
-        this._log.push(new CommentLine(message));
-        await this._fireAfter();
-        await this._fireFinally();
+        scenario._publish(ScenarioStatusEvent.executionProgress);
+        scenario._log.push(new CommentLine(message));
+        await scenario._fireAfter();
+        await scenario._fireFinally();
         return this;
     }
 
@@ -432,7 +435,7 @@ export class Scenario {
             // Execute it
             this._publish(ScenarioStatusEvent.executionProgress);
             this._isMock ?
-                this._executeMock() : 
+                this._executeMock() :
                 this._executeRequest();
         }
         return this;
@@ -464,6 +467,16 @@ export class Scenario {
      */
     public success(callback: Function): Scenario {
         this._successCallbacks.push(callback);
+        return this;
+    }
+
+    /**
+     * Callback after scenario completes if failed
+     * 
+     * @param callback 
+     */
+    public failure(callback: Function): Scenario {
+        this._failureCallbacks.push(callback);
         return this;
     }
 
@@ -889,16 +902,16 @@ export class Scenario {
     /**
      * Run the before execution and wait for any response.
      */
-    protected _fireBefore(): Promise<void> {
+    protected _fireBefore(): Promise<any> {
         const scenario = this;
         this._timeScenarioExecuted = Date.now();
-        return new Promise((resolve, reject) => {
+        return new Promise(async function (resolve, reject) {
             // Do all of the befores first, so they can do setup, and then actually execute
-            Bluebird.mapSeries(this._beforeCallbacks, (_then, index) => {
+            Bluebird.mapSeries(scenario._beforeCallbacks, (_then, index) => {
                 return _then.apply(scenario, [scenario]);
             }).then(() => {
                 // Then do notifications
-                this._publish(ScenarioStatusEvent.beforeExecute);                
+                scenario._publish(ScenarioStatusEvent.beforeExecute);
                 resolve();
             }).catch((err) => {
                 reject(err);
@@ -977,6 +990,7 @@ export class Scenario {
             Bluebird.mapSeries(this._finallyCallbacks, (_then, index) => {
                 return _then.apply(scenario, [scenario]);
             }).then(() => {
+                this._onCompletedCallback(scenario);
                 this._publish(ScenarioStatusEvent.finished);
                 resolve();
             }).catch((err) => {
