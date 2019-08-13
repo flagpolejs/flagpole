@@ -328,10 +328,6 @@ This will fire just after this Scenario has finished executing and marked comple
 
 This will fire just after this Scenario has been marked started, but before it actually starts the request.
 
-#### `Scenario.catch()`
-
-Alias for Scenario.error
-
 #### `Scenario.error()`
 
 This is called after the Scenario.after and before Scenario.finally, but only if the Scenario fails with an uncaught exception.
@@ -380,10 +376,6 @@ const suite = Flagpole.suite('Test order of callbacks')
 #### `Suite.beforeEach()`
 
 This will run after each scenario has been marked as started, but before the request actually gets called.
-  
-#### `Suite.catch()`
-
-This is an alias for Suite.error
 
 #### `Suite.error()`
 

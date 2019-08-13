@@ -72,6 +72,23 @@ export class AssertionContext {
         });
     }
 
+    public async clear(path: string): Promise<any> {
+        if (this._isBrowserRequest && this.page !== null) {
+            const input: ElementHandle<Element> | null = await this.page.$('#inputID');
+            if (input !== null) {
+                await input.click({ clickCount: 3 });
+                await this.page.keyboard.press('Backspace');
+            }   
+        }
+        else if (this._isHtmlRequest) {
+            const htmlResponse = this.response as HtmlResponse;
+            return await htmlResponse.evaluate(this, function ($: Cheerio) {
+                $.find(path).val('');
+            });
+        }
+        throw new Error('Can not type into this element.');
+    }
+
     public async type(path: string, textToType: string, opts: any = {}): Promise<any> {
         if (this._isBrowserRequest && this.page !== null) {
             return await this.page.type(path, textToType, opts);

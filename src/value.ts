@@ -40,6 +40,14 @@ export abstract class ProtoValue {
         return String(this._input);
     }
 
+    public toFloat(): number {
+        return parseFloat(this.toString());
+    }
+
+    public toInteger(): number {
+        return parseInt(this.toString());
+    }
+
     public toType(): string {
         return String(Flagpole.toType(this._input));
     }

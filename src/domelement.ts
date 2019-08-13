@@ -270,6 +270,9 @@ export class DOMElement extends ProtoValue {
         }
     }
 
+    public async submit(): Promise<any>;
+    public async submit(callback: Function): Promise<any>;
+    public async submit(message: string, callback: Function): Promise<any>;
     public async submit(a?: string | Function, b?: Function): Promise<any> {
         if (!this._isFormTag()) {
             throw new Error('You can only use .submit() with a form element.');
@@ -310,14 +313,27 @@ export class DOMElement extends ProtoValue {
         throw new Error('This is not supported yet.');
     }
 
+    public async click(): Promise<any>;
+    public async click(callback: Function): Promise<any>;
+    public async click(message: string, callback: Function): Promise<any>;
     public async click(a?: string | Function, b?: Function): Promise<any> {
+        const callback: Function = (() => {
+            if (typeof b == 'function') {
+                return b;
+            }
+            else if (typeof a == 'function') {
+                return a;
+            }
+            return () => { };
+        })();
+        const message: string = typeof a == 'string' ? a : '';
         if (this.isPuppeteerElement()) {
             return await this._context.click(this._path);
         }
 
         // If this is a link tag, treat it the same as load
         if (await this._isLinkTag()) {
-            return await this.load(a, b);
+            return await this.load(message, callback);
         }
         // Is this a button?
         if (await this._isButtonTag()) {
@@ -332,13 +348,16 @@ export class DOMElement extends ProtoValue {
      * 
      * @param a 
      */
+    public async load(): Promise<Scenario>;
+    public async load(callback: Function): Promise<Scenario>;
+    public async load(message: string, callback: Function): Promise<Scenario>;
     public async load(a?: string | Function, b?: Function): Promise<Scenario> {
         const link: Link = await this._getLink();
         const scenario: Scenario = await this._createLambdaScenario(a, b);
         // Is this link one that we can actually load?
         if (link.isNavigation()) {
             // Set a better title
-            scenario.title = (typeof a == 'string') ? a : `Load ${link.getUri()}`;
+            scenario.title = (typeof a == 'string' && a.length) ? a : `Load ${link.getUri()}`;
             // Execute it asynchronously
             setTimeout(() => {
                 scenario.open(link.getUri());

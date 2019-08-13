@@ -455,8 +455,7 @@ export class Scenario {
     /**
      * Callback when someting in the scenario throws an error
      */
-    public error = this.catch;
-    public catch(callback: Function): Scenario {
+    public error(callback: Function): Scenario {
         this._errorCallbacks.push(callback);
         return this;
     }
