@@ -497,7 +497,7 @@ export class DOMElement extends ProtoValue {
 
     private async _createLambdaScenario(a: any, b: any): Promise<Scenario> {
         const title: string = typeof a == 'string' ? a : this._path;
-        const scenario: Scenario = this._context.suite.Scenario(title);
+        const scenario: Scenario = this._context.suite.scenario(title);
         const scenarioType: string = await this._getLambdaScenarioType();
         const callback: Function = (function () {
             // Handle overloading

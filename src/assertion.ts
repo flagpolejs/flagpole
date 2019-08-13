@@ -340,7 +340,8 @@ export class Assertion {
             bool, 
             this._not ?
                 `${this._getSubject()} does not exist` :
-                `${this._getSubject()} exists`
+                `${this._getSubject()} exists`,
+            thisValue
         );
         return this;
     }
@@ -353,7 +354,8 @@ export class Assertion {
                     this._eval(bool),
                     this._not ?
                         `${this._getSubject()} was not resolve` :
-                        `${this._getSubject()} was resolved`
+                        `${this._getSubject()} was resolved`,
+                    bool
                 );
                 if (bool) {
                     resolve(assertion);
@@ -381,7 +383,8 @@ export class Assertion {
                     this._eval(bool),
                     this._not ?
                         `${this._getSubject()} was not rejected` :
-                        `${this._getSubject()} was rejected`
+                        `${this._getSubject()} was rejected`,
+                    bool
                 );
                 if (bool) {
                     resolve(assertion);
@@ -414,7 +417,8 @@ export class Assertion {
             this._eval(bool),
             this._not ?
                 `${this._getSubject()} some were true` :
-                `${this._getSubject()} none were true`
+                `${this._getSubject()} none were true`,
+            thisValue
         );
         return this;
     }
@@ -432,7 +436,8 @@ export class Assertion {
             this._eval(bool),
             this._not ?
                 `${this._getSubject()} not all were true` :
-                `${this._getSubject()} all were true`
+                `${this._getSubject()} all were true`,
+            thisValue
         );
         return this;
     }
@@ -450,12 +455,13 @@ export class Assertion {
             this._eval(bool),
             this._not ?
                 `${this._getSubject()} none were true` :
-                `${this._getSubject()} some were true`
+                `${this._getSubject()} some were true`,
+            thisValue
         );
         return this;
     }
 
-    private _assert(statement: boolean, defaultMessage: string, actualValue?: any) {
+    private _assert(statement: boolean, defaultMessage: string, actualValue: any) {
         // Result is immutable, so only let them assert once
         if (this._result !== null) {
             throw new Error('Assertion result is immutable.');
@@ -467,13 +473,11 @@ export class Assertion {
         }
         // Assertion fails
         else {
-            let message: string = (this._message || defaultMessage);
-            if (typeof actualValue != 'undefined' && actualValue != '') {
-                message += ` (${String(actualValue)})`
-            }
+            const message: string = (this._message || defaultMessage);
+            const details: string = `Actual value: ${String(actualValue)}`;
             this._result = this._optional ?
-                AssertionResult.failOptional(message) :
-                AssertionResult.fail(message);
+                AssertionResult.failOptional(message, details) :
+                AssertionResult.fail(message, details);
         }
         // Log this result
         this._context.scenario.logResult(this._result);

@@ -347,7 +347,7 @@ export class WarningLine extends LogLine implements iLogLine {
 
 export class DetailLine extends LogLine implements iLogLine {
 
-    public textPrefix: string = '  +    ';
+    public textPrefix: string = '     ';
 
     constructor(message: string) {
         super(message);

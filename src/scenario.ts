@@ -291,7 +291,6 @@ export class Scenario {
     /**
      * Add a neutral line to the output
      */
-    public echo = this.comment;
     public comment(message: string): Scenario {
         this._log.push(
             new CommentLine(message)
@@ -311,9 +310,11 @@ export class Scenario {
         else if (!result.isOptional) {
             this._failures.push(result);
             this._log.push(new FailLine(result.message));
+            (result.details !== null) && this._log.push(new DetailLine(result.details));
         }
         else {
             this._log.push(new OptionalFailLine(result.message));
+            (result.details !== null) && this._log.push(new DetailLine(result.details));
         }
         return this;
     }
@@ -361,8 +362,8 @@ export class Scenario {
     /**
      * Set the callback for the assertions to run after the request has a response
      */
-    //public then = this.assertions;  // this was causing problems because Node thought it was a real promise
-    public assertions = this.next;
+    public next(message: string, callback: any): Scenario;
+    public next(callback: any): Scenario;
     public next(a: Function | string, b?: Function): Scenario {
         const callback: Function = (() => {
             if (typeof b == 'function') {
@@ -454,8 +455,8 @@ export class Scenario {
     /**
      * Callback when someting in the scenario throws an error
      */
-    public catch = this.error;
-    public error(callback: Function): Scenario {
+    public error = this.catch;
+    public catch(callback: Function): Scenario {
         this._errorCallbacks.push(callback);
         return this;
     }
@@ -674,7 +675,7 @@ export class Scenario {
     public pause(millis: number): Promise<void> {
         return new Promise((resolve) => {
             setTimeout(() => {
-                this.echo('Paused ' + millis + ' milliseconds');
+                this.comment('Paused ' + millis + ' milliseconds');
                 resolve();
             }, millis);
         });
@@ -714,7 +715,7 @@ export class Scenario {
             const comment: string | null = scenario._nextMessages[index];
             comment !== null && this.comment(comment)
             context.result = lastReturnValue;
-            lastReturnValue = _then.apply(context, [response, context]);
+            lastReturnValue = _then.apply(context, [context]);
             return lastReturnValue;
         }).then(() => {
             scenario._markScenarioCompleted();
@@ -890,7 +891,7 @@ export class Scenario {
             }
             // Scenario compelted with an error
             else {
-                this.logResult(AssertionResult.fail(errorMessage));
+                this.logResult(AssertionResult.fail(errorMessage, errorDetails));
                 await this._fireError(errorDetails || errorMessage);
             }
             // Finally

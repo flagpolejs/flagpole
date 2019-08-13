@@ -5,16 +5,17 @@ export class AssertionResult {
     public readonly passed: boolean;
     public readonly message: string;
     public readonly isOptional: boolean;
+    public readonly details: string | null = null;
 
-    public static failOptional(message: string): AssertionResult {
+    public static failOptional(message: string, details?: string): AssertionResult {
         return new AssertionResult(
-            false, message, true
+            false, message, true, details
         );
     }
 
-    public static fail(message: string): AssertionResult {
+    public static fail(message: string, details?: string): AssertionResult {
         return new AssertionResult(
-            false, message, false
+            false, message, false, details
         );
     }
 
@@ -24,10 +25,11 @@ export class AssertionResult {
         );
     }
 
-    private constructor(passed: boolean, message: string, isOptional: boolean) {
+    private constructor(passed: boolean, message: string, isOptional: boolean, details?: string) {
         this.passed = passed;
         this.message = message;
         this.isOptional = isOptional;
+        this.details = details || null;
     }
 
 

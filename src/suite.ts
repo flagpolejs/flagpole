@@ -19,6 +19,8 @@ export class Suite {
 
     public scenarios: Array<Scenario> = [];
 
+    private _homeScore: number = 0;
+
     public get baseUrl(): URL | null {
         return this._baseUrl;
     }
@@ -126,9 +128,7 @@ export class Suite {
      * @returns {Scenario}
      * @constructor
      */
-    public scenario = this.Scenario;
-    public Scenario(title: string): Scenario {
-        const suite: Suite = this;
+    public scenario(title: string): Scenario {
         const scenario: Scenario = new Scenario(this, title, (scenario) => {
             return this._onAfterScenarioFinished(scenario);
         });
@@ -154,73 +154,64 @@ export class Suite {
     /**
      * Create a new JSON/REST API Scenario
      */
-    public json = this.Json;
-    public Json(title: string, opts: any = {}): Scenario {
-        return this.Scenario(title).json(opts);
+    public json(title: string, opts: any = {}): Scenario {
+        return this.scenario(title).json(opts);
     }
 
     /**
      * Create a new Image Scenario
      */
-    public image = this.Image;
-    public Image(title: string, opts: any = {}): Scenario {
-        return this.Scenario(title).image(opts);
+    public image(title: string, opts: any = {}): Scenario {
+        return this.scenario(title).image(opts);
     }
 
     /**
      * Create a new Video Scenario
      */
-    public video = this.Video;
-    public Video(title: string, opts: any = {}): Scenario {
-        return this.Scenario(title).video(opts);
+    public video(title: string, opts: any = {}): Scenario {
+        return this.scenario(title).video(opts);
     }
 
     /**
      * Create a new HTML/DOM Scenario
      */
-    public html = this.Html;
-    public Html(title: string, opts: any = {}): Scenario {
-        return this.Scenario(title).html(opts);
+    public html(title: string, opts: any = {}): Scenario {
+        return this.scenario(title).html(opts);
     }
 
     /**
      * Create a new CSS Scenario
      */
-    public stylesheet = this.Stylesheet;
-    public Stylesheet(title: string, opts: any = {}): Scenario {
-        return this.Scenario(title).stylesheet(opts);
+    public stylesheet(title: string, opts: any = {}): Scenario {
+        return this.scenario(title).stylesheet(opts);
     }
 
     /**
      * Create a new Script Scenario
      */
-    public script = this.Script;
-    public Script(title: string, opts: any = {}): Scenario {
-        return this.Scenario(title).script(opts);
+    public script(title: string, opts: any = {}): Scenario {
+        return this.scenario(title).script(opts);
     }
 
     /**
      * Create a generic resource scenario
      */
-    public resource = this.Resource;
-    public Resource(title: string, opts: any = {}): Scenario {
-        return this.Scenario(title).resource(opts);
+    public resource(title: string, opts: any = {}): Scenario {
+        return this.scenario(title).resource(opts);
     }
 
     /**
      * Create a Browser/Puppeteer Scenario
      */
-    public browser = this.Browser;
-    public Browser(title: string, opts: any = {}): Scenario {
-        return this.Scenario(title).browser(opts);
+    public browser(title: string, opts: any = {}): Scenario {
+        return this.scenario(title).browser(opts);
     }
 
     /**
      * Create an ExtJS Scenario
      */
-    public extjs = this.ExtJS;
-    public ExtJS(title: string, opts: any = {}): Scenario {
-        return this.Scenario(title).extjs(opts);
+    public extjs(title: string, opts: any = {}): Scenario {
+        return this.scenario(title).extjs(opts);
     }
 
     /**
@@ -312,7 +303,6 @@ export class Suite {
      * 
      * @param callback 
      */
-    public before = this.beforeAll;
     public beforeAll(callback: Function): Suite {
         this._beforeAllCallbacks.push(callback);
         return this;
@@ -343,7 +333,6 @@ export class Suite {
      * 
      * @param callback 
      */
-    public after = this.afterAll;
     public afterAll(callback: Function): Suite {
         this._afterAllCallbacks.push(callback);
         return this;
@@ -380,7 +369,6 @@ export class Suite {
     /**
      * This callback will run once everything else is completed, whether pass or fail
      */
-    public onDone = this.finally;
     public finally(callback: Function): Suite {
         this._finallyCallbacks.push(callback);
         return this;
@@ -502,7 +490,6 @@ export class Suite {
     private _fireFinally(): Promise<void> {
         const suite: Suite = this;
         return new Promise((resolve, reject) => {
-            // Do all all fthe finally callbacks first
             Bluebird.mapSeries(this._finallyCallbacks, (_then) => {
                 return _then.apply(suite, [suite]);
             }).then(() => {

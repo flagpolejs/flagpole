@@ -58,10 +58,12 @@ export class AssertionContext {
         this._scenario.comment(message);
     }
 
+    public assert(message: string, value: any): Assertion;
+    public assert(value: any): Assertion;
     public assert(a: any, b?: any): Assertion {
-        const statement = typeof b !== 'undefined' ? b : a;
+        const value = typeof b !== 'undefined' ? b : a;
         const message = typeof b !== 'undefined' ? a : undefined;
-        return new Assertion(this, statement, message);
+        return new Assertion(this, value, message);
     }
 
     public pause(milliseconds: number): Promise<any> {
