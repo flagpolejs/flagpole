@@ -8,6 +8,7 @@ import { reject } from 'bluebird';
 import { DOMElement } from './domelement';
 import { HtmlResponse } from './htmlresponse';
 import { Value } from './value';
+import { Flagpole } from '.';
 
 export class AssertionContext {
 
@@ -72,9 +73,33 @@ export class AssertionContext {
         });
     }
 
+    public async selectElementWithText(path: string, searchForText: string | RegExp): Promise<DOMElement | null> {
+        if (this._isBrowserRequest && this.page !== null) {
+            let matchingElement: DOMElement | null = null;
+            const elements: DOMElement[] = await this.selectAll(path);
+            // Loop through elements until we get to the end or find a match
+            for (let i = 0; i < elements.length && matchingElement == null; i++) {
+                const element: DOMElement = elements[i];
+                const text: Value = await element.getText();
+                if (typeof searchForText == 'string') {
+                    if (text.toString() == String(searchForText)) {
+                        matchingElement = element;
+                    }
+                }
+                else {
+                    if (searchForText.test(text.toString())) {
+                        matchingElement = element;
+                    }
+                }
+            }
+            return matchingElement;
+        }
+        throw new Error('visible is not available in this context');
+    };
+
     public async clear(path: string): Promise<any> {
         if (this._isBrowserRequest && this.page !== null) {
-            const input: ElementHandle<Element> | null = await this.page.$('#inputID');
+            const input: ElementHandle<Element> | null = await this.page.$(path);
             if (input !== null) {
                 await input.click({ clickCount: 3 });
                 await this.page.keyboard.press('Backspace');
@@ -86,7 +111,7 @@ export class AssertionContext {
                 $.find(path).val('');
             });
         }
-        throw new Error('Can not type into this element.');
+        throw new Error(`Can not type into this element ${path}`);
     }
 
     public async type(path: string, textToType: string, opts: any = {}): Promise<any> {
@@ -99,7 +124,7 @@ export class AssertionContext {
                 $(path).val(textToType);
             });
         }
-        throw new Error('Can not type into this element.');
+        throw new Error(`Can not type into element ${path}`);
     }
 
     public async evaluate(callback: Function): Promise<any> {

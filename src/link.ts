@@ -96,7 +96,8 @@ export class Link {
             (
                 /^\?/.test(this._uri) ||                // Starts with a question mark
                 /^https?:\/\//i.test(this._uri) ||      // Starts with http:// or https://
-                /^\//i.test(this._uri)                  // Starts with as slash
+                /^\//i.test(this._uri) ||               // Starts with as slash
+                !/^[a-z]+:\/\//i.test(this._uri)        // Not any other weird protocol
             )
         );
     }

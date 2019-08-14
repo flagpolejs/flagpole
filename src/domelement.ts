@@ -324,13 +324,13 @@ export class DOMElement extends ProtoValue {
             else if (typeof a == 'function') {
                 return a;
             }
-            return () => { };
+            return function () { };
         })();
         const message: string = typeof a == 'string' ? a : '';
+        // Click in Puppeteer
         if (this.isPuppeteerElement()) {
-            return await this._context.click(this._path);
+            return await this._input.click();
         }
-
         // If this is a link tag, treat it the same as load
         if (await this._isLinkTag()) {
             return await this.load(message, callback);

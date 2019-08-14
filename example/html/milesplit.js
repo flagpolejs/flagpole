@@ -26,7 +26,7 @@ suite.html('Test MileSplit Hompage').open('/')
             });
         });
     })
-    .next('Verify CSS', async function (response, context) {
+    .next('Verify CSS', async function (context) {
         const css = await this.selectAll('link[rel="stylesheet"]');
         css.forEach(stylesheet => {
             stylesheet.load(async function () {
