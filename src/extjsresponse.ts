@@ -20,7 +20,6 @@ export class ExtJSResponse extends BrowserResponse implements iResponse {
      * @param findIn 
      */
     public async find(path: string): Promise<DOMElement | null> {
-        const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
         if (page !== null) {
             const el: ElementHandle<Element> | null = await page.$(path);

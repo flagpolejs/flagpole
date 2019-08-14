@@ -164,7 +164,7 @@ export class AssertionContext {
         return await this.response.evaluate(this, callback);
     }
 
-    public async waitForHidden(path: string, timeout?: number): Promise<DOMElement | null> {
+    public async waitForHidden(path: string, timeout: number = 100): Promise<DOMElement | null> {
         if (this._isBrowserRequest && this.page !== null) {
             const opts = { timeout: timeout || 100, hidden: true };
             const element = await this.page.waitForSelector(path, opts);
@@ -176,7 +176,7 @@ export class AssertionContext {
         throw new Error('waitForExists is not available in this context');
     }
 
-    public async waitForVisible(path: string, timeout?: number): Promise<DOMElement | null> {
+    public async waitForVisible(path: string, timeout: number = 100): Promise<DOMElement | null> {
         if (this._isBrowserRequest && this.page !== null) {
             const opts = { timeout: timeout || 100, visible: true };
             const element = await this.page.waitForSelector(path, opts);
