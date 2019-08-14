@@ -4,11 +4,9 @@ import { Suite } from './suite';
 import { Browser } from './browser';
 import { Page, ElementHandle } from 'puppeteer';
 import { Assertion } from './assertion';
-import { reject } from 'bluebird';
 import { DOMElement } from './domelement';
 import { HtmlResponse } from './htmlresponse';
-import { Value } from './value';
-import { Flagpole } from '.';
+import { Value, iValue } from './value';
 
 export class AssertionContext {
 
@@ -73,12 +71,15 @@ export class AssertionContext {
         });
     }
 
-    public async selectElementWithText(path: string, searchForText: string | RegExp): Promise<DOMElement | null> {
-        if (this._isBrowserRequest && this.page !== null) {
+    public async selectHavingText(path: string, searchForText: string | RegExp): Promise<DOMElement | null> {
+        if (
+            (this._isBrowserRequest && this.page !== null) ||
+            this._isHtmlRequest
+        ) {
             let matchingElement: DOMElement | null = null;
             const elements: DOMElement[] = await this.selectAll(path);
             // Loop through elements until we get to the end or find a match
-            for (let i = 0; i < elements.length && matchingElement == null; i++) {
+            for (let i = 0; i < elements.length && matchingElement === null; i++) {
                 const element: DOMElement = elements[i];
                 const text: Value = await element.getText();
                 if (typeof searchForText == 'string') {
@@ -94,15 +95,47 @@ export class AssertionContext {
             }
             return matchingElement;
         }
-        throw new Error('visible is not available in this context');
+        throw new Error('selectHavingText is not available in this context');
     };
+
+    public async selectAllHavingText(path: string, searchForText: string | RegExp): Promise<DOMElement[]> {
+        if (
+            (this._isBrowserRequest && this.page !== null) ||
+            this._isHtmlRequest
+        ) {
+            let matchingElements: DOMElement[] = [];
+            const elements: DOMElement[] = await this.selectAll(path);
+            // Loop through elements until we get to the end or find a match
+            for (let i = 0; i < elements.length; i++) {
+                const element: DOMElement = elements[i];
+                const text: Value = await element.getText();
+                if (typeof searchForText == 'string') {
+                    if (text.toString() == String(searchForText)) {
+                        matchingElements.push(element);
+                    }
+                }
+                else {
+                    if (searchForText.test(text.toString())) {
+                        matchingElements.push(element);
+                    }
+                }
+            }
+            return matchingElements;
+        }
+        throw new Error('selectAllHavingText is not available in this context');
+    };
+
+    public async clearThenType(path: string, textToType: string, opts: any = {}): Promise<any> {
+        await this.clear(path);
+        return this.type(path, textToType, opts);
+    }
 
     public async clear(path: string): Promise<any> {
         if (this._isBrowserRequest && this.page !== null) {
             const input: ElementHandle<Element> | null = await this.page.$(path);
             if (input !== null) {
                 await input.click({ clickCount: 3 });
-                await this.page.keyboard.press('Backspace');
+                return await this.page.keyboard.press('Backspace');
             }   
         }
         else if (this._isHtmlRequest) {
@@ -157,12 +190,12 @@ export class AssertionContext {
         throw new Error('visible is not available in this context');
     }
 
-    public select(path: string, findIn?: any): Promise<any> {
-        return this.response.asyncSelect(path, findIn);
+    public select(path: string): Promise<any> {
+        return this.response.asyncSelect(path);
     }
 
-    public selectAll(path: string, findIn?: any): Promise<any[]> {
-        return this.response.asyncSelectAll(path, findIn);
+    public selectAll(path: string): Promise<any[]> {
+        return this.response.asyncSelectAll(path);
     }
 
     public async submit(path: string): Promise<any> {

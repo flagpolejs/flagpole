@@ -1,7 +1,32 @@
 import { Flagpole } from '.';
 import { AssertionContext } from './assertioncontext';
 
-export abstract class ProtoValue {
+export interface iValue {
+    $: any,
+    name: string,
+    toArray(): any[],
+    toString(): string,
+    toInteger(): number,
+    toFloat(): number,
+    toType(): string,
+    isNullOrUndefined(): boolean,
+    isUndefined(): boolean,
+    isNull(): boolean,
+    isNaN(): boolean,
+    isNumber(): boolean,
+    isNumeric(): boolean,
+    isObject(): boolean,
+    isPromise(): boolean,
+    isRegularExpression(): boolean,
+    isString(): boolean,
+    isArray(): boolean,
+    isCookie(): boolean,
+    isPuppeteerElement(): boolean,
+    isCheerioElement(): boolean,
+    hasProperty(key: string): Promise<iValue>
+}
+
+export abstract class ProtoValue  implements iValue{
 
     protected _input: any;
     protected _context: AssertionContext;
@@ -96,10 +121,6 @@ export abstract class ProtoValue {
         return this._input && this._input.cookieString;
     }
 
-    public isFlagpoleNodeElement(): boolean {
-        return this.toType() == 'node';
-    }
-
     public isRegularExpression(): boolean {
         return this.toType() == 'regexp';
     }
@@ -129,7 +150,7 @@ export abstract class ProtoValue {
 
 }
 
-export class Value extends ProtoValue {
+export class Value extends ProtoValue implements iValue {
 
     public async getProperty(key: string): Promise<any> {
         if (!this.isNullOrUndefined() && this.hasProperty(key)) {

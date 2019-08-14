@@ -22,7 +22,7 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         $ = cheerio.load(response.body);
     }
 
-    public getRoot(): any {
+    public getRoot(): CheerioStatic {
         return $;
     }
 
@@ -30,10 +30,8 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         return callback.apply(context, [ $ ]);
     }
 
-    public async asyncSelect(path: string, findIn?: any): Promise<DOMElement | null> {
-        const selection: Cheerio = (Flagpole.toType(findIn) == 'cheerio') ?
-            findIn.find(path) :
-            $(path);
+    public async asyncSelect(path: string): Promise<DOMElement | null> {
+        const selection: Cheerio = $(path);
         if (selection.length > 0) {
             return await DOMElement.create(
                 selection.eq(0), this.context, null, path
@@ -44,11 +42,9 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         }
     }
 
-    public async asyncSelectAll(path: string, findIn?: any): Promise<DOMElement[]> {
+    public async asyncSelectAll(path: string): Promise<DOMElement[]> {
         const response: iResponse = this;
-        const elements: Cheerio = (Flagpole.toType(findIn) == 'cheerio') ?
-            findIn.find(path) :
-            $(path);
+        const elements: Cheerio = $(path);
         if (elements.length > 0) {
             const nodeElements: DOMElement[] = [];
             await elements.each(async function (i: number) {

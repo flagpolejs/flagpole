@@ -1,11 +1,11 @@
-import { ProtoValue, Value } from './value';
+import { ProtoValue, Value, iValue } from './value';
 import { JSHandle, Page, ElementHandle } from 'puppeteer';
 import { Link } from './link';
 import { Scenario } from './scenario';
 import { ResponseType } from './response';
 import { AssertionContext } from './assertioncontext';
 
-export class DOMElement extends ProtoValue {
+export class DOMElement extends ProtoValue implements iValue {
 
     protected _path: string;
 
@@ -257,7 +257,7 @@ export class DOMElement extends ProtoValue {
                                 await page.select(selector, value);
                             }
                             else if (tagName == 'input') {
-                                await page.type(selector, value);
+                                await this._context.clearThenType(selector, value);
                             }
                         }
                     }
