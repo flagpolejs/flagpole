@@ -231,6 +231,16 @@ export class Scenario {
     }
 
     /**
+     * Set the authorization header with a bearer token
+     *
+     * @param {string} token
+     */
+    public bearerToken(token: string): Scenario {
+        this.header('Authorization', `Bearer ${token}`)
+        return this;
+    }
+
+    /**
      * Set a cookie
      * 
      * @param key 
