@@ -35,25 +35,77 @@ export class Scenario {
     }
 
     public set title(newTitle: string) {
-        if (this.hasExecuted()) {
+        if (this.hasExecuted) {
             throw new Error("Can not change the scenario's title after execution has started.");
         }
         this._title = newTitle;
     }
 
+    /**
+     * Length of time in milliseconds from initialization to completion
+     */
     public get totalDuration(): number | null {
         return this._timeScenarioFinished !== null ?
             (this._timeScenarioFinished - this._timeScenarioInitialized) : null;
     }
 
+    /**
+     * Length of time in milliseconds from start of execution to completion
+     */
     public get executionDuration(): number | null {
         return this._timeScenarioFinished !== null && this._timeScenarioExecuted !== null ?
             (this._timeScenarioFinished - this._timeScenarioExecuted) : null;
     }
 
+    /**
+     * Length of time in milliseconds from request start to response complete
+     */
     public get requestDuration(): number | null {
         return (this._timeRequestStarted !== null && this._timeRequestLoaded !== null) ?
             (this._timeRequestLoaded - this._timeRequestStarted) : null;
+    }
+
+    /**
+     * Did any assertions in this scenario fail?
+     */
+    public get hasFailed(): boolean {
+        return (this._failures.length > 0);
+    }
+
+    /**
+     * Did all assertions in this scenario pass? This also requires that the scenario has completed
+     */
+    public get hasPassed(): boolean {
+        return !!(this.hasFinished && this._failures.length == 0);
+    }
+
+
+    /**
+     * We ready to pull the trigger on this one?
+     */
+    public get canExecute(): boolean {
+        return (
+            !this.hasExecuted &&
+            this._url !== null &&
+            this._nextCallbacks.length > 0
+        );
+    }
+
+    /**
+     * Has this scenario already been executed?
+     */
+    public get hasExecuted(): boolean {
+        return (this._timeScenarioExecuted !== null);
+    }
+
+    /**
+     * Did this scenario finish executing?
+     */
+    public get hasFinished(): boolean {
+        return (
+            this.hasExecuted &&
+            this._timeScenarioFinished !== null
+        );
     }
 
     protected _title: string;
@@ -106,7 +158,7 @@ export class Scenario {
     }
 
     /**
-     * Get log
+     * Get log of all assetions, comments, etc. from this scenario
      */
     public async getLog(): Promise<iLogLine[]> {
         let output: iLogLine[] = [];
@@ -115,7 +167,7 @@ export class Scenario {
     }
 
     /**
-     * PubSub Subscription
+     * PubSub Subscription to any significant status changes of this scenario
      * 
      * @param callback 
      */
@@ -124,33 +176,19 @@ export class Scenario {
     }
 
     /**
-     * Did any assertions in this scenario fail?
-     */
-    public failed(): boolean {
-        return (this._failures.length > 0);
-    }
-
-    /**
-     * Did all assertions in this scenario pass? This also requires that the scenario has completed
-     */
-    public passed(): boolean {
-        return !!(this.hasFinished() && this._failures.length == 0);
-    }
-
-    /**
      * Set body to submit as JSON object
      * 
      * @param jsonObject 
      */
-    public jsonBody(jsonObject: any): Scenario {
-        this.header('Content-Type', 'application/json');
-        return this.body(JSON.stringify(jsonObject));
+    public setJsonBody(jsonObject: any): Scenario {
+        this.setHeader('Content-Type', 'application/json');
+        return this.setRawBody(JSON.stringify(jsonObject));
     }
 
     /**
      * Set body to submit as raw string
      */
-    public body(str: string): Scenario {
+    public setRawBody(str: string): Scenario {
         this._options.body = str;
         return this;
     }
@@ -167,26 +205,16 @@ export class Scenario {
     /**
      * Set the proxy URL for the request
      */
-    public proxy(proxyUri: string): Scenario {
-        this._options.proxy = proxyUri;
+    public setProxyUrl(proxyUrl: string): Scenario {
+        this._options.proxy = proxyUrl;
         return this;
     }
 
     /**
      * Set the timeout for how long the request should wait for a response
      */
-    public timeout(timeout: number): Scenario {
+    public setTimeout(timeout: number): Scenario {
         this._options.timeout = timeout;
-        return this;
-    }
-
-    /**
-     * Do not run this scenario until execute() is called
-     * 
-     * @param bool 
-     */
-    public wait(bool: boolean = true): Scenario {
-        this._waitToExecute = bool;
         return this;
     }
 
@@ -195,7 +223,7 @@ export class Scenario {
      *
      * @param form
      */
-    public form(form: {}): Scenario {
+    public setFormData(form: {}): Scenario {
         this._options.form = form;
         return this;
     }
@@ -205,7 +233,7 @@ export class Scenario {
      * 
      * @param n 
      */
-    public maxRedirects(n: number): Scenario {
+    public setMaxRedirects(n: number): Scenario {
         this._options.maxRedirects = n;
         return this;
     }
@@ -215,7 +243,7 @@ export class Scenario {
      * 
      * @param onRedirect 
      */
-    public followRedirect(onRedirect: boolean | Function): Scenario {
+    public shouldFollowRedirects(onRedirect: boolean | Function): Scenario {
         this._followRedirect = onRedirect;
         return this;
     }
@@ -225,7 +253,7 @@ export class Scenario {
      *
      * @param authorization
      */
-    public auth(authorization: { username: string, password: string }): Scenario {
+    public setBasicAuth(authorization: { username: string, password: string }): Scenario {
         this._options.auth = authorization;
         return this;
     }
@@ -237,7 +265,7 @@ export class Scenario {
      * @param value 
      * @param opts 
      */
-    public cookie(key: string, value: string, opts?: any): Scenario {
+    public setCookie(key: string, value: string, opts?: any): Scenario {
         let cookie: r.Cookie | undefined = r.cookie(key + '=' + value);
         if (cookie !== undefined) {
             this._cookieJar.setCookie(cookie, this._buildUrl(), opts);
@@ -253,7 +281,7 @@ export class Scenario {
      *
      * @param headers
      */
-    public headers(headers: {}): Scenario {
+    public setHeaders(headers: {}): Scenario {
         this._options.headers = { ...this._options.headers, ...headers };
         return this;
     }
@@ -264,7 +292,7 @@ export class Scenario {
      * @param {string} key
      * @param value
      */
-    public header(key: string, value: any): Scenario {
+    public setHeader(key: string, value: any): Scenario {
         this._options.headers = this._options.headers || {};
         this._options.headers[key] = value;
         return this;
@@ -275,8 +303,18 @@ export class Scenario {
      *
      * @param {string} method
      */
-    public method(method: string): Scenario {
+    public setMethod(method: string): Scenario {
         this._options.method = method.toUpperCase();
+        return this;
+    }
+
+    /**
+     * Do not run this scenario until execute() is called
+     * 
+     * @param bool 
+     */
+    public wait(bool: boolean = true): Scenario {
+        this._waitToExecute = bool;
         return this;
     }
 
@@ -351,7 +389,7 @@ export class Scenario {
      */
     public open(url: string): Scenario {
         // You can only load the url once per scenario
-        if (!this.hasExecuted()) {
+        if (!this.hasExecuted) {
             this._url = url;
             this._isMock = false;
             this._executeWhenReady();
@@ -383,7 +421,7 @@ export class Scenario {
             return null;
         })();
         // If it hasn't already been executed
-        if (!this.hasExecuted()) {
+        if (!this.hasExecuted) {
             this._nextCallbacks.push(callback);
             this._nextMessages.push(message);
             // Execute at the next opportunity.
@@ -401,7 +439,7 @@ export class Scenario {
      * Skip this scenario completely and mark it done
      */
     public async skip(message?: string): Promise<Scenario> {
-        if (this.hasExecuted()) {
+        if (this.hasExecuted) {
             throw new Error(`Can't skip Scenario since it already started executing.`);
         }
         const scenario = this;
@@ -426,7 +464,7 @@ export class Scenario {
      * Execute this scenario
      */
     public async execute(): Promise<Scenario> {
-        if (!this.hasExecuted() && this._url !== null) {
+        if (!this.hasExecuted && this._url !== null) {
             await this._fireBefore();
             this.subheading(this.title);
             // If we waited first
@@ -520,34 +558,6 @@ export class Scenario {
      */
     public getFinalUrl(): string | null {
         return this._finalUrl;
-    }
-
-    /**
-     * We ready to pull the trigger on this one?
-     */
-    public canExecute(): boolean {
-        return (
-            !this.hasExecuted() &&
-            this._url !== null &&
-            this._nextCallbacks.length > 0
-        );
-    }
-
-    /**
-     * Has this scenario already been executed?
-     */
-    public hasExecuted(): boolean {
-        return (this._timeScenarioExecuted !== null);
-    }
-
-    /**
-     * Did this scenario finish executing?
-     */
-    public hasFinished(): boolean {
-        return (
-            this.hasExecuted() &&
-            this._timeScenarioFinished !== null
-        );
     }
 
     /**
@@ -738,7 +748,7 @@ export class Scenario {
      * @param opts 
      */
     protected _setResponseType(type: ResponseType, opts: any = {}): Scenario {
-        if (this.hasExecuted()) {
+        if (this.hasExecuted) {
             throw new Error('Scenario was already executed. Can not change type.');
         }
         this._options = opts;
@@ -867,7 +877,7 @@ export class Scenario {
      * Execute now if we are able to do so
      */
     protected _executeWhenReady() {
-        if (!this._waitToExecute && this.canExecute()) {
+        if (!this._waitToExecute && this.canExecute) {
             this.execute();
         }
     }
@@ -879,12 +889,12 @@ export class Scenario {
      */
     protected async _markScenarioCompleted(errorMessage: string | null = null, errorDetails?: string): Promise<Scenario> {
         // Only run this once
-        if (!this.hasFinished()) {
+        if (!this.hasFinished) {
             await this._fireAfter();
             this._log.push(new CommentLine(`Took ${this.executionDuration}ms`));
             // Scenario completed without an error (could be pass or fail)
             if (errorMessage === null) {
-                this.passed ?
+                this.hasPassed ?
                     await this._fireSuccess() :
                     await this._fireFailure();
             }

@@ -118,30 +118,51 @@ export abstract class GenericResponse implements iResponse {
     abstract findAll(path: string): Promise<any[]>;
     abstract evaluate(context: any, callback: Function): Promise<any>;
 
+    /**
+     * HTTP Status Code
+     */
     public get statusCode(): Value {
         return this._wrapAsValue(this._response.statusCode, 'HTTP Status Code');
     }
 
+    /**
+     * HTTP Status Message
+     */
     public get statusMessage(): Value {
         return this._wrapAsValue(this._response.statusMessage, 'HTTP Status Message');
     }
 
+    /**
+     * Raw Response Body
+     */
     public get body(): Value {
         return this._wrapAsValue(this._response.body, 'Raw Response Body');
     }
 
+    /**
+     * Size of the response body
+     */
     public get length(): Value {
         return this._wrapAsValue(this._response.body.length, 'Length of Response Body');
     }
 
+    /**
+     * HTTP Headers
+     */
     public get headers(): Value {
         return this._wrapAsValue(this._response.headers, 'HTTP Headers');
     }
 
+    /**
+     * HTTP Cookies
+     */
     public get cookies(): Value {
         return this._wrapAsValue(this._response.cookies, 'HTTP Cookies');
     }
 
+    /**
+     * JSON parsed response body
+     */
     public get jsonBody(): Value {
         try {
             const json = JSON.parse(this._response.body);
@@ -151,14 +172,23 @@ export abstract class GenericResponse implements iResponse {
         }
     }
 
+    /**
+     * URL of the request
+     */
     public get url(): Value {
         return this._wrapAsValue(this.scenario.getUrl(), 'Request URL');
     }
 
+    /**
+     * URL of the response, after all redirects
+     */
     public get finalUrl(): Value {
         return this._wrapAsValue(this.scenario.getFinalUrl(), 'Response URL (after redirects)');
     }
 
+    /**
+     * Time from request start to response complete
+     */
     public get loadTime(): Value {
         return this._wrapAsValue(this.scenario.requestDuration, 'Request to Response Load Time');
     }
@@ -172,6 +202,11 @@ export abstract class GenericResponse implements iResponse {
         this._response = response;
     }
 
+    /**
+     * Take a relative URL and make it absolute, based on the requested URL
+     * 
+     * @param uri 
+     */
     public absolutizeUri(uri: string): string {
         let baseUrl: URL = new URL(this.scenario.suite.buildUrl(this.scenario.getUrl() || ''));
         return (new URL(uri, baseUrl.href)).href;

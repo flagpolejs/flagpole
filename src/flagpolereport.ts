@@ -25,8 +25,8 @@ export class FlagpoleReport {
         lines.push(new CommentLine('Environment: ' + Flagpole.getEnvironment()));
         lines.push(new CommentLine('Took ' + this.suite.executionDuration + 'ms'));
 
-        let color: ConsoleColor = this.suite.passed() ? ConsoleColor.FgGreen : ConsoleColor.FgRed;
-        lines.push(new CustomLine(' »   Passed? ' + (this.suite.passed() ? 'Yes' : 'No'), color));
+        let color: ConsoleColor = this.suite.hasPassed ? ConsoleColor.FgGreen : ConsoleColor.FgRed;
+        lines.push(new CustomLine(' »   Passed? ' + (this.suite.hasPassed ? 'Yes' : 'No'), color));
         lines.push(new LineBreak());
 
         await this.suite.scenarios.forEach(async function (scenario) {
@@ -83,7 +83,7 @@ export class FlagpoleReport {
             let scenario: Scenario = scenarios[i];
             const log = await scenario.getLog();
             out.scenarios[i] = {
-                done: scenario.hasFinished(),
+                done: scenario.hasFinished,
                 failCount: 0,
                 passCount: 0,
                 log: []

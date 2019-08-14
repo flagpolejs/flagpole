@@ -4,6 +4,7 @@ import { Link } from './link';
 import { Scenario } from './scenario';
 import { ResponseType } from './response';
 import { AssertionContext } from './assertioncontext';
+import { Flagpole } from '.';
 
 export class DOMElement extends ProtoValue implements iValue {
 
@@ -36,6 +37,9 @@ export class DOMElement extends ProtoValue implements iValue {
         this._path = path || '';
     }
 
+    /**
+     * Convert element synchronously to string as best we can
+     */
     public toString(): string {
         if (this.isCheerioElement()) {
             return this._context.response.getRoot().html(this._input);
@@ -46,6 +50,9 @@ export class DOMElement extends ProtoValue implements iValue {
         return '';
     }
 
+    /**
+     * Get all class names for element
+     */
     public async getClassName(): Promise<Value> {
         if (this.isCheerioElement()) {
             return this._wrapAsValue(
@@ -63,6 +70,11 @@ export class DOMElement extends ProtoValue implements iValue {
         throw new Error(`getClassName is not supported with ${this.toType()}.`);
     }
 
+    /**
+     * Does this element have the given class?
+     * 
+     * @param className 
+     */
     public async hasClassName(className: string): Promise<Value> {
         if (this.isCheerioElement()) {
             return this._wrapAsValue(
@@ -81,11 +93,17 @@ export class DOMElement extends ProtoValue implements iValue {
         throw new Error(`hasClassName is not supported with ${this.toType()}.`);
     }
 
+    /**
+     * Get element's HTML tag name
+     */
     public async getTagName(): Promise<Value> {
         const tagName: string = await this._getTagName();
         return this._wrapAsValue(tagName, `Tag Name of ${this.name}`);
     }
 
+    /**
+     * Get element's innerText
+     */
     public async getInnerText(): Promise<Value> {
         if (this.isPuppeteerElement() && this._context.page !== null) {
             return this._wrapAsValue(
@@ -102,6 +120,9 @@ export class DOMElement extends ProtoValue implements iValue {
         throw new Error(`getInnerText is not supported with ${this.toType()}.`);
     }
 
+    /**
+     * Get element's innerHtml which will not include the element itself, only its contents
+     */
     public async getInnerHtml(): Promise<Value> {
         if (this.isPuppeteerElement() && this._context.page !== null) {
             return this._wrapAsValue(
@@ -118,22 +139,9 @@ export class DOMElement extends ProtoValue implements iValue {
         throw new Error(`getInnerHtml is not supported with ${this.toType()}.`);
     }
 
-    public async getOuterText(): Promise<Value> {
-        if (this.isPuppeteerElement() && this._context.page !== null) {
-            return this._wrapAsValue(
-                await this._context.page.evaluate(e => e.outerText, this.$),
-                `Outer Text of ${this.name}`
-            );
-        }
-        else if (this.isCheerioElement()) {
-            return this._wrapAsValue(
-                this._input.text(),
-                `Outer Text of ${this.name}`
-            );
-        }
-        throw new Error(`getInnerText is not supported with ${this.toType()}.`);
-    }
-
+    /**
+     * Get the HTML of the element and all of its contents
+     */
     public async getOuterHtml(): Promise<Value> {
         if (this.isPuppeteerElement() && this._context.page !== null) {
             return this._wrapAsValue(
@@ -150,6 +158,11 @@ export class DOMElement extends ProtoValue implements iValue {
         throw new Error(`getInnerHtml is not supported with ${this.toType()}.`);
     }
 
+    /**
+     * Does this element have an atribute with this name?
+     * 
+     * @param key 
+     */
     public async hasAttribute(key: string): Promise<Value> {
         return this._wrapAsValue(
             (await this._getAttribute(key)) != null,
@@ -157,12 +170,22 @@ export class DOMElement extends ProtoValue implements iValue {
         );
     }
 
+    /**
+     * Get the attribute with this name or null if it doesn't exist
+     * 
+     * @param key 
+     */
     public async getAttribute(key: string): Promise<Value> {
         const name: string = `${this.name} -> ${key}`;
         const attr: string | null = await this._getAttribute(key);
         return this._wrapAsValue(attr, name);
     }
 
+    /**
+     * Does this element have a property with this name?
+     * 
+     * @param key 
+     */
     public async hasProperty(key: string): Promise<Value> {
         return this._wrapAsValue(
             !(await this.getProperty(key)).isNull(),
@@ -170,6 +193,10 @@ export class DOMElement extends ProtoValue implements iValue {
         );
     }
 
+    /**
+     * Get the property with this name in the element, or null if it doesn't exist
+     * @param key 
+     */
     public async getProperty(key: string): Promise<Value> {
         const name: string = `${this.name} -> ${key}`;
         if (this.isCheerioElement()) {
@@ -182,6 +209,11 @@ export class DOMElement extends ProtoValue implements iValue {
         throw new Error(`getProperty is not supported with ${this.toType()}.`);
     }
 
+    /**
+     * Does this element have data with this key?
+     * 
+     * @param key 
+     */
     public async hasData(key: string): Promise<Value> {
         return this._wrapAsValue(
             !(await this.getData(key)).isNull(),
@@ -189,6 +221,10 @@ export class DOMElement extends ProtoValue implements iValue {
         );
     }
 
+    /**
+     * Get the data with this key in the element, or null
+     * @param key 
+     */
     public async getData(key: string): Promise<Value> {
         const name: string = `${this.name} -> ${key}`;
         if (this.isCheerioElement()) {
@@ -201,6 +237,9 @@ export class DOMElement extends ProtoValue implements iValue {
         throw new Error(`getData is not supported with ${this.toType()}.`);
     }
 
+    /**
+     * Get the value of this element, such as the value of an input field
+     */
     public async getValue(): Promise<Value> {
         const name: string = `Value of ${this.name}`;
         if (this.isCheerioElement()) {
@@ -213,6 +252,9 @@ export class DOMElement extends ProtoValue implements iValue {
         throw new Error(`getValue is not supported with ${this.toType()}.`);
     }
 
+    /**
+     * Get the text content within the element
+     */
     public async getText(): Promise<Value> {
         const name: string = `Text of ${this.name}`;
         if (this.isCheerioElement()) {
@@ -227,7 +269,6 @@ export class DOMElement extends ProtoValue implements iValue {
 
     /**
      * Fill out the form with this data.
-     * TODO: This method is only partially working, needs more testing and to be completed.
      * 
      * @param formData 
      */
@@ -270,6 +311,9 @@ export class DOMElement extends ProtoValue implements iValue {
         }
     }
 
+    /**
+     * If this is a form element, submit the form
+     */
     public async submit(): Promise<any>;
     public async submit(callback: Function): Promise<any>;
     public async submit(message: string, callback: Function): Promise<any>;
@@ -290,7 +334,7 @@ export class DOMElement extends ProtoValue implements iValue {
             // If there is a URL we can submit the form to
             if (link.isNavigation()) {
                 let uri: string;
-                scenario.method(method);
+                scenario.setMethod(method);
                 if (method == 'get') {
                     uri = link.getUri(this.$.serializeArray());
                 }
@@ -301,7 +345,7 @@ export class DOMElement extends ProtoValue implements iValue {
                     formDataArray.forEach(function (input: any) {
                         formData[input.name] = input.value;
                     });
-                    scenario.form(formData)
+                    scenario.setFormData(formData)
                 }
                 return scenario.open(uri);
             }
@@ -313,6 +357,9 @@ export class DOMElement extends ProtoValue implements iValue {
         throw new Error('This is not supported yet.');
     }
 
+    /**
+     * Click on this element and then load a new page. For HTML/DOM scenarios this creates a new scenario
+     */
     public async click(): Promise<any>;
     public async click(callback: Function): Promise<any>;
     public async click(message: string, callback: Function): Promise<any>;
@@ -329,7 +376,8 @@ export class DOMElement extends ProtoValue implements iValue {
         const message: string = typeof a == 'string' ? a : '';
         // Click in Puppeteer
         if (this.isPuppeteerElement()) {
-            return await this._input.click();
+            message && this._context.scenario.comment(message);
+            return await (<ElementHandle> this._input).click();
         }
         // If this is a link tag, treat it the same as load
         if (await this._isLinkTag()) {
@@ -337,13 +385,22 @@ export class DOMElement extends ProtoValue implements iValue {
         }
         // Is this a button?
         if (await this._isButtonTag()) {
-
+            const type: Value = (await this.getAttribute('type'));
+            if (type.isNull() || type.toString().toLowerCase() == 'submit') {
+                const form = (<Cheerio>this._input).closest('form');
+                const id: string = Flagpole.uniqueId();
+                if (form) {
+                    form.attr('flagpole-id', id);
+                }
+                await this._context.submit(`form[flagpole-id=${id}]`);
+            }
+            return;
         }
         throw Error('This is not a clickable element.');
     }
 
     /**
-     * Load the URL from this NodeElement if it has something to load
+     * Load the URL from this element if it has something to load
      * This is used to create a lambda scenario
      * 
      * @param a 

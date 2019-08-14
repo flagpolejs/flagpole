@@ -6,7 +6,7 @@ import { Page, ElementHandle } from 'puppeteer';
 import { Assertion } from './assertion';
 import { DOMElement } from './domelement';
 import { HtmlResponse } from './htmlresponse';
-import { Value, iValue } from './value';
+import { Value } from './value';
 
 export class AssertionContext {
 
@@ -21,6 +21,9 @@ export class AssertionContext {
         return this._scenario.responseType == ResponseType.html;
     }
 
+    /**
+     * Get returned value from previous next block
+     */
     public result: any;
 
     public get response(): iResponse {
@@ -53,10 +56,21 @@ export class AssertionContext {
         this._response = response;
     }
 
+    /**
+     * Make a comment in the scenario output
+     * 
+     * @param message 
+     */
     public comment(message: string) {
         this._scenario.comment(message);
     }
 
+    /**
+     * Create a new assertion based on this value
+     * 
+     * @param message 
+     * @param value 
+     */
     public assert(message: string, value: any): Assertion;
     public assert(value: any): Assertion;
     public assert(a: any, b?: any): Assertion {
@@ -65,19 +79,30 @@ export class AssertionContext {
         return new Assertion(this, value, message);
     }
 
+    /**
+     * Wait for this number of milliseconds
+     * 
+     * @param milliseconds 
+     */
     public pause(milliseconds: number): Promise<any> {
         return new Promise((resolve) => {
             setTimeout(resolve, milliseconds);
         });
     }
 
-    public async findHavingText(path: string, searchForText: string | RegExp): Promise<DOMElement | null> {
+    /**
+     * Get first element with the given selector that has text content matching the search 
+     * 
+     * @param selector
+     * @param searchForText 
+     */
+    public async findHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement | null> {
         if (
             (this._isBrowserRequest && this.page !== null) ||
             this._isHtmlRequest
         ) {
             let matchingElement: DOMElement | null = null;
-            const elements: DOMElement[] = await this.findAll(path);
+            const elements: DOMElement[] = await this.findAll(selector);
             // Loop through elements until we get to the end or find a match
             for (let i = 0; i < elements.length && matchingElement === null; i++) {
                 const element: DOMElement = elements[i];
@@ -98,13 +123,19 @@ export class AssertionContext {
         throw new Error('selectHavingText is not available in this context');
     };
 
-    public async findAllHavingText(path: string, searchForText: string | RegExp): Promise<DOMElement[]> {
+    /**
+     * Get all elements with the given selector that has text content matching the search
+     * 
+     * @param selector
+     * @param searchForText 
+     */
+    public async findAllHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement[]> {
         if (
             (this._isBrowserRequest && this.page !== null) ||
             this._isHtmlRequest
         ) {
             let matchingElements: DOMElement[] = [];
-            const elements: DOMElement[] = await this.findAll(path);
+            const elements: DOMElement[] = await this.findAll(selector);
             // Loop through elements until we get to the end or find a match
             for (let i = 0; i < elements.length; i++) {
                 const element: DOMElement = elements[i];
@@ -125,14 +156,26 @@ export class AssertionContext {
         throw new Error('selectAllHavingText is not available in this context');
     };
 
-    public async clearThenType(path: string, textToType: string, opts: any = {}): Promise<any> {
-        await this.clear(path);
-        return this.type(path, textToType, opts);
+    /**
+     * Clear any current input and then type this into the input box
+     * 
+     * @param selector
+     * @param textToType 
+     * @param opts 
+     */
+    public async clearThenType(selector: string, textToType: string, opts: any = {}): Promise<any> {
+        await this.clear(selector);
+        return this.type(selector, textToType, opts);
     }
 
-    public async clear(path: string): Promise<any> {
+    /**
+     * Clear any current input in this input box
+     * 
+     * @param selector
+     */
+    public async clear(selector: string): Promise<any> {
         if (this._isBrowserRequest && this.page !== null) {
-            const input: ElementHandle<Element> | null = await this.page.$(path);
+            const input: ElementHandle<Element> | null = await this.page.$(selector);
             if (input !== null) {
                 await input.click({ clickCount: 3 });
                 return await this.page.keyboard.press('Backspace');
@@ -141,80 +184,205 @@ export class AssertionContext {
         else if (this._isHtmlRequest) {
             const htmlResponse = this.response as HtmlResponse;
             return await htmlResponse.evaluate(this, function ($: Cheerio) {
-                $.find(path).val('');
+                $.find(selector).val('');
             });
         }
-        throw new Error(`Can not type into this element ${path}`);
+        throw new Error(`Can not type into this element ${selector}`);
     }
 
-    public async type(path: string, textToType: string, opts: any = {}): Promise<any> {
+    /**
+     * Type this text into the given input box
+     * 
+     * @param selector
+     * @param textToType 
+     * @param opts 
+     */
+    public async type(selector: string, textToType: string, opts: any = {}): Promise<any> {
         if (this._isBrowserRequest && this.page !== null) {
-            return await this.page.type(path, textToType, opts);
+            return await this.page.type(selector, textToType, opts);
         }
         else if (this._isHtmlRequest) {
             const htmlResponse = this.response as HtmlResponse;
             return await htmlResponse.evaluate(this, function ($) {
-                $(path).val(textToType);
+                let currentValue = $(selector).val();
+                $(selector).val(currentValue + textToType);
             });
         }
-        throw new Error(`Can not type into element ${path}`);
+        throw new Error(`Can not type into element ${selector}`);
     }
 
+    /**
+     * Select items from a dropdown or multi-select box
+     * 
+     * @param selector
+     * @param value 
+     */
+    public select(selector: string, value: string | string[]): Promise<string[]> {
+        if (this._isBrowserRequest && this.page !== null) {
+            const values: string[] = (typeof value == 'string') ? [value] : value;
+            // @ts-ignore VS Code is unhappy no matter what I do
+            return this.page.select.apply(null, [selector].concat(values));
+        }
+        throw new Error('Select not available in this context.');
+    }
+
+    /**
+     * Execute this javascript against the response
+     * 
+     * @param callback 
+     */
     public async evaluate(callback: Function): Promise<any> {
         return await this.response.evaluate(this, callback);
     }
 
-    public async waitForHidden(path: string, timeout: number = 100): Promise<DOMElement | null> {
+    /**
+     * Wait for DOM Loaded before continuing
+     * 
+     * @param timeout 
+     */
+    public async waitForReady(timeout: number = 15000): Promise<void> {
+        if (this._isBrowserRequest && this.page !== null) {
+            await this.page.waitForNavigation({
+                timeout: timeout,
+                waitUntil: 'domcontentloaded'
+            });
+            return;
+        }
+        throw new Error('waitForReady is not available in this context');
+    }
+
+    /**
+     * Wait for everything to load before continuing
+     * 
+     * @param timeout 
+     */
+    public async waitForLoad(timeout: number = 30000): Promise<void> {
+        if (this._isBrowserRequest && this.page !== null) {
+            await this.page.waitForNavigation({
+                timeout: timeout,
+                waitUntil: 'load'
+            });
+            return;
+        }
+        throw new Error('waitForLoad is not available in this context');
+    }
+
+    /**
+     * Wait for network to be idle for 500ms before continuing
+     * 
+     * @param timeout 
+     */
+    public async waitForNetworkIdle(timeout: number = 10000): Promise<void> {
+        if (this._isBrowserRequest && this.page !== null) {
+            await this.page.waitForNavigation({
+                timeout: timeout,
+                waitUntil: 'networkidle0'
+            });
+            return;
+        }
+        throw new Error('waitForNetworkIdle is not available in this context');
+    }
+
+    /**
+     * Wait for network to have no more than two connections for 500ms before continuing
+     * 
+     * @param timeout 
+     */
+    public async waitForNavigation(timeout: number = 10000): Promise<void> {
+        if (this._isBrowserRequest && this.page !== null) {
+            await this.page.waitForNavigation({
+                timeout: timeout,
+                waitUntil: 'networkidle2'
+            });
+            return;
+        }
+        throw new Error('waitForNavigation is not available in this context');
+    }
+
+    /**
+     * Wait for element at the selected path to be hidden
+     * 
+     * @param selector
+     * @param timeout 
+     */
+    public async waitForHidden(selector: string, timeout: number = 100): Promise<DOMElement | null> {
         if (this._isBrowserRequest && this.page !== null) {
             const opts = { timeout: timeout || 100, hidden: true };
-            const element = await this.page.waitForSelector(path, opts);
-            return DOMElement.create(element, this, path, path);
+            const element = await this.page.waitForSelector(selector, opts);
+            return DOMElement.create(element, this, selector, selector);
         }
         else if (this._isHtmlRequest) {
-            return this.find(path);
+            return this.find(selector);
         }
-        throw new Error('waitForExists is not available in this context');
+        throw new Error('waitForHidden is not available in this context');
     }
 
-    public async waitForVisible(path: string, timeout: number = 100): Promise<DOMElement | null> {
+    /**
+     * Wait for element at the selected path to be visible
+     * 
+     * @param selector
+     * @param timeout 
+     */
+    public async waitForVisible(selector: string, timeout: number = 100): Promise<DOMElement | null> {
         if (this._isBrowserRequest && this.page !== null) {
             const opts = { timeout: timeout || 100, visible: true };
-            const element = await this.page.waitForSelector(path, opts);
-            return DOMElement.create(element, this, path, path);
+            const element = await this.page.waitForSelector(selector, opts);
+            return DOMElement.create(element, this, selector, selector);
         }
         else if (this._isHtmlRequest) {
-            return this.find(path);
+            return this.find(selector);
         }
         throw new Error('waitForExists is not available in this context');
     }
 
-    public async waitForExists(path: string, timeout?: number): Promise<DOMElement |  null> {
+    /**
+     * Wait for element at the selected path to exist in the DOM
+     * 
+     * @param selector
+     * @param timeout 
+     */
+    public async waitForExists(selector: string, timeout?: number): Promise<DOMElement |  null> {
         if (this._isBrowserRequest && this.page !== null) {
             const opts = { timeout: timeout || 100 };
-            const element = await this.page.waitForSelector(path, opts);
-            return DOMElement.create(element, this, path, path);
+            const element = await this.page.waitForSelector(selector, opts);
+            return DOMElement.create(element, this, selector, selector);
         }
         else if (this._isHtmlRequest) {
-            return this.find(path);
+            return this.find(selector);
         }
         throw new Error('waitForExists is not available in this context');
     }
 
-    public find(path: string): Promise<any> {
-        return this.response.find(path);
+    /**
+     * Find for first element at this selector path
+     * 
+     * @param selector
+     */
+    public find(selector: string): Promise<any> {
+        return this.response.find(selector);
     }
 
-    public findAll(path: string): Promise<any[]> {
-        return this.response.findAll(path);
+    /**
+     * Find all elements at this selector path
+     * 
+     * @param selector
+     */
+    public findAll(selector: string): Promise<any[]> {
+        return this.response.findAll(selector);
     }
 
-    public async submit(path: string): Promise<any> {
+    /**
+     * Submit this form
+     * 
+     * @param selector
+     */
+    public async submit(selector: string): Promise<any> {
         if (this._isBrowserRequest && this.page !== null) {
-            const form = await this.page.$(path);
+            const form = await this.page.$(selector);
             return await this.page.evaluate(form => form.submit(), form);
         }
         else if (this._isHtmlRequest) {
-            const form: DOMElement | null = await this.find(path);
+            const form: DOMElement | null = await this.find(selector);
             if (form !== null) {
                 return await form.submit();
             }
@@ -222,18 +390,23 @@ export class AssertionContext {
         throw new Error('Could not submit.')
     }
 
-    public click(path: string): Promise<any> {
+    /**
+     * Click on this element
+     * 
+     * @param selector
+     */
+    public click(selector: string): Promise<any> {
         return new Promise((resolve, reject) => {
             if (this._isBrowserRequest && this.page !== null) {
                 const page = this.page;
                 // Try this method first
-                page.click(path)
+                page.click(selector)
                     .then(resolve)
                     // But sometimes it fails, so try this as a backup
                     .catch(() => {
                         page.evaluate(`
                             (function() {
-                                const el = document.querySelector('${path}');
+                                const el = document.querySelector('${selector}');
                                 if (el) { el.click(); return true; }
                                 else { return false; }
                             })();`

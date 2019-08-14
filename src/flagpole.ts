@@ -119,4 +119,8 @@ export class Flagpole {
         return match !== null ? String(match[1]).toLocaleLowerCase() : '';
     }
 
+    public static uniqueId(): string {
+        return '_' + Math.random().toString(36).substr(2, 9);
+    }
+
 }

@@ -25,11 +25,49 @@ export class Suite {
         return this._baseUrl;
     }
 
+    /**
+     * Did every scenario in this suite pass?
+     */
+    public get hasPassed(): boolean {
+        return this.scenarios.every(function (scenario) {
+            return scenario.hasPassed;
+        });
+    }
+
+    /**
+     * Did any scenario in this suite fail?
+     */
+    public get hasFailed(): boolean {
+        return this.scenarios.some(function (scenario) {
+            return scenario.hasFailed;
+        });
+    }
+
+    /**
+     * Did this suite start running yet?
+     */
+    public get hasExecuted(): boolean {
+        return this._timeSuiteExecuted !== null;
+    }
+
+    /**
+     * Has this suite finished running?
+     */
+    public get hasFinished(): boolean {
+        return this._timeSuiteFinished !== null;
+    }
+
+    /**
+     * Total duration in milliseconds from initialization to completion
+     */
     public get totalDuration(): number | null {
         return this._timeSuiteFinished !== null ?
             (this._timeSuiteFinished - this._timeSuiteInitialized) : null;
     }
 
+    /**
+     * Duration in milliseconds between execution start and completion
+     */
     public get executionDuration(): number | null {
         return this._timeSuiteExecuted !== null && this._timeSuiteFinished !== null ?
             (this._timeSuiteFinished - this._timeSuiteExecuted) : null;
@@ -94,20 +132,6 @@ export class Suite {
     }
 
     /**
-     * Did this suite start running yet?
-     */
-    public hasExecuted(): boolean {
-        return this._timeSuiteExecuted !== null;
-    }
-
-    /**
-     * Has this suite finished running?
-     */
-    public hasFinished(): boolean {
-        return this._timeSuiteFinished !== null;
-    }
-
-    /**
      * Print all logs to console
      *
      * @returns {Suite}
@@ -116,7 +140,7 @@ export class Suite {
         const report: FlagpoleReport = new FlagpoleReport(this);
         report.print()
             .then(() => {
-                exitAfterPrint && Flagpole.exit(this.passed())
+                exitAfterPrint && Flagpole.exit(this.hasPassed)
             });
     }
 
@@ -268,7 +292,7 @@ export class Suite {
      * @returns {Suite}
      */
     public execute(): Suite {
-        if (this.hasExecuted()) {
+        if (this.hasExecuted) {
             throw new Error(`Suite already executed.`)
         }
         this._timeSuiteExecuted = Date.now();
@@ -276,26 +300,6 @@ export class Suite {
             scenario.execute();
         });
         return this;
-    }
-
-    /**
-     * Did every scenario in this suite pass?
-     *
-     * @returns {boolean}
-     */
-    public passed(): boolean {
-        return this.scenarios.every(function(scenario) {
-            return scenario.passed();
-        });
-    }
-
-    /**
-     * Did any scenario in this suite fail?
-     */
-    public failed(): boolean {
-        return this.scenarios.some(function (scenario) {
-            return scenario.failed();
-        });
     }
 
     /**
@@ -379,7 +383,7 @@ export class Suite {
     */
     private _haveAllScenariosFinished(): boolean {
         return this.scenarios.every(function (scenario) {
-            return scenario.hasFinished();
+            return scenario.hasFinished;
         });
     }
 
@@ -503,7 +507,7 @@ export class Suite {
 
     private async _onBeforeScenarioExecutes(scenario: Scenario): Promise<Scenario> {
         // This scenario is executing, suite was not previously executing
-        if (scenario.hasExecuted() && !this.hasExecuted()) {
+        if (scenario.hasExecuted && !this.hasExecuted) {
             await this._fireBeforeAll();
         }
         await this._beforeAllResolved();
@@ -518,10 +522,10 @@ export class Suite {
 
     private async _onAfterScenarioFinished(scenario: Scenario): Promise<void> {
         // Is every scenario completed? And only run it once
-        if (this._haveAllScenariosFinished() && !this.hasFinished()) {
+        if (this._haveAllScenariosFinished() && !this.hasFinished) {
             await this._fireAfterAll();
             // Success or failure?
-            this.passed() ?
+            this.hasPassed ?
                 await this._fireSuccess() :
                 await this._fireFailure();
             // All Done
@@ -531,7 +535,7 @@ export class Suite {
                 this.print(Flagpole.exitOnDone);
             }
             else {
-                Flagpole.exitOnDone && Flagpole.exit(this.passed());
+                Flagpole.exitOnDone && Flagpole.exit(this.hasPassed);
             }
         }
     }
