@@ -30,7 +30,7 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         return callback.apply(context, [ $ ]);
     }
 
-    public async asyncSelect(path: string): Promise<DOMElement | null> {
+    public async find(path: string): Promise<DOMElement | null> {
         const selection: Cheerio = $(path);
         if (selection.length > 0) {
             return await DOMElement.create(
@@ -42,7 +42,7 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         }
     }
 
-    public async asyncSelectAll(path: string): Promise<DOMElement[]> {
+    public async findAll(path: string): Promise<DOMElement[]> {
         const response: iResponse = this;
         const elements: Cheerio = $(path);
         if (elements.length > 0) {

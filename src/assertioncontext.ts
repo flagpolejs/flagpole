@@ -71,13 +71,13 @@ export class AssertionContext {
         });
     }
 
-    public async selectHavingText(path: string, searchForText: string | RegExp): Promise<DOMElement | null> {
+    public async findHavingText(path: string, searchForText: string | RegExp): Promise<DOMElement | null> {
         if (
             (this._isBrowserRequest && this.page !== null) ||
             this._isHtmlRequest
         ) {
             let matchingElement: DOMElement | null = null;
-            const elements: DOMElement[] = await this.selectAll(path);
+            const elements: DOMElement[] = await this.findAll(path);
             // Loop through elements until we get to the end or find a match
             for (let i = 0; i < elements.length && matchingElement === null; i++) {
                 const element: DOMElement = elements[i];
@@ -98,13 +98,13 @@ export class AssertionContext {
         throw new Error('selectHavingText is not available in this context');
     };
 
-    public async selectAllHavingText(path: string, searchForText: string | RegExp): Promise<DOMElement[]> {
+    public async findAllHavingText(path: string, searchForText: string | RegExp): Promise<DOMElement[]> {
         if (
             (this._isBrowserRequest && this.page !== null) ||
             this._isHtmlRequest
         ) {
             let matchingElements: DOMElement[] = [];
-            const elements: DOMElement[] = await this.selectAll(path);
+            const elements: DOMElement[] = await this.findAll(path);
             // Loop through elements until we get to the end or find a match
             for (let i = 0; i < elements.length; i++) {
                 const element: DOMElement = elements[i];
@@ -164,38 +164,48 @@ export class AssertionContext {
         return await this.response.evaluate(this, callback);
     }
 
-    public async exists(path: string, opts: any = {}): Promise<any> {
-        const context = this;
-        return new Promise(async function (resolve) {
-            if (context._isBrowserRequest && context.page !== null) {
-                const defaultOpts = { timeout: 100 };
-                const element = await context.page.waitForSelector(path, { ...defaultOpts, ...opts });
-                resolve(DOMElement.create(element, context, path, path));
-            }
-            else if (context._isHtmlRequest) {
-                return await context.select(path);
-            }
-            else {
-                throw new Error('waitFor is not available in this context');
-            }
-        });
-    }
-
-    public async visible(path: string, opts: any = {}): Promise<any> {
+    public async waitForHidden(path: string, timeout?: number): Promise<DOMElement | null> {
         if (this._isBrowserRequest && this.page !== null) {
-            const defaultOpts = { visible: true, timeout: 100 };
-            const element = await this.page.waitForSelector(path, { ...defaultOpts, ...opts });
+            const opts = { timeout: timeout || 100, hidden: true };
+            const element = await this.page.waitForSelector(path, opts);
             return DOMElement.create(element, this, path, path);
         }
-        throw new Error('visible is not available in this context');
+        else if (this._isHtmlRequest) {
+            return this.find(path);
+        }
+        throw new Error('waitForExists is not available in this context');
     }
 
-    public select(path: string): Promise<any> {
-        return this.response.asyncSelect(path);
+    public async waitForVisible(path: string, timeout?: number): Promise<DOMElement | null> {
+        if (this._isBrowserRequest && this.page !== null) {
+            const opts = { timeout: timeout || 100, visible: true };
+            const element = await this.page.waitForSelector(path, opts);
+            return DOMElement.create(element, this, path, path);
+        }
+        else if (this._isHtmlRequest) {
+            return this.find(path);
+        }
+        throw new Error('waitForExists is not available in this context');
     }
 
-    public selectAll(path: string): Promise<any[]> {
-        return this.response.asyncSelectAll(path);
+    public async waitForExists(path: string, timeout?: number): Promise<DOMElement |  null> {
+        if (this._isBrowserRequest && this.page !== null) {
+            const opts = { timeout: timeout || 100 };
+            const element = await this.page.waitForSelector(path, opts);
+            return DOMElement.create(element, this, path, path);
+        }
+        else if (this._isHtmlRequest) {
+            return this.find(path);
+        }
+        throw new Error('waitForExists is not available in this context');
+    }
+
+    public find(path: string): Promise<any> {
+        return this.response.find(path);
+    }
+
+    public findAll(path: string): Promise<any[]> {
+        return this.response.findAll(path);
     }
 
     public async submit(path: string): Promise<any> {
@@ -204,7 +214,7 @@ export class AssertionContext {
             return await this.page.evaluate(form => form.submit(), form);
         }
         else if (this._isHtmlRequest) {
-            const form: DOMElement | null = await this.select(path);
+            const form: DOMElement | null = await this.find(path);
             if (form !== null) {
                 return await form.submit();
             }

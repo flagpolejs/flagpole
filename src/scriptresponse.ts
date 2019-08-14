@@ -22,11 +22,11 @@ export class ScriptResponse extends GenericResponse implements iResponse {
         throw new Error('Evaluate does not support script resources.');
     }
 
-    public async asyncSelect(path: string): Promise<Value> {
+    public async find(path: string): Promise<Value> {
         throw new Error('Script Response does not yet support select');
     }
 
-    public async asyncSelectAll(path: string): Promise<Value[]> {
+    public async findAll(path: string): Promise<Value[]> {
         throw new Error('Script Response does not yet support selectAll');
     }
 

@@ -5,7 +5,7 @@ import { CssResponse } from './cssresponse';
 import { ImageResponse } from './imageresponse';
 import { JsonResponse } from './jsonresponse';
 import { ScriptResponse } from './scriptresponse';
-import { VideoResource } from './videoresource';
+import { VideoResponse } from './videoresponse';
 import { Scenario } from './scenario';
 import { NormalizedResponse, iResponse, ResponseType } from './response';
 import { ExtJSResponse } from './extjsresponse';
@@ -35,7 +35,7 @@ export function createResponse(scenario: Scenario, response: NormalizedResponse)
         className = ScriptResponse;
     }
     else if (type == ResponseType.video) {
-        className = VideoResource;
+        className = VideoResponse;
     }
     else {
         className = ResourceResponse;

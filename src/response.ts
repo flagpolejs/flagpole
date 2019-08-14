@@ -26,8 +26,8 @@ export interface iResponse {
     headers: Value,
     cookies: Value,
     getRoot(): any,
-    asyncSelect(path: string): Promise<any>
-    asyncSelectAll(path: string): Promise<Array<any>>
+    find(path: string): Promise<any>
+    findAll(path: string): Promise<Array<any>>
     header(key?: string): Value
     cookie(key?: string): Value
     absolutizeUri(uri: string): string
@@ -114,8 +114,8 @@ export abstract class GenericResponse implements iResponse {
 
     abstract get type(): ResponseType;
     abstract get typeName(): string;
-    abstract asyncSelect(path: string): Promise<any | null>;
-    abstract asyncSelectAll(path: string): Promise<any[]>;
+    abstract find(path: string): Promise<any | null>;
+    abstract findAll(path: string): Promise<any[]>;
     abstract evaluate(context: any, callback: Function): Promise<any>;
 
     public get statusCode(): Value {

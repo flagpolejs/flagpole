@@ -1,20 +1,9 @@
-import { Scenario } from "./scenario";
 import { DOMElement } from "./domelement";
-import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
-import { Browser } from './browser';
+import { iResponse, ResponseType } from "./response";
 import { Page, ElementHandle } from 'puppeteer';
-import { AssertionContext } from './assertioncontext';
-import { Flagpole } from '.';
+import { BrowserResponse } from './browserresponse';
 
-export class ExtJSResponse extends GenericResponse implements iResponse {
-
-    public get browser(): Browser {
-        return this.scenario.getBrowser();
-    }
-
-    public get page(): Page | null {
-        return this.scenario.getBrowser().getPage();
-    }
+export class ExtJSResponse extends BrowserResponse implements iResponse {
 
     public get typeName(): string {
         return 'ExtJS';
@@ -24,17 +13,13 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
         return ResponseType.extjs;
     }
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
-    }
-
     /**
      * Select the first matching element
      * 
      * @param path 
      * @param findIn 
      */
-    public async asyncSelect(path: string, findIn?: any): Promise<DOMElement | null> {
+    public async find(path: string): Promise<DOMElement | null> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
         if (page !== null) {
@@ -54,7 +39,7 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
      * @param path 
      * @param findIn 
      */
-    public async asyncSelectAll(path: string, findIn?: any): Promise<DOMElement[]> {
+    public async findAll(path: string): Promise<DOMElement[]> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
         const domElements: DOMElement[] = [];
@@ -68,25 +53,6 @@ export class ExtJSResponse extends GenericResponse implements iResponse {
             });
         }
         return domElements;
-    }
-
-    /**
-     * Runs the code in callback within the context of the browser.
-     * 
-     * @param context 
-     * @param callback 
-     */
-    public async evaluate(context: any, callback: Function): Promise<any> {
-        if (this.page !== null) {
-            const functionName: string = `flagpole_${Date.now()}`;
-            const jsToInject: string = `window.${functionName} = ${callback}`;
-            await this.page.addScriptTag({ content: jsToInject });
-            const result = await this.page.evaluate(({ functionName }) => {
-                return window[functionName]();
-            }, { functionName });
-            return result;
-        }
-        throw new Error('Page is null');
     }
 
 }

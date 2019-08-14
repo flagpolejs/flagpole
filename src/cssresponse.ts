@@ -1,7 +1,6 @@
 import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { Flagpole } from '.';
-import { Value } from './value';
 import { CSSRule } from './cssrule';
 
 const css = require('css');
@@ -35,7 +34,7 @@ export class CssResponse extends GenericResponse implements iResponse {
         throw new Error('Evaluate does not support stylesheets.');
     }
 
-    public async asyncSelect(path: string): Promise<CSSRule> {
+    public async find(path: string): Promise<CSSRule> {
         if (this.css.stylesheet && Flagpole.toType(this.css.stylesheet.rules) == 'array') {
             const rules: any[] = this.css.stylesheet.rules;
             let matchingRule: any | null = null;
@@ -55,7 +54,7 @@ export class CssResponse extends GenericResponse implements iResponse {
         throw new Error('CSS is invalid');
     }
 
-    public async asyncSelectAll(path: string): Promise<CSSRule[]> {
+    public async findAll(path: string): Promise<CSSRule[]> {
         if (this.css.stylesheet && Flagpole.toType(this.css.stylesheet.rules) == 'array') {
             const rules: any[] = this.css.stylesheet.rules;
             let matchingRules: CSSRule[] = [];

@@ -51,7 +51,7 @@ export class ImageResponse extends GenericResponse implements iResponse {
         throw new Error('Evaluate does not support images.');
     }
 
-    public async asyncSelect(propertyName: string): Promise<Value> {
+    public async find(propertyName: string): Promise<Value> {
         return new Value(
             typeof this.imageProperties[propertyName] !== 'undefined' ?
                 this.imageProperties[propertyName] :
@@ -61,8 +61,8 @@ export class ImageResponse extends GenericResponse implements iResponse {
         )
     }
 
-    public async asyncSelectAll(propertyName: string): Promise<Value[]> {
-        const value: Value = await this.asyncSelect(propertyName);
+    public async findAll(propertyName: string): Promise<Value[]> {
+        const value: Value = await this.find(propertyName);
         return value.isNull() ? [] : [value];
     }
 

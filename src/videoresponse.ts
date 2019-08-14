@@ -1,7 +1,7 @@
 import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
 
-export class VideoResource extends GenericResponse implements iResponse {
+export class VideoResponse extends GenericResponse implements iResponse {
 
     public get typeName(): string {
         return 'Video';
@@ -21,11 +21,11 @@ export class VideoResource extends GenericResponse implements iResponse {
         throw new Error('Evaluate does not support video resources.');
     }
 
-    public async asyncSelect(path: string): Promise<any | null> {
+    public async find(path: string): Promise<any | null> {
         throw new Error('Video Response does not yet support select');
     }
 
-    public async asyncSelectAll(path: string): Promise<any[]> {
+    public async findAll(path: string): Promise<any[]> {
         throw new Error('Video Response does not yet support selectAll');
     }
 

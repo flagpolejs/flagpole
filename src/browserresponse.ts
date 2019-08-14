@@ -25,9 +25,8 @@ export class BrowserResponse extends GenericResponse implements iResponse {
      * Select the first matching element
      * 
      * @param path 
-     * @param findIn 
      */
-    public async asyncSelect(path: string, findIn?: any): Promise<DOMElement | null> {
+    public async find(path: string): Promise<DOMElement | null> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
         if (page !== null) {
@@ -45,9 +44,8 @@ export class BrowserResponse extends GenericResponse implements iResponse {
      * Select all matching elements
      * 
      * @param path 
-     * @param findIn 
      */
-    public async asyncSelectAll(path: string, findIn?: any): Promise<DOMElement[]> {
+    public async findAll(path: string): Promise<DOMElement[]> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
         const domElements: DOMElement[] = [];
@@ -72,17 +70,11 @@ export class BrowserResponse extends GenericResponse implements iResponse {
             const jsToInject: string = `window.${functionName} = ${callback}`;
             await this.page.addScriptTag({ content: jsToInject });
             return await this.page.evaluate(functionName => {
+                // @ts-ignore This is calling into the browser, so don't do an IDE error
                 return window[functionName]();
             }, functionName);
         }
         throw new Error('Cannot evaluate code becuase page is null.');
-    }
-
-    /**
-     * DEPRECATED
-     */
-    public select(path: string, findIn?: any): Node {
-        throw new Error('Deprecated. Select is longer supported.');
     }
 
 }

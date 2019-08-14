@@ -37,18 +37,17 @@ export class JsonResponse extends GenericResponse implements iResponse {
      * @param path 
      * @param findIn 
      */
-    public async asyncSelect(path: string, findIn?: any): Promise<Value> {
+    public async find(path: string): Promise<Value> {
         await this.loadJmesPath();
         if (typeof this._jPath == 'undefined') {
             throw new Error('Could not load jmespath');
         }
-        const searchIn = findIn || this._json;
-        const selection = await this._jPath.search(searchIn, path);
+        const selection = await this._jPath.search(this._json, path);
         return this._wrapAsValue(selection, path);
     }
 
-    public async asyncSelectAll(path: string, findIn?: any): Promise<Value[]> {
-        throw new Error('selectAll() is not supported by JSON scenarios, please use select()');
+    public async findAll(path: string): Promise<Value[]> {
+        throw new Error('findAll() is not supported by JSON scenarios, please use select()');
     }
 
     private async loadJmesPath(): Promise<any> {
