@@ -49,6 +49,5 @@ const homepage = suite.html('Homepage').open('/')
             const searchInputBox = await this.find('input[name="q"]');
             this.assert('Search input box should have the value we typed', await searchInputBox.getValue())
                 .equals('milesplit');
-            this.comment(await this.openInBrowser());
         });
     });
