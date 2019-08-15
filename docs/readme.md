@@ -636,6 +636,22 @@ Creates an assertion with the input value.
 this.assert(await this.select('article.topStory h1'))
 ```
 
+#### `clear(selector: string): Promise<void>`
+
+Clear the existing text in this input and then type this text into the selected path. 
+
+```
+await this.clear('input[name="q"]');
+```
+
+#### `clearThenType(path: string, textToType: string, opts: any): Promise<void>`
+
+Clear the existing text in this input and then type this text into the selected path. For browser scenarios this will be emulating literally pressing keys into the browser. For HTML scenarios it overwrite the value of that element.
+
+```
+await this.clearThenType('input[name="q"]', 'who shot 2pac?');
+```
+
 #### `click(path: string): Promise<void | Scenario>`
 
 Issues a click on the selected element. This works on both browser and html types. For browser, the click event will be passed through to the underlying browser. For html scenarios, it will navigate a link or submit a form, if you click on a submit button or a link.
@@ -651,7 +667,6 @@ For html types, the promise will return a new dynamic scenario that will load th
   this.assert(response.statusCode.equals(200);
 });
 ```
-
 
 #### `comment(message: string)`
 
@@ -689,14 +704,6 @@ const loginText = await this.evaluate((json) => {
 
 In theory, with any of these types, you could also manipulate the response with this method.
 
-#### `exists(path: string, opts: any): Promise<DOMElement>`
-
-Test if an element exists at that path. For a browser scenario it will wait a certain timeout (default 100ms) for the element to show up. If you want it to wait longer, set the timeout value in the opts argument. For HTML tests it just does a select.
-
-```
-const button = await this.exists('a.submit', { timeout: 2000 });
-```
-
 #### `pause(milleseconds: number): Promise<void>`
 
 Delay the execution by this much
@@ -705,7 +712,7 @@ Delay the execution by this much
 await this.pause(1000);
 ```
 
-#### `select(path: string): Promise<DOMElement | CSSRule | Value | null>`
+#### `find(path: string): Promise<DOMElement | CSSRule | Value | null>`
 
 Select the element or value at the given path. What this actually does varies by the type of scenario. 
 
@@ -717,7 +724,7 @@ Note it returns only one element. If multiple match the path then it returns the
 const firstArticle = await this.select('section.topStories article');
 ```
 
-#### `selectAll(path: string): Promise<DOMElement[] | CSSRule[] | Value[] || []>`
+#### `findAll(path: string): Promise<DOMElement[] | CSSRule[] | Value[] || []>`
 
 Select the elements or values at the given path. What this actually does varies by the type of scenario. Browser and Html tests both return DOMElement. Stylesheet requests return CSSRule and JSON/REST scenarios return a Value.
 
@@ -751,12 +758,28 @@ Type this text into the selected path. For browser scenarios this will be emulat
 await this.type('input[name="q"]', 'who shot 2pac?');
 ```
 
-#### `visible(path: string, opts: any): Promise<DOMElement>`
+#### `waitForExists(path: string, timeout: number): Promise<DOMElement>`
 
-Checks if an element at this selector is visible. This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change that with the timeout setting in opts.
+Test if an element exists at that path. For a browser scenario it will wait a certain timeout (default 100ms) for the element to show up. If you want it to wait longer, set the timeout value in the second argument.
 
 ```
-const button = await this.visible('button[type="submit"]', { timeout: 200 });
+const button = await this.waitForExists('a.submit', 2000);
+```
+
+#### `waitFoHidden(path: string): Promise<DOMElement>`
+
+Checks if an element at this selector is hidden (display none or visibility hidden). This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change the timeout with the second argument.
+
+```
+const button = await this.waitFoHidden('button[type="submit"]', 2000);
+```
+
+#### `waitForVisible(path: string): Promise<DOMElement>`
+
+Checks if an element at this selector is visible. This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change the timeout with the second argument.
+
+```
+const button = await this.waitForVisible('button[type="submit"]', 2000);
 ```
 
 ### Properties 
@@ -1077,6 +1100,18 @@ A scenario is a collection of tests. It is a child of a Suite.
 
 The total time between when the Scenario was started executing and when it finished running. Null if it has not yet completed.
 
+#### `hasFailed: boolean`
+
+Did this Suite (or any of its Scenarios) fail? If the Suite is not yet completed (or hasn't started yet) this will be false, unless any Scenario has already failed.
+
+`suite.hasFailed`
+
+#### `hasPassed: boolean`
+
+Did this Suite (and all of its Scenarios) complete and all were passing?
+
+`suite.hasPassed`
+
 #### `responseDuration: number | null`
 
 The total time between when the Scenario's request went out and when the response back back. Null if it the request has not yet returned a response.
@@ -1173,12 +1208,6 @@ Creates a new Scenario of the ExtJS request type. This will use Puppeteer just l
 
 `suite.extjs('User Sign Up Work Flow', { headless: true, width: 1280, height: 800 })`
 
-#### `failed(): boolean`
-
-Did this Suite (or any of its Scenarios) fail? If the Suite is not yet completed (or hasn't started yet) this will be false, unless any Scenario has already failed.
-
-`suite.failed()`
-
 #### `finally(callback: Function): Suite`
 
 Hit this callback after all Scenarios finish executing and after the Suite has been marked completed. This is the final step.
@@ -1208,12 +1237,6 @@ Creates a new Scenario of the JSON/API End Point request type.
 Hit this callback after all Scenarios finish executing, but before Suite has been marked as completed. There can be multiple nexts.
 
 `suite.next(() => { })`
-
-#### `passed(): boolean`
-
-Did this Suite (and all of its Scenarios) complete and all were passing?
-
-`suite.passed()`
 
 #### `print(exitAfterPrint: boolean = true): void`
 

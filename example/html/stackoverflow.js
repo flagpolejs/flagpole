@@ -6,16 +6,16 @@ Flagpole.Suite('Stack Overflow')
         suite.print();
     })
     .html('Homepage').open('/')
-    .next('Check basic parameters', async function (response) {
-        this.assert(response.statusCode).equals(200);
-        this.assert(response.header('content-type')).contains('text/html');
-        const title = await this.select('title');
+    .next('Check basic parameters', async function () {
+        this.assert(this.response.statusCode).equals(200);
+        this.assert(this.response.header('content-type')).contains('text/html');
+        const title = await this.find('title');
         this.assert(await title.getText()).contains('Stack Overflow');
     })
     .next('Test the top navigation bar', async function () {
-        this.assert((await this.selectAll('.top-bar .-ctas')).length)
+        this.assert((await this.findAll('.top-bar .-ctas')).length)
             .greaterThan(0);
-        const loginLink = await this.select('a.login-link');
+        const loginLink = await this.find('a.login-link');
         this.assert(loginLink).exists();
         this.assert(await loginLink.getText()).like('Log In');
     })

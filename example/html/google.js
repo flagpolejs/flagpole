@@ -5,35 +5,35 @@ const suite = Flagpole.Suite('Test Google')
     .finally(suite => suite.print());
 
 const homepage = suite.html('Homepage').open('/')
-    .next('Test basic HTTP headers', async function (response, context) {
-        this.assert(response.statusCode).equals(200);
-        this.assert(response.header('content-type')).contains('text/html');
+    .next('Test basic HTTP headers', async function () {
+        this.assert(this.response.statusCode).equals(200);
+        this.assert(this.response.header('content-type')).contains('text/html');
         this.assert('hello').length.equals(5);
         this.assert(5).type.equals('number');
     })
    
-    .next(async function (response, context) {
-        const submitButton = await this.select('input[type="submit"]');
+    .next(async function () {
+        const submitButton = await this.find('input[type="submit"]');
         this.comment(submitButton);
         this.assert(await submitButton.getAttribute('value'))
             .in(["Google Search", "Search"]);
     }) 
     .next('Verify all images load', async function () {
-        const images = await this.selectAll('img');
+        const images = await this.findAll('img');
         this.assert(images).length.greaterThan(0).and.lessThan(99);
         this.assert('Should be at least one image on the page', images.length)
             .greaterThan(0);
         
         images.forEach(async function (img, index) {
             (await img.load('Image ' + index))
-                .next(function (response) {
-                    this.assert(response.length).greaterThan(0);
+                .next(function () {
+                    this.assert(this.response.length).greaterThan(0);
                 });
         });
         
     }) 
     .next(async function() {
-        const form = await this.select('form');
+        const form = await this.find('form');
         this.assert('Should be a form', form).not.equals(null);
         this.assert('Form action attribute should be /search', await form.getAttribute('action'))
             .equals('/search');
@@ -41,7 +41,7 @@ const homepage = suite.html('Homepage').open('/')
             q: 'milesplit'
         });
         form.submit('Submit form and check results page', async function () {
-            const searchInputBox = await this.select('input[name="q"]');
+            const searchInputBox = await this.find('input[name="q"]');
             this.assert('Search input box should have the value we typed', await searchInputBox.getValue())
                 .equals('milesplit');
         });

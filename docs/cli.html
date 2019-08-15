@@ -1,0 +1,278 @@
+<html>
+    <head>
+        <title>Flagpole JS QA Framework - CLI</title>
+        <link rel="stylesheet" href="stylesheet.css">
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <strong>Flagpole JS QA Framework</strong>
+            </div>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/docs.html">Developer Docs</a>
+                <a href="https://github.com/flocasts/flagpole">GitHub Repo</a>
+                <a href="https://www.npmjs.com/package/flagpole">NPM Package</a>
+            </nav>
+        </header>
+        <main>
+            <h1>CLI</h1>
+
+            <h2>Commands</h2>
+
+            <article>
+                <h3>about</h3>
+                <p>
+                    Gives some information about Flagpole and its contributors.
+                </p>
+                <code class="bash">
+                    flagpole about
+                </code>
+            </article>
+            <article>
+                <h3>add env</h3>
+                <p>
+                    Allows you to add a new environment. Environments are things like dev, staging, and prod. Each environment in a suite
+                    can have its own domain base, which allows you to use the same tests across environments easily.
+                </p>
+                <code class="bash">
+                    flagpole add env
+                </code>
+            </article>
+            <article>
+                <h3>add scenario</h3>
+                <p>
+                    Adds a new scenario to a suite. If you have no suites set up yet, this will fail. If you have multiple suites, it will
+                    ask you which on you want to add the new scenario to.
+                </p>
+                <p>
+                    This method will go into the suite file and add the code. Of course you can add this code manually, but this just gives
+                    you a template to start with.
+                </p>
+                <code class="bash">
+                    flagpole add scenario
+                </code>
+            </article>
+            <article>
+                <h3>add suite</h3>
+                <p>
+                    Adds a new suite to the project. This will create the suite file and add in the base code. Of course you can add this
+                    all manually, but this just gives you a template to start with.
+                </p>
+                <code class="bash">
+                    flagpole add suite
+                </code>
+            </article>
+            <article>
+                <h3>deploy</h3>
+                <p>
+                    In the future there will be a web based control panel where you can view, manage and run your tests in the cloud. This
+                    feature is not available in 2.0 but maybe in 3.0!
+                </p>
+                <code class="bash">
+                flagpole deploy
+                </code>
+            </article>
+            <article>
+                <h3>import suite</h3>
+                <p>
+                    If you created or dropped some .js suite files into the tests folder without going through the CLI, this allows you to
+                    officially import them into the project.
+                </p>
+                <code class="bash">
+                flagpole import suite
+                </code>
+            </article>
+            <article>
+                <h3>init</h3>
+                <p>
+                    Initializes flagpole to set it up in the current project folder.
+                </p>
+                <code class="bash">
+                flagpole init
+                </code>
+            </article>
+            <article>
+                <h3>list</h3>
+                <p>
+                    Lists out all of the suites available in this project.
+                </p>
+                <code class="bash">
+                flagpole list
+                </code>
+            </article>
+            <article>
+                <h3>login</h3>
+                <p>
+                    In the future there will be a web based control panel where you can view, manage and run your tests in the cloud. This
+                    feature is not available in 2.0 but maybe in 3.0!
+                </p>
+                <code class="bash">
+                flagpole login
+                </code>
+            </article>
+            <article>
+                <h3>logout</h3>
+                <p>
+                    In the future there will be a web based control panel where you can view, manage and run your tests in the cloud. This
+                    feature is not available in 2.0 but maybe in 3.0!
+                </p>
+                <code class="bash">
+                flagpole logout
+                </code>
+            </article>
+            <article>
+                <h3>pack</h3>
+                <p>
+                    Puts your test suites and project files into a zip file so that they can be copied to something else.
+                </p>
+                <code class="bash">
+                flagpole pack
+                </code>
+            </article>
+            <article>
+                <h3>rm env</h3>
+                <p>
+                    Allows you to remove an environment from the project. This will remove it from the config, but will not modify your
+                    existing suite that reference it.
+                </p>
+                <code class="bash">
+                flagpole rm env
+                </code>
+            </article>
+            <article>
+                <h3>rm suite</h3>
+                <p>
+                    Allows you to remove a suite from the project. This will remove it from the config and delete the file.
+                </p>
+                <code class="bash">
+                flagpole rm suite
+                </code>
+            </article>
+            <article>
+                <h3>run</h3>
+                <p>
+                    Runs your test suites. With no switches like this, it will run every one of the tests. See the -s switch about selecting
+                    which suite(s) specifically to run.
+                </p>
+                <code class="bash">
+                flagpole run
+                </code>
+            </article>
+
+            <h2>Switches</h2>
+
+            <article>
+                <h3>-c pathToConfig</h3>
+                <p>
+                    By default Flagpole looks for flagpole.json file in the current folder as the project config. But you can use this
+                    switch to tell it to look elsewhere.
+                </p>
+                <code class="bash">
+                    flagpole run -c /path/to/flagpole.json
+                </code>
+            </article>
+            <article>
+                <h3>-e environmentName</h3>
+                <p>
+                    Specifies the environment name, which will be the context that the tests execute with.
+                </p>
+                <code class="bash">
+                    flagpole run -e staging
+                </code>
+            </article>
+            <article>
+                <h3>-h</h3>
+                <p>
+                    Hides the ASCII banner graphic.
+                </p>
+                <code class="bash">
+                    flagpole run -h
+                </code>
+            </article>
+            <article>
+                <h3>-l</h3>
+                <p>
+                    There are some decorative florishes with the Flagpole output. Extra line breaks, horizontal rules, etc. They make it
+                    more readable. But perhaps you're trying to send the output to a log and you don't want that stuff.
+                </p>
+                <p>
+                    This "log" switch makes it only do the content lines and does one per line.
+                </p>
+                <code class="bash">
+                    flagpole run -l
+                </code>
+            </article>
+            <article>
+                <h3>-o outputType</h3> 
+                <p>
+                    Specifies that type of output you want Flagpole to create. The defualt is this pretty colored console ASCII text. But
+                    there are other options:
+                </p>
+                <dl>
+                    <dt>browser</dt>
+                    <dd>Formats it into HTML and opens it in your default web browser after</dd>
+                    <dt>console</dt>
+                    <dd>>Default</dd>
+                    <dt>csv</dt>
+                    <dd>Comma separated</dd>
+                    <dt>html</dt>
+                    <dd>Outputs HTML to the console</dd>
+                    <dt>json</dt>
+                    <dd>JSON formatted</dd>
+                    <dt>psv</dt>
+                    <dd>Pipe separated</dd>
+                    <dt>text</dt>
+                    <dd>Same as default but without the ASCII colors</dd>
+                    <dt>tsv</dt>
+                    <dd>Tab separated</dd>
+                </dl>
+                <code class="bash">
+                    flagpole run -o browser
+                </code>
+            </article>
+            <article>
+                <h3>-q</h3>
+                <p>
+                    Quiet mode. Silences all Flagpole command line output. This is useful when you don't want to capture what it has to say,
+                    you just want to know if it passed or failed. Which a script running this could get from the exit code of 0 or 1.
+                </p>
+                <code class="bash">
+                    flagpole run -q
+                </code>
+            </article>
+            <article>
+                <h3>-s suiteName</h3>
+                <p>
+                    Specifies a certain suite or suites to run.
+                </p>
+                <code class="bash">
+                    flagpole run -s smoke
+                </code>
+                <p>
+                    You can list out multiple suite, space separated.
+                </p>
+                <code class="bash">
+                    flagpole run -s smoke api e2e
+                </code>
+            </article>
+            <article>
+                <h3>-v</h3>
+                <p>
+                    Prints out simply what version of Flagpole CLI is installed.
+                </p>
+                <code>
+                    flagpole -v
+                </code>
+            </article>
+        </main>
+        <footer>
+            <div class="copyright">
+                <span>Flagpole is an open sourced project by <a href="https://www.flosports.tv">FloSports</a></span>
+            </div>
+            <div class="credit">
+                Created by <a href="http://www.jasoncbyrne.com">Jason Byrne</a>
+            </div>
+        </footer>
+    </body>
+</html>

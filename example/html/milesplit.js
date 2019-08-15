@@ -10,7 +10,7 @@ suite.html('Test MileSplit Hompage').open('/')
         this.assert('Content type is HTML', this.response.header('content-type')).contains('text/html');
     })
     .next('Look for images in top stories', async function () {
-        const coverImages = await this.selectAll('section.topStories figure img');
+        const coverImages = await this.findAll('section.topStories figure img');
         this.assert('There should be at least 4 top stories', coverImages.length)
             .greaterThanOrEquals(4);
         return coverImages;
@@ -22,15 +22,15 @@ suite.html('Test MileSplit Hompage').open('/')
         });
         coverImages.forEach(async function (image, i) {
             image.load(`Load Cover Image ${i + 1}`, async function () {
-                this.assert('Width is 620', await this.select('width')).equals(620);
+                this.assert('Width is 620', await this.find('width')).equals(620);
             });
         });
     })
     .next('Verify CSS', async function (context) {
-        const css = await this.selectAll('link[rel="stylesheet"]');
+        const css = await this.findAll('link[rel="stylesheet"]');
         css.forEach(stylesheet => {
             stylesheet.load(async function () {
-                const body = await this.select('body');
+                const body = await this.find('body');
                 if (!body.isNull()) {
                     const background = await body.getProperty('background');
                     context.comment(background.toString());
@@ -39,7 +39,7 @@ suite.html('Test MileSplit Hompage').open('/')
         });
     })
     .next('Click first meet and load it', async function () {
-        const firstMeetCoverage = await this.select('.meetCoverage article a');
+        const firstMeetCoverage = await this.find('.meetCoverage article a');
         //firstMeetCoverage.click('Load first meet', function (response) {
         //    this.comment('hi');
         //});

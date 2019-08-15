@@ -11,8 +11,8 @@ suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
         this.assert('Response body is greater than 0', this.response.length).greaterThan(0);
     })
     .next('Verify the data', async function () {
-        const resultCount = await this.select('resultCount');
-        const searchResults = await this.select('results');
+        const resultCount = await this.find('resultCount');
+        const searchResults = await this.find('results');
         this.assert(searchResults).type.equals('array');
         this.assert(searchResults.length).greaterThan(0);
         this.comment(searchResults.length);
