@@ -1,0 +1,294 @@
+<html>
+    <head>
+        <title>Flagpole JS QA Framework - CLI</title>
+        <link rel="stylesheet" href="stylesheet.css">
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <strong>Flagpole JS QA Framework</strong>
+            </div>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="docs.html">Developer Docs</a>
+                <a href="https://github.com/flocasts/flagpole">GitHub Repo</a>
+                <a href="https://www.npmjs.com/package/flagpole">NPM Package</a>
+            </nav>
+        </header>
+        <main>
+            <h1>Assertion</h1>
+            <p>
+                Create an assertion within your scenario's "next" blocks like this:
+            </p>
+            <pre class="prettyprint"><code class="language-javascript">
+            this.assert(myValue)
+            </code></pre>
+            <p>
+                You can also specify a message first, to override Flagpole's attempt at creating a default assertion method. That way it
+                is really descriptive of what that assertion checks for.
+            </p>
+            <pre class="prettyprint"><code class="language-javascript">
+            this.assert('Make sure my value is a number', myValue)
+            </code></pre>
+            <p>
+                This alone does nothing, since it just creates the assertion object with the value you want to assert against. But it
+                hasn't actually asserted anything. So use one of the methods below.
+            </p>
+            <h2>Methods</h2>
+            <p>
+                All methods return the Assertion itself, unless otherwise noted.
+            </p>
+            <article>
+                <h3>between(min: number, max: number): Assertion</h3>
+                <p>
+                    Works for numbers, but also casts strings to numbers for the compare. Tests if this value is between the minimum and
+                    maximum.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(myValue).between(0, 10);
+                </code></pre>
+            </article>
+            <article>
+                <h3>contains(value: any): Assertion</h3>
+                <p>
+                    Tests whether the input value contains the argument. This works for strings, arrays, and even for objects. If it's an
+                    object, it checks if a property exists with that value.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert('foobar').contains('foo');
+                </code></pre>
+            </article>
+            <article>
+                <h3>endsWith(value: any): Assertion</h3>
+                <p>
+                    Tests whether the input value ends with the argument. Also works with arrays, testing whether the argument is the last
+                    value of the array.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert('foobar').endsWith('bar');
+                </code></pre>
+            </article>
+            <article>
+                <h3>equals(value: any): Assertion</h3>
+                <p>
+                    This be used with any types of values. It uses a rough (double equals) equality versus the exactly method that uses a
+                    precise (triple equals) equality.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(myValue).equals(5);
+                </code></pre>
+            </article>
+            <article>
+                <h3>every(callback: Function): Assertion</h3>
+                <p>
+                    Loops throught the input value, which should be an array, and checks them against the callback function to be sure that
+                    every one is true.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(['eminem', 'dre', 'ice cube']).every((rapper) => {
+                        return rapper.indexOf('e') >= 0;
+                    });
+                </code></pre>
+            </article>
+            <article>
+                <h3>exactly(value: any): Assertion</h3>
+                <p>
+                    This asserts an exact match with precise (triple equals) equality.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(myValue).exactly(5);
+                </code></pre>
+            </article>
+            <article>
+                <h3>exists(): Assertion</h3>
+                <p>
+                    Tests whether the input value is not null or undefined. This works well for selecting a DOM Element and then testing if
+                    it actually existed (since it returns null if not).
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(await this.select('article')).exists();
+                </code></pre>
+            </article>
+            <article>
+                <h3>greaterThan(value: number): Assertion</h3>
+                <p>
+                    Works for numbers, but also casts strings to numbers for the compare.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(myValue).greaterThan(5);
+                </code></pre>
+            </article>
+            <article>
+                <h3>greaterThanOrEquals(value: number): Assertion</h3>
+                <p>
+                    Works for numbers, but also casts strings to numbers for the compare.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(myValue).greaterThanOrEquals(5);
+                </code></pre>
+            </article>
+            <article>
+                <h3>in(listOfValues: any[]): Assertion</h3>
+                <p>
+                    Tests whether the input value is in the array of possible values.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert('2pac').in(['2pac', 'biggie', 'daz']);
+                </code></pre>
+            </article>
+            <article>
+                <h3>includes(value: any): Assertion</h3>
+                <p>
+                    Tests whether the input array includes the argument.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(['2pac', 'biggie', 'daz']).includes('2pac');
+                </code></pre>
+            </article>
+            <article>
+                <h3>lessThan(value: number): Assertion</h3>
+                <p>
+                    Works for numbers, but also casts strings to numbers for the compare.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(myValue).lessThan(5);
+                </code></pre>
+            </article>
+            <article>
+                <h3>lessThanOrEquals(value: number): Assertion</h3>
+                <p>
+                    Works for numbers, but also casts strings to numbers for the compare.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(myValue).lessThanOrEquals(5);
+                </code></pre>
+            </article>
+            <article>
+                <h3>like(value: string): Assertion</h3>
+                <p>
+                    Like is a more fuzzy match. It ignores type differences and also trims whitespace and compares strings all lowercase. So
+                    it indicates the values are similar, but not necessarily equal.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(myValue).like('FooBar');
+                </code></pre>
+            </article>
+            <article>
+                <h3>matches(pattern: RegExp | string): Assertion</h3>
+                <p>
+                    Regular express compare of strings.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(myValue).matches(/^[a-z0-9]{3,32}$/i);
+                </code></pre>
+            </article>
+            <article>
+                <h3>none(callback: Function): Assertion</h3>
+                <p>
+                    Loops throught the input value, which should be an array, and checks them against the callback function to be sure that
+                    none are true.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(['2pac', 'biggie', 'daz']).none((rapper) => {
+                        return rapper == 'snoop';
+                    });
+                </code></pre>
+            </article>
+            <article>
+                <h3>rejects(): Assertion</h3>
+                <p>
+                    Tests whether the input promise rejects.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    await this.assert(myPromise).rejects();
+                </code></pre>
+            </article>
+            <article>
+                <h3>resolves(): Assertion</h3>
+                <p>
+                    Tests whether the input promise resolves.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    await this.assert(myPromise).resolves();
+                </code></pre>
+            </article>
+            <article>
+                <h3>some(callback: Function): Assertion</h3>
+                <p>
+                    Loops throught the input value, which should be an array, and checks them against the callback function to be sure that
+                    at least one is true.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(['dre', 'snoop', '2pac']).some((rapper) => {
+                        return rapper.indexOf('e') >= 0;
+                    })
+                </code></pre>
+            </article>
+            <article>
+                <h3>startsWith(value: any): Assertion</h3>
+                <p>
+                    Tests whether the input value starts with the argument. Also works with arrays, testing whether the argument is the
+                    first value of the array.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(['foo', 'bar']).startsWith('foo');
+                </code></pre>
+            </article>
+
+            <h2>Properties</h2>
+            <p>
+                In addition to the methods to make the assertions, you can change them by chaining these properties.
+            </p>
+            <article>
+                <h3>length: Assertion</h3>
+                <p>
+                    This causes the assertion to evaluate the length of the input value, rather than the actual value. This works for
+                    anything that supports length including strings and arrays. For other things it will cast the input to a string and
+                    evaluate it.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert('foobar').length.equals(6);
+                </code></pre>
+            </article>
+            <article>
+                <h3>not: Assertion</h3>
+                <p>
+                    Flips the assertion to be the negative of itself.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(5).not.equals(6);
+                </code></pre>
+            </article>
+            <article>
+                <h3>optional: Assertion</h3>
+                <p>
+                    This makes the assertion consider optional, meaning its failure won't cause the entire scenario to fail. If it passes,
+                    it will be listed as a pass. If it fails, it will be shown as failing in a special type of comment. That way you can see
+                    it, but not hold up the deploy because of it.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(5).optional.equals(6);
+                </code></pre>
+            </article>
+            <article>
+                <h3>type: Assertion</h3>
+                <p>
+                    This causes the assertion to evaluate the type of the value, rather than the actual input value. The type will always be
+                    a lowercase string. It is a smart typeof that can tell things like 'promise' and 'regexp' that might otherewise evaluate
+                    to plain old object.
+                </p>
+                <pre class="prettyprint"><code class="language-javascript">
+                    this.assert(5).type.equals('number');
+                </code></pre>
+            </article>
+        </main>
+        <footer>
+            <div class="copyright">
+                <span>Flagpole is an open sourced project by <a href="https://www.flosports.tv">FloSports</a></span>
+            </div>
+            <div class="credit">
+                Created by <a href="http://www.jasoncbyrne.com">Jason Byrne</a>
+            </div>
+        </footer>
+    </body>
+</html>
