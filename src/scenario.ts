@@ -263,8 +263,8 @@ export class Scenario {
      *
      * @param {string} token
      */
-    public bearerToken(token: string): Scenario {
-        this.header('Authorization', `Bearer ${token}`)
+    public setBearerToken(token: string): Scenario {
+        this.setHeader('Authorization', `Bearer ${token}`)
         return this;
     }
 
