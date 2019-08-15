@@ -5,6 +5,14 @@ html {
 body {
     padding: 0;
     margin: 0;
+    background: rgb(0, 0, 0);
+    color: rgb(180, 180, 180);
+}
+a {
+    color: rgb(120, 180, 200)
+}
+strong {
+    color: rgb(255, 255, 255);
 }
 header {
     background-color: rgb(120, 180, 200);
@@ -40,13 +48,15 @@ main {
 }
 h1 {
     font-size: 2rem;
+    color: rgb(255, 255, 255);
 }
 h2 {
     font-size: 1.7rem;
+    color: rgb(255, 255, 255);
 }
 h3 {
     font-size: 1.4rem;
-    color: rgb(30, 80, 150);
+    color: rgb(120, 180, 255);
 }
 h4 {
     font-size: 1.2rem;
@@ -66,7 +76,7 @@ dl dd {
     font-style: italic;
     margin-bottom: 8px;
 }
-code {
+blah code, samp {
     display: block;
     margin-top: 16px;
     margin-bottom: 16px;
@@ -74,24 +84,13 @@ code {
     padding-right: 8px;
     padding-top: 8px;
     padding-bottom: 16px;
-    background: rgb(0, 0, 0);
-    color: rgb(255, 255, 255);
+    /*background: rgb(40, 40, 40);
+    color: rgb(50, 255, 255);
     border: solid 2px rgb(80, 80, 80);
     font-size: 0.8rem;
     font-family: monospace;
     white-space: pre-line;
-}
-samp {
-    display: block;
-    margin-top: 16px;
-    margin-bottom: 16px;
-    padding: 8px;
-    background: rgb(0, 0, 0);
-    color: rgb(255, 255, 255);
-    border: solid 2px rgb(80, 80, 80);
-    font-size: 0.8rem;
-    font-family: monospace;
-    white-space: pre-line;
+    */
 }
 footer {
     background-color: rgb(30, 80, 150);
@@ -104,4 +103,22 @@ footer div {
 }
 footer a {
     color: rgb(200, 200, 255);
+}
+pre.prettyprint, code.prettyprint, samp {
+    display: block;
+    position: relative;
+    background: rgb(230, 230, 230);
+    border: solid 2px rgb(80, 80, 80);
+}
+samp {
+    color: rgb(0, 0, 0);
+    white-space: pre-line;
+}
+code.prettyprint {
+    padding: 16px;
+}
+pre.prettyprint code {
+    display: block;
+    position: relative;
+    left: -132px;
 }
