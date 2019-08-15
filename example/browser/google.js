@@ -36,7 +36,7 @@ suite.browser('Google Search for Flagpole', browserOpts)
         this.assert(button).exists();
         //await this.click(paths.submitButton);
         await form.submit();
-        await this.page.waitForNavigation();
+        await this.waitForNavigation();
         const results = await this.find(paths.searchResultsItem);
         await this.assert('Search results found', results).exists();
         await this.comment(await (await this.find('#searchform')).getClassName());

@@ -2,6 +2,7 @@
     <head>
         <title>Flagpole JS QA Framework - CLI</title>
         <link rel="stylesheet" href="stylesheet.css">
+        <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
     </head>
     <body>
         <header>
@@ -21,14 +22,14 @@
                 Create an assertion within your scenario's "next" blocks like this:
             </p>
             <pre class="prettyprint"><code class="language-javascript">
-            this.assert(myValue)
+                this.assert(myValue)
             </code></pre>
             <p>
                 You can also specify a message first, to override Flagpole's attempt at creating a default assertion method. That way it
                 is really descriptive of what that assertion checks for.
             </p>
             <pre class="prettyprint"><code class="language-javascript">
-            this.assert('Make sure my value is a number', myValue)
+                this.assert('Make sure my value is a number', myValue)
             </code></pre>
             <p>
                 This alone does nothing, since it just creates the assertion object with the value you want to assert against. But it

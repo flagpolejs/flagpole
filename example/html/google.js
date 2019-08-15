@@ -26,8 +26,9 @@ const homepage = suite.html('Homepage').open('/')
         
         images.forEach(async function (img, index) {
             (await img.load('Image ' + index))
-                .next(function () {
-                    this.assert(this.response.length).greaterThan(0);
+                .next(async (imageContext) => {
+                    imageContext.assert(imageContext.response.length).greaterThan(0);
+                    imageContext.assert(await imageContext.find('width')).greaterThan(100);
                 });
         });
         
@@ -40,9 +41,14 @@ const homepage = suite.html('Homepage').open('/')
         await form.fillForm({
             q: 'milesplit'
         });
+        const input = await this.find('input[name="q"]');
+        this.assert(input).exists()
+        const value = await input.getValue();
+        this.assert(value).equals('milesplit');
         form.submit('Submit form and check results page', async function () {
             const searchInputBox = await this.find('input[name="q"]');
             this.assert('Search input box should have the value we typed', await searchInputBox.getValue())
                 .equals('milesplit');
+            this.comment(await this.openInBrowser());
         });
     });

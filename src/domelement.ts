@@ -289,16 +289,49 @@ export class DOMElement extends ProtoValue implements iValue {
                     for (let name in formData) {
                         const value: any = formData[name];
                         const selector: string = `${element._path} [name="${name}"]`;
-                        const input: ElementHandle | null = await page.$(selector);
-                        if (input !== null) {
-                            const tagName = (await (await input.getProperty('tagName')).jsonValue()).toLowerCase();
-                            const inputType = (await (await input.getProperty('type')).jsonValue()).toLowerCase();
+                        const inputs: ElementHandle[] = await page.$$(selector);
+                        if (inputs.length > 0) {
+                            const input: ElementHandle = inputs[0];
+                            const tagName: string = (await (await input.getProperty('tagName')).jsonValue()).toLowerCase();
+                            const inputType: string = (await (await input.getProperty('type')).jsonValue()).toLowerCase();
+                            // Some sites need you to focus on the element first
                             await page.focus(selector);
+                            // Dropdowns
                             if (tagName == 'select') {
                                 await page.select(selector, value);
                             }
+                            // Input boxes
                             else if (tagName == 'input') {
-                                await this._context.clearThenType(selector, value);
+                                // Radio or checkbox we need to click on the items
+                                if (inputType == 'radio' || inputType == 'checkbox') {
+                                    // Turn it into an array, to support multiple checked boxes
+                                    const multiValues: any[] = Flagpole.toType(value) == 'array' ? value : [value];
+                                    // Loop through each checkbox/radio element with this name
+                                    for (let i = 0; i < inputs.length; i++) {
+                                        let checkbox: ElementHandle = inputs[i];
+                                        let isChecked: boolean = !!(await (await checkbox.getProperty('checked')).jsonValue());
+                                        let checkboxValue: string = String(await (await checkbox.getProperty('value')).jsonValue());
+                                        // Toggle it by clicking
+                                        if (
+                                            // This is one of our values, and it's not checked yet
+                                            (multiValues.indexOf(checkboxValue) >= 0 && !isChecked) ||
+                                            // This is not one of our values, but it is checked
+                                            (multiValues.indexOf(checkboxValue) < 0 && isChecked)
+                                        ) {
+                                            await checkbox.click();
+                                        }
+                                    }
+                                }
+                                else if (inputType == 'button' || inputType == 'submit' || inputType == 'reset') {
+                                    // Do nothing for now (maybe should click??)
+                                }
+                                else {
+                                    await this._context.clearThenType(selector, value);
+                                }
+                            }
+                            // Button elements
+                            else if (tagName == 'button') {
+                                // Do nothing for now (maybe should click??)
                             }
                         }
                     }
@@ -347,7 +380,7 @@ export class DOMElement extends ProtoValue implements iValue {
                     });
                     scenario.setFormData(formData)
                 }
-                return scenario.open(uri);
+                return await scenario.open(uri);
             }
             // Not a valid URL to submit form to
             else {
@@ -387,14 +420,12 @@ export class DOMElement extends ProtoValue implements iValue {
         if (await this._isButtonTag()) {
             const type: Value = (await this.getAttribute('type'));
             if (type.isNull() || type.toString().toLowerCase() == 'submit') {
+                // Grab the form and submit it
                 const form = (<Cheerio>this._input).closest('form');
-                const id: string = Flagpole.uniqueId();
-                if (form) {
-                    form.attr('flagpole-id', id);
-                }
-                await this._context.submit(`form[flagpole-id=${id}]`);
+                const formEl = await DOMElement.create(form, this._context, `Parent form of ${this.name}`, this.path);
+                return await formEl.submit(message, callback);
             }
-            return;
+            throw Error('This button did not have any action to submit.');
         }
         throw Error('This is not a clickable element.');
     }
@@ -402,8 +433,6 @@ export class DOMElement extends ProtoValue implements iValue {
     /**
      * Load the URL from this element if it has something to load
      * This is used to create a lambda scenario
-     * 
-     * @param a 
      */
     public async load(): Promise<Scenario>;
     public async load(callback: Function): Promise<Scenario>;

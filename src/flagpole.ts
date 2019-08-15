@@ -123,4 +123,16 @@ export class Flagpole {
         return '_' + Math.random().toString(36).substr(2, 9);
     }
 
+    public static async openInBrowser(content: string): Promise<string> {
+        const open = require('open');
+        const fs = require('fs');
+        const tmp = require('tmp');
+        const tmpObj = tmp.fileSync({ postfix: '.html' });
+        const filePath: string = tmpObj.name;
+        console.log(filePath);
+        fs.writeFileSync(filePath, content);
+        await open(filePath);
+        return filePath;
+    }
+
 }

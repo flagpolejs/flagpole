@@ -7,6 +7,7 @@ import { Assertion } from './assertion';
 import { DOMElement } from './domelement';
 import { HtmlResponse } from './htmlresponse';
 import { Value } from './value';
+import { Flagpole } from '.';
 
 export class AssertionContext {
 
@@ -120,7 +121,7 @@ export class AssertionContext {
             }
             return matchingElement;
         }
-        throw new Error('selectHavingText is not available in this context');
+        throw new Error('findHavingText is not available in this context');
     };
 
     /**
@@ -153,7 +154,7 @@ export class AssertionContext {
             }
             return matchingElements;
         }
-        throw new Error('selectAllHavingText is not available in this context');
+        throw new Error('findAllHavingText is not available in this context');
     };
 
     /**
@@ -332,7 +333,7 @@ export class AssertionContext {
         else if (this._isHtmlRequest) {
             return this.find(selector);
         }
-        throw new Error('waitForExists is not available in this context');
+        throw new Error('waitForVisible is not available in this context');
     }
 
     /**
@@ -377,17 +378,11 @@ export class AssertionContext {
      * @param selector
      */
     public async submit(selector: string): Promise<any> {
-        if (this._isBrowserRequest && this.page !== null) {
-            const form = await this.page.$(selector);
-            return await this.page.evaluate(form => form.submit(), form);
+        const el: DOMElement = await this.find(selector);
+        if (el === null) {
+            throw new Error(`Element with selector ${selector} not found.`);
         }
-        else if (this._isHtmlRequest) {
-            const form: DOMElement | null = await this.find(selector);
-            if (form !== null) {
-                return await form.submit();
-            }
-        }
-        throw new Error('Could not submit.')
+        return el.submit();
     }
 
     /**
@@ -395,32 +390,22 @@ export class AssertionContext {
      * 
      * @param selector
      */
-    public click(selector: string): Promise<any> {
-        return new Promise((resolve, reject) => {
-            if (this._isBrowserRequest && this.page !== null) {
-                const page = this.page;
-                // Try this method first
-                page.click(selector)
-                    .then(resolve)
-                    // But sometimes it fails, so try this as a backup
-                    .catch(() => {
-                        page.evaluate(`
-                            (function() {
-                                const el = document.querySelector('${selector}');
-                                if (el) { el.click(); return true; }
-                                else { return false; }
-                            })();`
-                        )
-                            .then((result) => {
-                                result ? resolve() : reject();
-                            })
-                            .catch(reject);
-                    });
-            }
-            else {
-                reject();
-            }
-        })
+    public async click(selector: string): Promise<any> {
+        const el: DOMElement = await this.find(selector);
+        if (el === null) {
+            throw new Error(`Element with selector ${selector} not found.`);
+        }
+        return el.click();
+    }
+
+    /**
+     * Save the response body into a temporary file and open it. This is mainly for debugging.
+     */
+    public async openInBrowser(): Promise<string> {
+        const output = this.response.body.toString();
+        const filePath: string = await Flagpole.openInBrowser(output);
+        this.scenario.comment(`Open response in browser temp file: ${filePath}`);
+        return filePath;
     }
 
 }
