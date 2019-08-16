@@ -1,150 +1,31 @@
-<html>
-    <head>
-        <title>Flagpole JS QA Framework - CLI</title>
-        <link rel="stylesheet" href="stylesheet.css">
-        <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <strong>Flagpole JS QA Framework</strong>
-            </div>
-            <nav>
-                <a href="index.html">Home</a>
-                <a href="docs.html">Developer Docs</a>
-                <a href="https://github.com/flocasts/flagpole">GitHub Repo</a>
-                <a href="https://www.npmjs.com/package/flagpole">NPM Package</a>
-            </nav>
-        </header>
-        <main>
-            <article>
-                <h2>What is Flagpole JS?</h2>
-                <p>
-                    <em>"Let me run it up the flagpole first"</em>
-                </p>
-                <p>
-                    Running something up the flagpole means you check on it first to see if it's good before going forward. And that's
-                    exactly what this framework is about, so we like the analogy.
-                </p>
-                <p>
-                    Flagpole is a flexible framework that can support a number of different types of testing:
-                </p>
-                <ul>
-                    <li>
-                        Full <strong>browser</strong> testing with Puppeteer
-                    </li>
-                    <li>
-                        Super-fast <strong>HTML DOM</strong> testing with Cheerio (jQuery for Node)
-                    </li>
-                    <li>
-                        <strong>REST API/JSON</strong> End Points
-                    </li>
-                    <li>
-                        Lightweight <strong>image</strong> tester that can verify the dimensions, mime and file size without downloading the whole thing
-                    </li>
-                    <li>
-                        Stylesheets including basic <strong>CSS</strong> validation
-                    </li>
-                    <li>
-                        Basic validation for other resources like <strong>JavaScript</strong>
-                    </li>
-                </ul>
-                <p>
-                    Flagpole is designed to be simple so that the most junior engineer or QA analyst can pick it up within hours.
-                </p>
-                <p>
-                    Flagpole is designed for portability, so that you can run it locally within your repository from a githook, in the cloud
-                    when something is deployed, as a scheduled job, or manually any time you want.
-                </p>
-                <p>
-                    Flagpole has a rich CLI that can be used to list tests, run tests, create new suites or scenarios, etc.
-                </p>
-            </article>
-            <artice>
-                <h2>Getting Started</h2>
-                <p>
-                    First thing we need to do is install Flagpole with npm. Go into the root of your project and run this:
-                </p>
-                <pre class="prettyprint"><code class="language-bash">
-                npm i flagpole -g
-                npm i flagpole --save-dev
-                </code></pre>
-                <p>
-                    The above command installs it both locally (within the project) and globally. This is a little annoying that we have to
-                    do both. But we do. Globally is so that the command "flagpole" will run. The second one is so that your test suites can
-                    find it.
-                </p>
-                <p>
-                    If you want to also use Puppeteer in your project install it as well, as a dev dependency.
-                </p>
-                <code class="prettyprint language-bash">npm i puppeteer --save-dev</code>
-                <p>
-                    You should be able to run the flagpole command now, which will give you instructions on how to use the CLI.
-                </p>
-                <code class="prettyprint language-bash">flagpole</code>
-                <p>
-                    Pretty colors, eh? Now let's initialize our project.
-                </p>
-                <p>
-                    If you prefer to watch, rather than read, here is a <a href="https://www.youtube.com/watch?v=d29m9eg7AV4">video walkthrough</a> of
-                    getting started.
-                </p>
-                <code class="prettyprint language-bash">flagpole init</code>
-                <p>
-                    Once you answer those questions, you should have a flagpole.json file. Now we need to create our first test scenario.
-                </p>
-                <code class="prettyprint language-bash">flagpole add suite</code>
-                <p>
-                    Answer those questions and it will set up your first test file. Now let's make sure. If we run this command you should
-                    see it listed.
-                </p>
-                <code class="prettyprint language-bash">flagpole list</code>
-                <p>
-                    We should be able to run this very basic test with:
-                </p>
-                <code class="prettyprint language-bash">flagpole run</code>
-                <p>
-                    Sweet! How about we actually do something with the test now and run it. So open that test file that was generated by our
-                    "add suite" command earlier and add this into the next callback:
-                </p>
-                <code class="prettyprint language-bash">this.assert('HTTP Status equals 200', response.status().equals(200);</code>
-                <p>
-                    Now run the flagpole run command again...
-                </p>
-                <code class="prettyprint language-bash">flagpole run</code>
-                <p>
-                    And if we did everything right, then you should see something like:
-                </p>
-                
-                <samp>
-                    ==================================================
-                    HELLO WORLD
-                    ==================================================
-                    » Base URL: http://www.flosports.tv
-                    » Environment: dev
-                    » Took 1383ms
-                    
-                    » Passed? Yes
-                    
-                    Just getting a test to run
-                    ✔ Loaded HTML Page /
-                    ✔ HTTP Status equals 200
-                    » Took 1382ms
-                </samp>
-                <p>
-                    Read the full <a href="docs.html">developer documentation</a> for more details, but also see the
-                    <a href="https://github.com/flocasts/flagpole/tree/master/example">examples folder in the repo</a> 
-                    and there will be blog posts coming up.
-                </p>
-            </artice>
-        </main>
-        <footer>
-            <div class="copyright">
-                <span>Flagpole is an open sourced project by <a href="https://www.flosports.tv">FloSports</a></span>
-            </div>
-            <div class="credit">
-                Created by <a href="http://www.jasoncbyrne.com">Jason Byrne</a>
-            </div>
-        </footer>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>flagpole - Simple and fast DOM integration, headless or headful browser, and REST API testing framework.</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="Simple and fast DOM integration, headless or headful browser, and REST API testing framework.">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  <link rel="stylesheet" href="stylesheet.css">
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    window.$docsify = {
+      name: 'flagpole',
+      repo: 'https://github.com/flocasts/flagpole',
+      logo: '/images/logo@2x.png',
+      name: 'Flagpole JS QA Framework',
+      search: 'auto', // default
+      search: [
+        '/',            // => /README.md
+      ],
+    }
+  </script>
+  <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+  <script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
+  <script src="//unpkg.com/docsify-copy-code"></script>
+  <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>
+</body>
 </html>
