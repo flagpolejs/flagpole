@@ -252,7 +252,7 @@ export class AssertionContext {
             });
             return;
         }
-        throw new Error('waitForReady is not available in this context');
+        return this.pause(1);
     }
 
     /**
@@ -268,7 +268,7 @@ export class AssertionContext {
             });
             return;
         }
-        throw new Error('waitForLoad is not available in this context');
+        return this.pause(1);
     }
 
     /**
@@ -284,7 +284,7 @@ export class AssertionContext {
             });
             return;
         }
-        throw new Error('waitForNetworkIdle is not available in this context');
+        return this.pause(1);
     }
 
     /**
@@ -300,7 +300,7 @@ export class AssertionContext {
             });
             return;
         }
-        throw new Error('waitForNavigation is not available in this context');
+        return this.pause(1);
     }
 
     /**

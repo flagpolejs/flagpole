@@ -25,6 +25,7 @@ export interface iResponse {
     context: AssertionContext,
     headers: Value,
     cookies: Value,
+    isBrowser: boolean,
     getRoot(): any,
     find(path: string): Promise<any>
     findAll(path: string): Promise<Array<any>>
@@ -117,6 +118,13 @@ export abstract class GenericResponse implements iResponse {
     abstract find(path: string): Promise<any | null>;
     abstract findAll(path: string): Promise<any[]>;
     abstract evaluate(context: any, callback: Function): Promise<any>;
+
+    /**
+     * Is this a browser based test
+     */
+    public get isBrowser(): boolean {
+        return false;
+    }
 
     /**
      * HTTP Status Code

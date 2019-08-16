@@ -170,7 +170,17 @@ export class Scenario {
         headers: {}
     };
 
-    constructor(suite: Suite, title: string, onCompletedCallback: (scenario: Scenario) => void) {
+    public static create(suite: Suite, title: string, type: ResponseType, opts: any, onCompletedCallback: (scenario: Scenario) => void): Scenario {
+        const scenario: Scenario = new Scenario(suite, title, onCompletedCallback);
+        opts = (() => {
+            return (type == ResponseType.browser || type == ResponseType.extjs) ?
+                { ...scenario._defaultBrowserOptions, ...opts } : 
+                { ...scenario._defaultRequestOptions, ...opts }
+        })();
+        return scenario._setResponseType(type, opts);
+    }
+
+    private constructor(suite: Suite, title: string, onCompletedCallback: (scenario: Scenario) => void) {
         this.suite = suite;
         this._cookieJar = new request.jar();
         this._options = this._defaultRequestOptions;

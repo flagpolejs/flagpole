@@ -1,5 +1,6 @@
 import { Flagpole } from "./index";
-import { Scenario, ScenarioStatusEvent } from "./scenario";
+import { ResponseType } from "./response";
+import { Scenario } from "./scenario";
 import { URL } from 'url';
 import { FlagpoleReport } from './flagpolereport';
 import * as Bluebird from "bluebird";
@@ -152,15 +153,18 @@ export class Suite {
      * @returns {Scenario}
      * @constructor
      */
-    public scenario(title: string): Scenario {
-        const scenario: Scenario = new Scenario(this, title, (scenario) => {
-            return this._onAfterScenarioFinished(scenario);
-        });
+    public scenario(title: string, type: ResponseType, opts: any): Scenario {
+        const scenario: Scenario = Scenario.create(
+            this, title, type, opts, 
+            (scenario: Scenario) => {
+                return this._onAfterScenarioFinished(scenario);
+            }
+        )
         // Notify suite on any changes to scenario
-        scenario.before((scenario) => {
+        scenario.before((scenario: Scenario) => {
             return this._onBeforeScenarioExecutes(scenario);
         });
-        scenario.after((scenario) => {
+        scenario.after((scenario: Scenario) => {
             return this._onAfterScenarioExecutes(scenario);
         });
         scenario.error((errorMessage: string) => {
@@ -179,63 +183,63 @@ export class Suite {
      * Create a new JSON/REST API Scenario
      */
     public json(title: string, opts: any = {}): Scenario {
-        return this.scenario(title).json(opts);
+        return this.scenario(title, ResponseType.json, opts);
     }
 
     /**
      * Create a new Image Scenario
      */
     public image(title: string, opts: any = {}): Scenario {
-        return this.scenario(title).image(opts);
+        return this.scenario(title, ResponseType.image, opts);
     }
 
     /**
      * Create a new Video Scenario
      */
     public video(title: string, opts: any = {}): Scenario {
-        return this.scenario(title).video(opts);
+        return this.scenario(title, ResponseType.video, opts);
     }
 
     /**
      * Create a new HTML/DOM Scenario
      */
     public html(title: string, opts: any = {}): Scenario {
-        return this.scenario(title).html(opts);
+        return this.scenario(title, ResponseType.html, opts);
     }
 
     /**
      * Create a new CSS Scenario
      */
     public stylesheet(title: string, opts: any = {}): Scenario {
-        return this.scenario(title).stylesheet(opts);
+        return this.scenario(title, ResponseType.stylesheet, opts);
     }
 
     /**
      * Create a new Script Scenario
      */
     public script(title: string, opts: any = {}): Scenario {
-        return this.scenario(title).script(opts);
+        return this.scenario(title, ResponseType.script, opts);
     }
 
     /**
      * Create a generic resource scenario
      */
     public resource(title: string, opts: any = {}): Scenario {
-        return this.scenario(title).resource(opts);
+        return this.scenario(title, ResponseType.resource, opts);
     }
 
     /**
      * Create a Browser/Puppeteer Scenario
      */
     public browser(title: string, opts: any = {}): Scenario {
-        return this.scenario(title).browser(opts);
+        return this.scenario(title, ResponseType.browser, opts);
     }
 
     /**
      * Create an ExtJS Scenario
      */
     public extjs(title: string, opts: any = {}): Scenario {
-        return this.scenario(title).extjs(opts);
+        return this.scenario(title, ResponseType.extjs, opts);
     }
 
     /**

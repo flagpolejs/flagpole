@@ -570,28 +570,28 @@ export class DOMElement extends ProtoValue implements iValue {
         return null;
     }
 
-    private async _getLambdaScenarioType(): Promise<string> {
+    private async _getLambdaScenarioType(): Promise<ResponseType> {
         if (
             (await this._isFormTag()) || (await this._isClickable())
         ) {
             // Assume if we are already in browser mode, we want to stay there
             return (this._context.scenario.responseType == ResponseType.browser) ?
-                'browser' : 'html';
+                ResponseType.browser : ResponseType.html;
         }
         else if (await this._isImageTag()) {
-            return 'image';
+            return ResponseType.image;
         }
         else if (await this._isStylesheetTag()) {
-            return 'stylesheet';
+            return ResponseType.stylesheet;
         }
         else if (await this._isScriptTag()) {
-            return 'script';
+            return ResponseType.script;
         }
         else if (await this._isVideoTag()) {
-            return 'video'
+            return ResponseType.video
         }
         else {
-            return 'resource';
+            return ResponseType.resource;
         }
     }
 
@@ -602,9 +602,22 @@ export class DOMElement extends ProtoValue implements iValue {
 
     private async _createLambdaScenario(a: any, b: any): Promise<Scenario> {
         const title: string = typeof a == 'string' ? a : this._path;
-        const scenario: Scenario = this._context.suite.scenario(title);
-        const scenarioType: string = await this._getLambdaScenarioType();
-        const callback: Function = (function () {
+        const scenarioType: ResponseType = await this._getLambdaScenarioType(); 
+        // Need a better way to do this
+        const newScenarioIsBrowser: boolean = (
+            scenarioType == ResponseType.browser ||
+            scenarioType == ResponseType.extjs
+        );
+        const curScenarioIsBrowser: boolean = (
+            this._context.scenario.responseType == ResponseType.browser ||
+            this._context.scenario.responseType == ResponseType.extjs
+        );
+        // If we are changing from a browser type to non-browser type (or vice versa) options don't carry over
+        const opts: any = ((newScenarioIsBrowser && curScenarioIsBrowser) || !newScenarioIsBrowser) ?
+            this._context.scenario.requestOptions() : {};
+        // Create our new lambda scenario and apply the next callback
+        const scenario: Scenario = this._context.suite.scenario(title, scenarioType, opts);
+        scenario.next((function () {
             // Handle overloading
             if (typeof b == 'function') {
                 return b;
@@ -616,16 +629,7 @@ export class DOMElement extends ProtoValue implements iValue {
             else {
                 return function () { };
             }
-        })();
-        // Get the options or just pass the default
-        const opts: any = (
-            (scenarioType == 'browser' && this._context.scenario.responseType == ResponseType.browser) ||
-            scenarioType != 'browser'
-        ) ? this._context.scenario.requestOptions() : {};
-        // Initialize the scenario
-        scenario[scenarioType](opts);
-        // Apply the callback
-        scenario.next(callback);
+        })());
         // Return it
         return scenario;
     }

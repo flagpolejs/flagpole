@@ -5,6 +5,13 @@ import { Page, ElementHandle } from 'puppeteer';
 
 export class BrowserResponse extends GenericResponse implements iResponse {
 
+    /**
+     * Is this a browser based test
+     */
+    public get isBrowser(): boolean {
+        return true;
+    }
+
     public get typeName(): string {
         return 'Browser';
     }
