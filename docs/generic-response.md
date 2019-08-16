@@ -9,7 +9,7 @@ This is actually an abtract class, which is extended by the specific response ob
 Select a specific cookie by key. Will return a Value object with the Cookie object inside.
 
 ```javascript
-this.assert(this.response.cookie("jwt_token")).exists();
+context.assert(context.response.cookie("jwt_token")).exists();
 ```
 
 ### header(key: string): Value
@@ -17,7 +17,7 @@ this.assert(this.response.cookie("jwt_token")).exists();
 Select a specific header by key value.
 
 ```javascript
-this.assert(this.response.header("content-type")).contains('html');
+context.assert(context.response.header("content-type")).contains('html');
 ```
 
 ## Properties
@@ -27,7 +27,7 @@ this.assert(this.response.header("content-type")).contains('html');
 The string value of the raw HTTP response body.
 
 ```javascript
-this.assert(response.body).contains('flosports');
+context.assert(response.body).contains('flosports');
 ```
 
 ### cookies: Value 
@@ -40,7 +40,7 @@ Value object containing an array of all the cookies.
 The string value of the final URL of the response, after any redirects.
 
 ```javascript
-this.assert(response.finalUrl).contains('google.com');
+context.assert(response.finalUrl).contains('google.com');
 ```
 
 ### headers: Value 
@@ -48,7 +48,7 @@ this.assert(response.finalUrl).contains('google.com');
 Value object containing the key-value pair of all the response headers.
 
 ```javascript
-this.assert(this.response.headers).contains('session');
+context.assert(context.response.headers).contains('session');
 ```
 
 ### jsonBody: Value 
@@ -56,7 +56,7 @@ this.assert(this.response.headers).contains('session');
 The JSON body of the response. If the response body was not in a valid JSON format this will be a null value.
 
 ```javascript
-this.assert(response.jsonBody).not.equals(null);
+context.assert(response.jsonBody).not.equals(null);
 ```
 
 ### length: Value 
@@ -64,7 +64,7 @@ this.assert(response.jsonBody).not.equals(null);
 The numeric value of the length of the HTTP Response body.
 
 ```javascript
-this.assert(response.length).greaterThan(0);
+context.assert(response.length).greaterThan(0);
 ```
 
 ### loadTime: Value 
@@ -72,7 +72,7 @@ this.assert(response.length).greaterThan(0);
 The numeric value of the time in millseconds that it took between when the request was made and when the response came back.
 
 ```javascript
-this.assert(response.loadTime).lessThan(1000);
+context.assert(response.loadTime).lessThan(1000);
 ```
 
 ### statusCode: Value 
@@ -80,7 +80,7 @@ this.assert(response.loadTime).lessThan(1000);
 The numeric value of the HTTP Status Code of the Response.
 
 ```javascript
-this.assert(response.statusCode).equals(200);
+context.assert(response.statusCode).equals(200);
 ```
 
 ### statusMessage: Value 
@@ -88,7 +88,7 @@ this.assert(response.statusCode).equals(200);
 The string value of the HTTP Status Message of the Response.
 
 ```javascript
-this.assert(response.statusMessage).like('OK');
+context.assert(response.statusMessage).like('OK');
 ```
 
 ### url: Value 
@@ -96,5 +96,5 @@ this.assert(response.statusMessage).like('OK');
 The string value of the requested URL of the Scenario.
 
 ```javascript
-this.assert(response.url).contains('google.com');
+context.assert(response.url).contains('google.com');
 ```

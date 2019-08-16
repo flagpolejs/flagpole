@@ -6,6 +6,6 @@ const suite = Flagpole.Suite('Basic Smoke Test of Site')
 suite.html('Homepage Loads')
    .open('/')
    .next(async function () {
-      const inputs = await this.selectAll('input');
+      const inputs = await this.findAll('input');
       this.assert(inputs).length.greaterThan(0);
    });

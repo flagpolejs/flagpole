@@ -95,6 +95,7 @@ export class SuiteExecution {
 export class TestRunner {
 
     private suites: { [s: string]: SuiteExecution; } = {};
+    private _timeStart: number = Date.now();
 
     /**
      * Add a suite to the list of ones we are running
@@ -143,14 +144,26 @@ export class TestRunner {
             return (this.suites[key].exitCode === 0);
         });
         const suites = this.getSuites();
+        const duration: number = Date.now() - this._timeStart;
         let output: string = '';
         if (Flagpole.output == FlagpoleOutput.json) {
-            output = '{ "suites": [';
+            let suiteOutput: string[] = [];
+            let overall = {
+                pass: 0,
+                fail: 0
+            };
             suites.forEach((suite: SuiteExecution) => {
                 //output += `{ "properties: { "name":"${suite.config.name}"}, "scenarios:" [ ${suite.output} ]}`;
-                output += suite.output + "\n";
+                suiteOutput.push(suite.output);
+                if (suite.exitCode == 0) {
+                    overall.pass += 1;
+                }
+                else {
+                    overall.fail += 1;
+                }
             });
-            output += ']}';
+            output = `{ "summary": { "passCount": ${overall.pass}, "failCount": ${overall.fail}, "duration": ${duration} }, ` +
+                `"suites": [${ suiteOutput.join(',') }] }`;
         }
         else {
             suites.forEach((suite: SuiteExecution) => {
