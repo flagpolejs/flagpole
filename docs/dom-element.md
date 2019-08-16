@@ -1,6 +1,6 @@
 # DOMElement
 
-This object contains elements within the DOM for Puppeteer browser scenarios or Cheerio HTML scenarios. You typically get this element by way of this.select('css selector path') from the AssertionContext.
+This object contains elements within the DOM for Puppeteer browser scenarios or Cheerio HTML scenarios. You typically get this element by way of `context.find('css selector path')` from the AssertionContext.
 
 ## Methods
 
@@ -17,7 +17,7 @@ const className = await someElement.getClassName();
 Get data property by this key from the current element. Value will contain null if it does not.
 
 ```javascript
-this.assert(await element.getData('athlete-id')).equals(123);
+context.assert(await element.getData('athlete-id')).equals(123);
 ```
 
 ### getInnerHtml(): Promise<Value>
@@ -49,7 +49,7 @@ const html = await someElement.getOuterHtml();
 Get property by this key from the current element. Value will contain null if it does not.
 
 ```javascript
-this.assert(await input.hasProperty('checked')).equals(true);
+context.assert(await input.hasProperty('checked')).equals(true);
 ```
 
 ### getTagName(): Promise<Value>
@@ -81,7 +81,7 @@ const searchTerm = await input.getValue();
 Does this element have an attribute by this name?
 
 ```javascript
-this.assert(await img.hasAttribute('src')).equals(true);
+context.assert(await img.hasAttribute('src')).equals(true);
 ```
 
 ### hasClassName(className: string): Promise<Value>
@@ -89,7 +89,7 @@ this.assert(await img.hasAttribute('src')).equals(true);
 Does this element have the given class? The value will contain boolean.
 
 ```javascript
-this.assert(await element.hasClassName('heading')).equals(true);
+context.assert(await element.hasClassName('heading')).equals(true);
 ```
 
 ### hasData(key: string): Promise<Value>
@@ -97,7 +97,7 @@ this.assert(await element.hasClassName('heading')).equals(true);
 Does this element have a data property by this name?
 
 ```javascript
-this.assert(await element.hasData('athlete-id')).equals(true);
+context.assert(await element.hasData('athlete-id')).equals(true);
 ```
 
 ### hasProperty(key: string): Promise<Value>
@@ -105,7 +105,7 @@ this.assert(await element.hasData('athlete-id')).equals(true);
 Does this element have a property by this name?
 
 ```javascript
-this.assert(await input.hasProperty('readonly')).equals(true);
+context.assert(await input.hasProperty('readonly')).equals(true);
 ```
 
 ## Properties 
@@ -116,8 +116,8 @@ This is a quick way to get the underlying value within this wrapper object. So t
 
 ### name: string (readonly)
 
-Get a friendly name for this DOMElement, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
+Get a friendly name for this `DOMElement`, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
 
 ### path: string (readonly)
 
-The selector requested to query this DOMElement.
+The selector requested to query this `DOMElement`.

@@ -110,7 +110,7 @@ flagpole rm suite
 
 ### run
 
-Runs your test suites. With no switches like this, it will run every one of the tests. See the -s switch about selecting which suite(s) specifically to run.
+Runs your test suites. With no switches like this. it will run every one of the tests. See the -s switch about selecting which suite(s) specifically to run.
 
 ```bash
 flagpole run

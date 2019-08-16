@@ -142,7 +142,7 @@ function addSuite() {
             "\n" +
             "suite." + typesOfTest[answers.type] + "('" + answers.scenarioDescription + "')\n" +
             "   .open('" + answers.scenarioPath + "')\n" +
-            "   .next(async function (context) {\n" +
+            "   .next(async (context) => {\n" +
             "       \n" +
             "   });\n";
 
@@ -252,7 +252,7 @@ function addScenario() {
         let fileContents: string = "\n\n" +
             "suite." + typesOfTest[answers.type] + "('" + answers.scenarioDescription + "')\n" +
             "   .open('" + answers.scenarioPath + "')\n" +
-            "   .next(async function (context) {\n" +
+            "   .next(async (context) => {\n" +
             "       \n" +
             "   });\n";
 

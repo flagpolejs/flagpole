@@ -1,6 +1,6 @@
 # CSSRule
 
-This object contains declarations for a given CSS selector. You would get this within the context of a Stylesheet scenario. This would come from a this.select('#myElement') type selector from the AssertionContext.
+This object contains declarations for a given CSS selector. You would get this within the context of a Stylesheet scenario. This would come from a this select('#myElement') type selector from the AssertionContext.
 
 ## Methods
 
@@ -9,8 +9,8 @@ This object contains declarations for a given CSS selector. You would get this w
 Test whether this rule has the given CSS property.
 
 ```javascript
-const rule = await this.select('body');
-this.assert(await rule.hasProperty('background')).equals(true);
+const rule = await context.select('body');
+context.assert(await rule.hasProperty('background')).equals(true);
 ```
 
 ### getProperty(key: string): Promise<Value | null> 
@@ -18,8 +18,8 @@ this.assert(await rule.hasProperty('background')).equals(true);
 Get the matching property for this CSS Rule. Returns null if the property does not exist.
 
 ```javascript
-const rule = await this.select('body');
-this.assert(await rule.getProperty('background')).equals('#ffffff');
+const rule = await context.select('body');
+context.assert(await rule.getProperty('background')).equals('#ffffff');
 ```
 
 ## Properties 

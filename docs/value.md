@@ -1,7 +1,7 @@
 
 # Value
 
-This object is the result of queried properties on a DOMElement, CSSRule, or from this.select('property') on a JSON/REST or Image type scenario. It is a wrapper of the actual underlying value that lets you do some nice things.
+This object is the result of queried properties on a DOMElement, CSSRule, or from context.select('property') on a JSON/REST or Image type scenario. It is a wrapper of the actual underlying value that lets you do some nice things.
 
 The main purpose of the Value object as a wrapper, rather than just dealing with the underlying data itself, is that Value has a name property as well. This is what allows Flagpole to devine intelligent assertion messages and other types of messages when you have not explicitly set one. Some other nice methods are also thrown in as a value add.
 
