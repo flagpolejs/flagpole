@@ -1,6 +1,6 @@
 - Getting Started
     - [What is Flagpole?](about.md)
-    - [Core QA Concepts](concepts.md)
+    - [Core Concepts](concepts.md)
     - [Quickstart](quickstart.md)
     - [Further Setup](setup.md)
     - [Config File](config.md)
