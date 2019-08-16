@@ -22,7 +22,7 @@ export class Link {
      */
     public getUri(queryString?: any): string {
         const baseUrl: URL = new URL(
-            this._context.suite.buildUrl(this._context.scenario.getUrl() || '')
+            this._context.suite.buildUrl(this._context.scenario.url || '')
         );
         const thisUrl: URL = new URL(this._uri, baseUrl.href);
         if (typeof queryString != 'undefined') {

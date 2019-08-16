@@ -176,14 +176,14 @@ export abstract class GenericResponse implements iResponse {
      * URL of the request
      */
     public get url(): Value {
-        return this._wrapAsValue(this.scenario.getUrl(), 'Request URL');
+        return this._wrapAsValue(this.scenario.url, 'Request URL');
     }
 
     /**
      * URL of the response, after all redirects
      */
     public get finalUrl(): Value {
-        return this._wrapAsValue(this.scenario.getFinalUrl(), 'Response URL (after redirects)');
+        return this._wrapAsValue(this.scenario.finalUrl, 'Response URL (after redirects)');
     }
 
     /**
@@ -208,7 +208,7 @@ export abstract class GenericResponse implements iResponse {
      * @param uri 
      */
     public absolutizeUri(uri: string): string {
-        let baseUrl: URL = new URL(this.scenario.suite.buildUrl(this.scenario.getUrl() || ''));
+        let baseUrl: URL = new URL(this.scenario.suite.buildUrl(this.scenario.url || ''));
         return (new URL(uri, baseUrl.href)).href;
     }
 

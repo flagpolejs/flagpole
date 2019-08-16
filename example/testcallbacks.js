@@ -26,8 +26,8 @@ const suite = Flagpole.suite('Test order of callbacks')
     .failure(() => {
         console.log('Suite Failure');
     })
-    .catch(() => {
-        console.log('Suite Catch');
+    .error(() => {
+        console.log('Suite Error');
     })
     .finally(() => {
         console.log('Suite Finally');
@@ -47,8 +47,8 @@ suite.html('Main Page')
     .failure(() => {
         console.log('Failure First Scenario');
     })
-    .catch(() => {
-        console.log('Catch First Scenario');
+    .error(() => {
+        console.log('Error First Scenario');
     })
     .finally(() => {
         console.log('Finally First Scenario');
@@ -71,8 +71,8 @@ suite.html('IP Lookup')
     .failure(() => {
         console.log('Failure Second Scenario');
     })
-    .catch(() => {
-        console.log('Catch Second Scenario');
+    .error(() => {
+        console.log('Error Second Scenario');
     })
     .finally(() => {
         console.log('Finally Second Scenario');
@@ -95,8 +95,8 @@ suite.html('Change IP')
     .failure(() => {
         console.log('Failure Third Scenario');
     })
-    .catch(() => {
-        console.log('Catch Third Scenario');
+    .error(() => {
+        console.log('Error Third Scenario');
     })
     .finally(() => {
         console.log('Finally Third Scenario');

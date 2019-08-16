@@ -87,7 +87,10 @@ export class AssertionContext {
      */
     public pause(milliseconds: number): Promise<any> {
         return new Promise((resolve) => {
-            setTimeout(resolve, milliseconds);
+            setTimeout(() => {
+                this.comment('Paused ' + milliseconds + ' milliseconds');
+                resolve();
+            }, milliseconds);
         });
     }
 

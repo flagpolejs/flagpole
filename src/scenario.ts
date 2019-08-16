@@ -108,6 +108,27 @@ export class Scenario {
         );
     }
 
+    /**
+    * Get the url
+    */
+    public get url(): string | null {
+        return this._url;
+    }
+
+    /**
+     * URL after redirects
+     */
+    public get finalUrl(): string | null {
+        return this._finalUrl;
+    }
+
+    /**
+     * Retrieve the options that itialized the request in this scenario
+     */
+    public get requestOptions(): any {
+        return this._options;
+    }
+
     protected _title: string;
     protected _subscribers: Function[] = [];
     protected _nextCallbacks: Function[] = [];
@@ -491,16 +512,6 @@ export class Scenario {
     }
 
     /**
-     * Fake response from local file for testing
-     */
-    public mock(localPath: string): Scenario {
-        this._url = localPath;
-        this._isMock = true;
-        this._executeWhenReady();
-        return this;
-    }
-
-    /**
      * Callback when someting in the scenario throws an error
      */
     public error(callback: Function): Scenario {
@@ -554,27 +565,6 @@ export class Scenario {
     public finally(callback: Function): Scenario {
         this._finallyCallbacks.push(callback);
         return this;
-    }
-
-    /**
-     * Get the url
-     */
-    public getUrl(): string | null {
-        return this._url;
-    }
-
-    /**
-     * URL after redirects
-     */
-    public getFinalUrl(): string | null {
-        return this._finalUrl;
-    }
-
-    /**
-     * Retrieve the options that itialized the request in this scenaior
-     */
-    public getRequestOptions(): any {
-        return this._options;
     }
 
     /**
@@ -687,17 +677,13 @@ export class Scenario {
     }
 
     /**
-     * Waits for this number of milliseconds
-     * 
-     * @param millis 
+     * Fake response from local file for testing
      */
-    public pause(millis: number): Promise<void> {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                this.comment('Paused ' + millis + ' milliseconds');
-                resolve();
-            }, millis);
-        });
+    public mock(localPath: string): Scenario {
+        this._url = localPath;
+        this._isMock = true;
+        this._executeWhenReady();
+        return this;
     }
 
     /**
@@ -777,7 +763,7 @@ export class Scenario {
                     result,
                     scenario._getCookies()
                 );
-                scenario._finalUrl = scenario.getUrl();
+                scenario._finalUrl = scenario.url;
                 scenario._processResponse(response);
             })
             .catch(err => {
@@ -993,7 +979,7 @@ export class Scenario {
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
             Bluebird.mapSeries(this._errorCallbacks, (_then) => {
-                return _then.apply(scenario, [error]);
+                return _then.apply(scenario, [error, scenario]);
             }).then(() => {
                 this._publish(ScenarioStatusEvent.finished);
                 resolve();

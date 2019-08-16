@@ -560,7 +560,7 @@ export class DOMElement extends ProtoValue implements iValue {
                     return this._getAttribute('href');
                 }
                 else if (['form'].indexOf(tagName) >= 0) {
-                    return this._getAttribute('action') || this._context.scenario.getUrl();
+                    return this._getAttribute('action') || this._context.scenario.url;
                 }
                 else if (['source'].indexOf(tagName) >= 0) {
                     return this._getAttribute('src');
@@ -621,7 +621,7 @@ export class DOMElement extends ProtoValue implements iValue {
         const opts: any = (
             (scenarioType == 'browser' && this._context.scenario.responseType == ResponseType.browser) ||
             scenarioType != 'browser'
-        ) ? this._context.scenario.getRequestOptions() : {};
+        ) ? this._context.scenario.requestOptions() : {};
         // Initialize the scenario
         scenario[scenarioType](opts);
         // Apply the callback
