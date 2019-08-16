@@ -1,9 +1,11 @@
 - [What is Flagpole?](about.md)
 - [Getting Started](quickstart.md)
     - [Quickstart](quickstart.md)
+    - [Further Setup](setup.md)
+    - [Config File](config.md)
 - [CLI](cli.md)
 - [Events](events.md)
-- Classes
+- [Classes](assertion.md)
     - [Assertion](assertion.md)
     - [AssertionContext](assertion-context.md)
     - [CSSRule](css-rule.md)
