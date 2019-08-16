@@ -21,7 +21,25 @@
       homepage: 'about.md',
       loadSidebar: true,
       subMaxLevel: 3,
-      search: 'auto'
+      search: {
+        paths: [
+          '/about',
+          '/assertion',
+          '/cli',
+          '/config',
+          '/css-rule',
+          '/dom-element',
+          '/events',
+          '/generic-response',
+          '/quickstart',
+          '/scenario',
+          '/setup',
+          '/suite',
+          '/value'
+        ],
+        depth: 4,
+        maxAge: 21600000   // Expire localStorage every six hours
+      }
     }
   </script>
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
