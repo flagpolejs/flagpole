@@ -2,7 +2,7 @@ import { Scenario } from './scenario';
 import { iResponse, ResponseType } from './response';
 import { Suite } from './suite';
 import { Browser } from './browser';
-import { Page, ElementHandle } from 'puppeteer';
+import { Page, ElementHandle, LoadEvent } from 'puppeteer';
 import { Assertion } from './assertion';
 import { DOMElement } from './domelement';
 import { HtmlResponse } from './htmlresponse';
@@ -15,7 +15,7 @@ export class AssertionContext {
     private _response: iResponse;
 
     private get _isBrowserRequest(): boolean {
-        return this._scenario.responseType == ResponseType.browser;
+        return this._response.isBrowser;
     }
 
     private get _isHtmlRequest(): boolean {
@@ -292,11 +292,29 @@ export class AssertionContext {
      * 
      * @param timeout 
      */
-    public async waitForNavigation(timeout: number = 10000): Promise<void> {
+    public async waitForNavigation(timeout: number = 10000, waitFor?: string | string[]): Promise<void> {
         if (this._isBrowserRequest && this.page !== null) {
+            const allowedOptions: string[] = ["load", "domcontentloaded", "networkidle0", "networkidle2"];
+            // @ts-ignore VS Code freaks out about this, but it's valid return output for LoadEvent
+            const waitForEvent: LoadEvent[] = (() => {
+                if (typeof waitFor == 'string' && allowedOptions.indexOf(waitFor) >= 0) {
+                    return [waitFor];
+                }
+                else if (
+                    Flagpole.toType(waitFor) == 'array' &&
+                    (<string[]>waitFor).every((waitForItem) => {
+                        return (allowedOptions.indexOf(waitForItem) >= 0);
+                    })
+                ) {
+                    return waitFor;
+                }
+                else {
+                    return ["networkidle2"];
+                }
+            })();
             await this.page.waitForNavigation({
                 timeout: timeout,
-                waitUntil: 'networkidle2'
+                waitUntil: waitForEvent
             });
             return;
         }
@@ -409,6 +427,21 @@ export class AssertionContext {
         const filePath: string = await Flagpole.openInBrowser(output);
         this.scenario.comment(`Open response in browser temp file: ${filePath}`);
         return filePath;
+    }
+
+    /**
+     * Take a screenshot
+     * 
+     * @param opts 
+     */
+    public async screenshot(opts: any): Promise<Buffer | string> {
+        if (this._isBrowserRequest) {
+            if (this.page !== null) {
+                return await this.page.screenshot(opts);
+            }
+            throw new Error(`No page found, so can't take a screenshot.`);
+        }
+        throw new Error(`This scenario type (${this.response.typeName}) does not support screenshots.`);
     }
 
 }
