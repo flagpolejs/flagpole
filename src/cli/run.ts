@@ -4,8 +4,8 @@ import { TestRunner } from './testrunner';
 
 export function run(selectedSuites: string[] = []) {
 
-    let tests: TestRunner = new TestRunner();
-    let suites: SuiteConfig[] = Cli.config.getSuites();
+    const tests: TestRunner = new TestRunner();
+    const suites: SuiteConfig[] = Cli.config.getSuites();
 
     // Run only certain suites
     if (selectedSuites.length) {

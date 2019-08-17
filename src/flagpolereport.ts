@@ -83,6 +83,7 @@ export class FlagpoleReport {
             let scenario: Scenario = scenarios[i];
             const log = await scenario.getLog();
             out.scenarios[i] = {
+                title: scenario.title,
                 done: scenario.hasFinished,
                 failCount: 0,
                 passCount: 0,

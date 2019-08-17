@@ -5,6 +5,11 @@ import { FlagpoleOutput } from '../flagpole';
 
 const exec = require('child_process').exec;
 
+export interface iTestRunnerResult {
+    output: string[],
+    exitCode: number
+}
+
 export class SuiteExecution {
 
     public config: SuiteConfig;
@@ -30,6 +35,7 @@ export class SuiteExecution {
      * @param {string} filePath
      */
     public run(callback: Function) {
+
         const suite: SuiteExecution = this;
         const filePath: string = this.config.getPath();
 
@@ -51,30 +57,17 @@ export class SuiteExecution {
         // Set the output to match what was typed at CLI
         opts += ' -o ' + Flagpole.output;
 
-        // Run this command
-        let child = exec('node ' + filePath + opts);
-        // When it outputs to stdout
-        child.stdout.on('data', function (data) {
-            data && suite._output.push(data);
-        });
-        // When it outputs to stderr
-        child.stderr.on('data', function (data) {
-            data && suite._output.push(data);
-        });
-        // When it outputs errors
-        child.on('error', function (data) {
-            data && suite._output.push(data);
-        });
-        // When child process exists
-        child.on('exit', function (exitCode: number) {
-            if (exitCode > 0 && Flagpole.output == FlagpoleOutput.console) {
-                suite._output.push('FAILED TEST SUITE:');
-                suite._output.push(filePath + ' exited with error code ' + exitCode);
-                suite._output.push("\n");
-            }
-            suite._onAfter(exitCode);
-            callback(suite);
-        });
+        TestRunner.execute(filePath, opts)
+            .then((result: iTestRunnerResult) => {
+                this._exitCode = result.exitCode;
+                suite._output = result.output;
+                suite._onAfter(result.exitCode);
+                callback(suite);
+            })
+            .catch((ex) => {
+                console.log(ex);
+            });
+        
     }
 
     protected _reset() {
@@ -96,6 +89,37 @@ export class TestRunner {
 
     private suites: { [s: string]: SuiteExecution; } = {};
     private _timeStart: number = Date.now();
+
+    public static execute(filePath: string, opts: string): Promise<iTestRunnerResult> {
+        return new Promise((resolve) => {
+            let child = exec(`node ${filePath} ${opts}`);
+            let output: string[] = [];
+            // When it outputs to stdout
+            child.stdout.on('data', function (data) {
+                data && output.push(data);
+            });
+            // When it outputs to stderr
+            child.stderr.on('data', function (data) {
+                data && output.push(data);
+            });
+            // When it outputs errors
+            child.on('error', function (data) {
+                data && output.push(data);
+            });
+            // When child process exists
+            child.on('exit', function (exitCode: number) {
+                if (exitCode > 0 && Flagpole.output == FlagpoleOutput.console) {
+                    output.push('FAILED TEST SUITE:');
+                    output.push(filePath + ' exited with error code ' + exitCode);
+                    output.push("\n");
+                }
+                resolve({
+                    output: output,
+                    exitCode: exitCode
+                });
+            });
+        });
+    }
 
     /**
      * Add a suite to the list of ones we are running

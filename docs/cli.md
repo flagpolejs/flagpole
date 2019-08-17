@@ -155,6 +155,14 @@ You can list out multiple suite, space separated.
 flagpole run -s smoke api e2e
 ```
 
+### serve
+
+Runs a local web server on port 3000 and opens default web browser to this port. This allows you to view your local Flagpole project configuration in a friendly user interface. You can run tests and do other things from here.
+
+```bash
+flagpole serve
+```
+
 ## General Switches
 
 ### -c pathToConfig

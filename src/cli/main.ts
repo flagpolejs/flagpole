@@ -8,7 +8,7 @@ const fs = require('fs');
 /**
  * COMMAND LINE ARGUMENTS
  */
-let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'pack', 'login', 'logout', 'deploy', 'about'];
+let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'pack', 'login', 'logout', 'deploy', 'about', 'serve'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
@@ -151,4 +151,7 @@ else if (Cli.command == 'import') {
     if (Cli.commandArg == 'suite') {
         require('./import').importSuite();
     }   
+}
+else if (Cli.command == 'serve') {
+    require('./serve').serve();
 }
