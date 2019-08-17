@@ -204,10 +204,10 @@ export class FlagpoleConfig {
         }, null, 2);
     }
 
-    public save(): Promise<any> {
+    public save(): Promise<void> {
         return new Promise((resolve, reject) => {
             fs.writeFile(this.getConfigPath(), this.toString(), function (err) {
-                if (err) return reject();
+                if (err) return reject(err);
                 resolve();
             });
         });

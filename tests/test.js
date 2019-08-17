@@ -6,8 +6,6 @@ Flagpole.automaticallyPrintToConsole = true;
 
 let mockRoutes = nock('http://test.flagpole');
 
-console.log('asdfas');
-
 mockRoutes.get('/test.html')
     .reply(200, function (uri, requestBody) {
         return fs.createReadStream(__dirname + '/mock/test.html');
@@ -21,15 +19,15 @@ mockRoutes.get('/test2.html')
 let suite = Flagpole.Suite('Test')
     .base('http://test.flagpole');
 
-suite.Scenario('Test 1')
+suite.html('Test 1')
     .open('/test.html')
-    .assertions(function (test) {
-        test.status().equals(200);
+    .next(function (context) {
+        context.assert(context.response.statusCode).equals(200);
 
-        test.select('a').length().greaterThan(0);
+        context.assert(await context.find('a')).length.greaterThan(0);
 
-        test.select('a[href^="/"]').each(function (link) {
-            link.click('Test 2', true);
+        (await context.find('a[href^="/"]')).forEach((link) => {
+            link.click();
         });
 
     });

@@ -5,6 +5,8 @@
             body { font: 14px 'Helvetica'; margin: 0; padding: 0; }
             header { padding: 8px; background: rgb(100, 150, 200); }
             header img.logo { width: 100%; max-width: 200px; }
+            nav { background: rgb(50, 80, 150); color: rgb(200, 200, 200); padding: 4px; }
+            nav a { color: rgb(255, 255, 255); text-decoration: none; padding-left: 8px; padding-right: 16px; display: inline-block; }
             main { width: 100%; max-width: 620px; margin-left: auto; margin-right: auto; padding: 8px; }
             aside { margin-top: 8px; margin-bottom: 16px; }
             article aside, article section { margin-left: 16px; }
@@ -19,6 +21,7 @@
             table { border: solid 1px rgb(0, 0, 0); width: 100%; max-width: 600px; }
             table thead { background: rgb(120, 180, 220); }
             table td { vertical-align: middle; padding-right: 8px; }
+            table tbody tr:nth-child(even) { background: rgb(230, 230, 230); }
         </style>
     </head>
     <body>
@@ -27,6 +30,10 @@
                 <img src="https://flocasts.github.io/flagpole/images/logo@2x.png" class="logo" alt="Flagpole" />
             </a>
         </header>
+        <nav>
+            ${nav}
+            <a href="https://flocasts.github.io/flagpole" target="_new">Documentation</a>
+        </nav>
         <main>
             ${output}
         </main>

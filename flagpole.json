@@ -13,6 +13,12 @@
   "suites": {
     "smoke": {
       "name": "smoke"
+    },
+    "cookie": {
+      "name": "cookie"
+    },
+    "test": {
+      "name": "test"
     }
   }
 }

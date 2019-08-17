@@ -201,7 +201,7 @@ export class TestRunner {
             const tmpObj = tmp.fileSync({ postfix: '.html' });
             const filePath: string = tmpObj.name;
             let template: string = fs.readFileSync(`${__dirname}/report.html`, 'utf8');
-            template = template.replace('${output}', output);
+            template = template.replace('${output}', output).replace('${nav}', '');
             fs.writeFileSync(filePath, template);
             Cli.log(`Writing output to: ${filePath}`);
             (async () => {
