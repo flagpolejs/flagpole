@@ -614,7 +614,7 @@ export class DOMElement extends ProtoValue implements iValue {
         );
         // If we are changing from a browser type to non-browser type (or vice versa) options don't carry over
         const opts: any = ((newScenarioIsBrowser && curScenarioIsBrowser) || !newScenarioIsBrowser) ?
-            this._context.scenario.requestOptions() : {};
+            this._context.scenario.requestOptions : {};
         // Create our new lambda scenario and apply the next callback
         const scenario: Scenario = this._context.suite.scenario(title, scenarioType, opts);
         scenario.next((function () {
