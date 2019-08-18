@@ -461,6 +461,81 @@ export class Assertion {
         return this;
     }
 
+    public schema(schema: any): Assertion {
+        const document: any = this._getCompareValue(this._input);
+        let bool: boolean = true;
+        let err: string | null = null;
+
+        function isValid(document: any, schema: any): boolean {
+            return Object.keys(schema).every((key) => {
+                const schemaItem = schema[key];
+                const docItem = document[key];
+                const schemaItemType: string = Flagpole.toType(schemaItem);
+                const docItemType: string = Flagpole.toType(docItem);
+                // If document does not contain this item
+                if (docItemType == 'undefined' && schemaItem) {
+                    // If this as optional, skip it
+                    if (schemaItem.optional) {
+                        return true;
+                    }
+                    // Otherwise, its non-existance is a violation
+                    err = `${key} was undefined`;
+                    return false;
+                }
+                // If schema item is a string, then it's defining type
+                if (schemaItemType == 'string') {
+                    if (docItemType != schemaItem) {
+                        err = `typeOf ${key} was ${docItemType}, which did not match ${schemaItem}`;
+                        return false;
+                    }
+                }
+                // If schema item is an object, then we do more complex parsing
+                else if (schemaItemType == 'object') {
+                    if (schemaItem.type && docItemType != schemaItem.type) {
+                        err = `typeOf ${key} was ${docItemType}, which did not match ${schemaItem.type}`;
+                        return false;
+                    }
+                    if (Flagpole.toType(schemaItem.items) == 'object') {
+                        // If this item is an array, loop through each subItem and make sure it matches
+                        if (docItemType == 'array') {
+                            // Loop through each item in the array
+                            return (docItem as Array<any>).every((subItem) => {
+                                // If it's a string, just validate the type of each item
+                                if (typeof schemaItem.items == 'string') {
+                                    return Flagpole.toType(subItem) == schemaItem.items;
+                                }
+                                // Otherwise, validate that array item against the "every" sub-schema
+                                return isValid(subItem, schemaItem.items);
+                            });
+                        }
+                        // If this item is an object, loop through each property and make sure it matches
+                        else if (docItemType == 'object') {
+                            return Object.keys(docItem).every((key) => {
+                                // If it's a string, just validate the type of each item
+                                if (typeof schemaItem.items == 'string') {
+                                    return Flagpole.toType(docItem[key]) == schemaItem.items;
+                                }
+                                return isValid(docItem[key], schemaItem.items);
+                            })
+                        }
+                        else {
+                            err = `${key} was not an array nor an object, so can't loop through its items.`;
+                            return false;
+                        }
+                    }
+                }
+                // Fallback to true, probably invalid schema item
+                return true;
+            });
+        }
+
+        if (Flagpole.toType(document) == 'object') {
+            bool = isValid(document, schema); 
+        }
+        this._assert(bool, 'Schema matches.', err);
+        return this;
+    }
+
     private _assert(statement: boolean, defaultMessage: string, actualValue: any) {
         // Result is immutable, so only let them assert once
         if (this._result !== null) {
