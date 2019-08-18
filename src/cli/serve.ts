@@ -517,7 +517,7 @@ const sendIndex = (response: http.ServerResponse): void => {
                 <table>
                     <thead>
                         <tr>
-                            <th>Suite Name</th>
+                            <th>Name</th>
                             <th>Tags</th>
                             <th>Actions</th>
                         </tr>
@@ -565,7 +565,7 @@ const sendIndex = (response: http.ServerResponse): void => {
                 <table>
                 <thead>
                     <tr>
-                        <th>Suite Name</th>
+                        <th>Name</th>
                         <th>Base Path</th>
                         <th>Actions</th>
                     </tr>
