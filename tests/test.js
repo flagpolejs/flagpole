@@ -21,13 +21,10 @@ let suite = Flagpole.Suite('Test')
 
 suite.html('Test 1')
     .open('/test.html')
-    .next(function (context) {
+    .next(async (context) => {
         context.assert(context.response.statusCode).equals(200);
-
         context.assert(await context.find('a')).length.greaterThan(0);
-
-        (await context.find('a[href^="/"]')).forEach((link) => {
+        (await context.findAll('a[href^="/"]')).forEach((link) => {
             link.click();
         });
-
     });

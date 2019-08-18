@@ -7,18 +7,22 @@
   "environments": {
     "dev": {
       "name": "dev",
-      "defaultDomain": ""
+      "defaultDomain": "http://localhost:8000"
     }
   },
   "suites": {
     "smoke": {
-      "name": "smoke"
+      "name": "smoke",
+      "tags": [
+        "foo"
+      ]
     },
     "cookie": {
-      "name": "cookie"
-    },
-    "test": {
-      "name": "test"
+      "name": "cookie",
+      "tags": [
+        "foo",
+        "bar"
+      ]
     }
   }
 }

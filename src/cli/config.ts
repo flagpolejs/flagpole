@@ -24,15 +24,32 @@ export class SuiteConfig {
     protected config: FlagpoleConfig;
     public id: string;
     public name: string;
+    public tags: string[] = [];
     
     constructor(config: FlagpoleConfig, opts: any) {
         this.config = config;
         this.name = opts.name || '';
         this.id = opts.id || '';
+        if (Flagpole.toType(opts.tags) == 'array') {
+            (opts.tags as Array<string>).forEach(tag => {
+                this.tags.push(String(tag));
+            });
+        }
     }
 
     public getPath(): string {
         return this.config.getTestsFolder() + this.name + '.js';
+    }
+
+    public clearTags() {
+        this.tags = [];
+    }
+
+    public addTag(tag: string) {
+        tag = String(tag).trim();
+        if (tag.length && this.tags.indexOf(tag) < 0) {
+            this.tags.push(tag);
+        }
     }
 
 }
@@ -118,10 +135,11 @@ export class FlagpoleConfig {
 
     public addSuite(name: string, opts: {} = {}) {
         if (name.length) {
-            this.suites[name] = new SuiteConfig(
+            const suite: SuiteConfig = new SuiteConfig(
                 this,
                 Object.assign(opts, { name: name })
             );
+            this.suites[name] = suite;
         }
     }
 
@@ -196,7 +214,8 @@ export class FlagpoleConfig {
                 let suites: any = {};
                 for (let key in config.suites) {
                     suites[key] = {
-                        name: config.suites[key].name
+                        name: config.suites[key].name,
+                        tags: config.suites[key].tags
                     };
                 }
                 return suites;
@@ -207,7 +226,10 @@ export class FlagpoleConfig {
     public save(): Promise<void> {
         return new Promise((resolve, reject) => {
             fs.writeFile(this.getConfigPath(), this.toString(), function (err) {
-                if (err) return reject(err);
+                if (err) {
+                    return reject(err);
+                }
+                Cli.refreshConfig();
                 resolve();
             });
         });

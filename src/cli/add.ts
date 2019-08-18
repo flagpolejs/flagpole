@@ -1,6 +1,6 @@
 import { printHeader, printSubheader } from "./cli-helper";
 import { Cli } from './cli';
-import { EnvConfig } from "./config";
+import { EnvConfig, SuiteConfig } from "./config";
 
 const { prompt } = require('enquirer');
 const fs = require('fs');
@@ -120,54 +120,24 @@ function addSuite() {
 
     prompt(questions).then(function (answers) {
         //Cli.log(JSON.stringify(answers));
-
         let suitePath: string = Cli.config.getTestsFolder() + answers.suiteName + '.js';
-        let domains: string = '';
-
-        if (answers.baseDomain) {
-            domains = "'" + answers.baseDomain + "'";
-        }
-        else {
-            domains += "{\n";
+        let baseDomain: string | { [key: string]: string } = answers.baseDomain;
+        if (!baseDomain) {
+            baseDomain = {};
             Cli.config.getEnvironments().forEach(function (env: EnvConfig) {
-                domains += '      ' + env.name + ": '" + answers['baseDomain_' + env.name] + "',\n";
+                baseDomain[env.name] = answers['baseDomain_' + env.name];
             });
-            domains += "   }";
         }
-
-        let fileContents: string = "const { Flagpole } = require('flagpole');\n" +
-            "\n" +
-            "const suite = Flagpole.suite('" + answers.suiteDescription + "')\n" +
-            "   .base(" + domains + ");\n" +
-            "\n" +
-            "suite." + typesOfTest[answers.type] + "('" + answers.scenarioDescription + "')\n" +
-            "   .open('" + answers.scenarioPath + "')\n" +
-            "   .next(async (context) => {\n" +
-            "       \n" +
-            "   });\n";
-
         Cli.log('');
-
-        fs.writeFile(suitePath, fileContents, function (err) {
-            if (err) {
-
-                Cli.log('Error creating scenario!');
-                Cli.log('Tried to write to: ' + suitePath);
-                Cli.log('Got Error: ' + err);
-                Cli.log('');
-                Cli.exit(1);
-            }
-
-            Cli.config.addSuite(answers.suiteName);
-            fs.writeFile(Cli.config.getConfigPath(), Cli.config.toString(), function (err) {
-                if (err) {
-                    Cli.log('Error creating scenario!');
-                    Cli.log('Failed updating config: ' + Cli.config.getConfigPath());
-                    Cli.log('Got Error: ' + err);
-                    Cli.log('');
-                    Cli.exit(1);
-                }
-
+        Cli.addSuite({
+                suiteName: answers.suiteName,
+                baseDomain: baseDomain,
+                suiteDescription: answers.suiteDescription,
+                scenarioDescription: answers.scenarioDescription,
+                scenarioType: typesOfTest[answers.type],
+                scenarioPath: answers.scenarioPath
+            })
+            .then(() => {
                 Cli.log('Created new test suite.');
                 Cli.list([
                     'Suite file created: ' + suitePath,
@@ -176,11 +146,14 @@ function addSuite() {
                 ]);
                 Cli.log('');
                 Cli.exit(0);
-
+            })
+            .catch((err) => {
+                Cli.log('Error creating scenario!');
+                Cli.log('Tried to write to: ' + suitePath);
+                Cli.log('Got Error: ' + err);
+                Cli.log('');
+                Cli.exit(1);
             });
-           
-        });
-
     });
 
 }
@@ -206,7 +179,7 @@ function addScenario() {
             type: 'select',
             name: 'suite',
             message: 'What suite do you want to add it to?',
-            initial: suites.indexOf(Cli.commandArg2 || '') ||  0,
+            initial: suites.indexOf(Cli.commandArg2 || '') || 0,
             choices: suites,
             validate: function (input) {
                 return (input.length > 0);
@@ -243,41 +216,33 @@ function addScenario() {
                 return /^\/.{0,63}$/i.test(input);
             }
         }
-    ]).then(function (answers) {
+    ]).then(function (answers: any) {
 
         //Cli.log(JSON.stringify(answers));
-
-        let suitePath: string = Cli.config.getTestsFolder() + answers.suite + '.js';
-
-        let fileContents: string = "\n\n" +
-            "suite." + typesOfTest[answers.type] + "('" + answers.scenarioDescription + "')\n" +
-            "   .open('" + answers.scenarioPath + "')\n" +
-            "   .next(async (context) => {\n" +
-            "       \n" +
-            "   });\n";
-
-        if (!fs.existsSync(suitePath)) {
-            Cli.log('Something weird happened. Could not find suite:')
-            Cli.log(suitePath);
-            Cli.exit(2);
+        const suite: SuiteConfig = Cli.config.suites[answers.suite];
+        if (!suite) {
+            Cli.log(`Invalid suite: ${answers.suite}`);
+            Cli.log('');
+            Cli.exit(1);
         }
 
-        fs.appendFile(suitePath, fileContents, function (err) {
-            Cli.log('');
-            if (err) {
-                Cli.log('Error creating scenario!');
-                Cli.log('Tried to write to: ' + suitePath);
-                Cli.log('Got Error: ' + err);
-                Cli.log('');
-                Cli.exit(1);
-            }
+        Cli.addScenario(suite, {
+            description: answers.scenarioDescription,
+            path: answers.scenarioPath,
+            type: typesOfTest[answers.type]
+        }).then(() => {
             Cli.log('Appended new scenario to suite:');
-            Cli.log(suitePath);
+            Cli.log(suite.getPath());
             Cli.log('');
             Cli.log('Scenario added to that suite:');
             Cli.log(answers.scenarioDescription);
             Cli.log('');
             Cli.exit(0);
+        }).catch((err) => {
+            Cli.log('Error creating scenario!');
+            Cli.log('Got Error: ' + err);
+            Cli.log('');
+            Cli.exit(1);
         });
 
     }).catch(function (err) {
@@ -286,7 +251,6 @@ function addScenario() {
     });
 
 }
-
 
 function addEnv() {
     printSubheader('Add New Environment');

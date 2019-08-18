@@ -1,11 +1,25 @@
-import { FlagpoleConfig } from "./config";
+import { FlagpoleConfig, SuiteConfig } from "./config";
 import { ClorthoService, iCredentials } from 'clortho-lite';
 import { printHeader } from './cli-helper';
+import { Flagpole } from '..';
 
 const fs = require('fs');
-const exec = require('child_process').exec;
 const path = require('path');
-const ansiAlign = require('ansi-align');
+
+export interface iSuiteOpts {
+    suiteName: string,
+    baseDomain: string | { [env: string]: string },
+    suiteDescription: string,
+    scenarioDescription: string,
+    scenarioType: string,
+    scenarioPath: string
+}
+
+export interface iInitOpts {
+    projectName: string,
+    testsPath: string,
+    environments: string[]
+}
 
 export class Cli {
 
@@ -18,6 +32,13 @@ export class Cli {
     static commandArg: string | null = null;
     static commandArg2: string | null = null;
     static apiDomain: string = 'https://us-central1-flagpolejs-5ea61.cloudfunctions.net'
+
+    static isInitialized(): boolean {
+        return (
+            Cli.configPath && fs.existsSync(Cli.configPath) &&
+            Cli.config && Cli.config.isValid()
+        );
+    }
 
     static log(message: string) {
         if (typeof message !== 'undefined') {
@@ -48,13 +69,11 @@ export class Cli {
         return path;
     }
 
-    static parseConfigFile(configPath: string): FlagpoleConfig {
-        let config: FlagpoleConfig = new FlagpoleConfig();
-        // Does path exist?
-        if (configPath && fs.existsSync(configPath)) {
+    static refreshConfig(): FlagpoleConfig {
+        if (Cli.configPath && fs.existsSync(Cli.configPath)) {
             // Read the file
-            let configContent: string = fs.readFileSync(configPath);
-            let configDir: string = Cli.normalizePath(path.dirname(configPath));
+            let configContent: string = fs.readFileSync(Cli.configPath);
+            let configDir: string = Cli.normalizePath(path.dirname(Cli.configPath));
             let configData: any;
             try {
                 configData = JSON.parse(configContent);
@@ -62,11 +81,18 @@ export class Cli {
             catch {
                 configData = {};
             }
-            configData.configPath = configPath;
             configData.configDir = configDir;
-            config = new FlagpoleConfig(configData);
+            Cli.config = new FlagpoleConfig(configData);
         }
-        return config;
+        else {
+            Cli.config = new FlagpoleConfig()
+        }
+        return Cli.config;
+    }
+
+    static parseConfigFile(configPath: string): FlagpoleConfig {
+        Cli.configPath = configPath;
+        return Cli.refreshConfig();
     }
 
     static getCredentials(): Promise<{ email: string, token: string }> {
@@ -102,6 +128,145 @@ export class Cli {
             }).catch(function (err) {
                 reject('Not logged in. ' + err);
             });
+        });
+    }
+
+    static findJsFilesInTestFolder(): string[] {
+
+        let startFolder: string = Cli.config.getTestsFolder();
+        let suitesInFolder: string[] = [];
+
+        function findSuites(dir: string, isSubFolder: boolean = false) {
+            // Does this folder exist?
+            if (fs.existsSync(dir)) {
+                // Read contents
+                let files = fs.readdirSync(dir);
+                files.forEach(function (file) {
+                    // Drill into sub-folders, but only once!
+                    if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
+                        findSuites(dir + file + '/', true);
+                    }
+                    // Push in any JS files
+                    else if (file.match(/.js$/)) {
+                        let name: string = (dir + file).replace(startFolder, '').replace(/\.js$/i, '');
+                        suitesInFolder.push(name);
+                    }
+                });
+            }
+        };
+
+        findSuites(startFolder);
+        return suitesInFolder;
+
+    }
+
+    static findDetachedSuites(): string[] {
+        const suitesInFolder: string[] = Cli.findJsFilesInTestFolder();
+        let suitesAvailableToImport: string[] = [];
+        let suitesInConfig: string[] = Cli.config.getSuiteNames();
+        suitesInFolder.forEach(function (suiteName: string) {
+            if (!suitesInConfig.includes(suiteName)) {
+                suitesAvailableToImport.push(suiteName);
+            }
+        });
+        return suitesAvailableToImport;
+    }
+
+    static addScenario(suite: SuiteConfig, scenario: {
+        description: string,
+        path: string,
+        type: string
+    }): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const suitePath: string = suite.getPath();
+            const fileContents: string = "\n\n" +
+                `suite.${scenario.type}("${scenario.description}")` + "\n" +
+                `   .open("${scenario.path}")` + "\n" +
+                `   .next(async (context) => {` + "\n" +
+                `       ` + "\n" +
+                `   });` + "\n";
+            if (!fs.existsSync(suitePath)) {
+                reject(`Suite file ${suitePath} does not exist.`)
+            }
+            fs.appendFile(suitePath, fileContents, function (err: string) {
+                if (err) {
+                    reject(err);
+                }
+                resolve();
+            });
+        });
+    }
+
+    static addSuite(opts: iSuiteOpts): Promise<iSuiteOpts> {
+        return new Promise((resolve, reject) => {
+            const suitePath: string = Cli.config.getTestsFolder() + opts.suiteName + '.js';
+            let domains: string = '';
+            if (typeof opts.baseDomain == 'string') {
+                domains = `'${opts.baseDomain}'`;
+            }
+            else if (Flagpole.toType(opts.baseDomain) == 'object') {
+                domains += "{\n";
+                for (let env in opts.baseDomain) {
+                    let domain: string = opts.baseDomain[env];
+                    domains += `      ${env}: '${domain}',` + "\n";
+                };
+                domains += "   }";
+            }
+            let fileContents: string = `const { Flagpole } = require('flagpole');` + "\n\n";
+            fileContents += `const suite = Flagpole.suite('${opts.suiteDescription}')` + "\n";
+            fileContents += `   .base(${domains});` + "\n\n";
+            fileContents += `suite.${opts.scenarioType}("${opts.scenarioDescription}")` + "\n";
+            fileContents += `   .open("${opts.scenarioPath}")` + "\n";
+            fileContents += `   .next(async (context) => {` + "\n";
+            fileContents += `       ` + "\n";
+            fileContents += `   });` + "\n\n";
+            fs.writeFile(suitePath, fileContents, function (err: string) {
+                if (err) {
+                    return reject(err);
+                }
+                Cli.config.addSuite(opts.suiteName);
+                Cli.config.save().then(() => {
+                    Cli.refreshConfig();
+                    resolve(opts)
+                }).catch(reject);
+            });
+        });
+    }
+
+    static init(opts: iInitOpts): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            const testsFolder: string = process.cwd() + '/' + opts.testsPath;
+            const configFilePath: string = process.cwd() + '/flagpole.json';
+            const configFile: FlagpoleConfig = new FlagpoleConfig({
+                configPath: configFilePath,
+                project: {
+                    name: opts.projectName,
+                    path: opts.testsPath
+                }
+            });
+            let tasks: string[] = [];
+            // Add environemnts
+            opts.environments.forEach(envName => {
+                configFile.addEnvironment(envName);
+            });
+            // Create tests folder
+            if (!fs.existsSync(testsFolder)) {
+                fs.mkdirSync(testsFolder);
+                tasks.push('Created tests folder: ' + testsFolder);
+            }
+            else {
+                tasks.push('Tests folder already existed: ' + testsFolder);
+            }
+            // Save config
+            configFile.save()
+                .then(() => {
+                    tasks.push('Saved config file.');
+                    Cli.parseConfigFile(configFilePath);
+                    resolve(tasks);
+                })
+                .catch((err) => {
+                    reject(`Error creating project config file: ${configFilePath}. ${err}`);
+                });
         });
     }
 

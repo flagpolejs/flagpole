@@ -17,11 +17,36 @@
             li.Fail { color: rgb(120, 0, 0); border-left-color: rgb(120, 0, 0); }
             li.Pass { color: rgb(0, 120, 0); border-left-color: rgb(0, 120, 0); }
             li.Comment { color: rgb(100, 100, 100);; border-left-color: rgb(100, 100, 100); font-style: italic; }
-            form { margin: 0; }
+            form { margin: 0; display: inline-block; padding-right: 16px; }
+            form:only-child { padding-right: 0; padding-left: 0; }
+            form input[readonly] { background: rgb(230, 230, 230); color: rgb(80, 80, 80); }
+            fieldset {
+                margin-top: 12px;
+                margin-bottom: 12px;
+            }
             table { border: solid 1px rgb(0, 0, 0); width: 100%; max-width: 600px; }
             table thead { background: rgb(120, 180, 220); }
             table td { vertical-align: middle; padding-right: 8px; }
             table tbody tr:nth-child(even) { background: rgb(230, 230, 230); }
+            table td, table th {
+                text-align: center;
+            }
+            table td:nth-child(1), table th:nth-child(1) {
+                text-align: left;
+            }
+            div.field {
+                padding-top: 8px;
+                padding-bottom: 8px;
+                vertical-align: middle;
+            }
+            div.field label {
+                display: inline-block;
+                padding-right: 16px;
+                min-width: 120px;
+            }
+            div.field select, div.field input[type="text"] {
+                min-width: 200px;
+            }
         </style>
     </head>
     <body>

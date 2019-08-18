@@ -3,8 +3,6 @@
 import { Cli } from './cli';
 import { Flagpole } from "..";
 
-const fs = require('fs');
-
 /**
  * COMMAND LINE ARGUMENTS
  */
