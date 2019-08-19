@@ -197,7 +197,10 @@ const schema = {
     lastName: "string",
     positionsPlayed: {
         type: "array",
-        enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
+        items: {
+            type: "string",
+            enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
+        }
     },
     jerseyNumber: {
         type: "number",
@@ -215,7 +218,10 @@ const schema = {
     lastName: "string",
     positionsPlayed: {
         type: "array",
-        enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
+        items: {
+            type: "string",
+            enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
+        }
     },
     jerseyNumber: {
         type: "number",
