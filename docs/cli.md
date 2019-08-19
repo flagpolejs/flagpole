@@ -155,6 +155,14 @@ You can list out multiple suite, space separated.
 flagpole run -s smoke api e2e
 ```
 
+#### -t tagName
+
+Run all suites with the given tag. This can only be a single string value.
+
+```bash
+flagpole run -t basic
+```
+
 ### serve
 
 Runs a local web server on port 3000 and opens default web browser to this port. This allows you to view your local Flagpole project configuration in a friendly user interface. You can run tests and do other things from here.

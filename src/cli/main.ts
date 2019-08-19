@@ -16,6 +16,7 @@ let argv = require('yargs')
     .demandCommand(1, 'You must specify a command: ' + commands.join(", "))
     .alias({
         's': 'suite',
+        't': 'tag',
         'e': 'env',
         'c': 'config',
         'd': 'debug',
@@ -25,6 +26,7 @@ let argv = require('yargs')
     })
     .describe({
         's': 'Specify one or more suites to run',
+        't': 'Specify a tag for suites to run',
         'e': 'Environment like: dev, staging, prod',
         'c': 'Specify path to config file',
         'd': 'Show extra debug info',
@@ -34,6 +36,7 @@ let argv = require('yargs')
         'q': 'Quiet Mode: Silence all output'
     })
     .array('s')
+    .string('t')
     .string('e')
     .boolean('d')
     .boolean('h')
@@ -43,6 +46,7 @@ let argv = require('yargs')
     .default('e', 'dev')
     .default('o', 'console')
     .default('s', [])
+    .default('t', '')
     .default('h', false)
     .default('q', false)
     .default('l', false)
@@ -50,7 +54,7 @@ let argv = require('yargs')
     .example('flagpole run', 'To run all test suites')
     .example('flagpole run -s smoke', 'To run just the suite called smoke')
     .example('flagpole run -s smoke api', 'Or you can run multiple suites (smoke and api)')
-    //.example('flagpole run -g basic', 'To run all test suites in the basic group')
+    .example('flagpole run -t basic', 'To run all suites with tag "basic"')
     .example('flagpole init', 'Initialize a new Flagpole project')
     .example('flagpole add suite', 'Add a new test suite')
     .example('flagpole add scenario', 'Add a new scenario to a test suite')
@@ -119,7 +123,7 @@ if (Cli.command == 'list') {
     require('./list').list();
 }
 else if (Cli.command== 'run') {
-    require('./run').run(argv.s);
+    require('./run').run(argv.s, argv.t);
 }
 else if (Cli.command == 'login') {
     require('./login').login();
