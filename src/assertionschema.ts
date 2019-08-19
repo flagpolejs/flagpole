@@ -82,7 +82,7 @@ export class AssertionSchema implements iAjvLike {
         return true;
     }
 
-    protected _matchesRegEx(schema: any, document: any, path: string): boolean {
+    protected _matchesPattern(schema: any, document: any, path: string): boolean {
         const schemaType = Flagpole.toType(schema);
         if (schemaType != 'undefined' && !(new RegExp(schema).test(String(document)))) {
             this._logError(`${path} value ${document} did not match ${String(schema)}`);
@@ -179,8 +179,8 @@ export class AssertionSchema implements iAjvLike {
             if (!this._matchesEnum(schema.enum, document, path)) {
                 return false;
             }
-            // matches
-            if (!this._matchesRegEx(schema.matches, document, path)) {
+            // pattern
+            if (!this._matchesPattern(schema.matches, document, path)) {
                 return false;
             }
             // test

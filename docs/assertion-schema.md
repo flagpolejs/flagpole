@@ -214,7 +214,7 @@ const schema = {
         lastName: "string",
         jerseyNumber: {
             type: "number",
-            matches: /^[0-9]{1,2}$/
+            pattern: /^[0-9]{1,2}$/
         }
     }
 }
