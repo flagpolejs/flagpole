@@ -81,7 +81,7 @@ context.assert('foobar').endsWith('bar');
 
 ### equals(value: any): Assertion
 
-This be used with any types of values. It uses a rough (double equals) equality versus the exactly method that uses a precise (triple equals) equality.
+This can be used with any type of value. It uses a rough (double equals) equality versus the exactly method that uses a precise (triple equals) equality.
 
 ```javascript
 context.assert(myValue).equals(5);
@@ -203,14 +203,24 @@ Tests whether the input promise resolves.
 await context.assert(myPromise).resolves();
 ```
 
-### schema(schema: iAssertionSchema): Promise<Assertion>
+### schema(schema: iAssertionSchema | any): Promise<Assertion>
 
 Test whether the input matches the schema provided. This currently is only valid for testing JSON. This assertion is async (returns a promise) so you should either await it or return it at the end of a next block.
 
-See documentation for [iAssertionSchema](assertion-schema.md) for more on how to define a schema.
+Flagpole ships with a simple JSON Schema validator. The format of the schema is similar to the standard, but it's simpler and has some nice enhancements. See documentation for [iAssertionSchema](assertion-schema.md) for more on how to define a schema.
+
+If you prefer a more powerful and complete schema validator, simply install AJV in your project. Flagpole will recognize if AJV is installed and use it by default. Read the [documentaiton about AJV](https://www.npmjs.com/package/ajv) to learn more.
+
+Either way, the syntax to make the assertion will be the same:
 
 ```typescript
 await context.assert(jsonResponse).schema(mySchema);
+```
+
+If you have AJV installed, but want to use our built in simpler syntax in some places, you can force the use of the Flagpole validator by passing true as the second argument.
+
+```typescript
+await context.assert(jsonResponse).schema(mySchema, true);
 ```
 
 ### some(callback: Function): Assertion

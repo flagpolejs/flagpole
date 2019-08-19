@@ -6,11 +6,13 @@ In its simplest form you can just define an object with properties of the JSON p
 
 ```javascript
 const schema = {
-    id: "number",
-    firstName: "string",
-    lastName: "string",
-    isActive: "boolean",
-    teams: "array"
+    properties: {
+        id: "number",
+        firstName: "string",
+        lastName: "string",
+        isActive: "boolean",
+        teams: "array"
+    }
 }
 ```
 
@@ -32,11 +34,13 @@ Whenever we define a value in our schema as a string, we are defining its type. 
 
 ```javascript
 const schema = {
-    id: { type: "number" },
-    firstName: { type: "string" },
-    lastName: { type: "string" },
-    isActive: { type: "boolean" },
-    teams: { type: "array" }
+    properties: {
+        id: { type: "number" },
+        firstName: { type: "string" },
+        lastName: { type: "string" },
+        isActive: { type: "boolean" },
+        teams: { type: "array" }
+    }
 }
 ```
 But there really is no point in doing that if we simply want to verify the type.
@@ -45,13 +49,15 @@ The above works well for a flat structure, but when we start to get nested with 
 
 ```javascript
 const schema = {
-    id: "number",
-    firstName: "string",
-    lastName: "string",
-    isActive: "boolean",
-    teams: {
-        type: "array",
-        items: "string"
+    properties: {
+        id: "number",
+        firstName: "string",
+        lastName: "string",
+        isActive: "boolean",
+        teams: {
+            type: "array",
+            items: "string"
+        }
     }
 }
 ```
@@ -80,18 +86,20 @@ We would define this schema like this:
 
 ```javascript
 const schema = {
-    id: "number",
-    firstName: "string",
-    lastName: "string",
-    isActive: "boolean",
-    teams: {
-        type: "array",
-        items: {
-            type: "object",
+    properties: {
+        id: "number",
+        firstName: "string",
+        lastName: "string",
+        isActive: "boolean",
+        teams: {
+            type: "array",
             items: {
-                name: "string",
-                firstSeason: "number",
-                lastSeason: "number"
+                type: "object",
+                properties: {
+                    name: "string",
+                    firstSeason: "number",
+                    lastSeason: "number"
+                }
             }
         }
     }
@@ -106,20 +114,22 @@ This is where the `optional` property comes in.
 
 ```javascript
 const schema = {
-    id: "number",
-    firstName: "string",
-    lastName: "string",
-    isActive: "boolean",
-    teams: {
-        type: "array",
-        items: {
-            type: "object",
+    properties: {
+        id: "number",
+        firstName: "string",
+        lastName: "string",
+        isActive: "boolean",
+        teams: {
+            type: "array",
             items: {
-                name: "string",
-                firstSeason: "number",
-                lastSeason: {
-                    type: "number",
-                    optional: true
+                type: "object",
+                properties: {
+                    name: "string",
+                    firstSeason: "number",
+                    lastSeason: {
+                        type: "number",
+                        optional: true
+                    }
                 }
             }
         }
@@ -131,18 +141,20 @@ Well that was easy! Okay, that works when the field is absent for active players
 
 ```javascript
 const schema = {
-    id: "number",
-    firstName: "string",
-    lastName: "string",
-    isActive: "boolean",
-    teams: {
-        type: "array",
-        items: {
-            type: "object",
+    properties: {
+        id: "number",
+        firstName: "string",
+        lastName: "string",
+        isActive: "boolean",
+        teams: {
+            type: "array",
             items: {
-                name: "string",
-                firstSeason: "number",
-                lastSeason: [ "number", "null" ]
+                type: "object",
+                properties: {
+                    name: "string",
+                    firstSeason: "number",
+                    lastSeason: [ "number", "null" ]
+                }
             }
         }
     }
@@ -166,14 +178,16 @@ We could validate that all of the values in the `positionsPlayed` array are a va
 
 ```javascript
 const schema = {
-    id: "number",
-    firstName: "string",
-    lastName: "string",
-    positionsPlayed: {
-        type: "array",
-        items: {
-            type: "string",
-            enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
+    properties: {
+        id: "number",
+        firstName: "string",
+        lastName: "string",
+        positionsPlayed: {
+            type: "array",
+            properties: {
+                type: "string",
+                enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
+            }
         }
     }
 }
@@ -194,12 +208,14 @@ So let's use a regular expression to verify the `jerseyNumber`.
 
 ```javascript
 const schema = {
-    id: "number",
-    firstName: "string",
-    lastName: "string",
-    jerseyNumber: {
-        type: "number",
-        matches: /^[0-9]{1,2}$/
+    properties: {
+        id: "number",
+        firstName: "string",
+        lastName: "string",
+        jerseyNumber: {
+            type: "number",
+            matches: /^[0-9]{1,2}$/
+        }
     }
 }
 ```
@@ -208,13 +224,15 @@ We could have also done this with another property which is `test`. This propert
 
 ```javascript
 const schema = {
-    id: "number",
-    firstName: "string",
-    lastName: "string",
-    jerseyNumber: {
-        type: "number",
-        test: function(value) {
-            return (value >= 0 && value < 100);
+    properties: {
+        id: "number",
+        firstName: "string",
+        lastName: "string",
+        jerseyNumber: {
+            type: "number",
+            test: function(value) {
+                return (value >= 0 && value < 100);
+            }
         }
     }
 }
@@ -222,7 +240,7 @@ const schema = {
 
 Obviously using the `test` function you could get more complicated with your logic. Besides the first `value` argument called above, the `test` method also receives a second `opts` argument. This contains the following properties:
 
-* key = The string key of the current item
+* path = The path of the current item
 * parent = The last parent item, which would be the array or object this propert is a part of
 * root = The root document that we are evaluating
 
@@ -244,17 +262,19 @@ We will apply this schema to be sure the season years are valid:
 
 ```javascript
 const schema = {
-    id: "number",
-    firstName: "string",
-    lastName: "string",
-    firstSeason: "number",
-    lastSeason: {
-        type: [ "number", "null" ]
-        test: function(value, opts) {
-            return (
-                value === null ||
-                value >= opts.parent.firstSeason
-            );
+    properties: {
+        id: "number",
+        firstName: "string",
+        lastName: "string",
+        firstSeason: "number",
+        lastSeason: {
+            type: [ "number", "null" ]
+            test: function(value, opts) {
+                return (
+                    value === null ||
+                    value >= opts.parent.firstSeason
+                );
+            }
         }
     }
 }
@@ -268,9 +288,11 @@ The constructor accepts the schema and JSON document to be evaluated.
 
 ```typescript
 const personSchema: iAssertionSchema = {
-    id: "number",
-    firstName: "string",
-    lastName: "string",
+    properties: {
+        id: "number",
+        firstName: "string",
+        lastName: "string"
+    }
 };
 const jsonBody = {
     id: 234,
@@ -278,18 +300,18 @@ const jsonBody = {
     lastName: 'Snyder'
 };
 
-const assertionSchema: AssertionSchema = new AssertionSchema(personSchema, jsonBody);
-const isValid: boolean = await assertionSchema.validate();
+const assertionSchema: AssertionSchema = new AssertionSchema();
+const isValid: boolean = await assertionSchema.validate(personSchema, jsonBody);
 ```
 
 ## Properties
 
-### lastError: string | null
+### errors: Error[]
 
 Gives you the last error encountered during the validation process. This will be null until the validate() method is run.
 
 ## Methods
 
-### validate(): Promise<boolean>
+### validate(schema: any, root: any): Promise<boolean>
 
 This will always resolve either true or false.

@@ -1,87 +1,91 @@
 let Flagpole = require('../../dist/index.js').Flagpole;
 
 const trackSchema = {
-    resultCount:  "number",
-    results: {
-        type: "array",
-        items: {
-            wrapperType: {
-                type: "string",
-                enum: ["track"],
-                matches: /track/i
-            },
-            kind: {
-                type: "string",
-                test: function (value) {
-                    return value == 'music-video'
-                }
-            },
-            artistId: "number",
-            trackId: "number",
-            artistName: "string",
-            trackName: "string",
-            trackCensoredName: "string",
-            artistViewUrl: "string",
-            trackViewUrl: "string",
-            previewUrl: "string",
-            artworkUrl30: "string",
-            artworkUrl60: "string",
-            artworkUrl100: "string",
-            trackPrice: "number",
-            releaseDate: "string",
-            trackExplicitness: "string",
-            trackTimeMillis: "number",
-            country: "string",
-            currency: "string",
-            primaryGenreName: "string",
-            discCount: {
-                type: "number",
-                optional: true
-            },
-            discNumber: {
-                type: "number",
-                optional: true
-            },
-            trackCount: {
-                type: "number",
-                optional: true
-            },
-            trackNumber: {
-                type: "number",
-                optional: true
-            },
-            collectionId: {
-                type: "number",
-                optional: true
-            },
-            collectionName: {
-                type: "string",
-                optional: true
-            },
-            collectionCensoredName: {
-                type: "string",
-                optional: true
-            },
-            collectionArtistId: {
-                type: "number",
-                optional: true
-            },
-            collectionViewUrl: {
-                type: "string",
-                optional: true
-            },
-            collectionPrice: {
-                type: "number",
-                optional: true
-            },
-            collectionExplicitness: {
-                type: "string",
-                optional: true
+    properties: {
+        wrapperType: {
+            type: "string",
+            enum: ["track"],
+            matches: /track/i
+        },
+        kind: {
+            type: "string",
+            test: function (value) {
+                return value == 'music-video'
             }
+        },
+        artistId: "number",
+        trackId: "number",
+        artistName: "string",
+        trackName: "string",
+        trackCensoredName: "string",
+        artistViewUrl: "string",
+        trackViewUrl: "string",
+        previewUrl: "string",
+        artworkUrl30: "string",
+        artworkUrl60: "string",
+        artworkUrl100: "string",
+        trackPrice: "number",
+        releaseDate: "string",
+        trackExplicitness: "string",
+        trackTimeMillis: "number",
+        country: "string",
+        currency: "string",
+        primaryGenreName: "string",
+        discCount: {
+            type: "number",
+            optional: true
+        },
+        discNumber: {
+            type: "number",
+            optional: true
+        },
+        trackCount: {
+            type: "number",
+            optional: true
+        },
+        trackNumber: {
+            type: "number",
+            optional: true
+        },
+        collectionId: {
+            type: "number",
+            optional: true
+        },
+        collectionName: {
+            type: "string",
+            optional: true
+        },
+        collectionCensoredName: {
+            type: "string",
+            optional: true
+        },
+        collectionArtistId: {
+            type: "number",
+            optional: true
+        },
+        collectionViewUrl: {
+            type: "string",
+            optional: true
+        },
+        collectionPrice: {
+            type: "number",
+            optional: true
+        },
+        collectionExplicitness: {
+            type: "string",
+            optional: true
         }
     }
 };
 
+const itunesApiSchema = {
+    properties: {
+        resultCount: "number",
+        results: {
+            items: trackSchema
+        }
+    }
+};
 
 let suite = Flagpole.Suite('Test iTunes API')
     .base('https://itunes.apple.com')
@@ -92,7 +96,7 @@ suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
         this.assert('HTTP Status is 200', this.response.statusCode).equals(200);
         this.assert(this.response.header('Content-Type')).contains('text/javascript');
         this.assert('Response body is greater than 0', this.response.length).greaterThan(0);
-        return this.assert('Schema is valid', this.response.jsonBody).schema(trackSchema);
+        return this.assert('Schema is valid', this.response.jsonBody).schema(itunesApiSchema, true);
     })
     .next('Verify the data', async function () {
         const resultCount = await this.find('resultCount');

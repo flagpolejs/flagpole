@@ -2,7 +2,8 @@ import { AssertionContext } from './assertioncontext';
 import { Value } from './value';
 import { Flagpole } from '.';
 import { AssertionResult } from './assertionresult';
-import { iAssertionSchemaTestOpts, AssertionSchema } from './assertionschema';
+import { iAssertionSchemaTestOpts, AssertionSchema, iAjvLike } from './assertionschema';
+import * as Ajv from 'ajv';
 
 export class Assertion {
 
@@ -90,6 +91,7 @@ export class Assertion {
     }
 
     private _context: AssertionContext;
+    private _ajv: any;
     private _input: any;
     private _message: string | null;
     private _not: boolean = false;
@@ -462,19 +464,44 @@ export class Assertion {
         return this;
     }
 
-    public async schema(schema: any): Promise<Assertion> {
-        const assertionSchema = new AssertionSchema(
-            schema,
-            this._getCompareValue(this._input)
-        );
-        const isValid: boolean = await assertionSchema.validate();
+    public async schema(schema: any, simple: boolean = false): Promise<Assertion> {
+        const validator = simple ? new AssertionSchema() : await this._loadSchemaValidator();
+        const isValid: boolean = await validator.validate(schema, this._getCompareValue(this._input));
+        const errors: Error[] | Ajv.ErrorObject[] | null | undefined = validator.errors;
+        let error: string = '';
+        if (typeof errors != 'undefined' && errors !== null) {
+            errors.forEach((err: Error | Ajv.ErrorObject) => {
+                error += err.message + ' ';
+            })
+        }
         return this._assert(
             this._eval(isValid),
             this._not ?
                 `${this._getSubject()} does not match schema` :
                 `${this._getSubject()} matches schema`,
-            assertionSchema.lastError
+            error
         );      
+    }
+
+    private async _loadSchemaValidator(): Promise<iAjvLike> {
+        // We haven't tried to load query engines yet
+        if (typeof this._ajv == 'undefined') {
+            // Try importing jmespath
+            return import('ajv')
+                // Got it, so save it and return it
+                .then(ajv => {
+                    this._ajv = new Ajv();
+                    return this._ajv;
+                })
+                // Couldn't load jmespath, so set it to null
+                .catch((e) => {
+                    this._ajv = new AssertionSchema();
+                    return this._ajv;
+                });
+        }
+        else {
+            return this._ajv;
+        }
     }
 
     private _assert(statement: boolean, defaultMessage: string, actualValue: any): Assertion {
