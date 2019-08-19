@@ -92,7 +92,7 @@ suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
         this.assert('HTTP Status is 200', this.response.statusCode).equals(200);
         this.assert(this.response.header('Content-Type')).contains('text/javascript');
         this.assert('Response body is greater than 0', this.response.length).greaterThan(0);
-        this.assert('Schema is valid', this.response.jsonBody).schema(trackSchema);
+        return this.assert('Schema is valid', this.response.jsonBody).schema(trackSchema);
     })
     .next('Verify the data', async function () {
         const resultCount = await this.find('resultCount');

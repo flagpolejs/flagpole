@@ -203,9 +203,9 @@ Tests whether the input promise resolves.
 await context.assert(myPromise).resolves();
 ```
 
-### schema(schema: iAssertionSchema): Assertion
+### schema(schema: iAssertionSchema): Promise<Assertion>
 
-Test whether the input matches the schema provided. This currently is only valid for testing JSON.
+Test whether the input matches the schema provided. This currently is only valid for testing JSON. This assertion is async (returns a promise) so you should either await it or return it at the end of a next block.
 
 See documentation for [iAssertionSchema](assertion-schema.md) for more on how to define a schema.
 
@@ -226,7 +226,7 @@ const mySchema: iAssertionSchema = {
     }
   }
 }
-context.assert(jsonResponse).schema(mySchema);
+await context.assert(jsonResponse).schema(mySchema);
 ```
 
 ### some(callback: Function): Assertion

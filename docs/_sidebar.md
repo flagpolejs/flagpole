@@ -9,6 +9,7 @@
 - Classes
     - [Assertion](assertion.md)
     - [AssertionContext](assertion-context.md)
+    - [AssertionSchema](assertion-schema.md)
     - [CSSRule](css-rule.md)
     - [DOMElement](dom-element.md)
     - [GenericResponse](generic-response.md)

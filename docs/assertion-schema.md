@@ -260,3 +260,36 @@ const schema = {
 }
 ```
 
+# AssertionSchema
+
+This is a class that allows you to validate a schema. Typically, you will not be using this directly. But for completeness it is documented below.
+
+The constructor accepts the schema and JSON document to be evaluated.
+
+```typescript
+const personSchema: iAssertionSchema = {
+    id: "number",
+    firstName: "string",
+    lastName: "string",
+};
+const jsonBody = {
+    id: 234,
+    firstName: 'Karl',
+    lastName: 'Snyder'
+};
+
+const assertionSchema: AssertionSchema = new AssertionSchema(personSchema, jsonBody);
+const isValid: boolean = await assertionSchema.validate();
+```
+
+## Properties
+
+### lastError: string | null
+
+Gives you the last error encountered during the validation process. This will be null until the validate() method is run.
+
+## Methods
+
+### validate(): Promise<boolean>
+
+This will always resolve either true or false.
