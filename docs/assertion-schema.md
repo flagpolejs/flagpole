@@ -171,7 +171,10 @@ const schema = {
     lastName: "string",
     positionsPlayed: {
         type: "array",
-        enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
+        items: {
+            type: "string",
+            enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
+        }
     }
 }
 ```
@@ -183,7 +186,6 @@ And that works fine, but baseball players also have numbers on their jersey. But
     id: 5,
     firstName: "George",
     lastName: "Brett",
-    positionsPlayed: [ "1b", "3b", "dh" ],
     jerseyNumber: 5
 }
 ```
@@ -195,13 +197,6 @@ const schema = {
     id: "number",
     firstName: "string",
     lastName: "string",
-    positionsPlayed: {
-        type: "array",
-        items: {
-            type: "string",
-            enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
-        }
-    },
     jerseyNumber: {
         type: "number",
         matches: /^[0-9]{1,2}$/
@@ -216,13 +211,6 @@ const schema = {
     id: "number",
     firstName: "string",
     lastName: "string",
-    positionsPlayed: {
-        type: "array",
-        items: {
-            type: "string",
-            enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
-        }
-    },
     jerseyNumber: {
         type: "number",
         test: function(value) {
