@@ -1,12 +1,21 @@
 let Flagpole = require('../../dist/index.js').Flagpole;
 
 const trackSchema = {
-    resultCount: "number",
+    resultCount:  "number",
     results: {
         type: "array",
         items: {
-            wrapperType: "string",
-            kind: "string",
+            wrapperType: {
+                type: "string",
+                enum: ["track"],
+                matches: /track/i
+            },
+            kind: {
+                type: "string",
+                test: function (value) {
+                    return value == 'music-video'
+                }
+            },
             artistId: "number",
             trackId: "number",
             artistName: "string",

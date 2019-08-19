@@ -2,6 +2,7 @@
 import { Assertion } from "./assertion";
 import { AssertionContext } from "./assertioncontext";
 import { AssertionResult } from "./assertionresult";
+import { iAssertionSchema, iAssertionSchemaItem } from "./assertionschema";
 import { Browser, BrowserOptions } from "./browser";
 import { BrowserResponse } from "./browserresponse";
 import { CssResponse } from "./cssresponse";
@@ -23,6 +24,7 @@ const cheerio = require('cheerio');
 
 export {
     Suite, Scenario,
+    Assertion, AssertionContext, AssertionResult, iAssertionSchema, iAssertionSchemaItem,
     Browser, BrowserOptions, BrowserResponse, CssResponse, DOMElement, ExtJSResponse,
     HtmlResponse, ImageResponse, JsonResponse, ResourceResponse,
     ResponseType, GenericResponse, NormalizedResponse,

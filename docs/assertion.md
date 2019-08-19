@@ -14,6 +14,43 @@ context.assert('Make sure my value is a number', myValue)
 
 This alone does nothing, since it just creates the assertion object with the value you want to assert against. But it hasn't actually asserted anything. So use one of the methods below.
 
+## Properties
+
+In addition to the methods to make the assertions, you can change them by chaining these properties.
+
+### length: Assertion
+
+This causes the assertion to evaluate the length of the input value, rather than the actual value. This works for anything that supports length including strings and arrays. For other things it will cast the input to a string and evaluate it.
+
+```javascript
+context.assert('foobar').length.equals(6);
+```
+
+### not: Assertion
+
+Flips the assertion to be the negative of itself.
+
+```javascript
+context.assert(5).not.equals(6);
+```
+
+### optional: Assertion
+
+This makes the assertion consider optional, meaning its failure won't cause the entire scenario to fail. If it passes, it will be listed as a pass. If it fails, it will be shown as failing in a special type of comment. That way you can see it, but not hold up the deploy because of it.
+
+```javascript
+context.assert(5).optional.equals(6);
+```
+
+### type: Assertion
+
+This causes the assertion to evaluate the type of the value, rather than the actual input value. The type will always be a lowercase string. It is a smart typeof that can tell things like 'promise' and 'regexp' that might otherewise evaluate to plain old object.
+
+```javascript
+context.assert(5).type.equals('number');
+```
+
+
 ## Methods
 
 All methods return the Assertion itself, unless otherwise noted.
@@ -166,6 +203,32 @@ Tests whether the input promise resolves.
 await context.assert(myPromise).resolves();
 ```
 
+### schema(schema: iAssertionSchema): Assertion
+
+Test whether the input matches the schema provided. This currently is only valid for testing JSON.
+
+See documentation for [iAssertionSchema](assertion-schema.md) for more on how to define a schema.
+
+```typescript
+const mySchema: iAssertionSchema = {
+  meta: {
+    timeCreated: "number",
+    createdBy: "string"
+  },
+  data: {
+    type: "object",
+    items: {
+      id: "number",
+      firstName: "string",
+      lastName: "string",
+      email: "string",
+      isSubscriber: "boolean"
+    }
+  }
+}
+context.assert(jsonResponse).schema(mySchema);
+```
+
 ### some(callback: Function): Assertion
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that at least one is true.
@@ -184,38 +247,3 @@ Tests whether the input value starts with the argument. Also works with arrays, 
 context.assert(['foo', 'bar']).startsWith('foo');
 ```
 
-## Properties
-
-In addition to the methods to make the assertions, you can change them by chaining these properties.
-
-### length: Assertion
-
-This causes the assertion to evaluate the length of the input value, rather than the actual value. This works for anything that supports length including strings and arrays. For other things it will cast the input to a string and evaluate it.
-
-```javascript
-context.assert('foobar').length.equals(6);
-```
-
-### not: Assertion
-
-Flips the assertion to be the negative of itself.
-
-```javascript
-context.assert(5).not.equals(6);
-```
-
-### optional: Assertion
-
-This makes the assertion consider optional, meaning its failure won't cause the entire scenario to fail. If it passes, it will be listed as a pass. If it fails, it will be shown as failing in a special type of comment. That way you can see it, but not hold up the deploy because of it.
-
-```javascript
-context.assert(5).optional.equals(6);
-```
-
-### type: Assertion
-
-This causes the assertion to evaluate the type of the value, rather than the actual input value. The type will always be a lowercase string. It is a smart typeof that can tell things like 'promise' and 'regexp' that might otherewise evaluate to plain old object.
-
-```javascript
-context.assert(5).type.equals('number');
-```

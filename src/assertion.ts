@@ -462,9 +462,30 @@ export class Assertion {
     }
 
     public schema(schema: any): Assertion {
-        const document: any = this._getCompareValue(this._input);
+        const root: any = this._getCompareValue(this._input);
         let bool: boolean = true;
         let err: string | null = null;
+
+        function matchesType(key: string, docItem: any, schemaItem: any): boolean {
+            const schemaItemType = Flagpole.toType(schemaItem);
+            const docItemType = Flagpole.toType(docItem);
+            // If schema item is a string, then it's defining type
+            if (schemaItemType == 'string') {
+                if (docItemType != schemaItem) {
+                    err = `typeOf ${key} was ${docItemType}, which did not match ${schemaItem}`;
+                    return false;
+                }
+            }
+            // If the type is an array, then it's an array of allowed types
+            else if (schemaItemType == 'array') {
+                const allowedTypes: string[] = schemaItem;
+                if (allowedTypes.indexOf(docItemType) < 0) {
+                    err = `typeOf ${key} was ${docItemType}, which did not match ${allowedTypes.join(' | ')}`;
+                    return false;
+                }
+            }
+            return true;
+        }
 
         function isValid(document: any, schema: any): boolean {
             return Object.keys(schema).every((key) => {
@@ -482,23 +503,51 @@ export class Assertion {
                     err = `${key} was undefined`;
                     return false;
                 }
-                // If schema item is a string, then it's defining type
-                if (schemaItemType == 'string') {
-                    if (docItemType != schemaItem) {
-                        err = `typeOf ${key} was ${docItemType}, which did not match ${schemaItem}`;
+                // If it's either a string or array, we're testing the type
+                if (schemaItemType == 'string' || schemaItemType == 'array') {
+                    if (!matchesType(key, docItem, schemaItem)) {
                         return false;
                     }
                 }
                 // If schema item is an object, then we do more complex parsing
                 else if (schemaItemType == 'object') {
-                    if (schemaItem.type && docItemType != schemaItem.type) {
-                        err = `typeOf ${key} was ${docItemType}, which did not match ${schemaItem.type}`;
-                        return false;
+                    // type
+                    if (schemaItem.type) {
+                        if (!matchesType(key, docItem, schemaItem.type)) {
+                            return false;
+                        }
                     }
+                    // enum
+                    if (Flagpole.toType(schemaItem.enum) == 'array') {
+                        // Value must be in this array
+                        if ((schemaItem.enum as any[]).indexOf(docItem) < 0) {
+                            err = `${key}'s value ${docItem} is not in enum ${schemaItem.enum.join(', ')}`
+                            return false;
+                        }
+                    }
+                    // matches
+                    if (schemaItem.matches) {
+                        // Value must match this regex
+                        if (!(new RegExp(schemaItem.matches).test(String(docItem)))) {
+                            err = `${key}'s value ${docItem} did not match ${String(schemaItem.matches)}`
+                            return false;
+                        }
+                    }
+                    // test
+                    if (Flagpole.toType(schemaItem.test) == 'function') {
+                        // Function must return true
+                        let opts = {
+                            key: key, parent: document, root: root
+                        }
+                        if (!schemaItem.test(docItem, opts)) {
+                            err = `${key} did not pass the test`
+                            return false;
+                        }
+                    }
+                    // items
                     if (Flagpole.toType(schemaItem.items) == 'object') {
                         // If this item is an array, loop through each subItem and make sure it matches
                         if (docItemType == 'array') {
-                            // Loop through each item in the array
                             return (docItem as Array<any>).every((subItem) => {
                                 // If it's a string, just validate the type of each item
                                 if (typeof schemaItem.items == 'string') {
@@ -529,14 +578,20 @@ export class Assertion {
             });
         }
 
-        if (Flagpole.toType(document) == 'object') {
-            bool = isValid(document, schema); 
+        if (Flagpole.toType(root) == 'object') {
+            bool = isValid(root, schema); 
         }
-        this._assert(bool, 'Schema matches.', err);
-        return this;
+
+        return this._assert(
+            this._eval(bool),
+            this._not ?
+                `${this._getSubject()} does not match schema` :
+                `${this._getSubject()} matches schema`,
+            err
+        );
     }
 
-    private _assert(statement: boolean, defaultMessage: string, actualValue: any) {
+    private _assert(statement: boolean, defaultMessage: string, actualValue: any): Assertion {
         // Result is immutable, so only let them assert once
         if (this._result !== null) {
             throw new Error('Assertion result is immutable.');
@@ -556,6 +611,7 @@ export class Assertion {
         }
         // Log this result
         this._context.scenario.logResult(this._result);
+        return this;
     }
 
     private _getCompareValue(value: any): any {
