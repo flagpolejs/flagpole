@@ -210,22 +210,6 @@ Test whether the input matches the schema provided. This currently is only valid
 See documentation for [iAssertionSchema](assertion-schema.md) for more on how to define a schema.
 
 ```typescript
-const mySchema: iAssertionSchema = {
-  meta: {
-    timeCreated: "number",
-    createdBy: "string"
-  },
-  data: {
-    type: "object",
-    items: {
-      id: "number",
-      firstName: "string",
-      lastName: "string",
-      email: "string",
-      isSubscriber: "boolean"
-    }
-  }
-}
 await context.assert(jsonResponse).schema(mySchema);
 ```
 
