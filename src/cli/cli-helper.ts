@@ -3,7 +3,7 @@ import { Flagpole } from "..";
 const ansiAlign = require('ansi-align');
 
 export function printHeader() {
-    if (Flagpole.quietMode) {
+    if (Flagpole.executionOpts.quietMode) {
         return;
     }
     console.log('\u001b[0m \u001b[37m^\u001b[0m ');
@@ -16,7 +16,7 @@ export function printHeader() {
 }
 
 export function printOldHeader() {
-    if (Flagpole.quietMode) {
+    if (Flagpole.executionOpts.quietMode) {
         return;
     }
     console.log(
@@ -37,7 +37,7 @@ export function printOldHeader() {
 }
 
 export function printSubheader(heading: string) {
-    if (!Flagpole.quietMode) {
+    if (!Flagpole.executionOpts.quietMode) {
         console.log(
             ansiAlign.center(
                 "\x1b[31m===========================================================================\x1b[0m\n" +

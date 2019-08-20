@@ -1,8 +1,6 @@
 const { Flagpole } = require('../dist/index.js');
 
-Flagpole.automaticallyPrintToConsole = true;
-
-const suite = Flagpole.Suite('Basic Smoke Test of Site')
+const suite = Flagpole.Suite('Basic Cookie Test of Site')
     .base('https://www.milesplit.com');
 
 suite.html('Not logged in test')

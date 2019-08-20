@@ -2,8 +2,6 @@ const Flagpole = require('../dist/index.js').Flagpole;
 const nock = require('nock');
 const fs = require('fs');
 
-Flagpole.automaticallyPrintToConsole = true;
-
 let mockRoutes = nock('http://test.flagpole');
 
 mockRoutes.get('/test.html')
@@ -17,7 +15,8 @@ mockRoutes.get('/test2.html')
     });
 
 let suite = Flagpole.Suite('Test')
-    .base('http://test.flagpole');
+    .base('http://test.flagpole')
+    .finally(suite => suite.print());
 
 suite.html('Test 1')
     .open('/test.html')

@@ -2,7 +2,7 @@ import { Cli } from './cli';
 import { SuiteConfig } from "./config";
 import { TestRunner } from './testrunner';
 
-export function run(suiteNames: string[], tag: string) {
+export const run = async (suiteNames: string[], tag: string): Promise<void> => {
     const suites: SuiteConfig[] = Cli.config.getSuites();
     let selectedSuites: SuiteConfig[] = [];
     // Run only certain suites, as specified in -s 
@@ -26,24 +26,30 @@ export function run(suiteNames: string[], tag: string) {
         selectedSuites = suites;
     }
     // Now run them
-    runSuites(selectedSuites);
+    return runSuites(selectedSuites);
 }
 
-function runSuites(selectedSuites: SuiteConfig[]) {
+const runSuites = async (selectedSuites: SuiteConfig[]): Promise<void> => {
     
     // Add suites to our test runner
-    const tests: TestRunner = new TestRunner();
+    const runner: TestRunner = new TestRunner();
     selectedSuites.forEach(function (suite: SuiteConfig) {
-        tests.addSuite(suite);
+        runner.addSuite(suite);
     });
 
     // If no matching tests found to run
-    if (tests.getSuites().length == 0) {
+    if (runner.suites.length == 0) {
         Cli.log("Did not find any test suites to run.\n");
         Cli.exit(2);
     }
 
+    runner.subscribe((message) => {
+        console.log("\x1b[F" + "\x1b[K" + message);
+    });
+
     // Run them doggies
-    tests.run();
+    await runner.run();
+    console.log("\x1b[F" + "\x1b[K");
+    Cli.exit(runner.exitCode);
 
 }

@@ -23,7 +23,7 @@ export interface iInitOpts {
 
 export class Cli {
 
-    static consoleLog: Array<string> = [];
+    static consoleLog: string[] = [];
     static hideBanner: boolean = false;
     static rootPath: string = __dirname;
     static configPath: string = __dirname + '/flagpole.json';
@@ -62,6 +62,11 @@ export class Cli {
         process.exit(exitCode);
     };
 
+    /**
+     * Have folder path always end in a /
+     * 
+     * @param path 
+     */
     static normalizePath(path: string): string {
         if (path) {
             path = (path.match(/\/$/) ? path : path + '/');

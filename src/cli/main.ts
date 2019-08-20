@@ -6,7 +6,7 @@ import { Flagpole } from "..";
 /**
  * COMMAND LINE ARGUMENTS
  */
-let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'pack', 'login', 'logout', 'deploy', 'about', 'serve'];
+let commands = ['run', 'list', 'init', 'add', 'rm', 'import', 'pack', 'login', 'logout', 'deploy', 'about', 'serve', 'watch'];
 let yargs = require('yargs');
 let argv = require('yargs')
     .usage('Usage: $0 <command> [options]')
@@ -84,17 +84,16 @@ if (commands.indexOf(String(Cli.command)) < 0) {
 /**
  * Settings
  */
-Flagpole.setEnvironment(argv.e);
-Flagpole.setOutput(argv.o);
-if (argv.l) {
-    Flagpole.logOutput = true;
-}
+Flagpole.executionOpts.environment = argv.e;
+Flagpole.executionOpts.setOutputFromString(argv.o);
+Flagpole.executionOpts.automaticallyPrintToConsole = true;
+Flagpole.executionOpts.logMode = !!argv.l;
 if (argv.q) {
     Cli.hideBanner = true;
-    Flagpole.quietMode = true;
-    Flagpole.automaticallyPrintToConsole = false;
+    Flagpole.executionOpts.quietMode = true;
+    Flagpole.executionOpts.automaticallyPrintToConsole = false;
 }
-Cli.hideBanner = argv.h;
+Cli.hideBanner = !!argv.h;
 Cli.rootPath = Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
 
 /**
@@ -156,4 +155,7 @@ else if (Cli.command == 'import') {
 }
 else if (Cli.command == 'serve') {
     require('./serve').serve();
+}
+else if (Cli.command == 'watch') {
+    require('./watch').watch(argv.s, argv.t);
 }

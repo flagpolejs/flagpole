@@ -431,7 +431,7 @@ export class Scenario {
     public open(url: string): Scenario {
         // You can only load the url once per scenario
         if (!this.hasExecuted) {
-            this._url = url;
+            this._url = String(url);
             this._isMock = false;
             this._executeWhenReady();
         }

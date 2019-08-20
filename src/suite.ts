@@ -255,8 +255,7 @@ export class Suite {
             baseUrl = url;
         }
         else if (Object.keys(url).length > 0) {
-            let env = Flagpole.getEnvironment() || 'dev';
-            baseUrl = url[env];
+            baseUrl = url[Flagpole.executionOpts.environment];
             // If env didn't match one, just pick the first one
             if (!baseUrl) {
                 baseUrl = url[Object.keys(url)[0]];
@@ -535,11 +534,11 @@ export class Suite {
             // All Done
             await this._fireFinally();
             // Should we print automatically?
-            if (Flagpole.automaticallyPrintToConsole) {
-                this.print(Flagpole.exitOnDone);
+            if (Flagpole.executionOpts.automaticallyPrintToConsole) {
+                this.print(Flagpole.executionOpts.exitOnDone);
             }
             else {
-                Flagpole.exitOnDone && Flagpole.exit(this.hasPassed);
+                Flagpole.executionOpts.exitOnDone && Flagpole.exit(this.hasPassed);
             }
         }
     }

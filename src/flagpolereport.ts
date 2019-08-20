@@ -1,9 +1,8 @@
-import { URL } from 'url';
 import { Suite } from "./suite";
 import { iLogLine, LogLineType, HeadingLine, DecorationLine, CommentLine, LineBreak, CustomLine, ConsoleColor, SubheadingLine, LogLine, HorizontalRule } from "./consoleline";
 import { Flagpole } from '.';
 import { Scenario } from './scenario';
-import { FlagpoleOutput } from './flagpole';
+import { FlagpoleOutput } from './flagpoleexecutionoptions';
 
 export class FlagpoleReport {
 
@@ -22,7 +21,7 @@ export class FlagpoleReport {
         lines.push(new HeadingLine(this.suite.title));
         lines.push(new HorizontalRule('='));
         lines.push(new CommentLine('Base URL: ' + this.suite.baseUrl));
-        lines.push(new CommentLine('Environment: ' + Flagpole.getEnvironment()));
+        lines.push(new CommentLine('Environment: ' + Flagpole.executionOpts.environment));
         lines.push(new CommentLine('Took ' + this.suite.executionDuration + 'ms'));
 
         let color: ConsoleColor = this.suite.hasPassed ? ConsoleColor.FgGreen : ConsoleColor.FgRed;
@@ -122,7 +121,7 @@ export class FlagpoleReport {
         html += "<ul>\n";
         html += new CommentLine('Duration: ' + this.suite.executionDuration + 'ms').toHTML();
         html += new CommentLine('Base URL: ' + this.suite.baseUrl).toHTML();
-        html += new CommentLine('Environment: ' + Flagpole.getEnvironment()).toHTML();
+        html += new CommentLine('Environment: ' + Flagpole.executionOpts.environment).toHTML();
         html += "</ul>\n";
         html += "</aside>\n";
         for (let i = 0; i < scenarios.length; i++) {
@@ -150,7 +149,7 @@ export class FlagpoleReport {
     public async print(): Promise<FlagpoleReport> {
         const lines = await this.getLines();
         // Log style output ignores any decoration lines
-        if (Flagpole.logOutput) {
+        if (Flagpole.executionOpts.logMode) {
             lines.forEach(function (line: iLogLine) {
                 if (line.type != LogLineType.Decoration) {
                     line.print();
@@ -161,13 +160,13 @@ export class FlagpoleReport {
         else {
             // HTML
             if (
-                Flagpole.output == FlagpoleOutput.html ||
-                Flagpole.output == FlagpoleOutput.browser
+                Flagpole.executionOpts.output == FlagpoleOutput.html ||
+                Flagpole.executionOpts.output == FlagpoleOutput.browser
             ) {
                 console.log(await this.toHTML());
             }
             // JSON
-            else if (Flagpole.output == FlagpoleOutput.json) {
+            else if (Flagpole.executionOpts.output == FlagpoleOutput.json) {
                 console.log(JSON.stringify(await this.toJson(), null, 2));
             }
             // Some sort of text format

@@ -1,10 +1,10 @@
 import { WebServer, WebResponse } from '../webserver';
 import * as http from 'http';
-import { Cli, iSuiteOpts, iInitOpts } from './cli';
+import { Cli, iSuiteOpts } from './cli';
 import { SuiteConfig, EnvConfig } from './config';
 import { URL } from 'url';
-import { TestRunner, iTestRunnerResult } from './testrunner';
-import { Flagpole } from '..';
+import { Flagpole, FlagpoleExecutionOptions } from '..';
+import { SuiteExecutionResult, SuiteExecution } from './suiteexecution';
 
 const open = require('open');
 const qs = require('querystring');
@@ -143,7 +143,7 @@ const routes = {
         const suiteName = postData.suite;
         const envName = postData.env;
         if (suiteName && Cli.config.suites[suiteName]) {
-            return runSuite(response, suiteName, envName || Flagpole.getEnvironment());
+            return runSuite(response, suiteName, envName || Flagpole.executionOpts.environment);
         }
         fileNotFound(response);
     }
@@ -483,9 +483,9 @@ const addEnv = (response: http.ServerResponse, env: EnvConfig): void => {
 }
 
 const runSuite = (response: http.ServerResponse, suiteName: string, envName: string): void => {
-    let opts: string = `-h -o json -e ${envName}`
-    TestRunner.execute(Cli.config.suites[suiteName].getPath(), opts)
-        .then((result: iTestRunnerResult) => {
+    let opts = FlagpoleExecutionOptions.createFromString(`-h -o json -e ${envName}`);
+    SuiteExecution.executePath(Cli.config.suites[suiteName].getPath(), opts)
+        .then((result: SuiteExecutionResult) => {
             const json: any = JSON.parse(result.output.join(' '));
             let output: string = `<h2>${json.title}</h2>`;
             json.scenarios.forEach((scenario: any) => {
@@ -511,7 +511,7 @@ const sendIndex = (response: http.ServerResponse): void => {
                     <li>Project Name: ${Cli.config.project.name}</li>
                     <li>Config Path: ${Cli.configPath}</li>
                     <li>Root Path: ${Cli.rootPath}</li>
-                    <li>Environment: ${Flagpole.getEnvironment()}</li>
+                    <li>Environment: ${Flagpole.executionOpts.environment}</li>
                 </ul>
                 <h2>List of Suites</h2>
                 <table>

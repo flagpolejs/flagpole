@@ -1,5 +1,4 @@
-import { Flagpole } from '.';
-import { FlagpoleOutput } from './flagpole';
+import { Flagpole, FlagpoleOutput } from '.';
 
 export enum ConsoleColor {
 
@@ -103,9 +102,9 @@ export abstract class LogLine implements iLogLine {
     }
 
     public print() {
-        if (!Flagpole.quietMode) {
+        if (!Flagpole.executionOpts.quietMode) {
             let line: string = '';
-            let style: FlagpoleOutput = Flagpole.output;
+            let style: FlagpoleOutput = Flagpole.executionOpts.output;
             if (style == FlagpoleOutput.text) {
                 line = this.toString();
             }
