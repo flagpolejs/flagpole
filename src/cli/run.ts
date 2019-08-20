@@ -1,6 +1,9 @@
 import { Cli } from './cli';
 import { SuiteConfig } from "./config";
 import { TestRunner } from './testrunner';
+import { CliAnsi } from './cli-ansi';
+
+const ansi = new CliAnsi();
 
 export const run = async (suiteNames: string[], tag: string): Promise<void> => {
     const suites: SuiteConfig[] = Cli.config.getSuites();
@@ -43,13 +46,18 @@ const runSuites = async (selectedSuites: SuiteConfig[]): Promise<void> => {
         Cli.exit(2);
     }
 
-    runner.subscribe((message) => {
-        console.log("\x1b[F" + "\x1b[K" + message);
+    ansi.writeLine();
+    runner.subscribe((message: string) => {
+        ansi.writeLine(
+            ansi.cursorUp(),
+            ansi.eraseLine(),
+            message
+        );
     });
 
     // Run them doggies
     await runner.run();
-    console.log("\x1b[F" + "\x1b[K");
+    ansi.write(ansi.eraseLines(2));
     Cli.exit(runner.exitCode);
 
 }
