@@ -1,10 +1,8 @@
 import { ProtoValue, Value, iValue } from './value';
-import { JSHandle, Page, ElementHandle } from 'puppeteer';
 import { Link } from './link';
 import { Scenario } from './scenario';
 import { ResponseType } from './response';
 import { AssertionContext } from './assertioncontext';
-import { Flagpole } from '.';
 
 export class DOMElement extends ProtoValue implements iValue {
 
@@ -32,7 +30,7 @@ export class DOMElement extends ProtoValue implements iValue {
         return element;
     }
 
-    private constructor(input: any, context: AssertionContext, name?: string | null, path?: string) {
+    protected constructor(input: any, context: AssertionContext, name?: string | null, path?: string) {
         super(input, context, (name || 'DOM Element'));
         this._path = path || '';
     }
@@ -41,33 +39,18 @@ export class DOMElement extends ProtoValue implements iValue {
      * Convert element synchronously to string as best we can
      */
     public toString(): string {
-        if (this.isCheerioElement()) {
-            return this._context.response.getRoot().html(this._input);
-        }
-        else if (this.isPuppeteerElement()) {
-            return String(this.path);
-        }
-        return '';
+        return this._context.response.getRoot().html(this._input);
     }
 
     /**
      * Get all class names for element
      */
     public async getClassName(): Promise<Value> {
-        if (this.isCheerioElement()) {
-            return this._wrapAsValue(
-                (typeof this._input.get(0).attribs['class'] !== 'undefined') ?
-                    this._input.get(0).attribs['class'] : null,
-                `Class Name of ${this.name}`
-            );
-        }
-        else if (this.isPuppeteerElement()) {
-            const classHandle: JSHandle = await this._input.getProperty('className');
-            return this._wrapAsValue(
-                await classHandle.jsonValue(), `Class Name of ${this.name}`
-            );
-        }
-        throw new Error(`getClassName is not supported with ${this.toType()}.`);
+        return this._wrapAsValue(
+            (typeof this._input.get(0).attribs['class'] !== 'undefined') ?
+                this._input.get(0).attribs['class'] : null,
+            `Class Name of ${this.name}`
+        );
     }
 
     /**
@@ -76,21 +59,10 @@ export class DOMElement extends ProtoValue implements iValue {
      * @param className 
      */
     public async hasClassName(className: string): Promise<Value> {
-        if (this.isCheerioElement()) {
-            return this._wrapAsValue(
-                this._input.hasClass(className),
-                `${this.name} has class ${className}`
-            )
-        }
-        else if (this.isPuppeteerElement()) {
-            const classHandle: JSHandle = await this._input.getProperty('className');
-            const classString: string = await classHandle.jsonValue();
-            return this._wrapAsValue(
-                (classString.split(' ').indexOf(className) >= 0),
-                `${this.name} has class ${className}`
-            )
-        }
-        throw new Error(`hasClassName is not supported with ${this.toType()}.`);
+        return this._wrapAsValue(
+            this._input.hasClass(className),
+            `${this.name} has class ${className}`
+        );
     }
 
     /**
@@ -105,57 +77,30 @@ export class DOMElement extends ProtoValue implements iValue {
      * Get element's innerText
      */
     public async getInnerText(): Promise<Value> {
-        if (this.isPuppeteerElement() && this._context.page !== null) {
-            return this._wrapAsValue(
-                await this._context.page.evaluate(e => e.innerText, this.$),
-                `Inner Text of ${this.name}`
-            );
-        }
-        else if (this.isCheerioElement()) {
-            return this._wrapAsValue(
-                this._input.text(),
-                `Inner Text of ${this.name}`
-            );
-        }
-        throw new Error(`getInnerText is not supported with ${this.toType()}.`);
+        return this._wrapAsValue(
+            this._input.text(),
+            `Inner Text of ${this.name}`
+        );
     }
 
     /**
      * Get element's innerHtml which will not include the element itself, only its contents
      */
     public async getInnerHtml(): Promise<Value> {
-        if (this.isPuppeteerElement() && this._context.page !== null) {
-            return this._wrapAsValue(
-                await this._context.page.evaluate(e => e.innerHTML, this.$),
-                `Inner Html of ${this.name}`
-            );
-        }
-        else if (this.isCheerioElement()) {
-            return this._wrapAsValue(
-                this._input.html(),
-                `Inner Html of ${this.name}`
-            );
-        }
-        throw new Error(`getInnerHtml is not supported with ${this.toType()}.`);
+        return this._wrapAsValue(
+            this._input.html(),
+            `Inner Html of ${this.name}`
+        );
     }
 
     /**
      * Get the HTML of the element and all of its contents
      */
     public async getOuterHtml(): Promise<Value> {
-        if (this.isPuppeteerElement() && this._context.page !== null) {
-            return this._wrapAsValue(
-                await this._context.page.evaluate(e => e.outerHTML, this.$),
-                `Outer Html of ${this.name}`
-            );
-        }
-        else if (this.isCheerioElement()) {
-            return this._wrapAsValue(
-                this._context.response.getRoot().html(this._input),
-                `Outer Html of ${this.name}`
-            );
-        }
-        throw new Error(`getInnerHtml is not supported with ${this.toType()}.`);
+        return this._wrapAsValue(
+            this._context.response.getRoot().html(this._input),
+            `Outer Html of ${this.name}`
+        );
     }
 
     /**
@@ -198,15 +143,8 @@ export class DOMElement extends ProtoValue implements iValue {
      * @param key 
      */
     public async getProperty(key: string): Promise<Value> {
-        const name: string = `${this.name} -> ${key}`;
-        if (this.isCheerioElement()) {
-            return this._wrapAsValue(this._input.prop(key), name);
-        }
-        else if (this.isPuppeteerElement()) {
-            const handle: JSHandle = await this._input.getProperty(key);
-            return this._wrapAsValue(await handle.jsonValue(), name);
-        }
-        throw new Error(`getProperty is not supported with ${this.toType()}.`);
+        const name: string = `${key} of ${this.name}`;
+        return this._wrapAsValue(this._input.prop(key), name);
     }
 
     /**
@@ -226,15 +164,8 @@ export class DOMElement extends ProtoValue implements iValue {
      * @param key 
      */
     public async getData(key: string): Promise<Value> {
-        const name: string = `${this.name} -> ${key}`;
-        if (this.isCheerioElement()) {
-            return this._wrapAsValue(this._input.data(key), name);
-        }
-        else if (this.isPuppeteerElement()) {
-            const handle: JSHandle = await this._input.getProperty(key);
-            return this._wrapAsValue(await handle.jsonValue(), name);
-        }
-        throw new Error(`getData is not supported with ${this.toType()}.`);
+        const name: string = `Data of ${this.name}`;
+        return this._wrapAsValue(this._input.data(key), name);
     }
 
     /**
@@ -242,14 +173,7 @@ export class DOMElement extends ProtoValue implements iValue {
      */
     public async getValue(): Promise<Value> {
         const name: string = `Value of ${this.name}`;
-        if (this.isCheerioElement()) {
-            return this._wrapAsValue(this._input.val(), name);
-        }
-        else if (this.isPuppeteerElement()) {
-            const handle: JSHandle = await this._input.getProperty('value');
-            return this._wrapAsValue(await handle.jsonValue(), name);
-        }
-        throw new Error(`getValue is not supported with ${this.toType()}.`);
+        return this._wrapAsValue(this._input.val(), name);
     }
 
     /**
@@ -257,14 +181,7 @@ export class DOMElement extends ProtoValue implements iValue {
      */
     public async getText(): Promise<Value> {
         const name: string = `Text of ${this.name}`;
-        if (this.isCheerioElement()) {
-            return this._wrapAsValue(this._input.text(), name);
-        }
-        else if (this.isPuppeteerElement()) {
-            const handle: JSHandle = await this._input.getProperty('textContent');
-            return this._wrapAsValue(await handle.jsonValue(), name);
-        }
-        throw new Error(`getText is not supported with ${this.toType()}.`);
+        return this._wrapAsValue(this._input.text(), name);
     }
 
     /**
@@ -276,66 +193,10 @@ export class DOMElement extends ProtoValue implements iValue {
         const element: DOMElement = this;
         const isForm: boolean = await this._isFormTag();
         if (isForm) {
-            if (element.isCheerioElement()) {
-                const form: Cheerio = element._input;
-                for (let name in formData) {
-                    const value = formData[name];
-                    form.find(`[name="${name}"]`).val(value);
-                }
-            }
-            else if (element.isPuppeteerElement()) {
-                const page: Page | null = element._context.page;
-                if (page !== null) {
-                    for (let name in formData) {
-                        const value: any = formData[name];
-                        const selector: string = `${element._path} [name="${name}"]`;
-                        const inputs: ElementHandle[] = await page.$$(selector);
-                        if (inputs.length > 0) {
-                            const input: ElementHandle = inputs[0];
-                            const tagName: string = (await (await input.getProperty('tagName')).jsonValue()).toLowerCase();
-                            const inputType: string = (await (await input.getProperty('type')).jsonValue()).toLowerCase();
-                            // Some sites need you to focus on the element first
-                            await page.focus(selector);
-                            // Dropdowns
-                            if (tagName == 'select') {
-                                await page.select(selector, value);
-                            }
-                            // Input boxes
-                            else if (tagName == 'input') {
-                                // Radio or checkbox we need to click on the items
-                                if (inputType == 'radio' || inputType == 'checkbox') {
-                                    // Turn it into an array, to support multiple checked boxes
-                                    const multiValues: any[] = Flagpole.toType(value) == 'array' ? value : [value];
-                                    // Loop through each checkbox/radio element with this name
-                                    for (let i = 0; i < inputs.length; i++) {
-                                        let checkbox: ElementHandle = inputs[i];
-                                        let isChecked: boolean = !!(await (await checkbox.getProperty('checked')).jsonValue());
-                                        let checkboxValue: string = String(await (await checkbox.getProperty('value')).jsonValue());
-                                        // Toggle it by clicking
-                                        if (
-                                            // This is one of our values, and it's not checked yet
-                                            (multiValues.indexOf(checkboxValue) >= 0 && !isChecked) ||
-                                            // This is not one of our values, but it is checked
-                                            (multiValues.indexOf(checkboxValue) < 0 && isChecked)
-                                        ) {
-                                            await checkbox.click();
-                                        }
-                                    }
-                                }
-                                else if (inputType == 'button' || inputType == 'submit' || inputType == 'reset') {
-                                    // Do nothing for now (maybe should click??)
-                                }
-                                else {
-                                    await this._context.clearThenType(selector, value);
-                                }
-                            }
-                            // Button elements
-                            else if (tagName == 'button') {
-                                // Do nothing for now (maybe should click??)
-                            }
-                        }
-                    }
-                }
+            const form: Cheerio = element._input;
+            for (let name in formData) {
+                const value = formData[name];
+                form.find(`[name="${name}"]`).val(value);
             }
             return element;
         }
@@ -354,40 +215,31 @@ export class DOMElement extends ProtoValue implements iValue {
         if (!this._isFormTag()) {
             throw new Error('You can only use .submit() with a form element.');
         }
-        if (this.isPuppeteerElement()) {
-            if (this._context.page === null) {
-                throw new Error('Page was null');
-            } 
-            return await this._context.page.evaluate(form => form.submit(), this.$);
-        }
-        else if (this.isCheerioElement()) {
-            const link: Link = await this._getLink();
-            const scenario: Scenario = await this._createLambdaScenario(a, b);
-            const method = ((await this._getAttribute('method')) || 'get').toString().toLowerCase();
-            // If there is a URL we can submit the form to
-            if (link.isNavigation()) {
-                let uri: string;
-                scenario.setMethod(method);
-                if (method == 'get') {
-                    uri = link.getUri(this.$.serializeArray());
-                }
-                else {
-                    const formDataArray: { name: string, value: string }[] = this.$.serializeArray();
-                    const formData: any = {};
-                    uri = link.getUri();
-                    formDataArray.forEach(function (input: any) {
-                        formData[input.name] = input.value;
-                    });
-                    scenario.setFormData(formData)
-                }
-                return await scenario.open(uri);
+        const link: Link = await this._getLink();
+        const scenario: Scenario = await this._createLambdaScenario(a, b);
+        const method = ((await this._getAttribute('method')) || 'get').toString().toLowerCase();
+        // If there is a URL we can submit the form to
+        if (link.isNavigation()) {
+            let uri: string;
+            scenario.setMethod(method);
+            if (method == 'get') {
+                uri = link.getUri(this.$.serializeArray());
             }
-            // Not a valid URL to submit form to
             else {
-                return scenario.skip('Nothing to submit');
+                const formDataArray: { name: string, value: string }[] = this.$.serializeArray();
+                const formData: any = {};
+                uri = link.getUri();
+                formDataArray.forEach(function (input: any) {
+                    formData[input.name] = input.value;
+                });
+                scenario.setFormData(formData)
             }
+            return await scenario.open(uri);
         }
-        throw new Error('This is not supported yet.');
+        // Not a valid URL to submit form to
+        else {
+            return scenario.skip('Nothing to submit');
+        }
     }
 
     /**
@@ -407,11 +259,6 @@ export class DOMElement extends ProtoValue implements iValue {
             return function () { };
         })();
         const message: string = typeof a == 'string' ? a : '';
-        // Click in Puppeteer
-        if (this.isPuppeteerElement()) {
-            message && this._context.scenario.comment(message);
-            return await (<ElementHandle> this._input).click();
-        }
         // If this is a link tag, treat it the same as load
         if (await this._isLinkTag()) {
             return await this.load(message, callback);
@@ -455,122 +302,96 @@ export class DOMElement extends ProtoValue implements iValue {
         return scenario;
     }
 
-    private async _isFormTag(): Promise<boolean> {
-        if (this.isCheerioElement() || this.isPuppeteerElement()) {
-            return (await this._getTagName()) == 'form';
-        }
-        return false;
+    protected async _isFormTag(): Promise<boolean> {
+        return (await this._getTagName()) == 'form';
     }
 
-    private async _isButtonTag(): Promise<boolean> {
-        if (this.isCheerioElement() || this.isPuppeteerElement()) {
-            const tagName: string = await this._getTagName();
-            const type: string | null = await this._getAttribute('type');
-            return (
-                tagName === 'button' ||
-                (tagName === 'input' && (['button', 'submit', 'reset'].indexOf(String(type)) >= 0))
-            );
-        }
-        return false;
+    protected async _isButtonTag(): Promise<boolean> {
+        const tagName: string = await this._getTagName();
+        const type: string | null = await this._getAttribute('type');
+        return (
+            tagName === 'button' ||
+            (tagName === 'input' && (['button', 'submit', 'reset'].indexOf(String(type)) >= 0))
+        );
     }
 
-    private async _isLinkTag(): Promise<boolean> {
-        if (this.isCheerioElement() || this.isPuppeteerElement()) {
-            return (
-                await this._getTagName() === 'a' &&
-                await this._getAttribute('href') !== null
-            );
-        }
-        return false;
+    protected async _isLinkTag(): Promise<boolean> {
+        return (
+            await this._getTagName() === 'a' &&
+            await this._getAttribute('href') !== null
+        );
     }
 
-    private async _isImageTag(): Promise<boolean> {
-        if (this.isCheerioElement() || this.isPuppeteerElement()) {
-            return (
-                await this._getTagName() === 'img' &&
-                await this._getAttribute('src') !== null
-            );
-        }
-        return false;
+    protected async _isImageTag(): Promise<boolean> {
+        return (
+            await this._getTagName() === 'img' &&
+            await this._getAttribute('src') !== null
+        );
     }
 
-    private async _isVideoTag(): Promise<boolean> {
-        if (this.isCheerioElement() || this.isPuppeteerElement()) {
-            const tagName: string = await this._getTagName();
-            const src: string | null = await this._getAttribute('src');
-            const type: string | null = await this._getAttribute('type');
-            return (
-                (tagName === 'video' && src !== null) ||
-                (tagName === 'source' && src !== null && /video/i.test(type || ''))
-            );
-        }
-        return false;
+    protected async _isVideoTag(): Promise<boolean> {
+        const tagName: string = await this._getTagName();
+        const src: string | null = await this._getAttribute('src');
+        const type: string | null = await this._getAttribute('type');
+        return (
+            (tagName === 'video' && src !== null) ||
+            (tagName === 'source' && src !== null && /video/i.test(type || ''))
+        );
     }
 
-    private async _isAudioTag(): Promise<boolean> {
-        if (this.isCheerioElement() || this.isPuppeteerElement()) {
-            const tagName: string = await this._getTagName();
-            const src: string | null = await this._getAttribute('src');
-            const type: string | null = await this._getAttribute('type');
-            return (
-                (tagName === 'audio' && src !== null) ||
-                (tagName === 'bgsound' && src !== null) ||
-                (tagName === 'source' && src !== null && /audio/i.test(type || ''))
-            );
-        }
-        return false;
+    protected async _isAudioTag(): Promise<boolean> {
+        const tagName: string = await this._getTagName();
+        const src: string | null = await this._getAttribute('src');
+        const type: string | null = await this._getAttribute('type');
+        return (
+            (tagName === 'audio' && src !== null) ||
+            (tagName === 'bgsound' && src !== null) ||
+            (tagName === 'source' && src !== null && /audio/i.test(type || ''))
+        );
     }
 
-    private async _isScriptTag(): Promise<boolean> {
-        if (this.isCheerioElement() || this.isPuppeteerElement()) {
-            return (
-                await this._getTagName() === 'script' &&
-                await this._getAttribute('src') !== null
-            );
-        }
-        return false;
+    protected async _isScriptTag(): Promise<boolean> {
+        return (
+            await this._getTagName() === 'script' &&
+            await this._getAttribute('src') !== null
+        );
     }
 
-    private async _isStylesheetTag(): Promise<boolean> {
-        if (this.isCheerioElement() || this.isPuppeteerElement()) {
-            return (
-                await this._getTagName() === 'link' &&
-                await this._getAttribute('href') !== null &&
-                String(await this._getAttribute('rel')).toLowerCase() == 'stylesheet'
-            );
-        }
-        return false;
+    protected async _isStylesheetTag(): Promise<boolean> {
+        return (
+            await this._getTagName() === 'link' &&
+            await this._getAttribute('href') !== null &&
+            String(await this._getAttribute('rel')).toLowerCase() == 'stylesheet'
+        );
     }
 
-    private async _isClickable(): Promise<boolean> {
+    protected async _isClickable(): Promise<boolean> {
         return (
             await this._isLinkTag() ||
             await this._isButtonTag()
         );
     }
 
-    private async _getUrl(): Promise<string | null> {
+    protected async _getUrl(): Promise<string | null> {
         const tagName: string = await this._getTagName();
-        if (this.isCheerioElement() || this.isPuppeteerElement()) {
-            if (tagName !== null) {
-                if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(tagName) >= 0) {
-                    return this._getAttribute('src');
-                }
-                else if (['a', 'link'].indexOf(tagName) >= 0) {
-                    return this._getAttribute('href');
-                }
-                else if (['form'].indexOf(tagName) >= 0) {
-                    return this._getAttribute('action') || this._context.scenario.url;
-                }
-                else if (['source'].indexOf(tagName) >= 0) {
-                    return this._getAttribute('src');
-                }
+        if (tagName !== null) {
+            if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(tagName) >= 0) {
+                return this._getAttribute('src');
+            }
+            else if (['a', 'link'].indexOf(tagName) >= 0) {
+                return this._getAttribute('href');
+            }
+            else if (['form'].indexOf(tagName) >= 0) {
+                return this._getAttribute('action') || this._context.scenario.url;
+            }
+            else if (['source'].indexOf(tagName) >= 0) {
+                return this._getAttribute('src');
             }
         }
         return null;
     }
 
-    private async _getLambdaScenarioType(): Promise<ResponseType> {
+    protected async _getLambdaScenarioType(): Promise<ResponseType> {
         if (
             (await this._isFormTag()) || (await this._isClickable())
         ) {
@@ -595,12 +416,12 @@ export class DOMElement extends ProtoValue implements iValue {
         }
     }
 
-    private async _getLink(): Promise<Link> {
+    protected async _getLink(): Promise<Link> {
         const srcPath: string | null = await this._getUrl();
         return new Link(srcPath || '', this._context);
     }
 
-    private async _createLambdaScenario(a: any, b: any): Promise<Scenario> {
+    protected async _createLambdaScenario(a: any, b: any): Promise<Scenario> {
         const title: string = typeof a == 'string' ? a : this._path;
         const scenarioType: ResponseType = await this._getLambdaScenarioType(); 
         // Need a better way to do this
@@ -634,27 +455,13 @@ export class DOMElement extends ProtoValue implements iValue {
         return scenario;
     }
 
-    private async _getTagName(): Promise<string> {
-        if (this.isCheerioElement()) {
-            return this._input.get(0).tagName.toLowerCase();
-        }
-        else if (this.isPuppeteerElement()) {
-            const handle: JSHandle = await this._input.getProperty('tagName');
-            return String(await handle.jsonValue()).toLowerCase();
-        }
-        throw new Error(`getTagName is not supported with ${this.toType()}.`);
+    protected async _getTagName(): Promise<string> {
+        return this._input.get(0).tagName.toLowerCase();
     }
 
-    private async _getAttribute(key: string): Promise<string | null> {
-        if (this.isCheerioElement()) {
-            return (typeof this._input.get(0).attribs[key] !== 'undefined') ?
-                this._input.get(0).attribs[key] : null;
-        }
-        else if (this.isPuppeteerElement()) {
-            const handle: JSHandle = await this._input.getProperty(key);
-            return await handle.jsonValue();
-        }
-        throw new Error(`getAttribute is not supported with ${this.toType()}.`);
+    protected async _getAttribute(key: string): Promise<string | null> {
+        return (typeof this._input.get(0).attribs[key] !== 'undefined') ?
+            this._input.get(0).attribs[key] : null;
     }
 
 

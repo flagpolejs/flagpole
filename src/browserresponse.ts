@@ -4,7 +4,7 @@ import { Page, ElementHandle } from 'puppeteer';
 import { PuppeteerResponse } from './puppeteerresponse';
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
-
+ 
     public get typeName(): string {
         return 'Browser';
     }

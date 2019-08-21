@@ -1,7 +1,8 @@
 import { Page, ElementHandle } from 'puppeteer';
 import { iResponse } from "./response";
-import { Browser, iValue, Flagpole, DOMElement } from '.';
+import { Browser, iValue, Flagpole } from '.';
 import { DOMResponse } from './domresponse';
+import { PuppeteerElement } from './puppeteerelement';
 
 export abstract class PuppeteerResponse extends DOMResponse implements iResponse {
 
@@ -127,29 +128,29 @@ export abstract class PuppeteerResponse extends DOMResponse implements iResponse
      * @param selector
      * @param timeout 
      */
-    public async waitForHidden(selector: string, timeout: number = 100): Promise<DOMElement | null> {
+    public async waitForHidden(selector: string, timeout: number = 100): Promise<PuppeteerElement | null> {
         if (this.page !== null) {
             const opts = { timeout: timeout || 100, hidden: true };
             const element = await this.page.waitForSelector(selector, opts);
-            return DOMElement.create(element, this.context, selector, selector);
+            return PuppeteerElement.create(element, this.context, selector, selector);
         }
         throw new Error('waitForHidden is not available in this context');
     }
 
-    public async waitForVisible(selector: string, timeout: number = 100): Promise<DOMElement | null> {
+    public async waitForVisible(selector: string, timeout: number = 100): Promise<PuppeteerElement | null> {
         if (this.page !== null) {
             const opts = { timeout: timeout || 100, visible: true };
             const element = await this.page.waitForSelector(selector, opts);
-            return DOMElement.create(element, this.context, selector, selector);
+            return PuppeteerElement.create(element, this.context, selector, selector);
         }
         throw new Error('waitForVisible is not available in this context');
     }
 
-    public async waitForExists(selector: string, timeout?: number): Promise<DOMElement | null> {
+    public async waitForExists(selector: string, timeout?: number): Promise<PuppeteerElement | null> {
         if (this.page !== null) {
             const opts = { timeout: timeout || 100 };
             const element = await this.page.waitForSelector(selector, opts);
-            return DOMElement.create(element, this.context, selector, selector);
+            return PuppeteerElement.create(element, this.context, selector, selector);
         }
         throw new Error('waitForExists is not available in this context');
     }
