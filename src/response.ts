@@ -4,6 +4,7 @@ import { Cookie } from 'request';
 import { AssertionContext } from './assertioncontext';
 import { Value } from './value';
 import { HttpResponse } from './httpresponse';
+import { iValue } from '.';
 
 /**
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
@@ -31,6 +32,16 @@ export interface iResponse {
     cookie(key?: string): Value
     absolutizeUri(uri: string): string
     evaluate(context: any, callback: Function): Promise<any>
+    waitForNavigation(timeout: number, waitFor?: string | string[]): Promise<void>
+    waitForLoad(timeout: number): Promise<void>
+    waitForNetworkIdle(timeout: number): Promise<void>
+    waitForReady(timeout: number): Promise<void>
+    waitForHidden(selector: string, timeout: number): Promise<iValue | null>
+    waitForVisible(selector: string, timeout: number): Promise<iValue | null>
+    waitForExists(selector: string, timeout?: number): Promise<iValue | null>
+    screenshot(opts: any): Promise<Buffer | string>
+    clearValue(selector: string): Promise<any>
+    typeText(selector: string, textToType: string, opts: any): Promise<any>
     readonly scenario: Scenario
 }
 
@@ -203,6 +214,46 @@ export abstract class ProtoResponse implements iResponse {
             cookie,
             'HTTP Cookies[' + key + ']'
         );
+    }
+
+    public async waitForNavigation(timeout: number = 10000, waitFor?: string | string[]): Promise<void> {
+        return this.context.pause(1);
+    }
+
+    public async waitForLoad(timeout: number = 30000): Promise<void> {
+        return this.context.pause(1);
+    }
+
+    public async waitForReady(timeout: number = 30000): Promise<void> {
+        return this.context.pause(1);
+    }
+
+    public async waitForNetworkIdle(timeout: number = 30000): Promise<void> {
+        return this.context.pause(1);
+    }
+
+    public async waitForHidden(selector: string, timeout: number = 30000): Promise<iValue | null> {
+        return this.context.pause(1);
+    }
+
+    public async waitForVisible(selector: string, timeout: number = 30000): Promise<iValue | null> {
+        return this.context.pause(1);
+    }
+
+    public async waitForExists(selector: string, timeout: number = 30000): Promise<iValue | null> {
+        return this.context.pause(1);
+    }
+
+    public async screenshot(opts: any): Promise<Buffer | string> {
+        throw new Error(`This scenario type (${this.typeName}) does not support screenshots.`);
+    }
+
+    public async typeText(selector: string, textToType: string, opts: any = {}): Promise<any> {
+        throw new Error(`This scenario type (${this.typeName}) does not support clearValue.`);
+    }
+
+    public async clearValue(selector: string): Promise<any> {
+        throw new Error(`This scenario type (${this.typeName}) does not support clearValue.`);
     }
 
     protected _wrapAsValue(data: any, name: string): Value {

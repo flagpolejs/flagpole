@@ -65,12 +65,6 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
         throw new Error('Cannot evaluate code becuase page is null.');
     }
 
-    /**
-     * Select all matching elements
-     * 
-     * @param path 
-     * @param findIn 
-     */
     public async findAll(path: string): Promise<ExtJsComponent[]> {
         if (this.page !== null) {
             const componentReference: string = `flagpole_${Date.now()}_${path.replace(/[^a-z]/ig, '')}`;
@@ -91,6 +85,45 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
             return components;
         }
         throw new Error('Cannot evaluate code becuase page is null.');
+    }
+
+    public async waitForReady(timeout: number = 15000): Promise<void> {
+        if (this.page !== null) {
+            await this.page.evaluate(`Ext.onReady(() => { window.flagpoleExtReady = true; });`);
+            await this.page.waitForFunction(`window.flagpoleExtReady`, { timeout: timeout });
+            return;
+        }
+        return super.waitForReady(timeout);
+    }
+
+    public async typeText(selector: string, textToType: string, opts: any = {}): Promise<any> {
+        if (this.page !== null) {
+            const component: ExtJsComponent | null = await this.find(selector);
+            if (component !== null) {
+                component.fireEvent('focus');
+                component.setValue(textToType);
+                component.fireEvent('blur');
+            }
+            else {
+                throw new Error(`Could not find component at ${selector}`);
+            }
+        }
+        throw new Error(`Can not type into element ${selector}`);
+    }
+
+    public async clearValue(selector: string): Promise<any> {
+        if (this.page !== null) {
+            const component: ExtJsComponent | null = await this.find(selector);
+            if (component !== null) {
+                component.fireEvent('focus');
+                component.setValue('');
+                component.fireEvent('blur');
+            }
+            else {
+                throw new Error(`Could not find component at ${selector}`);
+            }
+        }
+        throw new Error(`Can not type into this element ${selector}`);
     }
 
 }

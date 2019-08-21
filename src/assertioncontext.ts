@@ -7,7 +7,7 @@ import { Assertion } from './assertion';
 import { DOMElement } from './domelement';
 import { HtmlResponse } from './htmlresponse';
 import { Value } from './value';
-import { Flagpole } from '.';
+import { Flagpole, iValue } from '.';
 import { ExtJsComponent } from './extjscomponent';
 
 export class AssertionContext {
@@ -179,63 +179,11 @@ export class AssertionContext {
      * @param selector
      */
     public async clear(selector: string): Promise<any> {
-        if (this._response.type == ResponseType.browser && this.page !== null) {
-            const input: ElementHandle<Element> | null = await this.page.$(selector);
-            if (input !== null) {
-                await input.click({ clickCount: 3 });
-                return await this.page.keyboard.press('Backspace');
-            }   
-        }
-        else if (this._response.type == ResponseType.extjs && this.page !== null) {
-            const component: ExtJsComponent = await this.find(selector);
-            if (component !== null) {
-                component.fireEvent('focus');
-                component.setValue('');
-                component.fireEvent('blur');
-            }
-            else {
-                throw new Error(`Could not find component at ${selector}`);
-            }
-        }
-        else if (this._isHtmlRequest) {
-            const htmlResponse = this.response as HtmlResponse;
-            return await htmlResponse.evaluate(this, function ($: Cheerio) {
-                $.find(selector).val('');
-            });
-        }
-        throw new Error(`Can not type into this element ${selector}`);
+        return this.response.clearValue(selector);
     }
 
-    /**
-     * Type this text into the given input box
-     * 
-     * @param selector
-     * @param textToType 
-     * @param opts 
-     */
     public async type(selector: string, textToType: string, opts: any = {}): Promise<any> {
-        if (this._response.type == ResponseType.browser && this.page !== null) {
-            return await this.page.type(selector, textToType, opts);
-        }
-        else if (this._response.type == ResponseType.extjs && this.page !== null) {
-            const component: ExtJsComponent = await this.find(selector);
-            if (component !== null) {
-                component.fireEvent('focus');
-                component.setValue(textToType);
-                component.fireEvent('blur');
-            }
-            else {
-                throw new Error(`Could not find component at ${selector}`);
-            }
-        }
-        else if (this._isHtmlRequest) {
-            const htmlResponse = this.response as HtmlResponse;
-            return await htmlResponse.evaluate(this, function ($) {
-                let currentValue = $(selector).val();
-                $(selector).val(currentValue + textToType);
-            });
-        }
-        throw new Error(`Can not type into element ${selector}`);
+        return this.response.typeText(selector, textToType, opts);
     }
 
     /**
@@ -262,91 +210,20 @@ export class AssertionContext {
         return await this.response.evaluate(this, callback);
     }
 
-    /**
-     * Wait for DOM Loaded before continuing
-     * 
-     * @param timeout 
-     */
     public async waitForReady(timeout: number = 15000): Promise<void> {
-        if (this.response.type == ResponseType.extjs && this.page !== null) {
-            await this.page.evaluate(`Ext.onReady(() => { window.flagpoleExtReady = true; });`);
-            await this.page.waitForFunction(`window.flagpoleExtReady`, { timeout: timeout });
-            return;
-        }
-        else if (this._isBrowserRequest && this.page !== null) {
-            await this.page.waitForNavigation({
-                timeout: timeout,
-                waitUntil: 'domcontentloaded'
-            });
-            return;
-        }
-        return this.pause(1);
+        return this.response.waitForReady(timeout);
     }
 
-    /**
-     * Wait for everything to load before continuing
-     * 
-     * @param timeout 
-     */
     public async waitForLoad(timeout: number = 30000): Promise<void> {
-        if (this._isBrowserRequest && this.page !== null) {
-            await this.page.waitForNavigation({
-                timeout: timeout,
-                waitUntil: 'load'
-            });
-            return;
-        }
-        return this.pause(1);
+        return this.response.waitForLoad(timeout);
     }
 
-    /**
-     * Wait for network to be idle for 500ms before continuing
-     * 
-     * @param timeout 
-     */
     public async waitForNetworkIdle(timeout: number = 10000): Promise<void> {
-        if (this._isBrowserRequest && this.page !== null) {
-            await this.page.waitForNavigation({
-                timeout: timeout,
-                waitUntil: 'networkidle0'
-            });
-            return;
-        }
-        return this.pause(1);
+        return this.response.waitForNetworkIdle(timeout);
     }
 
-    /**
-     * Wait for network to have no more than two connections for 500ms before continuing
-     * 
-     * @param timeout 
-     */
     public async waitForNavigation(timeout: number = 10000, waitFor?: string | string[]): Promise<void> {
-        if (this._isBrowserRequest && this.page !== null) {
-            const allowedOptions: string[] = ["load", "domcontentloaded", "networkidle0", "networkidle2"];
-            // @ts-ignore VS Code freaks out about this, but it's valid return output for LoadEvent
-            const waitForEvent: LoadEvent[] = (() => {
-                if (typeof waitFor == 'string' && allowedOptions.indexOf(waitFor) >= 0) {
-                    return [waitFor];
-                }
-                else if (
-                    Flagpole.toType(waitFor) == 'array' &&
-                    (<string[]>waitFor).every((waitForItem) => {
-                        return (allowedOptions.indexOf(waitForItem) >= 0);
-                    })
-                ) {
-                    return waitFor;
-                }
-                else {
-                    return ["networkidle2"];
-                }
-            })();
-            await this.page.waitForNavigation({
-                timeout: timeout,
-                waitUntil: waitForEvent
-            });
-            return;
-        }
-        return this.pause(1);
+        return this.response.waitForNavigation(timeout, waitFor);
     }
 
     /**
@@ -355,16 +232,8 @@ export class AssertionContext {
      * @param selector
      * @param timeout 
      */
-    public async waitForHidden(selector: string, timeout: number = 100): Promise<DOMElement | null> {
-        if (this._isBrowserRequest && this.page !== null) {
-            const opts = { timeout: timeout || 100, hidden: true };
-            const element = await this.page.waitForSelector(selector, opts);
-            return DOMElement.create(element, this, selector, selector);
-        }
-        else if (this._isHtmlRequest) {
-            return this.find(selector);
-        }
-        throw new Error('waitForHidden is not available in this context');
+    public async waitForHidden(selector: string, timeout: number = 100): Promise<iValue | null> {
+        return this.response.waitForHidden(selector, timeout);
     }
 
     /**
@@ -373,16 +242,8 @@ export class AssertionContext {
      * @param selector
      * @param timeout 
      */
-    public async waitForVisible(selector: string, timeout: number = 100): Promise<DOMElement | null> {
-        if (this._isBrowserRequest && this.page !== null) {
-            const opts = { timeout: timeout || 100, visible: true };
-            const element = await this.page.waitForSelector(selector, opts);
-            return DOMElement.create(element, this, selector, selector);
-        }
-        else if (this._isHtmlRequest) {
-            return this.find(selector);
-        }
-        throw new Error('waitForVisible is not available in this context');
+    public async waitForVisible(selector: string, timeout: number = 100): Promise<iValue | null> {
+        return this.response.waitForVisible(selector, timeout);
     }
 
     /**
@@ -391,16 +252,8 @@ export class AssertionContext {
      * @param selector
      * @param timeout 
      */
-    public async waitForExists(selector: string, timeout?: number): Promise<DOMElement |  null> {
-        if (this._isBrowserRequest && this.page !== null) {
-            const opts = { timeout: timeout || 100 };
-            const element = await this.page.waitForSelector(selector, opts);
-            return DOMElement.create(element, this, selector, selector);
-        }
-        else if (this._isHtmlRequest) {
-            return this.find(selector);
-        }
-        throw new Error('waitForExists is not available in this context');
+    public async waitForExists(selector: string, timeout?: number): Promise<iValue |  null> {
+        return this.response.waitForExists(selector, timeout);
     }
 
     /**
@@ -457,19 +310,8 @@ export class AssertionContext {
         return filePath;
     }
 
-    /**
-     * Take a screenshot
-     * 
-     * @param opts 
-     */
     public async screenshot(opts: any): Promise<Buffer | string> {
-        if (this._isBrowserRequest) {
-            if (this.page !== null) {
-                return await this.page.screenshot(opts);
-            }
-            throw new Error(`No page found, so can't take a screenshot.`);
-        }
-        throw new Error(`This scenario type (${this.response.typeName}) does not support screenshots.`);
+        return this.response.screenshot(opts);
     }
 
 }

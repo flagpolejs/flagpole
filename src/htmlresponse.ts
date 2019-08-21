@@ -59,4 +59,29 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
         }
     }
 
+    public async waitForHidden(selector: string, timeout: number = 100): Promise<DOMElement | null> {
+        return this.find(selector);
+    }
+
+    public async waitForVisible(selector: string, timeout: number = 100): Promise<DOMElement | null> {
+        return this.find(selector);
+    }
+
+    public async waitForExists(selector: string, timeout: number = 100): Promise<DOMElement | null> {
+        return this.find(selector);
+    }
+
+    public async typeText(selector: string, textToType: string, opts: any = {}): Promise<any> {
+        return await this.evaluate(this, function ($) {
+            let currentValue = $(selector).val();
+            $(selector).val(currentValue + textToType);
+        });
+    }
+
+    public async clearValue(selector: string): Promise<any> {
+        return await this.evaluate(this, function ($: Cheerio) {
+            $.find(selector).val('');
+        });
+    }
+
 }
