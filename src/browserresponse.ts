@@ -1,27 +1,12 @@
 import { DOMElement } from "./domelement";
-import { iResponse, GenericResponse, ResponseType } from "./response";
-import { Browser } from './browser';
+import { iResponse, ResponseType } from "./response";
 import { Page, ElementHandle } from 'puppeteer';
+import { PuppeteerResponse } from './puppeteerresponse';
 
-export class BrowserResponse extends GenericResponse implements iResponse {
-
-    /**
-     * Is this a browser based test
-     */
-    public get isBrowser(): boolean {
-        return true;
-    }
+export class BrowserResponse extends PuppeteerResponse implements iResponse {
 
     public get typeName(): string {
         return 'Browser';
-    }
-
-    public get browser(): Browser {
-        return this.scenario.getBrowser();
-    }
-
-    public get page(): Page | null {
-        return this.scenario.getBrowser().getPage();
     }
 
     public get type(): ResponseType {
@@ -66,22 +51,6 @@ export class BrowserResponse extends GenericResponse implements iResponse {
             });
         }
         return domElements;
-    }
-
-    /**
-     * Runt his code in the browser
-     */
-    public async evaluate(context: any, callback: Function): Promise<any> {
-        if (this.page !== null) {
-            const functionName: string = `flagpole_${Date.now()}`;
-            const jsToInject: string = `window.${functionName} = ${callback}`;
-            await this.page.addScriptTag({ content: jsToInject });
-            return await this.page.evaluate(functionName => {
-                // @ts-ignore This is calling into the browser, so don't do an IDE error
-                return window[functionName]();
-            }, functionName);
-        }
-        throw new Error('Cannot evaluate code becuase page is null.');
     }
 
 }

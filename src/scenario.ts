@@ -444,36 +444,16 @@ export class Scenario {
     public next(message: string, callback: any): Scenario;
     public next(callback: any): Scenario;
     public next(a: Function | string, b?: Function): Scenario {
-        const callback: Function = (() => {
-            if (typeof b == 'function') {
-                return b;
-            }
-            else if (typeof a == 'function') {
-                return a;
-            }
-            else {
-                throw new Error('No callback provided.');
-            }
-        })();
-        const message: string | null = (function () {
-            if (typeof a == 'string' && a.trim().length > 0) {
-                return a;
-            }
-            return null;
-        })();
-        // If it hasn't already been executed
-        if (!this.hasExecuted) {
-            this._nextCallbacks.push(callback);
-            this._nextMessages.push(message);
-            // Execute at the next opportunity.
-            setTimeout(() => {
-                this._executeWhenReady();
-            }, 0);
-        }
-        else {
-            throw new Error('Scenario already executed.');
-        }
-        return this;
+        return this._next(a, b, true);
+    }
+
+    /**
+     * Insert this as the first next
+     */
+    public nextPrepend(message: string, callback: any): Scenario;
+    public nextPrepend(callback: any): Scenario;
+    public nextPrepend(a: Function | string, b?: Function): Scenario {
+        return this._next(a, b, false);
     }
 
     /**
@@ -1015,6 +995,53 @@ export class Scenario {
         });
     }
 
+    protected _getCallbackOverload(a: Function | string, b?: Function | null): Function {
+        return (() => {
+            if (typeof b == 'function') {
+                return b;
+            }
+            else if (typeof a == 'function') {
+                return a;
+            }
+            else {
+                throw new Error('No callback provided.');
+            }
+        })();
+    }
+
+    protected _getMessageOverload(a: any): string | null {
+        return (function () {
+            if (typeof a == 'string' && a.trim().length > 0) {
+                return a;
+            }
+            return null;
+        })();
+    }
+
+    protected _next(a: Function | string, b?: Function | null, append: boolean = true): Scenario {
+        const callback: Function = this._getCallbackOverload(a, b);
+        const message: string | null = this._getMessageOverload(a);
+        // If it hasn't already been executed
+        if (!this.hasExecuted) {
+            if (append) {
+                this._nextCallbacks.push(callback);
+                this._nextMessages.push(message);
+            }
+            else {
+                this._nextCallbacks.unshift(callback);
+                this._nextMessages.unshift(message);
+            }
+            // Execute at the next opportunity.
+            setTimeout(() => {
+                this._executeWhenReady();
+            }, 0);
+        }
+        else {
+            throw new Error('Scenario already executed.');
+        }
+        return this;
+    }
+    
     /**
      * PubSub Publish: To any subscribers, just listening for updates (no interupt)
      * 

@@ -47,16 +47,26 @@ const runSuites = async (selectedSuites: SuiteConfig[]): Promise<void> => {
     }
 
     ansi.writeLine();
-    runner.subscribe((message: string) => {
+
+    const states = ['/', '—', '\\', '|'];
+    let stateIndex: number = 0;
+    let statusMessage: string = `Loading ${runner.suites.length} test suites...`;
+    let timer = setInterval(() => {
         ansi.writeLine(
             ansi.cursorUp(),
             ansi.eraseLine(),
-            message
+            `${states[stateIndex]} ${statusMessage}`
         );
+        stateIndex = (stateIndex < states.length - 1) ? stateIndex + 1 : 0;
+    }, 100);
+
+    runner.subscribe((message: string) => {
+        statusMessage = message;
     });
 
     // Run them doggies
     await runner.run();
+    clearInterval(timer);
     ansi.write(ansi.eraseLines(2));
     Cli.exit(runner.exitCode);
 

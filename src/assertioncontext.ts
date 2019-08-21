@@ -8,6 +8,7 @@ import { DOMElement } from './domelement';
 import { HtmlResponse } from './htmlresponse';
 import { Value } from './value';
 import { Flagpole } from '.';
+import { ExtJsComponent } from './extjscomponent';
 
 export class AssertionContext {
 
@@ -178,12 +179,23 @@ export class AssertionContext {
      * @param selector
      */
     public async clear(selector: string): Promise<any> {
-        if (this._isBrowserRequest && this.page !== null) {
+        if (this._response.type == ResponseType.browser && this.page !== null) {
             const input: ElementHandle<Element> | null = await this.page.$(selector);
             if (input !== null) {
                 await input.click({ clickCount: 3 });
                 return await this.page.keyboard.press('Backspace');
             }   
+        }
+        else if (this._response.type == ResponseType.extjs && this.page !== null) {
+            const component: ExtJsComponent = await this.find(selector);
+            if (component !== null) {
+                component.fireEvent('focus');
+                component.setValue('');
+                component.fireEvent('blur');
+            }
+            else {
+                throw new Error(`Could not find component at ${selector}`);
+            }
         }
         else if (this._isHtmlRequest) {
             const htmlResponse = this.response as HtmlResponse;
@@ -202,8 +214,19 @@ export class AssertionContext {
      * @param opts 
      */
     public async type(selector: string, textToType: string, opts: any = {}): Promise<any> {
-        if (this._isBrowserRequest && this.page !== null) {
+        if (this._response.type == ResponseType.browser && this.page !== null) {
             return await this.page.type(selector, textToType, opts);
+        }
+        else if (this._response.type == ResponseType.extjs && this.page !== null) {
+            const component: ExtJsComponent = await this.find(selector);
+            if (component !== null) {
+                component.fireEvent('focus');
+                component.setValue(textToType);
+                component.fireEvent('blur');
+            }
+            else {
+                throw new Error(`Could not find component at ${selector}`);
+            }
         }
         else if (this._isHtmlRequest) {
             const htmlResponse = this.response as HtmlResponse;
