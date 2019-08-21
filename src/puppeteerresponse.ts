@@ -1,8 +1,9 @@
 import { Page, ElementHandle } from 'puppeteer';
-import { iResponse, ProtoResponse } from "./response";
+import { iResponse } from "./response";
 import { Browser, iValue, Flagpole, DOMElement } from '.';
+import { DOMResponse } from './domresponse';
 
-export abstract class PuppeteerResponse extends ProtoResponse implements iResponse {
+export abstract class PuppeteerResponse extends DOMResponse implements iResponse {
 
     /**
      * Is this a browser based test
@@ -176,6 +177,15 @@ export abstract class PuppeteerResponse extends ProtoResponse implements iRespon
             }
         }
         throw new Error(`Can not type into this element ${selector}`);
+    }
+
+    public selectOption(selector: string, value: string | string[]): Promise<string[]> {
+        if (this.page !== null) {
+            const values: string[] = (typeof value == 'string') ? [value] : value;
+            // @ts-ignore VS Code is unhappy no matter what I do
+            return this.page.select.apply(null, [selector].concat(values));
+        }
+        throw new Error('Page was null.');
     }
 
 }

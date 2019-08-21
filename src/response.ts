@@ -28,6 +28,8 @@ export interface iResponse {
     getRoot(): any,
     find(path: string): Promise<any>
     findAll(path: string): Promise<Array<any>>
+    findHavingText(selector: string, searchForText: string | RegExp): Promise<iValue | null>
+    findAllHavingText(selector: string, searchForText: string | RegExp): Promise<iValue[]>
     header(key?: string): Value
     cookie(key?: string): Value
     absolutizeUri(uri: string): string
@@ -42,6 +44,7 @@ export interface iResponse {
     screenshot(opts: any): Promise<Buffer | string>
     clearValue(selector: string): Promise<any>
     typeText(selector: string, textToType: string, opts: any): Promise<any>
+    selectOption(selector: string, value: string | string[]): Promise<string[]>
     readonly scenario: Scenario
 }
 
@@ -254,6 +257,18 @@ export abstract class ProtoResponse implements iResponse {
 
     public async clearValue(selector: string): Promise<any> {
         throw new Error(`This scenario type (${this.typeName}) does not support clearValue.`);
+    }
+
+    public async findHavingText(selector: string, searchForText: string | RegExp): Promise<iValue | null> {
+        throw new Error(`This scenario type (${this.typeName}) does not support findHavingText.`);
+    }
+
+    public async findAllHavingText(selector: string, searchForText: string | RegExp): Promise<iValue[]> {
+        throw new Error(`This scenario type (${this.typeName}) does not support findAllHavingText.`);
+    }
+
+    public async selectOption(selector: string, value: string | string[]): Promise<string[]> {
+        throw new Error(`This scenario type (${this.typeName}) does not support selectOption.`);
     }
 
     protected _wrapAsValue(data: any, name: string): Value {

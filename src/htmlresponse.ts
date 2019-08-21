@@ -1,11 +1,12 @@
-import { ProtoResponse, iResponse, ResponseType  } from "./response";
+import { iResponse, ResponseType  } from "./response";
 import { DOMElement } from './domelement';
 import { HttpResponse } from '.';
+import { DOMResponse } from './domresponse';
 
 let cheerio: CheerioAPI = require('cheerio');
 let $: CheerioStatic;
 
-export class HtmlResponse extends ProtoResponse implements iResponse {
+export class HtmlResponse extends DOMResponse implements iResponse {
 
     public get typeName(): string {
         return 'HTML';

@@ -1,27 +1,16 @@
 import { Scenario } from './scenario';
-import { iResponse, ResponseType } from './response';
+import { iResponse } from './response';
 import { Suite } from './suite';
 import { Browser } from './browser';
-import { Page, ElementHandle, LoadEvent } from 'puppeteer';
+import { Page } from 'puppeteer';
 import { Assertion } from './assertion';
 import { DOMElement } from './domelement';
-import { HtmlResponse } from './htmlresponse';
-import { Value } from './value';
 import { Flagpole, iValue } from '.';
-import { ExtJsComponent } from './extjscomponent';
 
 export class AssertionContext {
 
     private _scenario: Scenario;
     private _response: iResponse;
-
-    private get _isBrowserRequest(): boolean {
-        return this._response.isBrowser;
-    }
-
-    private get _isHtmlRequest(): boolean {
-        return this._scenario.responseType == ResponseType.html;
-    }
 
     /**
      * Get returned value from previous next block
@@ -41,7 +30,7 @@ export class AssertionContext {
     }
 
     public get browser(): Browser | null {
-        return this._isBrowserRequest ?
+        return this.response.isBrowser ?
             this._scenario.getBrowser() :
             null;
     }
@@ -102,30 +91,7 @@ export class AssertionContext {
      * @param searchForText 
      */
     public async findHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement | null> {
-        if (
-            (this._isBrowserRequest && this.page !== null) ||
-            this._isHtmlRequest
-        ) {
-            let matchingElement: DOMElement | null = null;
-            const elements: DOMElement[] = await this.findAll(selector);
-            // Loop through elements until we get to the end or find a match
-            for (let i = 0; i < elements.length && matchingElement === null; i++) {
-                const element: DOMElement = elements[i];
-                const text: Value = await element.getText();
-                if (typeof searchForText == 'string') {
-                    if (text.toString() == String(searchForText)) {
-                        matchingElement = element;
-                    }
-                }
-                else {
-                    if (searchForText.test(text.toString())) {
-                        matchingElement = element;
-                    }
-                }
-            }
-            return matchingElement;
-        }
-        throw new Error('findHavingText is not available in this context');
+        return this.findHavingText(selector, searchForText);
     };
 
     /**
@@ -135,30 +101,7 @@ export class AssertionContext {
      * @param searchForText 
      */
     public async findAllHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement[]> {
-        if (
-            (this._isBrowserRequest && this.page !== null) ||
-            this._isHtmlRequest
-        ) {
-            let matchingElements: DOMElement[] = [];
-            const elements: DOMElement[] = await this.findAll(selector);
-            // Loop through elements until we get to the end or find a match
-            for (let i = 0; i < elements.length; i++) {
-                const element: DOMElement = elements[i];
-                const text: Value = await element.getText();
-                if (typeof searchForText == 'string') {
-                    if (text.toString() == String(searchForText)) {
-                        matchingElements.push(element);
-                    }
-                }
-                else {
-                    if (searchForText.test(text.toString())) {
-                        matchingElements.push(element);
-                    }
-                }
-            }
-            return matchingElements;
-        }
-        throw new Error('findAllHavingText is not available in this context');
+        return this.findAllHavingText(selector, searchForText);
     };
 
     /**
@@ -193,12 +136,7 @@ export class AssertionContext {
      * @param value 
      */
     public select(selector: string, value: string | string[]): Promise<string[]> {
-        if (this._isBrowserRequest && this.page !== null) {
-            const values: string[] = (typeof value == 'string') ? [value] : value;
-            // @ts-ignore VS Code is unhappy no matter what I do
-            return this.page.select.apply(null, [selector].concat(values));
-        }
-        throw new Error('Select not available in this context.');
+        return this.response.selectOption(selector, value);
     }
 
     /**
