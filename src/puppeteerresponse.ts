@@ -1,9 +1,8 @@
-import { iResponse, GenericResponse } from "./response";
-import { Browser } from './browser';
 import { Page } from 'puppeteer';
-import { iValue } from '.';
+import { iResponse, ProtoResponse } from "./response";
+import { Browser, iValue } from '.';
 
-export abstract class PuppeteerResponse extends GenericResponse implements iResponse {
+export abstract class PuppeteerResponse extends ProtoResponse implements iResponse {
 
     /**
      * Is this a browser based test
@@ -24,7 +23,7 @@ export abstract class PuppeteerResponse extends GenericResponse implements iResp
     public abstract async findAll(path: string): Promise<iValue[]>
 
     /**
-     * Runt his code in the browser
+     * Run this code in the browser
      */
     public async evaluate(context: any, callback: Function): Promise<any> {
         if (this.page !== null) {

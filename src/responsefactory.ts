@@ -7,10 +7,10 @@ import { JsonResponse } from './jsonresponse';
 import { ScriptResponse } from './scriptresponse';
 import { VideoResponse } from './videoresponse';
 import { Scenario } from './scenario';
-import { NormalizedResponse, iResponse, ResponseType } from './response';
+import { iResponse, ResponseType } from './response';
 import { ExtJSResponse } from './extjsresponse';
 
-export function createResponse(scenario: Scenario, response: NormalizedResponse): iResponse {
+export function createResponse(scenario: Scenario): iResponse {
     const type: ResponseType = scenario.responseType;
     let className;
     if (type == ResponseType.html) {
@@ -40,5 +40,5 @@ export function createResponse(scenario: Scenario, response: NormalizedResponse)
     else {
         className = ResourceResponse;
     }
-    return new className(scenario, response);
+    return new className(scenario);
 }

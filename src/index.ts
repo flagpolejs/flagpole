@@ -9,11 +9,12 @@ import { CssResponse } from "./cssresponse";
 import { DOMElement } from "./domelement";
 import { ExtJSResponse } from "./extjsresponse";
 import { HtmlResponse } from "./htmlresponse";
+import { HttpResponse } from "./httpresponse";
 import { ImageResponse } from "./imageresponse";
 import { jPath, iJPath } from "./jpath";
 import { JsonResponse } from "./jsonresponse";
 import { ResourceResponse } from "./resourceresponse";
-import { ResponseType, GenericResponse, NormalizedResponse } from "./response";
+import { ResponseType, ProtoResponse, iResponse } from "./response";
 import { Scenario } from "./scenario";
 import { ScriptResponse } from "./scriptresponse";
 import { Suite } from "./suite";
@@ -30,7 +31,7 @@ export {
     Assertion, AssertionContext, AssertionResult, iAssertionSchema, iAssertionSchemaItem, AssertionSchema,
     Browser, BrowserOptions, BrowserResponse, CssResponse, DOMElement, ExtJSResponse,
     HtmlResponse, ImageResponse, JsonResponse, ResourceResponse,
-    ResponseType, GenericResponse, NormalizedResponse,
+    ResponseType, ProtoResponse, iResponse, HttpResponse,
     ScriptResponse, iValue, Value, VideoResponse,
     jPath, iJPath
 };

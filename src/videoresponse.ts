@@ -1,7 +1,8 @@
-import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
+import { iResponse, ResponseType } from "./response";
 import { Scenario } from "./scenario";
+import { ProtoResponse, HttpResponse } from '.';
 
-export class VideoResponse extends GenericResponse implements iResponse {
+export class VideoResponse extends ProtoResponse implements iResponse {
 
     public get typeName(): string {
         return 'Video';
@@ -11,10 +12,11 @@ export class VideoResponse extends GenericResponse implements iResponse {
         return ResponseType.video;
     }
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
+    public init(httpResponse: HttpResponse) {
+        super.init(httpResponse);
         this.context.assert('HTTP Status OK', this.statusCode).between(200, 299);
-        this.context.assert('MIME Type matches expected value for video', this.header('Content-Type')).matches(/(video|mpegurl)/i);
+        this.context.assert('MIME Type matches expected value for video', this.header('Content-Type'))
+            .matches(/(video|mpegurl)/i);
     }
 
     public async evaluate(context: any, callback: Function): Promise<any> {

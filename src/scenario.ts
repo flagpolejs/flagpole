@@ -1,6 +1,6 @@
 import { Suite } from "./suite";
 import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor, WarningLine, OptionalFailLine, DetailLine } from "./consoleline";
-import { ResponseType, NormalizedResponse, iResponse } from "./response";
+import { ResponseType, iResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
 import * as Bluebird from "bluebird";
@@ -8,6 +8,8 @@ import * as r from "request";
 import { createResponse } from './responsefactory';
 import { AssertionContext } from './assertioncontext';
 import { AssertionResult } from './assertionresult';
+import { HttpResponse } from './httpresponse';
+import { ResourceResponse } from '.';
 
 const request = require('request');
 const probeImage = require('probe-image-size');
@@ -160,6 +162,7 @@ export class Scenario {
     protected _followRedirect: boolean | Function | null = null;
     protected _browser: Browser | null = null;
     protected _isMock: boolean = false;
+    protected _response: iResponse;
     protected _defaultBrowserOptions: BrowserOptions = {
         headless: true,
         recordConsole: true,
@@ -177,7 +180,9 @@ export class Scenario {
                 { ...scenario._defaultBrowserOptions, ...opts } : 
                 { ...scenario._defaultRequestOptions, ...opts }
         })();
-        return scenario._setResponseType(type, opts);
+        scenario._setResponseType(type, opts);
+        scenario._response = createResponse(scenario);
+        return scenario;
     }
 
     private constructor(suite: Suite, title: string, onCompletedCallback: (scenario: Scenario) => void) {
@@ -186,6 +191,7 @@ export class Scenario {
         this._options = this._defaultRequestOptions;
         this._title = title;
         this._onCompletedCallback = onCompletedCallback;
+        this._response = new ResourceResponse(this);
     }
 
     /**
@@ -505,6 +511,9 @@ export class Scenario {
      * Callback when someting in the scenario throws an error
      */
     public error(callback: Function): Scenario {
+        if (this.hasFinished) {
+            throw new Error('Can not add error callbacks after execution has finished.');
+        }
         this._errorCallbacks.push(callback);
         return this;
     }
@@ -515,6 +524,9 @@ export class Scenario {
      * @param callback 
      */
     public success(callback: Function): Scenario {
+        if (this.hasFinished) {
+            throw new Error('Can not add success callbacks after execution has finished.');
+        }
         this._successCallbacks.push(callback);
         return this;
     }
@@ -525,6 +537,9 @@ export class Scenario {
      * @param callback 
      */
     public failure(callback: Function): Scenario {
+        if (this.hasFinished) {
+            throw new Error('Can not add failure callbacks after execution has finished.');
+        }
         this._failureCallbacks.push(callback);
         return this;
     }
@@ -535,6 +550,9 @@ export class Scenario {
      * @param callback 
      */
     public before(callback: Function): Scenario {
+        if (this.hasExecuted) {
+            throw new Error('Can not add before callbacks after execution has started.');
+        }
         this._beforeCallbacks.push(callback);
         return this;
     }
@@ -543,6 +561,9 @@ export class Scenario {
      * callback just after the scenario completes
      */
     public after(callback: Function): Scenario {
+        if (this.hasFinished) {
+            throw new Error('Can not add after callbacks after execution has finished.');
+        }
         this._afterCallbacks.push(callback);
         return this;
     }
@@ -553,117 +574,11 @@ export class Scenario {
      * @param callback 
      */
     public finally(callback: Function): Scenario {
+        if (this.hasFinished) {
+            throw new Error('Can not add failure callbacks after execution has finished.');
+        }
         this._finallyCallbacks.push(callback);
         return this;
-    }
-
-    /**
-     * Set scenario response type to image
-     * 
-     * @param opts 
-     */
-    public image(opts?: any): Scenario {
-        return this._setResponseType(
-            ResponseType.image,
-            { ...this._defaultRequestOptions, ...opts }
-        );
-    }
-
-    /**
-     * Set scenario response type to video
-     * 
-     * @param opts 
-     */
-    public video(opts?: any): Scenario {
-        return this._setResponseType(
-            ResponseType.video,
-            { ...this._defaultRequestOptions, ...opts }
-        );
-    }
-
-    /**
-     * Set scenario response type to html/DOM
-     * 
-     * @param opts 
-     */
-    public html(opts?: any): Scenario {
-        return this._setResponseType(
-            ResponseType.html,
-            { ...this._defaultRequestOptions, ...opts }
-        );
-    }
-
-    /**
-     * Set scenario response type to JSON/REST API
-     * 
-     * @param opts 
-     */
-    public json(opts: any = {}): Scenario {
-        return this._setResponseType(
-            ResponseType.json,
-            { ...this._defaultRequestOptions, ...opts }
-        );
-    }
-
-    /**
-     * Set scenario response type to script
-     * 
-     * @param opts 
-     */
-    public script(opts: any = {}): Scenario {
-        return this._setResponseType(
-            ResponseType.script,
-            { ...this._defaultRequestOptions, ...opts }
-        );
-    }
-
-    /**
-     * Set scenario response type to stylesheet
-     * 
-     * @param opts 
-     */
-    public stylesheet(opts: any = {}): Scenario {
-        return this._setResponseType(
-            ResponseType.stylesheet,
-            { ...this._defaultRequestOptions, ...opts }
-        );
-    }
-
-    /**
-     * Set scenario response type to generic resource
-     * 
-     * @param opts 
-     */
-    public resource(opts: any = {}): Scenario {
-        return this._setResponseType(
-            ResponseType.resource,
-            { ...this._defaultRequestOptions, ...opts }
-        );
-    }
-
-    /**
-     * Set scenario response type to browser, which will use Puppeteer 
-     * 
-     * @param opts 
-     */
-    public browser(opts: BrowserOptions = {}): Scenario {
-        return this._setResponseType(
-            ResponseType.browser,
-            { ...this._defaultBrowserOptions, ...opts }
-        );
-    }
-
-    /**
-     * Set scenario response type to extjs, which will use Puppeteer 
-     * 
-     * @param opts 
-     */
-    public extjs(opts: BrowserOptions = {}): Scenario {
-        // Uses browser options because it will leverage Puppeteer
-        return this._setResponseType(
-            ResponseType.extjs,
-            { ...this._defaultBrowserOptions, ...opts }
-        );
     }
 
     /**
@@ -697,12 +612,12 @@ export class Scenario {
      * 
      * @param r 
      */
-    protected _processResponse(r: NormalizedResponse) {
+    protected _processResponse(httpResponse: HttpResponse) {
+        this._response.init(httpResponse);
         const scenario: Scenario = this;
-        const response: iResponse = createResponse(this, r);
-        const context: AssertionContext = new AssertionContext(scenario, response);
+        const context: AssertionContext = new AssertionContext(scenario, this._response);
         this._timeRequestLoaded = Date.now();
-        this.logResult(AssertionResult.pass('Loaded ' + response.typeName + ' ' + this._url));
+        this.logResult(AssertionResult.pass('Loaded ' + this._response.typeName + ' ' + this._url));
         let lastReturnValue: any = null;
         // Execute all the assertion callbacks one by one
         this._publish(ScenarioStatusEvent.executionProgress);
@@ -749,7 +664,7 @@ export class Scenario {
         const scenario: Scenario = this;
         probeImage(this._options.uri, this._options)
             .then(result => {
-                const response: NormalizedResponse = NormalizedResponse.fromProbeImage(
+                const response: HttpResponse = HttpResponse.fromProbeImage(
                     result,
                     scenario._getCookies()
                 );
@@ -769,15 +684,15 @@ export class Scenario {
         this.getBrowser()
             .open(this._options)
             .then((next: { response: puppeteer.Response; body: string; }) => {
-                const response: puppeteer.Response = next.response;
+                const puppeteerResponse: puppeteer.Response = next.response;
                 const body: string = next.body;
-                if (response !== null) {
-                    scenario._finalUrl = response.url();
+                if (puppeteerResponse !== null) {
+                    scenario._finalUrl = puppeteerResponse.url();
                     scenario._processResponse(
-                        NormalizedResponse.fromPuppeteer(
-                            response,
+                        HttpResponse.fromPuppeteer(
+                            puppeteerResponse,
                             body,
-                            scenario._getCookies() // this isn't going to work, need to get cookies from Puppeteer
+                            scenario._getCookies() // TODO: this isn't going to work, need to get cookies from Puppeteer
                         )
                     );
                 }
@@ -807,7 +722,7 @@ export class Scenario {
         request(this._options, function (err: string, response: any, body: string) {
             if (!err) {
                 scenario._processResponse(
-                    NormalizedResponse.fromRequest(
+                    HttpResponse.fromRequest(
                         response,
                         body,
                         scenario._getCookies()
@@ -850,8 +765,8 @@ export class Scenario {
         if (!this._timeRequestStarted && this._url !== null) {
             const scenario: Scenario = this;
             this._timeRequestStarted = Date.now();
-            NormalizedResponse.fromLocalFile(this._url)
-                .then((mock: NormalizedResponse) => {
+            HttpResponse.fromLocalFile(this._url)
+                .then((mock: HttpResponse) => {
                     scenario._processResponse(mock);
                 }).catch(err => {
                     scenario._markScenarioCompleted(`Failed to load page ${scenario._url}`, err);
@@ -1021,8 +936,8 @@ export class Scenario {
     protected _next(a: Function | string, b?: Function | null, append: boolean = true): Scenario {
         const callback: Function = this._getCallbackOverload(a, b);
         const message: string | null = this._getMessageOverload(a);
-        // If it hasn't already been executed
-        if (!this.hasExecuted) {
+        // If it hasn't already finished
+        if (!this.hasFinished) {
             if (append) {
                 this._nextCallbacks.push(callback);
                 this._nextMessages.push(message);
@@ -1037,7 +952,7 @@ export class Scenario {
             }, 0);
         }
         else {
-            throw new Error('Scenario already executed.');
+            throw new Error('Scenario already finished.');
         }
         return this;
     }

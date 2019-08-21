@@ -1,15 +1,15 @@
-import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
-import { Scenario } from "./scenario";
+import { iResponse, ResponseType, ProtoResponse } from "./response";
 import { Value } from './value';
+import { HttpResponse } from './httpresponse';
 
-export class ResourceResponse extends GenericResponse implements iResponse {
+export class ResourceResponse extends ProtoResponse implements iResponse {
 
     public get type(): ResponseType {
         return ResponseType.resource;
     }
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
+    public init(httpResponse: HttpResponse) {
+        super.init(httpResponse);
         this.context.assert(this.statusCode).between(200, 299);
     }
 

@@ -268,7 +268,12 @@ export class AssertionContext {
      * @param timeout 
      */
     public async waitForReady(timeout: number = 15000): Promise<void> {
-        if (this._isBrowserRequest && this.page !== null) {
+        if (this.response.type == ResponseType.extjs && this.page !== null) {
+            await this.page.evaluate(`Ext.onReady(() => { window.flagpoleExtReady = true; });`);
+            await this.page.waitForFunction(`window.flagpoleExtReady`, { timeout: timeout });
+            return;
+        }
+        else if (this._isBrowserRequest && this.page !== null) {
             await this.page.waitForNavigation({
                 timeout: timeout,
                 waitUntil: 'domcontentloaded'

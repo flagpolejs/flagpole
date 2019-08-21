@@ -1,11 +1,11 @@
-import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
-import { Scenario } from "./scenario";
+import { iResponse, ResponseType, ProtoResponse } from "./response";
 import { Value } from './value';
 import { iJPath, jPath } from './jpath';
+import { HttpResponse } from '.';
 
-export class JsonResponse extends GenericResponse implements iResponse {
+export class JsonResponse extends ProtoResponse implements iResponse {
 
-    protected _json: {};
+    protected _json: {} = {};
     protected _jPath: iJPath | undefined;
 
     public get typeName(): string {
@@ -16,8 +16,8 @@ export class JsonResponse extends GenericResponse implements iResponse {
         return ResponseType.json;
     }
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
+    public init(httpResponse: HttpResponse) {
+        super.init(httpResponse);
         const json = this.jsonBody.$;
         this.context.assert('JSON is valid', json).type.not.equals('null')
         this._json = json || {};

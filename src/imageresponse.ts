@@ -1,7 +1,7 @@
-import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
-import { Scenario } from "./scenario";
+import { iResponse, ResponseType, ProtoResponse } from "./response";
 import { URL } from 'url';
 import { Value } from './value';
+import { HttpResponse } from '.';
 
 export interface ImageProperties {
     width: number,
@@ -14,9 +14,18 @@ export interface ImageProperties {
     url: string
 };    
 
-export class ImageResponse extends GenericResponse implements iResponse {
+export class ImageResponse extends ProtoResponse implements iResponse {
 
-    protected imageProperties: ImageProperties;
+    protected imageProperties: ImageProperties = {
+        width: 0,
+        height: 0,
+        type: '',
+        mime: '',
+        wUnits: '0',
+        hUnits: '0',
+        length: 0,
+        url: ''
+    };
 
     public get length(): Value {
         return this._wrapAsValue(this.imageProperties.length, 'Image Size');
@@ -38,9 +47,9 @@ export class ImageResponse extends GenericResponse implements iResponse {
         return 'Image';
     }
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
-        this.imageProperties = JSON.parse(response.body);
+    public init(httpResponse: HttpResponse) {
+        super.init(httpResponse);
+        this.imageProperties = JSON.parse(httpResponse.body);
         this.context.assert(
             'MIME Type matches expected value for an image',
             this.imageProperties.mime

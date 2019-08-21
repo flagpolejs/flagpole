@@ -311,6 +311,9 @@ export class Suite {
      * @param callback 
      */
     public beforeAll(callback: Function): Suite {
+        if (this.hasExecuted) {
+            throw new Error('Can not add beforeAll callbacks after execution has started.');
+        }
         this._beforeAllCallbacks.push(callback);
         return this;
     }
@@ -321,6 +324,9 @@ export class Suite {
      * @param callback 
      */
     public beforeEach(callback: Function): Suite {
+        if (this.hasExecuted) {
+            throw new Error('Can not add beforeEach callbacks after execution has started.');
+        }
         this._beforeEachCallbacks.push(callback);
         return this;
     }
@@ -331,6 +337,9 @@ export class Suite {
      * @param callback 
      */
     public afterEach(callback: Function): Suite {
+        if (this.hasFinished) {
+            throw new Error('Can not add afterEach callbacks after execution has finished.');
+        }
         this._afterEachCallbacks.push(callback);
         return this;
     }
@@ -341,6 +350,9 @@ export class Suite {
      * @param callback 
      */
     public afterAll(callback: Function): Suite {
+        if (this.hasFinished) {
+            throw new Error('Can not add afterAll callbacks after execution has finished.');
+        }
         this._afterAllCallbacks.push(callback);
         return this;
     }
@@ -350,7 +362,11 @@ export class Suite {
      * 
      * @param callback 
      */
+    public error = this.catch;
     public catch(callback: Function): Suite {
+        if (this.hasFinished) {
+            throw new Error('Can not add catch callbacks after execution has finished.');
+        }
         this._errorCallbacks.push(callback);
         return this;
     }
@@ -361,6 +377,9 @@ export class Suite {
      * @param callback 
      */
     public success(callback: Function): Suite {
+        if (this.hasFinished) {
+            throw new Error('Can not add success callbacks after execution has finished.');
+        }
         this._successCallbacks.push(callback);
         return this;
     }
@@ -369,6 +388,9 @@ export class Suite {
      * This callback runs once the suite is done, if it failed
      */
     public failure(callback: Function): Suite {
+        if (this.hasFinished) {
+            throw new Error('Can not add failure callbacks after execution has finished.');
+        }
         this._failureCallbacks.push(callback);
         return this;
     }
@@ -377,6 +399,9 @@ export class Suite {
      * This callback will run once everything else is completed, whether pass or fail
      */
     public finally(callback: Function): Suite {
+        if (this.hasFinished) {
+            throw new Error('Can not add finally callbacks after execution has finished.');
+        }
         this._finallyCallbacks.push(callback);
         return this;
     }

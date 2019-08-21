@@ -1,13 +1,11 @@
-import { Flagpole } from "./index";
-import { Scenario } from "./scenario";
-import { iResponse, NormalizedResponse, GenericResponse, ResponseType } from "./response";
+import { ProtoResponse, iResponse, ResponseType  } from "./response";
 import { DOMElement } from './domelement';
-import { AssertionContext } from './assertioncontext';
+import { HttpResponse } from '.';
 
 let cheerio: CheerioAPI = require('cheerio');
 let $: CheerioStatic;
 
-export class HtmlResponse extends GenericResponse implements iResponse {
+export class HtmlResponse extends ProtoResponse implements iResponse {
 
     public get typeName(): string {
         return 'HTML';
@@ -17,9 +15,9 @@ export class HtmlResponse extends GenericResponse implements iResponse {
         return ResponseType.html;
     }
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
-        $ = cheerio.load(response.body);
+    public init(httpResponse: HttpResponse) {
+        super.init(httpResponse);
+        $ = cheerio.load(httpResponse.body);
     }
 
     public getRoot(): CheerioStatic {

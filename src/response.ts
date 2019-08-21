@@ -1,12 +1,9 @@
 import { Scenario } from "./scenario";
 import { URL } from 'url';
 import { Cookie } from 'request';
-import { IncomingMessage } from 'http';
-import * as puppeteer from "puppeteer-core";
 import { AssertionContext } from './assertioncontext';
-import { Value, iValue } from './value';
-import { DOMElement } from './domelement';
-import { CSSRule } from './cssrule';
+import { Value } from './value';
+import { HttpResponse } from './httpresponse';
 
 /**
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
@@ -26,6 +23,7 @@ export interface iResponse {
     headers: Value,
     cookies: Value,
     isBrowser: boolean,
+    init(httpResponse: HttpResponse): void
     getRoot(): any,
     find(path: string): Promise<any>
     findAll(path: string): Promise<Array<any>>
@@ -49,69 +47,11 @@ export enum ResponseType {
     extjs
 }
 
-export class NormalizedResponse {
-
-    public body: string = '';
-    public statusCode: number = 0;
-    public statusMessage: string = '';
-    public headers: { [key: string]: string } = {};
-    public cookies: Cookie[] = []
-
-    private constructor() { }
-
-    static fromRequest(response: IncomingMessage, body: string, cookies: Cookie[]): NormalizedResponse {
-        const r = new NormalizedResponse();
-        r.statusCode = response.statusCode || 0;
-        r.statusMessage = response.statusMessage || '';
-        r.headers = <{ [key: string]: string }>response.headers;
-        r.body = body;
-        r.cookies = cookies;
-        return r;
-    }
-
-    static fromPuppeteer(response: puppeteer.Response, body: string, cookies: Cookie[]): NormalizedResponse {
-        const r = new NormalizedResponse();
-        r.statusCode = response.status();
-        r.statusMessage = response.statusText();
-        r.headers = response.headers();
-        r.body = body;
-        r.cookies = cookies;
-        //r.url = response.url();
-        return r;
-    }
-
-    static fromProbeImage(response: any, cookies: Cookie[]): NormalizedResponse {
-        const r = new NormalizedResponse();
-        r.headers = {
-            'content-type': response.mime
-        };
-        r.body = JSON.stringify(response);
-        return r;
-    }
-
-    static fromLocalFile(relativePath: string): Promise<NormalizedResponse> {
-        const r = new NormalizedResponse();
-        let fs = require('fs');
-        let path: string = __dirname + '/' + relativePath;
-        return new Promise((resolve, reject) => {
-            fs.readFile(path, function (err, data) {
-                if (err) {
-                    return reject(err);
-                }
-                r.body = data.toString();
-                //r.url = path;
-                resolve(r);
-            });
-        });
-    }
-
-}
-
-export abstract class GenericResponse implements iResponse {
+export abstract class ProtoResponse implements iResponse {
 
     public readonly scenario: Scenario;
 
-    private _response: NormalizedResponse;
+    private _httpResponse: HttpResponse = HttpResponse.createEmpty();
 
     abstract get type(): ResponseType;
     abstract get typeName(): string;
@@ -126,46 +66,50 @@ export abstract class GenericResponse implements iResponse {
         return false;
     }
 
+    public get httpResponse(): HttpResponse {
+        return this._httpResponse;
+    }
+
     /**
      * HTTP Status Code
      */
     public get statusCode(): Value {
-        return this._wrapAsValue(this._response.statusCode, 'HTTP Status Code');
+        return this._wrapAsValue(this.httpResponse.statusCode, 'HTTP Status Code');
     }
 
     /**
      * HTTP Status Message
      */
     public get statusMessage(): Value {
-        return this._wrapAsValue(this._response.statusMessage, 'HTTP Status Message');
+        return this._wrapAsValue(this.httpResponse.statusMessage, 'HTTP Status Message');
     }
 
     /**
      * Raw Response Body
      */
     public get body(): Value {
-        return this._wrapAsValue(this._response.body, 'Raw Response Body');
+        return this._wrapAsValue(this.httpResponse.body, 'Raw Response Body');
     }
 
     /**
      * Size of the response body
      */
     public get length(): Value {
-        return this._wrapAsValue(this._response.body.length, 'Length of Response Body');
+        return this._wrapAsValue(this.httpResponse.body.length, 'Length of Response Body');
     }
 
     /**
      * HTTP Headers
      */
     public get headers(): Value {
-        return this._wrapAsValue(this._response.headers, 'HTTP Headers');
+        return this._wrapAsValue(this.httpResponse.headers, 'HTTP Headers');
     }
 
     /**
      * HTTP Cookies
      */
     public get cookies(): Value {
-        return this._wrapAsValue(this._response.cookies, 'HTTP Cookies');
+        return this._wrapAsValue(this.httpResponse.cookies, 'HTTP Cookies');
     }
 
     /**
@@ -173,7 +117,7 @@ export abstract class GenericResponse implements iResponse {
      */
     public get jsonBody(): Value {
         try {
-            const json = JSON.parse(this._response.body);
+            const json = JSON.parse(this.httpResponse.body);
             return this._wrapAsValue(json, 'JSON Response');
         } catch (ex) {
             return this._wrapAsValue(null, 'JSON Response');
@@ -205,9 +149,12 @@ export abstract class GenericResponse implements iResponse {
         return new AssertionContext(this.scenario, this);
     }
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
+    constructor(scenario: Scenario) {
         this.scenario = scenario;
-        this._response = response;
+    }
+
+    public init(httpResponse: HttpResponse) {
+        this._httpResponse = httpResponse;
     }
 
     /**
@@ -221,7 +168,7 @@ export abstract class GenericResponse implements iResponse {
     }
 
     public getRoot(): any {
-        return this._response.body;
+        return this.httpResponse.body;
     }
 
     /**
@@ -232,8 +179,8 @@ export abstract class GenericResponse implements iResponse {
      */
     public header(key: string): Value {
         // Try first as they put it in the test, then try all lowercase
-        key = typeof this._response.headers[key] !== 'undefined' ? key : key.toLowerCase();
-        const headerValue: any = this._response.headers[key];
+        key = typeof this.httpResponse.headers[key] !== 'undefined' ? key : key.toLowerCase();
+        const headerValue: any = this.httpResponse.headers[key];
         return this._wrapAsValue(
             typeof headerValue == 'undefined' ? null : headerValue,
             'HTTP Headers[' + key + ']'
@@ -247,7 +194,7 @@ export abstract class GenericResponse implements iResponse {
      */
     public cookie(key: string): Value {
         let cookie: Cookie | null = null;
-        this._response.cookies.forEach((c: Cookie) => {
+        this.httpResponse.cookies.forEach((c: Cookie) => {
             if (c.key == key) {
                 cookie = c;
             }

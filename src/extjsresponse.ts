@@ -1,7 +1,6 @@
-import { iResponse, ResponseType } from "./response";
 import { PuppeteerResponse } from './puppeteerresponse';
 import { ExtJsComponent } from './extjscomponent';
-import { Scenario, NormalizedResponse, AssertionContext } from '.';
+import { Scenario, iResponse, ResponseType, AssertionContext  } from '.';
 
 export class ExtJSResponse extends PuppeteerResponse implements iResponse {
 
@@ -13,18 +12,31 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
         return ResponseType.extjs;
     }
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
+    constructor(scenario: Scenario) {
+        super(scenario);
         // Before this scenario starts to run
-        this.scenario.before(() => {
-            // Prepend this as the first next
-            this.scenario.nextPrepend(async (context: AssertionContext) => {
+        scenario.before(() => {
+            scenario.nextPrepend(async (context: AssertionContext) => {
                 if (context.page !== null) {
-                    const exists = await context.page.evaluate(`!!window['Ext']`);
-                    context.assert('ExtJS was found.', exists).equals(true);
+                    // Wait for HTML DOM
+                    await context.assert(
+                        'DOM Ready',
+                        context.waitForNavigation(3000, 'domcontentloaded')
+                    ).resolves();
+                    // Wait for Ext
+                    const extExists = `!!Ext`;
+                    await context.page.waitForFunction(extExists);
+                    await context.assert(
+                        'Found Ext object.',
+                        await context.page.evaluate(extExists)
+                    ).equals(true);
+                    // Wait for Ext ready
+                    return context.assert(
+                        'Ext.onReady fired',
+                        context.waitForReady(15000)
+                    ).resolves();
                 }
-                return context.pause(1);
-            });
+            })
         })
     }
 

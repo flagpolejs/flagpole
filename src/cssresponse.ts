@@ -1,11 +1,10 @@
-import { iResponse, GenericResponse, NormalizedResponse, ResponseType } from "./response";
-import { Scenario } from "./scenario";
-import { Flagpole } from '.';
+import { iResponse, ResponseType, ProtoResponse } from "./response";
+import { Flagpole, HttpResponse } from '.';
 import { CSSRule } from './cssrule';
 
 const css = require('css');
 
-export class CssResponse extends GenericResponse implements iResponse {
+export class CssResponse extends ProtoResponse implements iResponse {
 
     protected css: any;
 
@@ -17,8 +16,8 @@ export class CssResponse extends GenericResponse implements iResponse {
         return ResponseType.stylesheet;
     }
 
-    constructor(scenario: Scenario, response: NormalizedResponse) {
-        super(scenario, response);
+    public init(httpResponse: HttpResponse) {
+        super.init(httpResponse);
         this.context.assert(this.statusCode).between(200, 299);
         this.context.assert(this.header('Content-Type')).contains('text/css');
         try {
