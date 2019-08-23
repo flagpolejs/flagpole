@@ -1,4 +1,4 @@
-import { Flagpole, FlagpoleOutput } from '..';
+import { stripIndents, oneLine } from 'common-tags';
 
 export enum ConsoleColor {
 
@@ -22,6 +22,7 @@ export enum ConsoleColor {
     FgMagenta = "\x1b[35m",
     FgCyan = "\x1b[36m",
     FgWhite = "\x1b[37m",
+    FgGray = "\x1b[90m",
 
     FgBrightBlack = "\x1b[30;1m",
     FgBrightRed = "\x1b[31;1m",
@@ -105,14 +106,19 @@ export class HeadingLine extends ConsoleLine implements iConsoleLine {
 
     constructor(message: string) {
         super(message);
-        this.color = ConsoleColor.FgYellow;
+        this.color = ConsoleColor.FgBrightYellow;
         this.type = ConsoleLineType.Heading;
     }
 
     public toString(): string {
         let text: string = super.toString().trim();
         let padLength: number = Math.ceil((ConsoleLine.targetLineLength - text.length) / 2);
-        return ' '.repeat(padLength) + text + ' '.repeat(padLength);
+        return oneLine`
+            ${this.color}${'='.repeat(padLength)}
+            ${text}
+            ${'='.repeat(padLength)}
+            ${ConsoleColor.Reset}
+        `;
     }
 
 }
@@ -151,6 +157,10 @@ export class HorizontalRule extends ConsoleLine implements iConsoleLine {
         return text.repeat(reps);
     }
 
+    public toConsoleString(): string {
+        return '';
+    }
+
 }
 
 export class CustomLine extends ConsoleLine implements iConsoleLine {
@@ -174,7 +184,7 @@ export class LineBreak extends ConsoleLine implements iConsoleLine {
 
 export class CommentLine extends ConsoleLine implements iConsoleLine {
 
-    public textPrefix: string = '  »  ';
+    public textPrefix: string = '»';
 
     constructor(message: string) {
         super(message);
@@ -182,11 +192,22 @@ export class CommentLine extends ConsoleLine implements iConsoleLine {
         this.type = ConsoleLineType.Comment;
     }
 
+    public toConsoleString(): string {
+        return oneLine`
+            ${ConsoleColor.Reset} 
+            ${ConsoleColor.BgWhite}${ConsoleColor.FgBlack}
+            ${this.textPrefix}
+            ${ConsoleColor.Reset}
+            ${this.message}
+            ${ConsoleColor.Reset}
+        `;
+    }
+
 }
 
 export class PassLine extends ConsoleLine implements iConsoleLine {
 
-    public textPrefix: string = '  ✔  ';
+    public textPrefix: string = '✔';
 
     constructor(message: string) {
         super(message);
@@ -194,11 +215,22 @@ export class PassLine extends ConsoleLine implements iConsoleLine {
         this.type = ConsoleLineType.Pass;
     }
 
+    public toConsoleString(): string {
+        return oneLine`
+            ${ConsoleColor.Reset} 
+            ${ConsoleColor.BgGreen}${ConsoleColor.FgWhite}
+            ${this.textPrefix}
+            ${ConsoleColor.Reset}
+            ${this.message}
+            ${ConsoleColor.Reset} 
+        `;
+    }
+
 }
 
 export class FailLine extends ConsoleLine implements iConsoleLine {
 
-    public textPrefix: string = '  ✕  ';
+    public textPrefix: string = '✕';
 
     constructor(message: string) {
         super(message);
@@ -206,17 +238,39 @@ export class FailLine extends ConsoleLine implements iConsoleLine {
         this.type = ConsoleLineType.Fail;
     }
 
+    public toConsoleString(): string {
+        return oneLine`
+            ${ConsoleColor.Reset} 
+            ${ConsoleColor.BgRed}${ConsoleColor.FgWhite}
+            ${this.textPrefix}
+            ${ConsoleColor.Reset}
+            ${this.message}
+            ${ConsoleColor.Reset}
+        `;
+    }
+
 }
 
 export class OptionalFailLine extends ConsoleLine implements iConsoleLine {
 
-    public textPrefix: string = '  ✕  ';
+    public textPrefix: string = '✕';
 
     constructor(message: string) {
         super(message);
         this.color = ConsoleColor.FgMagenta;
         this.type = ConsoleLineType.Comment;
         this.textSuffix = '[Optional]'
+    }
+
+    public toConsoleString(): string {
+        return oneLine`
+            ${ConsoleColor.Reset} 
+            ${ConsoleColor.BgMagenta}${ConsoleColor.FgWhite}
+            ${this.textPrefix}
+            ${ConsoleColor.Reset}
+            ${this.message} [Optional]
+            ${ConsoleColor.Reset}
+        `;
     }
 
 }
@@ -235,12 +289,57 @@ export class WarningLine extends ConsoleLine implements iConsoleLine {
 
 export class DetailLine extends ConsoleLine implements iConsoleLine {
 
-    public textPrefix: string = '     ';
+    public textPrefix: string = '…';
 
     constructor(message: string) {
         super(message);
-        this.color = ConsoleColor.FgBrightYellow;
+        this.color = ConsoleColor.FgYellow;
         this.type = ConsoleLineType.Comment;
+    }
+
+    public toConsoleString(): string {
+        return oneLine`
+            ${ConsoleColor.Reset} 
+            ${ConsoleColor.BgWhite}${ConsoleColor.FgBlack}
+            ${this.textPrefix}
+            ${ConsoleColor.Reset}
+            ${this.message}
+            ${ConsoleColor.Reset}
+        `;
+    }
+
+}
+
+export class SourceCodeBlock extends ConsoleLine implements iConsoleLine {
+
+    public textPrefix: string = '         ';
+
+    constructor(message: string) {
+        super(message);
+        this.color = ConsoleColor.FgWhite;
+        this.type = ConsoleLineType.Comment;
+    }
+
+    public toConsoleString(): string {
+        const lines: string[] = this._codeHighlight(this.message)
+            .split("\n");
+        let out: string = `${this.color}\n`;
+        lines.forEach((line: string) => {
+            out += `${this.textPrefix}${line}\n`;
+        });
+        out += `${ConsoleColor.Reset}\n`
+        return out;
+    }
+
+    protected _codeHighlight(source: string): string {
+        source = source
+            .replace(/ ([a-z-]+)=/ig, ` ${ConsoleColor.FgMagenta}$1${this.color}=`)
+            .replace(/="([^"]+)"/ig, `="${ConsoleColor.FgGreen}$1${this.color}"`)
+            .replace(/='([^']+)"/ig, `='${ConsoleColor.FgGreen}$1${this.color}'`)
+            .replace(/<([a-z-]+) /ig, `<${ConsoleColor.FgYellow}$1${this.color} `)
+            .replace(/<(\/[a-z-]+)>/ig, `<${ConsoleColor.FgYellow}$1${this.color}>`);
+
+        return source;
     }
 
 }

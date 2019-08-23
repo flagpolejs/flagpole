@@ -270,9 +270,9 @@ export abstract class ProtoResponse implements iResponse {
     public async selectOption(selector: string, value: string | string[]): Promise<string[]> {
         throw new Error(`This scenario type (${this.typeName}) does not support selectOption.`);
     }
-
-    protected _wrapAsValue(data: any, name: string): Value {
-        return new Value(data, this.context, name);
+    
+    protected _wrapAsValue(data: any, name: string, source?: any): Value {
+        return new Value(data, this.context, name, source);
     }
 
 }

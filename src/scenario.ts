@@ -601,7 +601,11 @@ export class Scenario {
             comment !== null && this.comment(comment)
             context.result = lastReturnValue;
             lastReturnValue = _then.apply(context, [context]);
-            return lastReturnValue;
+            // Don't continue until last value and all assertions resolve
+            return Promise.all([
+                lastReturnValue,
+                context.assertionsResolved
+            ]);
         }).then(() => {
             scenario._markScenarioCompleted();
         }).catch((err) => {

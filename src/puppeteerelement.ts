@@ -73,25 +73,25 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async getProperty(key: string): Promise<Value> {
         const name: string = `${key} of ${this.name}`;
         const handle: JSHandle = await this._input.getProperty(key);
-        return this._wrapAsValue(await handle.jsonValue(), name);
+        return this._wrapAsValue(await handle.jsonValue(), name, this);
     }
 
     public async getData(key: string): Promise<Value> {
         const name: string = `Data of ${this.name}`;
         const handle: JSHandle = await this._input.getProperty(key);
-        return this._wrapAsValue(await handle.jsonValue(), name);
+        return this._wrapAsValue(await handle.jsonValue(), name, this);
     }
 
     public async getValue(): Promise<Value> {
         const name: string = `Value of ${this.name}`;
         const handle: JSHandle = await this._input.getProperty('value');
-        return this._wrapAsValue(await handle.jsonValue(), name);
+        return this._wrapAsValue(await handle.jsonValue(), name, this);
     }
 
     public async getText(): Promise<Value> {
         const name: string = `Text of ${this.name}`;
         const handle: JSHandle = await this._input.getProperty('textContent');
-        return this._wrapAsValue(await handle.jsonValue(), name);
+        return this._wrapAsValue(await handle.jsonValue(), name, this);
     }
 
     public async fillForm(formData: any): Promise<any> {

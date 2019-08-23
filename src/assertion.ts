@@ -11,6 +11,9 @@ export class Assertion {
      * Creates a new assertion with the same value and settings, just no result
      */
     public get and(): Assertion {
+        // If no assertion statement was made, skip it by marking it resolved
+        this._resolveAssertion();
+        // Create new assertion
         const assertion: Assertion = new Assertion(
             this._context,
             this._input,
@@ -25,11 +28,15 @@ export class Assertion {
      * Creates a new assertion with the type of this one
      */
     public get type(): Assertion {
+        // If no assertion statement was made, skip it by marking it resolved
+        this._resolveAssertion();
+        // Generate type value object
         const type: Value = new Value(
             Flagpole.toType(this._getCompareValue(this._input)),
             this._context,
             `Type of ${this._getSubject()}`
         );
+        // Generate new assertion
         const assertion: Assertion = new Assertion(this._context, type, this._message);
         this._not && assertion.not;
         this._optional && assertion.optional;
@@ -40,11 +47,15 @@ export class Assertion {
      * Creates a new assertion with the lengh of this one
      */
     public get length(): Assertion {
+        // If no assertion statement was made, skip it by marking it resolved
+        this._resolveAssertion();
+        // Generate length Value object
         const length: number = (() => {
             const thisValue: any = this._getCompareValue(this._input);
             return thisValue && thisValue.length ?
                 thisValue.length : 0;
         })();
+        // Create new assertion
         const assertion: Assertion = new Assertion(
             this._context,
             new Value(length, this._context, `Length of ${this._getSubject()}`),
@@ -71,23 +82,8 @@ export class Assertion {
         return this;
     }
 
-    /**
-     * Unsure of this one... but purpose is to create a new assertion based on the resolved value if input is a promise
-     */
-    public get resolvesTo(): Promise<any> {
-        if (Flagpole.toType(this._input) != 'promise') {
-            throw new Error(`${this._getSubject()} is not a promise.`)
-        }
-        const message: string | undefined = this._message || undefined;
-        const context: AssertionContext = this._context;
-        const promise: Promise<any> = this._input;
-        return new Promise(async function (resolve, reject) {
-            promise.then((value: any) => {
-                resolve(Assertion.create(context, value, message));
-            }).catch((err) => {
-                resolve(Assertion.create(context, err, message));
-            });
-        });
+    public get result(): Promise<AssertionResult | null> {
+        return this._finishedPromise;
     }
 
     private _context: AssertionContext;
@@ -97,6 +93,9 @@ export class Assertion {
     private _not: boolean = false;
     private _optional: boolean = false;
     private _result: AssertionResult | null = null;
+    private _finishedPromise: Promise<AssertionResult | null>;
+    private _finishedResolver: Function = () => { };
+    private _statement: boolean | null = null;
 
     public static async create(context: AssertionContext, thisValue: any, message?: string): Promise<Assertion> {
         return new Assertion(context, thisValue, message);
@@ -106,6 +105,9 @@ export class Assertion {
         this._context = context;
         this._input = thisValue;;
         this._message = typeof message == 'undefined' ? null : message;
+        this._finishedPromise = new Promise((resolve) => {
+            this._finishedResolver = resolve;
+        });
     }
 
     public exactly(value: any): Assertion {
@@ -504,11 +506,12 @@ export class Assertion {
         }
     }
 
-    private _assert(statement: boolean, defaultMessage: string, actualValue: any): Assertion {
+    private async _assert(statement: boolean, defaultMessage: string, actualValue: any): Promise<Assertion> {
         // Result is immutable, so only let them assert once
-        if (this._result !== null) {
+        if (this._result !== null || this._statement !== null) {
             throw new Error('Assertion result is immutable.');
         }
+        this._statement = statement;
         const message: string = this._message || defaultMessage;
         // Assertion passes
         if (!!statement) {
@@ -516,13 +519,16 @@ export class Assertion {
         }
         // Assertion fails
         else {
-            const details: string = `Actual value: ${String(actualValue)}`;
+            const source: string = (this._input && this._input.getSourceCode) ?
+                await this._input.getSourceCode() : '';
+            let details: string = `Actual value: ${String(actualValue)}`;
             this._result = this._optional ?
                 new AssertionFailOptional(message, details) :
-                new AssertionFail(message, details);
+                new AssertionFail(message, details, source);
         }
         // Log this result
         this._context.scenario.result(this._result);
+        this._finishedResolver(this._result);
         return this;
     }
 
@@ -568,6 +574,13 @@ export class Assertion {
     private _eval(bool: boolean): boolean {
         this._not && (bool = !bool);
         return bool;
+    }
+
+    private _resolveAssertion() {
+        if (this._statement === null) {
+            this._statement = false;
+            this._finishedResolver(null);
+        } 
     }
 
 }

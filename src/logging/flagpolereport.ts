@@ -1,5 +1,5 @@
 import { Suite } from "../suite";
-import { iConsoleLine, HeadingLine, CommentLine, LineBreak, CustomLine, ConsoleColor, HorizontalRule } from "./consoleline";
+import { iConsoleLine, HeadingLine, CommentLine, LineBreak, CustomLine, ConsoleColor, HorizontalRule, PassLine, FailLine } from "./consoleline";
 import { Flagpole } from '..';
 import { Scenario } from '../scenario';
 import { FlagpoleOutput, FlagpoleExecutionOptions } from '../flagpoleexecutionoptions';
@@ -22,17 +22,16 @@ export class FlagpoleReport {
     public async toConsole(): Promise<iConsoleLine[]> {
 
         let lines: iConsoleLine[] = [];
-        lines.push(new HorizontalRule('='));
         lines.push(new HeadingLine(this.suite.title));
-        lines.push(new HorizontalRule('='));
         lines.push(new CommentLine(`Base URL: ${this.suite.baseUrl}`));
         lines.push(new CommentLine(`Environment: ${Flagpole.executionOpts.environment}`));
         lines.push(new CommentLine(`Took ${this.suite.executionDuration}ms`));
-
-        let color: ConsoleColor = this.suite.hasPassed ? ConsoleColor.FgGreen : ConsoleColor.FgRed;
-        lines.push(new CustomLine(` »   Passed? ${(this.suite.hasPassed ? 'Yes' : 'No')}`, color));
+        const failCount: number = this.suite.failCount;
+        const totalCount: number = this.suite.scenarios.length;
+        (failCount == 0) ?
+            lines.push(new PassLine(`Passed (${totalCount} scenario${totalCount == 1 ? '' : 's'})`)) :
+            lines.push(new FailLine(`Failed (${failCount} of ${totalCount} scenario${totalCount == 1 ? '': 's'})`));
         lines.push(new LineBreak());
-
         await Flagpole.forEach(this.suite.scenarios, async (scenario: Scenario) => {
             const log = await scenario.getLog();
             log.forEach((item: iLogItem) => {

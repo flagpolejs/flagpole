@@ -24,6 +24,17 @@ export class Suite {
         return this._baseUrl;
     }
 
+    public get failCount(): number {
+        let fails: number = 0;
+        this.scenarios.forEach(function (scenario) {
+            if (!scenario.hasPassed) {
+                fails += 1;
+            }
+        });
+        return fails;
+    }
+
+
     /**
      * Did every scenario in this suite pass?
      */

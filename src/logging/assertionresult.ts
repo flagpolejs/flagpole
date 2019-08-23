@@ -1,6 +1,6 @@
 import { Flagpole } from '..';
 import { iLogItem, LogItem, LogItemType } from './logitem';
-import { iConsoleLine, PassLine, OptionalFailLine, FailLine, DetailLine } from './consoleline';
+import { iConsoleLine, PassLine, OptionalFailLine, FailLine, DetailLine, SourceCodeBlock } from './consoleline';
 
 export abstract class AssertionResult extends LogItem implements iLogItem {
 
@@ -10,6 +10,7 @@ export abstract class AssertionResult extends LogItem implements iLogItem {
     public abstract toConsole(): iConsoleLine[]
 
     protected _rawDetails: any;    
+    protected _sourceCode: any;    
 
 }
 
@@ -39,13 +40,18 @@ export class AssertionFail extends AssertionResult implements iLogItem {
         return true;
     }
 
-    constructor(message: string, errorDetails: any) {
+    constructor(message: string, errorDetails: any, sourceCode?: any) {
         super(message);
         this._rawDetails = errorDetails;
+        this._sourceCode = sourceCode;
     }
 
     public get isDetails(): boolean {
         return !!this._rawDetails;
+    }
+
+    public get sourceCode(): string {
+        return String(this._sourceCode);
     }
 
     public get detailsMessage(): string {
@@ -69,10 +75,16 @@ export class AssertionFail extends AssertionResult implements iLogItem {
     }
 
     public toConsole(): iConsoleLine[] {
-        return [
-            new FailLine(this.message),
-            new DetailLine(this.detailsMessage)
-        ];
+        const lines: iConsoleLine[] = [new FailLine(this.message)];
+        const details: string = this.detailsMessage;
+        const source: string = this.sourceCode;
+        if (details) {
+            lines.push(new DetailLine(this.detailsMessage));
+        }
+        if (source) {
+            lines.push(new SourceCodeBlock(this.sourceCode));
+        }
+        return lines;
     }
 
 }

@@ -31,6 +31,7 @@ export abstract class ProtoValue  implements iValue{
     protected _input: any;
     protected _context: AssertionContext;
     protected _name: string | null;
+    protected _source: any;
 
     public get $(): any {
         return this._input;
@@ -40,10 +41,25 @@ export abstract class ProtoValue  implements iValue{
         return this._name || 'it';
     }
 
-    constructor(input: any, context: AssertionContext, name?: string) {
+    constructor(input: any, context: AssertionContext, name?: string, source?: any) {
         this._input = input;
         this._context = context;
         this._name = name || null;
+        this._source = source;
+    }
+
+    public async getSourceCode(): Promise<string> {
+        // Throw these out
+        if (Flagpole.isNullOrUndefined(this._source)) {
+            return '';
+        }
+        // Do more processing based on type
+        const type: string = Flagpole.toType(this._source);
+        if (['puppeteerelement', 'extjscomponent', 'domelement'].includes(type)) {
+            return (await this._source.getOuterHtml()).toString();
+        }
+        // Fallback just toString it
+        return String(this._source);
     }
 
     public toArray(): any[] {
@@ -144,8 +160,8 @@ export abstract class ProtoValue  implements iValue{
         );
     }
 
-    protected _wrapAsValue(data: any, name: string): Value {
-        return new Value(data, this._context, name);
+    protected _wrapAsValue(data: any, name: string, source?: any): Value {
+        return new Value(data, this._context, name, source);
     }
 
 }

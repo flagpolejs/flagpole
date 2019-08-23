@@ -5,12 +5,13 @@ import { Browser } from './browser';
 import { Page } from 'puppeteer';
 import { Assertion } from './assertion';
 import { DOMElement } from './domelement';
-import { Flagpole, iValue } from '.';
+import { Flagpole, iValue, AssertionResult } from '.';
 
 export class AssertionContext {
 
     private _scenario: Scenario;
     private _response: iResponse;
+    private _assertions: Assertion[] = [];
 
     /**
      * Get returned value from previous next block
@@ -42,6 +43,14 @@ export class AssertionContext {
             null;
     }
 
+    public get assertionsResolved(): Promise<(AssertionResult | null)[]> {
+        const promises: Promise<AssertionResult | null>[] = [];
+        this._assertions.forEach((assertion) => {
+            promises.push(assertion.result)
+        });
+        return Promise.all(promises);
+    }
+
     constructor(scenario: Scenario, response: iResponse) {
         this._scenario = scenario;
         this._response = response;
@@ -67,7 +76,9 @@ export class AssertionContext {
     public assert(a: any, b?: any): Assertion {
         const value = typeof b !== 'undefined' ? b : a;
         const message = typeof b !== 'undefined' ? a : undefined;
-        return new Assertion(this, value, message);
+        const assertion = new Assertion(this, value, message);
+        this._assertions.push(assertion);
+        return assertion;
     }
 
     /**

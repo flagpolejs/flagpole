@@ -13,16 +13,35 @@
   "suites": {
     "smoke": {
       "name": "smoke",
-      "tags": [
-        "foo"
-      ]
+      "tags": []
     },
     "cookie": {
       "name": "cookie",
-      "tags": [
-        "foo",
-        "bar"
-      ]
+      "tags": []
+    },
+    "html/milesplit": {
+      "name": "html/milesplit",
+      "tags": []
+    },
+    "error": {
+      "name": "error",
+      "tags": []
+    },
+    "browser/google": {
+      "name": "browser/google",
+      "tags": []
+    },
+    "html/google": {
+      "name": "html/google",
+      "tags": []
+    },
+    "api/flo": {
+      "name": "api/flo",
+      "tags": []
+    },
+    "api/itunes": {
+      "name": "api/itunes",
+      "tags": []
     }
   }
 }

@@ -43,7 +43,7 @@ export class JsonResponse extends ProtoResponse implements iResponse {
             throw new Error('Could not load jmespath');
         }
         const selection = await this._jPath.search(this._json, path);
-        return this._wrapAsValue(selection, path);
+        return this._wrapAsValue(selection, path, selection);
     }
 
     public async findAll(path: string): Promise<Value[]> {

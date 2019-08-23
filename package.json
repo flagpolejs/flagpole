@@ -24,6 +24,7 @@
     "bluebird": "^3.5.3",
     "cheerio": "^1.0.0-rc.2",
     "clortho-lite": "^2.0.6",
+    "common-tags": "^1.8.0",
     "css": "^2.2.4",
     "enquirer": "^2.3.0",
     "form-data": "^2.3.3",

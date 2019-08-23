@@ -144,8 +144,9 @@ else if (Cli.command == 'about') {
 }
 else if (Cli.command == 'import') {
     if (Cli.commandArg == 'suite') {
-        require('./import').importSuite();
-    }   
+        // move import suite here when we add ability to import something else
+    }
+    require('./import').importSuite();
 }
 else if (Cli.command == 'serve') {
     require('./serve').serve();
