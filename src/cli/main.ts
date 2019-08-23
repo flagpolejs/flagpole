@@ -88,18 +88,15 @@ Flagpole.executionOpts.environment = argv.e;
 Flagpole.executionOpts.setOutputFromString(argv.o);
 Flagpole.executionOpts.automaticallyPrintToConsole = true;
 Flagpole.executionOpts.logMode = !!argv.l;
-if (argv.q) {
-    Cli.hideBanner = true;
-    Flagpole.executionOpts.quietMode = true;
-    Flagpole.executionOpts.automaticallyPrintToConsole = false;
-}
-Cli.hideBanner = !!argv.h;
+Flagpole.executionOpts.automaticallyPrintToConsole = !argv.q;
+Flagpole.executionOpts.quietMode = !!argv.q;
+Cli.hideBanner = (!!argv.h || argv.q || argv.o !== 'console');
 Cli.rootPath = Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
 
 /**
  * Read the config file in the path
  */
-Cli.configPath = (argv.c || Cli.rootPath + 'flagpole.json');
+Cli.configPath = (argv.c || `${Cli.rootPath}flagpole.json`);
 // If we found a config file at this path
 Cli.config = Cli.parseConfigFile(Cli.configPath);
 // If they specified a command line config that doesn't exist

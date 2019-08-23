@@ -6,6 +6,7 @@ const cheerio = require('cheerio');
 export class Flagpole {
 
     public static executionOpts = FlagpoleExecutionOptions.create();
+    public static suites: Suite[] = [];
 
     static exit(passed: boolean) {
         process.exit(passed ? 0 : 1);
@@ -21,6 +22,7 @@ export class Flagpole {
     static suite = Flagpole.Suite;
     static Suite(title: string): Suite {
         let suite: Suite = new Suite(title);
+        Flagpole.suites.push(suite);
         return suite;
     }
 
@@ -88,6 +90,12 @@ export class Flagpole {
         fs.writeFileSync(filePath, content);
         await open(filePath);
         return filePath;
+    }
+
+    public static async forEach(array: any[], callback: Function) {
+        for (let i = 0; i < array.length; i++) {
+            await callback(array[i], i, array);
+        }
     }
 
 }

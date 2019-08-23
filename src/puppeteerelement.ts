@@ -1,7 +1,8 @@
 import { Value, iValue } from './value';
 import { JSHandle, Page, ElementHandle } from 'puppeteer';
 import { AssertionContext } from './assertioncontext';
-import { Flagpole, DOMElement } from '.';
+import { Flagpole } from '.';
+import { DOMElement } from './domelement';
 
 export class PuppeteerElement extends DOMElement implements iValue {
 

@@ -1,5 +1,4 @@
 import { Suite } from "./suite";
-import { iLogLine, SubheadingLine, CommentLine, PassLine, FailLine, ConsoleColor, WarningLine, OptionalFailLine, DetailLine } from "./consoleline";
 import { ResponseType, iResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
@@ -7,9 +6,13 @@ import * as Bluebird from "bluebird";
 import * as r from "request";
 import { createResponse } from './responsefactory';
 import { AssertionContext } from './assertioncontext';
-import { AssertionResult } from './assertionresult';
+import { AssertionResult, AssertionPass, AssertionFail } from './logging/assertionresult';
 import { HttpResponse } from './httpresponse';
-import { ResourceResponse } from '.';
+import { ResourceResponse } from './resourceresponse';
+import { iLogItem, LogItemType } from './logging/logitem';
+import { LogScenarioSubHeading } from './logging/heading';
+import { LogComment } from './logging/comment';
+import { LogCollection } from './logging/logcollection';
 
 const request = require('request');
 const probeImage = require('probe-image-size');
@@ -71,14 +74,19 @@ export class Scenario {
      * Did any assertions in this scenario fail?
      */
     public get hasFailed(): boolean {
-        return (this._failures.length > 0);
+        return this._log.items.some((item: iLogItem) => {
+            return (
+                item.type == LogItemType.Result &&
+                item.failed && !item.isOptional
+            );
+        });
     }
 
     /**
      * Did all assertions in this scenario pass? This also requires that the scenario has completed
      */
     public get hasPassed(): boolean {
-        return !!(this.hasFinished && this._failures.length == 0);
+        return (this.hasFinished && !this.hasFailed);
     }
 
 
@@ -132,6 +140,7 @@ export class Scenario {
     }
 
     protected _title: string;
+    protected _log: LogCollection = new LogCollection();
     protected _subscribers: Function[] = [];
     protected _nextCallbacks: Function[] = [];
     protected _nextMessages: Array<string | null> = [];
@@ -142,9 +151,6 @@ export class Scenario {
     protected _failureCallbacks: Function[] = [];
     protected _successCallbacks: Function[] = [];
     protected _onCompletedCallback: (scenario: Scenario) => void;
-    protected _log: iLogLine[] = [];
-    protected _failures: Array<AssertionResult> = [];
-    protected _passes: Array<AssertionResult> = [];
     protected _timeScenarioInitialized: number = Date.now();
     protected _timeScenarioExecuted: number | null = null;
     protected _timeRequestStarted: number | null = null;
@@ -197,10 +203,8 @@ export class Scenario {
     /**
      * Get log of all assetions, comments, etc. from this scenario
      */
-    public async getLog(): Promise<iLogLine[]> {
-        let output: iLogLine[] = [];
-        output = this._log;
-        return output;
+    public async getLog(): Promise<iLogItem[]> {
+        return this._log.items;
     }
 
     /**
@@ -369,49 +373,21 @@ export class Scenario {
      * Add a subheading log message to buffer
      */
     public subheading(message: string): Scenario {
-        this._log.push(new SubheadingLine(message));
-        return this;
+        return this._pushToLog(new LogScenarioSubHeading(message));
     }
 
     /**
      * Add a neutral line to the output
      */
     public comment(message: string): Scenario {
-        this._log.push(
-            new CommentLine(message)
-        );
-        return this;
+        return this._pushToLog(new LogComment(message));
     }
 
     /**
      * Push in a new passing assertion
      */
-    public logResult(result: AssertionResult): Scenario {
-        // Log into passes and failures
-        if (result.passed) {
-            this._passes.push(result);
-            this._log.push(new PassLine(result.message));
-        }
-        else if (!result.isOptional) {
-            this._failures.push(result);
-            this._log.push(new FailLine(result.message));
-            (result.details !== null) && this._log.push(new DetailLine(result.details));
-        }
-        else {
-            this._log.push(new OptionalFailLine(result.message));
-            (result.details !== null) && this._log.push(new DetailLine(result.details));
-        }
-        return this;
-    }
-
-    /**
-     * Put in a non-fatal warning message, like a deprecation
-     * 
-     * @param message 
-     */
-    public logWarning(message: string): Scenario {
-        this._log.push(new WarningLine(message));
-        return this;
+    public result(result: AssertionResult): Scenario {
+        return this._pushToLog(result);
     }
 
     /**
@@ -471,9 +447,8 @@ export class Scenario {
         }
         const scenario = this;
         await this._fireBefore();
-        message = "Skipped" + (message ? ': ' + message : '');
         scenario._publish(ScenarioStatusEvent.executionProgress);
-        scenario._log.push(new CommentLine(message));
+        scenario.comment(`Skipped${(message ? ': ' + message : '')}`);
         await scenario._fireAfter();
         await scenario._fireFinally();
         return this;
@@ -496,7 +471,7 @@ export class Scenario {
             this.subheading(this.title);
             // If we waited first
             if (this._waitToExecute) {
-                this._log.push(new CommentLine(`Waited ${this.executionDuration}ms`));
+                this.comment(`Waited ${this.executionDuration}ms`);
             }
             // Execute it
             this._publish(ScenarioStatusEvent.executionProgress);
@@ -617,7 +592,7 @@ export class Scenario {
         const scenario: Scenario = this;
         const context: AssertionContext = new AssertionContext(scenario, this._response);
         this._timeRequestLoaded = Date.now();
-        this.logResult(AssertionResult.pass('Loaded ' + this._response.typeName + ' ' + this._url));
+        this.result(new AssertionPass('Loaded ' + this._response.typeName + ' ' + this._url));
         let lastReturnValue: any = null;
         // Execute all the assertion callbacks one by one
         this._publish(ScenarioStatusEvent.executionProgress);
@@ -792,7 +767,7 @@ export class Scenario {
         // Only run this once
         if (!this.hasFinished) {
             await this._fireAfter();
-            this._log.push(new CommentLine(`Took ${this.executionDuration}ms`));
+            this.comment(`Took ${this.executionDuration}ms`);
             // Scenario completed without an error (could be pass or fail)
             if (errorMessage === null) {
                 this.hasPassed ?
@@ -801,7 +776,9 @@ export class Scenario {
             }
             // Scenario compelted with an error
             else {
-                this.logResult(AssertionResult.fail(errorMessage, errorDetails));
+                this.result(
+                    new AssertionFail(errorMessage, errorDetails)
+                );
                 await this._fireError(errorDetails || errorMessage);
             }
             // Finally
@@ -967,6 +944,11 @@ export class Scenario {
         this._subscribers.forEach(async function (callback: Function) {
             callback(scenario, statusEvent);
         });
+    }
+
+    protected _pushToLog(logItem: iLogItem): Scenario {
+        this._log.add(logItem);
+        return this;
     }
 
 }

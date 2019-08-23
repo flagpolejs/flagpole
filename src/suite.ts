@@ -2,7 +2,7 @@ import { Flagpole } from "./index";
 import { ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { URL } from 'url';
-import { FlagpoleReport } from './flagpolereport';
+import { FlagpoleReport } from './logging/flagpolereport';
 import * as Bluebird from "bluebird";
 
 export enum SuiteStatusEvent {
@@ -19,8 +19,6 @@ export enum SuiteStatusEvent {
 export class Suite {
 
     public scenarios: Array<Scenario> = [];
-
-    private _homeScore: number = 0;
 
     public get baseUrl(): URL | null {
         return this._baseUrl;
@@ -78,6 +76,10 @@ export class Suite {
         return this._title;
     }
 
+    public get finished(): Promise<void> {
+        return this._finishedPromise;
+    }
+
     protected _subscribers: Function[] = [];
     protected _errorCallbacks: Function[] = [];
     protected _successCallbacks: Function[] = [];
@@ -89,6 +91,8 @@ export class Suite {
     protected _afterEachCallbacks: Function[] = [];
     protected _beforeAllPromise: Promise<void>;
     protected _beforeAllResolver: Function = () => { };
+    protected _finishedPromise: Promise<void>;
+    protected _finishedResolver: Function = () => { };
     protected _title: string;
     protected _baseUrl: URL | null = null;
     protected _timeSuiteInitialized: number = Date.now();
@@ -101,6 +105,9 @@ export class Suite {
         this._title = title;
         this._beforeAllPromise = new Promise((resolve) => {
             this._beforeAllResolver = resolve;
+        });
+        this._finishedPromise = new Promise((resolve) => {
+            this._finishedResolver = resolve;
         });
     }
 
@@ -138,7 +145,7 @@ export class Suite {
      * @returns {Suite}
      */
     public print(exitAfterPrint: boolean = true): void {
-        const report: FlagpoleReport = new FlagpoleReport(this);
+        const report: FlagpoleReport = new FlagpoleReport(this, Flagpole.executionOpts);
         report.print()
             .then(() => {
                 exitAfterPrint && Flagpole.exit(this.hasPassed)
@@ -526,6 +533,7 @@ export class Suite {
                 return _then.apply(suite, [suite]);
             }).then(() => {
                 this._publish(SuiteStatusEvent.finished);
+                this._finishedResolver();
                 resolve();
             }).catch((err) => {
                 reject(err);

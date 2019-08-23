@@ -1,6 +1,13 @@
 import { SuiteConfig } from './config';
 import { Flagpole, FlagpoleExecutionOptions, FlagpoleOutput } from '..';
 import { spawn } from 'child_process';
+import { Suite } from '../suite';
+import { FlagpoleReport } from '../logging/flagpolereport';
+
+export enum SuiteExecutionExitCode {
+    success = 0,
+    failure = 1
+}
 
 /**
  * Immutable result of an execution
@@ -37,6 +44,12 @@ export class SuiteExecution {
     protected _subscribers: Function[] = [];
     protected _finally: Function[] = [];
     protected _output: string[] = [];
+    protected _finishedPromise: Promise<SuiteExecutionResult>;
+    protected _finishedResolver: Function = () => { };
+
+    public get result(): Promise<SuiteExecutionResult>  {
+        return this._finishedPromise;
+    }
 
     public get exitCode(): number | null {
         return this._result === null ? null : this._result.exitCode;
@@ -46,14 +59,22 @@ export class SuiteExecution {
         return this._output;
     }
 
-    public static executePath(filePath: string, opts: FlagpoleExecutionOptions): Promise<SuiteExecutionResult> {
+    public static executePath(filePath: string, opts: FlagpoleExecutionOptions): SuiteExecution {
         const execution: SuiteExecution = new SuiteExecution();
-        return execution.executePath(filePath, opts);
+        execution.executePath(filePath, opts);
+        return execution;
     }
 
-    public static executeSuite(config: SuiteConfig): Promise<SuiteExecutionResult> {
+    public static executeSuite(config: SuiteConfig): SuiteExecution {
         const execution: SuiteExecution = new SuiteExecution();
-        return execution.executeSuite(config);
+        execution.executeSuite(config);
+        return execution;
+    }
+
+    constructor() {
+        this._finishedPromise = new Promise((resolve) => {
+            this._finishedResolver = resolve;
+        });
     }
 
     public subscribe(callback: (output: string, execution: SuiteExecution) => void) {
@@ -78,6 +99,7 @@ export class SuiteExecution {
         this._finally.forEach((callback: Function) => {
             callback.apply(this, [this]);
         });
+        this._finishedResolver(this._result);
         return this._result;
     }
 
@@ -94,7 +116,6 @@ export class SuiteExecution {
     }
 
     protected _execute(filePath: string, opts: FlagpoleExecutionOptions): Promise<SuiteExecutionResult> {
-        this._output = [];
         return new Promise((resolve) => {
             const process = spawn('node', [filePath].concat(opts.toArgs()));
             process.stdout.on('data', (data) => {
@@ -122,6 +143,42 @@ export class SuiteExecution {
                 callback.apply(this, [line, this]);
             });
         }
+    }
+
+}
+
+export class SuiteExecutionInline extends SuiteExecution {
+
+    protected async _execute(filePath: string, opts: FlagpoleExecutionOptions): Promise<SuiteExecutionResult> {
+        // Start with success
+        let exitCode: number = SuiteExecutionExitCode.success;
+        // How many suites do we have now?
+        const preSuiteCount: number = Flagpole.suites.length;
+        // Embed the suite file... it should add at least one suite
+        await require(filePath);
+        // How many suites do we have now?
+        const postSuiteCount: number = Flagpole.suites.length;
+        // If the require added at least one
+        if (postSuiteCount > preSuiteCount) {
+            // Get the added suites
+            const createdSuites = Flagpole.suites.slice(preSuiteCount);
+            // Loop through each added suite and grab the "finished" promise, which will be resolved once it is done
+            let promises: Promise<void>[] = [];
+            createdSuites.forEach((suite: Suite) => {
+                promises.push(suite.finished);
+            });
+            // Wait for every suite to finish executing
+            await Promise.all(promises);
+            // Loop through the added suites again and capture output
+            await Flagpole.forEach(createdSuites, async (suite: Suite) => {
+                if (suite.hasFailed) {
+                    exitCode = SuiteExecutionExitCode.failure;
+                }
+                const report: FlagpoleReport = new FlagpoleReport(suite, opts);
+                this._logLine(await report.toString());
+            });
+        }
+        return new SuiteExecutionResult(this._output, exitCode);
     }
 
 }

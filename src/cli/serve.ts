@@ -484,7 +484,8 @@ const addEnv = (response: http.ServerResponse, env: EnvConfig): void => {
 
 const runSuite = (response: http.ServerResponse, suiteName: string, envName: string): void => {
     let opts = FlagpoleExecutionOptions.createFromString(`-h -o json -e ${envName}`);
-    SuiteExecution.executePath(Cli.config.suites[suiteName].getPath(), opts)
+    const execution: SuiteExecution = SuiteExecution.executePath(Cli.config.suites[suiteName].getPath(), opts);
+    execution.result
         .then((result: SuiteExecutionResult) => {
             const json: any = JSON.parse(result.output.join(' '));
             let output: string = `<h2>${json.title}</h2>`;

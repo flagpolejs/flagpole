@@ -1,7 +1,7 @@
 import { SuiteConfig } from './config';
 import { Cli } from './cli';
 import { Flagpole, FlagpoleOutput  } from '..';
-import { SuiteExecution, SuiteExecutionResult } from './suiteexecution';
+import { SuiteExecution, SuiteExecutionResult, SuiteExecutionInline } from './suiteexecution';
 
 export class TestRunner {
 
@@ -58,9 +58,8 @@ export class TestRunner {
         let count: number = 1;
         for (let suiteName in this._suiteConfigs) {
             this._publish(`Running suite ${suiteName} (${count} of ${totalSuites})...`);
-            this._executionResults.push(
-                await SuiteExecution.executeSuite(this._suiteConfigs[suiteName])
-            );
+            let execution: SuiteExecution = SuiteExecutionInline.executeSuite(this._suiteConfigs[suiteName]);
+            this._executionResults.push(await execution.result);
             count++;
         }
         this._onDone();
@@ -85,8 +84,18 @@ export class TestRunner {
                     overall.fail += 1;
                 }
             });
-            output = `{ "summary": { "passCount": ${overall.pass}, "failCount": ${overall.fail}, "duration": ${duration} }, ` +
-                `"suites": [${ suiteOutput.join(',') }] }`;
+            output = `
+                { 
+                    "summary": {
+                        "passCount": ${overall.pass}, 
+                        "failCount": ${overall.fail}, 
+                        "duration": ${duration} 
+                    }, ` +
+                    `"suites": [
+                        ${suiteOutput.join(',')}
+                    ]
+                }
+            `;
         }
         else {
             this._executionResults.forEach(result => {

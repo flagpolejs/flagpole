@@ -1,7 +1,7 @@
 
 import { Assertion } from "./assertion";
 import { AssertionContext } from "./assertioncontext";
-import { AssertionResult } from "./assertionresult";
+import { AssertionResult } from "./logging/assertionresult";
 import { iAssertionSchema, iAssertionSchemaItem, AssertionSchema } from "./assertionschema";
 import { Browser, BrowserOptions } from "./browser";
 import { BrowserResponse } from "./browserresponse";

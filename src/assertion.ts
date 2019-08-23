@@ -1,8 +1,8 @@
 import { AssertionContext } from './assertioncontext';
 import { Value } from './value';
 import { Flagpole } from '.';
-import { AssertionResult } from './assertionresult';
-import { iAssertionSchemaTestOpts, AssertionSchema, iAjvLike } from './assertionschema';
+import { AssertionResult, AssertionFail, AssertionFailOptional, AssertionPass } from './logging/assertionresult';
+import { AssertionSchema, iAjvLike } from './assertionschema';
 import * as Ajv from 'ajv';
 
 export class Assertion {
@@ -84,8 +84,8 @@ export class Assertion {
         return new Promise(async function (resolve, reject) {
             promise.then((value: any) => {
                 resolve(Assertion.create(context, value, message));
-            }).catch((ex) => {
-                resolve(Assertion.create(context, ex, message));
+            }).catch((err) => {
+                resolve(Assertion.create(context, err, message));
             });
         });
     }
@@ -340,7 +340,7 @@ export class Assertion {
         const thisValue = this._getCompareValue(this._input);
         const bool: boolean = this._eval(!Flagpole.isNullOrUndefined(thisValue));
         this._assert(
-            bool, 
+            bool,
             this._not ?
                 `${this._getSubject()} does not exist` :
                 `${this._getSubject()} exists`,
@@ -509,21 +509,20 @@ export class Assertion {
         if (this._result !== null) {
             throw new Error('Assertion result is immutable.');
         }
+        const message: string = this._message || defaultMessage;
         // Assertion passes
         if (!!statement) {
-            const message: string = this._message || defaultMessage;
-            this._result = AssertionResult.pass(message);
+            this._result = new AssertionPass(message)
         }
         // Assertion fails
         else {
-            const message: string = (this._message || defaultMessage);
             const details: string = `Actual value: ${String(actualValue)}`;
             this._result = this._optional ?
-                AssertionResult.failOptional(message, details) :
-                AssertionResult.fail(message, details);
+                new AssertionFailOptional(message, details) :
+                new AssertionFail(message, details);
         }
         // Log this result
-        this._context.scenario.logResult(this._result);
+        this._context.scenario.result(this._result);
         return this;
     }
 
