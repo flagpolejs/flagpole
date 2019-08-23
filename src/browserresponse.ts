@@ -1,7 +1,7 @@
-import { DOMElement } from "./domelement";
 import { iResponse, ResponseType } from "./response";
 import { Page, ElementHandle } from 'puppeteer';
 import { PuppeteerResponse } from './puppeteerresponse';
+import { PuppeteerElement } from './puppeteerelement';
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
  
@@ -18,13 +18,12 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
      * 
      * @param path 
      */
-    public async find(path: string): Promise<DOMElement | null> {
-        const response: iResponse = this;
+    public async find(path: string): Promise<PuppeteerElement | null> {
         const page: Page | null = this.scenario.getBrowser().getPage();
         if (page !== null) {
             const el: ElementHandle<Element> | null = await page.$(path);
             if (el !== null) {
-                return await DOMElement.create(
+                return await PuppeteerElement.create(
                     el, this.context, null, path
                 );
             }
@@ -37,20 +36,20 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
      * 
      * @param path 
      */
-    public async findAll(path: string): Promise<DOMElement[]> {
+    public async findAll(path: string): Promise<PuppeteerElement[]> {
         const response: iResponse = this;
         const page: Page | null = this.scenario.getBrowser().getPage();
-        const domElements: DOMElement[] = [];
+        const puppeteerElements: PuppeteerElement[] = [];
         if (page !== null) {
             const elements: ElementHandle[] = await page.$$(path);
             await elements.forEach(async function (el: ElementHandle<Element>, i: number) {
-                const domElement = await DOMElement.create(
+                const element = await PuppeteerElement.create(
                     el, response.context, `${path} [${i}]`, path
                 );
-                domElements.push(domElement);
+                puppeteerElements.push(element);
             });
         }
-        return domElements;
+        return puppeteerElements;
     }
 
 }
