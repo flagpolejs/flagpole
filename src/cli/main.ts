@@ -32,7 +32,6 @@ let argv = require('yargs')
         'd': 'Show extra debug info',
         'h': 'Hide the output banner',
         'o': 'Output: console, text, html, json, csv, browser',
-        'l': 'Log style output, one per line',
         'q': 'Quiet Mode: Silence all output'
     })
     .array('s')
@@ -41,7 +40,6 @@ let argv = require('yargs')
     .boolean('d')
     .boolean('h')
     .boolean('q')
-    .boolean('l')
     .string('o')
     .default('e', 'dev')
     .default('o', 'console')
@@ -87,7 +85,6 @@ if (commands.indexOf(String(Cli.command)) < 0) {
 Flagpole.executionOpts.environment = argv.e;
 Flagpole.executionOpts.setOutputFromString(argv.o);
 Flagpole.executionOpts.automaticallyPrintToConsole = true;
-Flagpole.executionOpts.logMode = !!argv.l;
 Flagpole.executionOpts.automaticallyPrintToConsole = !argv.q;
 Flagpole.executionOpts.quietMode = !!argv.q;
 Cli.hideBanner = (!!argv.h || argv.q || argv.o !== 'console');

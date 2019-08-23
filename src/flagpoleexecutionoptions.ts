@@ -28,11 +28,6 @@ export class FlagpoleExecutionOptions {
     public automaticallyPrintToConsole: boolean = false;
 
     /**
-     * This indicates we are printing log style output where we should ignore any decorative stuff
-     */
-    public logMode: boolean = false;
-
-    /**
      * Once execution of a suite completes, exit the process
      */
     public exitOnDone: boolean = false;
@@ -78,11 +73,6 @@ export class FlagpoleExecutionOptions {
             }
             else if (arg == '-q') {
                 opts.quietMode = true;
-                lastArg = null;
-                return;
-            }
-            else if (arg == '-l') {
-                opts.logMode = true;
                 lastArg = null;
                 return;
             }
@@ -141,9 +131,6 @@ export class FlagpoleExecutionOptions {
         }
         if (this.quietMode) {
             opts += ' -q';
-        }
-        if (this.logMode) {
-            opts += ' -l';
         }
         if (this.exitOnDone) {
             opts += ' -x';

@@ -189,16 +189,6 @@ Hides the ASCII banner graphic.
 flagpole run -h
 ```
 
-### -l
-
-There are some decorative florishes with the Flagpole output. Extra line breaks, horizontal rules, etc. They make it more readable. But perhaps you're trying to send the output to a log and you don't want that stuff. 
-
-This "log" switch makes it only do the content lines and does one per line.
-
-```bash
-flagpole run -l
-```
-
 ### -q 
 
 Quiet mode. Silences all Flagpole command line output. This is useful when you don't want to capture what it has to say, you just want to know if it passed or failed. Which a script running this could get from the exit code of 0 or 1.
