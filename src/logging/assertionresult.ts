@@ -10,7 +10,8 @@ export abstract class AssertionResult extends LogItem implements iLogItem {
     public abstract toConsole(): iConsoleLine[]
 
     protected _rawDetails: any;    
-    protected _sourceCode: any;    
+    protected _sourceCode: any = null;   
+    protected _highlight: string = '';   
 
 }
 
@@ -40,10 +41,11 @@ export class AssertionFail extends AssertionResult implements iLogItem {
         return true;
     }
 
-    constructor(message: string, errorDetails: any, sourceCode?: any) {
+    constructor(message: string, errorDetails: any, sourceCode: any =  null, highlight: string = '') {
         super(message);
         this._rawDetails = errorDetails;
         this._sourceCode = sourceCode;
+        this._highlight = highlight;
     }
 
     public get isDetails(): boolean {
@@ -82,7 +84,7 @@ export class AssertionFail extends AssertionResult implements iLogItem {
             lines.push(new DetailLine(this.detailsMessage));
         }
         if (source) {
-            lines.push(new SourceCodeBlock(this.sourceCode));
+            lines.push(new SourceCodeBlock(this.sourceCode, this._highlight));
         }
         return lines;
     }

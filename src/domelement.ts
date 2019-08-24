@@ -111,7 +111,8 @@ export class DOMElement extends ProtoValue implements iValue {
     public async hasAttribute(key: string): Promise<Value> {
         return this._wrapAsValue(
             (await this._getAttribute(key)) != null,
-            `${this.name} has attribute ${key}`
+            `${this.name} has attribute ${key}`,
+            this
         );
     }
 
@@ -123,7 +124,7 @@ export class DOMElement extends ProtoValue implements iValue {
     public async getAttribute(key: string): Promise<Value> {
         const name: string = `${this.name} -> ${key}`;
         const attr: string | null = await this._getAttribute(key);
-        return this._wrapAsValue(attr, name, this);
+        return this._wrapAsValue(attr, name, this, `${key}="${attr}"`);
     }
 
     /**

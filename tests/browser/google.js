@@ -21,31 +21,35 @@ const paths = {
 
 suite.browser('Google Search for Flagpole', browserOpts)
     .open('/')
-    .next(async function () {
-        this.assert(this.response.statusCode).equals(200);
-        (await this.assert(this.find(paths.queryInput)).resolvesTo).not.equals(null);
-        //await this.page.type(paths.queryInput, searchTerm);
-        const form = await this.find('form');
-        const input = await this.find(paths.queryInput);
-        this.comment(input);
+    .next(async context => {
+        context.assert(context.response.statusCode).equals(200);
+    })
+    .next(async context => {
+        const logo = await context.find('#hplogo');
+        context.assert(await logo.getAttribute('alt')).equals('foo');
+    })
+    .next('Fill out form', async context => {
+        //await context.page.type(paths.queryInput, searchTerm);
+        const form = await context.find('form');
         await form.fillForm({
             q: searchTerm
         });
-        this.assert('Search term matches what we typed', await input.getValue()).equals(searchTerm);
-        const button = await this.find(paths.submitButton);
-        this.assert(button).exists();
-        //await this.click(paths.submitButton);
+        const input = await context.find(paths.queryInput);
+        context.assert('Search term matches what we typed', await input.getValue()).equals(searchTerm);
+        const button = await context.find(paths.submitButton);
+        context.assert(button).exists();
+        //await context.click(paths.submitButton);
         await form.submit();
-        await this.waitForNavigation();
-        const results = await this.find(paths.searchResultsItem);
-        await this.assert('Search results found', results).exists();
-        await this.comment(await (await this.find('#searchform')).getClassName());
-        return this.pause(1);
+        await context.waitForNavigation();
+        const results = await context.find(paths.searchResultsItem);
+        await context.assert('Search results found', results).exists();
+        await context.comment(await (await context.find('#searchform')).getClassName());
+        return context.pause(1);
     })
-    .next('see if evalulate works', async function () {
-        const divCount = await this.evaluate(function () {
+    .next('see if evalulate works', async context => {
+        const divCount = await context.evaluate(function () {
             return document.querySelectorAll('div').length;
         });
-        this.comment(`There are ${divCount} divs in this page`);
-        this.assert('There are more than one divs in it', divCount).greaterThan(0);
+        context.comment(`There are ${divCount} divs in this page`);
+        context.assert('There are more than one divs in it', divCount).greaterThan(0);
     });

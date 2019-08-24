@@ -10,8 +10,10 @@ export enum ConsoleColor {
     Bright = "\x1b[1m",
     Dim = "\x1b[2m",
     Underscore = "\x1b[4m",
+    UnderscoreEnd = "\x1b[24m",
     Blink = "\x1b[5m",
     Reverse = "\x1b[7m",
+    Unreverse = "\x1b[27m",
     Hidden = "\x1b[8m",
 
     FgBlack = "\x1b[30m",
@@ -314,10 +316,13 @@ export class SourceCodeBlock extends ConsoleLine implements iConsoleLine {
 
     public textPrefix: string = '         ';
 
-    constructor(message: string) {
+    protected highlight: string | null = null;
+
+    constructor(message: string, highlight?: string) {
         super(message);
         this.color = ConsoleColor.FgWhite;
         this.type = ConsoleLineType.Comment;
+        this.highlight = highlight || null;
     }
 
     public toConsoleString(): string {
@@ -332,13 +337,22 @@ export class SourceCodeBlock extends ConsoleLine implements iConsoleLine {
     }
 
     protected _codeHighlight(source: string): string {
+        // Highlight the text
+        if (this.highlight !== null) {
+            const regex = new RegExp(`(${this.highlight})`, 'ig');
+            source = source.replace(
+                regex,
+                `${ConsoleColor.Reverse}$1${ConsoleColor.Unreverse}`
+            );
+        }
+        // Color the code
         source = source
             .replace(/ ([a-z-]+)=/ig, ` ${ConsoleColor.FgMagenta}$1${this.color}=`)
             .replace(/="([^"]+)"/ig, `="${ConsoleColor.FgGreen}$1${this.color}"`)
             .replace(/='([^']+)"/ig, `='${ConsoleColor.FgGreen}$1${this.color}'`)
             .replace(/<([a-z-]+) /ig, `<${ConsoleColor.FgYellow}$1${this.color} `)
             .replace(/<(\/[a-z-]+)>/ig, `<${ConsoleColor.FgYellow}$1${this.color}>`);
-
+        // Donezo
         return source;
     }
 

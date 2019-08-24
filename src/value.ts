@@ -32,6 +32,7 @@ export abstract class ProtoValue  implements iValue{
     protected _context: AssertionContext;
     protected _name: string | null;
     protected _source: any;
+    protected _highlight: string;
 
     public get $(): any {
         return this._input;
@@ -41,11 +42,16 @@ export abstract class ProtoValue  implements iValue{
         return this._name || 'it';
     }
 
-    constructor(input: any, context: AssertionContext, name?: string, source?: any) {
+    public get highlight(): string {
+        return this._highlight;
+    }
+
+    constructor(input: any, context: AssertionContext, name?: string, source: any = null, highlight: string = '') {
         this._input = input;
         this._context = context;
         this._name = name || null;
         this._source = source;
+        this._highlight = highlight;
     }
 
     public async getSourceCode(): Promise<string> {
@@ -160,8 +166,8 @@ export abstract class ProtoValue  implements iValue{
         );
     }
 
-    protected _wrapAsValue(data: any, name: string, source?: any): Value {
-        return new Value(data, this._context, name, source);
+    protected _wrapAsValue(data: any, name: string, source?: any, highlight?: string): Value {
+        return new Value(data, this._context, name, source, highlight);
     }
 
 }
