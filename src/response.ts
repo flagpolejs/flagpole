@@ -10,8 +10,8 @@ import { iValue } from '.';
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
  */
 export interface iResponse {
-    type: ResponseType,
-    typeName: string,
+    responseType: ResponseType,
+    responseTypeName: string,
     statusCode: Value,
     statusMessage: Value,
     body: Value,
@@ -42,8 +42,8 @@ export interface iResponse {
     waitForVisible(selector: string, timeout: number): Promise<iValue | null>
     waitForExists(selector: string, timeout?: number): Promise<iValue | null>
     screenshot(opts: any): Promise<Buffer | string>
-    clearValue(selector: string): Promise<any>
-    typeText(selector: string, textToType: string, opts: any): Promise<any>
+    clear(selector: string): Promise<any>
+    type(selector: string, textToType: string, opts: any): Promise<any>
     selectOption(selector: string, value: string | string[]): Promise<string[]>
     readonly scenario: Scenario
 }
@@ -67,8 +67,8 @@ export abstract class ProtoResponse implements iResponse {
 
     private _httpResponse: HttpResponse = HttpResponse.createEmpty();
 
-    abstract get type(): ResponseType;
-    abstract get typeName(): string;
+    abstract get responseType(): ResponseType;
+    abstract get responseTypeName(): string;
     abstract find(path: string): Promise<any | null>;
     abstract findAll(path: string): Promise<any[]>;
     abstract evaluate(context: any, callback: Function): Promise<any>;
@@ -248,27 +248,27 @@ export abstract class ProtoResponse implements iResponse {
     }
 
     public async screenshot(opts: any): Promise<Buffer | string> {
-        throw new Error(`This scenario type (${this.typeName}) does not support screenshots.`);
+        throw new Error(`This scenario type (${this.responseTypeName}) does not support screenshots.`);
     }
 
-    public async typeText(selector: string, textToType: string, opts: any = {}): Promise<any> {
-        throw new Error(`This scenario type (${this.typeName}) does not support clearValue.`);
+    public async type(selector: string, textToType: string, opts: any = {}): Promise<any> {
+        throw new Error(`This scenario type (${this.responseTypeName}) does not support type.`);
     }
 
-    public async clearValue(selector: string): Promise<any> {
-        throw new Error(`This scenario type (${this.typeName}) does not support clearValue.`);
+    public async clear(selector: string): Promise<any> {
+        throw new Error(`This scenario type (${this.responseTypeName}) does not support clear.`);
     }
 
     public async findHavingText(selector: string, searchForText: string | RegExp): Promise<iValue | null> {
-        throw new Error(`This scenario type (${this.typeName}) does not support findHavingText.`);
+        throw new Error(`This scenario type (${this.responseTypeName}) does not support findHavingText.`);
     }
 
     public async findAllHavingText(selector: string, searchForText: string | RegExp): Promise<iValue[]> {
-        throw new Error(`This scenario type (${this.typeName}) does not support findAllHavingText.`);
+        throw new Error(`This scenario type (${this.responseTypeName}) does not support findAllHavingText.`);
     }
 
     public async selectOption(selector: string, value: string | string[]): Promise<string[]> {
-        throw new Error(`This scenario type (${this.typeName}) does not support selectOption.`);
+        throw new Error(`This scenario type (${this.responseTypeName}) does not support selectOption.`);
     }
     
     protected _wrapAsValue(data: any, name: string, source?: any): Value {

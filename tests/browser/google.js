@@ -1,8 +1,7 @@
 const Flagpole = require('../../dist/index.js').Flagpole;
 
 const suite = Flagpole.Suite('Test Google Search')
-    .base('https://www.google.com/')
-    .finally(suite => suite.print());
+    .base('https://www.google.com/');
 
 const browserOpts = {
     headless: false,

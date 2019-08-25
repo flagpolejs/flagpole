@@ -77,6 +77,7 @@ const runSuites = async (selectedSuites: SuiteConfig[]): Promise<void> => {
             );
             stateIndex = (stateIndex < states.length - 1) ? stateIndex + 1 : 0;
         }, 100);
+        
 
         runner.subscribe((message: string) => {
             statusMessage = message;

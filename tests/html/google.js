@@ -9,8 +9,8 @@ const homepage = suite.html('Homepage').open('/')
         context.assert(context.response.header('content-type')).contains('text/html');
         context.assert('hello').length.equals(5);
         context.assert(5).type.equals('number');
+        context.assert('foo');
     })
-
     .next(async (context) => {
         const submitButton = await context.find('input[type="submit"]');
         context.comment(submitButton);
@@ -44,7 +44,7 @@ const homepage = suite.html('Homepage').open('/')
         context.assert(input).exists()
         const value = await input.getValue();
         context.assert(value).equals('milesplit');
-        form.submit('Submit form and check results page', async function () {
+        form.submit('Submit form and check results page', async (context) => {
             const searchInputBox = await context.find('input[name="q"]');
             context.assert('Search input box should have the value we typed', await searchInputBox.getValue())
                 .equals('milesplit');

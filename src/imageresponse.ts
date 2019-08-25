@@ -39,11 +39,11 @@ export class ImageResponse extends ProtoResponse implements iResponse {
         return this._wrapAsValue(new URL(this.imageProperties.url).pathname, 'URL Path of Image');
     }
 
-    public get type(): ResponseType {
+    public get responseType(): ResponseType {
         return ResponseType.image;
     }
 
-    public get typeName(): string {
+    public get responseTypeName(): string {
         return 'Image';
     }
 

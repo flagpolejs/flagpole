@@ -1,6 +1,6 @@
 import { Flagpole } from '..';
 import { iLogItem, LogItem, LogItemType } from './logitem';
-import { iConsoleLine, PassLine, OptionalFailLine, FailLine, DetailLine, SourceCodeBlock } from './consoleline';
+import { iConsoleLine, PassLine, OptionalFailLine, FailLine, DetailLine, SourceCodeBlock, WarningLine } from './consoleline';
 
 export abstract class AssertionResult extends LogItem implements iLogItem {
 
@@ -101,6 +101,20 @@ export class AssertionFailOptional extends AssertionFail implements iLogItem {
 
     public toConsole(): iConsoleLine[] {
         return [new OptionalFailLine(this.message)];
+    }
+
+}
+
+export class AssertionFailWarning extends AssertionFail implements iLogItem {
+
+    public readonly className: string = 'failWarning';
+
+    public get isOptional(): boolean {
+        return true;
+    }
+
+    public toConsole(): iConsoleLine[] {
+        return [new WarningLine(this.message)];
     }
 
 }

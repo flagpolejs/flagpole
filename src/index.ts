@@ -22,7 +22,12 @@ import { Value, iValue } from "./value";
 import { VideoResponse } from "./videoresponse";
 import { FlagpoleExecutionOptions, FlagpoleOutput } from './flagpoleexecutionoptions';
 import { Flagpole } from "./flagpole";
+import * as Promise from "bluebird";
 
+// Have Bluebird replace default promises
+global.Promise = Promise
+
+// Consume arguments
 Flagpole.executionOpts = FlagpoleExecutionOptions.createWithArgs(process.argv);
 
 export {

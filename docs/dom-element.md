@@ -2,7 +2,42 @@
 
 This object contains elements within the DOM for Puppeteer browser scenarios or Cheerio HTML scenarios. You typically get this element by way of `context.find('css selector path')` from the AssertionContext.
 
+This class is extended more specifically by other classes:
+
+* PuppeteerElement
+* BrowserElement
+* ExtJsComponent
+
 ## Methods
+
+### clear(): Promise<void>
+
+Clear any text input into this form. This will not have any effect if the element is not a form text input.
+
+```javascript
+const textBox = await context.find('input[name="title"]');
+await textBox.clear();
+```
+
+### clearThenType(textToType: string, opts: any): Promise<void>
+
+Literally calls clear() and then type() methods. So just a shorthand to clear out the exiting text first before typing.
+
+### fillForm(data: { [key: string]: any }): Promise<Value>
+
+Fill out a form element with this data. The data object should match the input/select name attributes of elements within the form. For multi-select inputs pass in an array of values to be checked.
+
+If this element is not a form, the method will error.
+
+```javascript
+const form = await context.find('form');
+await form.fillForm({
+    firstName: 'Charlie',
+    lastName: 'Ward',
+    position: 'QB',
+    team: 'FSU'
+})
+```
 
 ### getClassName(): Promise<Value>
 
@@ -106,6 +141,24 @@ Does this element have a property by this name?
 
 ```javascript
 context.assert(await input.hasProperty('readonly')).equals(true);
+```
+
+### type(textToType: string, opts: any): Promise<void>
+
+Type this text into an text input. This will not have any effect if the element is not a form text input.
+
+If there is existing text already in the field it will append to it.
+
+```javascript
+const textBox = await context.find('input[name="title"]');
+await textBox.type('College Football is Back');
+```
+
+The opts is only relevant to browser types, like Puppeteer, it will pass the value on to do things like add delay between keypresses.
+
+```javascript
+const textBox = await context.find('input[name="title"]');
+await textBox.type('College Football is Back', { delay: 100 });
 ```
 
 ## Properties 

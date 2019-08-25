@@ -86,6 +86,14 @@ export class Assertion {
         return this._finishedPromise;
     }
 
+    public get assertionMade(): boolean {
+        return (this._assertionMade || this._finishedPromise.isResolved());
+    }
+
+    public get name(): string {
+        return this._message || String(this._input);
+    }
+
     private _context: AssertionContext;
     private _ajv: any;
     private _input: any;
@@ -96,6 +104,7 @@ export class Assertion {
     private _finishedPromise: Promise<AssertionResult | null>;
     private _finishedResolver: Function = () => { };
     private _statement: boolean | null = null;
+    private _assertionMade: boolean = false;
 
     public static async create(context: AssertionContext, thisValue: any, message?: string): Promise<Assertion> {
         return new Assertion(context, thisValue, message);
@@ -353,12 +362,13 @@ export class Assertion {
 
     public resolves(continueOnReject: boolean = false): Promise<Assertion> {
         const assertion: Assertion = this;
+        const thisValue = this._getCompareValue(this._input);
         return new Promise((resolve, reject) => {
             const result = (bool: boolean) => {
                 this._assert(
                     this._eval(bool),
                     this._not ?
-                        `${this._getSubject()} was not resolve` :
+                        `${this._getSubject()} was not resolved` :
                         `${this._getSubject()} was resolved`,
                     bool
                 );
@@ -369,8 +379,8 @@ export class Assertion {
                     continueOnReject ? resolve(assertion) : reject();
                 }
             }
-            if (Flagpole.toType(this._input) == 'promise') {
-                this._input
+            if (Flagpole.toType(thisValue) == 'promise') {
+                (thisValue as Promise<any>)
                     .then(() => { result(true) })
                     .catch(() => { result(false) });
             }
@@ -382,6 +392,7 @@ export class Assertion {
 
     public rejects(continueOnReject: boolean = false): Promise<any> {
         const assertion: Assertion = this;
+        const thisValue = this._getCompareValue(this._input);
         return new Promise((resolve, reject) => {
             const result = (bool: boolean) => {
                 this._assert(
@@ -398,8 +409,8 @@ export class Assertion {
                     continueOnReject ? resolve(assertion) : reject();
                 }
             }
-            if (Flagpole.toType(this._input) == 'promise') {
-                this._input
+            if (Flagpole.toType(thisValue) == 'promise') {
+                (thisValue as Promise<any>)
                     .then(() => { result(false) })
                     .catch(() => { result(true) });
             }
@@ -535,6 +546,7 @@ export class Assertion {
     }
 
     private _getCompareValue(value: any): any {
+        this._assertionMade = true;
         if (Flagpole.toType(value) == 'value') {
             return value.$;
         }

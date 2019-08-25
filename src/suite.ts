@@ -3,7 +3,6 @@ import { ResponseType } from "./response";
 import { Scenario } from "./scenario";
 import { URL } from 'url';
 import { FlagpoleReport } from './logging/flagpolereport';
-import * as Bluebird from "bluebird";
 
 export enum SuiteStatusEvent {
     beforeAllExecute,
@@ -437,7 +436,7 @@ export class Suite {
         const suite: Suite = this;
         this._timeSuiteExecuted = Date.now();
         return new Promise((resolve, reject) => {
-            Bluebird.mapSeries(this._beforeAllCallbacks, (_then) => {
+            Promise.mapSeries(this._beforeAllCallbacks, (_then) => {
                 return _then(suite);
             }).then(() => {
                 this._publish(SuiteStatusEvent.beforeAllExecute);
@@ -453,7 +452,7 @@ export class Suite {
         const suite: Suite = this;
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Bluebird.mapSeries(this._beforeEachCallbacks, (_then) => {
+            Promise.mapSeries(this._beforeEachCallbacks, (_then) => {
                 return _then.apply(suite, [scenario]);
             }).then(() => {
                 this._publish(SuiteStatusEvent.beforeEachExecute);
@@ -468,7 +467,7 @@ export class Suite {
         const suite: Suite = this;
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Bluebird.mapSeries(this._afterEachCallbacks, (_then) => {
+            Promise.mapSeries(this._afterEachCallbacks, (_then) => {
                 return _then.apply(suite, [scenario]);
             }).then(() => {
                 this._publish(SuiteStatusEvent.afterEachExecute);
@@ -484,7 +483,7 @@ export class Suite {
         this._timeSuiteFinished = Date.now();
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Bluebird.mapSeries(this._afterAllCallbacks, (_then) => {
+            Promise.mapSeries(this._afterAllCallbacks, (_then) => {
                 return _then.apply(suite, [suite]);
             }).then(() => {
                 this._publish(SuiteStatusEvent.afterAllExecute);
@@ -499,7 +498,7 @@ export class Suite {
         const suite: Suite = this;
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Bluebird.mapSeries(this._successCallbacks, (_then) => {
+            Promise.mapSeries(this._successCallbacks, (_then) => {
                 return _then.apply(suite, [suite]);
             }).then(() => {
                 resolve();
@@ -513,7 +512,7 @@ export class Suite {
         const suite: Suite = this;
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Bluebird.mapSeries(this._failureCallbacks, (_then) => {
+            Promise.mapSeries(this._failureCallbacks, (_then) => {
                 return _then.apply(suite, [suite]);
             }).then(() => {
                 resolve();
@@ -527,7 +526,7 @@ export class Suite {
         const suite: Suite = this;
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Bluebird.mapSeries(this._errorCallbacks, (_then) => {
+            Promise.mapSeries(this._errorCallbacks, (_then) => {
                 return _then.apply(suite, [errorMessage]);
             }).then(() => {
                 resolve();
@@ -540,7 +539,7 @@ export class Suite {
     private _fireFinally(): Promise<void> {
         const suite: Suite = this;
         return new Promise((resolve, reject) => {
-            Bluebird.mapSeries(this._finallyCallbacks, (_then) => {
+            Promise.mapSeries(this._finallyCallbacks, (_then) => {
                 return _then.apply(suite, [suite]);
             }).then(() => {
                 this._publish(SuiteStatusEvent.finished);

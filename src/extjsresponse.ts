@@ -4,11 +4,11 @@ import { Scenario, iResponse, ResponseType, AssertionContext  } from '.';
 
 export class ExtJSResponse extends PuppeteerResponse implements iResponse {
 
-    public get typeName(): string {
+    public get responseTypeName(): string {
         return 'ExtJS';
     }
 
-    public get type(): ResponseType {
+    public get responseType(): ResponseType {
         return ResponseType.extjs;
     }
 
@@ -96,7 +96,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
         return super.waitForReady(timeout);
     }
 
-    public async typeText(selector: string, textToType: string, opts: any = {}): Promise<any> {
+    public async type(selector: string, textToType: string, opts: any = {}): Promise<any> {
         if (this.page !== null) {
             const component: ExtJsComponent | null = await this.find(selector);
             if (component !== null) {
@@ -111,7 +111,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
         throw new Error(`Can not type into element ${selector}`);
     }
 
-    public async clearValue(selector: string): Promise<any> {
+    public async clear(selector: string): Promise<any> {
         if (this.page !== null) {
             const component: ExtJsComponent | null = await this.find(selector);
             if (component !== null) {

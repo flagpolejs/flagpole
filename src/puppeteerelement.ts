@@ -94,6 +94,26 @@ export class PuppeteerElement extends DOMElement implements iValue {
         return this._wrapAsValue(await handle.jsonValue(), name, this);
     }
 
+    public async clearThenType(textToType: string, opts: any = {}): Promise<void> {
+        await this.clear();
+        await this.type(textToType, opts);
+    }
+
+    public async type(textToType: string, opts: any = {}): Promise<void> {
+        if (this._context.page == null) {
+            throw new Error('Page is null.');
+        }
+        await (this._input as ElementHandle).type(textToType, opts);
+    }
+
+    public async clear(): Promise<void> {
+        if (this._context.page == null) {
+            throw new Error('Page is null.');
+        }
+        await (this._input as ElementHandle).click({ clickCount: 3 });
+        await this._context.page.keyboard.press('Backspace');
+    }
+
     public async fillForm(formData: any): Promise<any> {
         const element: PuppeteerElement = this;
         const isForm: boolean = await this._isFormTag();

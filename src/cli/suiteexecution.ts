@@ -149,9 +149,28 @@ export class SuiteExecution {
 
 export class SuiteExecutionInline extends SuiteExecution {
 
+    public static executePath(filePath: string, opts: FlagpoleExecutionOptions): SuiteExecutionInline {
+        const execution: SuiteExecutionInline = new SuiteExecutionInline();
+        execution.executePath(filePath, opts);
+        return execution;
+    }
+
+    public static executeSuite(config: SuiteConfig): SuiteExecutionInline {
+        const execution: SuiteExecutionInline = new SuiteExecutionInline();
+        execution.executeSuite(config);
+        return execution;
+    }
+
     protected async _execute(filePath: string, opts: FlagpoleExecutionOptions): Promise<SuiteExecutionResult> {
         // Start with success
         let exitCode: number = SuiteExecutionExitCode.success;
+        // Override the automatically print value
+        opts = Object.assign({}, opts);
+        opts.automaticallyPrintToConsole = false;
+        // Save current global output options
+        const globalOpts = Object.assign({}, Flagpole.executionOpts);
+        // Set it to our temporary opts
+        Flagpole.executionOpts = opts;
         // How many suites do we have now?
         const preSuiteCount: number = Flagpole.suites.length;
         // Embed the suite file... it should add at least one suite
@@ -178,6 +197,7 @@ export class SuiteExecutionInline extends SuiteExecution {
                 this._logLine(await report.toString());
             });
         }
+        Flagpole.executionOpts = globalOpts;
         return new SuiteExecutionResult(this._output, exitCode);
     }
 

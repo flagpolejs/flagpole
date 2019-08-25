@@ -261,7 +261,7 @@ export class OptionalFailLine extends ConsoleLine implements iConsoleLine {
         super(message);
         this.color = ConsoleColor.FgMagenta;
         this.type = ConsoleLineType.Comment;
-        this.textSuffix = '[Optional]'
+        this.textSuffix = '[Optional]';
     }
 
     public toConsoleString(): string {
@@ -279,12 +279,23 @@ export class OptionalFailLine extends ConsoleLine implements iConsoleLine {
 
 export class WarningLine extends ConsoleLine implements iConsoleLine {
 
-    public textPrefix: string = '  !   Warning: ';
+    public textPrefix: string = '!';
 
     constructor(message: string) {
         super(message);
-        this.color = ConsoleColor.FgBrightYellow;
+        this.color = ConsoleColor.FgMagenta;
         this.type = ConsoleLineType.Comment;
+    }
+
+    public toConsoleString(): string {
+        return oneLine`
+            ${ConsoleColor.Reset} 
+            ${ConsoleColor.BgMagenta}${ConsoleColor.FgWhite}
+            ${this.textPrefix}
+            ${ConsoleColor.Reset}
+            ${this.message}
+            ${ConsoleColor.Reset}
+        `;
     }
 
 }

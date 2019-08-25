@@ -8,11 +8,11 @@ export class JsonResponse extends ProtoResponse implements iResponse {
     protected _json: {} = {};
     protected _jPath: iJPath | undefined;
 
-    public get typeName(): string {
+    public get responseTypeName(): string {
         return 'JSON';
     }
 
-    public get type(): ResponseType {
+    public get responseType(): ResponseType {
         return ResponseType.json;
     }
 

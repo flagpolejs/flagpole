@@ -5,11 +5,11 @@ import { ProtoResponse, HttpResponse } from '.';
 
 export class ScriptResponse extends ProtoResponse implements iResponse {
 
-    public get typeName(): string {
+    public get responseTypeName(): string {
         return 'Script';
     }
 
-    public get type(): ResponseType {
+    public get responseType(): ResponseType {
         return ResponseType.script;
     }
 

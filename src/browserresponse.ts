@@ -5,11 +5,11 @@ import { PuppeteerElement } from './puppeteerelement';
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
  
-    public get typeName(): string {
+    public get responseTypeName(): string {
         return 'Browser';
     }
 
-    public get type(): ResponseType {
+    public get responseType(): ResponseType {
         return ResponseType.browser;
     }
 

@@ -12,7 +12,7 @@
     - [AssertionSchema](assertion-schema.md)
     - [CSSRule](css-rule.md)
     - [DOMElement](dom-element.md)
-    - [GenericResponse](generic-response.md)
+    - [ProtoResponse](proto-response.md)
     - [Scenario](scenario.md)
     - [Suite](suite.md)
     - [Value](value.md)

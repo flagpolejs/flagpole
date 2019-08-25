@@ -162,14 +162,14 @@ export abstract class PuppeteerResponse extends DOMResponse implements iResponse
         throw new Error(`No page found, so can't take a screenshot.`);
     }
 
-    public async typeText(selector: string, textToType: string, opts: any = {}): Promise<any> {
+    public async type(selector: string, textToType: string, opts: any = {}): Promise<any> {
         if (this.page !== null) {
             return await this.page.type(selector, textToType, opts);
         }
         throw new Error(`Can not type into element ${selector}`);
     }
 
-    public async clearValue(selector: string): Promise<any> {
+    public async clear(selector: string): Promise<any> {
         if (this.page !== null) {
             const input: ElementHandle<Element> | null = await this.page.$(selector);
             if (input !== null) {

@@ -4,17 +4,17 @@ import { HttpResponse } from './httpresponse';
 
 export class ResourceResponse extends ProtoResponse implements iResponse {
 
-    public get type(): ResponseType {
+    public get responseType(): ResponseType {
         return ResponseType.resource;
+    }
+
+    public get responseTypeName(): string {
+        return 'Resource';
     }
 
     public init(httpResponse: HttpResponse) {
         super.init(httpResponse);
         this.context.assert(this.statusCode).between(200, 299);
-    }
-
-    public get typeName(): string {
-        return 'Resource';
     }
 
     public async evaluate(context: any, callback: Function): Promise<any> {

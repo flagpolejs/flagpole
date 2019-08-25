@@ -2,17 +2,17 @@ import { Suite } from "./suite";
 import { ResponseType, iResponse } from "./response";
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
-import * as Bluebird from "bluebird";
 import * as r from "request";
 import { createResponse } from './responsefactory';
 import { AssertionContext } from './assertioncontext';
-import { AssertionResult, AssertionPass, AssertionFail } from './logging/assertionresult';
+import { AssertionResult, AssertionPass, AssertionFail, AssertionFailWarning } from './logging/assertionresult';
 import { HttpResponse } from './httpresponse';
 import { ResourceResponse } from './resourceresponse';
 import { iLogItem, LogItemType } from './logging/logitem';
 import { LogScenarioSubHeading } from './logging/heading';
 import { LogComment } from './logging/comment';
 import { LogCollection } from './logging/logcollection';
+import { Assertion } from '.';
 
 const request = require('request');
 const probeImage = require('probe-image-size');
@@ -590,22 +590,26 @@ export class Scenario {
     protected _processResponse(httpResponse: HttpResponse) {
         this._response.init(httpResponse);
         const scenario: Scenario = this;
-        const context: AssertionContext = new AssertionContext(scenario, this._response);
         this._timeRequestLoaded = Date.now();
-        this.result(new AssertionPass('Loaded ' + this._response.typeName + ' ' + this._url));
+        this.result(new AssertionPass('Loaded ' + this._response.responseTypeName + ' ' + this._url));
         let lastReturnValue: any = null;
         // Execute all the assertion callbacks one by one
         this._publish(ScenarioStatusEvent.executionProgress);
-        Bluebird.mapSeries(scenario._nextCallbacks, (_then, index) => {
+        Promise.mapSeries(scenario._nextCallbacks, (_then, index) => {
+            const context: AssertionContext = new AssertionContext(scenario, this._response);
             const comment: string | null = scenario._nextMessages[index];
             comment !== null && this.comment(comment)
             context.result = lastReturnValue;
             lastReturnValue = _then.apply(context, [context]);
+            // Warn about any incomplete assertions
+            context.incompleteAssertions.forEach((assertion: Assertion) => {
+                this.result(new AssertionFailWarning(`Incomplete assertion: ${assertion.name}`, assertion));
+            })
             // Don't continue until last value and all assertions resolve
             return Promise.all([
                 lastReturnValue,
                 context.assertionsResolved
-            ]);
+            ]).timeout(30000);
         }).then(() => {
             scenario._markScenarioCompleted();
         }).catch((err) => {
@@ -799,7 +803,7 @@ export class Scenario {
         this._timeScenarioExecuted = Date.now();
         return new Promise(async function (resolve, reject) {
             // Do all of the befores first, so they can do setup, and then actually execute
-            Bluebird.mapSeries(scenario._beforeCallbacks, (_then, index) => {
+            Promise.mapSeries(scenario._beforeCallbacks, (_then, index) => {
                 return _then.apply(scenario, [scenario]);
             }).then(() => {
                 // Then do notifications
@@ -819,7 +823,7 @@ export class Scenario {
         this._timeScenarioFinished = Date.now();
         return new Promise((resolve, reject) => {
             // Do all of the afters first, so they can tear down, and then mark it as finished
-            Bluebird.mapSeries(this._afterCallbacks, (_then, index) => {
+            Promise.mapSeries(this._afterCallbacks, (_then, index) => {
                 return _then.apply(scenario, [scenario]);
             }).then(() => {
                 this._publish(ScenarioStatusEvent.afterExecute);
@@ -834,7 +838,7 @@ export class Scenario {
         const scenario = this;
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Bluebird.mapSeries(this._successCallbacks, (_then, index) => {
+            Promise.mapSeries(this._successCallbacks, (_then, index) => {
                 return _then.apply(scenario, [scenario]);
             }).then(() => {
                 this._publish(ScenarioStatusEvent.finished);
@@ -849,7 +853,7 @@ export class Scenario {
         const scenario = this;
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Bluebird.mapSeries(this._failureCallbacks, (_then, index) => {
+            Promise.mapSeries(this._failureCallbacks, (_then, index) => {
                 return _then.apply(scenario, [scenario]);
             }).then(() => {
                 this._publish(ScenarioStatusEvent.finished);
@@ -864,7 +868,7 @@ export class Scenario {
         const scenario = this;
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Bluebird.mapSeries(this._errorCallbacks, (_then) => {
+            Promise.mapSeries(this._errorCallbacks, (_then) => {
                 return _then.apply(scenario, [error, scenario]);
             }).then(() => {
                 this._publish(ScenarioStatusEvent.finished);
@@ -879,7 +883,7 @@ export class Scenario {
         const scenario = this;
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Bluebird.mapSeries(this._finallyCallbacks, (_then, index) => {
+            Promise.mapSeries(this._finallyCallbacks, (_then, index) => {
                 return _then.apply(scenario, [scenario]);
             }).then(() => {
                 this._onCompletedCallback(scenario);

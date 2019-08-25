@@ -6,6 +6,7 @@ import { Page } from 'puppeteer';
 import { Assertion } from './assertion';
 import { DOMElement } from './domelement';
 import { Flagpole, iValue, AssertionResult } from '.';
+import { AssertionFailOptional } from './logging/assertionresult';
 
 export class AssertionContext {
 
@@ -43,10 +44,22 @@ export class AssertionContext {
             null;
     }
 
+    public get incompleteAssertions(): Assertion[] {
+        const incompleteAssertions: Assertion[] = [];
+        this._assertions.forEach((assertion) => {
+            if (!assertion.assertionMade) {
+                incompleteAssertions.push(assertion);
+            }
+        });
+        return incompleteAssertions;
+    }
+
     public get assertionsResolved(): Promise<(AssertionResult | null)[]> {
         const promises: Promise<AssertionResult | null>[] = [];
         this._assertions.forEach((assertion) => {
-            promises.push(assertion.result)
+            if (assertion.assertionMade) {
+                promises.push(assertion.result);
+            }
         });
         return Promise.all(promises);
     }
@@ -133,11 +146,11 @@ export class AssertionContext {
      * @param selector
      */
     public async clear(selector: string): Promise<any> {
-        return this.response.clearValue(selector);
+        return this.response.clear(selector);
     }
 
     public async type(selector: string, textToType: string, opts: any = {}): Promise<any> {
-        return this.response.typeText(selector, textToType, opts);
+        return this.response.type(selector, textToType, opts);
     }
 
     /**

@@ -8,11 +8,11 @@ export class CssResponse extends ProtoResponse implements iResponse {
 
     protected css: any;
 
-    public get typeName(): string {
+    public get responseTypeName(): string {
         return 'Stylesheet';
     }
 
-    public get type(): ResponseType {
+    public get responseType(): ResponseType {
         return ResponseType.stylesheet;
     }
 

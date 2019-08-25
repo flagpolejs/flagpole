@@ -1,4 +1,4 @@
-# GenericResponse
+# ProtoResponse
 
 This is actually an abtract class, which is extended by the specific response object of each scenario type. But there are a number of common properties and methods.
 

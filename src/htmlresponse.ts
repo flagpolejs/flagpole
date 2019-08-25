@@ -8,11 +8,11 @@ let $: CheerioStatic;
 
 export class HtmlResponse extends DOMResponse implements iResponse {
 
-    public get typeName(): string {
+    public get responseTypeName(): string {
         return 'HTML';
     }
 
-    public get type(): ResponseType {
+    public get responseType(): ResponseType {
         return ResponseType.html;
     }
 
@@ -72,14 +72,14 @@ export class HtmlResponse extends DOMResponse implements iResponse {
         return this.find(selector);
     }
 
-    public async typeText(selector: string, textToType: string, opts: any = {}): Promise<any> {
+    public async type(selector: string, textToType: string, opts: any = {}): Promise<any> {
         return await this.evaluate(this, function ($) {
             let currentValue = $(selector).val();
             $(selector).val(currentValue + textToType);
         });
     }
 
-    public async clearValue(selector: string): Promise<any> {
+    public async clear(selector: string): Promise<any> {
         return await this.evaluate(this, function ($: Cheerio) {
             $.find(selector).val('');
         });

@@ -4,11 +4,11 @@ import { ProtoResponse, HttpResponse } from '.';
 
 export class VideoResponse extends ProtoResponse implements iResponse {
 
-    public get typeName(): string {
+    public get responseTypeName(): string {
         return 'Video';
     }
 
-    public get type(): ResponseType {
+    public get responseType(): ResponseType {
         return ResponseType.video;
     }
 

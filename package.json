@@ -54,6 +54,7 @@
   ],
   "devDependencies": {
     "@types/bluebird": "^3.5.26",
+    "@types/bluebird-global": "^3.5.12",
     "@types/cheerio": "^0.22.11",
     "@types/inquirer": "0.0.43",
     "@types/puppeteer": "^1.12.2",
