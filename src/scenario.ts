@@ -9,7 +9,7 @@ import { AssertionResult, AssertionPass, AssertionFail, AssertionFailWarning } f
 import { HttpResponse } from './httpresponse';
 import { ResourceResponse } from './resourceresponse';
 import { iLogItem, LogItemType } from './logging/logitem';
-import { LogScenarioSubHeading } from './logging/heading';
+import { LogScenarioSubHeading, LogScenarioHeading } from './logging/heading';
 import { LogComment } from './logging/comment';
 import { LogCollection } from './logging/logcollection';
 import { Assertion } from '.';
@@ -370,13 +370,6 @@ export class Scenario {
     }
 
     /**
-     * Add a subheading log message to buffer
-     */
-    public subheading(message: string): Scenario {
-        return this._pushToLog(new LogScenarioSubHeading(message));
-    }
-
-    /**
      * Add a neutral line to the output
      */
     public comment(message: string): Scenario {
@@ -468,7 +461,9 @@ export class Scenario {
     public async execute(): Promise<Scenario> {
         if (!this.hasExecuted && this._url !== null) {
             await this._fireBefore();
-            this.subheading(this.title);
+            this._pushToLog(
+                new LogScenarioHeading(this.title)
+            );
             // If we waited first
             if (this._waitToExecute) {
                 this.comment(`Waited ${this.executionDuration}ms`);
@@ -598,7 +593,11 @@ export class Scenario {
         Promise.mapSeries(scenario._nextCallbacks, (_then, index) => {
             const context: AssertionContext = new AssertionContext(scenario, this._response);
             const comment: string | null = scenario._nextMessages[index];
-            comment !== null && this.comment(comment)
+            if (comment !== null) {
+                this._pushToLog(
+                    new LogScenarioSubHeading(comment)
+                );
+            }
             context.result = lastReturnValue;
             lastReturnValue = _then.apply(context, [context]);
             // Warn about any incomplete assertions

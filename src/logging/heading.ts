@@ -1,4 +1,5 @@
 import { LogItem, LogItemType } from './logitem';
+import { iConsoleLine, SubheadingLine, SectionHeadingLine } from './consoleline';
 
 
 export class LogSuiteHeading extends LogItem {
@@ -22,6 +23,10 @@ export class LogScenarioHeading extends LogSuiteHeading {
         `;
     }
 
+    public toConsole(): iConsoleLine[] {
+        return [new SubheadingLine(this.message)];
+    }
+
 }
 
 export class LogScenarioSubHeading extends LogSuiteHeading {
@@ -32,6 +37,10 @@ export class LogScenarioSubHeading extends LogSuiteHeading {
                 <strong>${this.message}</strong>
             </li>
         `;
+    }
+
+    public toConsole(): iConsoleLine[] {
+        return [new SectionHeadingLine(this.message)];
     }
 
 }

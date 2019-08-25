@@ -12,7 +12,9 @@ const homepage = suite.html('Homepage').open('/')
         context.assert('foo');
     })
     .next(async (context) => {
+        context.assert('bar');
         const submitButton = await context.find('input[type="submit"]');
+        context.assert('sadfa');
         context.comment(submitButton);
         context.assert(await submitButton.getAttribute('value'))
             .in(["Google Search", "Search"]);

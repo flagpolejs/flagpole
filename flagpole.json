@@ -42,6 +42,10 @@
     "api/itunes": {
       "name": "api/itunes",
       "tags": []
+    },
+    "browser/milesplit": {
+      "name": "browser/milesplit",
+      "tags": []
     }
   }
 }

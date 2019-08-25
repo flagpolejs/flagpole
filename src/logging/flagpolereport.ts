@@ -1,9 +1,9 @@
 import { Suite } from "../suite";
-import { iConsoleLine, HeadingLine, CommentLine, LineBreak, CustomLine, ConsoleColor, HorizontalRule, PassLine, FailLine } from "./consoleline";
+import { iConsoleLine, HeadingLine, CommentLine, LineBreak, PassLine, FailLine } from "./consoleline";
 import { Flagpole } from '..';
 import { Scenario } from '../scenario';
 import { FlagpoleOutput, FlagpoleExecutionOptions } from '../flagpoleexecutionoptions';
-import { iLogItem, LogItemType, LogItem } from './logitem';
+import { iLogItem, LogItemType } from './logitem';
 import { LogComment } from './comment';
 
 export class FlagpoleReport {

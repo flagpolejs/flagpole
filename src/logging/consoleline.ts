@@ -129,38 +129,29 @@ export class SubheadingLine extends ConsoleLine implements iConsoleLine {
 
     constructor(message: string) {
         super(message);
-        this.color = ConsoleColor.FgWhite;
+        this.color = ConsoleColor.FgYellow;
         this.type = ConsoleLineType.Subheading;
     }
 
+    public toString(): string {
+        let text: string = super.toString().trim();
+        let padLength: number = Math.ceil((ConsoleLine.targetLineLength - text.length) / 2);
+        return ` ${this.color}${ConsoleColor.Underlined}${text}${ConsoleColor.Reset}\n`;
+    }
+
 }
 
-export class DecorationLine extends ConsoleLine implements iConsoleLine {
+export class SectionHeadingLine extends ConsoleLine implements iConsoleLine {
 
     constructor(message: string) {
         super(message);
-        this.color = ConsoleColor.FgYellow;
-        this.type = ConsoleLineType.Decoration;
-    }
-
-}
-
-export class HorizontalRule extends ConsoleLine implements iConsoleLine {
-
-    constructor(message: string = '=') {
-        super(message);
-        this.color = ConsoleColor.FgYellow;
-        this.type = ConsoleLineType.Decoration;
+        this.color = ConsoleColor.FgBrightWhite;
+        this.type = ConsoleLineType.Subheading;
     }
 
     public toString(): string {
-        let text: string = this.message.trim();
-        let reps: number = Math.ceil(ConsoleLine.targetLineLength / text.length);
-        return text.repeat(reps);
-    }
-
-    public toConsoleString(): string {
-        return '';
+        let text: string = super.toString().trim();
+        return `      ${this.color}${text}${ConsoleColor.Reset}`;
     }
 
 }

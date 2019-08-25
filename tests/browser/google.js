@@ -23,9 +23,10 @@ suite.browser('Google Search for Flagpole', browserOpts)
     .next(async context => {
         context.assert(context.response.statusCode).equals(200);
     })
-    .next(async context => {
+    .next('Check Logo', async context => {
         const logo = await context.find('#hplogo');
-        context.assert(await logo.getAttribute('alt')).equals('foo');
+        //context.assert(await logo.getAttribute('alt')).equals('foo');
+        context.assert(await logo.getAttribute('alt')).equals('Google');
     })
     .next('Fill out form', async context => {
         //await context.page.type(paths.queryInput, searchTerm);
@@ -41,11 +42,9 @@ suite.browser('Google Search for Flagpole', browserOpts)
         await form.submit();
         await context.waitForNavigation();
         const results = await context.find(paths.searchResultsItem);
-        await context.assert('Search results found', results).exists();
-        await context.comment(await (await context.find('#searchform')).getClassName());
-        return context.pause(1);
+        context.assert('Search results found', results).exists();
     })
-    .next('see if evalulate works', async context => {
+    .next('See if evalulate works', async context => {
         const divCount = await context.evaluate(function () {
             return document.querySelectorAll('div').length;
         });
