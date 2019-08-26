@@ -3,6 +3,7 @@ import { Link } from './link';
 import { Scenario } from './scenario';
 import { ResponseType } from './response';
 import { AssertionContext } from './assertioncontext';
+import { AssertionActionCompleted, AssertionActionFailed } from './logging/assertionresult';
 
 export class DOMElement extends ProtoValue implements iValue {
 
@@ -190,29 +191,25 @@ export class DOMElement extends ProtoValue implements iValue {
      * 
      * @param formData 
      */
-    public async fillForm(formData: any): Promise<any> {
-        const element: DOMElement = this;
-        const isForm: boolean = await this._isFormTag();
-        if (isForm) {
-            const form: Cheerio = element._input;
-            for (let name in formData) {
-                const value = formData[name];
-                form.find(`[name="${name}"]`).val(value);
-            }
-            return element;
-        }
-        else {
+    public async fillForm(formData: any): Promise<void> {
+        if (!(await this._isFormTag())) {
             throw new Error('This is not a form element.');
         }
+        const form: Cheerio = this._input;
+        for (let name in formData) {
+            const value = formData[name];
+            form.find(`[name="${name}"]`).val(value);
+        }
+        this._completedAction('FILL');
     }
 
     /**
      * If this is a form element, submit the form
      */
-    public async submit(): Promise<any>;
-    public async submit(callback: Function): Promise<any>;
-    public async submit(message: string, callback: Function): Promise<any>;
-    public async submit(a?: string | Function, b?: Function): Promise<any> {
+    public async submit(): Promise<void>;
+    public async submit(callback: Function): Promise<void>;
+    public async submit(message: string, callback: Function): Promise<void>;
+    public async submit(a?: string | Function, b?: Function): Promise<void> {
         if (!this._isFormTag()) {
             throw new Error('You can only use .submit() with a form element.');
         }
@@ -235,21 +232,22 @@ export class DOMElement extends ProtoValue implements iValue {
                 });
                 scenario.setFormData(formData)
             }
-            return await scenario.open(uri);
+            scenario.open(uri);
+            this._completedAction('SUBMIT');
         }
         // Not a valid URL to submit form to
         else {
-            return scenario.skip('Nothing to submit');
+            scenario.skip('Nothing to submit');
         }
     }
 
     /**
      * Click on this element and then load a new page. For HTML/DOM scenarios this creates a new scenario
      */
-    public async click(): Promise<any>;
-    public async click(callback: Function): Promise<any>;
-    public async click(message: string, callback: Function): Promise<any>;
-    public async click(a?: string | Function, b?: Function): Promise<any> {
+    public async click(): Promise<void>;
+    public async click(callback: Function): Promise<void>;
+    public async click(message: string, callback: Function): Promise<void>;
+    public async click(a?: string | Function, b?: Function): Promise<void> {
         const callback: Function = (() => {
             if (typeof b == 'function') {
                 return b;
@@ -262,20 +260,19 @@ export class DOMElement extends ProtoValue implements iValue {
         const message: string = typeof a == 'string' ? a : '';
         // If this is a link tag, treat it the same as load
         if (await this._isLinkTag()) {
-            return await this.load(message, callback);
+            this.load(message, callback);
         }
         // Is this a button?
-        if (await this._isButtonTag()) {
+        else if (await this._isButtonTag()) {
             const type: Value = (await this.getAttribute('type'));
             if (type.isNull() || type.toString().toLowerCase() == 'submit') {
                 // Grab the form and submit it
                 const form = (<Cheerio>this._input).closest('form');
                 const formEl = await DOMElement.create(form, this._context, `Parent form of ${this.name}`, this.path);
-                return await formEl.submit(message, callback);
+                formEl.submit(message, callback);
             }
-            throw Error('This button did not have any action to submit.');
         }
-        throw Error('This is not a clickable element.');
+        this._completedAction('CLICK');
     }
 
     /**
@@ -300,6 +297,7 @@ export class DOMElement extends ProtoValue implements iValue {
         else {
             scenario.skip('Not a navigational link');
         }
+        this._completedAction('LOAD');
         return scenario;
     }
 
@@ -463,6 +461,18 @@ export class DOMElement extends ProtoValue implements iValue {
     protected async _getAttribute(key: string): Promise<string | null> {
         return (typeof this._input.get(0).attribs[key] !== 'undefined') ?
             this._input.get(0).attribs[key] : null;
+    }
+
+    protected async _completedAction(verb: string, noun?: string) {
+        this._context.scenario.result(
+            new AssertionActionCompleted(verb, noun || this.name)
+        );
+    }
+
+    protected async _failedAction(verb: string, noun?: string) {
+        this._context.scenario.result(
+            new AssertionActionFailed(verb, noun || this.name)
+        );
     }
 
 

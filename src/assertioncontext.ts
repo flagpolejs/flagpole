@@ -6,7 +6,7 @@ import { Page } from 'puppeteer';
 import { Assertion } from './assertion';
 import { DOMElement } from './domelement';
 import { Flagpole, iValue, AssertionResult } from '.';
-import { AssertionFailOptional } from './logging/assertionresult';
+import { AssertionActionCompleted, AssertionActionFailed } from './logging/assertionresult';
 
 export class AssertionContext {
 
@@ -102,7 +102,7 @@ export class AssertionContext {
     public pause(milliseconds: number): Promise<any> {
         return new Promise((resolve) => {
             setTimeout(() => {
-                this.comment('Paused ' + milliseconds + ' milliseconds');
+                this._completedAction('PAUSE', `${milliseconds}ms`);
                 resolve();
             }, milliseconds);
         });
@@ -145,12 +145,14 @@ export class AssertionContext {
      * 
      * @param selector
      */
-    public async clear(selector: string): Promise<any> {
-        return this.response.clear(selector);
+    public async clear(selector: string): Promise<void> {
+        await this.response.clear(selector);
+        this._completedAction('CLEAR', selector);
     }
 
-    public async type(selector: string, textToType: string, opts: any = {}): Promise<any> {
-        return this.response.type(selector, textToType, opts);
+    public async type(selector: string, textToType: string, opts: any = {}): Promise<void> {
+        await this.response.type(selector, textToType, opts);
+        this._completedAction('TYPE', textToType);
     }
 
     /**
@@ -159,8 +161,9 @@ export class AssertionContext {
      * @param selector
      * @param value 
      */
-    public select(selector: string, value: string | string[]): Promise<string[]> {
-        return this.response.selectOption(selector, value);
+    public async select(selector: string, value: string | string[]): Promise<void> {
+        await this.response.selectOption(selector, value);
+        this._completedAction('SELECT', typeof value == 'string' ? value : value.join(', '));
     }
 
     /**
@@ -173,19 +176,23 @@ export class AssertionContext {
     }
 
     public async waitForReady(timeout: number = 15000): Promise<void> {
-        return this.response.waitForReady(timeout);
+        await this.response.waitForReady(timeout);
+        this._completedAction('WAIT', 'Ready');
     }
 
     public async waitForLoad(timeout: number = 30000): Promise<void> {
-        return this.response.waitForLoad(timeout);
+        await this.response.waitForLoad(timeout);
+        this._completedAction('WAIT', 'Load');
     }
 
     public async waitForNetworkIdle(timeout: number = 10000): Promise<void> {
-        return this.response.waitForNetworkIdle(timeout);
+        await this.response.waitForNetworkIdle(timeout);
+        this._completedAction('WAIT', 'Network Idle');
     }
 
     public async waitForNavigation(timeout: number = 10000, waitFor?: string | string[]): Promise<void> {
-        return this.response.waitForNavigation(timeout, waitFor);
+        await this.response.waitForNavigation(timeout, waitFor);
+        this._completedAction('WAIT', 'Navigation');
     }
 
     /**
@@ -195,7 +202,11 @@ export class AssertionContext {
      * @param timeout 
      */
     public async waitForHidden(selector: string, timeout: number = 100): Promise<iValue | null> {
-        return this.response.waitForHidden(selector, timeout);
+        const el: iValue | null = await this.response.waitForHidden(selector, timeout);
+        el === null ?
+            this._failedAction('HIDDEN', selector) : 
+            this._completedAction('HIDDEN', selector);
+        return el;
     }
 
     /**
@@ -205,7 +216,11 @@ export class AssertionContext {
      * @param timeout 
      */
     public async waitForVisible(selector: string, timeout: number = 100): Promise<iValue | null> {
-        return this.response.waitForVisible(selector, timeout);
+        const el: iValue | null = await this.response.waitForVisible(selector, timeout);
+        el === null ?
+            this._failedAction('VISIBLE', selector) :
+            this._completedAction('VISIBLE', selector);
+        return el;
     }
 
     /**
@@ -214,8 +229,12 @@ export class AssertionContext {
      * @param selector
      * @param timeout 
      */
-    public async waitForExists(selector: string, timeout?: number): Promise<iValue |  null> {
-        return this.response.waitForExists(selector, timeout);
+    public async waitForExists(selector: string, timeout?: number): Promise<iValue |  null> {        
+        const el: iValue | null = await this.response.waitForExists(selector, timeout);
+        el === null ?
+            this._failedAction('EXISTS', `${selector}`) :
+            this._completedAction('EXISTS', `${selector}`);
+        return el;
     }
 
     /**
@@ -273,7 +292,21 @@ export class AssertionContext {
     }
 
     public async screenshot(opts: any): Promise<Buffer | string> {
-        return this.response.screenshot(opts);
+        const output: Buffer | string = await this.response.screenshot(opts);
+        this._completedAction('SCREENSHOT');
+        return output;
+    }
+
+    protected async _completedAction(verb: string, noun?: string) {
+        this.scenario.result(
+            new AssertionActionCompleted(verb, noun || '')
+        );
+    }
+
+    protected async _failedAction(verb: string, noun?: string) {
+        this.scenario.result(
+            new AssertionActionFailed(verb, noun || '')
+        );
     }
 
 }

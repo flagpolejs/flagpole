@@ -46,6 +46,10 @@
     "browser/milesplit": {
       "name": "browser/milesplit",
       "tags": []
+    },
+    "browser/ubereats": {
+      "name": "browser/ubereats",
+      "tags": []
     }
   }
 }

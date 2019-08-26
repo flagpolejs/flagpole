@@ -13,6 +13,7 @@ import { LogScenarioSubHeading, LogScenarioHeading } from './logging/heading';
 import { LogComment } from './logging/comment';
 import { LogCollection } from './logging/logcollection';
 import { Assertion } from '.';
+import { ReplaySubject } from 'rx';
 
 const request = require('request');
 const probeImage = require('probe-image-size');
@@ -599,6 +600,7 @@ export class Scenario {
                 );
             }
             context.result = lastReturnValue;
+            // Run this next
             lastReturnValue = _then.apply(context, [context]);
             // Warn about any incomplete assertions
             context.incompleteAssertions.forEach((assertion: Assertion) => {

@@ -187,7 +187,7 @@ export class Cli {
             const fileContents: string = "\n\n" +
                 `suite.${scenario.type}("${scenario.description}")` + "\n" +
                 `   .open("${scenario.path}")` + "\n" +
-                `   .next(async (context) => {` + "\n" +
+                `   .next(async context => {` + "\n" +
                 `       ` + "\n" +
                 `   });` + "\n";
             if (!fs.existsSync(suitePath)) {
@@ -222,7 +222,7 @@ export class Cli {
             fileContents += `   .base(${domains});` + "\n\n";
             fileContents += `suite.${opts.scenarioType}("${opts.scenarioDescription}")` + "\n";
             fileContents += `   .open("${opts.scenarioPath}")` + "\n";
-            fileContents += `   .next(async (context) => {` + "\n";
+            fileContents += `   .next(async context => {` + "\n";
             fileContents += `       ` + "\n";
             fileContents += `   });` + "\n\n";
             fs.writeFile(suitePath, fileContents, function (err: string) {

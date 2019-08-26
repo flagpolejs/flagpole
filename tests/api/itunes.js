@@ -92,28 +92,28 @@ let suite = Flagpole.Suite('Test iTunes API')
     .finally(() => { suite.print(); });
 
 suite.json('Search for Tupac').open('/search?term=2pac&entity=musicVideo')
-    .next('Check response code and headers', function () {
-        this.assert('HTTP Status is 200', this.response.statusCode).equals(200);
-        this.assert(this.response.header('Content-Type')).contains('text/javascript');
-        this.assert('Response body is greater than 0', this.response.length).greaterThan(0);
-        return this.assert('Schema is valid', this.response.jsonBody).schema(itunesApiSchema, true);
+    .next('Check response code and headers', context => {
+        context.assert('HTTP Status is 200', context.response.statusCode).equals(200);
+        context.assert(context.response.header('Content-Type')).contains('text/javascript');
+        context.assert('Response body is greater than 0', context.response.length).greaterThan(0);
+        context.assert('Schema is valid', context.response.jsonBody).schema(itunesApiSchema, true);
     })
-    .next('Verify the data', async function () {
-        const resultCount = await this.find('resultCount');
-        const searchResults = await this.find('results');
-        this.assert(searchResults).type.equals('array');
-        this.assert(searchResults.length).equals(0);
-        this.assert(searchResults.length).greaterThan(0);
-        this.comment(searchResults.length);
-        this.comment((searchResults.length > 0));
-        this.assert(resultCount).greaterThan(0);
-        this.assert('Results Count field matches results length', resultCount)
+    .next('Verify the data', async context => {
+        const resultCount = await context.find('resultCount');
+        const searchResults = await context.find('results');
+        context.assert(searchResults).type.equals('array');
+        context.assert(searchResults).length.greaterThan(0);
+        context.comment(searchResults.length);
+        context.comment((searchResults.length > 0));
+        context.assert(resultCount).type.equals('number');
+        context.assert(resultCount).greaterThan(0);
+        context.assert('Results Count field matches results length', resultCount)
             .equals(searchResults.length);
-        this.assert('Every result is a music video', searchResults)
+        context.assert('Every result is a music video', searchResults)
             .every(result => { return result['kind'] == 'music-video'; });
-        this.assert('No items are books', searchResults)
+        context.assert('No items are books', searchResults)
             .none(result => { return result['wrapperType'] == 'book'; });
-        this.assert('Some tracks are clean version', searchResults)
+        context.assert('Some tracks are clean version', searchResults)
             .some(result => { return result['trackExplicitness'] == 'notExplicit'; });
         return searchResults;
     })

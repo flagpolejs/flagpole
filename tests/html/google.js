@@ -4,22 +4,17 @@ const suite = Flagpole.Suite('Test Google')
     .base('http://www.google.com');
 
 const homepage = suite.html('Homepage').open('/')
-    .next('Test basic HTTP headers', async (context) => {
+    .next('Test basic HTTP headers', async context => {
         context.assert(context.response.statusCode).equals(200);
         context.assert(context.response.header('content-type')).contains('text/html');
-        context.assert('hello').length.equals(5);
-        context.assert(5).type.equals('number');
-        context.assert('foo');
     })
-    .next(async (context) => {
-        context.assert('bar');
+    .next(async context => {
         const submitButton = await context.find('input[type="submit"]');
-        context.assert('sadfa');
         context.comment(submitButton);
         context.assert(await submitButton.getAttribute('value'))
             .in(["Google Search", "Search"]);
     }) 
-    .next('Verify all images load', async (context) => {
+    .next('Verify all images load', async context => {
         const images = await context.findAll('img');
         context.assert(images).length.greaterThan(0).and.lessThan(99);
         context.assert('Should be at least one image on the page', images.length)
@@ -34,7 +29,7 @@ const homepage = suite.html('Homepage').open('/')
         });
         
     }) 
-    .next(async (context) => {
+    .next(async context => {
         const form = await context.find('form');
         context.assert('Should be a form', form).not.equals(null);
         context.assert('Form action attribute should be /search', await form.getAttribute('action'))

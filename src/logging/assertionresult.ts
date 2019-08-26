@@ -1,6 +1,6 @@
 import { Flagpole } from '..';
 import { iLogItem, LogItem, LogItemType } from './logitem';
-import { iConsoleLine, PassLine, OptionalFailLine, FailLine, DetailLine, SourceCodeBlock, WarningLine } from './consoleline';
+import { iConsoleLine, PassLine, OptionalFailLine, FailLine, DetailLine, SourceCodeBlock, WarningLine, ActionCompletedLine, ActionFailedLine } from './consoleline';
 
 export abstract class AssertionResult extends LogItem implements iLogItem {
 
@@ -32,6 +32,24 @@ export class AssertionPass extends AssertionResult implements iLogItem {
     }
 
 }
+
+export class AssertionActionCompleted extends AssertionPass implements iLogItem {
+
+    protected _verb: string;
+    protected _noun: string;
+
+    constructor(verb: string, noun: string) {
+        super(`${verb} ${noun}`);
+        this._verb = verb;
+        this._noun = noun;
+    }
+
+    public toConsole(): iConsoleLine[] {
+        return [new ActionCompletedLine(this._verb, this._noun)];
+    }
+
+}
+
 
 export class AssertionFail extends AssertionResult implements iLogItem {
 
@@ -79,11 +97,10 @@ export class AssertionFail extends AssertionResult implements iLogItem {
     public toConsole(): iConsoleLine[] {
         const lines: iConsoleLine[] = [new FailLine(this.message)];
         const details: string = this.detailsMessage;
-        const source: string = this.sourceCode;
         if (details) {
             lines.push(new DetailLine(this.detailsMessage));
         }
-        if (source) {
+        if (this.sourceCode && this.sourceCode != 'null') {
             lines.push(new SourceCodeBlock(this.sourceCode, this._highlight));
         }
         return lines;
@@ -115,6 +132,23 @@ export class AssertionFailWarning extends AssertionFail implements iLogItem {
 
     public toConsole(): iConsoleLine[] {
         return [new WarningLine(this.message)];
+    }
+
+}
+
+export class AssertionActionFailed extends AssertionPass implements iLogItem {
+
+    protected _verb: string;
+    protected _noun: string;
+
+    constructor(verb: string, noun: string) {
+        super(`${verb} ${noun}`);
+        this._verb = verb;
+        this._noun = noun;
+    }
+
+    public toConsole(): iConsoleLine[] {
+        return [new ActionFailedLine(this._verb, this._noun)];
     }
 
 }

@@ -104,6 +104,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
             throw new Error('Page is null.');
         }
         await (this._input as ElementHandle).type(textToType, opts);
+        this._completedAction('TYPE', textToType);
     }
 
     public async clear(): Promise<void> {
@@ -112,6 +113,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
         }
         await (this._input as ElementHandle).click({ clickCount: 3 });
         await this._context.page.keyboard.press('Backspace');
+        this._completedAction('CLEAR');
     }
 
     public async fillForm(formData: any): Promise<any> {
@@ -120,83 +122,83 @@ export class PuppeteerElement extends DOMElement implements iValue {
         if (this._context.page == null) {
             throw new Error('Page is null.');
         }
-        if (isForm) {
-            const page: Page | null = this._context.page;
-            if (page !== null) {
-                for (let name in formData) {
-                    const value: any = formData[name];
-                    const selector: string = `${element._path} [name="${name}"]`;
-                    const inputs: ElementHandle[] = await page.$$(selector);
-                    if (inputs.length > 0) {
-                        const input: ElementHandle = inputs[0];
-                        const tagName: string = (await (await input.getProperty('tagName')).jsonValue()).toLowerCase();
-                        const inputType: string = (await (await input.getProperty('type')).jsonValue()).toLowerCase();
-                        // Some sites need you to focus on the element first
-                        await page.focus(selector);
-                        // Dropdowns
-                        if (tagName == 'select') {
-                            await page.select(selector, value);
-                        }
-                        // Input boxes
-                        else if (tagName == 'input') {
-                            // Radio or checkbox we need to click on the items
-                            if (inputType == 'radio' || inputType == 'checkbox') {
-                                // Turn it into an array, to support multiple checked boxes
-                                const multiValues: any[] = Flagpole.toType(value) == 'array' ? value : [value];
-                                // Loop through each checkbox/radio element with this name
-                                for (let i = 0; i < inputs.length; i++) {
-                                    let checkbox: ElementHandle = inputs[i];
-                                    let isChecked: boolean = !!(await (await checkbox.getProperty('checked')).jsonValue());
-                                    let checkboxValue: string = String(await (await checkbox.getProperty('value')).jsonValue());
-                                    // Toggle it by clicking
-                                    if (
-                                        // This is one of our values, and it's not checked yet
-                                        (multiValues.indexOf(checkboxValue) >= 0 && !isChecked) ||
-                                        // This is not one of our values, but it is checked
-                                        (multiValues.indexOf(checkboxValue) < 0 && isChecked)
-                                    ) {
-                                        await checkbox.click();
-                                    }
-                                }
+        if (!isForm) {
+            throw new Error('This is not a form element.');
+        }
+        const page: Page | null = this._context.page;
+        if (page === null) {
+            throw new Error('Page is null');
+        }
+        for (let name in formData) {
+            const value: any = formData[name];
+            const selector: string = `${element._path} [name="${name}"]`;
+            const inputs: ElementHandle[] = await page.$$(selector);
+            if (inputs.length > 0) {
+                const input: ElementHandle = inputs[0];
+                const tagName: string = (await (await input.getProperty('tagName')).jsonValue()).toLowerCase();
+                const inputType: string = (await (await input.getProperty('type')).jsonValue()).toLowerCase();
+                // Some sites need you to focus on the element first
+                await page.focus(selector);
+                // Dropdowns
+                if (tagName == 'select') {
+                    await page.select(selector, value);
+                }
+                // Input boxes
+                else if (tagName == 'input') {
+                    // Radio or checkbox we need to click on the items
+                    if (inputType == 'radio' || inputType == 'checkbox') {
+                        // Turn it into an array, to support multiple checked boxes
+                        const multiValues: any[] = Flagpole.toType(value) == 'array' ? value : [value];
+                        // Loop through each checkbox/radio element with this name
+                        for (let i = 0; i < inputs.length; i++) {
+                            let checkbox: ElementHandle = inputs[i];
+                            let isChecked: boolean = !!(await (await checkbox.getProperty('checked')).jsonValue());
+                            let checkboxValue: string = String(await (await checkbox.getProperty('value')).jsonValue());
+                            // Toggle it by clicking
+                            if (
+                                // This is one of our values, and it's not checked yet
+                                (multiValues.indexOf(checkboxValue) >= 0 && !isChecked) ||
+                                // This is not one of our values, but it is checked
+                                (multiValues.indexOf(checkboxValue) < 0 && isChecked)
+                            ) {
+                                await checkbox.click();
                             }
-                            else if (inputType == 'button' || inputType == 'submit' || inputType == 'reset') {
-                                // Do nothing for now (maybe should click??)
-                            }
-                            else {
-                                await this._context.clearThenType(selector, value);
-                            }
-                        }
-                        // Button elements
-                        else if (tagName == 'button') {
-                            // Do nothing for now (maybe should click??)
                         }
                     }
+                    else if (inputType == 'button' || inputType == 'submit' || inputType == 'reset') {
+                        // Do nothing for now (maybe should click??)
+                    }
+                    else {
+                        await this._context.clearThenType(selector, value);
+                    }
+                }
+                // Button elements
+                else if (tagName == 'button') {
+                    // Do nothing for now (maybe should click??)
                 }
             }
-            return element;
-        }
-        else {
-            throw new Error('This is not a form element.');
+            this._completedAction('FILL');
         }
     }
 
-    public async submit(): Promise<any>;
-    public async submit(callback: Function): Promise<any>;
-    public async submit(message: string, callback: Function): Promise<any>;
-    public async submit(a?: string | Function, b?: Function): Promise<any> {
+    public async submit(): Promise<void>;
+    public async submit(callback: Function): Promise<void>;
+    public async submit(message: string, callback: Function): Promise<void>;
+    public async submit(a?: string | Function, b?: Function): Promise<void> {
         if (!this._isFormTag()) {
             throw new Error('You can only use .submit() with a form element.');
         }
         if (this._context.page === null) {
             throw new Error('Page was null');
         }
-        return await this._context.page.evaluate(form => form.submit(), this.$);
+        await this._context.page.evaluate(form => form.submit(), this.$);
+        this._completedAction('SUBMIT');
     }
 
-    public async click(): Promise<any>;
-    public async click(callback: Function): Promise<any>;
-    public async click(message: string, callback: Function): Promise<any>;
-    public async click(a?: string | Function, b?: Function): Promise<any> {
+    public async click(): Promise<void>;
+    public async click(callback: Function): Promise<void>;
+    public async click(message: string, callback: Function): Promise<void>;
+    public async click(a?: string | Function, b?: Function): Promise<void> {
         const callback: Function = (() => {
             if (typeof b == 'function') {
                 return b;
@@ -208,7 +210,8 @@ export class PuppeteerElement extends DOMElement implements iValue {
         })();
         const message: string = typeof a == 'string' ? a : '';
         message && this._context.scenario.comment(message);
-        return await (<ElementHandle>this._input).click();
+        await (<ElementHandle>this._input).click();
+        this._completedAction('CLICK');
     }
 
     protected async _getTagName(): Promise<string> {

@@ -1,20 +1,14 @@
 import { stripIndents, oneLine } from 'common-tags';
+import { CliAnsi } from '../cli/cli-ansi';
+
+const Ansi = new CliAnsi();
 
 export enum ConsoleColor {
 
-    Bold = "\u001b[1m",
-    Underlined = "\u001b[4m",
-    Reversed = "\u001b[7m",
-
     Reset = "\x1b[0m",
-    Bright = "\x1b[1m",
-    Dim = "\x1b[2m",
-    Underscore = "\x1b[4m",
-    UnderscoreEnd = "\x1b[24m",
-    Blink = "\x1b[5m",
-    Reverse = "\x1b[7m",
-    Unreverse = "\x1b[27m",
-    Hidden = "\x1b[8m",
+
+    Highlight = "\x1b[7m",
+    Unhighlight = "\x1b[27m",
 
     FgBlack = "\x1b[30m",
     FgRed = "\x1b[31m",
@@ -135,8 +129,7 @@ export class SubheadingLine extends ConsoleLine implements iConsoleLine {
 
     public toString(): string {
         let text: string = super.toString().trim();
-        let padLength: number = Math.ceil((ConsoleLine.targetLineLength - text.length) / 2);
-        return ` ${this.color}${ConsoleColor.Underlined}${text}${ConsoleColor.Reset}\n`;
+        return ` ${Ansi.fgYellow(Ansi.underlined(text))} \n`;
     }
 
 }
@@ -151,7 +144,7 @@ export class SectionHeadingLine extends ConsoleLine implements iConsoleLine {
 
     public toString(): string {
         let text: string = super.toString().trim();
-        return `      ${this.color}${text}${ConsoleColor.Reset}`;
+        return `      ${Ansi.fgWhite(Ansi.bold(text))}`;
     }
 
 }
@@ -188,10 +181,8 @@ export class CommentLine extends ConsoleLine implements iConsoleLine {
     public toConsoleString(): string {
         return oneLine`
             ${ConsoleColor.Reset} 
-            ${ConsoleColor.BgWhite}${ConsoleColor.FgBlack}
-            ${this.textPrefix}
-            ${ConsoleColor.Reset}
-            ${this.message}
+            ${Ansi.bgRgb(Ansi.fgBlack(' ' + this.textPrefix + ' '), 150, 150, 150)}
+            ${Ansi.fgRgb(this.message, 120, 120, 120)}
             ${ConsoleColor.Reset}
         `;
     }
@@ -211,15 +202,37 @@ export class PassLine extends ConsoleLine implements iConsoleLine {
     public toConsoleString(): string {
         return oneLine`
             ${ConsoleColor.Reset} 
-            ${ConsoleColor.BgGreen}${ConsoleColor.FgWhite}
-            ${this.textPrefix}
-            ${ConsoleColor.Reset}
+            ${Ansi.bgGreen(Ansi.fgWhite(' ' + this.textPrefix + ' '))}
             ${this.message}
             ${ConsoleColor.Reset} 
         `;
     }
 
 }
+
+export class ActionCompletedLine extends PassLine implements iConsoleLine {
+
+    protected _verb: string;
+    protected _noun: string;
+
+    constructor(verb: string, noun: string) {
+        super(`${verb} ${noun}`);
+        this._verb = verb;
+        this._noun = noun;
+    }
+
+    public toConsoleString(): string {
+        return oneLine`
+            ${ConsoleColor.Reset} 
+            ${Ansi.bgGreen(Ansi.fgWhite(' ' + this.textPrefix + ' '))}
+            ${Ansi.bgRgb(` ${this._verb} `, 65, 65, 65)}
+            ${Ansi.fgRgb(this._noun, 120, 120, 120)}
+            ${ConsoleColor.Reset} 
+        `;
+    }
+
+}
+
 
 export class FailLine extends ConsoleLine implements iConsoleLine {
 
@@ -234,15 +247,37 @@ export class FailLine extends ConsoleLine implements iConsoleLine {
     public toConsoleString(): string {
         return oneLine`
             ${ConsoleColor.Reset} 
-            ${ConsoleColor.BgRed}${ConsoleColor.FgWhite}
-            ${this.textPrefix}
-            ${ConsoleColor.Reset}
+            ${Ansi.bgRed(Ansi.fgWhite(' ' + this.textPrefix + ' '))}
             ${this.message}
             ${ConsoleColor.Reset}
         `;
     }
 
 }
+
+export class ActionFailedLine extends FailLine implements iConsoleLine {
+
+    protected _verb: string;
+    protected _noun: string;
+
+    constructor(verb: string, noun: string) {
+        super(`${verb} ${noun}`);
+        this._verb = verb;
+        this._noun = noun;
+    }
+
+    public toConsoleString(): string {
+        return oneLine`
+            ${ConsoleColor.Reset} 
+            ${Ansi.bgRed(Ansi.fgWhite(' ' + this.textPrefix + ' '))}
+            ${Ansi.bgRgb(` ${this._verb} `, 65, 65, 65)}
+            ${Ansi.fgRgb(this._noun, 120, 120, 120)}
+            ${ConsoleColor.Reset} 
+        `;
+    }
+
+}
+
 
 export class OptionalFailLine extends ConsoleLine implements iConsoleLine {
 
@@ -258,9 +293,7 @@ export class OptionalFailLine extends ConsoleLine implements iConsoleLine {
     public toConsoleString(): string {
         return oneLine`
             ${ConsoleColor.Reset} 
-            ${ConsoleColor.BgMagenta}${ConsoleColor.FgWhite}
-            ${this.textPrefix}
-            ${ConsoleColor.Reset}
+            ${Ansi.bgMagenta(Ansi.fgWhite(' ' + this.textPrefix + ' '))}
             ${this.message} [Optional]
             ${ConsoleColor.Reset}
         `;
@@ -281,9 +314,7 @@ export class WarningLine extends ConsoleLine implements iConsoleLine {
     public toConsoleString(): string {
         return oneLine`
             ${ConsoleColor.Reset} 
-            ${ConsoleColor.BgMagenta}${ConsoleColor.FgWhite}
-            ${this.textPrefix}
-            ${ConsoleColor.Reset}
+            ${Ansi.bgMagenta(Ansi.fgWhite(' ' + this.textPrefix + ' '))}
             ${this.message}
             ${ConsoleColor.Reset}
         `;
@@ -304,9 +335,7 @@ export class DetailLine extends ConsoleLine implements iConsoleLine {
     public toConsoleString(): string {
         return oneLine`
             ${ConsoleColor.Reset} 
-            ${ConsoleColor.BgWhite}${ConsoleColor.FgBlack}
-            ${this.textPrefix}
-            ${ConsoleColor.Reset}
+            ${Ansi.bgWhite(Ansi.fgBlack(' ' + this.textPrefix + ' '))}
             ${this.message}
             ${ConsoleColor.Reset}
         `;
@@ -344,7 +373,7 @@ export class SourceCodeBlock extends ConsoleLine implements iConsoleLine {
             const regex = new RegExp(`(${this.highlight})`, 'ig');
             source = source.replace(
                 regex,
-                `${ConsoleColor.Reverse}$1${ConsoleColor.Unreverse}`
+                `${ConsoleColor.Highlight}$1${ConsoleColor.Unhighlight}`
             );
         }
         // Color the code

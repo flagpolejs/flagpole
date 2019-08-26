@@ -1,8 +1,7 @@
 const Flagpole = require('../../dist/index.js').Flagpole;
 
 const suite = Flagpole.Suite('Uber Eats Sample Test')
-    .base('https://www.ubereats.com/')
-    .finally(() => { suite.print(); });
+    .base('https://www.ubereats.com/');
 
 const paths = {
     addressInput: 'div[aria-label="enter address"] input',

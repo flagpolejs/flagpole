@@ -1,6 +1,5 @@
 
 const ESC: string = '\x1b[';
-const FONT_SUFFIX: string = 'm';
 
 const CURSOR_UP: string = 'A';
 const CURSOR_DOWN: string = 'B';
@@ -26,37 +25,57 @@ const ERASE_START_LINE: string = '1K';
 const ERASE_LINE: string = '2K';
 
 
-const FG_BLACK: string = '30';
-const FG_RED: string = '31';
-const FG_GREEN: string = '32';
-const FG_YELLOW: string = '33';
-const FG_BLUE: string = '34';
-const FG_MAGENTA: string = '35';
-const FG_CYAN: string = '36';
-const FG_WHITE: string = '37';
-const FG_GREY: string = '90';
+const FG_BLACK: string = '30m';
+const FG_RED: string = '31m';
+const FG_GREEN: string = '32m';
+const FG_YELLOW: string = '33m';
+const FG_BLUE: string = '34m';
+const FG_MAGENTA: string = '35m';
+const FG_CYAN: string = '36m';
+const FG_WHITE: string = '37m';
+const FG_RGB: string = '38;2;';
+const FG_CUSTOM: string = '38;5;';
+const FG_DEFAULT: string = '39m';
 
-const BG_BLACK: string = '40';
-const BG_RED: string = '41';
-const BG_GREEN: string = '42';
-const BG_YELLOW: string = '43';
-const BG_BLUE: string = '44';
-const BG_MAGENTA: string = '45';
-const BG_CYAN: string = '46';
-const BG_WHITE: string = '47';
+const BG_BLACK: string = '40m';
+const BG_RED: string = '41m';
+const BG_GREEN: string = '42m';
+const BG_YELLOW: string = '43m';
+const BG_BLUE: string = '44m';
+const BG_MAGENTA: string = '45m';
+const BG_CYAN: string = '46m';
+const BG_WHITE: string = '47m';
+const BG_RGB: string = '48;2;';
+const BG_CUSTOM: string = '48;5;';
+const BG_DEFAULT: string = '49m';
 
-const FONT_BRIGHT: string = '1';
-const FONT_DIM: string = '2';
-const FONT_UNDERSCORE: string = '4';
-const FONT_BLINK: string = '5';
-const FONT_INVERSE: string = '7';
-const FONT_HIDDEN: string = '8';
+const FONT_BOLD: string = '1m';
+const FONT_LIGHT: string = '2m';
+const FONT_ITALIC: string = '3m';
+const FONT_UNDERLINED: string = '4m';
+const FONT_BLINK: string = '5m';
+const FONT_FAST_BLINK: string = '6m';
+const FONT_INVERSE: string = '7m';
+const FONT_HIDDEN: string = '8m';
+const FONT_STRIKETHROUGH: string = '9m';
+const FONT_BORDER: string = '51m';
+const FONT_ROUNDED_BORDER: string = '52m';
+const FONT_OVERLINE: string = '53m';
 
-const FONT_RESET: string = '0';
-const FONT_END_BOLD: string = '22';
-const FONT_END_ITALIC: string = '23';
-const FONT_END_UNDERLINED: string = '24';
-const FONT_END_INVERSE: string = '27';
+const FONT_RESET: string = '0m';
+const FONT_END_BOLD: string = '21m';
+const FONT_END_LIGHT: string = '22m';
+const FONT_END_ITALIC: string = '23m';
+const FONT_END_UNDERLINED: string = '24m';
+const FONT_END_BLINK: string = '25m';
+const FONT_END_FAST_BLINK: string = '26m';
+const FONT_END_INVERSE: string = '27m';
+const FONT_END_HIDDEN: string = '28m';
+const FONT_END_STRIKETHROUGH: string = '29m';
+const FONT_END_BORDER: string = '54m';
+const FONT_END_OVERLINE: string = '54m';
+
+
 
 
 export class CliAnsi {
@@ -173,5 +192,156 @@ export class CliAnsi {
         }
         return clear;
     };
+
+    public bold(str: string) {
+        return `${ESC}${FONT_BOLD}${str}${ESC}${FONT_END_BOLD}`;
+    }
+
+    public underlined(str: string) {
+        return `${ESC}${FONT_UNDERLINED}${str}${ESC}${FONT_END_UNDERLINED}`;
+    }
+
+    public italic(str: string) {
+        return `${ESC}${FONT_ITALIC}${str}${ESC}${FONT_END_ITALIC}`;
+    }
+
+    public light(str: string) {
+        return `${ESC}${FONT_LIGHT}${str}${ESC}${FONT_END_LIGHT}`;
+    }
+
+    public blink(str: string) {
+        return `${ESC}${FONT_BLINK}${str}${ESC}${FONT_END_BLINK}`;
+    }
+
+    public inverse(str: string) {
+        return `${ESC}${FONT_INVERSE}${str}${ESC}${FONT_END_INVERSE}`;
+    }
+
+    public border(str: string) {
+        return `${ESC}${FONT_BORDER}${str}${ESC}${FONT_END_BORDER}`;
+    } 
+
+    public roundedBorder(str: string) {
+        return `${ESC}${FONT_ROUNDED_BORDER}${str}${ESC}${FONT_END_BORDER}`;
+    } 
+
+    public strikethrough(str: string) {
+        return `${ESC}${FONT_STRIKETHROUGH}${str}${ESC}${FONT_END_STRIKETHROUGH}`;
+    } 
+
+    public hidden(str: string) {
+        return `${ESC}${FONT_HIDDEN}${str}${ESC}${FONT_END_HIDDEN}`;
+    } 
+
+    public center(str: string, targetLength: number, padChar: string = ' '): string {
+        const regex: RegExp = new RegExp(`${ESC}[^m]+m`, 'g');
+        const len: number = str.replace(regex, '').length;
+        const padLeft: number = Math.max(0, Math.floor((targetLength - len) / 2));
+        const padRight: number = Math.max(0, Math.ceil((targetLength - len) / 2));
+        return `${padChar.repeat(padLeft)}${str}${padChar.repeat(padRight)}`;
+    }
+
+    public left(str: string, targetLength: number, padChar: string = ' '): string {
+        const regex: RegExp = new RegExp(`${ESC}[^m]+m`, 'g');
+        const len: number = str.replace(regex, '').length;
+        const padding: number = Math.max(targetLength - len, 1);
+        return `${str}${padChar.repeat(padding)}`;
+    }
+
+    public right(str: string, targetLength: number, padChar: string = ' '): string {
+        const regex: RegExp = new RegExp(`${ESC}[^m]+m`, 'g');
+        const len: number = str.replace(regex, '').length;
+        const padding: number = targetLength - len;
+        return `${padChar.repeat(padding)}${str}`;
+    }
+
+    public bgBlue(str: string) {
+        return this._bg(BG_BLUE, str);
+    }
+
+    public bgBlack(str: string) {
+        return this._bg(BG_BLACK, str);
+    }
+
+    public bgCyan(str: string) {
+        return this._bg(BG_CYAN, str);
+    }
+
+    public bgGreen(str: string) {
+        return this._bg(BG_GREEN, str);
+    }
+
+    public bgMagenta(str: string) {
+        return this._bg(BG_MAGENTA, str);
+    }
+
+    public bgRed(str: string) {
+        return this._bg(BG_RED, str);
+    }
+
+    public bgWhite(str: string) {
+        return this._bg(BG_WHITE, str);
+    }
+
+    public bgYellow(str: string) {
+        return this._bg(BG_YELLOW, str);
+    }
+
+    public bgRgb(str: string, r: number, g: number, b: number) {
+        return `${ESC}${BG_RGB}${r};${g};${b}m${str}${ESC}${BG_DEFAULT}`;
+    }
+
+    public bgCustom(str: string, colorNumber: number) {
+        return `${ESC}${BG_CUSTOM}${colorNumber}m${str}${ESC}${BG_DEFAULT}`;
+    }
+
+    public fgBlue(str: string) {
+        return this._fg(FG_BLUE, str);
+    }
+
+    public fgBlack(str: string) {
+        return this._fg(FG_BLACK, str);
+    }
+
+    public fgCyan(str: string) {
+        return this._fg(FG_CYAN, str);
+    }
+
+    public fgGreen(str: string) {
+        return this._fg(FG_GREEN, str);
+    }
+
+    public fgMagenta(str: string) {
+        return this._fg(FG_MAGENTA, str);
+    }
+
+    public fgRed(str: string) {
+        return this._fg(FG_RED, str);
+    }
+
+    public fgWhite(str: string) {
+        return this._fg(FG_WHITE, str);
+    }
+
+    public fgYellow(str: string) {
+        return this._fg(FG_YELLOW, str);
+    }
+
+    public fgRgb(str: string, r: number, g: number, b: number) {
+        return `${ESC}${FG_RGB}${r};${g};${b}m${str}${ESC}${FG_DEFAULT}`;
+    }
+
+    public fgCustom(str: string, colorNumber: number) {
+        return `${ESC}${FG_CUSTOM}${colorNumber}m${str}${ESC}${FG_DEFAULT}`;
+    }
+
+    protected _bg(color: string, str: string) {
+        return `${ESC}${color}${str}${ESC}${BG_DEFAULT}`;
+    }
+
+    protected _fg(color: string, str: string) {
+        return `${ESC}${color}${str}${ESC}${FG_DEFAULT}`;
+    }
+
 
 }
