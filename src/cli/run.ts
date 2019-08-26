@@ -83,13 +83,13 @@ const runSuites = async (selectedSuites: SuiteConfig[]): Promise<void> => {
             statusMessage = message;
         });
 
-        await runner.run();
+        await runner.runSpawn();
         clearInterval(timer);
         ansi.write(ansi.eraseLines(2));
     }
     // If other output, just give final out
     else {
-        await runner.run();
+        await runner.runSpawn();
     }
 
     // Adios

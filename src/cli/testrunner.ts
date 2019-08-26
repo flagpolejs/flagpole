@@ -66,6 +66,21 @@ export class TestRunner {
         return this._executionResults;
     }
 
+    public async runSpawn(): Promise<SuiteExecutionResult[]> {
+        this._executionResults = [];
+        // Loop through each suite and run it
+        const totalSuites = Object.keys(this._suiteConfigs).length;
+        let count: number = 1;
+        for (let suiteName in this._suiteConfigs) {
+            this._publish(`Running suite ${suiteName} (${count} of ${totalSuites})...`);
+            let execution: SuiteExecution = SuiteExecution.executeSuite(this._suiteConfigs[suiteName]);
+            this._executionResults.push(await execution.result);
+            count++;
+        }
+        this._onDone();
+        return this._executionResults;
+    }
+
     private _onDone() {
         const duration: number = Date.now() - this._timeStart;
         let output: string = '';

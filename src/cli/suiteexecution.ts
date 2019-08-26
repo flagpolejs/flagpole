@@ -94,7 +94,7 @@ export class SuiteExecution {
             throw new Error(`This execution has already run.`);
         }
         this._started = Date.now();
-        this._result = await this._execute(filePath, Flagpole.executionOpts);
+        this._result = await this._execute(filePath, opts);
         this._finished = Date.now();
         this._finally.forEach((callback: Function) => {
             callback.apply(this, [this]);
@@ -174,7 +174,7 @@ export class SuiteExecutionInline extends SuiteExecution {
         // How many suites do we have now?
         const preSuiteCount: number = Flagpole.suites.length;
         // Embed the suite file... it should add at least one suite
-        await require(filePath);
+        await require(`${filePath}`);
         // How many suites do we have now?
         const postSuiteCount: number = Flagpole.suites.length;
         // If the require added at least one
