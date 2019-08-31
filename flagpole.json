@@ -50,6 +50,10 @@
     "browser/ubereats": {
       "name": "browser/ubereats",
       "tags": []
+    },
+    "browser/arena": {
+      "name": "browser/arena",
+      "tags": []
     }
   }
 }

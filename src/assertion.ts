@@ -537,7 +537,7 @@ export class Assertion {
             let details: string = `Actual value: ${String(actualValue)}`;
             this._result = this._optional ?
                 new AssertionFailOptional(message, details) :
-                new AssertionFail(message, details, source, highlight);
+                new AssertionFail(message, details, '', '');
         }
         // Log this result
         this._context.scenario.result(this._result);

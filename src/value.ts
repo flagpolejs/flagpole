@@ -61,8 +61,10 @@ export abstract class ProtoValue  implements iValue{
         }
         // Do more processing based on type
         const type: string = Flagpole.toType(this._source);
-        if (['puppeteerelement', 'extjscomponent', 'domelement'].includes(type)) {
-            return (await this._source.getOuterHtml()).toString();
+        //if (['puppeteerelement', 'extjscomponent', 'domelement'].includes(type)) {
+        if (['domelement'].includes(type)) {
+            const html = await this._source.getOuterHtml();
+            return html.toString();
         }
         // Fallback just toString it
         return String(this._source);

@@ -61,7 +61,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     }
 
     public async getOuterHtml(): Promise<Value> {
-        if (this._context.page == null) {
+        if (this._context.page === null) {
             throw new Error('Page is null.');
         }
         return this._wrapAsValue(
@@ -91,7 +91,8 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async getText(): Promise<Value> {
         const name: string = `Text of ${this.name}`;
         const handle: JSHandle = await this._input.getProperty('textContent');
-        return this._wrapAsValue(await handle.jsonValue(), name, this);
+        const text: string = await handle.jsonValue();
+        return this._wrapAsValue(text, name, this);
     }
 
     public async clearThenType(textToType: string, opts: any = {}): Promise<void> {

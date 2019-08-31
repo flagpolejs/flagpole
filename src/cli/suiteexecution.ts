@@ -117,7 +117,13 @@ export class SuiteExecution {
 
     protected _execute(filePath: string, opts: FlagpoleExecutionOptions): Promise<SuiteExecutionResult> {
         return new Promise((resolve) => {
+            opts.exitOnDone = true;
             const process = spawn('node', [filePath].concat(opts.toArgs()));
+            // If it doesn't resolve after this point
+            let timeout = setTimeout(() => {
+                process.kill();
+                resolve(new SuiteExecutionResult(this._output, 1));
+            }, 30000);
             process.stdout.on('data', (data) => {
                 this._logLine(data);
             });
@@ -125,6 +131,7 @@ export class SuiteExecution {
                 this._logLine(data);
             });
             process.on('close', (exitCode) => {
+                clearTimeout(timeout);
                 if (exitCode > 0 && opts.output == FlagpoleOutput.console) {
                     this._logLine('FAILED TEST SUITE:');
                     this._logLine(filePath + ' exited with error code ' + exitCode);
@@ -132,6 +139,7 @@ export class SuiteExecution {
                 }
                 resolve(new SuiteExecutionResult(this._output, exitCode));
             });
+
         });
     }
 
