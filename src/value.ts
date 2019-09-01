@@ -31,8 +31,9 @@ export abstract class ProtoValue  implements iValue{
     protected _input: any;
     protected _context: AssertionContext;
     protected _name: string | null;
-    protected _source: any;
+    protected _parent: any;
     protected _highlight: string;
+    protected _sourceCode: string | null = null;
 
     public get $(): any {
         return this._input;
@@ -46,28 +47,20 @@ export abstract class ProtoValue  implements iValue{
         return this._highlight;
     }
 
-    constructor(input: any, context: AssertionContext, name?: string, source: any = null, highlight: string = '') {
+    public get parent(): any {
+        return this._parent;
+    }
+
+    public get sourceCode(): string {
+        return (this._sourceCode === null) ? '' : this._sourceCode;
+    }
+
+    constructor(input: any, context: AssertionContext, name?: string, parent: any = null, highlight: string = '') {
         this._input = input;
         this._context = context;
         this._name = name || null;
-        this._source = source;
+        this._parent = parent;
         this._highlight = highlight;
-    }
-
-    public async getSourceCode(): Promise<string> {
-        // Throw these out
-        if (Flagpole.isNullOrUndefined(this._source)) {
-            return '';
-        }
-        // Do more processing based on type
-        const type: string = Flagpole.toType(this._source);
-        //if (['puppeteerelement', 'extjscomponent', 'domelement'].includes(type)) {
-        if (['domelement'].includes(type)) {
-            const html = await this._source.getOuterHtml();
-            return html.toString();
-        }
-        // Fallback just toString it
-        return String(this._source);
     }
 
     public toArray(): any[] {
@@ -168,8 +161,13 @@ export abstract class ProtoValue  implements iValue{
         );
     }
 
-    protected _wrapAsValue(data: any, name: string, source?: any, highlight?: string): Value {
-        return new Value(data, this._context, name, source, highlight);
+    protected _wrapAsValue(data: any, name: string, parent?: any, highlight?: string): Value {
+        const val: Value = new Value(data, this._context, name, parent, highlight);
+        // If no source code of its own, inherit it from parent
+        if (!val.sourceCode && parent && parent.sourceCode) {
+            val._sourceCode = parent.sourceCode;
+        }
+        return val;
     }
 
 }

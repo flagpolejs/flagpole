@@ -28,6 +28,7 @@ export class DOMElement extends ProtoValue implements iValue {
                 element._name = String(path);
             }
         }
+        element._sourceCode = (await element.getOuterHtml()).toString();
         return element;
     }
 

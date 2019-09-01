@@ -6,6 +6,12 @@ import { DOMElement } from './domelement';
 
 export class PuppeteerElement extends DOMElement implements iValue {
 
+    protected _input: ElementHandle;
+
+    public get $(): ElementHandle {
+        return this._input;
+    }
+
     public static async create(input: any, context: AssertionContext, name: string | null = null, path?: string): Promise<PuppeteerElement> {
         const element = new PuppeteerElement(input, context, name, path);
         if (name === null) {
@@ -17,7 +23,17 @@ export class PuppeteerElement extends DOMElement implements iValue {
                 element._name = String(path);
             }
         }
+        // I have no idea why I have to do this setTimeout, but it dies without it
+        setTimeout(async () => {
+            element._sourceCode = (await element.getOuterHtml()).toString();
+        }, 0);
         return element;
+    }
+
+    protected constructor(input: any, context: AssertionContext, name?: string | null, path?: string) {
+        super(input, context, name, path);
+        this._input = input;
+        this._path = path || '';
     }
 
     public toString(): string {
@@ -64,8 +80,9 @@ export class PuppeteerElement extends DOMElement implements iValue {
         if (this._context.page === null) {
             throw new Error('Page is null.');
         }
+        const html: string = await this.$.executionContext().evaluate(e => e.outerHTML, this.$);
         return this._wrapAsValue(
-            await this._context.page.evaluate(e => e.outerHTML, this.$),
+            html,
             `Outer Html of ${this.name}`
         );
     }

@@ -530,14 +530,14 @@ export class Assertion {
         }
         // Assertion fails
         else {
-            const source: string = (this._input && this._input.getSourceCode) ?
-                await this._input.getSourceCode() : '';
+            const source: string = (this._input && this._input.sourceCode) ?
+                this._input.sourceCode : '';
             const highlight: string = (this._input && this._input.highlight) ?
-                await this._input.highlight : '';
+                this._input.highlight : String(actualValue);
             let details: string = `Actual value: ${String(actualValue)}`;
             this._result = this._optional ?
                 new AssertionFailOptional(message, details) :
-                new AssertionFail(message, details, '', '');
+                new AssertionFail(message, details, source, highlight);
         }
         // Log this result
         this._context.scenario.result(this._result);

@@ -37,11 +37,10 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
      * @param path 
      */
     public async findAll(path: string): Promise<PuppeteerElement[]> {
-        const response: iResponse = this;
-        const page: Page | null = this.scenario.getBrowser().getPage();
+        const response: iResponse = this;  
         const puppeteerElements: PuppeteerElement[] = [];
-        if (page !== null) {
-            const elements: ElementHandle[] = await page.$$(path);
+        if (this.context.page !== null) {
+            const elements: ElementHandle[] = await this.context.page.$$(path);
             await elements.forEach(async function (el: ElementHandle<Element>, i: number) {
                 const element = await PuppeteerElement.create(
                     el, response.context, `${path} [${i}]`, path
