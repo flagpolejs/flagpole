@@ -1,5 +1,5 @@
 import { iResponse, ResponseType  } from "./response";
-import { DOMElement } from './domelement';
+import { HTMLElement } from './htmlelement';
 import { HttpResponse } from '.';
 import { DOMResponse } from './domresponse';
 
@@ -29,10 +29,10 @@ export class HtmlResponse extends DOMResponse implements iResponse {
         return callback.apply(context, [ $ ]);
     }
 
-    public async find(path: string): Promise<DOMElement | null> {
+    public async find(path: string): Promise<HTMLElement | null> {
         const selection: Cheerio = $(path);
         if (selection.length > 0) {
-            return await DOMElement.create(
+            return await HTMLElement.create(
                 selection.eq(0), this.context, null, path
             );
         }
@@ -41,14 +41,14 @@ export class HtmlResponse extends DOMResponse implements iResponse {
         }
     }
 
-    public async findAll(path: string): Promise<DOMElement[]> {
+    public async findAll(path: string): Promise<HTMLElement[]> {
         const response: iResponse = this;
         const elements: Cheerio = $(path);
         if (elements.length > 0) {
-            const nodeElements: DOMElement[] = [];
+            const nodeElements: HTMLElement[] = [];
             await elements.each(async function (i: number) {
                 nodeElements.push(
-                    await DOMElement.create(
+                    await HTMLElement.create(
                         $(elements.get(i)), response.context, `${path} [${i}]`, path
                     )
                 );
@@ -60,15 +60,15 @@ export class HtmlResponse extends DOMResponse implements iResponse {
         }
     }
 
-    public async waitForHidden(selector: string, timeout: number = 100): Promise<DOMElement | null> {
+    public async waitForHidden(selector: string, timeout: number = 100): Promise<HTMLElement | null> {
         return this.find(selector);
     }
 
-    public async waitForVisible(selector: string, timeout: number = 100): Promise<DOMElement | null> {
+    public async waitForVisible(selector: string, timeout: number = 100): Promise<HTMLElement | null> {
         return this.find(selector);
     }
 
-    public async waitForExists(selector: string, timeout: number = 100): Promise<DOMElement | null> {
+    public async waitForExists(selector: string, timeout: number = 100): Promise<HTMLElement | null> {
         return this.find(selector);
     }
 

@@ -56,6 +56,100 @@ export class PuppeteerElement extends DOMElement implements iValue {
         )
     }
 
+    public async find(selector: string): Promise<PuppeteerElement | Value> {
+        const element: ElementHandle | null = await this.$.$(selector)
+        const name: string = `${selector} under ${this.name}`;
+        const path: string = `${this.path} ${selector}`;
+        if (element !== null) {
+            return PuppeteerElement.create(
+                element, this._context, name, path
+            );
+        }
+        return this._wrapAsValue(null, name, this);
+    }
+
+    public async findAll(selector: string): Promise<PuppeteerElement[]> {
+        const elements: ElementHandle[] = await this.$.$$(selector)
+        const out: PuppeteerElement[] = [];
+        Flagpole.forEach(elements, async (element: ElementHandle, i: number) => {
+            out.push(
+                await PuppeteerElement.create(
+                    element,
+                    this._context,
+                    `${selector}[${i}] under ${this.name}`,
+                    `${this.path} ${selector}[${i}]`
+                )
+            )
+        });
+        return out;
+    }
+
+    public async getParent(): Promise<PuppeteerElement | Value> {
+        const parents: ElementHandle[] = await this.$.$x('..');
+        const name: string = `Parent of ${this.name}`;
+        const path: string = `${this.path}[..]`;
+        if (parents.length > 0) {
+            return PuppeteerElement.create(
+                parents[0], this._context, name, path
+            );
+        }
+        return this._wrapAsValue(null, name, this);
+    }
+
+    public async getPreviousSibling(selector: string = '*'): Promise<PuppeteerElement | Value> {
+        const siblings: ElementHandle[] = await this.$.$x(`preceding-sibling::${selector}`);
+        const name: string = `Previous Sibling of ${this.name}`;
+        const path: string = `${this.path}[preceding-sibling::${selector}][0]`;
+        if (siblings.length > 0) {
+            return PuppeteerElement.create(
+                siblings[0], this._context, name, path
+            );
+        }
+        return this._wrapAsValue(null, name, this);
+    }
+
+    public async getPreviousSiblings(selector: string = '*'): Promise<PuppeteerElement[]> {
+        const siblingElements: ElementHandle[] = await this.$.$x(`preceding-sibling::${selector}`);
+        const siblings: PuppeteerElement[] = [];
+        Flagpole.forEach(siblingElements, async (sibling: ElementHandle, i: number) => {
+            const name: string = `Previous Sibling ${i} of ${this.name}`;
+            const path: string = `${this.path}[preceding-sibling::${selector}][${i}]`;
+            siblings.push(
+                await PuppeteerElement.create(
+                    sibling, this._context, name, path
+                )
+            )
+        });
+        return siblings;
+    }
+
+    public async getNextSibling(selector: string = '*'): Promise<PuppeteerElement | Value> {
+        const siblings: ElementHandle[] = await this.$.$x(`following-sibling::${selector}`);
+        const name: string = `Next Sibling of ${this.name}`;
+        const path: string = `${this.path}[following-sibling::${selector}][0]`;
+        if (siblings.length > 0) {
+            return PuppeteerElement.create(
+                siblings[0], this._context, name, path
+            );
+        }
+        return this._wrapAsValue(null, name, this);
+    }
+
+    public async getNextSiblings(selector: string = '*'): Promise<PuppeteerElement[]> {
+        const siblingElements: ElementHandle[] = await this.$.$x(`following-sibling::${selector}`);
+        const siblings: PuppeteerElement[] = [];
+        Flagpole.forEach(siblingElements, async (sibling: ElementHandle, i: number) => {
+            const name: string = `Next Sibling ${i} of ${this.name}`;
+            const path: string = `${this.path}[following-sibling::${selector}][${i}]`;
+            siblings.push(
+                await PuppeteerElement.create(
+                    sibling, this._context, name, path
+                )
+            )
+        });
+        return siblings;
+    }
+
     public async getInnerText(): Promise<Value> {
         if (this._context.page == null) {
             throw new Error('Page is null.');

@@ -5,7 +5,7 @@ import { ResponseType } from './response';
 import { AssertionContext } from './assertioncontext';
 import { AssertionActionCompleted, AssertionActionFailed } from './logging/assertionresult';
 
-export class DOMElement extends ProtoValue implements iValue {
+export abstract class DOMElement extends ProtoValue implements iValue {
 
     protected _path: string;
 
@@ -17,25 +17,17 @@ export class DOMElement extends ProtoValue implements iValue {
         return this._name || this._path || 'DOM Element';
     }
 
-    public static async create(input: any, context: AssertionContext, name: string | null = null, path?: string): Promise<DOMElement> {
-        const element = new DOMElement(input, context, name, path);
-        if (name === null) {
-            const tagName: string | null = await element._getTagName();
-            if (tagName !== null) {
-                element._name = `<${tagName}> Element @ ${path}`;
-            }
-            else if (path) {
-                element._name = String(path);
-            }
-        }
-        element._sourceCode = (await element.getOuterHtml()).toString();
-        return element;
-    }
-
     protected constructor(input: any, context: AssertionContext, name?: string | null, path?: string) {
         super(input, context, (name || 'DOM Element'));
         this._path = path || '';
     }
+
+    public abstract async click(a?: string | Function, b?: Function): Promise<void>
+    public abstract async fillForm(formData: any): Promise<void>
+    public abstract async submit(a?: string | Function, b?: Function): Promise<void>
+    public abstract async find(selector: string): Promise<iValue | null>
+    public abstract async findAll(selector: string): Promise<iValue[]>
+
 
     /**
      * Convert element synchronously to string as best we can
@@ -185,95 +177,6 @@ export class DOMElement extends ProtoValue implements iValue {
     public async getText(): Promise<Value> {
         const name: string = `Text of ${this.name}`;
         return this._wrapAsValue(this._input.text(), name, this);
-    }
-
-    /**
-     * Fill out the form with this data.
-     * 
-     * @param formData 
-     */
-    public async fillForm(formData: any): Promise<void> {
-        if (!(await this._isFormTag())) {
-            throw new Error('This is not a form element.');
-        }
-        const form: Cheerio = this._input;
-        for (let name in formData) {
-            const value = formData[name];
-            form.find(`[name="${name}"]`).val(value);
-        }
-        this._completedAction('FILL');
-    }
-
-    /**
-     * If this is a form element, submit the form
-     */
-    public async submit(): Promise<void>;
-    public async submit(callback: Function): Promise<void>;
-    public async submit(message: string, callback: Function): Promise<void>;
-    public async submit(a?: string | Function, b?: Function): Promise<void> {
-        if (!this._isFormTag()) {
-            throw new Error('You can only use .submit() with a form element.');
-        }
-        const link: Link = await this._getLink();
-        const scenario: Scenario = await this._createLambdaScenario(a, b);
-        const method = ((await this._getAttribute('method')) || 'get').toString().toLowerCase();
-        // If there is a URL we can submit the form to
-        if (link.isNavigation()) {
-            let uri: string;
-            scenario.setMethod(method);
-            if (method == 'get') {
-                uri = link.getUri(this.$.serializeArray());
-            }
-            else {
-                const formDataArray: { name: string, value: string }[] = this.$.serializeArray();
-                const formData: any = {};
-                uri = link.getUri();
-                formDataArray.forEach(function (input: any) {
-                    formData[input.name] = input.value;
-                });
-                scenario.setFormData(formData)
-            }
-            scenario.open(uri);
-            this._completedAction('SUBMIT');
-        }
-        // Not a valid URL to submit form to
-        else {
-            scenario.skip('Nothing to submit');
-        }
-    }
-
-    /**
-     * Click on this element and then load a new page. For HTML/DOM scenarios this creates a new scenario
-     */
-    public async click(): Promise<void>;
-    public async click(callback: Function): Promise<void>;
-    public async click(message: string, callback: Function): Promise<void>;
-    public async click(a?: string | Function, b?: Function): Promise<void> {
-        const callback: Function = (() => {
-            if (typeof b == 'function') {
-                return b;
-            }
-            else if (typeof a == 'function') {
-                return a;
-            }
-            return function () { };
-        })();
-        const message: string = typeof a == 'string' ? a : '';
-        // If this is a link tag, treat it the same as load
-        if (await this._isLinkTag()) {
-            this.load(message, callback);
-        }
-        // Is this a button?
-        else if (await this._isButtonTag()) {
-            const type: Value = (await this.getAttribute('type'));
-            if (type.isNull() || type.toString().toLowerCase() == 'submit') {
-                // Grab the form and submit it
-                const form = (<Cheerio>this._input).closest('form');
-                const formEl = await DOMElement.create(form, this._context, `Parent form of ${this.name}`, this.path);
-                formEl.submit(message, callback);
-            }
-        }
-        this._completedAction('CLICK');
     }
 
     /**
