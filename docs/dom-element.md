@@ -1,12 +1,13 @@
 # DOMElement
 
-This object contains elements within the DOM for Puppeteer browser scenarios or Cheerio HTML scenarios. You typically get this element by way of `context.find('css selector path')` from the AssertionContext.
+This is an abstract class for elements that is extended by HTMLElement, PuppeteerElement, and ExtJSComponent. Use it a base reference for all of these. You typically get this element by way of `context.find('css selector path')` from the AssertionContext.
 
 This class is extended more specifically by other classes:
 
 * PuppeteerElement
 * BrowserElement
 * ExtJsComponent
+* HTMLElement
 
 ## Methods
 
@@ -39,12 +40,44 @@ await form.fillForm({
 })
 ```
 
+### find(selector: string): Promise<DOMElement | Value<null>>
+
+Find the first element in the descendents of the current element that matches this selector. If there are no matches, you will be returned a Value object that contains null.
+
+```javascript
+const li = await someElement.find('li');
+```
+
+### findAll(selector: string): Promise<DOMElement[]>
+
+Find all of the elements in the descendents of the current element that match this selector. If there are no matches, it will be an empty array.
+
+```javascript
+const li = await someElement.findAll('li');
+```
+
+### getChildren(selector?: string): Promise<DOMElement[]>
+
+Get the immediate children of the current element. If a selector string is passed, it will filter only children matching that selector. If none match the selector, an empty array will be returned.
+
+```javascript
+const children = await someElement.getChildren('li');
+```
+
 ### getClassName(): Promise<Value>
 
 Get the class name of this element. If there are multiple classes then they will be space delimited.
 
 ```javascript
 const className = await someElement.getClassName();
+```
+
+### getClosest(selector: string): Promise<DOMElement | Value<null>>
+
+Going up the chain of ancestors (and including itself), look for the first element matching the selector. If there are no ancestors (or self) that matches, a Value object containing null is returned.
+
+```javascript
+const tbody = await td.getClosest('tbody');
 ```
 
 ### getData(key: string): Promise<Value>
@@ -71,6 +104,22 @@ Get the text inside the opening and closing tags of the given element.
 const text = await someElement.getInnerText();
 ```
 
+### getNextSibling(selector?: string): Promise<DOMElement | Value<null>>
+
+Traverse through the siblings proceeding the current element. If no selector is passed, the immediate following sibling is returned. If a selector is passed, the next one matching the selector is returned. If none match, a Value object containing null is returned.
+
+```javascript
+const nextSibling = await someElement.getNextSibling('li');
+```
+
+### getNextSiblings(selector?: string): Promise<DOMElement[]>
+
+Traverse through the siblings proceeding the current element. If no selector is passed, all next siblings will be returned. If a selector is passed, only those matching the selector. If none match, an empty array is returned.
+
+```javascript
+const siblings = await someElement.getNextSiblings('li');
+```
+
 ### getOuterHtml(): Promise<Value>
 
 Get the HTML string of the current element and all of its child elemenets from the opening of the tag to the ending of the tag.
@@ -79,12 +128,36 @@ Get the HTML string of the current element and all of its child elemenets from t
 const html = await someElement.getOuterHtml();
 ```
 
+### getPreviousSibling(selector?: string): Promise<DOMElement | Value<null>>
+
+Traverse through the siblings preceeding the current element. If no selector is passed, the immediate preceeding sibling is returned. If a selector is passed, the previous one matching the selector is returned. If none match, a Value object containing null is returned.
+
+```javascript
+const prevSibling = await someElement.getPreviousSibling('li');
+```
+
+### getPreviousSiblings(selector?: string): Promise<DOMElement[]>
+
+Traverse through the siblings preceeding the current element. If no selector is passed, all previous siblings will be returned. If a selector is passed, only those matching the selector. If none match, an empty array is returned.
+
+```javascript
+const siblings = await someElement.getPreviousSiblings('li');
+```
+
 ### getProperty(key: string): Promise<Value>
 
 Get property by this key from the current element. Value will contain null if it does not.
 
 ```javascript
 context.assert(await input.hasProperty('checked')).equals(true);
+```
+
+### getSiblings(selector?: string): Promise<DOMElement[]>
+
+Get the siblings of the current element. If a selector string is passed, it will filter only siblings matching that selector. If none match, it will return an empty array.
+
+```javascript
+const siblings = await someElement.getSiblings('li');
 ```
 
 ### getTagName(): Promise<Value>
