@@ -63,6 +63,50 @@ export class HTMLElement extends DOMElement implements iValue {
         return out;
     }
 
+    public async getClosest(selector: string = '*'): Promise<HTMLElement | Value> {
+        const closest: Cheerio = await this.$.closest(selector);
+        const name: string = `Closest ${selector} of ${this.name}`;
+        const path: string = `${this.path}[ancestor-or-self::${selector}]`;
+        if (closest.length > 0) {
+            return HTMLElement.create(
+                closest[0], this._context, name, path
+            );
+        }
+        return this._wrapAsValue(null, name, this);
+    }
+
+    public async getChildren(selector: string = '*'): Promise<HTMLElement[]> {
+        const children: Cheerio = await this.$.children(selector);
+        const out: HTMLElement[] = [];
+        for (let i = 0; i < children.length; i++) {
+            out.push(
+                await HTMLElement.create(
+                    children[i],
+                    this._context,
+                    `Child ${selector} ${i} of ${this.name}`,
+                    `${this.path}[child::${selector}][${i}]`
+                )
+            );
+        }
+        return out;
+    }
+
+    public async getSiblings(selector: string = '*'): Promise<HTMLElement[]> {
+        const children: Cheerio = await this.$.siblings(selector);
+        const out: HTMLElement[] = [];
+        for (let i = 0; i < children.length; i++) {
+            out.push(
+                await HTMLElement.create(
+                    children[i],
+                    this._context,
+                    `Sibling ${selector} ${i} of ${this.name}`,
+                    `${this.path}[sibling::${selector}][${i}]`
+                )
+            );
+        }
+        return out;
+    }
+
     public async getParent(): Promise<HTMLElement | Value> {
         const parent: Cheerio = this.$.parent();
         const name: string = `Parent of ${this.name}`;

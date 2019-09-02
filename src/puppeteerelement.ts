@@ -84,6 +84,33 @@ export class PuppeteerElement extends DOMElement implements iValue {
         return out;
     }
 
+    public async getClosest(selector: string = '*'): Promise<PuppeteerElement | Value> {
+        const closest: ElementHandle[] = await this.$.$x(`ancestor-or-self::${selector}`);
+        const name: string = `Closest ${selector} of ${this.name}`;
+        const path: string = `${this.path}[ancestor-or-self::${selector}]`;
+        if (closest.length > 0) {
+            return PuppeteerElement.create(
+                closest[0], this._context, name, path
+            );
+        }
+        return this._wrapAsValue(null, name, this);
+    }
+
+    public async getChildren(selector: string = '*'): Promise<PuppeteerElement[]> {
+        const children: ElementHandle[] = await this.$.$x(`child::${selector}`);
+        const out: PuppeteerElement[] = [];
+        Flagpole.forEach(children, async (child: ElementHandle, i: number) => {
+            const name: string = `Child ${selector} ${i} of ${this.name}`;
+            const path: string = `${this.path}[child::${selector}][${i}]`;
+            out.push(
+                await PuppeteerElement.create(
+                    child, this._context, name, path
+                )
+            )
+        });
+        return out;
+    }
+
     public async getParent(): Promise<PuppeteerElement | Value> {
         const parents: ElementHandle[] = await this.$.$x('..');
         const name: string = `Parent of ${this.name}`;
@@ -94,6 +121,22 @@ export class PuppeteerElement extends DOMElement implements iValue {
             );
         }
         return this._wrapAsValue(null, name, this);
+    }
+
+    public async getSiblings(selector: string = '*'): Promise<PuppeteerElement[]> {
+        const prevSiblings: ElementHandle[] = await this.$.$x(`preceding-sibling::${selector}`);
+        const nextSiblings: ElementHandle[] = await this.$.$x(`following-sibling::${selector}`);
+        const siblings: PuppeteerElement[] = [];
+        Flagpole.forEach(prevSiblings.concat(nextSiblings), async (sibling: ElementHandle, i: number) => {
+            const name: string = `Sibling ${i} of ${this.name}`;
+            const path: string = `${this.path}[sibling::${selector}][${i}]`;
+            siblings.push(
+                await PuppeteerElement.create(
+                    sibling, this._context, name, path
+                )
+            )
+        });
+        return siblings;
     }
 
     public async getPreviousSibling(selector: string = '*'): Promise<PuppeteerElement | Value> {
