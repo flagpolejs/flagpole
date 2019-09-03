@@ -12,22 +12,20 @@ export class PuppeteerElement extends DOMElement implements iValue {
         return this._input;
     }
 
-    public static async create(input: any, context: AssertionContext, name: string | null = null, path?: string): Promise<PuppeteerElement> {
-        const element = new PuppeteerElement(input, context, name, path);
-        if (name === null) {
-            const tagName: string | null = await element._getTagName();
-            if (tagName !== null) {
-                element._name = `<${tagName}> Element @ ${path}`;
-            }
-            else if (path) {
+    public static create(input: any, context: AssertionContext, name: string | null = null, path?: string): Promise<PuppeteerElement> {
+        return new Promise(resolve => {
+            const element = new PuppeteerElement(input, context, name, path);
+            if (name === null) {
                 element._name = String(path);
             }
-        }
-        // I have no idea why I have to do this setTimeout, but it dies without it
-        setTimeout(async () => {
-            element._sourceCode = (await element.getOuterHtml()).toString();
-        }, 0);
-        return element;
+            Promise.all([
+                    element._getTagName(),
+                    element._getSourceCode()
+                ])
+                .then(() => {
+                    resolve(element);
+                })
+       })
     }
 
     protected constructor(input: any, context: AssertionContext, name?: string | null, path?: string) {
@@ -71,7 +69,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async findAll(selector: string): Promise<PuppeteerElement[]> {
         const elements: ElementHandle[] = await this.$.$$(selector)
         const out: PuppeteerElement[] = [];
-        Flagpole.forEach(elements, async (element: ElementHandle, i: number) => {
+       await Flagpole.forEach(elements, async (element: ElementHandle, i: number) => {
             out.push(
                 await PuppeteerElement.create(
                     element,
@@ -99,7 +97,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async getChildren(selector: string = '*'): Promise<PuppeteerElement[]> {
         const children: ElementHandle[] = await this.$.$x(`child::${selector}`);
         const out: PuppeteerElement[] = [];
-        Flagpole.forEach(children, async (child: ElementHandle, i: number) => {
+        await Flagpole.forEach(children, async (child: ElementHandle, i: number) => {
             const name: string = `Child ${selector} ${i} of ${this.name}`;
             const path: string = `${this.path}[child::${selector}][${i}]`;
             out.push(
@@ -127,7 +125,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
         const prevSiblings: ElementHandle[] = await this.$.$x(`preceding-sibling::${selector}`);
         const nextSiblings: ElementHandle[] = await this.$.$x(`following-sibling::${selector}`);
         const siblings: PuppeteerElement[] = [];
-        Flagpole.forEach(prevSiblings.concat(nextSiblings), async (sibling: ElementHandle, i: number) => {
+        await Flagpole.forEach(prevSiblings.concat(nextSiblings), async (sibling: ElementHandle, i: number) => {
             const name: string = `Sibling ${i} of ${this.name}`;
             const path: string = `${this.path}[sibling::${selector}][${i}]`;
             siblings.push(
@@ -154,7 +152,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async getPreviousSiblings(selector: string = '*'): Promise<PuppeteerElement[]> {
         const siblingElements: ElementHandle[] = await this.$.$x(`preceding-sibling::${selector}`);
         const siblings: PuppeteerElement[] = [];
-        Flagpole.forEach(siblingElements, async (sibling: ElementHandle, i: number) => {
+        await Flagpole.forEach(siblingElements, async (sibling: ElementHandle, i: number) => {
             const name: string = `Previous Sibling ${i} of ${this.name}`;
             const path: string = `${this.path}[preceding-sibling::${selector}][${i}]`;
             siblings.push(
@@ -181,7 +179,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async getNextSiblings(selector: string = '*'): Promise<PuppeteerElement[]> {
         const siblingElements: ElementHandle[] = await this.$.$x(`following-sibling::${selector}`);
         const siblings: PuppeteerElement[] = [];
-        Flagpole.forEach(siblingElements, async (sibling: ElementHandle, i: number) => {
+        await Flagpole.forEach(siblingElements, async (sibling: ElementHandle, i: number) => {
             const name: string = `Next Sibling ${i} of ${this.name}`;
             const path: string = `${this.path}[following-sibling::${selector}][${i}]`;
             siblings.push(
@@ -354,6 +352,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async click(callback: Function): Promise<void>;
     public async click(message: string, callback: Function): Promise<void>;
     public async click(a?: string | Function, b?: Function): Promise<void> {
+        let explicitCallback: boolean = true;
         const callback: Function = (() => {
             if (typeof b == 'function') {
                 return b;
@@ -361,20 +360,38 @@ export class PuppeteerElement extends DOMElement implements iValue {
             else if (typeof a == 'function') {
                 return a;
             }
+            explicitCallback = false;
             return function () { };
         })();
         const message: string = typeof a == 'string' ? a : '';
         message && this._context.scenario.comment(message);
-        await (<ElementHandle>this._input).click();
+        if (message.length > 0 || explicitCallback) {
+            await this.load(message, callback);
+        }
+        else {
+            await (<ElementHandle>this._input).click();
+        }
         this._completedAction('CLICK');
     }
 
-    protected async _getTagName(): Promise<string> {
-        const handle: JSHandle = await this._input.getProperty('tagName');
-        return String(await handle.jsonValue()).toLowerCase();
+    protected _getTagName(): Promise<string> {
+        return new Promise(async resolve => {
+            const handle: JSHandle = await this._input.getProperty('tagName');
+            const value: string = await handle.jsonValue();
+            this._tagName = value.toLowerCase();
+            resolve(value);
+        })
     }
 
-    protected async _getAttribute(key: string): Promise<string | null> {
+    protected _getSourceCode(): Promise<void> {
+        return new Promise(async resolve => {
+            const outerHtml: string = (await this.getOuterHtml()).toString();
+            this._sourceCode = outerHtml;
+            resolve();
+        });
+    }
+
+    protected async _getAttribute(key: string): Promise<any> {
         const handle: JSHandle = await this._input.getProperty(key);
         return await handle.jsonValue();
     }

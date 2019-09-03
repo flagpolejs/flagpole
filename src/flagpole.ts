@@ -92,10 +92,21 @@ export class Flagpole {
         return filePath;
     }
 
-    public static async forEach(array: any[], callback: Function) {
-        for (let i = 0; i < array.length; i++) {
-            await callback(array[i], i, array);
-        }
+    public static forEach(array: any[], callback: Function): Promise<void> {
+        return new Promise(resolve => {
+            const promises: Promise<any>[] = [];
+            for (let i = 0; i < array.length; i++) {
+                promises.push(callback(array[i], i, array));
+            }
+            Promise.all(promises)
+                .then(() => {
+                    resolve();
+                });
+        });
+    }
+
+    public static runAsync(callback: Function, delay: number = 1) {
+        setTimeout(callback, delay);
     }
 
 }

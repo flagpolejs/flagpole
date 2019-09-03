@@ -2,6 +2,7 @@ import { iResponse, ResponseType } from "./response";
 import { Page, ElementHandle } from 'puppeteer';
 import { PuppeteerResponse } from './puppeteerresponse';
 import { PuppeteerElement } from './puppeteerelement';
+import { Flagpole } from '.';
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
  
@@ -36,19 +37,21 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
      * 
      * @param path 
      */
-    public async findAll(path: string): Promise<PuppeteerElement[]> {
-        const response: iResponse = this;  
-        const puppeteerElements: PuppeteerElement[] = [];
-        if (this.context.page !== null) {
-            const elements: ElementHandle[] = await this.context.page.$$(path);
-            await elements.forEach(async function (el: ElementHandle<Element>, i: number) {
-                const element = await PuppeteerElement.create(
-                    el, response.context, `${path} [${i}]`, path
-                );
-                puppeteerElements.push(element);
-            });
-        }
-        return puppeteerElements;
+    public findAll(path: string): Promise<PuppeteerElement[]> {
+        return new Promise(async resolve => {
+            const response: iResponse = this;
+            const puppeteerElements: PuppeteerElement[] = [];
+            if (this.context.page !== null) {
+                const elements: ElementHandle[] = await this.context.page.$$(path);
+                await Flagpole.forEach(elements, async (el: ElementHandle<Element>, i: number) => {
+                    const element = await PuppeteerElement.create(
+                        el, response.context, `${path} [${i}]`, path
+                    );
+                    puppeteerElements.push(element);
+                });
+            }
+            resolve(puppeteerElements);
+        })
     }
 
 }

@@ -4,10 +4,12 @@ import { Scenario } from './scenario';
 import { ResponseType } from './response';
 import { AssertionContext } from './assertioncontext';
 import { AssertionActionCompleted, AssertionActionFailed } from './logging/assertionresult';
+import { Flagpole } from '.';
 
 export abstract class DOMElement extends ProtoValue implements iValue {
 
     protected _path: string;
+    protected _tagName: string = '';
 
     public get path(): string {
         return this._path;
@@ -15,6 +17,10 @@ export abstract class DOMElement extends ProtoValue implements iValue {
 
     public get name(): string {
         return this._name || this._path || 'DOM Element';
+    }
+
+    public get tagName(): string {
+        return this._tagName;
     }
 
     protected constructor(input: any, context: AssertionContext, name?: string | null, path?: string) {
@@ -28,6 +34,8 @@ export abstract class DOMElement extends ProtoValue implements iValue {
     public abstract async find(selector: string): Promise<iValue | null>
     public abstract async findAll(selector: string): Promise<iValue[]>
 
+    protected abstract async _getTagName(): Promise<string> 
+    protected abstract async _getAttribute(key: string): Promise<string | null>
 
     /**
      * Convert element synchronously to string as best we can
@@ -63,8 +71,7 @@ export abstract class DOMElement extends ProtoValue implements iValue {
      * Get element's HTML tag name
      */
     public async getTagName(): Promise<Value> {
-        const tagName: string = await this._getTagName();
-        return this._wrapAsValue(tagName, `Tag Name of ${this.name}`);
+        return this._wrapAsValue(this.tagName, `Tag Name of ${this.name}`);
     }
 
     /**
@@ -194,9 +201,7 @@ export abstract class DOMElement extends ProtoValue implements iValue {
             // Set a better title
             scenario.title = (typeof a == 'string' && a.length) ? a : `Load ${link.getUri()}`;
             // Execute it asynchronously
-            setTimeout(() => {
-                scenario.open(link.getUri());
-            }, 1);
+            this._context.addSubScenario(scenario, link);
         }
         else {
             scenario.skip('Not a navigational link');
@@ -206,63 +211,60 @@ export abstract class DOMElement extends ProtoValue implements iValue {
     }
 
     protected async _isFormTag(): Promise<boolean> {
-        return (await this._getTagName()) == 'form';
+        return (await this.tagName) == 'form';
     }
 
     protected async _isButtonTag(): Promise<boolean> {
-        const tagName: string = await this._getTagName();
         const type: string | null = await this._getAttribute('type');
         return (
-            tagName === 'button' ||
-            (tagName === 'input' && (['button', 'submit', 'reset'].indexOf(String(type)) >= 0))
+            this.tagName === 'button' ||
+            (this.tagName === 'input' && (['button', 'submit', 'reset'].indexOf(String(type)) >= 0))
         );
     }
 
     protected async _isLinkTag(): Promise<boolean> {
         return (
-            await this._getTagName() === 'a' &&
+            await this.tagName === 'a' &&
             await this._getAttribute('href') !== null
         );
     }
 
     protected async _isImageTag(): Promise<boolean> {
         return (
-            await this._getTagName() === 'img' &&
+            await this.tagName === 'img' &&
             await this._getAttribute('src') !== null
         );
     }
 
     protected async _isVideoTag(): Promise<boolean> {
-        const tagName: string = await this._getTagName();
         const src: string | null = await this._getAttribute('src');
         const type: string | null = await this._getAttribute('type');
         return (
-            (tagName === 'video' && src !== null) ||
-            (tagName === 'source' && src !== null && /video/i.test(type || ''))
+            (this.tagName === 'video' && src !== null) ||
+            (this.tagName === 'source' && src !== null && /video/i.test(type || ''))
         );
     }
 
     protected async _isAudioTag(): Promise<boolean> {
-        const tagName: string = await this._getTagName();
         const src: string | null = await this._getAttribute('src');
         const type: string | null = await this._getAttribute('type');
         return (
-            (tagName === 'audio' && src !== null) ||
-            (tagName === 'bgsound' && src !== null) ||
-            (tagName === 'source' && src !== null && /audio/i.test(type || ''))
+            (this.tagName === 'audio' && src !== null) ||
+            (this.tagName === 'bgsound' && src !== null) ||
+            (this.tagName === 'source' && src !== null && /audio/i.test(type || ''))
         );
     }
 
     protected async _isScriptTag(): Promise<boolean> {
         return (
-            await this._getTagName() === 'script' &&
+            await this.tagName === 'script' &&
             await this._getAttribute('src') !== null
         );
     }
 
     protected async _isStylesheetTag(): Promise<boolean> {
         return (
-            await this._getTagName() === 'link' &&
+            await this.tagName === 'link' &&
             await this._getAttribute('href') !== null &&
             String(await this._getAttribute('rel')).toLowerCase() == 'stylesheet'
         );
@@ -276,19 +278,18 @@ export abstract class DOMElement extends ProtoValue implements iValue {
     }
 
     protected async _getUrl(): Promise<string | null> {
-        const tagName: string = await this._getTagName();
-        if (tagName !== null) {
-            if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(tagName) >= 0) {
-                return this._getAttribute('src');
+        if (this.tagName !== null) {
+            if (['img', 'script', 'video', 'audio', 'object', 'iframe'].indexOf(this.tagName) >= 0) {
+                return await this._getAttribute('src');
             }
-            else if (['a', 'link'].indexOf(tagName) >= 0) {
-                return this._getAttribute('href');
+            else if (['a', 'link'].indexOf(this.tagName) >= 0) {
+                return await this._getAttribute('href');
             }
-            else if (['form'].indexOf(tagName) >= 0) {
-                return this._getAttribute('action') || this._context.scenario.url;
+            else if (['form'].indexOf(this.tagName) >= 0) {
+                return await this._getAttribute('action') || this._context.scenario.url;
             }
-            else if (['source'].indexOf(tagName) >= 0) {
-                return this._getAttribute('src');
+            else if (['source'].indexOf(this.tagName) >= 0) {
+                return await this._getAttribute('src');
             }
         }
         return null;
@@ -356,15 +357,6 @@ export abstract class DOMElement extends ProtoValue implements iValue {
         })());
         // Return it
         return scenario;
-    }
-
-    protected async _getTagName(): Promise<string> {
-        return this._input.get(0).tagName.toLowerCase();
-    }
-
-    protected async _getAttribute(key: string): Promise<string | null> {
-        return (typeof this._input.get(0).attribs[key] !== 'undefined') ?
-            this._input.get(0).attribs[key] : null;
     }
 
     protected async _completedAction(verb: string, noun?: string) {

@@ -13,7 +13,6 @@ import { LogScenarioSubHeading, LogScenarioHeading } from './logging/heading';
 import { LogComment } from './logging/comment';
 import { LogCollection } from './logging/logcollection';
 import { Assertion } from '.';
-import { ReplaySubject } from 'rx';
 
 const request = require('request');
 const probeImage = require('probe-image-size');
@@ -609,7 +608,8 @@ export class Scenario {
             // Don't continue until last value and all assertions resolve
             return Promise.all([
                 lastReturnValue,
-                context.assertionsResolved
+                context.assertionsResolved,
+                context.subScenariosResolved
             ]).timeout(30000);
         }).then(() => {
             scenario._markScenarioCompleted();

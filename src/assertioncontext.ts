@@ -7,12 +7,14 @@ import { Assertion } from './assertion';
 import { DOMElement } from './domelement';
 import { Flagpole, iValue, AssertionResult } from '.';
 import { AssertionActionCompleted, AssertionActionFailed } from './logging/assertionresult';
+import { Link } from './link';
 
 export class AssertionContext {
 
     private _scenario: Scenario;
     private _response: iResponse;
     private _assertions: Assertion[] = [];
+    private _subScenarios: Promise<any>[] = [];
 
     /**
      * Get returned value from previous next block
@@ -62,6 +64,10 @@ export class AssertionContext {
             }
         });
         return Promise.all(promises);
+    }
+
+    public get subScenariosResolved(): Promise<any[]> {
+        return Promise.all(this._subScenarios);
     }
 
     constructor(scenario: Scenario, response: iResponse) {
@@ -295,6 +301,19 @@ export class AssertionContext {
         const output: Buffer | string = await this.response.screenshot(opts);
         this._completedAction('SCREENSHOT');
         return output;
+    }
+
+    public addSubScenario(scenario: Scenario, link: Link) {
+        // Add this to our list of sub-scenarios so we can wait for it
+        this._subScenarios.push(new Promise(resolve => {
+            scenario.before(() => {
+                resolve();
+            });
+        }));
+        // Fire it off with a slight delay
+        Flagpole.runAsync(() => {
+            scenario.open(link.getUri());
+        }, 10);
     }
 
     protected async _completedAction(verb: string, noun?: string) {

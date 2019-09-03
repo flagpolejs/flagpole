@@ -8,6 +8,7 @@ export class Link {
 
     protected _context: AssertionContext;
     protected _uri: string;
+    protected _qs: any;
 
     constructor(uri: string, context: AssertionContext) {
         this._uri = uri;
@@ -19,25 +20,29 @@ export class Link {
      * 
      * @param queryString 
      */
-    public getUri(queryString?: any): string {
+    public getUri(): string {
         const baseUrl: URL = new URL(
             this._context.suite.buildUrl(this._context.scenario.url || '')
         );
         const thisUrl: URL = new URL(this._uri, baseUrl.href);
-        if (typeof queryString != 'undefined') {
-            const type: string = Flagpole.toType(queryString);
+        if (typeof this._qs != 'undefined') {
+            const type: string = Flagpole.toType(this._qs);
             if (type == 'object') {
-                for (let key in queryString) {
-                    thisUrl.searchParams.append(key, queryString[key]);
+                for (let key in this._qs) {
+                    thisUrl.searchParams.append(key, this._qs[key]);
                 }
             }
             else if (type == 'array') {
-                queryString.forEach(item => {
+                this._qs.forEach(item => {
                     thisUrl.searchParams.append(item.name, item.value);
                 });
             }
         }
         return thisUrl.href;
+    }
+
+    public setQueryString(qs: any) {
+        this._qs = qs;
     }
 
     public isValidDataUri(): boolean {

@@ -15,16 +15,16 @@ export class HTMLElement extends DOMElement implements iValue {
 
     public static async create(input: any, context: AssertionContext, name: string | null = null, path?: string): Promise<HTMLElement> {
         const element = new HTMLElement(input, context, name, path);
+        element._tagName = await element._getTagName();
+        element._sourceCode = (await element.getOuterHtml()).toString();
         if (name === null) {
-            const tagName: string | null = await element._getTagName();
-            if (tagName !== null) {
-                element._name = `<${tagName}> Element @ ${path}`;
+            if (element._tagName !== null) {
+                element._name = `<${element.tagName}> Element @ ${path}`;
             }
             else if (path) {
                 element._name = String(path);
             }
         }
-        element._sourceCode = (await element.getOuterHtml()).toString();
         return element;
     }
 
@@ -241,21 +241,19 @@ export class HTMLElement extends DOMElement implements iValue {
         const method = ((await this._getAttribute('method')) || 'get').toString().toLowerCase();
         // If there is a URL we can submit the form to
         if (link.isNavigation()) {
-            let uri: string;
             scenario.setMethod(method);
             if (method == 'get') {
-                uri = link.getUri(this.$.serializeArray());
+                link.setQueryString(this.$.serializeArray());
             }
             else {
                 const formDataArray: { name: string, value: string }[] = this.$.serializeArray();
                 const formData: any = {};
-                uri = link.getUri();
                 formDataArray.forEach(function (input: any) {
                     formData[input.name] = input.value;
                 });
                 scenario.setFormData(formData)
             }
-            scenario.open(uri);
+            this._context.addSubScenario(scenario, link);
             this._completedAction('SUBMIT');
         }
         // Not a valid URL to submit form to
@@ -264,5 +262,13 @@ export class HTMLElement extends DOMElement implements iValue {
         }
     }
 
+    protected async _getTagName(): Promise<string> {
+        return this._input.get(0).tagName.toLowerCase();
+    }
+
+    protected async _getAttribute(key: string): Promise<string | null> {
+        return (typeof this._input.get(0).attribs[key] !== 'undefined') ?
+            this._input.get(0).attribs[key] : null;
+    }
 
 }
