@@ -1,11 +1,11 @@
-const { Flagpole } = require('../dist/index.js');
+const { Flagpole } = require('../dist/index');
 
-const suite = Flagpole.Suite('Basic Smoke Test of Site')
+const suite = Flagpole.suite('Basic Smoke Test of Site')
    .base('https://www.google.com');
 
-suite.html('Homepage Loads')
-   .open('/')
-   .next(async function () {
-      const inputs = await this.findAll('input');
-      this.assert(inputs).length.greaterThan(0);
+suite.html("Homepage Loads")
+   .open("/")
+   .next(async context => {
+       
    });
+

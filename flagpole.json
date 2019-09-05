@@ -54,6 +54,10 @@
     "browser/arena": {
       "name": "browser/arena",
       "tags": []
+    },
+    "foobar": {
+      "name": "foobar",
+      "tags": []
     }
   }
 }

@@ -80,7 +80,7 @@ export class Cli {
         else {
             Cli.config = new FlagpoleConfig()
         }
-        Cli.config.onSave(this.refreshConfig);
+        Cli.config.onSave(Cli.refreshConfig);
         return Cli.config;
     }
 

@@ -28,7 +28,7 @@ suite.html('Test MileSplit Hompage').open('/')
     .next('Verify CSS', async function (context) {
         const css = await this.findAll('link[rel="stylesheet"]');
         css.forEach(stylesheet => {
-            stylesheet.load(async function () {
+            stylesheet.load(async (context) => {
                 const body = await this.find('body');
                 if (!body.isNull()) {
                     const background = await body.getProperty('background');
