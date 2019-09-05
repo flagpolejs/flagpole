@@ -1,4 +1,4 @@
-import { iLogItem } from './logitem';
+import { iLogItem } from '../interfaces'
 
 export class LogCollection {
 

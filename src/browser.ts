@@ -1,4 +1,4 @@
-import * as puppeteer from "puppeteer-core";
+import * as puppeteer from 'puppeteer-core';
 import { CookieJar } from 'request';
 import { ElementHandle } from 'puppeteer-core';
 import { Cookie } from 'tough-cookie';

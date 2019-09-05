@@ -1,6 +1,7 @@
 import { DOMElement } from "./domelement";
-import { iResponse, ProtoResponse } from "./response";
-import { Value } from '.';
+import { ProtoResponse } from "./response";
+import { Value } from './value';
+import { iResponse } from './interfaces';
 
 export abstract class DOMResponse extends ProtoResponse implements iResponse {
 

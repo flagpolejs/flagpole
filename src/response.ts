@@ -1,69 +1,21 @@
-import { Scenario } from "./scenario";
 import { URL } from 'url';
 import { Cookie } from 'request';
-import { AssertionContext } from './assertioncontext';
 import { Value } from './value';
+import { iValue, iResponse, iScenario, iDOMElement, iAssertionContext } from './interfaces';
+import { ResponseType } from './enums';
 import { HttpResponse } from './httpresponse';
-import { iValue } from '.';
+import { AssertionContext } from './assertioncontext';
 
-/**
- * Responses may be HTML or JSON, so this interface let's us know how to handle either
- */
-export interface iResponse {
-    responseType: ResponseType,
-    responseTypeName: string,
-    statusCode: Value,
-    statusMessage: Value,
-    body: Value,
-    jsonBody: Value,
-    url: Value,
-    finalUrl: Value,
-    length: Value,
-    loadTime: Value,
-    context: AssertionContext,
-    headers: Value,
-    cookies: Value,
-    isBrowser: boolean,
-    init(httpResponse: HttpResponse): void
-    getRoot(): any,
-    find(path: string): Promise<any>
-    findAll(path: string): Promise<Array<any>>
-    findHavingText(selector: string, searchForText: string | RegExp): Promise<iValue | null>
-    findAllHavingText(selector: string, searchForText: string | RegExp): Promise<iValue[]>
-    header(key?: string): Value
-    cookie(key?: string): Value
-    absolutizeUri(uri: string): string
-    evaluate(context: any, callback: Function): Promise<any>
-    waitForNavigation(timeout: number, waitFor?: string | string[]): Promise<void>
-    waitForLoad(timeout: number): Promise<void>
-    waitForNetworkIdle(timeout: number): Promise<void>
-    waitForReady(timeout: number): Promise<void>
-    waitForHidden(selector: string, timeout: number): Promise<iValue | null>
-    waitForVisible(selector: string, timeout: number): Promise<iValue | null>
-    waitForExists(selector: string, timeout?: number): Promise<iValue | null>
-    screenshot(opts: any): Promise<Buffer | string>
-    clear(selector: string): Promise<any>
-    type(selector: string, textToType: string, opts: any): Promise<any>
-    selectOption(selector: string, value: string | string[]): Promise<string[]>
-    readonly scenario: Scenario
-}
-
-export enum ResponseType {
-    html,
-    json,
-    image,
-    stylesheet,
-    script,
-    video,
-    audio,
-    resource,
-    browser,
-    extjs
+export function isPuppeteer(type: ResponseType): boolean {
+    return [
+        ResponseType.browser,
+        ResponseType.extjs
+    ].indexOf(type) >= 0;
 }
 
 export abstract class ProtoResponse implements iResponse {
 
-    public readonly scenario: Scenario;
+    public readonly scenario: iScenario;
 
     private _httpResponse: HttpResponse = HttpResponse.createEmpty();
 
@@ -159,11 +111,11 @@ export abstract class ProtoResponse implements iResponse {
         return this._wrapAsValue(this.scenario.requestDuration, 'Request to Response Load Time');
     }
 
-    public get context(): AssertionContext {
+    public get context(): iAssertionContext {
         return new AssertionContext(this.scenario, this);
     }
 
-    constructor(scenario: Scenario) {
+    constructor(scenario: iScenario) {
         this.scenario = scenario;
     }
 
@@ -259,11 +211,11 @@ export abstract class ProtoResponse implements iResponse {
         throw new Error(`This scenario type (${this.responseTypeName}) does not support clear.`);
     }
 
-    public async findHavingText(selector: string, searchForText: string | RegExp): Promise<iValue | null> {
+    public async findHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement | null> {
         throw new Error(`This scenario type (${this.responseTypeName}) does not support findHavingText.`);
     }
 
-    public async findAllHavingText(selector: string, searchForText: string | RegExp): Promise<iValue[]> {
+    public async findAllHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement[]> {
         throw new Error(`This scenario type (${this.responseTypeName}) does not support findAllHavingText.`);
     }
 

@@ -1,6 +1,9 @@
-import { PuppeteerResponse } from './puppeteerresponse';
 import { ExtJsComponent } from './extjscomponent';
-import { Scenario, iResponse, ResponseType, AssertionContext  } from '.';
+import { ResponseType } from "./enums";
+import { iResponse, iScenario } from "./interfaces";
+import { AssertionContext } from './assertioncontext';
+import { PuppeteerResponse } from './puppeteerresponse';
+
 
 export class ExtJSResponse extends PuppeteerResponse implements iResponse {
 
@@ -12,7 +15,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
         return ResponseType.extjs;
     }
 
-    constructor(scenario: Scenario) {
+    constructor(scenario: iScenario) {
         super(scenario);
         // Before this scenario starts to run
         scenario.before(() => {

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 import { Cli } from './cli';
-import { Flagpole } from "..";
+import { normalizePath } from '../util';
+import { FlagpoleExecution } from '../flagpoleexecutionoptions';
 
 /**
  * COMMAND LINE ARGUMENTS
@@ -82,13 +83,13 @@ if (commands.indexOf(String(Cli.command)) < 0) {
 /**
  * Settings
  */
-Flagpole.executionOpts.environment = argv.e;
-Flagpole.executionOpts.setOutputFromString(argv.o);
-Flagpole.executionOpts.automaticallyPrintToConsole = true;
-Flagpole.executionOpts.automaticallyPrintToConsole = !argv.q;
-Flagpole.executionOpts.quietMode = !!argv.q;
+FlagpoleExecution.opts.environment = argv.e;
+FlagpoleExecution.opts.setOutputFromString(argv.o);
+FlagpoleExecution.opts.automaticallyPrintToConsole = true;
+FlagpoleExecution.opts.automaticallyPrintToConsole = !argv.q;
+FlagpoleExecution.opts.quietMode = !!argv.q;
 Cli.hideBanner = (!!argv.h || argv.q || argv.o !== 'console');
-Cli.rootPath = Cli.normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
+Cli.rootPath = normalizePath(typeof argv.p !== 'undefined' ? argv.p : process.cwd());
 
 /**
  * Read the config file in the path

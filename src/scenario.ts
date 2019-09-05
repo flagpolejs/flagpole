@@ -1,5 +1,5 @@
-import { Suite } from "./suite";
-import { ResponseType, iResponse } from "./response";
+import { ResponseType, LogItemType, ScenarioStatusEvent } from "./enums";
+import { iLogItem, iResponse, iScenario, iSuite } from './interfaces';
 import * as puppeteer from "puppeteer-core";
 import { Browser, BrowserOptions } from "./browser";
 import * as r from "request";
@@ -8,28 +8,20 @@ import { AssertionContext } from './assertioncontext';
 import { AssertionResult, AssertionPass, AssertionFail, AssertionFailWarning } from './logging/assertionresult';
 import { HttpResponse } from './httpresponse';
 import { ResourceResponse } from './resourceresponse';
-import { iLogItem, LogItemType } from './logging/logitem';
 import { LogScenarioSubHeading, LogScenarioHeading } from './logging/heading';
 import { LogComment } from './logging/comment';
 import { LogCollection } from './logging/logcollection';
-import { Assertion } from '.';
+import { Assertion } from './assertion';
 
 const request = require('request');
 const probeImage = require('probe-image-size');
 
-export enum ScenarioStatusEvent {
-    beforeExecute,
-    executionProgress,
-    afterExecute,
-    finished
-}
-
 /**
  * A scenario contains tests that run against one request
  */
-export class Scenario {
+export class Scenario implements iScenario {
 
-    public readonly suite: Suite;
+    public readonly suite: iSuite;
 
     public get responseType(): ResponseType {
         return this._responseType;
@@ -150,7 +142,7 @@ export class Scenario {
     protected _errorCallbacks: Function[] = [];
     protected _failureCallbacks: Function[] = [];
     protected _successCallbacks: Function[] = [];
-    protected _onCompletedCallback: (scenario: Scenario) => void;
+    protected _onCompletedCallback: Function;
     protected _timeScenarioInitialized: number = Date.now();
     protected _timeScenarioExecuted: number | null = null;
     protected _timeRequestStarted: number | null = null;
@@ -179,19 +171,12 @@ export class Scenario {
         headers: {}
     };
 
-    public static create(suite: Suite, title: string, type: ResponseType, opts: any, onCompletedCallback: (scenario: Scenario) => void): Scenario {
-        const scenario: Scenario = new Scenario(suite, title, onCompletedCallback);
-        opts = (() => {
-            return (type == ResponseType.browser || type == ResponseType.extjs) ?
-                { ...scenario._defaultBrowserOptions, ...opts } : 
-                { ...scenario._defaultRequestOptions, ...opts }
-        })();
-        scenario._setResponseType(type, opts);
-        scenario._response = createResponse(scenario);
-        return scenario;
+    public static create(suite: iSuite, title: string, type: ResponseType, opts: any, onCompletedCallback: Function): Scenario {
+        return new Scenario(suite, title, onCompletedCallback)
+            .setResponseType(type, opts);
     }
 
-    private constructor(suite: Suite, title: string, onCompletedCallback: (scenario: Scenario) => void) {
+    private constructor(suite: iSuite, title: string, onCompletedCallback: Function) {
         this.suite = suite;
         this._cookieJar = new request.jar();
         this._options = this._defaultRequestOptions;
@@ -438,12 +423,21 @@ export class Scenario {
         if (this.hasExecuted) {
             throw new Error(`Can't skip Scenario since it already started executing.`);
         }
-        const scenario = this;
         await this._fireBefore();
-        scenario._publish(ScenarioStatusEvent.executionProgress);
-        scenario.comment(`Skipped${(message ? ': ' + message : '')}`);
-        await scenario._fireAfter();
-        await scenario._fireFinally();
+        this._publish(ScenarioStatusEvent.executionProgress);
+        this.comment(`Skipped${(message ? ': ' + message : '')}`);
+        await this._fireAfter();
+        await this._fireFinally();
+        return this;
+    }
+
+    public async cancel(): Promise<Scenario> {
+        if (this.hasExecuted) {
+            throw new Error(`Can't cancel Scenario since it already started executing.`);
+        }
+        await this._fireBefore();
+        await this._fireAfter();
+        await this._fireFinally();
         return this;
     }
 
@@ -632,12 +626,19 @@ export class Scenario {
      * @param type 
      * @param opts 
      */
-    protected _setResponseType(type: ResponseType, opts: any = {}): Scenario {
+    public setResponseType(type: ResponseType, opts: any = {}): Scenario {
         if (this.hasExecuted) {
             throw new Error('Scenario was already executed. Can not change type.');
         }
+        // Merge passed in opts with default opts
+        opts = (() => {
+            return (type == ResponseType.browser || type == ResponseType.extjs) ?
+                { ...this._defaultBrowserOptions, ...opts } :
+                { ...this._defaultRequestOptions, ...opts }
+        })();
         this._options = opts;
         this._responseType = type;
+        this._response = createResponse(this);
         return this;
     }
 
@@ -884,7 +885,7 @@ export class Scenario {
         const scenario = this;
         return new Promise((resolve, reject) => {
             // Do all all fthe finally callbacks first
-            Promise.mapSeries(this._finallyCallbacks, (_then, index) => {
+            Promise.mapSeries(this._finallyCallbacks, _then => {
                 return _then.apply(scenario, [scenario]);
             }).then(() => {
                 this._onCompletedCallback(scenario);

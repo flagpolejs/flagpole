@@ -1,7 +1,9 @@
-import { iResponse, ResponseType, ProtoResponse } from "./response";
+import { ProtoResponse } from "./response";
+import { ResponseType } from "./enums";
+import { iResponse } from "./interfaces";
 import { URL } from 'url';
 import { Value } from './value';
-import { HttpResponse } from '.';
+import { HttpResponse } from './httpresponse';
 
 export interface ImageProperties {
     width: number,

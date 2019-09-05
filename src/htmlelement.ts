@@ -1,7 +1,9 @@
-import { Value, iValue } from './value';
-import { AssertionContext } from './assertioncontext';
-import { DOMElement, Flagpole, Scenario } from '.';
+import { Value } from './value';
+import { DOMElement } from './domelement';
+import { Scenario } from './scenario';
 import { Link } from './link';
+import { ResponseType } from './enums';
+import { iValue, iAssertionContext, iScenario } from './interfaces';
 
 export class HTMLElement extends DOMElement implements iValue {
 
@@ -13,7 +15,7 @@ export class HTMLElement extends DOMElement implements iValue {
         return this._input;
     }
 
-    public static async create(input: any, context: AssertionContext, name: string | null = null, path?: string): Promise<HTMLElement> {
+    public static async create(input: any, context: iAssertionContext, name: string | null = null, path?: string): Promise<HTMLElement> {
         const element = new HTMLElement(input, context, name, path);
         element._tagName = await element._getTagName();
         element._sourceCode = (await element.getOuterHtml()).toString();
@@ -28,7 +30,7 @@ export class HTMLElement extends DOMElement implements iValue {
         return element;
     }
 
-    protected constructor(input: any, context: AssertionContext, name?: string | null, path?: string) {
+    protected constructor(input: any, context: iAssertionContext, name?: string | null, path?: string) {
         super(input, context, (name || 'HTML Element'));
         this._path = path || '';
         this._input = input;
@@ -229,19 +231,25 @@ export class HTMLElement extends DOMElement implements iValue {
     /**
      * If this is a form element, submit the form
      */
-    public async submit(): Promise<void>;
-    public async submit(callback: Function): Promise<void>;
-    public async submit(message: string, callback: Function): Promise<void>;
-    public async submit(a?: string | Function, b?: Function): Promise<void> {
+    public async submit(): Promise<iScenario>;
+    public async submit(callback: Function): Promise<iScenario>;
+    public async submit(message: string, callback: Function): Promise<iScenario>;
+    public async submit(a?: string | Function, b?: Function): Promise<iScenario> {
         if (!this._isFormTag()) {
             throw new Error('You can only use .submit() with a form element.');
         }
         const link: Link = await this._getLink();
-        const scenario: Scenario = await this._createLambdaScenario(a, b);
+        const overloaded = this._getMessageAndCallbackFromOverloading(a, b);
+        const scenarioType: ResponseType = await this._getLambdaScenarioType();
+        const opts: any = await this._getLambdaScenarioOpts(scenarioType);
+        const scenario: iScenario = this._context.suite.scenario(
+            overloaded.message,
+            scenarioType,
+            opts
+        );
         const method = ((await this._getAttribute('method')) || 'get').toString().toLowerCase();
         // If there is a URL we can submit the form to
         if (link.isNavigation()) {
-            scenario.setMethod(method);
             if (method == 'get') {
                 link.setQueryString(this.$.serializeArray());
             }
@@ -253,13 +261,16 @@ export class HTMLElement extends DOMElement implements iValue {
                 });
                 scenario.setFormData(formData)
             }
-            this._context.addSubScenario(scenario, link);
+            scenario.setMethod(method);   
+            scenario.next(overloaded.callback);
+            scenario.open(link.getUri());
             this._completedAction('SUBMIT');
         }
         // Not a valid URL to submit form to
         else {
             scenario.skip('Nothing to submit');
         }
+        return scenario;
     }
 
     protected async _getTagName(): Promise<string> {

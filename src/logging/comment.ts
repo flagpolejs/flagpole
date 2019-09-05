@@ -1,5 +1,7 @@
-import { LogItem, LogItemType } from './logitem';
-import { iConsoleLine, CommentLine } from './consoleline';
+import { LogItem } from './logitem';
+import { CommentLine } from './consoleline';
+import { iConsoleLine } from '../interfaces';
+import { LogItemType } from '../enums';
 
 
 export class LogComment extends LogItem {

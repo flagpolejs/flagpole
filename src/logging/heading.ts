@@ -1,5 +1,7 @@
-import { LogItem, LogItemType } from './logitem';
-import { iConsoleLine, SubheadingLine, SectionHeadingLine } from './consoleline';
+import { LogItem } from './logitem';
+import { SubheadingLine, SectionHeadingLine } from './consoleline';
+import { LogItemType } from '../enums';
+import { iConsoleLine } from '../interfaces';
 
 
 export class LogSuiteHeading extends LogItem {

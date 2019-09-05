@@ -1,16 +1,16 @@
 import { URL } from 'url';
-import { Flagpole } from ".";
-import { AssertionContext } from './assertioncontext';
+import { iAssertionContext } from './interfaces';
+import { toType } from './util';
 
 const isValidDataUrl = require('valid-data-url');
 
 export class Link {
 
-    protected _context: AssertionContext;
+    protected _context: iAssertionContext;
     protected _uri: string;
     protected _qs: any;
 
-    constructor(uri: string, context: AssertionContext) {
+    constructor(uri: string, context: iAssertionContext) {
         this._uri = uri;
         this._context = context;
     }
@@ -26,7 +26,7 @@ export class Link {
         );
         const thisUrl: URL = new URL(this._uri, baseUrl.href);
         if (typeof this._qs != 'undefined') {
-            const type: string = Flagpole.toType(this._qs);
+            const type: string = toType(this._qs);
             if (type == 'object') {
                 for (let key in this._qs) {
                     thisUrl.searchParams.append(key, this._qs[key]);

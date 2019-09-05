@@ -1,8 +1,10 @@
-import { Flagpole } from '..';
-import { iLogItem, LogItem, LogItemType } from './logitem';
-import { iConsoleLine, PassLine, OptionalFailLine, FailLine, DetailLine, SourceCodeBlock, WarningLine, ActionCompletedLine, ActionFailedLine } from './consoleline';
+import { iLogItem, iConsoleLine, iAssertionResult } from '../interfaces';
+import { LogItemType } from '../enums';
+import { PassLine, OptionalFailLine, FailLine, DetailLine, SourceCodeBlock, WarningLine, ActionCompletedLine, ActionFailedLine } from './consoleline';
+import { LogItem } from './logitem';
+import { isNullOrUndefined, toType } from '../util';
 
-export abstract class AssertionResult extends LogItem implements iLogItem {
+export abstract class AssertionResult extends LogItem implements iLogItem, iAssertionResult {
 
     public readonly type: LogItemType = LogItemType.Result;
     public abstract className: string;
@@ -76,11 +78,11 @@ export class AssertionFail extends AssertionResult implements iLogItem {
 
     public get detailsMessage(): string {
         // Get rid of blanks
-        if (Flagpole.isNullOrUndefined(this._rawDetails)) {
+        if (isNullOrUndefined(this._rawDetails)) {
             return '';
         }
         // Okay give me something
-        const type: string = Flagpole.toType(this._rawDetails);
+        const type: string = toType(this._rawDetails);
         const details = this._rawDetails;
         if (type == 'array') {
             const arr = details as Array<any>;

@@ -1,11 +1,12 @@
-import { AssertionContext } from './assertioncontext';
 import { Value } from './value';
-import { Flagpole } from '.';
 import { AssertionResult, AssertionFail, AssertionFailOptional, AssertionPass } from './logging/assertionresult';
 import { AssertionSchema, iAjvLike } from './assertionschema';
 import * as Ajv from 'ajv';
+import { iAssertionContext, iAssertion } from './interfaces';
+import { toType } from './util';
+import { isNullOrUndefined } from 'util';
 
-export class Assertion {
+export class Assertion implements iAssertion {
 
     /**
      * Creates a new assertion with the same value and settings, just no result
@@ -32,7 +33,7 @@ export class Assertion {
         this._resolveAssertion();
         // Generate type value object
         const type: Value = new Value(
-            Flagpole.toType(this._getCompareValue(this._input)),
+            toType(this._getCompareValue(this._input)),
             this._context,
             `Type of ${this._getSubject()}`
         );
@@ -94,7 +95,7 @@ export class Assertion {
         return this._message || String(this._input);
     }
 
-    private _context: AssertionContext;
+    private _context: iAssertionContext;
     private _ajv: any;
     private _input: any;
     private _message: string | null;
@@ -106,11 +107,11 @@ export class Assertion {
     private _statement: boolean | null = null;
     private _assertionMade: boolean = false;
 
-    public static async create(context: AssertionContext, thisValue: any, message?: string): Promise<Assertion> {
+    public static async create(context: iAssertionContext, thisValue: any, message?: string): Promise<Assertion> {
         return new Assertion(context, thisValue, message);
     }
 
-    constructor(context: AssertionContext, thisValue: any, message?: string | null) {
+    constructor(context: iAssertionContext, thisValue: any, message?: string | null) {
         this._context = context;
         this._input = thisValue;;
         this._message = typeof message == 'undefined' ? null : message;
@@ -238,7 +239,7 @@ export class Assertion {
     public matches(value: any): Assertion {
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
-        const pattern = Flagpole.toType(value) == 'regexp' ? thatValue : new RegExp(value);
+        const pattern = toType(value) == 'regexp' ? thatValue : new RegExp(value);
         const bool: boolean = this._eval(pattern.test(thisValue));
         this._assert(
             bool,
@@ -254,13 +255,13 @@ export class Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
-        if (Flagpole.isNullOrUndefined(this._input)) {
+        if (isNullOrUndefined(this._input)) {
             bool = this._eval(thisValue === thatValue);
         }
-        else if (Flagpole.toType(this._input) == 'array') {
+        else if (toType(this._input) == 'array') {
             bool = this._eval(thisValue.indexOf(thatValue) >= 0);
         }
-        else if (Flagpole.toType(this._input) == 'object') {
+        else if (toType(this._input) == 'object') {
             bool = this._eval(typeof this._input[thatValue] !== 'undefined');
         }
         else {
@@ -279,10 +280,10 @@ export class Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
-        if (Flagpole.toType(thisValue) == 'array') {
+        if (toType(thisValue) == 'array') {
             bool = this._eval(thisValue[0] == value);
         }
-        if (!Flagpole.isNullOrUndefined(thisValue)) {
+        if (!isNullOrUndefined(thisValue)) {
             bool = this._eval(String(thisValue).indexOf(thatValue) === 0);
         }
         this._assert(
@@ -299,10 +300,10 @@ export class Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
         const thatValue = this._getCompareValue(value);
-        if (Flagpole.toType(thisValue) == 'array') {
+        if (toType(thisValue) == 'array') {
             bool = this._eval(thisValue[thisValue.length - 1] == thatValue);
         }
-        if (!Flagpole.isNullOrUndefined(thisValue)) {
+        if (!isNullOrUndefined(thisValue)) {
             bool = this._eval(
                 String(thisValue).substr(0, String(thisValue).length - String(thatValue).length) == thatValue
             );
@@ -349,7 +350,7 @@ export class Assertion {
 
     public exists(): Assertion {
         const thisValue = this._getCompareValue(this._input);
-        const bool: boolean = this._eval(!Flagpole.isNullOrUndefined(thisValue));
+        const bool: boolean = this._eval(!isNullOrUndefined(thisValue));
         this._assert(
             bool,
             this._not ?
@@ -379,7 +380,7 @@ export class Assertion {
                     continueOnReject ? resolve(assertion) : reject();
                 }
             }
-            if (Flagpole.toType(thisValue) == 'promise') {
+            if (toType(thisValue) == 'promise') {
                 (thisValue as Promise<any>)
                     .then(() => { result(true) })
                     .catch(() => { result(false) });
@@ -409,7 +410,7 @@ export class Assertion {
                     continueOnReject ? resolve(assertion) : reject();
                 }
             }
-            if (Flagpole.toType(thisValue) == 'promise') {
+            if (toType(thisValue) == 'promise') {
                 (thisValue as Promise<any>)
                     .then(() => { result(false) })
                     .catch(() => { result(true) });
@@ -423,7 +424,7 @@ export class Assertion {
     public none(callback: Function): Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
-        if (Flagpole.toType(thisValue) == 'array') {
+        if (toType(thisValue) == 'array') {
             const arr: Array<any> = thisValue;
             bool = arr.every((value: any, index: number, array: any[]) => {
                 return !callback(value, index, array);
@@ -442,7 +443,7 @@ export class Assertion {
     public every(callback: Function): Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
-        if (Flagpole.toType(thisValue) == 'array') {
+        if (toType(thisValue) == 'array') {
             const arr: Array<any> = thisValue;
             bool = arr.every((value: any, index: number, array: any[]) => {
                 return callback(value, index, array);
@@ -461,7 +462,7 @@ export class Assertion {
     public some(callback: Function): Assertion {
         let bool: boolean = false;
         const thisValue = this._getCompareValue(this._input);
-        if (Flagpole.toType(thisValue) == 'array') {
+        if (toType(thisValue) == 'array') {
             const arr: Array<any> = thisValue;
             bool = arr.some((value: any, index: number, array: any[]) => {
                 return callback(value, index, array);
@@ -547,7 +548,7 @@ export class Assertion {
 
     private _getCompareValue(value: any): any {
         this._assertionMade = true;
-        if (Flagpole.toType(value) == 'value') {
+        if (toType(value) == 'value') {
             return value.$;
         }
         else {
@@ -556,7 +557,7 @@ export class Assertion {
     }
 
     private _getSubject(): string {
-        const type: string = Flagpole.toType(this._input);
+        const type: string = toType(this._input);
         let name: string;
         if (this._input && this._input.name) {
             name = this._input.name;
@@ -581,7 +582,7 @@ export class Assertion {
             name = name.substr(0, 61) + '...';
         }
         // Return it
-        return (Flagpole.isNullOrUndefined(name) || String(name).length == 0) ?
+        return (isNullOrUndefined(name) || String(name).length == 0) ?
             'It' : String(name);
     }
 

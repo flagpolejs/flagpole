@@ -1,8 +1,9 @@
 import { Page, ElementHandle } from 'puppeteer';
-import { iResponse } from "./response";
-import { Browser, iValue, Flagpole } from '.';
+import { iResponse, iValue, iDOMElement } from "./interfaces";
+import { Browser } from './browser';
 import { DOMResponse } from './domresponse';
 import { PuppeteerElement } from './puppeteerelement';
+import { toType } from './util';
 
 export abstract class PuppeteerResponse extends DOMResponse implements iResponse {
 
@@ -21,8 +22,8 @@ export abstract class PuppeteerResponse extends DOMResponse implements iResponse
         return this.scenario.getBrowser().getPage();
     }
 
-    public abstract async find(path: string): Promise<iValue | null>
-    public abstract async findAll(path: string): Promise<iValue[]>
+    public abstract async find(path: string): Promise<iDOMElement | null>
+    public abstract async findAll(path: string): Promise<iDOMElement[]>
 
     /**
      * Run this code in the browser
@@ -70,7 +71,7 @@ export abstract class PuppeteerResponse extends DOMResponse implements iResponse
                     return [waitFor];
                 }
                 else if (
-                    Flagpole.toType(waitFor) == 'array' &&
+                    toType(waitFor) == 'array' &&
                     (<string[]>waitFor).every((waitForItem) => {
                         return (allowedOptions.indexOf(waitForItem) >= 0);
                     })

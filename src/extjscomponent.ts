@@ -1,5 +1,6 @@
-import { ProtoValue, iValue } from './value';
-import { AssertionContext, Value } from '.';
+import { Value } from './value';
+import { iValue, iDOMElement, iAssertionContext } from './interfaces';
+import { PuppeteerElement } from './puppeteerelement';
 
 export const ExtJsComponentTypes = {
     actionsheet: "Ext.ActionSheet",
@@ -46,7 +47,7 @@ export const ExtJsComponentTypes = {
     formpanel: "Ext.form.Panel"
 }
 
-export class ExtJsComponent extends ProtoValue implements iValue {
+export class ExtJsComponent extends PuppeteerElement implements iValue, iDOMElement {
 
     protected _path: string;
 
@@ -62,7 +63,7 @@ export class ExtJsComponent extends ProtoValue implements iValue {
         return `window.${this._input}`;
     }
 
-    public static async create(referencePath: string, context: AssertionContext, path: string) {
+    public static async create(referencePath: string, context: iAssertionContext, path: string) {
         const element = new ExtJsComponent(referencePath, context, path, path);
         const componentType: string | null = (await element.getType()).$;
         if (componentType !== null) {
@@ -71,7 +72,7 @@ export class ExtJsComponent extends ProtoValue implements iValue {
         return element;
     }
 
-    private constructor(input: any, context: AssertionContext, name?: string | null, path?: string) {
+    private constructor(input: any, context: iAssertionContext, name?: string | null, path?: string) {
         super(input, context, (name || 'ExtJs Component'));
         this._path = path || '';
     }

@@ -12,20 +12,6 @@ const selectors = {
     sectionHeaders: '.section > div.events > h4'
 }
 
-/*
-suite.browser("Homepage Loads Stuff", opts)
-    .open('/')
-    .next(async context => {
-        context.assert('HTTP Status equals 200', context.response.statusCode).equals(200);
-        await context.waitForExists(selectors.sectionHeaders, 10000);
-        const h4 = await context.find(selectors.sectionHeaders);
-        context.assert(h4).exists();
-        context.comment(await h4.getText());
-        const h4s = await context.findAll(selectors.sectionHeaders);
-        context.assert(h4s).length.greaterThan(0);
-    });
-*/
-
 suite.browser("Homepage Loads Stuff", opts)
     .open('/')
     .next(async context => {
@@ -61,4 +47,17 @@ suite.browser("Homepage Loads Stuff", opts)
             context.comment('hi');
         });
         context.comment('loaded it');
+    });
+
+suite.browser("Check Log in and log out", opts)
+    .open("/")
+    .next('Load Arena Homepage', async context => {
+        const loginLink = await context.waitForExists('a.login', 10000);
+        context.assert(await loginLink.getText()).like('Log in');
+        //click on login link
+        return loginLink.click();
+    })
+    .next('Load Login page', async context => {
+        await context.waitForNavigation(20000);
+        context.assert(await context.find('h1.funnel-title')).exists();
     });

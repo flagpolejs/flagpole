@@ -1,5 +1,5 @@
-import { Cli } from './cli';
-import { Flagpole } from "..";
+
+import { toType, normalizePath } from '../util';
 
 const fs = require('fs');
 const path = require('path');
@@ -30,7 +30,7 @@ export class SuiteConfig {
         this.config = config;
         this.name = opts.name || '';
         this.id = opts.id || '';
-        if (Flagpole.toType(opts.tags) == 'array') {
+        if (toType(opts.tags) == 'array') {
             (opts.tags as Array<string>).forEach(tag => {
                 this.tags.push(String(tag));
             });
@@ -63,7 +63,7 @@ export class ProjectConfig {
 
     constructor(config: FlagpoleConfig, opts: any) {
         this.config = config;
-        if (Flagpole.toType(opts) == 'object') {
+        if (toType(opts) == 'object') {
             this.id = opts.id || '';
             this.name = opts.name || 'default';
             this.path = opts.path || 'tests';
@@ -87,6 +87,7 @@ export class ProjectConfig {
 export class FlagpoleConfig {
 
     protected configPath: string;
+    protected _onSave: Function[] = [];
     
     public project: ProjectConfig;
     public suites: { [key: string]: SuiteConfig } = {};
@@ -98,13 +99,13 @@ export class FlagpoleConfig {
         this.configPath = configData.configPath || process.cwd() + '/flagpole.json';
         // Explicit (can be set and show in config file output)
         this.project = new ProjectConfig(this, configData.project);
-        if (Flagpole.toType(configData.suites) == 'object') {
+        if (toType(configData.suites) == 'object') {
             for (let key in configData.suites) {
                 configData.suites[key]['name'] = key;
                 config.suites[key] = new SuiteConfig(this, configData.suites[key]);
             }
         }
-        if (Flagpole.toType(configData.environments) == 'object') {
+        if (toType(configData.environments) == 'object') {
             for (let key in configData.environments) {
                 configData.environments[key]['name'] = key;
                 config.environments[key] = new EnvConfig(this, configData.environments[key]);
@@ -121,7 +122,7 @@ export class FlagpoleConfig {
     }
 
     public getTestsFolder(): string {
-        return Cli.normalizePath(this.getConfigFolder() + '/' + this.project.path);
+        return normalizePath(this.getConfigFolder() + '/' + this.project.path);
     }
 
     public addEnvironment(name: string, opts: {} = {}) {
@@ -223,13 +224,19 @@ export class FlagpoleConfig {
         }, null, 2);
     }
 
+    public onSave(callback: Function) {
+        this._onSave.push(callback);
+    }
+
     public save(): Promise<void> {
         return new Promise((resolve, reject) => {
-            fs.writeFile(this.getConfigPath(), this.toString(), function (err) {
+            fs.writeFile(this.getConfigPath(), this.toString(), (err: any) => {
                 if (err) {
                     return reject(err);
                 }
-                Cli.refreshConfig();
+                this._onSave.forEach(callback => {
+                    callback();
+                });
                 resolve();
             });
         });

@@ -1,5 +1,5 @@
 import { ProtoValue, Value } from './value';
-import { AssertionContext } from './assertioncontext';
+import { iAssertionContext } from './interfaces';
 
 interface iCSSPosition {
     line: number,
@@ -26,11 +26,11 @@ export class CSSRule extends ProtoValue {
         return this._name || this._path || 'CSS Rule';
     }
 
-    public static create(input: any, context: AssertionContext, name: string, path: string): CSSRule {
+    public static create(input: any, context: iAssertionContext, name: string, path: string): CSSRule {
         return new CSSRule(input, context, name, path);
     }
 
-    private constructor(input: any, context: AssertionContext, name: string, path: string) {
+    private constructor(input: any, context: iAssertionContext, name: string, path: string) {
         super(input, context, name);
         this._path = path || '';
     }

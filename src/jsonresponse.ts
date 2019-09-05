@@ -1,7 +1,9 @@
-import { iResponse, ResponseType, ProtoResponse } from "./response";
+import { ProtoResponse } from "./response";
 import { Value } from './value';
 import { iJPath, jPath } from './jpath';
-import { HttpResponse } from '.';
+import { HttpResponse } from './httpresponse';
+import { ResponseType } from '.';
+import { iResponse } from './interfaces';
 
 export class JsonResponse extends ProtoResponse implements iResponse {
 

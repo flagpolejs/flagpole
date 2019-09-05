@@ -1,27 +1,6 @@
-import { iConsoleLine, CustomLine, ConsoleColor } from './consoleline';
-
-export enum LogItemType {
-    Result,
-    Comment,
-    Heading,
-    SummaryData
-}
-
-export interface iLogItem {
-    type: LogItemType
-    className: string
-    message: string,
-    passed: boolean
-    failed: boolean
-    isOptional: boolean,
-    timestamp: Date
-    toConsole(): iConsoleLine[]
-    toJson(): any
-    toCsv(): string
-    toPsv(): string
-    toTsv(): string
-    toHtml(): string
-}
+import { iConsoleLine, iLogItem } from '../interfaces';
+import { ConsoleColor, LogItemType } from '../enums';
+import { CustomLine } from './consoleline';
 
 export abstract class LogItem implements iLogItem {
 

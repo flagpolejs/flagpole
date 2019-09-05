@@ -1,8 +1,8 @@
-import { Value, iValue } from './value';
+import { Value } from './value';
+import { iValue, iAssertionContext, iScenario } from "./interfaces";
 import { JSHandle, Page, ElementHandle } from 'puppeteer';
-import { AssertionContext } from './assertioncontext';
-import { Flagpole } from '.';
 import { DOMElement } from './domelement';
+import { asyncForEach, toType } from './util';
 
 export class PuppeteerElement extends DOMElement implements iValue {
 
@@ -12,7 +12,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
         return this._input;
     }
 
-    public static create(input: any, context: AssertionContext, name: string | null = null, path?: string): Promise<PuppeteerElement> {
+    public static create(input: any, context: iAssertionContext, name: string | null = null, path?: string): Promise<PuppeteerElement> {
         return new Promise(resolve => {
             const element = new PuppeteerElement(input, context, name, path);
             if (name === null) {
@@ -28,7 +28,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
        })
     }
 
-    protected constructor(input: any, context: AssertionContext, name?: string | null, path?: string) {
+    protected constructor(input: any, context: iAssertionContext, name?: string | null, path?: string) {
         super(input, context, name, path);
         this._input = input;
         this._path = path || '';
@@ -69,7 +69,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async findAll(selector: string): Promise<PuppeteerElement[]> {
         const elements: ElementHandle[] = await this.$.$$(selector)
         const out: PuppeteerElement[] = [];
-       await Flagpole.forEach(elements, async (element: ElementHandle, i: number) => {
+       await asyncForEach(elements, async (element: ElementHandle, i: number) => {
             out.push(
                 await PuppeteerElement.create(
                     element,
@@ -97,7 +97,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async getChildren(selector: string = '*'): Promise<PuppeteerElement[]> {
         const children: ElementHandle[] = await this.$.$x(`child::${selector}`);
         const out: PuppeteerElement[] = [];
-        await Flagpole.forEach(children, async (child: ElementHandle, i: number) => {
+        await asyncForEach(children, async (child: ElementHandle, i: number) => {
             const name: string = `Child ${selector} ${i} of ${this.name}`;
             const path: string = `${this.path}[child::${selector}][${i}]`;
             out.push(
@@ -125,7 +125,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
         const prevSiblings: ElementHandle[] = await this.$.$x(`preceding-sibling::${selector}`);
         const nextSiblings: ElementHandle[] = await this.$.$x(`following-sibling::${selector}`);
         const siblings: PuppeteerElement[] = [];
-        await Flagpole.forEach(prevSiblings.concat(nextSiblings), async (sibling: ElementHandle, i: number) => {
+        await asyncForEach(prevSiblings.concat(nextSiblings), async (sibling: ElementHandle, i: number) => {
             const name: string = `Sibling ${i} of ${this.name}`;
             const path: string = `${this.path}[sibling::${selector}][${i}]`;
             siblings.push(
@@ -152,7 +152,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async getPreviousSiblings(selector: string = '*'): Promise<PuppeteerElement[]> {
         const siblingElements: ElementHandle[] = await this.$.$x(`preceding-sibling::${selector}`);
         const siblings: PuppeteerElement[] = [];
-        await Flagpole.forEach(siblingElements, async (sibling: ElementHandle, i: number) => {
+        await asyncForEach(siblingElements, async (sibling: ElementHandle, i: number) => {
             const name: string = `Previous Sibling ${i} of ${this.name}`;
             const path: string = `${this.path}[preceding-sibling::${selector}][${i}]`;
             siblings.push(
@@ -179,7 +179,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     public async getNextSiblings(selector: string = '*'): Promise<PuppeteerElement[]> {
         const siblingElements: ElementHandle[] = await this.$.$x(`following-sibling::${selector}`);
         const siblings: PuppeteerElement[] = [];
-        await Flagpole.forEach(siblingElements, async (sibling: ElementHandle, i: number) => {
+        await asyncForEach(siblingElements, async (sibling: ElementHandle, i: number) => {
             const name: string = `Next Sibling ${i} of ${this.name}`;
             const path: string = `${this.path}[following-sibling::${selector}][${i}]`;
             siblings.push(
@@ -301,7 +301,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
                     // Radio or checkbox we need to click on the items
                     if (inputType == 'radio' || inputType == 'checkbox') {
                         // Turn it into an array, to support multiple checked boxes
-                        const multiValues: any[] = Flagpole.toType(value) == 'array' ? value : [value];
+                        const multiValues: any[] = toType(value) == 'array' ? value : [value];
                         // Loop through each checkbox/radio element with this name
                         for (let i = 0; i < inputs.length; i++) {
                             let checkbox: ElementHandle = inputs[i];
@@ -349,29 +349,22 @@ export class PuppeteerElement extends DOMElement implements iValue {
     }
 
     public async click(): Promise<void>;
-    public async click(callback: Function): Promise<void>;
-    public async click(message: string, callback: Function): Promise<void>;
-    public async click(a?: string | Function, b?: Function): Promise<void> {
-        let explicitCallback: boolean = true;
-        const callback: Function = (() => {
-            if (typeof b == 'function') {
-                return b;
-            }
-            else if (typeof a == 'function') {
-                return a;
-            }
-            explicitCallback = false;
-            return function () { };
-        })();
-        const message: string = typeof a == 'string' ? a : '';
-        message && this._context.scenario.comment(message);
-        if (message.length > 0 || explicitCallback) {
-            await this.load(message, callback);
+    public async click(callback: Function): Promise<iScenario>;
+    public async click(message: string, callback: Function): Promise<iScenario>;
+    public async click(a?: string | Function, b?: Function): Promise<void | iScenario> {
+        this._completedAction('CLICK');
+        // If they passed in a message or callback, treat this as a new sub-scenario
+        if (
+            (typeof a == 'string') ||
+            (typeof a == 'function' || typeof b == 'function')
+        ) {
+            const overloaded = this._getMessageAndCallbackFromOverloading(a, b);
+            return this.load(overloaded.message, overloaded.callback);
         }
+        // Otherwise, just treat this as an inline click within the same scenario
         else {
             await (<ElementHandle>this._input).click();
         }
-        this._completedAction('CLICK');
     }
 
     protected _getTagName(): Promise<string> {

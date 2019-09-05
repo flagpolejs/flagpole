@@ -1,6 +1,9 @@
-import { iResponse, ResponseType, ProtoResponse } from "./response";
-import { Flagpole, HttpResponse } from '.';
+import { ProtoResponse } from "./response";
+import { ResponseType } from "./enums";
+import { iResponse } from "./interfaces";
+import { HttpResponse } from './httpresponse';
 import { CSSRule } from './cssrule';
+import { toType } from './util';
 
 const css = require('css');
 
@@ -34,7 +37,7 @@ export class CssResponse extends ProtoResponse implements iResponse {
     }
 
     public async find(path: string): Promise<CSSRule> {
-        if (this.css.stylesheet && Flagpole.toType(this.css.stylesheet.rules) == 'array') {
+        if (this.css.stylesheet && toType(this.css.stylesheet.rules) == 'array') {
             const rules: any[] = this.css.stylesheet.rules;
             let matchingRule: any | null = null;
             rules.some((rule: any) => {
@@ -54,7 +57,7 @@ export class CssResponse extends ProtoResponse implements iResponse {
     }
 
     public async findAll(path: string): Promise<CSSRule[]> {
-        if (this.css.stylesheet && Flagpole.toType(this.css.stylesheet.rules) == 'array') {
+        if (this.css.stylesheet && toType(this.css.stylesheet.rules) == 'array') {
             const rules: any[] = this.css.stylesheet.rules;
             let matchingRules: CSSRule[] = [];
             rules.forEach((rule: any) => {

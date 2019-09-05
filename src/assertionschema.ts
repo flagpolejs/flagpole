@@ -1,5 +1,4 @@
-import { Flagpole } from '.';
-
+import { toType } from './util';
 
 export interface iAssertionSchema {
     [key: string]: string | any[] | iAssertionSchemaItem
@@ -49,8 +48,8 @@ export class AssertionSchema implements iAjvLike {
     }
 
     protected _matchesType(schema: any, document: any, path: string): boolean {
-        const schemaType = Flagpole.toType(schema);
-        const docType = Flagpole.toType(document);
+        const schemaType = toType(schema);
+        const docType = toType(document);
         if (schemaType != 'undefined') {
             // If schema item is a string, then it's defining type
             if (schemaType == 'string') {
@@ -72,7 +71,7 @@ export class AssertionSchema implements iAjvLike {
     }
 
     protected _matchesEnum(schema: any, document: any, path: string): boolean {
-        if (Flagpole.toType(schema) == 'array') {
+        if (toType(schema) == 'array') {
             // Value must be in this array
             if ((schema as any[]).indexOf(document) < 0) {
                 this._logError(`${path} value ${document} is not in enum ${schema.join(', ')}`);
@@ -83,7 +82,7 @@ export class AssertionSchema implements iAjvLike {
     }
 
     protected _matchesPattern(schema: any, document: any, path: string): boolean {
-        const schemaType = Flagpole.toType(schema);
+        const schemaType = toType(schema);
         if (schemaType != 'undefined' && !(new RegExp(schema).test(String(document)))) {
             this._logError(`${path} value ${document} did not match ${String(schema)}`);
             return false;
@@ -92,7 +91,7 @@ export class AssertionSchema implements iAjvLike {
     }
 
     protected _matchesTest(schema: any, document: any, path: string): boolean {
-        const schemaType = Flagpole.toType(schema);
+        const schemaType = toType(schema);
         if (schemaType == 'function') {
             // Function must return true
             let opts: iAssertionSchemaTestOpts = {
@@ -109,8 +108,8 @@ export class AssertionSchema implements iAjvLike {
     }
 
     protected _matchesItems(schema: any, document: any, path: string): boolean {
-        const schemaType: string = Flagpole.toType(schema);
-        const docType: string = Flagpole.toType(document);
+        const schemaType: string = toType(schema);
+        const docType: string = toType(document);
         if (schemaType != 'undefined') {
             // If there is an items value then implicity this should be an array
             if (docType != 'array') {
@@ -134,8 +133,8 @@ export class AssertionSchema implements iAjvLike {
     }
 
     protected  _matchesProperties(schema: any, document: any, path: string): boolean {
-        const schemaType: string = Flagpole.toType(schema);
-        const docType: string = Flagpole.toType(document);
+        const schemaType: string = toType(schema);
+        const docType: string = toType(document);
         if (schemaType != 'undefined') {
             // If there is an properties value then implicity this should be an object
             if (docType != 'object') {
@@ -159,8 +158,8 @@ export class AssertionSchema implements iAjvLike {
     }
 
     protected _isValid(schema: any, document: any, path: string): boolean {
-        const schemaType: string = Flagpole.toType(schema);
-        const docType: string = Flagpole.toType(document);
+        const schemaType: string = toType(schema);
+        const docType: string = toType(document);
         // If it's either a string or array, we're testing the type
         if (schemaType == 'string' || schemaType == 'array') {
             if (!this._matchesType(schema, document, path)) {

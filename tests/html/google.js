@@ -19,16 +19,14 @@ const homepage = suite.html('Homepage').open('/')
         context.assert(images).length.greaterThan(0).and.lessThan(99);
         context.assert('Should be at least one image on the page', images.length)
             .greaterThan(0);
-        
-        images.forEach(async function (img, index) {
+        images.forEach(async (img, index) => {
             (await img.load('Image ' + index))
                 .next(async (imageContext) => {
                     imageContext.assert(imageContext.response.length).greaterThan(0);
                     imageContext.assert(await imageContext.find('width')).greaterThan(100);
                 });
         });
-        
-    }) 
+    })
     .next(async context => {
         const form = await context.find('form');
         context.assert('Should be a form', form).not.equals(null);

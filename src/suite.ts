@@ -1,21 +1,15 @@
-import { Flagpole } from "./index";
-import { ResponseType } from "./response";
+import { ResponseType, SuiteStatusEvent } from "./enums";
 import { Scenario } from "./scenario";
 import { URL } from 'url';
 import { FlagpoleReport } from './logging/flagpolereport';
-
-export enum SuiteStatusEvent {
-    beforeAllExecute,
-    beforeEachExecute,
-    afterEachExecute,
-    afterAllExecute,
-    finished
-}
+import { iSuite } from './interfaces';
+import { exitProcess } from './util';
+import { FlagpoleExecution } from './flagpoleexecutionoptions';
 
 /**
  * A suite contains many scenarios
  */
-export class Suite {
+export class Suite implements iSuite {
 
     public scenarios: Array<Scenario> = [];
 
@@ -155,10 +149,10 @@ export class Suite {
      * @returns {Suite}
      */
     public print(exitAfterPrint: boolean = true): void {
-        const report: FlagpoleReport = new FlagpoleReport(this, Flagpole.executionOpts);
+        const report: FlagpoleReport = new FlagpoleReport(this, FlagpoleExecution.opts);
         report.print()
             .then(() => {
-                exitAfterPrint && Flagpole.exit(this.hasPassed)
+                exitAfterPrint && exitProcess(this.hasPassed)
             });
     }
 
@@ -272,7 +266,7 @@ export class Suite {
             baseUrl = url;
         }
         else if (Object.keys(url).length > 0) {
-            baseUrl = url[Flagpole.executionOpts.environment];
+            baseUrl = url[FlagpoleExecution.opts.environment];
             // If env didn't match one, just pick the first one
             if (!baseUrl) {
                 baseUrl = url[Object.keys(url)[0]];
@@ -577,11 +571,11 @@ export class Suite {
             // All Done
             await this._fireFinally();
             // Should we print automatically?
-            if (Flagpole.executionOpts.automaticallyPrintToConsole) {
-                this.print(Flagpole.executionOpts.exitOnDone);
+            if (FlagpoleExecution.opts.automaticallyPrintToConsole) {
+                this.print(FlagpoleExecution.opts.exitOnDone);
             }
             else {
-                Flagpole.executionOpts.exitOnDone && Flagpole.exit(this.hasPassed);
+                FlagpoleExecution.opts.exitOnDone && exitProcess(this.hasPassed);
             }
         }
     }

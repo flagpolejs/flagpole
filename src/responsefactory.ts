@@ -6,11 +6,11 @@ import { ImageResponse } from './imageresponse';
 import { JsonResponse } from './jsonresponse';
 import { ScriptResponse } from './scriptresponse';
 import { VideoResponse } from './videoresponse';
-import { Scenario } from './scenario';
-import { iResponse, ResponseType } from './response';
 import { ExtJSResponse } from './extjsresponse';
+import { ResponseType } from "./enums";
+import { iResponse, iScenario } from "./interfaces";
 
-export function createResponse(scenario: Scenario): iResponse {
+export function createResponse(scenario: iScenario): iResponse {
     const type: ResponseType = scenario.responseType;
     let className;
     if (type == ResponseType.html) {

@@ -1,17 +1,16 @@
-import { Suite } from "../suite";
-import { iConsoleLine, HeadingLine, CommentLine, LineBreak, PassLine, FailLine } from "./consoleline";
-import { Flagpole } from '..';
-import { Scenario } from '../scenario';
-import { FlagpoleOutput, FlagpoleExecutionOptions } from '../flagpoleexecutionoptions';
-import { iLogItem, LogItemType } from './logitem';
+import { HeadingLine, CommentLine, LineBreak, PassLine, FailLine } from "./consoleline";
+import { FlagpoleOutput, FlagpoleExecutionOptions, FlagpoleExecution } from '../flagpoleexecutionoptions';
 import { LogComment } from './comment';
+import { iConsoleLine, iLogItem, iScenario, iSuite } from '../interfaces';
+import { LogItemType } from '../enums';
+import { asyncForEach } from '../util';
 
 export class FlagpoleReport {
 
-    public readonly suite: Suite;
+    public readonly suite: iSuite;
     public readonly opts: FlagpoleExecutionOptions;
 
-    constructor(suite: Suite, opts: FlagpoleExecutionOptions) {
+    constructor(suite: iSuite, opts: FlagpoleExecutionOptions) {
         this.suite = suite;
         this.opts = opts;
     }
@@ -24,7 +23,7 @@ export class FlagpoleReport {
         let lines: iConsoleLine[] = [];
         lines.push(new HeadingLine(this.suite.title));
         lines.push(new CommentLine(`Base URL: ${this.suite.baseUrl}`));
-        lines.push(new CommentLine(`Environment: ${Flagpole.executionOpts.environment}`));
+        lines.push(new CommentLine(`Environment: ${FlagpoleExecution.opts.environment}`));
         lines.push(new CommentLine(`Took ${this.suite.executionDuration}ms`));
         const failCount: number = this.suite.failCount;
         const totalCount: number = this.suite.scenarios.length;
@@ -32,7 +31,7 @@ export class FlagpoleReport {
             lines.push(new PassLine(`Passed (${totalCount} scenario${totalCount == 1 ? '' : 's'})`)) :
             lines.push(new FailLine(`Failed (${failCount} of ${totalCount} scenario${totalCount == 1 ? '': 's'})`));
         lines.push(new LineBreak());
-        await Flagpole.forEach(this.suite.scenarios, async (scenario: Scenario) => {
+        await asyncForEach(this.suite.scenarios, async (scenario: iScenario) => {
             const log = await scenario.getLog();
             log.forEach((item: iLogItem) => {
                 lines = lines.concat(item.toConsole());
@@ -49,7 +48,7 @@ export class FlagpoleReport {
      * @returns {any}
      */
     public async toJson(): Promise<any> {
-        const scenarios: Scenario[] = this.suite.scenarios;
+        const scenarios: iScenario[] = this.suite.scenarios;
         let out: any = {
             title: this.suite.title,
             baseUrl: String(this.suite.baseUrl),
@@ -59,7 +58,7 @@ export class FlagpoleReport {
         let failCount: number = 0;
         let passCount: number = 0;
         for (let i = 0; i < scenarios.length; i++) {
-            let scenario: Scenario = scenarios[i];
+            let scenario: iScenario = scenarios[i];
             const log: iLogItem[] = await scenario.getLog();
             out.scenarios[i] = {
                 title: scenario.title,
@@ -95,7 +94,7 @@ export class FlagpoleReport {
      * Create HTML output for results
      */
     public async toHTML(): Promise<string> {
-        const scenarios: Scenario[] = this.suite.scenarios;
+        const scenarios: iScenario[] = this.suite.scenarios;
         let html: string = '';
         html += '<article class="suite">' + "\n";
         html += `<h2>${this.suite.title}</h2>\n`;
@@ -104,12 +103,12 @@ export class FlagpoleReport {
         html += `
             <li>Duration: ${this.suite.executionDuration}ms</li>
             <li>Base URL: ${this.suite.baseUrl}</li>
-            <li>Environment: ${Flagpole.executionOpts.environment}</li>
+            <li>Environment: ${FlagpoleExecution.opts.environment}</li>
         `;
         html += "</ul>\n";
         html += "</aside>\n";
         for (let i = 0; i < scenarios.length; i++) {
-            let scenario: Scenario = scenarios[i];
+            let scenario: iScenario = scenarios[i];
             const log = await scenario.getLog();
             html += '<section class="scenario">' + "\n";
             html += `

@@ -1,6 +1,7 @@
-import { iResponse, ResponseType } from "./response";
-import { Scenario } from "./scenario";
-import { ProtoResponse, HttpResponse } from '.';
+import { ResponseType } from "./enums";
+import { iResponse } from "./interfaces";
+import { ProtoResponse } from './response';
+import { HttpResponse } from './httpresponse';
 
 export class VideoResponse extends ProtoResponse implements iResponse {
 

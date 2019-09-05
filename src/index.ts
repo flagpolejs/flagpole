@@ -14,21 +14,20 @@ import { ImageResponse } from "./imageresponse";
 import { jPath, iJPath } from "./jpath";
 import { JsonResponse } from "./jsonresponse";
 import { ResourceResponse } from "./resourceresponse";
-import { ResponseType, ProtoResponse, iResponse } from "./response";
+import { ProtoResponse } from "./response";
 import { Scenario } from "./scenario";
 import { ScriptResponse } from "./scriptresponse";
 import { Suite } from "./suite";
-import { Value, iValue } from "./value";
+import { Value } from "./value";
 import { VideoResponse } from "./videoresponse";
 import { FlagpoleExecutionOptions, FlagpoleOutput } from './flagpoleexecutionoptions';
 import { Flagpole } from "./flagpole";
+import { ResponseType } from "./enums";
+import { iResponse, iValue } from "./interfaces";
 import * as Promise from "bluebird";
 
 // Have Bluebird replace default promises
-global.Promise = Promise
-
-// Consume arguments
-Flagpole.executionOpts = FlagpoleExecutionOptions.createWithArgs(process.argv);
+global.Promise = Promise;
 
 export {
     Flagpole, FlagpoleExecutionOptions, FlagpoleOutput,

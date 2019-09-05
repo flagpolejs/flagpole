@@ -1,7 +1,8 @@
-import { iResponse, ResponseType } from "./response";
-import { Scenario } from "./scenario";
+import { ResponseType } from "./enums";
+import { iResponse } from "./interfaces";
 import { Value } from './value';
-import { ProtoResponse, HttpResponse } from '.';
+import { ProtoResponse } from './response';
+import { HttpResponse } from './httpresponse';
 
 export class ScriptResponse extends ProtoResponse implements iResponse {
 

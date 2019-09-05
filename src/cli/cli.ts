@@ -1,7 +1,7 @@
 import { FlagpoleConfig, SuiteConfig } from "./config";
 import { ClorthoService, iCredentials } from 'clortho-lite';
 import { printHeader } from './cli-helper';
-import { Flagpole } from '..';
+import { toType, normalizePath } from '../util';
 
 const fs = require('fs');
 const path = require('path');
@@ -62,23 +62,11 @@ export class Cli {
         process.exit(exitCode);
     };
 
-    /**
-     * Have folder path always end in a /
-     * 
-     * @param path 
-     */
-    static normalizePath(path: string): string {
-        if (path) {
-            path = (path.match(/\/$/) ? path : path + '/');
-        }
-        return path;
-    }
-
     static refreshConfig(): FlagpoleConfig {
         if (Cli.configPath && fs.existsSync(Cli.configPath)) {
             // Read the file
             let configContent: string = fs.readFileSync(Cli.configPath);
-            let configDir: string = Cli.normalizePath(path.dirname(Cli.configPath));
+            let configDir: string = normalizePath(path.dirname(Cli.configPath));
             let configData: any;
             try {
                 configData = JSON.parse(configContent);
@@ -92,6 +80,7 @@ export class Cli {
         else {
             Cli.config = new FlagpoleConfig()
         }
+        Cli.config.onSave(this.refreshConfig);
         return Cli.config;
     }
 
@@ -209,7 +198,7 @@ export class Cli {
             if (typeof opts.baseDomain == 'string') {
                 domains = `'${opts.baseDomain}'`;
             }
-            else if (Flagpole.toType(opts.baseDomain) == 'object') {
+            else if (toType(opts.baseDomain) == 'object') {
                 domains += "{\n";
                 for (let env in opts.baseDomain) {
                     let domain: string = opts.baseDomain[env];

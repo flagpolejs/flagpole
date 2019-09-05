@@ -3,8 +3,9 @@ import * as http from 'http';
 import { Cli, iSuiteOpts } from './cli';
 import { SuiteConfig, EnvConfig } from './config';
 import { URL } from 'url';
-import { Flagpole, FlagpoleExecutionOptions } from '..';
+import { FlagpoleExecutionOptions } from '..';
 import { SuiteExecutionResult, SuiteExecution } from './suiteexecution';
+import { FlagpoleExecution } from '../flagpoleexecutionoptions';
 
 const open = require('open');
 const qs = require('querystring');
@@ -143,7 +144,7 @@ const routes = {
         const suiteName = postData.suite;
         const envName = postData.env;
         if (suiteName && Cli.config.suites[suiteName]) {
-            return runSuite(response, suiteName, envName || Flagpole.executionOpts.environment);
+            return runSuite(response, suiteName, envName || FlagpoleExecution.opts.environment);
         }
         fileNotFound(response);
     }
@@ -512,7 +513,7 @@ const sendIndex = (response: http.ServerResponse): void => {
                     <li>Project Name: ${Cli.config.project.name}</li>
                     <li>Config Path: ${Cli.configPath}</li>
                     <li>Root Path: ${Cli.rootPath}</li>
-                    <li>Environment: ${Flagpole.executionOpts.environment}</li>
+                    <li>Environment: ${FlagpoleExecution.opts.environment}</li>
                 </ul>
                 <h2>List of Suites</h2>
                 <table>

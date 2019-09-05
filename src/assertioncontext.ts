@@ -1,17 +1,13 @@
-import { Scenario } from './scenario';
-import { iResponse } from './response';
-import { Suite } from './suite';
 import { Browser } from './browser';
 import { Page } from 'puppeteer';
 import { Assertion } from './assertion';
-import { DOMElement } from './domelement';
-import { Flagpole, iValue, AssertionResult } from '.';
+import { iResponse, iValue, iAssertionContext, iScenario, iSuite, iAssertionResult, iDOMElement } from './interfaces';
 import { AssertionActionCompleted, AssertionActionFailed } from './logging/assertionresult';
-import { Link } from './link';
+import { openInBrowser } from './util';
 
-export class AssertionContext {
+export class AssertionContext implements iAssertionContext {
 
-    private _scenario: Scenario;
+    private _scenario: iScenario;
     private _response: iResponse;
     private _assertions: Assertion[] = [];
     private _subScenarios: Promise<any>[] = [];
@@ -25,11 +21,11 @@ export class AssertionContext {
         return this._response;
     }
 
-    public get scenario(): Scenario {
+    public get scenario(): iScenario {
         return this._scenario;
     }
 
-    public get suite(): Suite {
+    public get suite(): iSuite {
         return this._scenario.suite;
     }
 
@@ -56,8 +52,8 @@ export class AssertionContext {
         return incompleteAssertions;
     }
 
-    public get assertionsResolved(): Promise<(AssertionResult | null)[]> {
-        const promises: Promise<AssertionResult | null>[] = [];
+    public get assertionsResolved(): Promise<(iAssertionResult | null)[]> {
+        const promises: Promise<iAssertionResult | null>[] = [];
         this._assertions.forEach((assertion) => {
             if (assertion.assertionMade) {
                 promises.push(assertion.result);
@@ -70,7 +66,7 @@ export class AssertionContext {
         return Promise.all(this._subScenarios);
     }
 
-    constructor(scenario: Scenario, response: iResponse) {
+    constructor(scenario: iScenario, response: iResponse) {
         this._scenario = scenario;
         this._response = response;
     }
@@ -120,7 +116,7 @@ export class AssertionContext {
      * @param selector
      * @param searchForText 
      */
-    public async findHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement | null> {
+    public async findHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement | null> {
         return this.findHavingText(selector, searchForText);
     };
 
@@ -130,7 +126,7 @@ export class AssertionContext {
      * @param selector
      * @param searchForText 
      */
-    public async findAllHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement[]> {
+    public async findAllHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement[]> {
         return this.findAllHavingText(selector, searchForText);
     };
 
@@ -267,7 +263,7 @@ export class AssertionContext {
      * @param selector
      */
     public async submit(selector: string): Promise<any> {
-        const el: DOMElement = await this.find(selector);
+        const el: iDOMElement = await this.find(selector);
         if (el === null) {
             throw new Error(`Element with selector ${selector} not found.`);
         }
@@ -280,7 +276,7 @@ export class AssertionContext {
      * @param selector
      */
     public async click(selector: string): Promise<any> {
-        const el: DOMElement = await this.find(selector);
+        const el: iDOMElement = await this.find(selector);
         if (el === null) {
             throw new Error(`Element with selector ${selector} not found.`);
         }
@@ -292,7 +288,7 @@ export class AssertionContext {
      */
     public async openInBrowser(): Promise<string> {
         const output = this.response.body.toString();
-        const filePath: string = await Flagpole.openInBrowser(output);
+        const filePath: string = await openInBrowser(output);
         this.scenario.comment(`Open response in browser temp file: ${filePath}`);
         return filePath;
     }
@@ -301,19 +297,6 @@ export class AssertionContext {
         const output: Buffer | string = await this.response.screenshot(opts);
         this._completedAction('SCREENSHOT');
         return output;
-    }
-
-    public addSubScenario(scenario: Scenario, link: Link) {
-        // Add this to our list of sub-scenarios so we can wait for it
-        this._subScenarios.push(new Promise(resolve => {
-            scenario.before(() => {
-                resolve();
-            });
-        }));
-        // Fire it off with a slight delay
-        Flagpole.runAsync(() => {
-            scenario.open(link.getUri());
-        }, 10);
     }
 
     protected async _completedAction(verb: string, noun?: string) {

@@ -1,7 +1,8 @@
-import { iResponse, ResponseType  } from "./response";
 import { HTMLElement } from './htmlelement';
-import { HttpResponse } from '.';
+import { HttpResponse } from './httpresponse';
 import { DOMResponse } from './domresponse';
+import { iResponse } from './interfaces';
+import { ResponseType } from './enums';
 
 let cheerio: CheerioAPI = require('cheerio');
 let $: CheerioStatic;

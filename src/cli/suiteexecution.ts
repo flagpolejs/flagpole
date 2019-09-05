@@ -1,8 +1,10 @@
 import { SuiteConfig } from './config';
-import { Flagpole, FlagpoleExecutionOptions, FlagpoleOutput } from '..';
+import { FlagpoleExecutionOptions, FlagpoleOutput, FlagpoleExecution } from '../flagpoleexecutionoptions';
 import { spawn } from 'child_process';
 import { Suite } from '../suite';
 import { FlagpoleReport } from '../logging/flagpolereport';
+import { asyncForEach } from '../util';
+import { Flagpole } from '../flagpole';
 
 export enum SuiteExecutionExitCode {
     success = 0,
@@ -111,7 +113,7 @@ export class SuiteExecution {
     public async executeSuite(config: SuiteConfig): Promise<SuiteExecutionResult> {
         return this.executePath(
             config.getPath(),
-            Flagpole.executionOpts
+            FlagpoleExecution.opts
         );
     }
 
@@ -176,9 +178,9 @@ export class SuiteExecutionInline extends SuiteExecution {
         opts = Object.assign({}, opts);
         opts.automaticallyPrintToConsole = false;
         // Save current global output options
-        const globalOpts = Object.assign({}, Flagpole.executionOpts);
+        const globalOpts = Object.assign({}, FlagpoleExecution.opts);
         // Set it to our temporary opts
-        Flagpole.executionOpts = opts;
+        FlagpoleExecution.opts = opts;
         // How many suites do we have now?
         const preSuiteCount: number = Flagpole.suites.length;
         // Embed the suite file... it should add at least one suite
@@ -197,7 +199,7 @@ export class SuiteExecutionInline extends SuiteExecution {
             // Wait for every suite to finish executing
             await Promise.all(promises);
             // Loop through the added suites again and capture output
-            await Flagpole.forEach(createdSuites, async (suite: Suite) => {
+            await asyncForEach(createdSuites, async (suite: Suite) => {
                 if (suite.hasFailed) {
                     exitCode = SuiteExecutionExitCode.failure;
                 }
@@ -205,7 +207,7 @@ export class SuiteExecutionInline extends SuiteExecution {
                 this._logLine(await report.toString());
             });
         }
-        Flagpole.executionOpts = globalOpts;
+        FlagpoleExecution.opts = globalOpts;
         return new SuiteExecutionResult(this._output, exitCode);
     }
 

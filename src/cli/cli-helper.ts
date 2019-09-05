@@ -1,9 +1,9 @@
-import { Flagpole } from "..";
+import { FlagpoleExecution } from '../flagpoleexecutionoptions';
 
 const ansiAlign = require('ansi-align');
 
 export function printHeader() {
-    if (Flagpole.executionOpts.quietMode) {
+    if (FlagpoleExecution.opts.quietMode) {
         return;
     }
     console.log('\u001b[0m \u001b[37m^\u001b[0m ');
@@ -16,7 +16,7 @@ export function printHeader() {
 }
 
 export function printOldHeader() {
-    if (Flagpole.executionOpts.quietMode) {
+    if (FlagpoleExecution.opts.quietMode) {
         return;
     }
     console.log(
@@ -37,7 +37,7 @@ export function printOldHeader() {
 }
 
 export function printSubheader(heading: string) {
-    if (!Flagpole.executionOpts.quietMode) {
+    if (!FlagpoleExecution.opts.quietMode) {
         console.log(
             ansiAlign.center(
                 "\x1b[31m===========================================================================\x1b[0m\n" +

@@ -2,7 +2,7 @@ import { Cli } from './cli';
 import { SuiteConfig } from "./config";
 import { TestRunner } from './testrunner';
 import { CliAnsi } from './cli-ansi';
-import { Flagpole, FlagpoleOutput } from '..';
+import { FlagpoleOutput, FlagpoleExecution } from '../flagpoleexecutionoptions';
 
 const ansi = new CliAnsi();
 
@@ -57,7 +57,7 @@ const runSuites = async (selectedSuites: SuiteConfig[]): Promise<void> => {
     });
 
     // If console output, then give feedback
-    if (Flagpole.executionOpts.output == FlagpoleOutput.console) {
+    if (FlagpoleExecution.opts.output == FlagpoleOutput.console) {
         // If no matching tests found to run
         if (runner.suites.length == 0) {
             Cli.log("Did not find any test suites to run.\n");

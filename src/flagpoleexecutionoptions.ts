@@ -147,3 +147,17 @@ export class FlagpoleExecutionOptions {
     }
 
 }
+
+export class FlagpoleExecution {
+
+    protected static _opts: FlagpoleExecutionOptions = FlagpoleExecutionOptions.createWithArgs(process.argv);
+
+    public static get opts(): FlagpoleExecutionOptions {
+        return this._opts;
+    }
+
+    public static set opts(value: FlagpoleExecutionOptions) {
+        this._opts = value;
+    }
+
+}

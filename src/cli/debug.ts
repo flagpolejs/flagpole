@@ -1,5 +1,6 @@
 import { Cli } from './cli';
-import { Flagpole } from "..";
+import { FlagpoleExecution } from '../flagpoleexecutionoptions';
+
 
 export function debug(argv) {
     Cli.log('DEBUG INFO');
@@ -28,8 +29,8 @@ export function debug(argv) {
     Cli.log('');
     Cli.log('Other settings:')
     Cli.list([
-        'Environment: ' + Flagpole.executionOpts.environment,
-        'Output: ' + Flagpole.executionOpts.output.toString(),
+        'Environment: ' + FlagpoleExecution.opts.environment,
+        'Output: ' + FlagpoleExecution.opts.output.toString(),
         'Root Path: ' + Cli.config.getConfigFolder(),
         'Tests Path: ' + Cli.config.getTestsFolder()
     ]);

@@ -1,35 +1,10 @@
-import { Flagpole } from '.';
-import { AssertionContext } from './assertioncontext';
+import { iAssertionContext, iValue } from './interfaces';
+import { toType, isNullOrUndefined } from './util';
 
-export interface iValue {
-    $: any,
-    name: string,
-    toArray(): any[],
-    toString(): string,
-    toInteger(): number,
-    toFloat(): number,
-    toType(): string,
-    isNullOrUndefined(): boolean,
-    isUndefined(): boolean,
-    isNull(): boolean,
-    isNaN(): boolean,
-    isNumber(): boolean,
-    isNumeric(): boolean,
-    isObject(): boolean,
-    isPromise(): boolean,
-    isRegularExpression(): boolean,
-    isString(): boolean,
-    isArray(): boolean,
-    isCookie(): boolean,
-    isPuppeteerElement(): boolean,
-    isCheerioElement(): boolean,
-    hasProperty(key: string): Promise<iValue>
-}
-
-export abstract class ProtoValue  implements iValue{
+export abstract class ProtoValue implements iValue {
 
     protected _input: any;
-    protected _context: AssertionContext;
+    protected _context: iAssertionContext;
     protected _name: string | null;
     protected _parent: any;
     protected _highlight: string;
@@ -55,7 +30,7 @@ export abstract class ProtoValue  implements iValue{
         return (this._sourceCode === null) ? '' : this._sourceCode;
     }
 
-    constructor(input: any, context: AssertionContext, name?: string, parent: any = null, highlight: string = '') {
+    constructor(input: any, context: iAssertionContext, name?: string, parent: any = null, highlight: string = '') {
         this._input = input;
         this._context = context;
         this._name = name || null;
@@ -72,7 +47,7 @@ export abstract class ProtoValue  implements iValue{
     }
 
     public toString(): string {
-        const type: string = Flagpole.toType(this._input);
+        const type: string = toType(this._input);
         if (this._input && this._input.value) {
             return String(this._input.value);
         }
@@ -91,11 +66,11 @@ export abstract class ProtoValue  implements iValue{
     }
 
     public toType(): string {
-        return String(Flagpole.toType(this._input));
+        return String(toType(this._input));
     }
 
     public isNullOrUndefined(): boolean {
-        return Flagpole.isNullOrUndefined(this._input);
+        return isNullOrUndefined(this._input);
     }
 
     public isUndefined(): boolean {

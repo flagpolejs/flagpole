@@ -1,8 +1,9 @@
-import { iResponse, ResponseType } from "./response";
+import { ResponseType } from "./enums";
+import { iResponse } from "./interfaces";
 import { Page, ElementHandle } from 'puppeteer';
 import { PuppeteerResponse } from './puppeteerresponse';
 import { PuppeteerElement } from './puppeteerelement';
-import { Flagpole } from '.';
+import { asyncForEach } from './util';
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
  
@@ -43,7 +44,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
             const puppeteerElements: PuppeteerElement[] = [];
             if (this.context.page !== null) {
                 const elements: ElementHandle[] = await this.context.page.$$(path);
-                await Flagpole.forEach(elements, async (el: ElementHandle<Element>, i: number) => {
+                await asyncForEach(elements, async (el: ElementHandle<Element>, i: number) => {
                     const element = await PuppeteerElement.create(
                         el, response.context, `${path} [${i}]`, path
                     );

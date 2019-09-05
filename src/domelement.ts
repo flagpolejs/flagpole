@@ -1,12 +1,12 @@
-import { ProtoValue, Value, iValue } from './value';
+import { ProtoValue, Value } from './value';
+import { iValue, iAssertionContext, iScenario, iDOMElement, iMessageAndCallback } from './interfaces';
 import { Link } from './link';
-import { Scenario } from './scenario';
-import { ResponseType } from './response';
-import { AssertionContext } from './assertioncontext';
+import { ResponseType } from './enums';
+import { isPuppeteer } from './response';
 import { AssertionActionCompleted, AssertionActionFailed } from './logging/assertionresult';
-import { Flagpole } from '.';
+import { runAsync } from './util';
 
-export abstract class DOMElement extends ProtoValue implements iValue {
+export abstract class DOMElement extends ProtoValue implements iValue, iDOMElement {
 
     protected _path: string;
     protected _tagName: string = '';
@@ -23,14 +23,14 @@ export abstract class DOMElement extends ProtoValue implements iValue {
         return this._tagName;
     }
 
-    protected constructor(input: any, context: AssertionContext, name?: string | null, path?: string) {
+    protected constructor(input: any, context: iAssertionContext, name?: string | null, path?: string) {
         super(input, context, (name || 'DOM Element'));
         this._path = path || '';
     }
 
-    public abstract async click(a?: string | Function, b?: Function): Promise<void>
+    public abstract async click(a?: string | Function, b?: Function): Promise<iScenario | void>
     public abstract async fillForm(formData: any): Promise<void>
-    public abstract async submit(a?: string | Function, b?: Function): Promise<void>
+    public abstract async submit(a?: string | Function, b?: Function): Promise<iScenario | void>
     public abstract async find(selector: string): Promise<iValue | null>
     public abstract async findAll(selector: string): Promise<iValue[]>
 
@@ -190,28 +190,34 @@ export abstract class DOMElement extends ProtoValue implements iValue {
      * Load the URL from this element if it has something to load
      * This is used to create a lambda scenario
      */
-    public async load(): Promise<Scenario>;
-    public async load(callback: Function): Promise<Scenario>;
-    public async load(message: string, callback: Function): Promise<Scenario>;
-    public async load(a?: string | Function, b?: Function): Promise<Scenario> {
-        const link: Link = await this._getLink();
-        const scenario: Scenario = await this._createLambdaScenario(a, b);
-        // Is this link one that we can actually load?
-        if (link.isNavigation()) {
-            // Set a better title
-            scenario.title = (typeof a == 'string' && a.length) ? a : `Load ${link.getUri()}`;
-            // Execute it asynchronously
-            this._context.addSubScenario(scenario, link);
-        }
-        else {
-            scenario.skip('Not a navigational link');
-        }
+    public load(): iScenario;
+    public load(callback: Function): iScenario;
+    public load(message: string, callback: Function): iScenario;
+    public load(a?: string | Function, b?: Function): iScenario {
+        const overloaded: iMessageAndCallback = this._getMessageAndCallbackFromOverloading(a, b);
+        const scenario = this._context.suite.scenario(overloaded.message, ResponseType.resource, {});
         this._completedAction('LOAD');
+        runAsync(async () => {
+            const link: Link = await this._getLink();
+            const scenarioType: ResponseType = await this._getLambdaScenarioType(); 
+            const opts: any = await this._getLambdaScenarioOpts(scenarioType);
+            scenario.setResponseType(scenarioType, opts);
+            scenario.next(overloaded.callback);
+            if (overloaded.message.length == 0) {
+                scenario.title = `Load ${link.getUri()}`;
+            }
+            if (link.isNavigation()) {
+                scenario.open(link.getUri());
+            }
+            else {
+                scenario.skip('Not a navigational link');
+            }
+        }, 10);
         return scenario;
     }
 
     protected async _isFormTag(): Promise<boolean> {
-        return (await this.tagName) == 'form';
+        return this.tagName == 'form';
     }
 
     protected async _isButtonTag(): Promise<boolean> {
@@ -224,14 +230,14 @@ export abstract class DOMElement extends ProtoValue implements iValue {
 
     protected async _isLinkTag(): Promise<boolean> {
         return (
-            await this.tagName === 'a' &&
+            this.tagName === 'a' &&
             await this._getAttribute('href') !== null
         );
     }
 
     protected async _isImageTag(): Promise<boolean> {
         return (
-            await this.tagName === 'img' &&
+            this.tagName === 'img' &&
             await this._getAttribute('src') !== null
         );
     }
@@ -257,14 +263,14 @@ export abstract class DOMElement extends ProtoValue implements iValue {
 
     protected async _isScriptTag(): Promise<boolean> {
         return (
-            await this.tagName === 'script' &&
+            this.tagName === 'script' &&
             await this._getAttribute('src') !== null
         );
     }
 
     protected async _isStylesheetTag(): Promise<boolean> {
         return (
-            await this.tagName === 'link' &&
+            this.tagName === 'link' &&
             await this._getAttribute('href') !== null &&
             String(await this._getAttribute('rel')).toLowerCase() == 'stylesheet'
         );
@@ -299,9 +305,8 @@ export abstract class DOMElement extends ProtoValue implements iValue {
         if (
             (await this._isFormTag()) || (await this._isClickable())
         ) {
-            // Assume if we are already in browser mode, we want to stay there
-            return (this._context.scenario.responseType == ResponseType.browser) ?
-                ResponseType.browser : ResponseType.html;
+            // If we are loading an html page, stay in our current mode 
+            return this._context.scenario.responseType;
         }
         else if (await this._isImageTag()) {
             return ResponseType.image;
@@ -325,24 +330,9 @@ export abstract class DOMElement extends ProtoValue implements iValue {
         return new Link(srcPath || '', this._context);
     }
 
-    protected async _createLambdaScenario(a: any, b: any): Promise<Scenario> {
-        const title: string = typeof a == 'string' ? a : this._path;
-        const scenarioType: ResponseType = await this._getLambdaScenarioType(); 
-        // Need a better way to do this
-        const newScenarioIsBrowser: boolean = (
-            scenarioType == ResponseType.browser ||
-            scenarioType == ResponseType.extjs
-        );
-        const curScenarioIsBrowser: boolean = (
-            this._context.scenario.responseType == ResponseType.browser ||
-            this._context.scenario.responseType == ResponseType.extjs
-        );
-        // If we are changing from a browser type to non-browser type (or vice versa) options don't carry over
-        const opts: any = ((newScenarioIsBrowser && curScenarioIsBrowser) || !newScenarioIsBrowser) ?
-            this._context.scenario.requestOptions : {};
-        // Create our new lambda scenario and apply the next callback
-        const scenario: Scenario = this._context.suite.scenario(title, scenarioType, opts);
-        scenario.next((function () {
+    protected _getMessageAndCallbackFromOverloading(a: any, b: any): iMessageAndCallback {
+        const message: string = typeof a == 'string' ? a : this._path;
+        const callback: Function = ((function () {
             // Handle overloading
             if (typeof b == 'function') {
                 return b;
@@ -355,8 +345,18 @@ export abstract class DOMElement extends ProtoValue implements iValue {
                 return function () { };
             }
         })());
-        // Return it
-        return scenario;
+        return {
+            message: message,
+            callback: callback
+        }
+    }
+
+    protected _getLambdaScenarioOpts(newScenarioType: ResponseType): any {
+        const newScenarioIsBrowser: boolean = isPuppeteer(newScenarioType);
+        const curScenarioIsBrowser: boolean = isPuppeteer(this._context.response.responseType);
+        // Carry over the opts, unless we change from non-browser to browser (or vice versa)
+        return newScenarioIsBrowser == curScenarioIsBrowser ?
+            this._context.scenario.requestOptions : {};
     }
 
     protected async _completedAction(verb: string, noun?: string) {
