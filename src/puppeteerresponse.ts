@@ -1,6 +1,6 @@
-import { Page, ElementHandle } from 'puppeteer';
+import { Page, ElementHandle, Browser, Response } from 'puppeteer';
 import { iResponse, iValue, iDOMElement } from "./interfaces";
-import { Browser } from './browser';
+import { BrowserControl } from './browsercontrol';
 import { DOMResponse } from './domresponse';
 import { PuppeteerElement } from './puppeteerelement';
 import { toType } from './util';
@@ -14,15 +14,23 @@ export abstract class PuppeteerResponse extends DOMResponse implements iResponse
         return true;
     }
 
-    public get browser(): Browser {
-        return this.scenario.getBrowser();
+    public get browserControl(): BrowserControl {
+        return this.scenario.getBrowserControl();
     }
 
     public get page(): Page | null {
-        return this.scenario.getBrowser().getPage();
+        return this.scenario.getBrowserControl().page;
     }
 
-    public abstract async find(path: string): Promise<iDOMElement | null>
+    public get browser(): Browser | null {
+        return this.scenario.getBrowserControl().browser;
+    }
+
+    public get response(): Response | null {
+        return this.scenario.getBrowserControl().response;
+    }
+
+    public abstract async find(path: string): Promise<iDOMElement | iValue>
     public abstract async findAll(path: string): Promise<iDOMElement[]>
 
     /**
@@ -129,7 +137,7 @@ export abstract class PuppeteerResponse extends DOMResponse implements iResponse
      * @param selector
      * @param timeout 
      */
-    public async waitForHidden(selector: string, timeout: number = 100): Promise<PuppeteerElement | null> {
+    public async waitForHidden(selector: string, timeout: number = 100): Promise<PuppeteerElement> {
         if (this.page !== null) {
             const opts = { timeout: timeout || 100, hidden: true };
             const element = await this.page.waitForSelector(selector, opts);
@@ -138,7 +146,7 @@ export abstract class PuppeteerResponse extends DOMResponse implements iResponse
         throw new Error('waitForHidden is not available in this context');
     }
 
-    public async waitForVisible(selector: string, timeout: number = 100): Promise<PuppeteerElement | null> {
+    public async waitForVisible(selector: string, timeout: number = 100): Promise<PuppeteerElement> {
         if (this.page !== null) {
             const opts = { timeout: timeout || 100, visible: true };
             const element = await this.page.waitForSelector(selector, opts);
@@ -147,7 +155,7 @@ export abstract class PuppeteerResponse extends DOMResponse implements iResponse
         throw new Error('waitForVisible is not available in this context');
     }
 
-    public async waitForExists(selector: string, timeout?: number): Promise<PuppeteerElement | null> {
+    public async waitForExists(selector: string, timeout?: number): Promise<PuppeteerElement> {
         if (this.page !== null) {
             const opts = { timeout: timeout || 100 };
             const element = await this.page.waitForSelector(selector, opts);
@@ -181,7 +189,7 @@ export abstract class PuppeteerResponse extends DOMResponse implements iResponse
         throw new Error(`Can not type into this element ${selector}`);
     }
 
-    public selectOption(selector: string, value: string | string[]): Promise<string[]> {
+    public select(selector: string, value: string | string[]): Promise<string[]> {
         if (this.page !== null) {
             const values: string[] = (typeof value == 'string') ? [value] : value;
             // @ts-ignore VS Code is unhappy no matter what I do

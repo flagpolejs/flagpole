@@ -1,8 +1,9 @@
-import { Browser } from './browser';
-import { Page } from 'puppeteer';
+import { BrowserControl } from './browsercontrol';
+import { Page, LaunchOptions } from 'puppeteer-core';;
 import { LogItemType, ConsoleLineType, ConsoleColor, ResponseType } from './enums';
 import { HttpResponse } from './httpresponse';
 import { URL } from 'url';
+import { CookieJar } from 'tough-cookie';
 
 export interface iConsoleLine {
     timestamp: Date
@@ -71,6 +72,37 @@ export interface iValue {
     hasProperty(key: string): Promise<iValue>
 }
 
+export interface iDOMElement {
+    $: any,
+    path: string
+    name: string
+    tagName: string,
+    outerHTML: string
+    isNull(): boolean,
+    click(a?: string | Function, b?: Function): Promise<iScenario | void>
+    submit(a?: string | Function, b?: Function): Promise<iScenario | void>
+    fillForm(formData: any): Promise<void>
+    exists(selector: string): Promise<iValue | iDOMElement | null>
+    find(selector: string): Promise<iValue | iDOMElement | null>
+    findAll(selector: string): Promise<(iValue | iDOMElement)[]>
+    toString(): string
+    getClassName(): Promise<iValue>
+    hasClassName(className: string): Promise<iValue>
+    getTagName(): Promise<iValue>
+    getInnerText(): Promise<iValue>
+    getInnerHtml(): Promise<iValue>
+    getOuterHtml(): Promise<iValue>
+    hasAttribute(key: string): Promise<iValue>
+    getAttribute(key: string): Promise<iValue>
+    hasProperty(key: string): Promise<iValue>
+    getProperty(key: string): Promise<iValue>
+    hasData(key: string): Promise<iValue>
+    getData(key: string): Promise<iValue>
+    getValue(): Promise<iValue>
+    getText(): Promise<iValue>
+    load(message: string, callback: Function): iScenario
+}
+
 
 /**
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
@@ -92,9 +124,9 @@ export interface iResponse {
     isBrowser: boolean,
     init(httpResponse: HttpResponse): void
     getRoot(): any,
-    find(path: string): Promise<iValue | iDOMElement | null>
+    find(path: string): Promise<iValue | iDOMElement>
     findAll(path: string): Promise<Array<iValue | iDOMElement>>
-    findHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement | iValue | null>
+    findHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement | iValue>
     findAllHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement[] | iValue[]>
     header(key?: string): iValue
     cookie(key?: string): iValue
@@ -104,9 +136,9 @@ export interface iResponse {
     waitForLoad(timeout: number): Promise<void>
     waitForNetworkIdle(timeout: number): Promise<void>
     waitForReady(timeout: number): Promise<void>
-    waitForHidden(selector: string, timeout: number): Promise<iValue | null>
-    waitForVisible(selector: string, timeout: number): Promise<iValue | null>
-    waitForExists(selector: string, timeout?: number): Promise<iValue | null>
+    waitForHidden(selector: string, timeout: number): Promise<iValue | iDOMElement>
+    waitForVisible(selector: string, timeout: number): Promise<iValue | iDOMElement>
+    waitForExists(selector: string, timeout?: number): Promise<iValue | iDOMElement>
     screenshot(opts: any): Promise<Buffer | string>
     clear(selector: string): Promise<any>
     type(selector: string, textToType: string, opts: any): Promise<any>
@@ -151,18 +183,23 @@ export interface iAssertionContext {
     response: iResponse
     scenario: iScenario
     suite: iSuite
-    browser: Browser | null
+    browserControl: BrowserControl | null
     page: Page | null
     incompleteAssertions: iAssertion[]
     assertionsResolved: Promise<(iAssertionResult | null)[]>
     subScenariosResolved: Promise<any[]>
     comment(message: string): void
     assert(a: any, b?: any): iAssertion
-    pause(milliseconds: number): Promise<any>
-    findHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement | null>
+    pause(milliseconds: number): Promise<void>
+    exists(selector: string): Promise<iValue | iDOMElement>
+    find(selector: string): Promise<iValue | iDOMElement>
+    findAll(selector: string): Promise<(iValue | iDOMElement)[]>
+    findHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement | iValue>
     findAllHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement[]>
     clearThenType(selector: string, textToType: string, opts?: any): Promise<any>
     clear(selector: string): Promise<void>
+    click(selector: string): Promise<any>
+    submit(selector: string): Promise<any>
     type(selector: string, textToType: string, opts?: any): Promise<void>
     select(selector: string, value: string | string[]): Promise<void>
     evaluate(callback: Function): Promise<any>
@@ -170,13 +207,9 @@ export interface iAssertionContext {
     waitForLoad(timeout?: number): Promise<void>
     waitForNetworkIdle(timeout?: number): Promise<void>
     waitForNavigation(timeout?: number, waitFor?: string | string[]): Promise<void>
-    waitForHidden(selector: string, timeout?: number): Promise<iValue | null>
-    waitForVisible(selector: string, timeout?: number): Promise<iValue | null>
-    waitForExists(selector: string, timeout?: number): Promise<iValue | null>
-    find(selector: string): Promise<iDOMElement>
-    findAll(selector: string): Promise<iDOMElement[]>
-    submit(selector: string): Promise<any>
-    click(selector: string): Promise<any>
+    waitForHidden(selector: string, timeout?: number): Promise<iValue | iDOMElement>
+    waitForVisible(selector: string, timeout?: number): Promise<iValue | iDOMElement>
+    waitForExists(selector: string, timeout?: number): Promise<iValue | iDOMElement>
     openInBrowser(): Promise<string>
     screenshot(opts: any): Promise<Buffer | string>
 }
@@ -260,7 +293,7 @@ export interface iScenario {
     nextPrepend(a: any, b?: any): iScenario
     skip(message?: string): Promise<iScenario>
     cancel(): Promise<iScenario>
-    getBrowser(): Browser
+    getBrowserControl(): BrowserControl
     execute(): Promise<iScenario>
     error(callback: Function): iScenario
     success(callback: Function): iScenario
@@ -278,29 +311,19 @@ export interface iMessageAndCallback {
     callback: Function
 }
 
-export interface iDOMElement {
-    path: string
-    name: string
-    tagName: string
-    click(a?: string | Function, b?: Function): Promise<iScenario | void>
-    fillForm(formData: any): Promise<void>
-    submit(a?: string | Function, b?: Function): Promise<iScenario | void>
-    find(selector: string): Promise<iValue | null>
-    findAll(selector: string): Promise<iValue[]>
-    toString(): string
-    getClassName(): Promise<iValue>
-    hasClassName(className: string): Promise<iValue>
-    getTagName(): Promise<iValue>
-    getInnerText(): Promise<iValue>
-    getInnerHtml(): Promise<iValue>
-    getOuterHtml(): Promise<iValue>
-    hasAttribute(key: string): Promise<iValue>
-    getAttribute(key: string): Promise<iValue>
-    hasProperty(key: string): Promise<iValue>
-    getProperty(key: string): Promise<iValue>
-    hasData(key: string): Promise<iValue>
-    getData(key: string): Promise<iValue>
-    getValue(): Promise<iValue>
-    getText(): Promise<iValue>
-    load(message: string, callback: Function): iScenario
+export interface iBounds {
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    points: { x: number, y: number }[]
 }
+
+export interface BrowserOptions extends LaunchOptions {
+    uri?: string,
+    width?: number
+    height?: number,
+    jar?: CookieJar,
+    recordConsole?: boolean,
+    outputConsole?: boolean
+};

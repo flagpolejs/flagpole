@@ -21,8 +21,8 @@ export abstract class ProtoResponse implements iResponse {
 
     abstract get responseType(): ResponseType;
     abstract get responseTypeName(): string;
-    abstract find(path: string): Promise<any | null>;
-    abstract findAll(path: string): Promise<any[]>;
+    abstract find(path: string): Promise<iDOMElement | iValue>;
+    abstract findAll(path: string): Promise<iDOMElement[] | iValue[]>;
     abstract evaluate(context: any, callback: Function): Promise<any>;
 
     /**
@@ -187,16 +187,19 @@ export abstract class ProtoResponse implements iResponse {
         return this.context.pause(1);
     }
 
-    public async waitForHidden(selector: string, timeout: number = 30000): Promise<iValue | null> {
-        return this.context.pause(1);
+    public async waitForHidden(selector: string, timeout: number = 30000): Promise<iValue | iDOMElement> {
+        await this.context.pause(1);
+        return this._wrapAsValue(null, selector);
     }
 
-    public async waitForVisible(selector: string, timeout: number = 30000): Promise<iValue | null> {
-        return this.context.pause(1);
+    public async waitForVisible(selector: string, timeout: number = 30000): Promise<iValue | iDOMElement> {
+        await this.context.pause(1);
+        return this._wrapAsValue(null, selector);
     }
 
-    public async waitForExists(selector: string, timeout: number = 30000): Promise<iValue | null> {
-        return this.context.pause(1);
+    public async waitForExists(selector: string, timeout: number = 30000): Promise<iValue | iDOMElement> {
+        await this.context.pause(1);
+        return this._wrapAsValue(null, selector);
     }
 
     public async screenshot(opts: any): Promise<Buffer | string> {
@@ -211,7 +214,7 @@ export abstract class ProtoResponse implements iResponse {
         throw new Error(`This scenario type (${this.responseTypeName}) does not support clear.`);
     }
 
-    public async findHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement | null> {
+    public async findHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement | iValue> {
         throw new Error(`This scenario type (${this.responseTypeName}) does not support findHavingText.`);
     }
 

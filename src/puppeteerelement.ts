@@ -1,10 +1,10 @@
 import { Value } from './value';
-import { iValue, iAssertionContext, iScenario } from "./interfaces";
-import { JSHandle, Page, ElementHandle } from 'puppeteer';
+import { iValue, iAssertionContext, iScenario, iBounds, iDOMElement } from "./interfaces";
+import { JSHandle, Page, ElementHandle, BoxModel } from 'puppeteer';
 import { DOMElement } from './domelement';
 import { asyncForEach, toType } from './util';
 
-export class PuppeteerElement extends DOMElement implements iValue {
+export class PuppeteerElement extends DOMElement implements iValue, iDOMElement {
 
     protected _input: ElementHandle;
 
@@ -245,6 +245,59 @@ export class PuppeteerElement extends DOMElement implements iValue {
         const handle: JSHandle = await this._input.getProperty('textContent');
         const text: string = await handle.jsonValue();
         return this._wrapAsValue(text, name, this);
+    }
+
+    public async getBounds(boxType: string = 'border'): Promise<iBounds | null> {
+        if (this._context.page == null) {
+            throw new Error('Page is null.');
+        }
+        const allowedTypes: string[] = ['content', 'padding', 'border', 'margin'];
+        if (allowedTypes.indexOf(boxType) < 0) {
+            throw new Error(`${boxType} is not a valid box type. Must be one of the following: ${allowedTypes.join(', ')}.`);
+        }
+        const boxModel: BoxModel | null = await (this._input as ElementHandle).boxModel();
+        if (boxModel !== null) {
+            return {
+                x: boxModel[boxType][0].x,
+                y: boxModel[boxType][0].y,
+                width: boxModel.width,
+                height: boxModel.height,
+                points: boxModel[boxType]
+            };
+        }
+        return null;
+    }
+
+    public async focus(): Promise<any> {
+        if (this._context.page == null) {
+            throw new Error('Page is null.');
+        }
+        await (this._input as ElementHandle).focus();
+        this._completedAction('FOCUS');
+    }
+
+    public async hover(): Promise<void> {
+        if (this._context.page == null) {
+            throw new Error('Page is null.');
+        }
+        await (this._input as ElementHandle).hover();
+        this._completedAction('HOVER');
+    }
+
+    public async tap(): Promise<void> {
+        if (this._context.page == null) {
+            throw new Error('Page is null.');
+        }
+        await (this._input as ElementHandle).tap();
+        this._completedAction('TAP');
+    }
+
+    public async press(key: string, opts?: any): Promise<void> {
+        if (this._context.page == null) {
+            throw new Error('Page is null.');
+        }
+        await (this._input as ElementHandle).press(key, opts || {});
+        this._completedAction('PRESS', key);
     }
 
     public async clearThenType(textToType: string, opts: any = {}): Promise<void> {

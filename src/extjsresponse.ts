@@ -3,6 +3,7 @@ import { ResponseType } from "./enums";
 import { iResponse, iScenario } from "./interfaces";
 import { AssertionContext } from './assertioncontext';
 import { PuppeteerResponse } from './puppeteerresponse';
+import { iValue } from '.';
 
 
 export class ExtJSResponse extends PuppeteerResponse implements iResponse {
@@ -49,7 +50,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
      * @param path 
      * @param findIn 
      */
-    public async find(path: string): Promise<ExtJsComponent | null> {
+    public async find(path: string): Promise<ExtJsComponent | iValue> {
         if (this.page !== null) {
             const componentReference: string = `flagpole_${Date.now()}_${path.replace(/[^a-z]/ig, '')}`;
             const queryToInject: string | undefined = `window.${componentReference} = Ext.ComponentQuery.query("${path}")[0];`;
@@ -63,7 +64,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
                     `${path}[0]`
                 )
             }
-            return null;
+            return this._wrapAsValue(null, path);
         }
         throw new Error('Cannot evaluate code becuase page is null.');
     }
@@ -101,8 +102,8 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
 
     public async type(selector: string, textToType: string, opts: any = {}): Promise<any> {
         if (this.page !== null) {
-            const component: ExtJsComponent | null = await this.find(selector);
-            if (component !== null) {
+            const component: ExtJsComponent | iValue = await this.find(selector);
+            if (component instanceof ExtJsComponent) {
                 component.fireEvent('focus');
                 component.setValue(textToType);
                 component.fireEvent('blur');
@@ -116,8 +117,8 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
 
     public async clear(selector: string): Promise<any> {
         if (this.page !== null) {
-            const component: ExtJsComponent | null = await this.find(selector);
-            if (component !== null) {
+            const component: ExtJsComponent | iValue = await this.find(selector);
+            if (component instanceof ExtJsComponent) {
                 component.fireEvent('focus');
                 component.setValue('');
                 component.fireEvent('blur');

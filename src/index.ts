@@ -3,7 +3,7 @@ import { Assertion } from "./assertion";
 import { AssertionContext } from "./assertioncontext";
 import { AssertionResult } from "./logging/assertionresult";
 import { iAssertionSchema, iAssertionSchemaItem, AssertionSchema } from "./assertionschema";
-import { Browser, BrowserOptions } from "./browser";
+import { BrowserControl } from "./browsercontrol";
 import { BrowserResponse } from "./browserresponse";
 import { CssResponse } from "./cssresponse";
 import { DOMElement } from "./domelement";
@@ -23,7 +23,7 @@ import { VideoResponse } from "./videoresponse";
 import { FlagpoleExecutionOptions, FlagpoleOutput } from './flagpoleexecutionoptions';
 import { Flagpole } from "./flagpole";
 import { ResponseType } from "./enums";
-import { iResponse, iValue } from "./interfaces";
+import { iResponse, iValue, BrowserOptions } from "./interfaces";
 import * as Promise from "bluebird";
 
 // Have Bluebird replace default promises
@@ -33,7 +33,7 @@ export {
     Flagpole, FlagpoleExecutionOptions, FlagpoleOutput,
     Suite, Scenario,
     Assertion, AssertionContext, AssertionResult, iAssertionSchema, iAssertionSchemaItem, AssertionSchema,
-    Browser, BrowserOptions, BrowserResponse, CssResponse, DOMElement, ExtJSResponse,
+    BrowserControl, BrowserOptions, BrowserResponse, CssResponse, DOMElement, ExtJSResponse,
     HtmlResponse, ImageResponse, JsonResponse, ResourceResponse,
     ResponseType, ProtoResponse, iResponse, HttpResponse,
     ScriptResponse, iValue, Value, VideoResponse,

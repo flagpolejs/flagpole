@@ -88,6 +88,14 @@ For html types, the promise will return a new dynamic scenario that will load th
 
 Add a comment to the Scenario output.
 
+### exists(path: string): Promise<DOMElement | CSSRule | Value>
+
+This is just like an `exists`, but it also does an assertion that the element actually exists. It is similar to `waitForExists` except that it doesn't wait around.
+
+```javascript
+const firstArticle = await context.exists('section.topStories article');
+```
+
 ### evaluate(callback: Function): Promise<any>
 
 Passes this function off to the underlying response to run it in the context of that type. 
@@ -120,7 +128,7 @@ const loginText = await context.evaluate((json) => {
 
 In theory, with any of these types, you could also manipulate the response with this method.
 
-### find(path: string): Promise<DOMElement | CSSRule | Value | null>
+### find(path: string): Promise<DOMElement | CSSRule | Value>
 
 Select the element or value at the given path. What this actually does varies by the type of scenario. 
 
@@ -132,7 +140,7 @@ Note it returns only one element. If multiple match the path then it returns the
 const firstArticle = await context.find('section.topStories article');
 ```
 
-### findAll(path: string): Promise<DOMElement[] | CSSRule[] | Value[] || []>
+### findAll(path: string): Promise<DOMElement[] | CSSRule[] | Value[]>
 
 Select the elements or values at the given path. What this actually does varies by the type of scenario. Browser and Html tests both return DOMElement. Stylesheet requests return CSSRule and JSON/REST scenarios return a Value.
 
@@ -153,7 +161,7 @@ const itemsContainingTupac = await context.findAllHavingText('li', /tupac/i);
 const itemsExactlyTupac = await context.findAllHavingText('li', 'tupac');
 ```
 
-### findHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement>
+### findHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement | Value>
 
 Find the first element matching the given selector that have the given text. The second argument can either be a string, which will match on an equality basis, or a regular expression if you want some more leeway.
 

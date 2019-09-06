@@ -1,5 +1,5 @@
-import { Browser } from './browser';
-import { Page } from 'puppeteer';
+import { BrowserControl } from './browsercontrol';
+import { Page, Browser } from 'puppeteer';
 import { Assertion } from './assertion';
 import { iResponse, iValue, iAssertionContext, iScenario, iSuite, iAssertionResult, iDOMElement } from './interfaces';
 import { AssertionActionCompleted, AssertionActionFailed } from './logging/assertionresult';
@@ -29,17 +29,14 @@ export class AssertionContext implements iAssertionContext {
         return this._scenario.suite;
     }
 
-    public get browser(): Browser | null {
+    public get browserControl(): BrowserControl | null {
         return this.response.isBrowser ?
-            this._scenario.getBrowser() :
+            this._scenario.getBrowserControl() :
             null;
     }
 
     public get page(): Page | null {
-        const browser = this.browser;
-        return browser !== null ?
-            browser.getPage() :
-            null;
+        return this.browserControl !== null ? this.browserControl.page : null;
     }
 
     public get incompleteAssertions(): Assertion[] {
@@ -116,7 +113,7 @@ export class AssertionContext implements iAssertionContext {
      * @param selector
      * @param searchForText 
      */
-    public async findHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement | null> {
+    public async findHavingText(selector: string, searchForText: string | RegExp): Promise<iDOMElement | iValue> {
         return this.findHavingText(selector, searchForText);
     };
 
@@ -203,9 +200,9 @@ export class AssertionContext implements iAssertionContext {
      * @param selector
      * @param timeout 
      */
-    public async waitForHidden(selector: string, timeout: number = 100): Promise<iValue | null> {
-        const el: iValue | null = await this.response.waitForHidden(selector, timeout);
-        el === null ?
+    public async waitForHidden(selector: string, timeout: number = 100): Promise<iValue | iDOMElement> {
+        const el: iValue | iDOMElement = await this.response.waitForHidden(selector, timeout);
+        el.isNull() ?
             this._failedAction('HIDDEN', selector) : 
             this._completedAction('HIDDEN', selector);
         return el;
@@ -217,9 +214,9 @@ export class AssertionContext implements iAssertionContext {
      * @param selector
      * @param timeout 
      */
-    public async waitForVisible(selector: string, timeout: number = 100): Promise<iValue | null> {
-        const el: iValue | null = await this.response.waitForVisible(selector, timeout);
-        el === null ?
+    public async waitForVisible(selector: string, timeout: number = 100): Promise<iValue | iDOMElement> {
+        const el: iValue | iDOMElement = await this.response.waitForVisible(selector, timeout);
+        el.isNull() ?
             this._failedAction('VISIBLE', selector) :
             this._completedAction('VISIBLE', selector);
         return el;
@@ -231,8 +228,22 @@ export class AssertionContext implements iAssertionContext {
      * @param selector
      * @param timeout 
      */
-    public async waitForExists(selector: string, timeout?: number): Promise<iValue |  null> {        
-        const el: iValue | null = await this.response.waitForExists(selector, timeout);
+    public async waitForExists(selector: string, timeout?: number): Promise<iValue | iDOMElement> {        
+        const el: iValue | iDOMElement = await this.response.waitForExists(selector, timeout);
+        el.isNull() ?
+            this._failedAction('EXISTS', `${selector}`) :
+            this._completedAction('EXISTS', `${selector}`);
+        return el;
+    }
+
+    /**
+     * Find for first element at this selector path and assert it exists
+     * 
+     * @param selector
+     */
+    public async exists(selector: string): Promise<iValue | iDOMElement> {
+        const el = await this.response.find(selector);
+        el.isNull
         el === null ?
             this._failedAction('EXISTS', `${selector}`) :
             this._completedAction('EXISTS', `${selector}`);
@@ -244,7 +255,7 @@ export class AssertionContext implements iAssertionContext {
      * 
      * @param selector
      */
-    public find(selector: string): Promise<any> {
+    public async find(selector: string): Promise<iValue | iDOMElement> {
         return this.response.find(selector);
     }
 
@@ -253,7 +264,7 @@ export class AssertionContext implements iAssertionContext {
      * 
      * @param selector
      */
-    public findAll(selector: string): Promise<any[]> {
+    public async findAll(selector: string): Promise<(iValue | iDOMElement)[]> {
         return this.response.findAll(selector);
     }
 
@@ -263,11 +274,14 @@ export class AssertionContext implements iAssertionContext {
      * @param selector
      */
     public async submit(selector: string): Promise<any> {
-        const el: iDOMElement = await this.find(selector);
+        const el: iDOMElement | iValue | null = await this.exists(selector);
         if (el === null) {
             throw new Error(`Element with selector ${selector} not found.`);
         }
-        return el.submit();
+        if ('submit' in el) {
+            return el.submit();
+        }
+        return null;
     }
 
     /**
@@ -276,11 +290,14 @@ export class AssertionContext implements iAssertionContext {
      * @param selector
      */
     public async click(selector: string): Promise<any> {
-        const el: iDOMElement = await this.find(selector);
+        const el: iDOMElement | iValue | null = await this.find(selector);
         if (el === null) {
             throw new Error(`Element with selector ${selector} not found.`);
         }
-        return el.click();
+        if ('click' in el) {
+            return el.click();
+        }
+        return null;
     }
 
     /**

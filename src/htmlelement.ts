@@ -1,14 +1,12 @@
 import { Value } from './value';
 import { DOMElement } from './domelement';
-import { Scenario } from './scenario';
 import { Link } from './link';
 import { ResponseType } from './enums';
-import { iValue, iAssertionContext, iScenario } from './interfaces';
+import { iValue, iAssertionContext, iScenario, iDOMElement } from './interfaces';
 
-export class HTMLElement extends DOMElement implements iValue {
+export class HTMLElement extends DOMElement implements iValue, iDOMElement {
 
     protected _path: string;
-
     protected _input: Cheerio;
 
     public get $(): Cheerio {
@@ -36,7 +34,11 @@ export class HTMLElement extends DOMElement implements iValue {
         this._input = input;
     }
 
-
+    /**
+    * Find for first element at this selector path
+    *
+    * @param selector
+    */
     public async find(selector: string): Promise<HTMLElement | Value> {
         const element: Cheerio = await this.$.find(selector);
         const name: string = `${selector} under ${this.name}`;

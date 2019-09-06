@@ -1,5 +1,5 @@
 import { ResponseType } from "./enums";
-import { iResponse } from "./interfaces";
+import { iResponse, iValue } from "./interfaces";
 import { Page, ElementHandle } from 'puppeteer';
 import { PuppeteerResponse } from './puppeteerresponse';
 import { PuppeteerElement } from './puppeteerelement';
@@ -20,8 +20,8 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
      * 
      * @param path 
      */
-    public async find(path: string): Promise<PuppeteerElement | null> {
-        const page: Page | null = this.scenario.getBrowser().getPage();
+    public async find(path: string): Promise<PuppeteerElement | iValue> {
+        const page: Page | null = this.context.page;
         if (page !== null) {
             const el: ElementHandle<Element> | null = await page.$(path);
             if (el !== null) {
@@ -30,7 +30,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
                 );
             }
         }
-        return null;
+        return this._wrapAsValue(null, path);
     }
 
     /**

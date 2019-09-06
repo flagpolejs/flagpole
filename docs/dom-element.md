@@ -9,6 +9,29 @@ This class is extended more specifically by other classes:
 * ExtJsComponent
 * HTMLElement
 
+
+## Properties 
+
+### $: any (readonly)
+
+This is a quick way to get the underlying value within this wrapper object. So that will typically be either an ElementHandle if a browser test or a Cheerio object if an html test.
+
+### name: string (readonly)
+
+Get a friendly name for this `DOMElement`, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
+
+### outerHTML: string (readonly)
+
+The full HTML of this HTML tag and its descendents.
+
+### path: string (readonly)
+
+The selector requested to query this `DOMElement`.
+
+### tagName: string (readonly)
+
+The HTML tag of this `DOMElement`.
+
 ## Methods
 
 ### clear(): Promise<void>
@@ -54,6 +77,14 @@ Find all of the elements in the descendents of the current element that match th
 
 ```javascript
 const li = await someElement.findAll('li');
+```
+
+### getAttribute(key: string): Promise<Value>
+
+Get the attribute of the element with this key and return its value. If it is not present the Value object will contain null.
+
+```javascript
+const src = await img.getAttribute('src');
 ```
 
 ### getChildren(selector?: string): Promise<DOMElement[]>
@@ -233,17 +264,3 @@ The opts is only relevant to browser types, like Puppeteer, it will pass the val
 const textBox = await context.find('input[name="title"]');
 await textBox.type('College Football is Back', { delay: 100 });
 ```
-
-## Properties 
-
-### $: any (readonly)
-
-This is a quick way to get the underlying value within this wrapper object. So that will typically be either an ElementHandle if a browser test or a Cheerio object if an html test.
-
-### name: string (readonly)
-
-Get a friendly name for this `DOMElement`, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
-
-### path: string (readonly)
-
-The selector requested to query this `DOMElement`.

@@ -3,6 +3,7 @@ import { HttpResponse } from './httpresponse';
 import { DOMResponse } from './domresponse';
 import { iResponse } from './interfaces';
 import { ResponseType } from './enums';
+import { iValue } from '.';
 
 let cheerio: CheerioAPI = require('cheerio');
 let $: CheerioStatic;
@@ -30,7 +31,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
         return callback.apply(context, [ $ ]);
     }
 
-    public async find(path: string): Promise<HTMLElement | null> {
+    public async find(path: string): Promise<HTMLElement | iValue> {
         const selection: Cheerio = $(path);
         if (selection.length > 0) {
             return await HTMLElement.create(
@@ -38,7 +39,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
             );
         }
         else {
-            return null;
+            return this._wrapAsValue(null, path);
         }
     }
 
@@ -61,15 +62,15 @@ export class HtmlResponse extends DOMResponse implements iResponse {
         }
     }
 
-    public async waitForHidden(selector: string, timeout: number = 100): Promise<HTMLElement | null> {
+    public async waitForHidden(selector: string, timeout: number = 100): Promise<HTMLElement | iValue> {
         return this.find(selector);
     }
 
-    public async waitForVisible(selector: string, timeout: number = 100): Promise<HTMLElement | null> {
+    public async waitForVisible(selector: string, timeout: number = 100): Promise<HTMLElement | iValue> {
         return this.find(selector);
     }
 
-    public async waitForExists(selector: string, timeout: number = 100): Promise<HTMLElement | null> {
+    public async waitForExists(selector: string, timeout: number = 100): Promise<HTMLElement | iValue> {
         return this.find(selector);
     }
 

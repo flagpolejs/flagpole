@@ -1,7 +1,7 @@
 import { ResponseType, LogItemType, ScenarioStatusEvent } from "./enums";
-import { iLogItem, iResponse, iScenario, iSuite } from './interfaces';
+import { iLogItem, iResponse, iScenario, iSuite, BrowserOptions } from './interfaces';
 import * as puppeteer from "puppeteer-core";
-import { Browser, BrowserOptions } from "./browser";
+import { BrowserControl, iBrowserControlResponse } from "./browsercontrol";
 import * as r from "request";
 import { createResponse } from './responsefactory';
 import { AssertionContext } from './assertioncontext';
@@ -158,7 +158,7 @@ export class Scenario implements iScenario {
     protected _cookieJar: r.CookieJar;
     protected _options: any = {};
     protected _followRedirect: boolean | Function | null = null;
-    protected _browser: Browser | null = null;
+    protected _browserControl: BrowserControl | null = null;
     protected _isMock: boolean = false;
     protected _response: iResponse;
     protected _defaultBrowserOptions: BrowserOptions = {
@@ -444,9 +444,9 @@ export class Scenario implements iScenario {
     /**
      * Get the browser object for a browser request
      */
-    public getBrowser(): Browser {
-        this._browser = (this._browser !== null) ? this._browser : new Browser();
-        return this._browser;
+    public getBrowserControl(): BrowserControl {
+        this._browserControl = (this._browserControl !== null) ? this._browserControl : new BrowserControl();
+        return this._browserControl;
     }
 
     /**
@@ -666,18 +666,18 @@ export class Scenario implements iScenario {
      */
     private _executeBrowserRequest() {
         const scenario: Scenario = this;
-        this.getBrowser()
+        const browserControl: BrowserControl = this.getBrowserControl();
+        browserControl
             .open(this._options)
-            .then((next: { response: puppeteer.Response; body: string; }) => {
+            .then((next: iBrowserControlResponse) => {
                 const puppeteerResponse: puppeteer.Response = next.response;
-                const body: string = next.body;
                 if (puppeteerResponse !== null) {
                     scenario._finalUrl = puppeteerResponse.url();
                     scenario._processResponse(
                         HttpResponse.fromPuppeteer(
                             puppeteerResponse,
-                            body,
-                            scenario._getCookies() // TODO: this isn't going to work, need to get cookies from Puppeteer
+                            next.body,
+                            next.cookies
                         )
                     );
                 }
@@ -793,6 +793,10 @@ export class Scenario implements iScenario {
             }
             // Finally
             await this._fireFinally();
+            // Close the browser window
+            if (this._browserControl !== null) {
+                //this._browserControl.close();
+            }
         }
         return this;
     }

@@ -23,6 +23,10 @@ export abstract class DOMElement extends ProtoValue implements iValue, iDOMEleme
         return this._tagName;
     }
 
+    public get outerHTML(): string {
+        return this._sourceCode || '';
+    }
+
     protected constructor(input: any, context: iAssertionContext, name?: string | null, path?: string) {
         super(input, context, (name || 'DOM Element'));
         this._path = path || '';
@@ -31,8 +35,8 @@ export abstract class DOMElement extends ProtoValue implements iValue, iDOMEleme
     public abstract async click(a?: string | Function, b?: Function): Promise<iScenario | void>
     public abstract async fillForm(formData: any): Promise<void>
     public abstract async submit(a?: string | Function, b?: Function): Promise<iScenario | void>
-    public abstract async find(selector: string): Promise<iValue | null>
-    public abstract async findAll(selector: string): Promise<iValue[]>
+    public abstract async find(selector: string): Promise<iDOMElement | iValue>
+    public abstract async findAll(selector: string): Promise<iDOMElement[]>
 
     protected abstract async _getTagName(): Promise<string> 
     protected abstract async _getAttribute(key: string): Promise<string | null>
@@ -184,6 +188,19 @@ export abstract class DOMElement extends ProtoValue implements iValue, iDOMEleme
     public async getText(): Promise<Value> {
         const name: string = `Text of ${this.name}`;
         return this._wrapAsValue(this._input.text(), name, this);
+    }
+
+    /**
+    * Find for first element at this selector path and assert it exists
+    * 
+    * @param selector
+    */
+    public async exists(selector: string): Promise<iDOMElement | iValue> {
+        const el: iDOMElement | iValue = await this.find(selector);
+        el.$ === null ?
+            this._failedAction('EXISTS', `${selector}`) :
+            this._completedAction('EXISTS', `${selector}`);
+        return el;
     }
 
     /**
