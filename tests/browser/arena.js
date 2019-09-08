@@ -1,6 +1,9 @@
 const Flagpole = require('../../dist/index.js').Flagpole;
 const suite = Flagpole.suite('Basic Smoke Test of Site')
-    .base('http://staging-arena.flowrestling.org/');
+    .base({
+        stag: 'http://staging-arena.flowrestling.org/',
+        prod: 'http://arena.flowrestling.org/'
+    });
 
 const opts = {
     width: 1280,
@@ -17,11 +20,17 @@ suite.browser("Homepage Loads Stuff", opts)
     .next(async context => {
         context.assert('HTTP Status equals 200', context.response.statusCode).equals(200);
         await context.waitForExists(selectors.sectionHeaders, 10000);
-        const h4s = await context.findAll(selectors.sectionHeaders);
-        context.assert(h4s).length.equals(3);
-        context.assert('First section says Live Today', await h4s[0].getText()).like('Live Today');
-        context.assert('Second section says upcoming', await h4s[1].getText()).like('Upcoming');
-        context.assert('Third section says Results', await h4s[2].getText()).like('Results');
+        const section1 = await context.find('.current.section h4');
+        if (section1.isNull()) {
+            context.comment('No live events today. Skipping test.');
+        }
+        else {
+            context.assert(await section1.getText()).contains('Live Today');
+        }
+        const section2 = await context.find('.upcoming.section h4');
+        context.assert(await section2.getText()).contains('Upcoming');
+        const section3 = await context.find('.results.section h4');
+        context.assert(await section3.getText()).contains('Results');
     })
     .next(async context => {
         const listItems = await context.findAll('.upcoming .events-group li');

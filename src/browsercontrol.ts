@@ -109,6 +109,10 @@ export class BrowserControl {
                     this._opts.defaultViewport = this._opts.defaultViewport || {};
                     this._opts.defaultViewport.width = this._opts.defaultViewport.width || this._opts.width || 800;
                     this._opts.defaultViewport.height = this._opts.defaultViewport.height || this._opts.width || 600;
+                    // Need some default args
+                    this._opts.args = this._opts.args || [];
+                    this._opts.args.push('--no-sandbox');
+                    this._opts.args.push('--disable-setuid-sandbox');
                     // Start up the browser
                     this._browser = await puppeteer.launch(this._opts);
                     this._page = await this._onBrowserReady(this._browser);
