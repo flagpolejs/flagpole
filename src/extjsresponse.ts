@@ -22,18 +22,12 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
         scenario.before(() => {
             scenario.nextPrepend(async (context: AssertionContext) => {
                 if (context.page !== null) {
-                    // Wait for HTML DOM
-                    await context.assert(
-                        'DOM Ready',
-                        context.waitForNavigation(3000, 'domcontentloaded')
-                    ).resolves();
                     // Wait for Ext
-                    const extExists = `!!Ext`;
-                    await context.page.waitForFunction(extExists);
-                    await context.assert(
-                        'Found Ext object.',
-                        await context.page.evaluate(extExists)
-                    ).equals(true);
+                    const extExists = await context.evaluate(function () {
+                        return !!window['Ext'];
+                    });
+                    await context.assert('ExtJS was found.', extExists).equals(true);
+
                     // Wait for Ext ready
                     return context.assert(
                         'Ext.onReady fired',
@@ -53,6 +47,9 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     public async find(path: string): Promise<ExtJsComponent | iValue> {
         if (this.page !== null) {
             const componentReference: string = `flagpole_${Date.now()}_${path.replace(/[^a-z]/ig, '')}`;
+            // We need to be sure to encode the String so single and double quotes don't break the query
+            path = path.replace(/\'/g, '\\\'');
+            path = path.replace(/\"/g, '\\\"');
             const queryToInject: string | undefined = `window.${componentReference} = Ext.ComponentQuery.query("${path}")[0];`;
             await this.page.addScriptTag({ content: queryToInject });
             // Build array of ExtJsComponent elements
