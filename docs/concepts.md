@@ -8,17 +8,17 @@ A suite is collection of similar tests. Typically it will be rahter large, but i
 
 # Scenario
 
-Think of a scenario as a situation that you want to evaluate. Perhaps it is logging into the site and making sure you can access permium content. Another scenario, conversely, might be not being logged into the site and making sure you can't see what is behind the paywall.
+Think of a scenario as a situation that you want to evaluate. Perhaps it is logging into the site and making sure you can access premium content. Another scenario, conversely, might be not being logged into the site and making sure you can't see what is behind the paywall.
 
-A scenario should be represent a specific action you want to take. And often you might also think of the scenario being related to a specific persona, which is a archetype of a particular user. A scenario will usually contain multiple steps with assertions along the way.
+A scenario should represent a specific action you want to take. And often you might also think of the scenario being related to a specific persona, which is an archetype of a particular user. A scenario will usually contain multiple steps with assertions along the way.
 
 # Assertion
 
-An assertion is a particular statement that you are saying is true. For a tangible example "I assert that the ocean is wet" or "I assert a dropped ball will fall to the ground." Now if those assertions fails we have to rethink our whole laws of physics!
+An assertion is a particular statement that you are saying is true. For example "I assert that the ocean is wet" or "I assert a dropped ball will fall to the ground." Now if those assertions fail we have to rethink our whole laws of physics!
 
-But that's the idea. We often assume that our site will behave in a certain way... until it doesn't. So our assertions should test each of our very basic understandings of what should happen--those are positive tests. Further, when you get to next level QA you will couple that will negative teses like "I assert I can't walk through this wall." 
+But that's the idea. We often assume that our site will behave in a certain way... until it doesn't. So our assertions should test each of our very basic understandings of what should happen--those are positive tests. Further, when you get to next level QA you will couple that will negative tests like "I assert I can not walk through this wall." 
 
-The final level of QA greatness is when you add in what I call (and QA insiders tell me isn't a real term) jerk tests. This is something like typing in a string or a negative number into a quantity field and making sure the site doesn't break or (more ideally) throws up a pertinent error message.
+The final level of QA greatness is when you add in what I call (and QA insiders tell me isn't a real term) jerk tests. This is something like typing in a string or a negative number into a quantity field and making sure the site doesn't break or (more ideally throws up a pertinent error message.
 
 All of these things are accomplished by making assertions.
 
@@ -28,7 +28,7 @@ When you are doing a full browser test, you can run it in either "headful" mode,
 
 # Puppeteer
 
-[Puppeteer](https://pptr.dev/) is a tool where you can automate actions in Chromium (almost identical to Chrome) that Google has open sourced. It is similar to how many QA framweorks might use Selenium, other similar packages are NightmareJS or (the now suspended) PhantomJS.
+[Puppeteer](https://pptr.dev/) is an open source tool where you can automate actions in Chromium (almost identical to Chrome) released by. It is similar to how many QA framweorks might use Selenium, other similar packages such as NightmareJS or (the now suspended) PhantomJS.
 
 # DOM
 
@@ -42,7 +42,7 @@ Command line interface is a collection of commands, starting with a given keywor
 
 # async...await
 
-This is a core modern JavaScript concept that are always coupled. A function is designated as `async` which means that its contents are expected to run asynchronously--not linearly with the rest of the code around it--and it will return a Promise automatically. Inside of it we may have the `await` keyword which meands this thing that I am calling is going to run asynchronously and return a Promise, but wait on this line for that Promise to resolve to the actual value.
+This is a core modern JavaScript concept that is always coupled. A function designated as `async` means that its contents are expected to run asynchronously -- not linearly with the rest of the code around it -- and it will return a Promise automatically. Inside of it we may have the `await` keyword which meands this thing that I am calling is going to run asynchronously and return a Promise, but wait on this line for that Promise to resolve to the actual value.
 
 # Promise
 
