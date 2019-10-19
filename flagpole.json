@@ -8,6 +8,10 @@
     "dev": {
       "name": "dev",
       "defaultDomain": "http://localhost:8000"
+    },
+    "prod": {
+      "name": "prod",
+      "defaultDomain": "https://www.flagpolejs.com"
     }
   },
   "suites": {

@@ -120,7 +120,8 @@ export class SuiteExecution {
     protected _execute(filePath: string, opts: FlagpoleExecutionOptions): Promise<SuiteExecutionResult> {
         return new Promise((resolve) => {
             opts.exitOnDone = true;
-            const process = spawn('node', [filePath].concat(opts.toArgs()));
+            const command: string[] = [filePath].concat(opts.toArgs());
+            const process = spawn('node', command);
             // If it doesn't resolve after this point
             let timeout = setTimeout(() => {
                 process.kill();

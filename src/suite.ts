@@ -107,6 +107,9 @@ export class Suite implements iSuite {
 
     constructor(title: string) {
         this._title = title;
+        if (FlagpoleExecution.opts.baseDomain) {
+            this._baseUrl = new URL(FlagpoleExecution.opts.baseDomain);
+        }
         this._beforeAllPromise = new Promise((resolve) => {
             this._beforeAllResolver = resolve;
         });
@@ -260,6 +263,8 @@ export class Suite implements iSuite {
      * @param {string | {}} url
      * @returns {Suite}
      */
+    public base(url: string): Suite;
+    public base(basePathsByEnvironment: {}): Suite;
     public base(url: string | {}): Suite {
         let baseUrl: string = '';
         if (typeof url == 'string') {

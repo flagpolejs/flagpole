@@ -3,6 +3,7 @@
 import { Cli } from './cli';
 import { normalizePath } from '../util';
 import { FlagpoleExecution } from '../flagpoleexecutionoptions';
+import { EnvConfig } from './config';
 
 /**
  * COMMAND LINE ARGUMENTS
@@ -42,6 +43,7 @@ let argv = require('yargs')
     .boolean('h')
     .boolean('q')
     .string('o')
+    .string('base')
     .default('e', 'dev')
     .default('o', 'console')
     .default('s', [])
@@ -102,6 +104,17 @@ if (argv.c && !Cli.config.isValid()) {
     Cli.log("The config file you specified did not exist.\n");
     Cli.exit(1);
 }
+
+// Settings from config file
+FlagpoleExecution.opts.baseDomain = (() => {
+    if (argv.base) {
+        return argv.base;
+    }
+    if (Cli.config.environments[FlagpoleExecution.opts.environment]) {
+        return Cli.config.environments[FlagpoleExecution.opts.environment].defaultDomain;
+    }
+    return '';
+})();
 
 /**
  * Show debug info

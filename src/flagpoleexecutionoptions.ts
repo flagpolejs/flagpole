@@ -13,6 +13,11 @@ export enum FlagpoleOutput {
 export class FlagpoleExecutionOptions {
 
     /**
+     * Set base path
+     */
+    public baseDomain: string = '';
+
+    /**
      * There always has to be an environment, default to dev
      */
     public environment: string = 'dev';
@@ -71,6 +76,9 @@ export class FlagpoleExecutionOptions {
                 opts.setOutputFromString(arg);
                 opts.automaticallyPrintToConsole = true;
             }
+            else if (lastArg == '--base') {
+                opts.baseDomain = arg;
+            }
             else if (arg == '-q') {
                 opts.quietMode = true;
                 lastArg = null;
@@ -126,6 +134,9 @@ export class FlagpoleExecutionOptions {
      */
     public toString(): string {
         let opts: string = '';
+        if (this.baseDomain) {
+            opts += ` --base ${this.baseDomain}`;
+        }
         if (this.environment !== null) {
             opts += ' -e ' + this.environment;
         }
