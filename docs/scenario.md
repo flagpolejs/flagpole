@@ -10,11 +10,27 @@ This will be called immediately after the scenario completes execution. You can 
 
 If this callback returns a promise, further callbacks are delayed until the promise resolves.
 
+The first argument to the callback is the scenario itself.
+
+```typescript
+scenario.after((scenario: Scenario) => {
+  console.log(`${scenario.title} has completed`);
+});
+```
+
 ### before(callback: Function): Scenario
 
 This will be called immediately before the scenario executes the request. You can set more than one and they will be called in the order that they were set.
 
 If this callback returns a promise, execution is delayed until the promise resolves.
+
+The first argument to the callback is the scenario itself.
+
+```typescript
+scenario.before((scenario: Scenario) => {
+  scenario.setBearerToken(token);
+});
+```
 
 ### comment(message: string)
 
@@ -26,8 +42,8 @@ Set an error callback. This function will be called if there are any exceptions 
 
 ```typescript
 scenario.error((msg: string) => {
-    console.log(msg);
-})
+  console.log(msg);
+});
 ```
 
 Additionally you can return a promise. Execution will be delayed until the promise is resolved.
@@ -36,25 +52,31 @@ Additionally you can return a promise. Execution will be delayed until the promi
 
 You don't normally need to call this method. However, if you set the wait method to true then use this to start execution.
 
+```typescript
+scenario2.execute();
+```
+
 ### failure(callback: Function): Scenario
 
 Assign a callback that will be hit whenever the scenario completes with at least one failed assertion. You can set more than one of these callbacks, which will be called in the order they are set.
 
 ```typescript
 scenario.failure((scenario: Scenario) => {
-    console.log(':-(');
-})
+  console.log(":-(");
+});
 ```
 
 Additionally you can return a promise. Execution will be delayed until the promise is resolved.
 
 ```typescript
 scenario.failure((scenario: Scenario) => {
-    return new Promise((resolve) => {
-        console.log('I am sad that we failed an assertion, so I will delay further execution one second.');
-        setTimeout(resolve, 1000);
-    });
-})
+  return new Promise(resolve => {
+    console.log(
+      "I am sad that we failed an assertion, so I will delay further execution one second."
+    );
+    setTimeout(resolve, 1000);
+  });
+});
 ```
 
 ### finally(callback: Function): Scenario
@@ -63,9 +85,7 @@ This will be called after everything else has been called. This is the last hoor
 
 ```typescript
 scenario.finally((scenario: Scenario) => {
-    console.log(
-        scenario.hasPassed ? ':-)' : ':-('
-    );
+  console.log(scenario.hasPassed ? ":-)" : ":-(");
 });
 ```
 
@@ -88,22 +108,22 @@ These callbacks will contain the assertions and other parts of the scenario we w
 #### next(message: string, callback: any): Scenario
 
 ```javascript
-scenario.next('Fill out the form', async (context) => {
-    const form = await context.find('form');
-    await form.fillForm({
-        'q': 'Flagpole JS QA'
-    })
+scenario.next("Fill out the form", async context => {
+  const form = await context.find("form");
+  await form.fillForm({
+    q: "Flagpole JS QA"
+  });
 });
 ```
 
 #### next(callback: any): Scenario
 
 ```javascript
-scenario.next(async (context) => {
-    const form = await context.find('form');
-    await form.fillForm({
-        'q': 'Flagpole JS QA'
-    })
+scenario.next(async context => {
+  const form = await context.find("form");
+  await form.fillForm({
+    q: "Flagpole JS QA"
+  });
 });
 ```
 
@@ -125,19 +145,19 @@ Many APIs are starting to use the bearer token method of authentication. This wi
 
 ### setCookie(key: string, value: string, opts?: any): Scenario
 
-Set a cookie with a key and value. The opts allow you to set additional options like domain and ttl. 
+Set a cookie with a key and value. The opts allow you to set additional options like domain and ttl.
 
 Options supports these properties, in line with the ToughCookie format.
 
-* expires - Date - if set, the Expires= attribute of the cookie (defaults to the string "Infinity"). See setExpires()
-* maxAge - seconds - if set, the Max-Age= attribute in seconds of the cookie. May also be set to strings "Infinity" and "-Infinity" for non-expiry and immediate-expiry, respectively. See setMaxAge()
-* domain - string - the Domain= attribute of the cookie
-* path - string - the Path= of the cookie
-* secure - boolean - the Secure cookie flag
-* httpOnly - boolean - the HttpOnly cookie flag
-* extensions - Array - any unrecognized cookie attributes as strings (even if equal-signs inside)
-* creation - Date - when this cookie was constructed
-* creationIndex - number - set at construction, used to provide greater sort precision (please see cookieCompare(a,b) for a full explanation)
+- expires - Date - if set, the Expires= attribute of the cookie (defaults to the string "Infinity"). See setExpires()
+- maxAge - seconds - if set, the Max-Age= attribute in seconds of the cookie. May also be set to strings "Infinity" and "-Infinity" for non-expiry and immediate-expiry, respectively. See setMaxAge()
+- domain - string - the Domain= attribute of the cookie
+- path - string - the Path= of the cookie
+- secure - boolean - the Secure cookie flag
+- httpOnly - boolean - the HttpOnly cookie flag
+- extensions - Array - any unrecognized cookie attributes as strings (even if equal-signs inside)
+- creation - Date - when this cookie was constructed
+- creationIndex - number - set at construction, used to provide greater sort precision (please see cookieCompare(a,b) for a full explanation)
 
 ### setFormData(form: {}): Scenario
 
@@ -148,7 +168,7 @@ When you want to simulate a form submission, pass in those values here. It expec
 Set a single header.
 
 ```javascript
-scenario.setHeader('jwt_token', 'your-token-here')
+scenario.setHeader("jwt_token", "your-token-here");
 ```
 
 ### setHeaders(headers: {}): Scenario
@@ -168,10 +188,10 @@ Sets the JSON Body that will be submitted with the request. This can only be cal
 
 ```javascript
 scenario.setJsonBody({
-    athlete: {
-        firstName: "Jose",
-        lastName: "Canseco"
-    }
+  athlete: {
+    firstName: "Jose",
+    lastName: "Canseco"
+  }
 });
 ```
 
@@ -183,12 +203,12 @@ Sometimes tests can get stuck in a redirect loop. This limits how many times to 
 
 Set the HTTP Method of the request. This can accept any value but typically it would be one the following:
 
-* GET
-* POST
-* PUT
-* DELETE
-* PATCH
-* OPTIONS
+- GET
+- POST
+- PUT
+- DELETE
+- PATCH
+- OPTIONS
 
 ### setProxyUrl(proxyUrl: string): Scenario
 
@@ -199,7 +219,7 @@ If your network requires you to proxy the request through another URL, set that 
 Sets the raw post body that will be submitted with the request. This can only be run before the scenario has executed.
 
 ```javascript
-scenario.setRawBody('what up');
+scenario.setRawBody("what up");
 ```
 
 ### setTimeout(timeout: number): Scenario
@@ -211,7 +231,9 @@ Set the request timeout for how long to wait for a response.
 Sometimes, perhaps based on the results from a previous scenario in the suite, we want to skip a certain scenario. All scenarios must be completed in one way or another, in order for the parent suite to complete. So if we determine that a certain scenario should not run, we use skip. It will appear in the output as skipped and will not count as failed or passed.
 
 ```javascript
-scenario.skip('There were no images on the page, so we skipped the image validation scenario.');
+scenario.skip(
+  "There were no images on the page, so we skipped the image validation scenario."
+);
 ```
 
 ### subheading(message: string)
@@ -230,7 +252,7 @@ The this context will be the current scenario, but if you do an arrow function y
 
 ```javascript
 scenario.success((scenario: Scenario) => {
-    console.log('PASSED!!')
+  console.log("PASSED!!");
 });
 ```
 
@@ -252,11 +274,19 @@ Sometimes you may NOT want to execute a scenario until you specifically say so. 
 scenario.wait();
 ```
 
-## Properties 
+### waitFor(thatScenario: Scenario): Scenario
+
+Sometimes you may NOT want to execute a scenario until another scenario has successfully completed. For example, if `scenario1` does a PUT request on an API and `scenario2` does a GET to verify that it was set correctly... you want to make sure that `scenario2` waits for a successfully completed `scenario1`. This method provides that convenient shorthand.
+
+```javascript
+scenario2.waitFor(scenario1);
+```
+
+## Properties
 
 Most of these properties are read only. You can not set any of them directly, unless otherwise designated.
 
-### canExecute: boolean 
+### canExecute: boolean
 
 Indicates whether this scenario can potentially execute. A scenario can only execute once, so if it has already excuted this will be false. Additionally a scenario requires both a URL to open (via the open method) and at least one next callback (set with the next method).
 
@@ -268,7 +298,7 @@ The total time between when the Scenario was started executing and when it finis
 
 Get the final URL of the response after all redirects.
 
-### hasExecuted: boolean 
+### hasExecuted: boolean
 
 Has this scenario already started executing?
 
@@ -298,7 +328,7 @@ The total time between when the Scenario's request went out and when the respons
 
 The type of Scenario this is, the type of request we'll make and the response we'll expect back.
 
-*Possible Values: html, json, image, stylesheet, script, video, audio, resource, browser, extjs*
+_Possible Values: html, json, image, stylesheet, script, video, audio, resource, browser, extjs_
 
 ### title: string
 
