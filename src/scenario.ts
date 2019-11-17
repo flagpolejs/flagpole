@@ -422,6 +422,13 @@ export class Scenario implements iScenario {
   public open(url: string): Scenario {
     // You can only load the url once per scenario
     if (!this.hasExecuted) {
+      // If the HTTP method was part of open
+      const match = /([A-Z]+) (.*)/.exec(url);
+      if (match !== null) {
+        this.setMethod(match[1]);
+        url = match[2];
+      }
+      // Okay now set the open method
       this._url = String(url);
       this._isMock = false;
       this._executeWhenReady();
