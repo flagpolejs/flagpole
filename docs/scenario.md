@@ -129,11 +129,17 @@ scenario.next(async context => {
 
 ### open(url: string): Scenario
 
-Set the URL that the scenario should open. If at least one next callback has already been set, this will cause the scenario to start executing (unless you have set wait to true). Typically this is a relative URL, which will be built based on the suite's base.
+Set the URL that the scenario should open. If at least one next callback has already been set, this will cause the scenario to start executing (unless you have set it to wait). Typically this is a relative URL, which will be built based on the suite's base.
 
-### shouldFollowRedirects(onRedirect: boolean | Function): Scenario
+```
+scenario.open('/api/articles')
+```
 
-Redirects can be tricky. Passing in false as the argument prevents the request from following any redirects. Passing in a callback function instead allows you to determine if it should follow a given redirect by returning a boolean.
+Optionally, you can pass the HTTP verb in as a prefix. If you do so, it should be all capital letters followed by a space and then the URL. For example:
+
+```
+scenario.open('POST /api/articles')
+```
 
 ### setBasicAuth(authorization: { username: string, password: string }): Scenario
 
@@ -210,6 +216,8 @@ Set the HTTP Method of the request. This can accept any value but typically it w
 - PATCH
 - OPTIONS
 
+Alternately, you can set the HTTP verb/method as part of the `open` method.
+
 ### setProxyUrl(proxyUrl: string): Scenario
 
 If your network requires you to proxy the request through another URL, set that here.
@@ -225,6 +233,10 @@ scenario.setRawBody("what up");
 ### setTimeout(timeout: number): Scenario
 
 Set the request timeout for how long to wait for a response.
+
+### shouldFollowRedirects(onRedirect: boolean | Function): Scenario
+
+Redirects can be tricky. Passing in false as the argument prevents the request from following any redirects. Passing in a callback function instead allows you to determine if it should follow a given redirect by returning a boolean.
 
 ### skip(message?: string): Promise<Scenario>
 
@@ -243,6 +255,19 @@ Write a subheading element to the output log.
 ### subscribe(callback: Function)
 
 Subscribes to updates to the status of this scenario.
+
+```
+scenario2.subscribe((scenario: Scenario, status: ScenarioStatusEvent) => {
+  console.log(`${scenario.title} changed to ${status}`);
+})
+```
+
+Possible values of the status argument enum:
+
+- beforeExecute
+- executionProgress
+- afterExecute
+- finished
 
 ### success(callback: Function): Scenario
 
