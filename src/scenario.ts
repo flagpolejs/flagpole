@@ -183,6 +183,7 @@ export class Scenario implements iScenario {
     method: "GET",
     headers: {}
   };
+  protected _aliasedData: any = {};
 
   public static create(
     suite: iSuite,
@@ -208,6 +209,15 @@ export class Scenario implements iScenario {
     this._title = title;
     this._onCompletedCallback = onCompletedCallback;
     this._response = new ResourceResponse(this);
+  }
+
+  public set(aliasName: string, value: any): Scenario {
+    this._aliasedData[aliasName] = value;
+    return this;
+  }
+
+  public get(aliasName: string): any {
+    return this._aliasedData[aliasName];
   }
 
   /**

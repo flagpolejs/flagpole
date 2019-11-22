@@ -548,6 +548,21 @@ export class Assertion implements iAssertion {
     return this._context.assert(a, b);
   }
 
+  /**
+   * Add a comment on the AssertionContext, allows chaining
+   *
+   * @param message
+   * @param value
+   */
+  public comment(message: string): iAssertionContext {
+    return this._context.comment(message);
+  }
+
+  public as(aliasName: string): iAssertion {
+    this._context.set(aliasName, this._input);
+    return this;
+  }
+
   private async _loadSchemaValidator(): Promise<iAjvLike> {
     // We haven't tried to load query engines yet
     if (typeof this._ajv == "undefined") {

@@ -89,6 +89,10 @@ scenario.finally((scenario: Scenario) => {
 });
 ```
 
+### get(aliasName: string): any
+
+If a value was previously saved on this Scenario `set` or within an Assertion, Value or DOMElement with `as` then use this `get` method to retrieve it.
+
 ### getLog(): Promise<iLogLine[]>
 
 Return the logs from each line of the test, including passes, fails, and comments.
@@ -139,6 +143,20 @@ Optionally, you can pass the HTTP verb in as a prefix. If you do so, it should b
 
 ```
 scenario.open('POST /api/articles')
+```
+
+### set(aliasName: string, value: any): Scenario
+
+Save `value` to alias `aliasName` so it that it can be retrieved later with a `.get(aliasName)` call.
+
+```javascript
+scenario
+  .before(scenario => {
+    scenario.set("foo", "bar");
+  })
+  .next(context => {
+    context.assert(context.get("foo")).equals("bar");
+  });
 ```
 
 ### setBasicAuth(authorization: { username: string, password: string }): Scenario

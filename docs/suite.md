@@ -23,7 +23,7 @@ Set the base URL that all Scenarios in this Suite will use as its starting point
 This can be just a string:
 
 ```javascript
-suite.base('https://www.google.com/')
+suite.base("https://www.google.com/");
 ```
 
 Or it can be an object with environment as its key and the domain as its value.
@@ -50,7 +50,7 @@ suite.beforeEach(() => { })
 
 ### browser(title: string, opts: any = {}): Scenario
 
-Creates a new Scenario of the Browser request type. This will run a version of Chrominium with Puppeteer. 
+Creates a new Scenario of the Browser request type. This will run a version of Chrominium with Puppeteer.
 
 suite.browser('User Sign Up Work Flow', { headless: true, width: 1280, height: 800 })
 
@@ -132,7 +132,7 @@ Adds this callback to a PubSub subscription to get notified on any updates with 
 
 This will probably return a handle to be able to unsubscribe later, but it doesn't return anything yet.
 
-suite.callback((suite: Suite, status: SuiteStatusEvent) => {  });
+suite.callback((suite: Suite, status: SuiteStatusEvent) => { });
 
 ### success(callback: Function): Suite
 
@@ -167,6 +167,10 @@ The base URL tha tis being used to execute Scenarios in this Suite. It will come
 ### executionDuration: number | null
 
 The amount of time, in milliseconds, between when the first Scenario in the Suite started to execute and when the last one was completed.
+
+### executionOptions: FlagpoleExecutionOptions
+
+The execution options specified from the command line arguments or defaults. This notably includes environment.
 
 ### title: string
 

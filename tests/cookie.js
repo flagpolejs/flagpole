@@ -1,8 +1,8 @@
 const { Flagpole } = require("../dist/index.js");
 
-const suite = Flagpole.Suite("Basic Cookie Test of Site").base(
-  "https://www.milesplit.com"
-);
+const suite = Flagpole.Suite("Basic Cookie Test of Site").base(() => {
+  return "https://www.milesplit.com";
+});
 
 suite
   .html("Not logged in test")

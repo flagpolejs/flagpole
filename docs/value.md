@@ -1,4 +1,3 @@
-
 # Value
 
 This object is the result of queried properties on a DOMElement, CSSRule, or from context.select('property') on a JSON/REST or Image type scenario. It is a wrapper of the actual underlying value that lets you do some nice things.
@@ -10,43 +9,43 @@ Value also has a toString method and a valueOf method, which are sort of JavaScr
 For example this will automatically convert href to a string, even though it's actually a Value object.
 
 ```typescript
-const href: Value = await element.getAttribute('href');
-if (href == 'http://www.flosports.tv') {
-    console.log('Welcome to FloSports');
+const href: Value = await element.getAttribute("href");
+if (href == "http://www.flosports.tv") {
+  console.log("Welcome to FloSports");
 }
 ```
 
 Likewise you can do an assertion with it:
 
 ```typescript
-const href: Value = await element.getAttribute('href');
-context.assert(href).equals('http://www.flosports.tv');
+const href: Value = await element.getAttribute("href");
+context.assert(href).equals("http://www.flosports.tv");
 ```
 
 Similarly, you can do this with numeric operators.
 
 ```typescript
-const numberOfImages: Value = (await context.findAll('img')).length;
+const numberOfImages: Value = (await context.findAll("img")).length;
 if (numberOfImages > 0) {
-    console.log('There are images on the page');
+  console.log("There are images on the page");
 }
 ```
 
 As you might have expected, this also works with assertions:
 
 ```typescript
-const numberOfImages: Value = (await context.findAll('img')).length;
+const numberOfImages: Value = (await context.findAll("img")).length;
 context.assert(numberOfImages).greaterThan(0);
 ```
 
-To get the literal interal value you will use the .$ property as a shorthand, which you will find useful as you go.
+To get the literal interal value you will use the .\$ property as a shorthand, which you will find useful as you go.
 
 ```typescript
-const numberOfImages: Value = (await context.findAll('img')).length;
+const numberOfImages: Value = (await context.findAll("img")).length;
 context.comment(`There are ${numberOfImages.$} images on the page`);
 ```
 
-But there are also a lot of .to* methods outlined below, which are extremely useful to converting or making sure it's the type you think it should be. For example:
+But there are also a lot of .to\* methods outlined below, which are extremely useful to converting or making sure it's the type you think it should be. For example:
 
 ```typescript
 const inputValue: Value = await inputElement.getValue();
@@ -57,12 +56,16 @@ Assuming the input element's value attribute was "4" if you did not use .toNumbe
 
 ## Methods
 
+### as(aliasName: string): Value
+
+Save this value to an alias within the Scenario, so that it can be accessed later.
+
 ### getProperty(key: string): Promise<Value>
 
 Get the property of this input value with the key. If there is no such property then it will return null. This is an async method.
 
 ```javascript
-const isChecked = await element.getProperty('checked');
+const isChecked = await element.getProperty("checked");
 ```
 
 ### hasProperty(key: string): Promise<Value>
@@ -70,7 +73,7 @@ const isChecked = await element.getProperty('checked');
 If this element is an object of some sort, does it have the property matching key? Note this is an async function.
 
 ```javascript
-context.assert(await element.hasProperty('qa-name')).equals(true);
+context.assert(await element.hasProperty("qa-name")).equals(true);
 ```
 
 ### isNullOrUndefined(): boolean
@@ -135,15 +138,15 @@ Convert this value to a number with parseInt.
 
 ### toString(): string
 
-Casts the input value as a string. 
+Casts the input value as a string.
 
 ### toType(): string
 
 Grabs the type of the input value. It will be all lowercase and is a deep type look up, beyond a normal typeof.
 
-## Properties 
+## Properties
 
-### $: any (readonly)
+### \$: any (readonly)
 
 This is a quick way to get the underlying value within this wrapper object.
 
