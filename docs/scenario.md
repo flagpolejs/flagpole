@@ -93,6 +93,10 @@ scenario.finally((scenario: Scenario) => {
 
 If a value was previously saved on this Scenario `set` or within an Assertion, Value or DOMElement with `as` then use this `get` method to retrieve it.
 
+```javascript
+console.log(scenario.get("foo"));
+```
+
 ### getLog(): Promise<iLogLine[]>
 
 Return the logs from each line of the test, including passes, fails, and comments.
@@ -135,14 +139,14 @@ scenario.next(async context => {
 
 Set the URL that the scenario should open. If at least one next callback has already been set, this will cause the scenario to start executing (unless you have set it to wait). Typically this is a relative URL, which will be built based on the suite's base.
 
-```
-scenario.open('/api/articles')
+```javascript
+scenario.open("/api/articles");
 ```
 
 Optionally, you can pass the HTTP verb in as a prefix. If you do so, it should be all capital letters followed by a space and then the URL. For example:
 
-```
-scenario.open('POST /api/articles')
+```javascript
+scenario.open("POST /api/articles");
 ```
 
 ### set(aliasName: string, value: any): Scenario
@@ -163,9 +167,20 @@ scenario
 
 Set basic authentication schema for sites that expect this old fashioned auth strategy.
 
+```javascript
+scenario.setBasicAuth({
+  username: "john_doe",
+  password: "abc123"
+});
+```
+
 ### setBearerToken(token: string): Scenario
 
 Many APIs are starting to use the bearer token method of authentication. This will set the header accordingly.
+
+```javascript
+scenario.setBearerToken(jwtToken);
+```
 
 ### setCookie(key: string, value: string, opts?: any): Scenario
 
@@ -186,6 +201,13 @@ Options supports these properties, in line with the ToughCookie format.
 ### setFormData(form: {}): Scenario
 
 When you want to simulate a form submission, pass in those values here. It expects an object, which will be serialized automatically in this method.
+
+```javascript
+scenario.setFormData({
+  firstName: "George",
+  lastName: "Brett"
+});
+```
 
 ### setHeader(key: string, value: any): Scenario
 

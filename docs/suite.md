@@ -8,13 +8,17 @@ A Suite is essentially a collection of test Scenarios. You will be able to choos
 
 Hit this callback after all Scenarios finish executing.
 
-suite.afterAll(() => { })
+```javascript
+suite.afterAll(suite => {});
+```
 
 ### afterEach(callback: Function): Suite
 
 Hit this callback after each Scenario finishes executing.
 
-suite.afterEach(() => { })
+```javascript
+suite.afterEach(scenario => {});
+```
 
 ### base(parms: string | {} | Function): Suite
 
@@ -52,91 +56,129 @@ suite.base(suite => {
 
 Hit this callback before the first Scenario starts executing.
 
-suite.beforeAll(() => { })
+```javascript
+suite.beforeAll(suite => {});
+```
 
 ### beforeEach(callback: Function): Suite
 
 Hit this callback before each Scenario starts executing.
 
-suite.beforeEach(() => { })
+```javascript
+suite.beforeEach(scenario => {});
+```
 
 ### browser(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the Browser request type. This will run a version of Chrominium with Puppeteer.
 
-suite.browser('User Sign Up Work Flow', { headless: true, width: 1280, height: 800 })
+```javascript
+suite.browser("User Sign Up Work Flow", {
+  headless: true,
+  width: 1280,
+  height: 800
+});
+```
 
 ### buildUrl(path: string): string
 
 Creates a fully qualified URL based on the input string. This will be relative to the Suite's base.
 
-suite.buildUrl('/index.html')
+```javascript
+suite.buildUrl("/index.html");
+```
 
 ### catch(callback: Function): Suite
 
 Hit this callback after the Suite completes if there is an error or failure in any Scenario.
 
-suite.catch(() => { })
+```javascript
+suite.catch(() => {});
+```
 
 ### execute(): Suite
 
 If this string was told to wait() to execute, this will kick it off. This method will trigger the execute to then be called on each Scenario in the Suite.
 
-suite.execute()
+```javascript
+suite.execute();
+```
 
 ### extjs(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the ExtJS request type. This will use Puppeteer just like the browser variety. The only difference is that it has Ext specific select methods and other helper methods to dig into this framework's custom internals.
 
-suite.extjs('User Sign Up Work Flow', { headless: true, width: 1280, height: 800 })
+```javascript
+suite.extjs("User Sign Up Work Flow", {
+  headless: true,
+  width: 1280,
+  height: 800
+});
+```
 
 ### finally(callback: Function): Suite
 
 Hit this callback after all Scenarios finish executing and after the Suite has been marked completed. This is the final step.
 
-suite.finally(() => { })
+```javascript
+suite.finally(() => {});
+```
 
 ### html(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the HTML/DOM Only request type. This will use Cheerio to grab the HTML and load it into a jQuery-like DOM that we can test against. We can fake a browser here, allowing form completion, clicks, etc. However, it just is not a full browser so does not have JavaScript and won't work on SPAs, unless they have server side rendering as well.
 
-suite.html('Homepage Test')
+```javascript
+suite.html("Homepage Test");
+```
 
 ### image(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the Image request type. This will use probe-image-size library to grab only the first few bytes of the image (not download the entire thing). This allows us to quickly test the basic properties.
 
-suite.image('Make sure image loads and is correct width')
+```javascript
+suite.image("Make sure image loads and is correct width");
+```
 
 ### json(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the JSON/API End Point request type.
 
-suite.json('Articles API Test')
+```javascript
+suite.json("Articles API Test");
+```
 
 ### next(callback: Function): Suite
 
 Hit this callback after all Scenarios finish executing, but before Suite has been marked as completed. There can be multiple nexts.
 
-suite.next(() => { })
+```javascript
+suite.next(() => {});
+```
 
 ### print(exitAfterPrint: boolean = true): void
 
 Prints the results from the test execution to the console. This is often run inside the finally callback. If you leave the default argument as true, the process will terminate after it prints. So be sure to set that to false if you don't want it to do so.
 
-suite.finally(suite => suite.print(false))
+```javascript
+suite.finally(suite => suite.print(false));
+```
 
 ### resource(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the Generic Resource request type. This is any other random type of file. You can test the file size, mime type, content, HTTP status, etc.
 
-suite.resource('Make sure this file loads')
+```javascript
+suite.resource("Make sure this file loads");
+```
 
 ### script(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the Script request type. It doesn't currently do anything more than load it. You can test the file size, mime type, HTTP Status, and such... so it may have some use but does not currently validate the JS.
 
-suite.script('Make sure JS file loads')
+```javascript
+suite.script("Make sure JS file loads");
+```
 
 ### subscribe(callback: Function): void
 
@@ -144,31 +186,41 @@ Adds this callback to a PubSub subscription to get notified on any updates with 
 
 This will probably return a handle to be able to unsubscribe later, but it doesn't return anything yet.
 
-suite.callback((suite: Suite, status: SuiteStatusEvent) => { });
+```javascript
+suite.callback((suite: Suite, status: SuiteStatusEvent) => {});
+```
 
 ### success(callback: Function): Suite
 
 Hit this callback after all Scenarios finish executing if all Scenarios passed. This happens following after and next, but before finally.
 
-suite.success(() => { })
+```javascript
+suite.success(() => {});
+```
 
 ### verifySslCert(verify: boolean): Suite
 
 Tells the request not to worry about verifying any SSL certs for HTTPS requests. This is helpful for local environments that may not have a valid cert. This value is passed on to any Scenarios created in this Suite, so you don't have to set it each time.
 
-suite.verifySslCert(false)
+```javascript
+suite.verifySslCert(false);
+```
 
 ### video(title: string, opts: any = {}): Suite
 
 Creates a new Scenario of the Video request type.
 
-suite.video('Make sure video loads')
+```javascript
+suite.video("Make sure video loads");
+```
 
 ### wait(verify: boolean = true): Suite
 
 Tells this suite not to execute right away. Will not execute any scenarios until .execute() is called. This wait value gets passed to any Scenarios created under this Suite, so that you don't have to set it each time.
 
-suite.wait()
+```javascript
+suite.wait();
+```
 
 ## Properties
 
