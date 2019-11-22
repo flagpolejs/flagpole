@@ -16,7 +16,7 @@ Hit this callback after each Scenario finishes executing.
 
 suite.afterEach(() => { })
 
-### base(parms: string | {}): Suite
+### base(parms: string | {} | Function): Suite
 
 Set the base URL that all Scenarios in this Suite will use as its starting point.
 
@@ -34,6 +34,18 @@ suite.base({
   stag: 'http://www.google.internal/'
   dev: 'http://www.google.local/'
 })
+```
+
+Or it can be a callback function
+
+```javascript
+suite.base(suite => {
+  if (suite.executionOptions.environment == "prod") {
+    return "https://www.google.com/";
+  } else {
+    return "http://www.google.internal/";
+  }
+});
 ```
 
 ### beforeAll(callback: Function): Suite
@@ -171,6 +183,12 @@ The amount of time, in milliseconds, between when the first Scenario in the Suit
 ### executionOptions: FlagpoleExecutionOptions
 
 The execution options specified from the command line arguments or defaults. This notably includes environment.
+
+```javascript
+if (suite.executionOptions.quietMode) {
+  console.log("shhhh!");
+}
+```
 
 ### title: string
 
