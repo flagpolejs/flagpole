@@ -302,8 +302,7 @@ export class AssertionContext implements iAssertionContext {
    */
   public async exists(selector: string): Promise<iValue | iDOMElement> {
     const el = await this.response.find(selector);
-    el.isNull;
-    el === null
+    el.isNull()
       ? this._failedAction("EXISTS", `${selector}`)
       : this._completedAction("EXISTS", `${selector}`);
     return el;

@@ -7,14 +7,32 @@ const suite = Flagpole.Suite("Test Google Search")
   });
 
 suite
-  .Html("MileSplit Florida - Browser Test")
+  .html("MileSplit Florida - Browser Test")
   .open("/")
-  .then(async context => {
+  .next(async context => {
+    context.comment(context.response.url);
+    context.comment(context.response.finalUrl);
     context
       .assert(context.response.statusCode)
       .equals(200)
       .assert("Jason")
-      .is("string")
-      .assert(context.exists("section.videos"))
-      .resolves();
+      .type.equals("string");
+  });
+
+suite
+  .html("Florida Runners Rankings")
+  .open("/rankings")
+  .next(async context => {
+    context.comment(context.response.url);
+    context.comment(context.response.finalUrl);
+    await context.exists("#rankingsTable");
+  });
+
+suite
+  .html("Florida Runners 5K Rankings")
+  .open("GET /rankings/events/high-school-boys/cross-country/5000m?year=2019")
+  .next(async context => {
+    context.comment(context.response.url);
+    context.comment(context.response.finalUrl);
+    context.comment(`There were ${context.response.redirectCount} redirects`);
   });

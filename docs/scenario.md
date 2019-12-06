@@ -149,6 +149,21 @@ Optionally, you can pass the HTTP verb in as a prefix. If you do so, it should b
 scenario.open("POST /api/articles");
 ```
 
+### pause(milliseconds: number): Scenario
+
+Insert a `next` callback that pauses for this amount of time.
+
+```javascript
+scenario
+  .next(context => {
+    context.assert(true).equals(true);
+  })
+  .pause(3000)
+  .next(context => {
+    context.assert(true).equals(true);
+  });
+```
+
 ### set(aliasName: string, value: any): Scenario
 
 Save `value` to alias `aliasName` so it that it can be retrieved later with a `.get(aliasName)` call.

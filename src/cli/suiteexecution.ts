@@ -4,7 +4,6 @@ import {
   FlagpoleOutput,
   FlagpoleExecution
 } from "../flagpoleexecutionoptions";
-import * as execa from "execa";
 import { Suite } from "../suite";
 import { FlagpoleReport } from "../logging/flagpolereport";
 import { asyncForEach } from "../util";

@@ -312,6 +312,7 @@ export interface iScenario {
   hasFinished: boolean;
   url: string | null;
   finalUrl: string | null;
+  redirectCount: number;
   requestOptions: any;
   set(aliasName: string, value: any): iScenario;
   get(aliasName: string): any;

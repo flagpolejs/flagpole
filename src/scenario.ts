@@ -23,6 +23,7 @@ import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/logcollection";
 import { Assertion } from "./assertion";
+import { URL } from "url";
 
 const request = require("request");
 const probeImage = require("probe-image-size");
@@ -129,6 +130,13 @@ export class Scenario implements iScenario {
    */
   public get finalUrl(): string | null {
     return this._finalUrl;
+  }
+
+  /**
+   * Cound the redirects
+   */
+  public get redirectCount(): number {
+    return this._redirectCount;
   }
 
   /**
@@ -427,6 +435,19 @@ export class Scenario implements iScenario {
       assertions();
       this.ignore(false);
     }
+    return this;
+  }
+
+  /**
+   * Insert a next call back that waits this amount of time before continuing
+   *
+   * @param milliseconds
+   */
+  public pause(milliseconds: number): Scenario {
+    this.next((context: AssertionContext) => {
+      context.comment(`Pause for ${milliseconds}ms`);
+      return context.pause(milliseconds);
+    });
     return this;
   }
 
@@ -803,21 +824,24 @@ export class Scenario implements iScenario {
    */
   private _executeDefaultRequest() {
     const scenario: Scenario = this;
-    this._options.followRedirect =
-      this._followRedirect === null
-        ? (response: any) => {
-            const url = require("url");
-            scenario._finalUrl = response.request.href;
-            if (response.headers.location) {
-              scenario._finalUrl = url.resolve(
-                response.headers.location,
-                response.request.href
-              );
-            }
-            scenario._redirectCount++;
-            return true;
-          }
-        : this._followRedirect;
+    this._options.followRedirect = (response: any) => {
+      const shouldFollow: boolean =
+        this._followRedirect === null
+          ? true
+          : typeof this._followRedirect === "function"
+          ? this._followRedirect(response)
+          : !!this._followRedirect;
+      if (shouldFollow) {
+        if (response.headers.location) {
+          scenario._finalUrl = new URL(
+            response.headers.location,
+            response.request.href
+          ).href;
+        }
+        scenario._redirectCount++;
+      }
+      return shouldFollow;
+    };
     request(this._options, function(err: string, response: any, body: string) {
       if (!err) {
         scenario._processResponse(
@@ -837,6 +861,7 @@ export class Scenario implements iScenario {
       this._timeRequestStarted = Date.now();
       this._options.uri = this._buildUrl();
       this._options.jar = this._cookieJar;
+      this._finalUrl = this._buildUrl();
       if (this._responseType == ResponseType.image) {
         this._executeImageRequest();
       } else if (
