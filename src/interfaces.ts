@@ -360,6 +360,7 @@ export interface iScenario {
 export interface iMessageAndCallback {
   message: string;
   callback: Function;
+  scenario?: iScenario;
 }
 
 export interface iBounds {

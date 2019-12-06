@@ -190,7 +190,7 @@ export abstract class ProtoResponse implements iResponse {
   public cookie(key: string): Value {
     let cookie: Cookie | null = null;
     this.httpResponse.cookies.forEach((c: Cookie) => {
-      if (c.key == key) {
+      if (c.key === key) {
         cookie = c;
       }
     });

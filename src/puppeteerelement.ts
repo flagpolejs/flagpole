@@ -440,8 +440,13 @@ export class PuppeteerElement extends DOMElement
 
   public async submit(): Promise<void>;
   public async submit(callback: Function): Promise<void>;
+  public async submit(scenario: iScenario): Promise<void>;
   public async submit(message: string, callback: Function): Promise<void>;
-  public async submit(a?: string | Function, b?: Function): Promise<void> {
+  public async submit(message: string, scenario: iScenario): Promise<void>;
+  public async submit(
+    a?: string | Function | iScenario,
+    b?: Function | iScenario
+  ): Promise<void> {
     if (!this._isFormTag()) {
       throw new Error("You can only use .submit() with a form element.");
     }
@@ -454,20 +459,19 @@ export class PuppeteerElement extends DOMElement
 
   public async click(): Promise<void>;
   public async click(callback: Function): Promise<iScenario>;
+  public async click(scenario: iScenario): Promise<iScenario>;
   public async click(message: string, callback: Function): Promise<iScenario>;
+  public async click(message: string, scenario: iScenario): Promise<iScenario>;
   public async click(
-    a?: string | Function,
-    b?: Function
+    a?: string | Function | iScenario,
+    b?: Function | iScenario
   ): Promise<void | iScenario> {
     this._completedAction("CLICK");
     // If they passed in a message or callback, treat this as a new sub-scenario
-    if (
-      typeof a == "string" ||
-      typeof a == "function" ||
-      typeof b == "function"
-    ) {
-      const overloaded = this._getMessageAndCallbackFromOverloading(a, b);
-      return this.load(overloaded.message, overloaded.callback);
+    if (a || b) {
+      return this._loadSubScenario(
+        this._getMessageAndCallbackFromOverloading(a, b)
+      );
     }
     // Otherwise, just treat this as an inline click within the same scenario
     else {

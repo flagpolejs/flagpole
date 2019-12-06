@@ -4,15 +4,14 @@ This is an abstract class for elements that is extended by HTMLElement, Puppetee
 
 This class is extended more specifically by other classes:
 
-* PuppeteerElement
-* BrowserElement
-* ExtJsComponent
-* HTMLElement
+- PuppeteerElement
+- BrowserElement
+- ExtJsComponent
+- HTMLElement
 
+## Properties
 
-## Properties 
-
-### $: any (readonly)
+### \$: any (readonly)
 
 This is a quick way to get the underlying value within this wrapper object. So that will typically be either an ElementHandle if a browser test or a Cheerio object if an html test.
 
@@ -47,6 +46,58 @@ await textBox.clear();
 
 Literally calls clear() and then type() methods. So just a shorthand to clear out the exiting text first before typing.
 
+### click(): Promise<void>
+
+If the DOM Element is something clickable like a link or a button, you can perform a "click" on it. There are multiple options for loverloading it.
+
+#### click(message: string, callback: function): Promise<void>
+
+You can specify a message, which will become the sub-scenario title, and a callback. This will effectively create a new lambda scenario.
+
+```javascript
+const loginLink = await context.find("a.login");
+loginLink.click("Make sure link is valid", subContext => {
+  subContext.assert(subContext.response.statusCode).equals(200);
+});
+```
+
+#### click(callback: function): Promise<void>
+
+If you leave off the message it still works. This will set the sub-scenario title to the URL you are opening.
+
+```javascript
+const loginLink = await context.find("a.login");
+loginLink.click(subContext => {
+  subContext.assert(subContext.response.statusCode).equals(200);
+});
+```
+
+#### click(otherScenario: Scenario): Promise<void>
+
+Alternately, you can pre-define another scenario you want to execute on this click. Just leave the `open` method off of that scenario definition. Calling click on this link will call open with this URL to kick off that other scenario.
+
+```javascript
+const loginLink = await context.find("a.login");
+loginLink.click(otherScenario);
+```
+
+#### click(): Promise<void>
+
+Finally, you can leave off all of the arguments. This will execute a click with a basic scenario, which sometimes will be sufficient for a basic test of a valid link.
+
+```javascript
+const loginLink = await context.find("a.login");
+loginLink.click();
+```
+
+In the case of a browser test, you can use this to execute the click inline with this same scenario (not launch a sub-scenario). In this case, you should await the response. You'd probably also want to `waitForNavigation` or similar wait method after it.
+
+```javascript
+const loginLink = await context.find("a.login");
+await loginLink.click();
+await context.waitForNavigation();
+```
+
 ### fillForm(data: { [key: string]: any }): Promise<Value>
 
 Fill out a form element with this data. The data object should match the input/select name attributes of elements within the form. For multi-select inputs pass in an array of values to be checked.
@@ -54,13 +105,13 @@ Fill out a form element with this data. The data object should match the input/s
 If this element is not a form, the method will error.
 
 ```javascript
-const form = await context.find('form');
+const form = await context.find("form");
 await form.fillForm({
-    firstName: 'Charlie',
-    lastName: 'Ward',
-    position: 'QB',
-    team: 'FSU'
-})
+  firstName: "Charlie",
+  lastName: "Ward",
+  position: "QB",
+  team: "FSU"
+});
 ```
 
 ### find(selector: string): Promise<DOMElement | Value<null>>
@@ -68,7 +119,7 @@ await form.fillForm({
 Find the first element in the descendents of the current element that matches this selector. If there are no matches, you will be returned a Value object that contains null.
 
 ```javascript
-const li = await someElement.find('li');
+const li = await someElement.find("li");
 ```
 
 ### findAll(selector: string): Promise<DOMElement[]>
@@ -76,7 +127,7 @@ const li = await someElement.find('li');
 Find all of the elements in the descendents of the current element that match this selector. If there are no matches, it will be an empty array.
 
 ```javascript
-const li = await someElement.findAll('li');
+const li = await someElement.findAll("li");
 ```
 
 ### getAttribute(key: string): Promise<Value>
@@ -84,7 +135,7 @@ const li = await someElement.findAll('li');
 Get the attribute of the element with this key and return its value. If it is not present the Value object will contain null.
 
 ```javascript
-const src = await img.getAttribute('src');
+const src = await img.getAttribute("src");
 ```
 
 ### getChildren(selector?: string): Promise<DOMElement[]>
@@ -92,7 +143,7 @@ const src = await img.getAttribute('src');
 Get the immediate children of the current element. If a selector string is passed, it will filter only children matching that selector. If none match the selector, an empty array will be returned.
 
 ```javascript
-const children = await someElement.getChildren('li');
+const children = await someElement.getChildren("li");
 ```
 
 ### getClassName(): Promise<Value>
@@ -108,7 +159,7 @@ const className = await someElement.getClassName();
 Going up the chain of ancestors (and including itself), look for the first element matching the selector. If there are no ancestors (or self) that matches, a Value object containing null is returned.
 
 ```javascript
-const tbody = await td.getClosest('tbody');
+const tbody = await td.getClosest("tbody");
 ```
 
 ### getData(key: string): Promise<Value>
@@ -116,7 +167,7 @@ const tbody = await td.getClosest('tbody');
 Get data property by this key from the current element. Value will contain null if it does not.
 
 ```javascript
-context.assert(await element.getData('athlete-id')).equals(123);
+context.assert(await element.getData("athlete-id")).equals(123);
 ```
 
 ### getInnerHtml(): Promise<Value>
@@ -140,7 +191,7 @@ const text = await someElement.getInnerText();
 Traverse through the siblings proceeding the current element. If no selector is passed, the immediate following sibling is returned. If a selector is passed, the next one matching the selector is returned. If none match, a Value object containing null is returned.
 
 ```javascript
-const nextSibling = await someElement.getNextSibling('li');
+const nextSibling = await someElement.getNextSibling("li");
 ```
 
 ### getNextSiblings(selector?: string): Promise<DOMElement[]>
@@ -148,7 +199,7 @@ const nextSibling = await someElement.getNextSibling('li');
 Traverse through the siblings proceeding the current element. If no selector is passed, all next siblings will be returned. If a selector is passed, only those matching the selector. If none match, an empty array is returned.
 
 ```javascript
-const siblings = await someElement.getNextSiblings('li');
+const siblings = await someElement.getNextSiblings("li");
 ```
 
 ### getOuterHtml(): Promise<Value>
@@ -164,7 +215,7 @@ const html = await someElement.getOuterHtml();
 Traverse through the siblings preceeding the current element. If no selector is passed, the immediate preceeding sibling is returned. If a selector is passed, the previous one matching the selector is returned. If none match, a Value object containing null is returned.
 
 ```javascript
-const prevSibling = await someElement.getPreviousSibling('li');
+const prevSibling = await someElement.getPreviousSibling("li");
 ```
 
 ### getPreviousSiblings(selector?: string): Promise<DOMElement[]>
@@ -172,7 +223,7 @@ const prevSibling = await someElement.getPreviousSibling('li');
 Traverse through the siblings preceeding the current element. If no selector is passed, all previous siblings will be returned. If a selector is passed, only those matching the selector. If none match, an empty array is returned.
 
 ```javascript
-const siblings = await someElement.getPreviousSiblings('li');
+const siblings = await someElement.getPreviousSiblings("li");
 ```
 
 ### getProperty(key: string): Promise<Value>
@@ -180,7 +231,7 @@ const siblings = await someElement.getPreviousSiblings('li');
 Get property by this key from the current element. Value will contain null if it does not.
 
 ```javascript
-context.assert(await input.hasProperty('checked')).equals(true);
+context.assert(await input.hasProperty("checked")).equals(true);
 ```
 
 ### getSiblings(selector?: string): Promise<DOMElement[]>
@@ -188,12 +239,12 @@ context.assert(await input.hasProperty('checked')).equals(true);
 Get the siblings of the current element. If a selector string is passed, it will filter only siblings matching that selector. If none match, it will return an empty array.
 
 ```javascript
-const siblings = await someElement.getSiblings('li');
+const siblings = await someElement.getSiblings("li");
 ```
 
 ### getTagName(): Promise<Value>
 
-Get the HTML tag of this element. 
+Get the HTML tag of this element.
 
 ```javascript
 const tagName = await someElement.getTagName();
@@ -201,7 +252,7 @@ const tagName = await someElement.getTagName();
 
 ### getText(): Promise<Value>
 
-Get the textContent of this element. This is slightly different from getInnerText()  and here is a [StackOverflow question](https://stackoverflow.com/questions/35213147/difference-between-textcontent-vs-innertext) about that so I don't have to repeat it.
+Get the textContent of this element. This is slightly different from getInnerText() and here is a [StackOverflow question](https://stackoverflow.com/questions/35213147/difference-between-textcontent-vs-innertext) about that so I don't have to repeat it.
 
 ```javascript
 const text = await div.getText();
@@ -220,7 +271,7 @@ const searchTerm = await input.getValue();
 Does this element have an attribute by this name?
 
 ```javascript
-context.assert(await img.hasAttribute('src')).equals(true);
+context.assert(await img.hasAttribute("src")).equals(true);
 ```
 
 ### hasClassName(className: string): Promise<Value>
@@ -228,7 +279,7 @@ context.assert(await img.hasAttribute('src')).equals(true);
 Does this element have the given class? The value will contain boolean.
 
 ```javascript
-context.assert(await element.hasClassName('heading')).equals(true);
+context.assert(await element.hasClassName("heading")).equals(true);
 ```
 
 ### hasData(key: string): Promise<Value>
@@ -236,7 +287,7 @@ context.assert(await element.hasClassName('heading')).equals(true);
 Does this element have a data property by this name?
 
 ```javascript
-context.assert(await element.hasData('athlete-id')).equals(true);
+context.assert(await element.hasData("athlete-id")).equals(true);
 ```
 
 ### hasProperty(key: string): Promise<Value>
@@ -244,7 +295,34 @@ context.assert(await element.hasData('athlete-id')).equals(true);
 Does this element have a property by this name?
 
 ```javascript
-context.assert(await input.hasProperty('readonly')).equals(true);
+context.assert(await input.hasProperty("readonly")).equals(true);
+```
+
+### load(): Promise<Scenario>
+
+Load works basically the same way as `.click()`, so you should see the documentation on that.
+
+The difference between the two is that `click` will only work for clickable things like links or buttons. However, you can use `load` on other things like images, scripts, audio, video, stylesheets, iframes, and forms.
+
+```javascript
+const image = await context.find("img.logo");
+image.load("Make sure logo is a valid image");
+```
+
+### submit(): Promise<Scenario>
+
+Load works basically the same way as `.click()` and `.load()`, so you can reference the documentation on those.
+
+The difference is that `submit` only works on form elements _and_ it will compile the filled out data from the form. Then it will submit the form based on the settings of the `method` and `action` attributes of the form element.
+
+```javascript
+const form = await context.find("form.login");
+await form.fillForm({
+  user: "bob",
+  password: "abc123"
+});
+await form.submit();
+await context.waitForNavigation();
 ```
 
 ### type(textToType: string, opts: any): Promise<void>
@@ -255,12 +333,12 @@ If there is existing text already in the field it will append to it.
 
 ```javascript
 const textBox = await context.find('input[name="title"]');
-await textBox.type('College Football is Back');
+await textBox.type("College Football is Back");
 ```
 
 The opts is only relevant to browser types, like Puppeteer, it will pass the value on to do things like add delay between keypresses.
 
 ```javascript
 const textBox = await context.find('input[name="title"]');
-await textBox.type('College Football is Back', { delay: 100 });
+await textBox.type("College Football is Back", { delay: 100 });
 ```

@@ -53,11 +53,19 @@ export abstract class ProtoValue implements iValue {
 
   public toString(): string {
     const type: string = toType(this._input);
-    if (this._input && this._input.value) {
+    // Handle a Value in a Value
+    if (type == "value" && this._input && this._input.$) {
+      return String(this._input.$);
+    }
+    // If there's a value property, use that
+    else if (this._input && this._input.value) {
       return String(this._input.value);
-    } else if (type == "object") {
+    }
+    // If this is an object, list the keys
+    else if (type == "object") {
       return String(Object.keys(this._input));
     }
+    // Default
     return String(this._input);
   }
 

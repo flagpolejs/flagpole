@@ -361,9 +361,12 @@ export class Assertion implements iAssertion {
   public includes(value: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = String(this._getCompareValue(value));
-    let bool: boolean = this._eval(
-      thisValue && thisValue.indexOf && thisValue.indexOf(thatValue) >= 0
-    );
+    const thisType = toType(thisValue);
+    const thatType = toType(thatValue);
+    let bool: boolean = false;
+    if (thisValue && thisValue.indexOf) {
+      bool = thisValue.indexOf(thatValue) >= 0;
+    }
     this._assert(
       bool,
       this._not
@@ -621,7 +624,8 @@ export class Assertion implements iAssertion {
 
   private _getCompareValue(value: any): any {
     this._assertionMade = true;
-    if (toType(value) == "value") {
+    const type = toType(value);
+    if (type == "value") {
       return value.$;
     } else {
       return value;

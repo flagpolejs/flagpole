@@ -13,7 +13,8 @@ import {
   AssertionActionCompleted,
   AssertionActionFailed
 } from "./logging/assertionresult";
-import { runAsync } from "./util";
+import { runAsync, toType } from "./util";
+import { is } from "bluebird";
 
 export abstract class DOMElement extends ProtoValue
   implements iValue, iDOMElement {
@@ -47,13 +48,13 @@ export abstract class DOMElement extends ProtoValue
   }
 
   public abstract async click(
-    a?: string | Function,
-    b?: Function
+    a?: string | Function | iScenario,
+    b?: Function | iScenario
   ): Promise<iScenario | void>;
   public abstract async fillForm(formData: any): Promise<void>;
   public abstract async submit(
-    a?: string | Function,
-    b?: Function
+    a?: string | Function | iScenario,
+    b?: Function | iScenario
   ): Promise<iScenario | void>;
   public abstract async find(selector: string): Promise<iDOMElement | iValue>;
   public abstract async findAll(selector: string): Promise<iDOMElement[]>;
@@ -231,32 +232,35 @@ export abstract class DOMElement extends ProtoValue
    */
   public load(): iScenario;
   public load(callback: Function): iScenario;
+  public load(scenario: iScenario): iScenario;
   public load(message: string, callback: Function): iScenario;
-  public load(a?: string | Function, b?: Function): iScenario {
-    const overloaded: iMessageAndCallback = this._getMessageAndCallbackFromOverloading(
-      a,
-      b
-    );
-    const scenario = this._context.suite.scenario(
-      overloaded.message,
-      ResponseType.resource,
-      {}
-    );
+  public load(message: string, scenario: iScenario): iScenario;
+  public load(
+    a?: string | Function | iScenario,
+    b?: Function | iScenario
+  ): iScenario {
+    const overloaded = this._getMessageAndCallbackFromOverloading(a, b);
+    const scenario = this._createSubScenario(overloaded);
     this._completedAction("LOAD");
     runAsync(async () => {
       const link: Link = await this._getLink();
-      const scenarioType: ResponseType = await this._getLambdaScenarioType();
-      const opts: any = await this._getLambdaScenarioOpts(scenarioType);
-      scenario.setResponseType(scenarioType, opts);
-      scenario.next(overloaded.callback);
+      // If this is a lmabda scenario, define the response type and options
+      if (overloaded.scenario === undefined) {
+        const scenarioType: ResponseType = await this._getLambdaScenarioType();
+        scenario.setResponseType(
+          scenarioType,
+          this._getLambdaScenarioOpts(scenarioType)
+        );
+        scenario.next(overloaded.callback);
+      }
+      // If no message was provided, set a default one
       if (overloaded.message.length == 0) {
         scenario.title = `Load ${link.getUri()}`;
       }
-      if (link.isNavigation()) {
-        scenario.open(link.getUri());
-      } else {
-        scenario.skip("Not a navigational link");
-      }
+      // Execute it
+      link.isNavigation()
+        ? scenario.open(link.getUri())
+        : scenario.skip("Not a navigational link");
     }, 10);
     return scenario;
   }
@@ -379,9 +383,18 @@ export abstract class DOMElement extends ProtoValue
         return function() {};
       }
     })();
+    const scenario: iScenario = (function() {
+      if (toType(a) == "scenario") {
+        return a;
+      } else if (toType(b) == "scenario") {
+        return b;
+      }
+      return undefined;
+    })();
     return {
       message: message,
-      callback: callback
+      callback: callback,
+      scenario: scenario
     };
   }
 
@@ -406,5 +419,25 @@ export abstract class DOMElement extends ProtoValue
     this._context.scenario.result(
       new AssertionActionFailed(verb, noun || this.name)
     );
+  }
+
+  protected _createSubScenario(
+    overloaded: iMessageAndCallback,
+    defaultResponseType: ResponseType = ResponseType.resource,
+    defaultOpts: any = {}
+  ): iScenario {
+    return overloaded.scenario === undefined
+      ? this._context.suite.scenario(
+          overloaded.message,
+          defaultResponseType,
+          defaultOpts
+        )
+      : overloaded.scenario;
+  }
+
+  protected _loadSubScenario(overloaded: iMessageAndCallback): iScenario {
+    return overloaded.scenario === undefined
+      ? this.load(overloaded.message, overloaded.callback)
+      : this.load(overloaded.message, overloaded.scenario);
   }
 }

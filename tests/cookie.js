@@ -1,12 +1,25 @@
 const { Flagpole } = require("../dist/index.js");
 
-const suite = Flagpole.Suite("Basic Cookie Test of Site").base(() => {
-  return "https://www.milesplit.com";
-});
+const suite = Flagpole.Suite("Basic Cookie Test of Site")
+  .base(() => {
+    return "https://www.milesplit.com";
+  })
+  .finally(() => {
+    suite.print();
+  });
 
-suite
+const test = suite
   .html("Not logged in test")
-  .open("/athletes/3888271/stats")
+  .open("/")
   .next("Boo", context => {
-    context.comment(context.response.finalUrl);
+    context
+      .comment(context.response.finalUrl)
+      .comment(context.response.cookies.$[0].key)
+      .comment(context.response.cookie("unique_id"));
+    const value = context.response.cookie("unique_id").toString();
+    context
+      .assert(context.response.cookie("unique_id"))
+      .exists()
+      .assert(context.response.cookie("unique_id").toString())
+      .equals(value);
   });
