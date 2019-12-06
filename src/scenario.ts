@@ -136,7 +136,14 @@ export class Scenario implements iScenario {
    * Cound the redirects
    */
   public get redirectCount(): number {
-    return this._redirectCount;
+    return this._redirectChain.length;
+  }
+
+  /**
+   * Return every URL reidrect
+   */
+  public get redirectChain(): string[] {
+    return this._redirectChain;
   }
 
   /**
@@ -170,7 +177,7 @@ export class Scenario implements iScenario {
   protected _timeRequestLoaded: number | null = null;
   protected _timeScenarioFinished: number | null = null;
   protected _responseType: ResponseType = ResponseType.html;
-  protected _redirectCount: number = 0;
+  protected _redirectChain: string[] = [];
   protected _finalUrl: string | null = null;
   protected _url: string | null = null;
   protected _waitToExecute: boolean = false;
@@ -802,6 +809,14 @@ export class Scenario implements iScenario {
         const puppeteerResponse: puppeteer.Response = next.response;
         if (puppeteerResponse !== null) {
           scenario._finalUrl = puppeteerResponse.url();
+          // Loop through the redirects to populate our array
+          puppeteerResponse
+            .request()
+            .redirectChain()
+            .forEach(req => {
+              this._redirectChain.push(req.url());
+            });
+          // Finishing processing the response
           scenario._processResponse(
             HttpResponse.fromPuppeteer(
               puppeteerResponse,
@@ -824,6 +839,7 @@ export class Scenario implements iScenario {
    */
   private _executeDefaultRequest() {
     const scenario: Scenario = this;
+    // Handle ridrects
     this._options.followRedirect = (response: any) => {
       const shouldFollow: boolean =
         this._followRedirect === null
@@ -832,13 +848,11 @@ export class Scenario implements iScenario {
           ? this._followRedirect(response)
           : !!this._followRedirect;
       if (shouldFollow) {
-        if (response.headers.location) {
-          scenario._finalUrl = new URL(
-            response.headers.location,
-            response.request.href
-          ).href;
-        }
-        scenario._redirectCount++;
+        scenario._finalUrl = new URL(
+          response.headers.location,
+          response.request.href
+        ).href;
+        scenario._redirectChain.push(scenario._finalUrl);
       }
       return shouldFollow;
     };
