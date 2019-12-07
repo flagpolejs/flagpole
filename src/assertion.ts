@@ -75,6 +75,50 @@ export class Assertion implements iAssertion {
   }
 
   /**
+   * Creates a new assertion with the keys of the object as the value
+   */
+  public get keys(): Assertion {
+    // If no assertion statement was made, skip it by marking it resolved
+    this._resolveAssertion();
+    // Get keys
+    const keys: string[] = (() => {
+      const thisValue: any = this._getCompareValue(this._input);
+      return isNullOrUndefined(thisValue) ? [] : Object.keys(thisValue);
+    })();
+    // Create new assertion
+    const assertion: Assertion = new Assertion(
+      this._context,
+      new Value(keys, this._context, `Keys of ${this._getSubject()}`),
+      this._message
+    );
+    this._not && assertion.not;
+    this._optional && assertion.optional;
+    return assertion;
+  }
+
+  /**
+   * Creates a new assertion with the values of the object as the value
+   */
+  public get values(): Assertion {
+    // If no assertion statement was made, skip it by marking it resolved
+    this._resolveAssertion();
+    // Get values
+    const values: any[] = (() => {
+      const thisValue: any = this._getCompareValue(this._input);
+      return isNullOrUndefined(thisValue) ? [] : Object.values(thisValue);
+    })();
+    // Create new assertion
+    const assertion: Assertion = new Assertion(
+      this._context,
+      new Value(values, this._context, `Values of ${this._getSubject()}`),
+      this._message
+    );
+    this._not && assertion.not;
+    this._optional && assertion.optional;
+    return assertion;
+  }
+
+  /**
    * Flips the expected assertion evaluation
    */
   public get not(): Assertion {
