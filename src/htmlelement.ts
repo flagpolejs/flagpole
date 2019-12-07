@@ -8,13 +8,21 @@ import {
   iScenario,
   iDOMElement
 } from "./interfaces";
+import { asyncForEach } from "./util";
+
+const cheerio: CheerioAPI = require("cheerio");
+let $: CheerioStatic;
 
 export class HTMLElement extends DOMElement implements iValue, iDOMElement {
   protected _path: string;
-  protected _input: Cheerio;
+  protected _input: Cheerio | CheerioElement;
 
-  public get $(): Cheerio {
+  public get $(): Cheerio | CheerioElement {
     return this._input;
+  }
+
+  protected get el(): Cheerio {
+    return $(this._input);
   }
 
   public static async create(
@@ -45,6 +53,7 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
     super(input, context, name || "HTML Element");
     this._path = path || "";
     this._input = input;
+    $ = context.response.getRoot();
   }
 
   /**
@@ -53,7 +62,7 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
    * @param selector
    */
   public async find(selector: string): Promise<HTMLElement | Value> {
-    const element: Cheerio = await this.$.find(selector);
+    const element: Cheerio = this.el.find(selector).eq(0);
     const name: string = `${selector} under ${this.name}`;
     const path: string = `${this.path} ${selector}`;
     if (element !== null) {
@@ -63,25 +72,25 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
   }
 
   public async findAll(selector: string): Promise<HTMLElement[]> {
-    const elements: Cheerio = await this.$.find(selector);
+    const elements: CheerioElement[] = this.el.find(selector).toArray();
     const out: HTMLElement[] = [];
-    for (let i = 0; i < elements.length; i++) {
-      out.push(
+    await asyncForEach(elements, async (element, i) => {
+      return out.push(
         await HTMLElement.create(
-          elements[i],
+          element,
           this._context,
           `${selector}[${i}] under ${this.name}`,
           `${this.path} ${selector}[${i}]`
         )
       );
-    }
+    });
     return out;
   }
 
   public async getClosest(
     selector: string = "*"
   ): Promise<HTMLElement | Value> {
-    const closest: Cheerio = await this.$.closest(selector);
+    const closest: Cheerio = await this.el.closest(selector);
     const name: string = `Closest ${selector} of ${this.name}`;
     const path: string = `${this.path}[ancestor-or-self::${selector}]`;
     if (closest.length > 0) {
@@ -91,7 +100,7 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
   }
 
   public async getChildren(selector: string = "*"): Promise<HTMLElement[]> {
-    const children: Cheerio = await this.$.children(selector);
+    const children: Cheerio = await this.el.children(selector);
     const out: HTMLElement[] = [];
     for (let i = 0; i < children.length; i++) {
       out.push(
@@ -107,7 +116,7 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
   }
 
   public async getSiblings(selector: string = "*"): Promise<HTMLElement[]> {
-    const children: Cheerio = await this.$.siblings(selector);
+    const children: Cheerio = await this.el.siblings(selector);
     const out: HTMLElement[] = [];
     for (let i = 0; i < children.length; i++) {
       out.push(
@@ -123,7 +132,7 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
   }
 
   public async getParent(): Promise<HTMLElement | Value> {
-    const parent: Cheerio = this.$.parent();
+    const parent: Cheerio = this.el.parent();
     const name: string = `Parent of ${this.name}`;
     const path: string = `${this.path}[..]`;
     if (parent !== null) {
@@ -135,7 +144,7 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
   public async getPreviousSibling(
     selector: string = "*"
   ): Promise<HTMLElement | Value> {
-    const siblings: Cheerio = await this.$.prev(selector);
+    const siblings: Cheerio = await this.el.prev(selector);
     const name: string = `Previous Sibling of ${this.name}`;
     const path: string = `${this.path}[preceding-sibling::${selector}][0]`;
     if (siblings.length > 0) {
@@ -147,7 +156,7 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
   public async getPreviousSiblings(
     selector: string = "*"
   ): Promise<HTMLElement[]> {
-    const siblingElements: Cheerio = await this.$.prevAll(selector);
+    const siblingElements: Cheerio = await this.el.prevAll(selector);
     const siblings: HTMLElement[] = [];
     for (let i = 0; i < siblingElements.length; i++) {
       siblings.push(
@@ -165,7 +174,7 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
   public async getNextSibling(
     selector: string = "*"
   ): Promise<HTMLElement | Value> {
-    const siblings: Cheerio = await this.$.next(selector);
+    const siblings: Cheerio = await this.el.next(selector);
     const name: string = `Next Sibling of ${this.name}`;
     const path: string = `${this.path}[following-sibling::${selector}][0]`;
     if (siblings.length > 0) {
@@ -175,7 +184,7 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
   }
 
   public async getNextSiblings(selector: string = "*"): Promise<HTMLElement[]> {
-    const siblingElements: Cheerio = await this.$.nextAll(selector);
+    const siblingElements: Cheerio = await this.el.nextAll(selector);
     const siblings: HTMLElement[] = [];
     for (let i = 0; i < siblingElements.length; i++) {
       siblings.push(
@@ -236,7 +245,7 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
     if (!(await this._isFormTag())) {
       throw new Error("This is not a form element.");
     }
-    const form: Cheerio = this._input;
+    const form: Cheerio = this.el;
     for (let name in formData) {
       const value = formData[name];
       form.find(`[name="${name}"]`).val(value);
@@ -274,12 +283,12 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
     // If there is a URL we can submit the form to
     if (link.isNavigation()) {
       if (method == "get") {
-        link.setQueryString(this.$.serializeArray());
+        link.setQueryString(this.el.serializeArray());
       } else {
         const formDataArray: {
           name: string;
           value: string;
-        }[] = this.$.serializeArray();
+        }[] = this.el.serializeArray();
         const formData: any = {};
         formDataArray.forEach(function(input: any) {
           formData[input.name] = input.value;
@@ -299,12 +308,12 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
   }
 
   protected async _getTagName(): Promise<string> {
-    return this._input.get(0).tagName.toLowerCase();
+    return this.el.get(0).tagName.toLowerCase();
   }
 
   protected async _getAttribute(key: string): Promise<string | null> {
-    return typeof this._input.get(0).attribs[key] !== "undefined"
-      ? this._input.get(0).attribs[key]
+    return typeof this.el.get(0).attribs[key] !== "undefined"
+      ? this.el.get(0).attribs[key]
       : null;
   }
 }

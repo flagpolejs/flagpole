@@ -7,19 +7,12 @@ const suite = Flagpole.Suite("Test Google Search")
   });
 
 suite
-  .html("MileSplit Florida - Browser Test")
+  .html("MileSplit Florida - Front Page Test")
   .open("/")
   .next(async context => {
-    context.comment(context.response.url);
-    context.comment(context.response.finalUrl);
-    context
-      .assert(context.response.statusCode)
-      .equals(200)
-      .assert("Jason")
-      .type.equals("string")
-      .assert(context.response.cookies)
-      .includes("unique_id")
-      .and.type.equals("array");
+    const topStories = await context.exists(".topStories");
+    const articles = await topStories.findAll("article");
+    context.assert(articles).length.greaterThan(0);
   });
 
 suite
