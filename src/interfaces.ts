@@ -85,8 +85,14 @@ export interface iDOMElement {
   tagName: string;
   outerHTML: string;
   isNull(): boolean;
-  click(a?: string | Function, b?: Function): Promise<iScenario | void>;
-  submit(a?: string | Function, b?: Function): Promise<iScenario | void>;
+  click(
+    a?: string | Function | iScenario,
+    b?: Function | iScenario
+  ): Promise<iScenario | void>;
+  submit(
+    a?: string | Function | iScenario,
+    b?: Function | iScenario
+  ): Promise<iScenario | void>;
   fillForm(formData: any): Promise<void>;
   exists(selector: string): Promise<iValue | iDOMElement | null>;
   find(selector: string): Promise<iValue | iDOMElement | null>;

@@ -214,7 +214,13 @@ export class HTMLElement extends DOMElement implements iValue, iDOMElement {
     const overloaded = this._getMessageAndCallbackFromOverloading(a, b);
     // If this is a link tag, treat it the same as load
     if (await this._isLinkTag()) {
-      this._loadSubScenario(overloaded);
+      if (a || b) {
+        this._loadSubScenario(overloaded);
+      } else {
+        throw new Error(
+          "HTML/DOM type request does not yet support click() method without a callback."
+        );
+      }
     }
     // Is this a button?
     else if (await this._isButtonTag()) {

@@ -347,13 +347,17 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public async click(selector: string): Promise<any> {
+  public async click(
+    selector: string,
+    a?: string | Function | iScenario,
+    b?: Function | iScenario
+  ): Promise<any> {
     const el: iDOMElement | iValue | null = await this.find(selector);
     if (el === null) {
       throw new Error(`Element with selector ${selector} not found.`);
     }
     if ("click" in el) {
-      return el.click();
+      return el.click(a, b);
     }
     return null;
   }

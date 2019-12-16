@@ -255,6 +255,10 @@ await context.type('input[name="q"]', "who shot 2pac?");
 
 Wait for `timeout` milliseconds for the browser's navigation to complete. This really only makes sense in a browser-based scenario. This is shorthand for the `domcontentloaded` in the Puppeteer API.
 
+```javascript
+await context.waitForReady();
+```
+
 ### waitForExists(path: string, timeout: number): Promise<DOMElement>
 
 Test if an element exists at that path. For a browser scenario it will wait a certain timeout (default 100ms) for the element to show up. If you want it to wait longer, set the timeout value in the second argument.
@@ -275,15 +279,29 @@ const button = await context.waitFoHidden('button[type="submit"]', 2000);
 
 Wait for `timeout` milliseconds for the browser's navigation to complete. This really only makes sense in a browser-based scenario. This is shorthand for the `load` in the Puppeteer API.
 
+```javascript
+await context.waitForLoad(15000);
+```
+
 ### waitForNetworkIdle(timeout: number = 10000): Promise<void>
 
 Wait for `timeout` milliseconds for the browser's navigation to complete. This really only makes sense in a browser-based scenario. This is shorthand for the `networkidle0` in the Puppeteer API.
+
+```javascript
+await context.waitForNetworkIdle(5000);
+```
 
 ### waitForNavigation(timeout: number = 10000, waitFor?: string | string[]): Promise<void>
 
 Wait for `timeout` milliseconds for the browser's navigation to complete. This really only makes sense in a browser-based scenario.
 
 Default waitFor value is `networkidle2`, as defined in the Puppeteer API.
+
+```javascript
+await context.click("a.topStory");
+await context.waitForNavigation();
+await context.exists("h1.headline");
+```
 
 ### waitForVisible(path: string): Promise<DOMElement>
 

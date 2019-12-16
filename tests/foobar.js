@@ -32,3 +32,12 @@ suite
     context.comment(await title.getInnerText());
     context.comment(await title.getTagName());
   });
+
+suite
+  .html("MileSplit Florida - Front Page Test")
+  .open(
+    "/rankings/events/high-school-boys/indoor-track-and-field/55m?year=2019&accuracy=fat"
+  )
+  .next(async context => {
+    await context.exists("div.blurry");
+  });
