@@ -4,6 +4,7 @@ import { DOMResponse } from "./domresponse";
 import { iResponse, iValue } from "./interfaces";
 import { ResponseType } from "./enums";
 import { Value } from "./value";
+import { asyncForEach } from "./util";
 
 const cheerio: CheerioAPI = require("cheerio");
 let $: CheerioStatic;
@@ -48,7 +49,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     const elements: Cheerio = $(path);
     if (elements.length > 0) {
       const nodeElements: HTMLElement[] = [];
-      elements.each(async function(i: number) {
+      for (let i = 0; i < elements.length; i++) {
         nodeElements.push(
           await HTMLElement.create(
             $(elements.get(i)),
@@ -57,7 +58,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
             path
           )
         );
-      });
+      }
       return nodeElements;
     } else {
       return [];

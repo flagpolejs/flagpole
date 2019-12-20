@@ -59,7 +59,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
 
   public async hasClassName(className: string): Promise<iValue> {
     const classHandle: JSHandle = await this._input.getProperty("className");
-    const classString: string = await classHandle.jsonValue();
+    const classString: string = String(await classHandle.jsonValue());
     return this._wrapAsValue(
       classString.split(" ").indexOf(className) >= 0,
       `${this.name} has class ${className}`
@@ -272,7 +272,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
   public async getText(): Promise<iValue> {
     const name: string = `Text of ${this.name}`;
     const handle: JSHandle = await this._input.getProperty("textContent");
-    const text: string = await handle.jsonValue();
+    const text: string = String(await handle.jsonValue());
     return this._wrapAsValue(text, name, this);
   }
 
@@ -378,10 +378,10 @@ export class PuppeteerElement extends DOMElement implements iValue {
       const inputs: ElementHandle[] = await page.$$(selector);
       if (inputs.length > 0) {
         const input: ElementHandle = inputs[0];
-        const tagName: string = (
+        const tagName: string = String(
           await (await input.getProperty("tagName")).jsonValue()
         ).toLowerCase();
-        const inputType: string = (
+        const inputType: string = String(
           await (await input.getProperty("type")).jsonValue()
         ).toLowerCase();
         // Some sites need you to focus on the element first
@@ -478,7 +478,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
   protected _getTagName(): Promise<string> {
     return new Promise(async resolve => {
       const handle: JSHandle = await this._input.getProperty("tagName");
-      const value: string = await handle.jsonValue();
+      const value: string = String(await handle.jsonValue());
       this._tagName = value.toLowerCase();
       resolve(value);
     });

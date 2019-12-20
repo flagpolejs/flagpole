@@ -62,6 +62,11 @@ export interface iValue {
   tagName: string;
   outerHTML: string;
   path: string;
+  length: iValue;
+  highlight: string;
+  parent: any;
+  sourceCode: string;
+  valueOf(): any;
   toArray(): any[];
   toString(): string;
   toInteger(): number;
@@ -220,6 +225,7 @@ export interface iAssertionContext {
   comment(message: string): iAssertionContext;
   assert(a: any, b?: any): iAssertion;
   pause(milliseconds: number): Promise<void>;
+  exists(message: string, selector: string): Promise<iValue>;
   exists(selector: string): Promise<iValue>;
   set(aliasName: string, value: any): iAssertionContext;
   get(aliasName: string): any;

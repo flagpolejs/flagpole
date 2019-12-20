@@ -1,7 +1,6 @@
 import { ExtJsComponent } from "./extjscomponent";
 import { ResponseType } from "./enums";
-import { iResponse, iScenario, iAssertionContext } from "./interfaces";
-import { AssertionContext } from "./assertioncontext";
+import { iResponse, iScenario } from "./interfaces";
 import { PuppeteerResponse } from "./puppeteerresponse";
 import { iValue } from ".";
 
@@ -55,9 +54,9 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
         | undefined = `window.${componentReference} = Ext.ComponentQuery.query("${path}")[0];`;
       await this.page.addScriptTag({ content: queryToInject });
       // Build array of ExtJsComponent elements
-      const exists: boolean = await this.page.evaluate(
+      const exists: boolean = !!(await this.page.evaluate(
         `!!window.${componentReference}`
-      );
+      ));
       if (exists) {
         return await ExtJsComponent.create(
           componentReference,
@@ -79,8 +78,8 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
       const queryToInject: string = `window.${componentReference} = Ext.ComponentQuery.query("${path}");`;
       await this.page.addScriptTag({ content: queryToInject });
       // Build array of ExtJsComponent elements
-      const length: number = await this.page.evaluate(
-        `window.${componentReference}.length`
+      const length: number = Number(
+        await this.page.evaluate(`window.${componentReference}.length`)
       );
       let components: ExtJsComponent[] = [];
       for (let i = 0; i < length; i++) {
