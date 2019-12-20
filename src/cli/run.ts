@@ -63,8 +63,6 @@ const runSuites = async (selectedSuites: SuiteConfig[]): Promise<void> => {
 
     ansi.writeLine();
 
-    /*
-
     const states = ["/", "—", "\\", "|"];
     let stateIndex: number = 0;
     let statusMessage: string = `Loading ${runner.suites.length} test suites...`;
@@ -81,12 +79,10 @@ const runSuites = async (selectedSuites: SuiteConfig[]): Promise<void> => {
       statusMessage = message;
     });
 
-    */
-
     await runner.runSpawn();
 
-    //clearInterval(timer);
-    //ansi.write(ansi.eraseLines(2));
+    clearInterval(timer);
+    ansi.write(ansi.eraseLines(2));
   }
   // If other output, just give final out
   else {

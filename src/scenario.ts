@@ -4,11 +4,11 @@ import {
   iResponse,
   iScenario,
   iSuite,
-  BrowserOptions
+  BrowserOptions,
+  iNextCallback
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import { BrowserControl, iBrowserControlResponse } from "./browsercontrol";
-import * as r from "request";
 import { createResponse } from "./responsefactory";
 import { AssertionContext } from "./assertioncontext";
 import {
@@ -24,8 +24,9 @@ import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/logcollection";
 import { Assertion } from "./assertion";
 import { URL } from "url";
+import * as rp from "request-promise";
+import * as r from "request";
 
-const request = require("request");
 const probeImage = require("probe-image-size");
 
 /**
@@ -125,6 +126,13 @@ export class Scenario implements iScenario {
     return this._url;
   }
 
+  public get requestUrl(): string {
+    if (!this._options.uri) {
+      this._options.uri = this._buildUrl();
+    }
+    return this._options.uri;
+  }
+
   /**
    * URL after redirects
    */
@@ -206,27 +214,27 @@ export class Scenario implements iScenario {
     type: ResponseType,
     opts: any,
     onCompletedCallback: Function
-  ): Scenario {
+  ): iScenario {
     return new Scenario(suite, title, onCompletedCallback).setResponseType(
       type,
       opts
     );
   }
 
-  private constructor(
+  protected constructor(
     suite: iSuite,
     title: string,
     onCompletedCallback: Function
   ) {
     this.suite = suite;
-    this._cookieJar = new request.jar();
+    this._cookieJar = rp.jar();
     this._options = this._defaultRequestOptions;
     this._title = title;
     this._onCompletedCallback = onCompletedCallback;
     this._response = new ResourceResponse(this);
   }
 
-  public set(aliasName: string, value: any): Scenario {
+  public set(aliasName: string, value: any): iScenario {
     this._aliasedData[aliasName] = value;
     return this;
   }
@@ -247,8 +255,9 @@ export class Scenario implements iScenario {
    *
    * @param callback
    */
-  public subscribe(callback: Function) {
+  public subscribe(callback: Function): iScenario {
     this._subscribers.push(callback);
+    return this;
   }
 
   /**
@@ -256,7 +265,7 @@ export class Scenario implements iScenario {
    *
    * @param jsonObject
    */
-  public setJsonBody(jsonObject: any): Scenario {
+  public setJsonBody(jsonObject: any): iScenario {
     this.setHeader("Content-Type", "application/json");
     return this.setRawBody(JSON.stringify(jsonObject));
   }
@@ -264,7 +273,7 @@ export class Scenario implements iScenario {
   /**
    * Set body to submit as raw string
    */
-  public setRawBody(str: string): Scenario {
+  public setRawBody(str: string): iScenario {
     this._options.body = str;
     return this;
   }
@@ -272,7 +281,7 @@ export class Scenario implements iScenario {
   /**
    * Make sure the web page has valid SSL certificate
    */
-  public verifySslCert(verify: boolean): Scenario {
+  public verifySslCert(verify: boolean): iScenario {
     this._options.strictSSL = verify;
     this._options.rejectUnauthorized = verify;
     return this;
@@ -281,7 +290,7 @@ export class Scenario implements iScenario {
   /**
    * Set the proxy URL for the request
    */
-  public setProxyUrl(proxyUrl: string): Scenario {
+  public setProxyUrl(proxyUrl: string): iScenario {
     this._options.proxy = proxyUrl;
     return this;
   }
@@ -289,7 +298,7 @@ export class Scenario implements iScenario {
   /**
    * Set the timeout for how long the request should wait for a response
    */
-  public setTimeout(timeout: number): Scenario {
+  public setTimeout(timeout: number): iScenario {
     this._options.timeout = timeout;
     return this;
   }
@@ -299,7 +308,7 @@ export class Scenario implements iScenario {
    *
    * @param form
    */
-  public setFormData(form: {}): Scenario {
+  public setFormData(form: {}): iScenario {
     this._options.form = form;
     return this;
   }
@@ -309,7 +318,7 @@ export class Scenario implements iScenario {
    *
    * @param n
    */
-  public setMaxRedirects(n: number): Scenario {
+  public setMaxRedirects(n: number): iScenario {
     this._options.maxRedirects = n;
     return this;
   }
@@ -319,7 +328,7 @@ export class Scenario implements iScenario {
    *
    * @param onRedirect
    */
-  public shouldFollowRedirects(onRedirect: boolean | Function): Scenario {
+  public shouldFollowRedirects(onRedirect: boolean | Function): iScenario {
     this._followRedirect = onRedirect;
     return this;
   }
@@ -332,7 +341,7 @@ export class Scenario implements iScenario {
   public setBasicAuth(authorization: {
     username: string;
     password: string;
-  }): Scenario {
+  }): iScenario {
     this._options.auth = authorization;
     return this;
   }
@@ -342,7 +351,7 @@ export class Scenario implements iScenario {
    *
    * @param {string} token
    */
-  public setBearerToken(token: string): Scenario {
+  public setBearerToken(token: string): iScenario {
     this.setHeader("Authorization", `Bearer ${token}`);
     return this;
   }
@@ -354,8 +363,8 @@ export class Scenario implements iScenario {
    * @param value
    * @param opts
    */
-  public setCookie(key: string, value: string, opts?: any): Scenario {
-    let cookie: r.Cookie | undefined = r.cookie(key + "=" + value);
+  public setCookie(key: string, value: string, opts?: any): iScenario {
+    let cookie: r.Cookie | undefined = rp.cookie(key + "=" + value);
     if (cookie !== undefined) {
       this._cookieJar.setCookie(cookie, this._buildUrl(), opts);
     } else {
@@ -369,7 +378,7 @@ export class Scenario implements iScenario {
    *
    * @param headers
    */
-  public setHeaders(headers: {}): Scenario {
+  public setHeaders(headers: {}): iScenario {
     this._options.headers = { ...this._options.headers, ...headers };
     return this;
   }
@@ -380,7 +389,7 @@ export class Scenario implements iScenario {
    * @param {string} key
    * @param value
    */
-  public setHeader(key: string, value: any): Scenario {
+  public setHeader(key: string, value: any): iScenario {
     this._options.headers = this._options.headers || {};
     this._options.headers[key] = value;
     return this;
@@ -391,7 +400,7 @@ export class Scenario implements iScenario {
    *
    * @param {string} method
    */
-  public setMethod(method: string): Scenario {
+  public setMethod(method: string): iScenario {
     this._options.method = method.toUpperCase();
     return this;
   }
@@ -401,12 +410,12 @@ export class Scenario implements iScenario {
    *
    * @param bool
    */
-  public wait(bool: boolean = true): Scenario {
+  public wait(bool: boolean = true): iScenario {
     this._waitToExecute = bool;
     return this;
   }
 
-  public waitFor(thatScenario: Scenario): Scenario {
+  public waitFor(thatScenario: iScenario): iScenario {
     if (this === thatScenario) {
       throw new Error("Scenario can't wait for itself");
     }
@@ -420,21 +429,21 @@ export class Scenario implements iScenario {
   /**
    * Add a neutral line to the output
    */
-  public comment(message: string): Scenario {
+  public comment(message: string): iScenario {
     return this._pushToLog(new LogComment(message));
   }
 
   /**
    * Push in a new passing assertion
    */
-  public result(result: AssertionResult): Scenario {
+  public result(result: AssertionResult): iScenario {
     return this._pushToLog(result);
   }
 
   /**
    * Ignore assertions until further notice. This is created to prevent automatic assertions from firing.
    */
-  public ignore(assertions: boolean | Function = true): Scenario {
+  public ignore(assertions: boolean | Function = true): iScenario {
     if (typeof assertions == "boolean") {
       this._ignoreAssertion = assertions;
     } else if (typeof assertions == "function") {
@@ -450,8 +459,8 @@ export class Scenario implements iScenario {
    *
    * @param milliseconds
    */
-  public pause(milliseconds: number): Scenario {
-    this.next((context: AssertionContext) => {
+  public pause(milliseconds: number): iScenario {
+    this.next(context => {
       context.comment(`Pause for ${milliseconds}ms`);
       return context.pause(milliseconds);
     });
@@ -463,7 +472,7 @@ export class Scenario implements iScenario {
    *
    * @param {string} url
    */
-  public open(url: string): Scenario {
+  public open(url: string): iScenario {
     // You can only load the url once per scenario
     if (!this.hasExecuted) {
       // If the HTTP method was part of open
@@ -483,18 +492,18 @@ export class Scenario implements iScenario {
   /**
    * Set the callback for the assertions to run after the request has a response
    */
-  public next(message: string, callback: any): Scenario;
-  public next(callback: any): Scenario;
-  public next(a: Function | string, b?: Function): Scenario {
+  public next(message: string, callback: iNextCallback): iScenario;
+  public next(callback: iNextCallback): iScenario;
+  public next(a: iNextCallback | string, b?: iNextCallback): iScenario {
     return this._next(a, b, true);
   }
 
   /**
    * Insert this as the first next
    */
-  public nextPrepend(message: string, callback: any): Scenario;
-  public nextPrepend(callback: any): Scenario;
-  public nextPrepend(a: Function | string, b?: Function): Scenario {
+  public nextPrepend(message: string, callback: iNextCallback): iScenario;
+  public nextPrepend(callback: iNextCallback): iScenario;
+  public nextPrepend(a: iNextCallback | string, b?: iNextCallback): iScenario {
     return this._next(a, b, false);
   }
 
@@ -559,9 +568,9 @@ export class Scenario implements iScenario {
   /**
    * Callback when someting in the scenario throws an error
    */
-  public error(callback: Function): Scenario;
-  public error(message: string, callback: Function): Scenario;
-  public error(a: string | Function, b?: Function): Scenario {
+  public error(callback: Function): iScenario;
+  public error(message: string, callback: Function): iScenario;
+  public error(a: string | Function, b?: Function): iScenario {
     if (this.hasFinished) {
       throw new Error(
         "Can not add error callbacks after execution has finished."
@@ -578,9 +587,9 @@ export class Scenario implements iScenario {
    *
    * @param callback
    */
-  public success(callback: Function): Scenario;
-  public success(message: string, callback: Function): Scenario;
-  public success(a: string | Function, b?: Function): Scenario {
+  public success(callback: Function): iScenario;
+  public success(message: string, callback: Function): iScenario;
+  public success(a: string | Function, b?: Function): iScenario {
     if (this.hasFinished) {
       throw new Error(
         "Can not add success callbacks after execution has finished."
@@ -597,9 +606,9 @@ export class Scenario implements iScenario {
    *
    * @param callback
    */
-  public failure(callback: Function): Scenario;
-  public failure(message: string, callback: Function): Scenario;
-  public failure(a: string | Function, b?: Function): Scenario {
+  public failure(callback: Function): iScenario;
+  public failure(message: string, callback: Function): iScenario;
+  public failure(a: string | Function, b?: Function): iScenario {
     if (this.hasFinished) {
       throw new Error(
         "Can not add failure callbacks after execution has finished."
@@ -616,9 +625,9 @@ export class Scenario implements iScenario {
    *
    * @param callback
    */
-  public before(callback: Function): Scenario;
-  public before(message: string, callback: Function): Scenario;
-  public before(a: string | Function, b?: Function): Scenario {
+  public before(callback: Function): iScenario;
+  public before(message: string, callback: Function): iScenario;
+  public before(a: string | Function, b?: Function): iScenario {
     if (this.hasExecuted) {
       throw new Error(
         "Can not add before callbacks after execution has started."
@@ -633,9 +642,9 @@ export class Scenario implements iScenario {
   /**
    * callback just after the scenario completes
    */
-  public after(callback: Function): Scenario;
-  public after(message: string, callback: Function): Scenario;
-  public after(a: string | Function, b?: Function): Scenario {
+  public after(callback: Function): iScenario;
+  public after(message: string, callback: Function): iScenario;
+  public after(a: string | Function, b?: Function): iScenario {
     if (this.hasFinished) {
       throw new Error(
         "Can not add after callbacks after execution has finished."
@@ -652,9 +661,9 @@ export class Scenario implements iScenario {
    *
    * @param callback
    */
-  public finally(callback: Function): Scenario;
-  public finally(message: string, callback: Function): Scenario;
-  public finally(a: string | Function, b?: Function): Scenario {
+  public finally(callback: Function): iScenario;
+  public finally(message: string, callback: Function): iScenario;
+  public finally(a: string | Function, b?: Function): iScenario {
     if (this.hasFinished) {
       throw new Error(
         "Can not add failure callbacks after execution has finished."
@@ -669,7 +678,7 @@ export class Scenario implements iScenario {
   /**
    * Fake response from local file for testing
    */
-  public mock(localPath: string): Scenario {
+  public mock(localPath: string): iScenario {
     this._url = localPath;
     this._isMock = true;
     this._executeWhenReady();
@@ -679,7 +688,7 @@ export class Scenario implements iScenario {
   /**
    * Clear out any previous settings
    */
-  protected _reset(): Scenario {
+  protected _reset(): iScenario {
     this._flipAssertion = false;
     return this;
   }
@@ -688,14 +697,12 @@ export class Scenario implements iScenario {
    * Get the cookie jar for this url
    */
   protected _getCookies(): r.Cookie[] {
-    return this._cookieJar.getCookies(this._options.uri);
+    return this._cookieJar.getCookies(this.requestUrl);
   }
 
   /**
    * Handle the normalized response once the request comes back
    * This will loop through each next
-   *
-   * @param r
    */
   protected _processResponse(httpResponse: HttpResponse) {
     this._response.init(httpResponse);
@@ -759,7 +766,7 @@ export class Scenario implements iScenario {
    * @param type
    * @param opts
    */
-  public setResponseType(type: ResponseType, opts: any = {}): Scenario {
+  public setResponseType(type: ResponseType, opts: any = {}): iScenario {
     if (this.hasExecuted) {
       throw new Error("Scenario was already executed. Can not change type.");
     }
@@ -780,8 +787,8 @@ export class Scenario implements iScenario {
    */
   private _executeImageRequest() {
     const scenario: Scenario = this;
-    probeImage(this._options.uri, this._options)
-      .then(result => {
+    probeImage(this.requestUrl, this._options)
+      .then((result: any) => {
         const response: HttpResponse = HttpResponse.fromProbeImage(
           result,
           scenario._getCookies()
@@ -789,7 +796,7 @@ export class Scenario implements iScenario {
         scenario._finalUrl = scenario.url;
         scenario._processResponse(response);
       })
-      .catch(err => {
+      .catch((err: any) => {
         scenario._markScenarioCompleted(
           `Failed to load image ${scenario._url}`,
           err
@@ -856,15 +863,16 @@ export class Scenario implements iScenario {
       }
       return shouldFollow;
     };
-    request(this._options, function(err: string, response: any, body: string) {
-      if (!err) {
+    this._options.resolveWithFullResponse = true;
+    rp(this.requestUrl, this._options)
+      .then(res => {
         scenario._processResponse(
-          HttpResponse.fromRequest(response, body, scenario._getCookies())
+          HttpResponse.fromRequest(res, res.body, scenario._getCookies())
         );
-      } else {
+      })
+      .catch(err => {
         scenario._markScenarioCompleted(`Failed to load ${scenario._url}`, err);
-      }
-    });
+      });
   }
 
   /**
@@ -1124,7 +1132,7 @@ export class Scenario implements iScenario {
     a: Function | string,
     b?: Function | null,
     append: boolean = true
-  ): Scenario {
+  ): iScenario {
     const callback: Function = this._getCallbackOverload(a, b);
     const message: string | null = this._getMessageOverload(a);
     // If it hasn't already finished
@@ -1158,7 +1166,7 @@ export class Scenario implements iScenario {
     });
   }
 
-  protected _pushToLog(logItem: iLogItem): Scenario {
+  protected _pushToLog(logItem: iLogItem): iScenario {
     this._log.add(logItem);
     return this;
   }

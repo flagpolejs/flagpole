@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.0.63",
+  "version": "2.1.1",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -12,7 +12,8 @@
   },
   "scripts": {
     "build": "tsc && cp src/cli/*.html dist/cli/",
-    "test": "node tests/test.js"
+    "build-tests": "cd tests && tsc && cd ..",
+    "test": "npm run build-tests && flagpole run -t basic -h"
   },
   "homepage": "https://github.com/flocasts/flagpole",
   "repository": "git@github.com:flocasts/flagpole.git",
@@ -26,13 +27,12 @@
     "clortho-lite": "^2.0.6",
     "common-tags": "^1.8.0",
     "css": "^2.2.4",
-    "enquirer": "^2.3.0",
     "form-data": "^2.3.3",
     "nock": "^10.0.6",
     "open": "^6.4.0",
     "probe-image-size": "^4.0.0",
+    "prompts": "^2.3.0",
     "puppeteer-core": "1.11.0",
-    "request": "^2.88.0",
     "tmp": "^0.1.0",
     "tough-cookie": "^3.0.1",
     "valid-data-url": "^1.0.0",
@@ -57,14 +57,17 @@
     "@types/bluebird": "^3.5.26",
     "@types/bluebird-global": "^3.5.12",
     "@types/cheerio": "^0.22.11",
-    "@types/inquirer": "0.0.43",
     "@types/node": "^12.12.8",
+    "@types/prompts": "^2.0.3",
     "@types/puppeteer": "^1.12.2",
     "@types/puppeteer-core": "^1.9.0",
-    "@types/request": "^2.48.1",
+    "@types/request": "^2.48.4",
+    "@types/request-promise": "^4.1.45",
     "ajv": "^6.10.2",
     "jmespath": "^0.15.0",
     "puppeteer": "^1.15.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5",
     "typescript": "^3.7.2"
   }
 }

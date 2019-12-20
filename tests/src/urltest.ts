@@ -1,4 +1,4 @@
-const Flagpole = require("../dist/index.js").Flagpole;
+import { Flagpole } from "../../dist/index.js";
 
 const suite = Flagpole.Suite("Example test suite for blog post")
   .base({
@@ -15,8 +15,8 @@ suite
     const topStory = await context.find(".extremeHero-postContent a");
     context.assert(topStory).exists();
     const url = await topStory.getAttribute("href");
-    context.comment(url);
-    articleScenario.open(url);
+    context.comment(url.toString());
+    articleScenario.open(url.toString());
   });
 
 const articleScenario = suite.html("Test Article").next(async context => {

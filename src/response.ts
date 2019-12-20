@@ -1,13 +1,7 @@
 import { URL } from "url";
 import { Cookie } from "request";
 import { Value } from "./value";
-import {
-  iValue,
-  iResponse,
-  iScenario,
-  iDOMElement,
-  iAssertionContext
-} from "./interfaces";
+import { iValue, iResponse, iScenario, iAssertionContext } from "./interfaces";
 import { ResponseType } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import { AssertionContext } from "./assertioncontext";
@@ -23,8 +17,8 @@ export abstract class ProtoResponse implements iResponse {
 
   abstract get responseType(): ResponseType;
   abstract get responseTypeName(): string;
-  abstract find(path: string): Promise<iDOMElement | iValue>;
-  abstract findAll(path: string): Promise<iDOMElement[] | iValue[]>;
+  abstract find(path: string): Promise<iValue>;
+  abstract findAll(path: string): Promise<iValue[]>;
   abstract evaluate(context: any, callback: Function): Promise<any>;
 
   /**
@@ -41,14 +35,14 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * HTTP Status Code
    */
-  public get statusCode(): Value {
+  public get statusCode(): iValue {
     return this._wrapAsValue(this.httpResponse.statusCode, "HTTP Status Code");
   }
 
   /**
    * HTTP Status Message
    */
-  public get statusMessage(): Value {
+  public get statusMessage(): iValue {
     return this._wrapAsValue(
       this.httpResponse.statusMessage,
       "HTTP Status Message"
@@ -58,14 +52,14 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * Raw Response Body
    */
-  public get body(): Value {
+  public get body(): iValue {
     return this._wrapAsValue(this.httpResponse.body, "Raw Response Body");
   }
 
   /**
    * Size of the response body
    */
-  public get length(): Value {
+  public get length(): iValue {
     return this._wrapAsValue(
       this.httpResponse.body.length,
       "Length of Response Body"
@@ -75,21 +69,21 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * HTTP Headers
    */
-  public get headers(): Value {
+  public get headers(): iValue {
     return this._wrapAsValue(this.httpResponse.headers, "HTTP Headers");
   }
 
   /**
    * HTTP Cookies
    */
-  public get cookies(): Value {
+  public get cookies(): iValue {
     return this._wrapAsValue(this.httpResponse.cookies, "HTTP Cookies");
   }
 
   /**
    * JSON parsed response body
    */
-  public get jsonBody(): Value {
+  public get jsonBody(): iValue {
     try {
       const json = JSON.parse(this.httpResponse.body);
       return this._wrapAsValue(json, "JSON Response");
@@ -101,14 +95,14 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * URL of the request
    */
-  public get url(): Value {
+  public get url(): iValue {
     return this._wrapAsValue(this.scenario.url, "Request URL");
   }
 
   /**
    * URL of the response, after all redirects
    */
-  public get finalUrl(): Value {
+  public get finalUrl(): iValue {
     return this._wrapAsValue(
       this.scenario.finalUrl,
       "Response URL (after redirects)"
@@ -118,7 +112,7 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * URL of the response, after all redirects
    */
-  public get redirectCount(): Value {
+  public get redirectCount(): iValue {
     return this._wrapAsValue(
       this.scenario.redirectCount,
       "Response URL (after redirects)"
@@ -128,7 +122,7 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * Time from request start to response complete
    */
-  public get loadTime(): Value {
+  public get loadTime(): iValue {
     return this._wrapAsValue(
       this.scenario.requestDuration,
       "Request to Response Load Time"
@@ -169,7 +163,7 @@ export abstract class ProtoResponse implements iResponse {
    * @param {string} key
    * @returns {Value}
    */
-  public header(key: string): Value {
+  public header(key: string): iValue {
     // Try first as they put it in the test, then try all lowercase
     key =
       typeof this.httpResponse.headers[key] !== "undefined"
@@ -187,7 +181,7 @@ export abstract class ProtoResponse implements iResponse {
    *
    * @param key
    */
-  public cookie(key: string): Value {
+  public cookie(key: string): iValue {
     let cookie: Cookie | null = null;
     this.httpResponse.cookies.forEach((c: Cookie) => {
       if (c.key === key) {
@@ -219,7 +213,7 @@ export abstract class ProtoResponse implements iResponse {
   public async waitForHidden(
     selector: string,
     timeout: number = 30000
-  ): Promise<iValue | iDOMElement> {
+  ): Promise<iValue> {
     await this.context.pause(1);
     return this._wrapAsValue(null, selector);
   }
@@ -227,7 +221,7 @@ export abstract class ProtoResponse implements iResponse {
   public async waitForVisible(
     selector: string,
     timeout: number = 30000
-  ): Promise<iValue | iDOMElement> {
+  ): Promise<iValue> {
     await this.context.pause(1);
     return this._wrapAsValue(null, selector);
   }
@@ -235,7 +229,7 @@ export abstract class ProtoResponse implements iResponse {
   public async waitForExists(
     selector: string,
     timeout: number = 30000
-  ): Promise<iValue | iDOMElement> {
+  ): Promise<iValue> {
     await this.context.pause(1);
     return this._wrapAsValue(null, selector);
   }
@@ -265,7 +259,7 @@ export abstract class ProtoResponse implements iResponse {
   public async findHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): Promise<iDOMElement | iValue> {
+  ): Promise<iValue> {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support findHavingText.`
     );
@@ -274,7 +268,7 @@ export abstract class ProtoResponse implements iResponse {
   public async findAllHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): Promise<iDOMElement[]> {
+  ): Promise<iValue[]> {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support findAllHavingText.`
     );
@@ -289,7 +283,7 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  protected _wrapAsValue(data: any, name: string, source?: any): Value {
+  protected _wrapAsValue(data: any, name: string, source?: any): iValue {
     return new Value(data, this.context, name, source);
   }
 }

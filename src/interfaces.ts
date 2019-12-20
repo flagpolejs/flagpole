@@ -10,6 +10,10 @@ import { HttpResponse } from "./httpresponse";
 import { URL } from "url";
 import { CookieJar } from "tough-cookie";
 
+export interface iNextCallback {
+  (callback: iAssertionContext): Promise<any> | void;
+}
+
 export interface iConsoleLine {
   timestamp: Date;
   color: ConsoleColor;
@@ -55,6 +59,9 @@ export interface iAssertionResult {
 export interface iValue {
   $: any;
   name: string;
+  tagName: string;
+  outerHTML: string;
+  path: string;
   toArray(): any[];
   toString(): string;
   toInteger(): number;
@@ -76,28 +83,27 @@ export interface iValue {
   isCheerioElement(): boolean;
   hasProperty(key: string): Promise<iValue>;
   as(aliasName: string): iValue;
-}
-
-export interface iDOMElement {
-  $: any;
-  path: string;
-  name: string;
-  tagName: string;
-  outerHTML: string;
-  isNull(): boolean;
-  click(
-    a?: string | Function | iScenario,
-    b?: Function | iScenario
-  ): Promise<iScenario | void>;
-  submit(
-    a?: string | Function | iScenario,
-    b?: Function | iScenario
-  ): Promise<iScenario | void>;
+  // DOM Elements only
+  click(): Promise<void>;
+  click(scenario: iScenario): Promise<iScenario>;
+  click(message: string): Promise<iScenario>;
+  click(callback: Function): Promise<iScenario>;
+  click(message: string, callback: Function): Promise<iScenario>;
+  submit(): Promise<void>;
+  submit(scenario: iScenario): Promise<iScenario>;
+  submit(message: string): Promise<iScenario>;
+  submit(callback: Function): Promise<iScenario>;
+  submit(message: string, callback: Function): Promise<iScenario>;
+  load(): void;
+  load(message: string): iScenario;
+  load(scenario: iScenario): iScenario;
+  load(callback: Function): iScenario;
+  load(message: string, callback: Function): iScenario;
   fillForm(formData: any): Promise<void>;
-  exists(selector: string): Promise<iValue | iDOMElement | null>;
-  find(selector: string): Promise<iValue | iDOMElement | null>;
-  findAll(selector: string): Promise<(iValue | iDOMElement)[]>;
-  toString(): string;
+  exists(): Promise<iValue>;
+  exists(selector: string): Promise<iValue>;
+  find(selector: string): Promise<iValue>;
+  findAll(selector: string): Promise<iValue[]>;
   getClassName(): Promise<iValue>;
   hasClassName(className: string): Promise<iValue>;
   getTagName(): Promise<iValue>;
@@ -106,14 +112,11 @@ export interface iDOMElement {
   getOuterHtml(): Promise<iValue>;
   hasAttribute(key: string): Promise<iValue>;
   getAttribute(key: string): Promise<iValue>;
-  hasProperty(key: string): Promise<iValue>;
   getProperty(key: string): Promise<iValue>;
   hasData(key: string): Promise<iValue>;
   getData(key: string): Promise<iValue>;
   getValue(): Promise<iValue>;
   getText(): Promise<iValue>;
-  load(message: string, callback: Function): iScenario;
-  as(aliasName: string): iValue;
 }
 
 /**
@@ -136,16 +139,16 @@ export interface iResponse {
   isBrowser: boolean;
   init(httpResponse: HttpResponse): void;
   getRoot(): any;
-  find(path: string): Promise<iValue | iDOMElement>;
-  findAll(path: string): Promise<Array<iValue | iDOMElement>>;
+  find(path: string): Promise<iValue>;
+  findAll(path: string): Promise<iValue[]>;
   findHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): Promise<iDOMElement | iValue>;
+  ): Promise<iValue>;
   findAllHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): Promise<iDOMElement[] | iValue[]>;
+  ): Promise<iValue[]>;
   header(key?: string): iValue;
   cookie(key?: string): iValue;
   absolutizeUri(uri: string): string;
@@ -157,18 +160,9 @@ export interface iResponse {
   waitForLoad(timeout: number): Promise<void>;
   waitForNetworkIdle(timeout: number): Promise<void>;
   waitForReady(timeout: number): Promise<void>;
-  waitForHidden(
-    selector: string,
-    timeout: number
-  ): Promise<iValue | iDOMElement>;
-  waitForVisible(
-    selector: string,
-    timeout: number
-  ): Promise<iValue | iDOMElement>;
-  waitForExists(
-    selector: string,
-    timeout?: number
-  ): Promise<iValue | iDOMElement>;
+  waitForHidden(selector: string, timeout: number): Promise<iValue>;
+  waitForVisible(selector: string, timeout: number): Promise<iValue>;
+  waitForExists(selector: string, timeout?: number): Promise<iValue>;
   screenshot(opts: any): Promise<Buffer | string>;
   clear(selector: string): Promise<any>;
   type(selector: string, textToType: string, opts: any): Promise<any>;
@@ -180,6 +174,8 @@ export interface iAssertion {
   and: iAssertion;
   type: iAssertion;
   length: iAssertion;
+  keys: iAssertion;
+  values: iAssertion;
   not: iAssertion;
   optional: iAssertion;
   result: Promise<any>;
@@ -207,6 +203,8 @@ export interface iAssertion {
   every(callback: Function): iAssertion;
   some(callback: Function): iAssertion;
   schema(schema: any, simple?: boolean): Promise<iAssertion>;
+  assert(a: any, b?: any): iAssertion;
+  comment(message: string): iAssertionContext;
 }
 
 export interface iAssertionContext {
@@ -222,23 +220,39 @@ export interface iAssertionContext {
   comment(message: string): iAssertionContext;
   assert(a: any, b?: any): iAssertion;
   pause(milliseconds: number): Promise<void>;
-  exists(selector: string): Promise<iValue | iDOMElement>;
+  exists(selector: string): Promise<iValue>;
   set(aliasName: string, value: any): iAssertionContext;
   get(aliasName: string): any;
-  find(selector: string): Promise<iValue | iDOMElement>;
-  findAll(selector: string): Promise<(iValue | iDOMElement)[]>;
+  find(selector: string): Promise<iValue>;
+  findAll(selector: string): Promise<iValue[]>;
   findHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): Promise<iDOMElement | iValue>;
+  ): Promise<iValue>;
   findAllHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): Promise<iDOMElement[]>;
+  ): Promise<iValue[]>;
   clearThenType(selector: string, textToType: string, opts?: any): Promise<any>;
   clear(selector: string): Promise<void>;
-  click(selector: string): Promise<any>;
-  submit(selector: string): Promise<any>;
+  click(selector: string): Promise<void>;
+  click(selector: string, scenario: iScenario): Promise<iScenario>;
+  click(selector: string, message: string): Promise<iScenario>;
+  click(selector: string, callback: Function): Promise<iScenario>;
+  click(
+    selector: string,
+    message: string,
+    callback: Function
+  ): Promise<iScenario>;
+  submit(selector: string): Promise<void>;
+  submit(selector: string, scenario: iScenario): Promise<iScenario>;
+  submit(selector: string, message: string): Promise<iScenario>;
+  submit(selector: string, callback: Function): Promise<iScenario>;
+  submit(
+    selector: string,
+    message: string,
+    callback: Function
+  ): Promise<iScenario>;
   type(selector: string, textToType: string, opts?: any): Promise<void>;
   select(selector: string, value: string | string[]): Promise<void>;
   evaluate(callback: Function): Promise<any>;
@@ -249,22 +263,12 @@ export interface iAssertionContext {
     timeout?: number,
     waitFor?: string | string[]
   ): Promise<void>;
-  waitForHidden(
-    selector: string,
-    timeout?: number
-  ): Promise<iValue | iDOMElement>;
-  waitForVisible(
-    selector: string,
-    timeout?: number
-  ): Promise<iValue | iDOMElement>;
-  waitForExists(
-    selector: string,
-    timeout?: number
-  ): Promise<iValue | iDOMElement>;
+  waitForHidden(selector: string, timeout?: number): Promise<iValue>;
+  waitForVisible(selector: string, timeout?: number): Promise<iValue>;
+  waitForExists(selector: string, timeout?: number): Promise<iValue>;
   openInBrowser(): Promise<string>;
   screenshot(opts: any): Promise<Buffer | string>;
 }
-
 export interface iSuite {
   scenarios: Array<iScenario>;
   baseUrl: URL | null;
@@ -277,7 +281,7 @@ export interface iSuite {
   executionDuration: number | null;
   title: string;
   finished: Promise<void>;
-  subscribe(callback: Function);
+  subscribe(callback: Function): iSuite;
   verifySslCert(verify: boolean): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
@@ -318,13 +322,14 @@ export interface iScenario {
   hasFinished: boolean;
   url: string | null;
   finalUrl: string | null;
+  requestUrl: string;
   redirectCount: number;
   redirectChain: string[];
   requestOptions: any;
   set(aliasName: string, value: any): iScenario;
   get(aliasName: string): any;
   getLog(): Promise<iLogItem[]>;
-  subscribe(callback: Function);
+  subscribe(callback: Function): iScenario;
   setJsonBody(jsonObject: any): iScenario;
   setRawBody(str: string): iScenario;
   verifySslCert(verify: boolean): iScenario;
@@ -347,25 +352,34 @@ export interface iScenario {
   result(result: iAssertionResult): iScenario;
   ignore(assertions?: boolean | Function): iScenario;
   open(url: string): iScenario;
-  next(a: any, b?: any): iScenario;
-  nextPrepend(a: any, b?: any): iScenario;
+  next(callback: iNextCallback): iScenario;
+  next(message: string, callback: iNextCallback): iScenario;
+  nextPrepend(callback: iNextCallback): iScenario;
+  nextPrepend(message: string, callback: iNextCallback): iScenario;
   skip(message?: string): Promise<iScenario>;
   cancel(): Promise<iScenario>;
   getBrowserControl(): BrowserControl;
   execute(): Promise<iScenario>;
+  error(message: string, callback: Function): iScenario;
   error(callback: Function): iScenario;
+  success(message: string, callback: Function): iScenario;
   success(callback: Function): iScenario;
+  failure(message: string, callback: Function): iScenario;
   failure(callback: Function): iScenario;
+  before(message: string, callback: Function): iScenario;
   before(callback: Function): iScenario;
+  after(message: string, callback: Function): iScenario;
   after(callback: Function): iScenario;
+  finally(message: string, callback: Function): iScenario;
   finally(callback: Function): iScenario;
   mock(localPath: string): iScenario;
   setResponseType(type: ResponseType, opts?: any): iScenario;
 }
 
 export interface iMessageAndCallback {
+  isSubScenario: boolean;
   message: string;
-  callback: Function;
+  callback: iNextCallback;
   scenario?: iScenario;
 }
 

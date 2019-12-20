@@ -11,7 +11,7 @@ suite
   .open("/")
   .next(async context => {
     const topStories = await context.exists(".topStories");
-    const articles = await topStories.findAll("article");
+    const articles = await context.findAll(".topStories article");
     context.assert(articles).length.greaterThan(0);
   });
 

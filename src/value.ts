@@ -1,16 +1,43 @@
-import { iAssertionContext, iValue } from "./interfaces";
+import { iAssertionContext, iValue, iScenario } from "./interfaces";
 import { toType, isNullOrUndefined } from "./util";
+import {
+  AssertionActionCompleted,
+  AssertionActionFailed
+} from "./logging/assertionresult";
 
-export abstract class ProtoValue implements iValue {
+export class Value implements iValue {
   protected _input: any;
   protected _context: iAssertionContext;
   protected _name: string | null;
   protected _parent: any;
   protected _highlight: string;
   protected _sourceCode: string | null = null;
+  protected _path: string | undefined;
+  protected _tagName: string | undefined;
 
   public get $(): any {
     return this._input;
+  }
+
+  public get tagName(): string {
+    return this._tagName || "";
+  }
+
+  public get outerHTML(): string {
+    return this._sourceCode || "";
+  }
+
+  public get length(): iValue {
+    const thisValue: any = this.$;
+    return new Value(
+      thisValue && thisValue.length ? thisValue.length : 0,
+      this._context,
+      `Length of ${this._name}`
+    );
+  }
+
+  public get path(): string {
+    return this._path || "";
   }
 
   public get name(): string {
@@ -137,7 +164,7 @@ export abstract class ProtoValue implements iValue {
     return this.toType() == "elementhandle";
   }
 
-  public async hasProperty(key: string): Promise<Value> {
+  public async hasProperty(key: string): Promise<iValue> {
     return this._wrapAsValue(
       this._input &&
         this._input.hasOwnProperty &&
@@ -151,41 +178,135 @@ export abstract class ProtoValue implements iValue {
     return this;
   }
 
+  public async getProperty(key: string): Promise<any> {
+    if (!this.isNullOrUndefined() && this.hasProperty(key)) {
+      return this._input[key];
+    }
+    return undefined;
+  }
+
+  public click(): Promise<void>;
+  public click(scenario: iScenario): Promise<iScenario>;
+  public click(message: string): Promise<iScenario>;
+  public click(callback: Function): Promise<iScenario>;
+  public click(message: string, callback: Function): Promise<iScenario>;
+  public async click(a?: any, b?: any): Promise<void | iScenario> {}
+
+  public submit(): Promise<void>;
+  public submit(scenario: iScenario): Promise<iScenario>;
+  public submit(message: string): Promise<iScenario>;
+  public submit(callback: Function): Promise<iScenario>;
+  public async submit(a?: any, b?: any): Promise<void | iScenario> {}
+
+  public load(): iScenario;
+  public load(message: string): iScenario;
+  public load(scenario: iScenario): iScenario;
+  public load(callback: Function): iScenario;
+  public load(a?: any, b?: any): iScenario | void {}
+
+  public async fillForm(formData: any): Promise<void> {}
+
+  public async exists(): Promise<iValue>;
+  public async exists(selector: string): Promise<iValue>;
+  public async exists(selector?: string): Promise<iValue> {
+    if (selector === undefined) {
+      this.isNullOrUndefined()
+        ? this._failedAction("EXISTS", `${this.name}`)
+        : this._completedAction("EXISTS", `${this.name}`);
+      return this;
+    } else {
+      const el: iValue = await this.find(selector);
+      el.isNull()
+        ? this._failedAction("EXISTS", `${selector}`)
+        : this._completedAction("EXISTS", `${selector}`);
+      return el;
+    }
+  }
+
+  public async find(selector: string): Promise<iValue> {
+    return this._wrapAsValue(null, selector);
+  }
+
+  public async findAll(selector: string): Promise<iValue[]> {
+    return [];
+  }
+
+  public async getClassName(): Promise<iValue> {
+    return this._wrapAsValue(null, `${this.name} Class`);
+  }
+
+  public async hasClassName(className: string): Promise<iValue> {
+    return this._wrapAsValue(false, `${this.name} has class ${className}`);
+  }
+
+  public async getTagName(): Promise<iValue> {
+    return this._wrapAsValue(this.tagName, `Tag Name of ${this.name}`);
+  }
+
+  public async getInnerText(): Promise<iValue> {
+    return this._wrapAsValue(this.toString(), `Inner Text of ${this.name}`);
+  }
+
+  public async getInnerHtml(): Promise<iValue> {
+    return this._wrapAsValue(null, `Inner HTML of ${this.name}`);
+  }
+
+  public async getOuterHtml(): Promise<iValue> {
+    return this._wrapAsValue(null, `Outer HTML of ${this.name}`);
+  }
+
+  public hasAttribute(key: string): Promise<iValue> {
+    return this.hasProperty(key);
+  }
+
+  public getAttribute(key: string): Promise<iValue> {
+    return this.getProperty(key);
+  }
+
+  public hasData(key: string): Promise<iValue> {
+    return this.hasProperty(key);
+  }
+
+  public getData(key: string): Promise<iValue> {
+    return this.getProperty(key);
+  }
+
+  public async getValue(): Promise<iValue> {
+    return this;
+  }
+
+  public async getText(): Promise<iValue> {
+    return this._wrapAsValue(
+      this.toString(),
+      this.name,
+      this.parent,
+      this.highlight
+    );
+  }
+
+  protected async _completedAction(verb: string, noun?: string) {
+    this._context.scenario.result(
+      new AssertionActionCompleted(verb, noun || this.name)
+    );
+  }
+
+  protected async _failedAction(verb: string, noun?: string) {
+    this._context.scenario.result(
+      new AssertionActionFailed(verb, noun || this.name)
+    );
+  }
+
   protected _wrapAsValue(
     data: any,
     name: string,
     parent?: any,
     highlight?: string
-  ): Value {
+  ): iValue {
     const val: Value = new Value(data, this._context, name, parent, highlight);
     // If no source code of its own, inherit it from parent
     if (!val.sourceCode && parent && parent.sourceCode) {
       val._sourceCode = parent.sourceCode;
     }
     return val;
-  }
-}
-
-export class Value extends ProtoValue implements iValue {
-  public async getProperty(key: string): Promise<any> {
-    if (!this.isNullOrUndefined() && this.hasProperty(key)) {
-      const thisValue: any = this.$;
-      return this._input[key];
-    }
-    return undefined;
-  }
-
-  public async hasProperty(key: string): Promise<Value> {
-    const thisValue: any = this.$;
-    return thisValue && thisValue.hasOwnProperty(key);
-  }
-
-  public get length(): Value {
-    const thisValue: any = this.$;
-    return new Value(
-      thisValue && thisValue.length ? thisValue.length : 0,
-      this._context,
-      `Length of ${this._name}`
-    );
   }
 }

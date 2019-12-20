@@ -1,9 +1,7 @@
-const { Flagpole } = require("../dist/index.js");
+import { Flagpole } from "../../dist/index.js";
 
 const suite = Flagpole.Suite("Basic Cookie Test of Site")
-  .base(() => {
-    return "https://www.milesplit.com";
-  })
+  .base("https://www.milesplit.com")
   .finally(() => {
     suite.print();
   });
@@ -13,9 +11,9 @@ const test = suite
   .open("/")
   .next("Boo", context => {
     context
-      .comment(context.response.finalUrl)
+      .comment(context.response.finalUrl.$)
       .comment(context.response.cookies.$[0].key)
-      .comment(context.response.cookie("unique_id"));
+      .comment(context.response.cookie("unique_id").$);
     const value = context.response.cookie("unique_id").toString();
     context
       .assert(context.response.cookie("unique_id"))

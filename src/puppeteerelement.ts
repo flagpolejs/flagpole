@@ -1,17 +1,14 @@
-import { Value } from "./value";
-import {
-  iValue,
-  iAssertionContext,
-  iScenario,
-  iBounds,
-  iDOMElement
-} from "./interfaces";
+import { iAssertionContext, iScenario, iBounds, iValue } from "./interfaces";
 import { JSHandle, Page, ElementHandle, BoxModel } from "puppeteer";
 import { DOMElement } from "./domelement";
-import { asyncForEach, toType } from "./util";
+import {
+  asyncForEach,
+  toType,
+  getMessageAndCallbackFromOverloading
+} from "./util";
+import { Value } from "./value";
 
-export class PuppeteerElement extends DOMElement
-  implements iValue, iDOMElement {
+export class PuppeteerElement extends DOMElement implements iValue {
   protected _input: ElementHandle;
 
   public get $(): ElementHandle {
@@ -52,7 +49,7 @@ export class PuppeteerElement extends DOMElement
     return String(this.path);
   }
 
-  public async getClassName(): Promise<Value> {
+  public async getClassName(): Promise<iValue> {
     const classHandle: JSHandle = await this._input.getProperty("className");
     return this._wrapAsValue(
       await classHandle.jsonValue(),
@@ -60,7 +57,7 @@ export class PuppeteerElement extends DOMElement
     );
   }
 
-  public async hasClassName(className: string): Promise<Value> {
+  public async hasClassName(className: string): Promise<iValue> {
     const classHandle: JSHandle = await this._input.getProperty("className");
     const classString: string = await classHandle.jsonValue();
     return this._wrapAsValue(
@@ -69,14 +66,14 @@ export class PuppeteerElement extends DOMElement
     );
   }
 
-  public async find(selector: string): Promise<PuppeteerElement | Value> {
+  public async find(selector: string): Promise<iValue> {
     const element: ElementHandle | null = await this.$.$(selector);
     const name: string = `${selector} under ${this.name}`;
     const path: string = `${this.path} ${selector}`;
     if (element !== null) {
       return PuppeteerElement.create(element, this._context, name, path);
     }
-    return this._wrapAsValue(null, name, this);
+    return this._wrapAsValue(null, name);
   }
 
   public async findAll(selector: string): Promise<PuppeteerElement[]> {
@@ -97,7 +94,7 @@ export class PuppeteerElement extends DOMElement
 
   public async getClosest(
     selector: string = "*"
-  ): Promise<PuppeteerElement | Value> {
+  ): Promise<PuppeteerElement | iValue> {
     const closest: ElementHandle[] = await this.$.$x(
       `ancestor-or-self::${selector}`
     );
@@ -122,7 +119,7 @@ export class PuppeteerElement extends DOMElement
     return out;
   }
 
-  public async getParent(): Promise<PuppeteerElement | Value> {
+  public async getParent(): Promise<PuppeteerElement | iValue> {
     const parents: ElementHandle[] = await this.$.$x("..");
     const name: string = `Parent of ${this.name}`;
     const path: string = `${this.path}[..]`;
@@ -157,7 +154,7 @@ export class PuppeteerElement extends DOMElement
 
   public async getPreviousSibling(
     selector: string = "*"
-  ): Promise<PuppeteerElement | Value> {
+  ): Promise<PuppeteerElement | iValue> {
     const siblings: ElementHandle[] = await this.$.$x(
       `preceding-sibling::${selector}`
     );
@@ -191,7 +188,7 @@ export class PuppeteerElement extends DOMElement
 
   public async getNextSibling(
     selector: string = "*"
-  ): Promise<PuppeteerElement | Value> {
+  ): Promise<PuppeteerElement | iValue> {
     const siblings: ElementHandle[] = await this.$.$x(
       `following-sibling::${selector}`
     );
@@ -223,7 +220,7 @@ export class PuppeteerElement extends DOMElement
     return siblings;
   }
 
-  public async getInnerText(): Promise<Value> {
+  public async getInnerText(): Promise<iValue> {
     if (this._context.page == null) {
       throw new Error("Page is null.");
     }
@@ -233,7 +230,7 @@ export class PuppeteerElement extends DOMElement
     );
   }
 
-  public async getInnerHtml(): Promise<Value> {
+  public async getInnerHtml(): Promise<iValue> {
     if (this._context.page == null) {
       throw new Error("Page is null.");
     }
@@ -243,7 +240,7 @@ export class PuppeteerElement extends DOMElement
     );
   }
 
-  public async getOuterHtml(): Promise<Value> {
+  public async getOuterHtml(): Promise<iValue> {
     if (this._context.page === null) {
       throw new Error("Page is null.");
     }
@@ -254,25 +251,25 @@ export class PuppeteerElement extends DOMElement
     return this._wrapAsValue(html, `Outer Html of ${this.name}`);
   }
 
-  public async getProperty(key: string): Promise<Value> {
+  public async getProperty(key: string): Promise<iValue> {
     const name: string = `${key} of ${this.name}`;
     const handle: JSHandle = await this._input.getProperty(key);
     return this._wrapAsValue(await handle.jsonValue(), name, this);
   }
 
-  public async getData(key: string): Promise<Value> {
+  public async getData(key: string): Promise<iValue> {
     const name: string = `Data of ${this.name}`;
     const handle: JSHandle = await this._input.getProperty(key);
     return this._wrapAsValue(await handle.jsonValue(), name, this);
   }
 
-  public async getValue(): Promise<Value> {
+  public async getValue(): Promise<iValue> {
     const name: string = `Value of ${this.name}`;
     const handle: JSHandle = await this._input.getProperty("value");
     return this._wrapAsValue(await handle.jsonValue(), name, this);
   }
 
-  public async getText(): Promise<Value> {
+  public async getText(): Promise<iValue> {
     const name: string = `Text of ${this.name}`;
     const handle: JSHandle = await this._input.getProperty("textContent");
     const text: string = await handle.jsonValue();
@@ -439,14 +436,14 @@ export class PuppeteerElement extends DOMElement
   }
 
   public async submit(): Promise<void>;
-  public async submit(callback: Function): Promise<void>;
-  public async submit(scenario: iScenario): Promise<void>;
-  public async submit(message: string, callback: Function): Promise<void>;
-  public async submit(message: string, scenario: iScenario): Promise<void>;
+  public async submit(message: string): Promise<iScenario>;
+  public async submit(callback: Function): Promise<iScenario>;
+  public async submit(scenario: iScenario): Promise<iScenario>;
+  public async submit(message: string, callback: Function): Promise<iScenario>;
   public async submit(
     a?: string | Function | iScenario,
-    b?: Function | iScenario
-  ): Promise<void> {
+    b?: Function
+  ): Promise<iScenario | void> {
     if (!this._isFormTag()) {
       throw new Error("You can only use .submit() with a form element.");
     }
@@ -458,20 +455,19 @@ export class PuppeteerElement extends DOMElement
   }
 
   public async click(): Promise<void>;
+  public async click(message: string): Promise<iScenario>;
   public async click(callback: Function): Promise<iScenario>;
   public async click(scenario: iScenario): Promise<iScenario>;
   public async click(message: string, callback: Function): Promise<iScenario>;
-  public async click(message: string, scenario: iScenario): Promise<iScenario>;
   public async click(
     a?: string | Function | iScenario,
-    b?: Function | iScenario
+    b?: Function
   ): Promise<void | iScenario> {
     this._completedAction("CLICK");
     // If they passed in a message or callback, treat this as a new sub-scenario
     if (a || b) {
-      return this._loadSubScenario(
-        this._getMessageAndCallbackFromOverloading(a, b)
-      );
+      const overloaded = getMessageAndCallbackFromOverloading(a, b, this._path);
+      return this._loadSubScenario(overloaded);
     }
     // Otherwise, just treat this as an inline click within the same scenario
     else {

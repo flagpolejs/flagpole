@@ -1,9 +1,9 @@
 import { WebServer, WebResponse } from "../webserver";
 import * as http from "http";
-import { Cli, iSuiteOpts } from "./cli";
-import { SuiteConfig, EnvConfig } from "./config";
+import { Cli } from "./cli";
+import { iSuiteOpts, SuiteConfig, EnvConfig, iScenarioOpts } from "./config";
 import { URL } from "url";
-import { FlagpoleExecutionOptions } from "..";
+import { FlagpoleExecutionOptions } from "../flagpoleexecutionoptions";
 import { SuiteExecutionResult, SuiteExecution } from "./suiteexecution";
 import { FlagpoleExecution } from "../flagpoleexecutionoptions";
 
@@ -35,7 +35,9 @@ const routes = {
   ) => {
     const name: string = postData.name;
     if (name) {
-      Cli.config.addSuite(name);
+      Cli.config.addSuite({
+        name: name
+      });
       Cli.config.save();
       return sendOutput(
         response,
@@ -127,14 +129,18 @@ const routes = {
       domains.dev = "http://localhost";
     }
     // Create new suite and first scenario
-    addSuite(response, {
-      suiteName: postData.suiteName,
-      suiteDescription: postData.suiteDescription,
-      baseDomain: domains,
-      scenarioDescription: postData.scenarioDescription,
-      scenarioPath: postData.scenarioPath,
-      scenarioType: postData.scenarioType
-    });
+    addSuite(
+      response,
+      {
+        name: postData.suiteName,
+        description: postData.suiteDescription
+      },
+      {
+        description: postData.scenarioDescription,
+        path: postData.scenarioPath,
+        type: postData.scenarioType
+      }
+    );
   },
   "GET /suite": (url: URL, response: http.ServerResponse) => {
     const suite: SuiteConfig | void = getSuite(
@@ -518,8 +524,10 @@ const initProject = (response: http.ServerResponse, postData: any): void => {
     );
   }
   Cli.init({
-    projectName: postData.projectName,
-    testsPath: postData.testsPath,
+    project: {
+      name: postData.projectName,
+      path: postData.testsPath
+    },
     environments: []
   })
     .then(() => {
@@ -528,14 +536,19 @@ const initProject = (response: http.ServerResponse, postData: any): void => {
       possibleEnvironments.forEach(env => {
         // If this env was checked
         if (postData[`envName[${env}]`]) {
-          let domain: string = postData[`envDomain[${env}]`];
-          Cli.config.addEnvironment(`${env}`, { defaultDomain: `${domain}` });
+          const domain: string = postData[`envDomain[${env}]`];
+          Cli.config.addEnvironment({
+            name: env,
+            defaultDomain: domain
+          });
           countEnvs++;
         }
       });
       // Require at least one environment
       if (countEnvs == 0) {
-        Cli.config.addEnvironment("dev", {});
+        Cli.config.addEnvironment({
+          name: "dev"
+        });
         countEnvs++;
       }
       // Save the config file with environments
@@ -569,12 +582,16 @@ const initProject = (response: http.ServerResponse, postData: any): void => {
     });
 };
 
-const addSuite = (response: http.ServerResponse, opts: iSuiteOpts): void => {
-  Cli.addSuite(opts)
+const addSuite = (
+  response: http.ServerResponse,
+  suite: iSuiteOpts,
+  scenario: iScenarioOpts
+): void => {
+  Cli.addSuite(suite, scenario)
     .then(() => {
       sendOutput(
         response,
-        `Added new suite <em>${opts.suiteName}</em>. <a href="/">Back</a>`
+        `Added new suite <em>${suite.name}</em>. <a href="/">Back</a>`
       );
     })
     .catch(err => {
@@ -586,7 +603,10 @@ const addEnv = (response: http.ServerResponse, env: EnvConfig): void => {
   if (Cli.config.environments[env.name]) {
     sendOutput(response, "Error: Environment name is already taken.");
   } else {
-    Cli.config.addEnvironment(env.name, { defaultDomain: env.defaultDomain });
+    Cli.config.addEnvironment({
+      name: env.name,
+      defaultDomain: env.defaultDomain
+    });
     Cli.config
       .save()
       .then(() => {
@@ -610,7 +630,7 @@ const runSuite = (
     `-h -o json -e ${envName} -x`
   );
   const execution: SuiteExecution = SuiteExecution.executePath(
-    Cli.config.suites[suiteName].getPath(),
+    Cli.config.suites[suiteName].getTestPath(),
     opts
   );
   execution.result
@@ -641,7 +661,7 @@ const sendIndex = (response: http.ServerResponse): void => {
                 <ul>
                     <li>Project Name: ${Cli.config.project.name}</li>
                     <li>Config Path: ${Cli.configPath}</li>
-                    <li>Root Path: ${Cli.rootPath}</li>
+                    <li>Project Path: ${Cli.projectPath}</li>
                     <li>Environment: ${FlagpoleExecution.opts.environment}</li>
                 </ul>
                 <h2>List of Suites</h2>

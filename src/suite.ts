@@ -2,7 +2,7 @@ import { ResponseType, SuiteStatusEvent } from "./enums";
 import { Scenario } from "./scenario";
 import { URL } from "url";
 import { FlagpoleReport } from "./logging/flagpolereport";
-import { iSuite } from "./interfaces";
+import { iSuite, iScenario } from "./interfaces";
 import { exitProcess } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecutionoptions";
 import { FlagpoleExecutionOptions } from ".";
@@ -11,7 +11,7 @@ import { FlagpoleExecutionOptions } from ".";
  * A suite contains many scenarios
  */
 export class Suite implements iSuite {
-  public scenarios: Array<Scenario> = [];
+  public scenarios: Array<iScenario> = [];
 
   public get baseUrl(): URL | null {
     return this._baseUrl;
@@ -149,8 +149,9 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public subscribe(callback: Function) {
+  public subscribe(callback: Function): iSuite {
     this._subscribers.push(callback);
+    return this;
   }
 
   /**
@@ -204,8 +205,8 @@ export class Suite implements iSuite {
    * @returns {Scenario}
    * @constructor
    */
-  public scenario(title: string, type: ResponseType, opts: any): Scenario {
-    const scenario: Scenario = Scenario.create(
+  public scenario(title: string, type: ResponseType, opts: any): iScenario {
+    const scenario: iScenario = Scenario.create(
       this,
       title,
       type,
@@ -236,63 +237,63 @@ export class Suite implements iSuite {
   /**
    * Create a new JSON/REST API Scenario
    */
-  public json(title: string, opts: any = {}): Scenario {
+  public json(title: string, opts: any = {}): iScenario {
     return this.scenario(title, ResponseType.json, opts);
   }
 
   /**
    * Create a new Image Scenario
    */
-  public image(title: string, opts: any = {}): Scenario {
+  public image(title: string, opts: any = {}): iScenario {
     return this.scenario(title, ResponseType.image, opts);
   }
 
   /**
    * Create a new Video Scenario
    */
-  public video(title: string, opts: any = {}): Scenario {
+  public video(title: string, opts: any = {}): iScenario {
     return this.scenario(title, ResponseType.video, opts);
   }
 
   /**
    * Create a new HTML/DOM Scenario
    */
-  public html(title: string, opts: any = {}): Scenario {
+  public html(title: string, opts: any = {}): iScenario {
     return this.scenario(title, ResponseType.html, opts);
   }
 
   /**
    * Create a new CSS Scenario
    */
-  public stylesheet(title: string, opts: any = {}): Scenario {
+  public stylesheet(title: string, opts: any = {}): iScenario {
     return this.scenario(title, ResponseType.stylesheet, opts);
   }
 
   /**
    * Create a new Script Scenario
    */
-  public script(title: string, opts: any = {}): Scenario {
+  public script(title: string, opts: any = {}): iScenario {
     return this.scenario(title, ResponseType.script, opts);
   }
 
   /**
    * Create a generic resource scenario
    */
-  public resource(title: string, opts: any = {}): Scenario {
+  public resource(title: string, opts: any = {}): iScenario {
     return this.scenario(title, ResponseType.resource, opts);
   }
 
   /**
    * Create a Browser/Puppeteer Scenario
    */
-  public browser(title: string, opts: any = {}): Scenario {
+  public browser(title: string, opts: any = {}): iScenario {
     return this.scenario(title, ResponseType.browser, opts);
   }
 
   /**
    * Create an ExtJS Scenario
    */
-  public extjs(title: string, opts: any = {}): Scenario {
+  public extjs(title: string, opts: any = {}): iScenario {
     return this.scenario(title, ResponseType.extjs, opts);
   }
 

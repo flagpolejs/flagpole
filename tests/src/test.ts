@@ -1,4 +1,4 @@
-const Flagpole = require("../dist/index.js").Flagpole;
+import { Flagpole } from "../../dist/index.js";
 const nock = require("nock");
 const fs = require("fs");
 

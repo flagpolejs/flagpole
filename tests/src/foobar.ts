@@ -1,4 +1,4 @@
-const Flagpole = require("../dist/index.js").Flagpole;
+import { Flagpole } from "../../dist/index.js";
 
 const suite = Flagpole.Suite("Test")
   .base("https://fl.milesplit.com/")
@@ -17,8 +17,7 @@ suite
       .length.greaterThan(0)
       .comment(`${articles.length} articles`);
     const title = await articles[0].find("a.title strong");
-    context.comment(await title.getInnerText());
-    context.set("articles", articles);
+    context.comment((await title.getInnerText()).$).set("articles", articles);
   })
   .next("Second article", async context => {
     const title = await context.get("articles")[1].find("a.title strong");
@@ -29,8 +28,8 @@ suite
   .next("Last test", async context => {
     const topStories = await context.exists(".topStories");
     const title = await topStories.find("a.title strong");
-    context.comment(await title.getInnerText());
-    context.comment(await title.getTagName());
+    context.comment(String(await title.getInnerText()));
+    context.comment(String(await title.getTagName()));
   });
 
 suite

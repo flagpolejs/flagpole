@@ -1,74 +1,112 @@
-import { printSubheader, printHeader } from "./cli-helper";
-import { Cli } from './cli';
-import { FlagpoleConfig } from "./config";
+import { printSubheader, printHeader, trimInput } from "./cli-helper";
+import { Cli } from "./cli";
+import { iConfigOpts, iEnvOpts } from "./config";
+import * as prompts from "prompts";
 
-const { prompt } = require('enquirer');
-const fs = require('fs');
+export async function init() {
+  printHeader();
+  printSubheader("Initialize Flagpole Project");
 
-export function init() {
+  const initialResponses = await prompts([
+    {
+      type: "text",
+      name: "project",
+      message: "What is the name of your project?",
+      initial: process
+        .cwd()
+        .split("/")
+        .pop(),
+      format: trimInput
+    },
+    {
+      type: "multiselect",
+      name: "env",
+      message: "What environments do you want to support?",
+      initial: 0,
+      choices: [
+        { value: "dev", title: "dev" },
+        { value: "stag", title: "stag" },
+        { value: "stag", title: "stag" },
+        { value: "qa", title: "qa" },
+        { value: "qa", title: "qa" },
+        { value: "qa", title: "qa" },
+        { value: "alpha", title: "alpha" },
+        { value: "beta", title: "beta" }
+      ],
+      validate: function(input) {
+        return input.length > 0;
+      }
+    },
+    {
+      type: "toggle",
+      name: "useTypeScript",
+      message: "Do you want Flagpole to use TypeScript?",
+      initial: true,
+      active: "Yes",
+      inactive: "No"
+    }
+  ]);
 
-    printHeader();
-    printSubheader('Initialize Flagpole Project');
+  const rootFolder = await prompts({
+    type: "text",
+    name: "path",
+    message: initialResponses.useTypeScript
+      ? "What is the root subfolder you want to put your tests in? (tsconfig.json will go here)"
+      : "What subfolder do you want to put your tests in?",
+    initial: "tests",
+    format: trimInput
+  });
 
-    prompt([
-        {
-            type: 'input',
-            name: 'project',
-            message: 'What is the name of your project?',
-            initial: process.cwd().split('/').pop(),
-            result: function (input) {
-                return input.trim();
-            }
-        },
-        {
-            type: 'input',
-            name: 'path',
-            message: 'What subfolder do you want to put your tests in?',
-            initial: 'tests',
-            result: function (input) {
-                return input.trim();
-            }
-        },
-        {
-            type: 'select',
-            name: 'env',
-            message: 'What environments do you want to support?',
-            initial: 0,
-            multiple: true,
-            choices: [
-                'dev',
-                'stag',
-                'prod',
-                'qa',
-                'rc',
-                'preprod',
-                'alpha',
-                'beta'
-            ],
-            validate: function (input) {
-                return (input.length > 0);
-            }
-        }
-    ]).then(function (answers) {
-        const configOptions = {
-            projectName: answers.project,
-            testsPath: answers.path,
-            environments: answers.env
-        };
-        Cli.hideBanner = true;
-        Cli.log('Creating your Flagpole project...')
-        Cli.init(configOptions)
-            .then((tasks: string[]) => {
-                Cli.log('');
-                Cli.list(tasks)
-                Cli.log('');
-                Cli.log('Your Flagpole project was created.');
-                Cli.exit(0);
-            })
-            .catch((err: string) => {
-                Cli.log(err);
-                Cli.exit(1);
-            });        
+  let tsResponses: undefined | prompts.Answers<string> = undefined;
+  if (initialResponses.useTypeScript) {
+    tsResponses = await prompts([
+      {
+        type: "text",
+        name: "sourceFolder",
+        message: `Source Folder ${rootFolder.path}/`,
+        initial: `src`
+      },
+      {
+        type: "text",
+        name: "outputFolder",
+        message: `Output Folder ${rootFolder.path}/`,
+        initial: `out`
+      }
+    ]);
+  }
+
+  const configOptions: iConfigOpts = {
+    configPath: `${process.cwd()}/flagpole.json`,
+    project: {
+      name: initialResponses.project,
+      path: rootFolder.path,
+      source: tsResponses == undefined ? undefined : tsResponses.sourceFolder,
+      output: tsResponses == undefined ? undefined : tsResponses.outputFolder
+    },
+    environments: ((): iEnvOpts[] => {
+      const out: iEnvOpts[] = [];
+      initialResponses.env.forEach(env => {
+        out.push({
+          name: env,
+          defaultDomain: ""
+        });
+      });
+      return out;
+    })(),
+    suites: []
+  };
+  Cli.hideBanner = true;
+  Cli.log("Creating your Flagpole project...");
+  Cli.init(configOptions)
+    .then((tasks: string[]) => {
+      Cli.log("");
+      Cli.list(tasks);
+      Cli.log("");
+      Cli.log("Your Flagpole project was created.");
+      Cli.exit(0);
     })
-
+    .catch((err: string) => {
+      Cli.log(err);
+      Cli.exit(1);
+    });
 }

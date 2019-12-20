@@ -122,7 +122,7 @@ export class SuiteExecution {
   public async executeSuite(
     config: SuiteConfig
   ): Promise<SuiteExecutionResult> {
-    return this.executePath(config.getPath(), FlagpoleExecution.opts);
+    return this.executePath(config.getTestPath(), FlagpoleExecution.opts);
   }
 
   protected _execute(

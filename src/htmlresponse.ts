@@ -1,9 +1,9 @@
 import { HTMLElement } from "./htmlelement";
 import { HttpResponse } from "./httpresponse";
 import { DOMResponse } from "./domresponse";
-import { iResponse } from "./interfaces";
+import { iResponse, iValue } from "./interfaces";
 import { ResponseType } from "./enums";
-import { iValue } from ".";
+import { Value } from "./value";
 
 const cheerio: CheerioAPI = require("cheerio");
 let $: CheerioStatic;
@@ -30,7 +30,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     return callback.apply(context, [$]);
   }
 
-  public async find(path: string): Promise<HTMLElement | iValue> {
+  public async find(path: string): Promise<iValue> {
     const selection: Cheerio = $(path);
     if (selection.length > 0) {
       return await HTMLElement.create(
@@ -39,17 +39,16 @@ export class HtmlResponse extends DOMResponse implements iResponse {
         null,
         path
       );
-    } else {
-      return this._wrapAsValue(null, path);
     }
+    return new Value(null, this.context, path);
   }
 
-  public async findAll(path: string): Promise<HTMLElement[]> {
-    const response: iResponse = this;
+  public async findAll(path: string): Promise<iValue[]> {
+    const response: HtmlResponse = this;
     const elements: Cheerio = $(path);
     if (elements.length > 0) {
       const nodeElements: HTMLElement[] = [];
-      await elements.each(async function(i: number) {
+      elements.each(async function(i: number) {
         nodeElements.push(
           await HTMLElement.create(
             $(elements.get(i)),
@@ -68,21 +67,21 @@ export class HtmlResponse extends DOMResponse implements iResponse {
   public async waitForHidden(
     selector: string,
     timeout: number = 100
-  ): Promise<HTMLElement | iValue> {
+  ): Promise<iValue> {
     return this.find(selector);
   }
 
   public async waitForVisible(
     selector: string,
     timeout: number = 100
-  ): Promise<HTMLElement | iValue> {
+  ): Promise<iValue> {
     return this.find(selector);
   }
 
   public async waitForExists(
     selector: string,
     timeout: number = 100
-  ): Promise<HTMLElement | iValue> {
+  ): Promise<iValue> {
     return this.find(selector);
   }
 

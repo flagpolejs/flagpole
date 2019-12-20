@@ -1,5 +1,5 @@
 import { Page, ElementHandle, Browser, Response } from "puppeteer";
-import { iResponse, iValue, iDOMElement } from "./interfaces";
+import { iResponse, iValue } from "./interfaces";
 import { BrowserControl } from "./browsercontrol";
 import { DOMResponse } from "./domresponse";
 import { PuppeteerElement } from "./puppeteerelement";
@@ -30,8 +30,8 @@ export abstract class PuppeteerResponse extends DOMResponse
     return this.scenario.getBrowserControl().response;
   }
 
-  public abstract async find(path: string): Promise<iDOMElement | iValue>;
-  public abstract async findAll(path: string): Promise<iDOMElement[]>;
+  public abstract async find(path: string): Promise<iValue>;
+  public abstract async findAll(path: string): Promise<iValue[]>;
 
   /**
    * Run this code in the browser

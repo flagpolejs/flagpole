@@ -1,67 +1,49 @@
 {
   "project": {
-    "id": "89FlnTVjMEb5ZhUkovPt",
+    "id": "",
     "name": "flagpole",
-    "path": "tests"
+    "path": "tests",
+    "source": "src",
+    "output": "out"
   },
   "environments": {
     "dev": {
       "name": "dev",
       "defaultDomain": "http://localhost:8000"
-    },
-    "prod": {
-      "name": "prod",
-      "defaultDomain": "https://www.flagpolejs.com"
     }
   },
   "suites": {
-    "smoke": {
-      "name": "smoke",
+    "internal/recursion": {
+      "id": "",
+      "name": "internal/recursion",
       "tags": []
     },
+    "smoke": {
+      "id": "",
+      "name": "smoke",
+      "tags": [
+        ""
+      ]
+    },
     "cookie": {
+      "id": "",
       "name": "cookie",
       "tags": []
     },
-    "html/milesplit": {
-      "name": "html/milesplit",
-      "tags": []
-    },
     "error": {
+      "id": "",
       "name": "error",
-      "tags": []
-    },
-    "browser/google": {
-      "name": "browser/google",
-      "tags": []
-    },
-    "html/google": {
-      "name": "html/google",
-      "tags": []
-    },
-    "api/flo": {
-      "name": "api/flo",
-      "tags": []
-    },
-    "api/itunes": {
-      "name": "api/itunes",
-      "tags": []
-    },
-    "browser/milesplit": {
-      "name": "browser/milesplit",
-      "tags": []
-    },
-    "browser/ubereats": {
-      "name": "browser/ubereats",
-      "tags": []
-    },
-    "browser/arena": {
-      "name": "browser/arena",
-      "tags": []
+      "tags": [
+        "basic",
+        "npmjs"
+      ]
     },
     "foobar": {
+      "id": "",
       "name": "foobar",
-      "tags": []
+      "tags": [
+        "basic"
+      ]
     }
   }
 }

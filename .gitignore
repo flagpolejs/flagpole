@@ -1,5 +1,7 @@
 # Examples
 examples/houston*
+tests/out
+tests/src/internal*
 
 # Logs
 logs

@@ -1,9 +1,8 @@
-import { ProtoValue, Value } from "./value";
+import { Value } from "./value";
 import {
   iValue,
   iAssertionContext,
   iScenario,
-  iDOMElement,
   iMessageAndCallback
 } from "./interfaces";
 import { Link } from "./link";
@@ -13,28 +12,11 @@ import {
   AssertionActionCompleted,
   AssertionActionFailed
 } from "./logging/assertionresult";
-import { runAsync, toType } from "./util";
-import { is } from "bluebird";
+import { runAsync, getMessageAndCallbackFromOverloading } from "./util";
 
-export abstract class DOMElement extends ProtoValue
-  implements iValue, iDOMElement {
-  protected _path: string;
-  protected _tagName: string = "";
-
-  public get path(): string {
-    return this._path;
-  }
-
+export abstract class DOMElement extends Value {
   public get name(): string {
     return this._name || this._path || "DOM Element";
-  }
-
-  public get tagName(): string {
-    return this._tagName;
-  }
-
-  public get outerHTML(): string {
-    return this._sourceCode || "";
   }
 
   protected constructor(
@@ -47,17 +29,8 @@ export abstract class DOMElement extends ProtoValue
     this._path = path || "";
   }
 
-  public abstract async click(
-    a?: string | Function | iScenario,
-    b?: Function | iScenario
-  ): Promise<iScenario | void>;
-  public abstract async fillForm(formData: any): Promise<void>;
-  public abstract async submit(
-    a?: string | Function | iScenario,
-    b?: Function | iScenario
-  ): Promise<iScenario | void>;
-  public abstract async find(selector: string): Promise<iDOMElement | iValue>;
-  public abstract async findAll(selector: string): Promise<iDOMElement[]>;
+  public abstract async find(selector: string): Promise<iValue>;
+  public abstract async findAll(selector: string): Promise<iValue[]>;
 
   protected abstract async _getTagName(): Promise<string>;
   protected abstract async _getAttribute(key: string): Promise<string | null>;
@@ -72,7 +45,7 @@ export abstract class DOMElement extends ProtoValue
   /**
    * Get all class names for element
    */
-  public async getClassName(): Promise<Value> {
+  public async getClassName(): Promise<iValue> {
     return this._wrapAsValue(
       typeof this._input.get(0).attribs["class"] !== "undefined"
         ? this._input.get(0).attribs["class"]
@@ -86,7 +59,7 @@ export abstract class DOMElement extends ProtoValue
    *
    * @param className
    */
-  public async hasClassName(className: string): Promise<Value> {
+  public async hasClassName(className: string): Promise<iValue> {
     return this._wrapAsValue(
       this._input.hasClass(className),
       `${this.name} has class ${className}`
@@ -94,30 +67,23 @@ export abstract class DOMElement extends ProtoValue
   }
 
   /**
-   * Get element's HTML tag name
-   */
-  public async getTagName(): Promise<Value> {
-    return this._wrapAsValue(this.tagName, `Tag Name of ${this.name}`);
-  }
-
-  /**
    * Get element's innerText
    */
-  public async getInnerText(): Promise<Value> {
+  public async getInnerText(): Promise<iValue> {
     return this._wrapAsValue(this._input.text(), `Inner Text of ${this.name}`);
   }
 
   /**
    * Get element's innerHtml which will not include the element itself, only its contents
    */
-  public async getInnerHtml(): Promise<Value> {
+  public async getInnerHtml(): Promise<iValue> {
     return this._wrapAsValue(this._input.html(), `Inner Html of ${this.name}`);
   }
 
   /**
    * Get the HTML of the element and all of its contents
    */
-  public async getOuterHtml(): Promise<Value> {
+  public async getOuterHtml(): Promise<iValue> {
     return this._wrapAsValue(
       this._context.response.getRoot().html(this._input),
       `Outer Html of ${this.name}`
@@ -129,7 +95,7 @@ export abstract class DOMElement extends ProtoValue
    *
    * @param key
    */
-  public async hasAttribute(key: string): Promise<Value> {
+  public async hasAttribute(key: string): Promise<iValue> {
     return this._wrapAsValue(
       (await this._getAttribute(key)) != null,
       `${this.name} has attribute ${key}`,
@@ -142,7 +108,7 @@ export abstract class DOMElement extends ProtoValue
    *
    * @param key
    */
-  public async getAttribute(key: string): Promise<Value> {
+  public async getAttribute(key: string): Promise<iValue> {
     const name: string = `${this.name} -> ${key}`;
     const attr: string | null = await this._getAttribute(key);
     return this._wrapAsValue(attr, name, this, `${key}="${attr}"`);
@@ -153,7 +119,7 @@ export abstract class DOMElement extends ProtoValue
    *
    * @param key
    */
-  public async hasProperty(key: string): Promise<Value> {
+  public async hasProperty(key: string): Promise<iValue> {
     return this._wrapAsValue(
       !(await this.getProperty(key)).isNull(),
       `Does ${this.name} have property ${key}?`
@@ -164,7 +130,7 @@ export abstract class DOMElement extends ProtoValue
    * Get the property with this name in the element, or null if it doesn't exist
    * @param key
    */
-  public async getProperty(key: string): Promise<Value> {
+  public async getProperty(key: string): Promise<iValue> {
     const name: string = `${key} of ${this.name}`;
     return this._wrapAsValue(this._input.prop(key), name);
   }
@@ -174,7 +140,7 @@ export abstract class DOMElement extends ProtoValue
    *
    * @param key
    */
-  public async hasData(key: string): Promise<Value> {
+  public async hasData(key: string): Promise<iValue> {
     return this._wrapAsValue(
       !(await this.getData(key)).isNull(),
       `${this.name} has data ${key}`
@@ -185,7 +151,7 @@ export abstract class DOMElement extends ProtoValue
    * Get the data with this key in the element, or null
    * @param key
    */
-  public async getData(key: string): Promise<Value> {
+  public async getData(key: string): Promise<iValue> {
     const name: string = `Data of ${this.name}`;
     return this._wrapAsValue(this._input.data(key), name);
   }
@@ -193,7 +159,7 @@ export abstract class DOMElement extends ProtoValue
   /**
    * Get the value of this element, such as the value of an input field
    */
-  public async getValue(): Promise<Value> {
+  public async getValue(): Promise<iValue> {
     const name: string = `Value of ${this.name}`;
     return this._wrapAsValue(this._input.val(), name);
   }
@@ -201,29 +167,9 @@ export abstract class DOMElement extends ProtoValue
   /**
    * Get the text content within the element
    */
-  public async getText(): Promise<Value> {
+  public async getText(): Promise<iValue> {
     const name: string = `Text of ${this.name}`;
     return this._wrapAsValue(this._input.text(), name, this);
-  }
-
-  /**
-   * Find for first element at this selector path and assert it exists
-   */
-  public async exists(): Promise<iDOMElement | iValue>;
-  public async exists(selector: string): Promise<iDOMElement | iValue>;
-  public async exists(selector?: string): Promise<iDOMElement | iValue> {
-    if (selector === undefined) {
-      this.isNull()
-        ? this._failedAction("EXISTS", `${this.name}`)
-        : this._completedAction("EXISTS", `${this.name}`);
-      return this;
-    } else {
-      const el: iDOMElement | iValue = await this.find(selector);
-      el.isNull()
-        ? this._failedAction("EXISTS", `${selector}`)
-        : this._completedAction("EXISTS", `${selector}`);
-      return el;
-    }
   }
 
   /**
@@ -231,15 +177,12 @@ export abstract class DOMElement extends ProtoValue
    * This is used to create a lambda scenario
    */
   public load(): iScenario;
+  public load(message: string): iScenario;
   public load(callback: Function): iScenario;
   public load(scenario: iScenario): iScenario;
   public load(message: string, callback: Function): iScenario;
-  public load(message: string, scenario: iScenario): iScenario;
-  public load(
-    a?: string | Function | iScenario,
-    b?: Function | iScenario
-  ): iScenario {
-    const overloaded = this._getMessageAndCallbackFromOverloading(a, b);
+  public load(a?: string | Function | iScenario, b?: Function): iScenario {
+    const overloaded = getMessageAndCallbackFromOverloading(a, b, this._path);
     const scenario = this._createSubScenario(overloaded);
     this._completedAction("LOAD");
     runAsync(async () => {
@@ -366,38 +309,6 @@ export abstract class DOMElement extends ProtoValue
     return new Link(srcPath || "", this._context);
   }
 
-  protected _getMessageAndCallbackFromOverloading(
-    a: any,
-    b: any
-  ): iMessageAndCallback {
-    const message: string = typeof a == "string" ? a : this._path;
-    const callback: Function = (function() {
-      // Handle overloading
-      if (typeof b == "function") {
-        return b;
-      } else if (typeof a == "function") {
-        return a;
-      }
-      // No callback was set, so just create a blank one
-      else {
-        return function() {};
-      }
-    })();
-    const scenario: iScenario = (function() {
-      if (toType(a) == "scenario") {
-        return a;
-      } else if (toType(b) == "scenario") {
-        return b;
-      }
-      return undefined;
-    })();
-    return {
-      message: message,
-      callback: callback,
-      scenario: scenario
-    };
-  }
-
   protected _getLambdaScenarioOpts(newScenarioType: ResponseType): any {
     const newScenarioIsBrowser: boolean = isPuppeteer(newScenarioType);
     const curScenarioIsBrowser: boolean = isPuppeteer(
@@ -407,18 +318,6 @@ export abstract class DOMElement extends ProtoValue
     return newScenarioIsBrowser == curScenarioIsBrowser
       ? this._context.scenario.requestOptions
       : {};
-  }
-
-  protected async _completedAction(verb: string, noun?: string) {
-    this._context.scenario.result(
-      new AssertionActionCompleted(verb, noun || this.name)
-    );
-  }
-
-  protected async _failedAction(verb: string, noun?: string) {
-    this._context.scenario.result(
-      new AssertionActionFailed(verb, noun || this.name)
-    );
   }
 
   protected _createSubScenario(
@@ -438,6 +337,6 @@ export abstract class DOMElement extends ProtoValue
   protected _loadSubScenario(overloaded: iMessageAndCallback): iScenario {
     return overloaded.scenario === undefined
       ? this.load(overloaded.message, overloaded.callback)
-      : this.load(overloaded.message, overloaded.scenario);
+      : this.load(overloaded.scenario);
   }
 }

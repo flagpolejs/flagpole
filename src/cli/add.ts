@@ -1,326 +1,257 @@
-import { printHeader, printSubheader } from "./cli-helper";
-import { Cli } from './cli';
-import { EnvConfig, SuiteConfig } from "./config";
+import {
+  printHeader,
+  printSubheader,
+  trimInput,
+  stringArrayToPromptChoices
+} from "./cli-helper";
+import { Cli } from "./cli";
+import { SuiteConfig } from "./config";
+import * as prompts from "prompts";
+import { path } from "./path";
 
-const { prompt } = require('enquirer');
-const fs = require('fs');
+const fs = require("fs");
 
-const typesOfTest: {} = {
-    'HTML Page': 'html',
-    'REST API (JSON Format)': 'json',
-    'Browser (Puppeteer)': 'browser'
-};
-
-const canAdd: string[] = [
-    'suite', 'scenario', 'env'
+const typesOfTest: any[] = [
+  { title: "HTML Page", value: "html" },
+  {
+    title: "REST API (JSON Format)",
+    value: "json"
+  },
+  {
+    title: "Browser (Puppeteer)",
+    value: "browser"
+  }
 ];
 
-function addSuite() {
+const canAdd: string[] = ["suite", "scenario", "env"];
 
-    printSubheader('Add New Suite');
+async function addSuite() {
+  printSubheader("Add New Suite");
 
-    if (!Cli.config.isValid()) {
-        Cli.log('Config file is invalid.');
-        Cli.exit(1);
+  if (!Cli.config.isValid()) {
+    Cli.log("Config file is invalid.");
+    Cli.exit(1);
+  }
+
+  // Standard questions
+  const standardQuestions = await prompts([
+    {
+      type: "text",
+      name: "suiteName",
+      message: "Name of Suite",
+      initial: Cli.commandArg2 || "smoke",
+      format: trimInput,
+      validate: function(input) {
+        return /^[a-z0-9_-]{1,63}$/i.test(input);
+      }
+    },
+    {
+      type: "text",
+      name: "suiteDescription",
+      message: "Description of Suite",
+      initial: "Basic Smoke Test of Site",
+      format: trimInput,
+      validate: function(input) {
+        return /^[a-z0-9].{1,63}$/i.test(input);
+      }
+    },
+    {
+      type: "text",
+      name: "scenarioDescription",
+      message: "First Scenario",
+      initial: "Homepage Loads",
+      format: trimInput,
+      validate: function(input) {
+        return /^[a-z0-9].{1,63}$/i.test(input);
+      }
+    },
+    {
+      type: "select",
+      name: "type",
+      message: "What type of test is this scenario?",
+      initial: 0,
+      choices: typesOfTest
+    },
+    {
+      type: "text",
+      name: "scenarioPath",
+      message: "Scenario Start Path",
+      initial: "/",
+      format: trimInput,
+      validate: function(input) {
+        return /^\/.{0,63}$/i.test(input);
+      }
+    },
+    {
+      type: "list",
+      name: "tags",
+      message: "Add Tags (Optional)",
+      initial: "",
+      // @ts-ignore
+      separator: " "
     }
+  ]);
 
-    // Standard questions
-    let questions: any[] = [
-        {
-            type: 'input',
-            name: 'suiteName',
-            message: 'Name of Suite',
-            initial: Cli.commandArg2 || 'smoke',
-            result: function (input) {
-                return input.trim();
-            },
-            validate: function (input) {
-                return /^[a-z0-9_-]{1,63}$/i.test(input);
-            }
-        },
-        {
-            type: 'input',
-            name: 'suiteDescription',
-            message: 'Description of Suite',
-            initial: 'Basic Smoke Test of Site',
-            result: function (input) {
-                return input.trim();
-            },
-            validate: function (input) {
-                return /^[a-z0-9].{1,63}$/i.test(input);
-            }
-        },
-        {
-            type: 'input',
-            name: 'scenarioDescription',
-            message: 'First Scenario',
-            initial: 'Homepage Loads',
-            result: function (input) {
-                return input.trim();
-            },
-            validate: function (input) {
-                return /^[a-z0-9].{1,63}$/i.test(input);
-            }
-        },
-        {
-            type: 'select',
-            name: 'type',
-            message: 'What type of test is this scenario?',
-            initial: 0,
-            choices: Object.keys(typesOfTest)
-        }
-    ];
-
-    // Ask for a domain for each env
-    let envs: EnvConfig[] = Cli.config.getEnvironments();
-    if (envs.length <= 1) {
-        questions.push({
-            type: 'input',
-            name: 'baseDomain',
-            message: 'Base Domain',
-            initial: envs[0].defaultDomain || 'https://www.google.com',
-            result: function (input) {
-                return input.trim();
-            },
-            validate: function (input) {
-                return /^.{1,63}$/i.test(input);
-            }
-        });
+  Cli.log("");
+  await Cli.addSuite(
+    {
+      name: standardQuestions.suiteName,
+      description: standardQuestions.suiteDescription,
+      tags: standardQuestions.tags
+    },
+    {
+      description: standardQuestions.scenarioDescription,
+      type: standardQuestions.type,
+      path: standardQuestions.scenarioPath
     }
-    else {
-        envs.forEach(function (env: EnvConfig) {
-            questions.push({
-                type: 'input',
-                name: 'baseDomain_' + env.name,
-                message: 'Base Domain for ' + env.name,
-                initial: env.defaultDomain || 'https://www.google.com',
-                result: function (input) {
-                    return input.trim();
-                },
-                validate: function (input) {
-                    return /^.{1,63}$/i.test(input);
-                }
-            });
-        });
-    }
+  );
 
-    // Lastly add the scenario path
-    questions.push({
-        type: 'input',
-        name: 'scenarioPath',
-        message: 'Scenario Start Path',
-        initial: '/',
-        result: function (input) {
-            return input.trim();
-        },
-        validate: function (input) {
-            return /^\/.{0,63}$/i.test(input);
-        }
-    });
-
-    prompt(questions).then(function (answers) {
-        //Cli.log(JSON.stringify(answers));
-        let suitePath: string = Cli.config.getTestsFolder() + answers.suiteName + '.js';
-        let baseDomain: string | { [key: string]: string } = answers.baseDomain;
-        if (!baseDomain) {
-            baseDomain = {};
-            Cli.config.getEnvironments().forEach(function (env: EnvConfig) {
-                baseDomain[env.name] = answers['baseDomain_' + env.name];
-            });
-        }
-        Cli.log('');
-        Cli.addSuite({
-                suiteName: answers.suiteName,
-                baseDomain: baseDomain,
-                suiteDescription: answers.suiteDescription,
-                scenarioDescription: answers.scenarioDescription,
-                scenarioType: typesOfTest[answers.type],
-                scenarioPath: answers.scenarioPath
-            })
-            .then(() => {
-                Cli.log('Created new test suite.');
-                Cli.list([
-                    'Suite file created: ' + suitePath,
-                    'Scenario added: ' + answers.scenarioDescription,
-                    'Config file updated'
-                ]);
-                Cli.log('');
-                Cli.exit(0);
-            })
-            .catch((err) => {
-                Cli.log('Error creating scenario!');
-                Cli.log('Tried to write to: ' + suitePath);
-                Cli.log('Got Error: ' + err);
-                Cli.log('');
-                Cli.exit(1);
-            });
-    });
-
+  Cli.log("Created new test suite.");
+  Cli.list([
+    "Suite file created: " + standardQuestions.suiteName,
+    "Scenario added: " + standardQuestions.scenarioDescription,
+    "Config file updated"
+  ]);
+  Cli.log("");
+  Cli.exit(0);
 }
 
-function addScenario() {
+async function addScenario() {
+  printSubheader("Add New Scenaio");
 
-    printSubheader('Add New Scenaio');
+  const suites = stringArrayToPromptChoices(Cli.config.getSuiteNames());
 
-    let suites: string[] = Cli.config.getSuiteNames();
+  if (suites.length == 0) {
+    Cli.log("");
+    Cli.log(
+      "You have not created any test suites yet. You should do that first."
+    );
+    Cli.log("");
+    Cli.log("To add a test suite:");
+    Cli.log("flagpole add suite");
+    Cli.log("");
+    Cli.exit(1);
+  }
 
-    if (suites.length == 0) {
-        Cli.log('');
-        Cli.log('You have not created any test suites yet. You should do that first.');
-        Cli.log('');
-        Cli.log('To add a test suite:')
-        Cli.log('flagpole add suite');
-        Cli.log('');
-        Cli.exit(1);
+  const responses = await prompts([
+    {
+      type: "select",
+      name: "suite",
+      message: "What suite do you want to add it to?",
+      initial: Cli.commandArg2 || "",
+      choices: suites,
+      validate: function(input) {
+        return input.length > 0;
+      }
+    },
+    {
+      type: "select",
+      name: "type",
+      message: "What type of test is this scenario?",
+      initial: 0,
+      choices: typesOfTest
+    },
+    {
+      type: "text",
+      name: "scenarioDescription",
+      message: "Description of Scenario",
+      initial: "Some Other Page Loads",
+      format: trimInput,
+      validate: function(input) {
+        return /^[a-z0-9].{1,63}$/i.test(input);
+      }
+    },
+    {
+      type: "text",
+      name: "scenarioPath",
+      message: "Scenario Start Path",
+      initial: "/some-other-page",
+      format: trimInput,
+      validate: function(input) {
+        return /^\/.{0,63}$/i.test(input);
+      }
     }
+  ]);
 
-    prompt([
-        {
-            type: 'select',
-            name: 'suite',
-            message: 'What suite do you want to add it to?',
-            initial: suites.indexOf(Cli.commandArg2 || '') || 0,
-            choices: suites,
-            validate: function (input) {
-                return (input.length > 0);
-            }
-        },
-        {
-            type: 'select',
-            name: 'type',
-            message: 'What type of test is this scenario?',
-            initial: 0,
-            choices: Object.keys(typesOfTest)
-        },
-        {
-            type: 'input',
-            name: 'scenarioDescription',
-            message: 'Description of Scenario',
-            initial: 'Some Other Page Loads',
-            result: function (input) {
-                return input.trim();
-            },
-            validate: function (input) {
-                return /^[a-z0-9].{1,63}$/i.test(input);
-            }
-        },
-        {
-            type: 'input',
-            name: 'scenarioPath',
-            message: 'Scenario Start Path',
-            initial: '/some-other-page',
-            result: function (input) {
-                return input.trim();
-            },
-            validate: function (input) {
-                return /^\/.{0,63}$/i.test(input);
-            }
-        }
-    ]).then(function (answers: any) {
+  const suite: SuiteConfig = Cli.config.suites[responses.suite];
+  if (!suite) {
+    Cli.log(`Invalid suite: ${responses.suite}`);
+    Cli.log("");
+    Cli.exit(1);
+  }
 
-        //Cli.log(JSON.stringify(answers));
-        const suite: SuiteConfig = Cli.config.suites[answers.suite];
-        if (!suite) {
-            Cli.log(`Invalid suite: ${answers.suite}`);
-            Cli.log('');
-            Cli.exit(1);
-        }
+  await Cli.addScenario(suite, {
+    description: responses.scenarioDescription,
+    path: responses.scenarioPath,
+    type: responses.type
+  });
 
-        Cli.addScenario(suite, {
-            description: answers.scenarioDescription,
-            path: answers.scenarioPath,
-            type: typesOfTest[answers.type]
-        }).then(() => {
-            Cli.log('Appended new scenario to suite:');
-            Cli.log(suite.getPath());
-            Cli.log('');
-            Cli.log('Scenario added to that suite:');
-            Cli.log(answers.scenarioDescription);
-            Cli.log('');
-            Cli.exit(0);
-        }).catch((err) => {
-            Cli.log('Error creating scenario!');
-            Cli.log('Got Error: ' + err);
-            Cli.log('');
-            Cli.exit(1);
-        });
-
-    }).catch(function (err) {
-        Cli.log('Error: ' + err);
-        Cli.exit(1);
-    });
-
+  Cli.log("Appended new scenario to suite:");
+  Cli.log(suite.getSourcePath());
+  Cli.log("");
+  Cli.log("Scenario added to that suite:");
+  Cli.log(responses.scenarioDescription);
+  Cli.log("");
+  Cli.exit(0);
 }
 
-function addEnv() {
-    printSubheader('Add New Environment');
-    prompt([
-        {
-            type: 'input',
-            name: 'name',
-            message: 'What do you want to call the environment?',
-            initial: Cli.commandArg2 || '',
-            validate: function (input) {
-                return /^[a-z0-9]{1,12}$/i.test(input);
-            }
-        },
-        {
-            type: 'input',
-            name: 'defaultDomain',
-            message: 'Default Domain (optional)',
-            result: function (input) {
-                return input.trim();
-            }
-        }
-    ]).then(function (answers) {
-        Cli.config.addEnvironment(answers.name, {
-            defaultDomain: answers.defaultDomain
-        });
-        fs.writeFile(Cli.config.getConfigPath(), Cli.config.toString(), function (err) {
-            if (err) {
-                Cli.log('Error creating environment!');
-                Cli.log('Failed updating config: ' + Cli.config.getConfigPath());
-                Cli.log('Got Error: ' + err);
-                Cli.log('');
-                Cli.exit(1);
-            }
-            Cli.log('Added new environment.');
-            Cli.list([
-                'Config file updated'
-            ]);
-            Cli.log('');
-            Cli.exit(0);
+async function addEnv() {
+  printSubheader("Add New Environment");
+  const responses = await prompts([
+    {
+      type: "text",
+      name: "name",
+      message: "What do you want to call the environment?",
+      initial: Cli.commandArg2 || "",
+      validate: function(input) {
+        return /^[a-z0-9]{1,12}$/i.test(input);
+      }
+    },
+    {
+      type: "text",
+      name: "defaultDomain",
+      message: "Default Domain (optional)",
+      format: trimInput
+    }
+  ]);
 
-        });
-
-    }).catch(function (err) {
-        Cli.log('Error: ' + err);
-        Cli.exit(1);
-    });
+  Cli.config.addEnvironment({
+    name: responses.name,
+    defaultDomain: responses.defaultDomain
+  });
+  await Cli.config.save();
+  Cli.log("Added new environment.");
+  Cli.list(["Config file updated"]);
+  Cli.log("");
+  Cli.exit(0);
 }
 
+export async function add() {
+  Cli.hideBanner = true;
+  printHeader();
 
-export function add() {
+  let type: string = Cli.commandArg || "";
 
-    Cli.hideBanner = true;
-    printHeader();
+  if (!canAdd.includes(type)) {
+    type = (
+      await prompts({
+        type: "select",
+        name: "thingToAdd",
+        message: "What do you want to add?",
+        choices: [
+          { value: "scenario", title: "Scenario" },
+          { value: "env", title: "Environment" },
+          { value: "suite", title: "Suite" }
+        ]
+      })
+    ).thingToAdd;
+  }
 
-    if (!canAdd.includes(Cli.commandArg || '')) {
-        Cli.log('');
-        Cli.log('You can add: ' + canAdd.join(', '));
-        Cli.log('Example syntax: flagpole add suite');
-        Cli.log('');
-        Cli.exit(1);
-    }
-    else if (Cli.commandArg == 'scenario') {
-        addScenario();
-    }
-    else if (Cli.commandArg == 'env') {
-        addEnv();
-    }
-    else {
-        addSuite();
-    }
-
-
+  if (type == "scenario") {
+    addScenario();
+  } else if (type == "env") {
+    addEnv();
+  } else {
+    addSuite();
+  }
 }

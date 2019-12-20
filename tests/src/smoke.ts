@@ -1,4 +1,4 @@
-const { Flagpole } = require("../dist/index");
+import { Flagpole } from "../../dist/index";
 
 const suite = Flagpole.suite("Basic Smoke Test of Site");
 
