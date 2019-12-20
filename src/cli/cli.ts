@@ -38,7 +38,7 @@ export class Cli {
   }
 
   static list(list: Array<string>) {
-    list.forEach(function(message: string) {
+    list.forEach(function (message: string) {
       Cli.log("  » " + message);
     });
   }
@@ -66,33 +66,33 @@ export class Cli {
         new Promise((resolve, reject) => {
           service
             .get("token")
-            .then(function(credentials: iCredentials) {
+            .then(function (credentials: iCredentials) {
               token = credentials.password;
               resolve();
             })
-            .catch(function() {
+            .catch(function () {
               reject("No saved token.");
             });
         }),
         new Promise((resolve, reject) => {
           service
             .get("email")
-            .then(function(credentials: iCredentials) {
+            .then(function (credentials: iCredentials) {
               email = credentials.password;
               resolve();
             })
-            .catch(function() {
+            .catch(function () {
               reject("No saved email.");
             });
         })
       ])
-        .then(function() {
+        .then(function () {
           resolve({
             email: email,
             token: token
           });
         })
-        .catch(function(err) {
+        .catch(function (err) {
           reject("Not logged in. " + err);
         });
     });
@@ -107,7 +107,7 @@ export class Cli {
       if (fs.existsSync(dir)) {
         // Read contents
         let files = fs.readdirSync(dir);
-        files.forEach(function(file) {
+        files.forEach(function (file) {
           // Drill into sub-folders, but only once!
           if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
             findSuites(dir + file + "/", true);
@@ -131,7 +131,7 @@ export class Cli {
     const suitesInFolder: string[] = Cli.findJsFilesInTestFolder();
     let suitesAvailableToImport: string[] = [];
     let suitesInConfig: string[] = Cli.config.getSuiteNames();
-    suitesInFolder.forEach(function(suiteName: string) {
+    suitesInFolder.forEach(function (suiteName: string) {
       if (!suitesInConfig.includes(suiteName)) {
         suitesAvailableToImport.push(suiteName);
       }
@@ -160,7 +160,7 @@ export class Cli {
       if (!fs.existsSync(suitePath)) {
         reject(`Suite file ${suitePath} does not exist.`);
       }
-      fs.appendFile(suitePath, fileContents, function(err: string) {
+      fs.appendFile(suitePath, fileContents, function (err: string) {
         if (err) {
           reject(err);
         }
@@ -193,7 +193,7 @@ export class Cli {
         "\n" +
         `   });` +
         "\n\n";
-      fs.writeFile(suitePath, fileContents, function(err: string) {
+      fs.writeFile(suitePath, fileContents, function (err: string) {
         if (err) {
           return reject(err);
         }
@@ -262,7 +262,7 @@ export function refreshConfig(): FlagpoleConfig {
       name: path.basename(process.cwd()),
       path: "tests"
     },
-    environments: [{ name: "dev", defaultDomain: "http://localhost:8000" }],
+    environments: [{ name: "dev", defaultDomain: "" }],
     suites: []
   };
   // Is there a config file?
@@ -278,7 +278,7 @@ export function refreshConfig(): FlagpoleConfig {
     const opts: iConfigOpts = {
       project: Object.assign(configData.project || {}, defaultConfig.project),
       environments: Object.values(
-        Object.assign(configData.environemnts || {}, defaultConfig.environments)
+        Object.assign(configData.environments || {}, defaultConfig.environments)
       ),
       suites: Object.values(
         Object.assign(configData.suites || {}, defaultConfig.suites)

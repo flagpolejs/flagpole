@@ -92,7 +92,7 @@ let argv = require("yargs")
   )
   .epilogue("For more information, go to https://github.com/flocasts/flagpole")
   .wrap(Math.min(100, yargs.terminalWidth()))
-  .fail(function(msg, err, yargs) {
+  .fail(function (msg, err, yargs) {
     Cli.log(yargs.help());
     Cli.log(msg);
     Cli.exit(1);

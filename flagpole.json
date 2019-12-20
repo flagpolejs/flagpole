@@ -9,7 +9,7 @@
   "environments": {
     "dev": {
       "name": "dev",
-      "defaultDomain": "http://localhost:8000"
+      "defaultDomain": "https://www.milesplit.com"
     }
   },
   "suites": {
@@ -43,6 +43,13 @@
       "name": "foobar",
       "tags": [
         "basic"
+      ]
+    },
+    "debug": {
+      "id": "",
+      "name": "debug",
+      "tags": [
+        ""
       ]
     }
   }
