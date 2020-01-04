@@ -25,11 +25,11 @@ export async function importSuite() {
     Cli.exit(0);
   }
 
-  const suiteToImport = await prompts([
+  const responses = await prompts([
     {
-      type: "select",
-      name: "name",
-      message: "Which suite do you want to import?",
+      type: "multiselect",
+      name: "suitesNames",
+      message: "Which suites do you want to import?",
       choices: suitesAvailableToImport
     },
     {
@@ -42,20 +42,18 @@ export async function importSuite() {
     }
   ]);
 
-  Cli.config.addSuite({ name: suiteToImport.name, tags: suiteToImport.tags });
-  fs.writeFile(Cli.config.getConfigPath(), Cli.config.toString(), function(
-    err: any
-  ) {
-    if (err) {
-      Cli.log("Error importing suite!");
-      Cli.log("Failed updating config: " + Cli.config.getConfigPath());
-      Cli.log("Got Error: " + err);
-      Cli.log("");
-      Cli.exit(1);
-    }
-    Cli.log("Imported Suite");
-    Cli.list(["Config file updated"]);
+  if (responses.suitesNames.length > 0) {
+    responses.suitesNames.forEach((suiteName: string) => {
+      Cli.config.addSuite({ name: suiteName, tags: responses.tags });
+    });
+    await Cli.config.save();
+    Cli.log(`Imported Suites:`);
+    Cli.list(responses.suitesNames);
     Cli.log("");
     Cli.exit(0);
-  });
+  } else {
+    Cli.log("No suites selected. Nothing imported.");
+    Cli.log("");
+    Cli.exit(1);
+  }
 }

@@ -7,9 +7,6 @@ import {
 import { Cli } from "./cli";
 import { SuiteConfig } from "./config";
 import * as prompts from "prompts";
-import { path } from "./path";
-
-const fs = require("fs");
 
 const typesOfTest: any[] = [
   { title: "HTML Page", value: "html" },
@@ -23,7 +20,7 @@ const typesOfTest: any[] = [
   }
 ];
 
-const canAdd: string[] = ["suite", "scenario", "env"];
+const canAdd: string[] = ["suite", "scenario", "env", "tag"];
 
 async function addSuite() {
   printSubheader("Add New Suite");
@@ -42,7 +39,7 @@ async function addSuite() {
       initial: Cli.commandArg2 || "smoke",
       format: trimInput,
       validate: function(input) {
-        return /^[a-z0-9_-]{1,63}$/i.test(input);
+        return /^[a-z0-9][a-z0-9/\/_-]{1,62}[a-z0-9]$/i.test(input);
       }
     },
     {
@@ -226,6 +223,34 @@ async function addEnv() {
   Cli.exit(0);
 }
 
+async function addTag() {
+  const responses = await prompts([
+    {
+      type: "text",
+      name: "tag",
+      message: "Tag to Add",
+      validate: tag => {
+        return /^[a-z][a-z0-9_-][a-z0-0]+$/i.test(tag)
+          ? true
+          : "Tag should be a single alpha-numeric word";
+      },
+      format: trimInput
+    },
+    {
+      type: "multiselect",
+      name: "suites",
+      min: 1,
+      message: "Suites to apply it to",
+      choices: stringArrayToPromptChoices(Cli.config.getSuiteNames())
+    }
+  ]);
+
+  responses.suites.forEach((suiteName: string) => {
+    Cli.config.suites[suiteName].addTag(responses.tag);
+  });
+  Cli.config.save();
+}
+
 export async function add() {
   Cli.hideBanner = true;
   printHeader();
@@ -239,9 +264,10 @@ export async function add() {
         name: "thingToAdd",
         message: "What do you want to add?",
         choices: [
+          { value: "suite", title: "Suite" },
           { value: "scenario", title: "Scenario" },
           { value: "env", title: "Environment" },
-          { value: "suite", title: "Suite" }
+          { value: "tag", title: "Tag" }
         ]
       })
     ).thingToAdd;
@@ -251,6 +277,8 @@ export async function add() {
     addScenario();
   } else if (type == "env") {
     addEnv();
+  } else if (type == "tag") {
+    addTag();
   } else {
     addSuite();
   }

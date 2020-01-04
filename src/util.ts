@@ -1,6 +1,6 @@
-import { FlagpoleExecutionOptions } from "./flagpoleexecutionoptions";
 import { iMessageAndCallback, iScenario, iNextCallback } from "./interfaces";
 
+const path = require("path");
 const cheerio = require("cheerio");
 
 /**
@@ -92,11 +92,11 @@ export function asyncForEach(array: any[], callback: Function): Promise<void> {
  *
  * @param path
  */
-export function normalizePath(path: string): string {
-  if (path) {
-    path = path.match(/\/$/) ? path : path + "/";
+export function normalizePath(uri: string): string {
+  if (uri) {
+    uri = uri.endsWith(path.sep) ? uri : uri + path.sep;
   }
-  return path;
+  return uri;
 }
 
 export function exitProcess(passed: boolean) {

@@ -11,7 +11,7 @@ import { URL } from "url";
 import { CookieJar } from "tough-cookie";
 
 export interface iNextCallback {
-  (callback: iAssertionContext): Promise<any> | void;
+  (context: iAssertionContext): Promise<any> | void;
 }
 
 export interface iConsoleLine {
@@ -366,6 +366,7 @@ export interface iScenario {
   cancel(): Promise<iScenario>;
   getBrowserControl(): BrowserControl;
   execute(): Promise<iScenario>;
+  execute(params: { [key: string]: string | number }): Promise<iScenario>;
   error(message: string, callback: Function): iScenario;
   error(callback: Function): iScenario;
   success(message: string, callback: Function): iScenario;

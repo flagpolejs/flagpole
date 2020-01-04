@@ -22,21 +22,41 @@ export async function init() {
       type: "multiselect",
       name: "env",
       message: "What environments do you want to support?",
-      initial: 0,
+      hint: "You can easily add more later",
+      initial: "dev",
+      min: 1,
+      max: 8,
       choices: [
         { value: "dev", title: "dev" },
         { value: "stag", title: "stag" },
-        { value: "stag", title: "stag" },
+        { value: "prod", title: "prod" },
+        { value: "preprod", title: "preprod" },
         { value: "qa", title: "qa" },
-        { value: "qa", title: "qa" },
-        { value: "qa", title: "qa" },
+        { value: "local", title: "local" },
         { value: "alpha", title: "alpha" },
         { value: "beta", title: "beta" }
       ],
-      validate: function(input) {
+      validate: function (input) {
         return input.length > 0;
       }
-    },
+    }]);
+
+  const domainPrompts: prompts.PromptObject[] = [];
+  initialResponses.env.forEach((env: string) => {
+    domainPrompts.push({
+      type: "text",
+      name: `domain_${env}`,
+      message: `Default Domain for ${env}`,
+      format: trimInput,
+      validate: domain => {
+        return /^https?:\/\/[a-z][a-z0-9_.-]+[a-z](:[0-9]+)?(\/.*)?$/i.test(domain) ?
+          true : 'Must be a valid URL, starting with http:// or https://'
+      }
+    });
+  });
+  const domains = await prompts(domainPrompts);
+
+  const tsResponse = await prompts(
     {
       type: "toggle",
       name: "useTypeScript",
@@ -45,21 +65,21 @@ export async function init() {
       active: "Yes",
       inactive: "No"
     }
-  ]);
+  );
 
   const rootFolder = await prompts({
     type: "text",
     name: "path",
-    message: initialResponses.useTypeScript
+    message: tsResponse.useTypeScript
       ? "What is the root subfolder you want to put your tests in? (tsconfig.json will go here)"
       : "What subfolder do you want to put your tests in?",
     initial: "tests",
     format: trimInput
   });
 
-  let tsResponses: undefined | prompts.Answers<string> = undefined;
-  if (initialResponses.useTypeScript) {
-    tsResponses = await prompts([
+  let tsFolders: undefined | prompts.Answers<string> = undefined;
+  if (tsResponse.useTypeScript) {
+    tsFolders = await prompts([
       {
         type: "text",
         name: "sourceFolder",
@@ -80,15 +100,15 @@ export async function init() {
     project: {
       name: initialResponses.project,
       path: rootFolder.path,
-      source: tsResponses == undefined ? undefined : tsResponses.sourceFolder,
-      output: tsResponses == undefined ? undefined : tsResponses.outputFolder
+      source: tsFolders == undefined ? undefined : tsFolders.sourceFolder,
+      output: tsFolders == undefined ? undefined : tsFolders.outputFolder
     },
     environments: ((): iEnvOpts[] => {
       const out: iEnvOpts[] = [];
-      initialResponses.env.forEach(env => {
+      initialResponses.env.forEach((env: string) => {
         out.push({
           name: env,
-          defaultDomain: ""
+          defaultDomain: domains[`domain_${env}`]
         });
       });
       return out;

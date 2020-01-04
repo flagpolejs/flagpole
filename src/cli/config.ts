@@ -1,6 +1,5 @@
 import { normalizePath } from "../util";
 import { exec } from "child_process";
-import { Cli } from "./cli";
 
 const fs = require("fs");
 const path = require("path");
@@ -53,7 +52,7 @@ export class EnvConfig {
   constructor(config: FlagpoleConfig, opts: iEnvOpts) {
     this.config = config;
     this.name = opts.name;
-    this.defaultDomain = opts.defaultDomain || "http://localhost:8000";
+    this.defaultDomain = opts.defaultDomain || "";
   }
 
   public toJson(): iEnvOpts {
@@ -83,12 +82,12 @@ export class SuiteConfig {
 
   public getSourcePath(): string {
     return this.config.project.isSourceAndOutput
-      ? this.config.getSourceFolder() + this.name + ".ts"
+      ? path.join(this.config.getSourceFolder(), `${this.name}.ts`)
       : this.getTestPath();
   }
 
   public getTestPath(): string {
-    return this.config.getTestsFolder() + this.name + ".js";
+    return path.join(this.config.getTestsFolder(), `${this.name}.js`);
   }
 
   public clearTags() {
@@ -106,7 +105,10 @@ export class SuiteConfig {
     return {
       id: this.id,
       name: this.name,
-      tags: this.tags
+      // Remove duplicates and empty strings
+      tags: [...new Set(this.tags)].filter(value => {
+        return value.trim().length > 0;
+      })
     };
   }
 }
@@ -192,15 +194,19 @@ export class FlagpoleConfig {
   }
 
   public getRootFolder(): string {
-    return normalizePath(this.getConfigFolder() + "/" + this.project.path);
+    return normalizePath(path.join(this.getConfigFolder(), this.project.path));
   }
 
   public getTestsFolder(): string {
-    return normalizePath(`${this.getRootFolder()}${this.project.output || ""}`);
+    return normalizePath(
+      path.join(this.getRootFolder(), this.project.output || "")
+    );
   }
 
   public getSourceFolder(): string {
-    return normalizePath(`${this.getRootFolder()}${this.project.source || ""}`);
+    return normalizePath(
+      path.join(this.getRootFolder(), this.project.source || "")
+    );
   }
 
   public addEnvironment(opts: iEnvOpts) {
@@ -332,17 +338,17 @@ export class FlagpoleConfig {
           noImplicitAny: false,
           sourceMap: false,
           declaration: false,
-          rootDir: `./${this.project.source}`,
-          outDir: `./${this.project.output}`,
+          rootDir: `.${path.sep}${this.project.source}`,
+          outDir: `.${path.sep}${this.project.output}`,
           strict: true,
           moduleResolution: "node",
           removeComments: true,
           preserveConstEnums: true
         },
-        include: ["src/**/*"],
-        exclude: ["node_modules", "**/*.spec.ts"]
+        include: [`src${path.sep}**${path.sep}*`],
+        exclude: ["node_modules", `**${path.sep}*.spec.ts`]
       };
-      const tsconfigPath = `${this.getRootFolder()}tsconfig.json`;
+      const tsconfigPath = path.join(this.getRootFolder(), "tsconfig.json");
       fs.writeFile(
         tsconfigPath,
         JSON.stringify(tsconfig, null, 2),

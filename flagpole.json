@@ -9,45 +9,49 @@
   "environments": {
     "dev": {
       "name": "dev",
-      "defaultDomain": "https://www.milesplit.com"
+      "defaultDomain": "http://localhost:8000"
     }
   },
   "suites": {
-    "internal/recursion": {
+    "debug": {
       "id": "",
-      "name": "internal/recursion",
+      "name": "debug",
+      "tags": [
+        "basic"
+      ]
+    },
+    "foobar": {
+      "id": "",
+      "name": "foobar",
       "tags": []
     },
     "smoke": {
       "id": "",
       "name": "smoke",
       "tags": [
-        ""
+        "basic"
       ]
-    },
-    "cookie": {
-      "id": "",
-      "name": "cookie",
-      "tags": []
     },
     "error": {
       "id": "",
       "name": "error",
+      "tags": []
+    },
+    "test": {
+      "id": "",
+      "name": "test",
+      "tags": []
+    },
+    "internal/recursion": {
+      "id": "",
+      "name": "internal/recursion",
       "tags": [
-        "basic",
-        "npmjs"
+        ""
       ]
     },
-    "foobar": {
+    "internal/recursion-google": {
       "id": "",
-      "name": "foobar",
-      "tags": [
-        "basic"
-      ]
-    },
-    "debug": {
-      "id": "",
-      "name": "debug",
+      "name": "internal/recursion-google",
       "tags": [
         ""
       ]

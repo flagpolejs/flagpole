@@ -26,6 +26,9 @@ import { Assertion } from "./assertion";
 import { URL } from "url";
 import * as rp from "request-promise";
 import * as r from "request";
+import { toType } from "./util";
+import { IncomingMessage } from "http";
+import request = require("request");
 
 const probeImage = require("probe-image-size");
 
@@ -55,10 +58,10 @@ export class Scenario implements iScenario {
   /**
    * Length of time in milliseconds from initialization to completion
    */
-  public get totalDuration(): number | null {
+  public get totalDuration(): number {
     return this._timeScenarioFinished !== null
       ? this._timeScenarioFinished - this._timeScenarioInitialized
-      : null;
+      : Date.now() - this._timeScenarioInitialized;
   }
 
   /**
@@ -481,6 +484,10 @@ export class Scenario implements iScenario {
         this.setMethod(match[1]);
         url = match[2];
       }
+      // If the URL had parameters in it, implicitly wait for execute parameters
+      if (/{[A-Za-z0-9_ -]+}/.test(url)) {
+        this.wait();
+      }
       // Okay now set the open method
       this._url = String(url);
       this._isMock = false;
@@ -550,13 +557,25 @@ export class Scenario implements iScenario {
   /**
    * Execute this scenario
    */
-  public async execute(): Promise<Scenario> {
+  public async execute(): Promise<Scenario>;
+  public async execute(params: {
+    [key: string]: string | number;
+  }): Promise<Scenario>;
+  public async execute(params?: {
+    [key: string]: string | number;
+  }): Promise<Scenario> {
     if (!this.hasExecuted && this._url !== null) {
+      if (params) {
+        Object.keys(params).forEach(key => {
+          this._url =
+            this._url?.replace(`{${key}}`, String(params[key])) || null;
+        });
+      }
       await this._fireBefore();
       this._pushToLog(new LogScenarioHeading(this.title));
       // If we waited first
       if (this._waitToExecute) {
-        this.comment(`Waited ${this.executionDuration}ms`);
+        this.comment(`Waited ${Date.now() - this._timeScenarioInitialized}ms`);
       }
       // Execute it
       this._publish(ScenarioStatusEvent.executionProgress);
@@ -845,7 +864,6 @@ export class Scenario implements iScenario {
    * Start a regular request scenario
    */
   private _executeDefaultRequest() {
-    const scenario: Scenario = this;
     // Handle ridrects
     this._options.followRedirect = (response: any) => {
       const shouldFollow: boolean =
@@ -855,24 +873,25 @@ export class Scenario implements iScenario {
           ? this._followRedirect(response)
           : !!this._followRedirect;
       if (shouldFollow) {
-        scenario._finalUrl = new URL(
+        this._finalUrl = new URL(
           response.headers.location,
           response.request.href
         ).href;
-        scenario._redirectChain.push(scenario._finalUrl);
+        this._redirectChain.push(this._finalUrl);
       }
       return shouldFollow;
     };
     this._options.resolveWithFullResponse = true;
-    rp(this.requestUrl, this._options)
-      .then(res => {
-        scenario._processResponse(
-          HttpResponse.fromRequest(res, res.body, scenario._getCookies())
+    (async () => {
+      try {
+        const res: request.Response = await rp(this.requestUrl, this._options);
+        this._processResponse(
+          HttpResponse.fromRequest(res, this._getCookies())
         );
-      })
-      .catch(err => {
-        scenario._markScenarioCompleted(`Failed to load ${scenario._url}`, err);
-      });
+      } catch (err) {
+        this._markScenarioCompleted(`Failed to load ${this._url}`, err);
+      }
+    })();
   }
 
   /**

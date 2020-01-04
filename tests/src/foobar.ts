@@ -32,11 +32,17 @@ suite
     context.comment(String(await title.getTagName()));
   });
 
-suite
+const eventRankings = suite
   .html("MileSplit Florida - Front Page Test")
   .open(
-    "/rankings/events/high-school-boys/indoor-track-and-field/55m?year=2019&accuracy=fat"
+    "/rankings/events/high-school-boys/indoor-track-and-field/{eventCode}?year=2019&accuracy=fat"
   )
   .next(async context => {
     await context.exists("div.blurry");
   });
+
+setTimeout(() => {
+  eventRankings.execute({
+    eventCode: "55m"
+  });
+}, 1000);
