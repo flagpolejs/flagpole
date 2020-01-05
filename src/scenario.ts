@@ -801,6 +801,14 @@ export class Scenario implements iScenario {
     return this;
   }
 
+  public promise(): Promise<Scenario> {
+    return new Promise((resolve, reject) => {
+      this.success(resolve);
+      this.error(reject);
+      this.failure(reject);
+    });
+  }
+
   /**
    * Start an image scenario
    */

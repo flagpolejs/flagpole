@@ -286,6 +286,7 @@ export interface iSuite {
   totalDuration: number | null;
   executionDuration: number | null;
   title: string;
+  suite: iSuite;
   finished: Promise<void>;
   subscribe(callback: Function): iSuite;
   verifySslCert(verify: boolean): iSuite;
@@ -312,6 +313,7 @@ export interface iSuite {
   success(callback: Function): iSuite;
   failure(callback: Function): iSuite;
   finally(callback: Function): iSuite;
+  promise(): Promise<iSuite>;
 }
 
 export interface iScenario {
@@ -381,6 +383,7 @@ export interface iScenario {
   finally(callback: Function): iScenario;
   mock(localPath: string): iScenario;
   setResponseType(type: ResponseType, opts?: any): iScenario;
+  promise(): Promise<iScenario>;
 }
 
 export interface iMessageAndCallback {

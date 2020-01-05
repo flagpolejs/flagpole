@@ -50,10 +50,26 @@ Additionally you can return a promise. Execution will be delayed until the promi
 
 ### execute(): Promise<Scenario>
 
-You don't normally need to call this method. However, if you set the wait method to true then use this to start execution.
+A scenario will automatically execute, unless told otherwise by the `.wait()` method, once it has the necessary properties set to do so. Namely, it must know the URL to open (with the `.open(...)` method) and have at least one `.next()` block to run tests against.
 
 ```typescript
 scenario2.execute();
+```
+
+If the `open` method was called with URL parameters in it like this:
+
+```typescript
+myScenario.open("POST /events/{eventId}");
+```
+
+That is NOT enough information to execute the scenario (since we don't yet have the value of that parameter). Flagpole will consider this an "implicit wait", so you don't have to separately call the `.wait()` method to tell it to hold off.
+
+So now that you have this scenario waiting on parameters, you will call the `execute` method with those parameters in an object like this:
+
+```typescript
+myScenario.execute({
+  eventId: 53322
+});
 ```
 
 ### failure(callback: Function): Scenario
@@ -149,6 +165,15 @@ Optionally, you can pass the HTTP verb in as a prefix. If you do so, it should b
 scenario.open("POST /api/articles");
 ```
 
+You can also include URL parameters in the path. Surround these by brackets like `{eventId}`. Doing so will allow you to define the template of the URL of the scenario, while not executing it right away. This will be interpetted as if we called the `.wait()` method on the scenario or what we will call an "implicit wait." The scenario will not start until we provide those URL parameters with the `execute` command, like so:
+
+```typescript
+scenario.open("POST /api/articles/{articleId}");
+scenario.execute({
+  articleId: 32423
+});
+```
+
 ### pause(milliseconds: number): Scenario
 
 Insert a `next` callback that pauses for this amount of time.
@@ -162,6 +187,21 @@ scenario
   .next(context => {
     context.assert(true).equals(true);
   });
+```
+
+### promise(): Promise<Scenario>
+
+Promisifies the Scenario. The returned promise will resolve once the scenario completes successfully.
+
+Here is an example where `myScenario` was waiting to excecute. We tell it to execute and return a promise. Now we can await it and the line after will not run until it has completed successfully.
+
+```javascript
+try {
+  await myScenario.execute().promise();
+  console.log("scenario completed successfully");
+} catch (ex) {
+  console.log("uh oh! scenario failed!");
+}
 ```
 
 ### set(aliasName: string, value: any): Scenario

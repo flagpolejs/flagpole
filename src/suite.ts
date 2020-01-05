@@ -13,6 +13,10 @@ import { FlagpoleExecutionOptions } from ".";
 export class Suite implements iSuite {
   public scenarios: Array<iScenario> = [];
 
+  public get suite(): Suite {
+    return this;
+  }
+
   public get baseUrl(): URL | null {
     return this._baseUrl;
   }
@@ -476,6 +480,14 @@ export class Suite implements iSuite {
     }
     this._finallyCallbacks.push(callback);
     return this;
+  }
+
+  public promise(): Promise<Suite> {
+    return new Promise((resolve, reject) => {
+      this.success(resolve);
+      this.error(reject);
+      this.failure(reject);
+    });
   }
 
   /**

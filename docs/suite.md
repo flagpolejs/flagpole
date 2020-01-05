@@ -164,6 +164,19 @@ Prints the results from the test execution to the console. This is often run ins
 suite.finally(suite => suite.print(false));
 ```
 
+### promise(): Promise<Scenario>
+
+Promisifies the Suite. The returned promise will resolve once all scenarios in the suite complete successfully.
+
+```javascript
+try {
+  await mySuite.promise();
+  console.log("alll scenarios in the suite completed successfully!");
+} catch (ex) {
+  console.log("uh oh! one or more scenarios failed!");
+}
+```
+
 ### resource(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the Generic Resource request type. This is any other random type of file. You can test the file size, mime type, content, HTTP status, etc.
