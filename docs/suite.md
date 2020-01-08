@@ -171,7 +171,7 @@ Promisifies the Suite. The returned promise will resolve once all scenarios in t
 ```javascript
 try {
   await mySuite.promise();
-  console.log("alll scenarios in the suite completed successfully!");
+  console.log("all scenarios in the suite completed successfully!");
 } catch (ex) {
   console.log("uh oh! one or more scenarios failed!");
 }

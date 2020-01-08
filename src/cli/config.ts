@@ -117,8 +117,8 @@ export class ProjectConfig {
   protected config: FlagpoleConfig;
 
   public id: string = "";
-  public name: string = "default";
-  public path: string = "tests";
+  public name: string;
+  public path: string;
   public source: string | undefined;
   public output: string | undefined;
 

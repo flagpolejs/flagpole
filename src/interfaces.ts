@@ -384,6 +384,7 @@ export interface iScenario {
   mock(localPath: string): iScenario;
   setResponseType(type: ResponseType, opts?: any): iScenario;
   promise(): Promise<iScenario>;
+  waitFor(thatScenario: iScenario): iScenario;
 }
 
 export interface iMessageAndCallback {
