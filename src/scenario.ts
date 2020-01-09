@@ -889,7 +889,10 @@ export class Scenario implements iScenario {
       }
       return shouldFollow;
     };
+    // Get full response object, not just body
     this._options.resolveWithFullResponse = true;
+    // Don't reject non-2XX reponses
+    this._options.simple = false;
     (async () => {
       try {
         const res: request.Response = await rp(this.requestUrl, this._options);
