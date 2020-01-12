@@ -271,6 +271,18 @@ export class Value implements iValue {
     return this.getProperty(key);
   }
 
+  public async getStyleProperty(key: string): Promise<iValue> {
+    return this._wrapAsValue(null, `Style of ${key}`);
+  }
+
+  public async download(): Promise<string | Buffer | null> {
+    return null;
+  }
+
+  public async downloadBinary(): Promise<Buffer | null> {
+    return null;
+  }
+
   public async getValue(): Promise<iValue> {
     return this;
   }

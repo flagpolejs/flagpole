@@ -1,7 +1,7 @@
-import { suite } from "../../dist/index.js";
+import { suite, iSuite } from "../../dist/index.js";
 
 (async () => {
-  await suite("Test", foobar => {
+  await suite("Test", (foobar: iSuite) => {
     foobar
       .base("https://fl.milesplit.com/")
       .html("MileSplit Florida - Front Page Test")

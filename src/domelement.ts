@@ -8,11 +8,9 @@ import {
 import { Link } from "./link";
 import { ResponseType } from "./enums";
 import { isPuppeteer } from "./response";
-import {
-  AssertionActionCompleted,
-  AssertionActionFailed
-} from "./logging/assertionresult";
 import { runAsync, getMessageAndCallbackFromOverloading } from "./util";
+import * as rp from "request-promise";
+import * as fs from "fs";
 
 export abstract class DOMElement extends Value {
   public get name(): string {
@@ -114,6 +112,27 @@ export abstract class DOMElement extends Value {
     return this._wrapAsValue(attr, name, this, `${key}="${attr}"`);
   }
 
+  public async getStyleProperty(key: string): Promise<iValue> {
+    const name: string = `${this.name} -> style[${key}]`;
+    const style: string | null = await this._getAttribute("style");
+    console.log(this.tagName);
+    console.log(style);
+    let attr: null | string = null;
+    if (style) {
+      const properties = style.split(";").map(value => {
+        return value.trim();
+      });
+      properties.some(property => {
+        if (new RegExp(`^{$key}:`).test(property)) {
+          attr = property.substring(property.indexOf(":") + 1);
+          return true;
+        }
+        return false;
+      });
+    }
+    return this._wrapAsValue(attr, name, this);
+  }
+
   /**
    * Does this element have a property with this name?
    *
@@ -170,6 +189,60 @@ export abstract class DOMElement extends Value {
   public async getText(): Promise<iValue> {
     const name: string = `Text of ${this.name}`;
     return this._wrapAsValue(this._input.text(), name, this);
+  }
+
+  /**
+   * Download the file that is linked by this element... return the
+   * contents and/or save it to a file
+   *
+   * @param opts
+   */
+  public download(): Promise<Buffer | string | null>;
+  public download(localFilePath: string): Promise<Buffer | string | null>;
+  public download(
+    localFilePath: string,
+    opts: {}
+  ): Promise<Buffer | string | null>;
+  public download(opts: {}): Promise<Buffer | string | null>;
+  public async download(a?: any, b = {}): Promise<Buffer | string | null> {
+    const localFilePath: string | null = typeof a == "string" ? a : null;
+    const opts = typeof a == "object" && a !== null ? a : b;
+    const link = await this._getLink();
+    if (link.isNavigation()) {
+      const response = rp(link.getUri(), opts);
+      if (localFilePath) {
+        fs.writeFileSync(localFilePath, response);
+      }
+      return response;
+    }
+    return null;
+  }
+
+  /**
+   * This is a shorthand object to get binary, which in turn calls download.
+   * That way you don't have to remember the encoding:null step in opts
+   *
+   * @param opts
+   */
+  public downloadBinary(): Promise<Buffer | null>;
+  public downloadBinary(localFilePath: string): Promise<Buffer | null>;
+  public downloadBinary(
+    localFilePath: string,
+    opts: {}
+  ): Promise<Buffer | null>;
+  public downloadBinary(opts: {}): Promise<Buffer | null>;
+  public async downloadBinary(a?: any, b = {}): Promise<Buffer | null> {
+    const localFilePath: string | null = typeof a == "string" ? a : null;
+    const opts = {
+      ...(typeof a == "object" && a !== null ? a : b),
+      ...{ encoding: null }
+    };
+    const buffer =
+      localFilePath !== null
+        ? this.download(localFilePath, opts)
+        : this.download(opts);
+    //@ts-ignore
+    return typeof buffer !== "string" ? buffer : null;
   }
 
   /**

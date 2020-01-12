@@ -3,7 +3,6 @@ import { Link } from "./link";
 import { ResponseType } from "./enums";
 import { iAssertionContext, iScenario, iValue } from "./interfaces";
 import { asyncForEach, getMessageAndCallbackFromOverloading } from "./util";
-import { Value } from "./value";
 
 const cheerio: CheerioAPI = require("cheerio");
 let $: CheerioStatic;

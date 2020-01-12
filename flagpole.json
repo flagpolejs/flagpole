@@ -41,12 +41,17 @@
     "internal/recursion": {
       "id": "",
       "name": "internal/recursion",
-      "tags": [""]
+      "tags": []
     },
     "internal/recursion-google": {
       "id": "",
       "name": "internal/recursion-google",
-      "tags": [""]
+      "tags": []
+    },
+    "visual": {
+      "id": "",
+      "name": "visual",
+      "tags": []
     }
   }
 }

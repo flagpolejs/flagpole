@@ -122,6 +122,15 @@ export interface iValue {
   getData(key: string): Promise<iValue>;
   getValue(): Promise<iValue>;
   getText(): Promise<iValue>;
+  getStyleProperty(key: string): Promise<iValue>;
+  download(): Promise<Buffer | string | null>;
+  download(localFilePath: string): Promise<Buffer | string | null>;
+  download(localFilePath: string, opts: {}): Promise<Buffer | string | null>;
+  download(opts: {}): Promise<Buffer | string | null>;
+  downloadBinary(): Promise<Buffer | null>;
+  downloadBinary(localFilePath: string): Promise<Buffer | null>;
+  downloadBinary(localFilePath: string, opts: {}): Promise<Buffer | null>;
+  downloadBinary(opts: {}): Promise<Buffer | null>;
 }
 
 /**
@@ -210,6 +219,9 @@ export interface iAssertion {
   schema(schema: any, simple?: boolean): Promise<iAssertion>;
   assert(a: any, b?: any): iAssertion;
   comment(message: string): iAssertionContext;
+  looksLike(image: Buffer | string): iAssertion;
+  looksLike(image: Buffer | string, threshhold: number): iAssertion;
+  looksLike(image: Buffer | string, percent: string): iAssertion;
 }
 
 export interface iAssertionContext {
