@@ -172,6 +172,28 @@ Like is a more fuzzy match. It ignores type differences and also trims whitespac
 context.assert(myValue).like("FooBar");
 ```
 
+### looksLike(image: string | Buffer, threshold: string | number): Assertion
+
+Do a visual comparison of two images. This can be used with screenshots or comparing any two other images. Normally you'd have a control image saved with in the repository to compare against.
+
+```typescript
+context.assert(screenshot).looksLike("./screenshots/homepage.png");
+```
+
+The second (optional) argument is `threshold`. This represents the allowed range of difference to give it some wiggle room. A lower number would indicate less allowed difference.
+
+If this argument is passed in as a number, it must greater than or equal to 0 and less than 1. The default is 0.1, which would incate only allow 10% difference between the two images.
+
+```typescript
+context.assert(screenshot).looksLike("./screenshots/homepage.png", 0.05);
+```
+
+Alternately, you can pass the `threshold` argument as a string. In this mode, it will be interpretted as a percentage.
+
+```typescript
+context.assert(screenshot).looksLike("./screenshots/homepage.png", "5%");
+```
+
 ### matches(pattern: RegExp | string): Assertion
 
 Regular express compare of strings.

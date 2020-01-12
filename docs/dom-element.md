@@ -98,6 +98,48 @@ await loginLink.click();
 await context.waitForNavigation();
 ```
 
+### download(): Promise<string | Buffer | null>
+
+This will download the URL that is referenced by this element. It will automatically pull the `src` attribute from an `img` tag, for example. Or extract the `href` from a link.
+
+When called without any arguments, it will use the default and return the response as a string;
+
+```typescript
+const cssContent = await cssLinkElement.download();
+```
+
+If you want to save it to a local file, pass that path as the first argument.
+
+```typescript
+await cssLinkElement.download("./localFile.css");
+```
+
+If you want to pass in opts for the HTTP request. This will use the `request-promise` library, so any valid opts for this library will work.
+
+```typescript
+const cssContent = await cssLink.download(qs: {
+  cacheBuster: Date.now()
+});
+```
+
+You can also pass in both `localFilePath` and `opts` arguments.
+
+```typescript
+await cssLink.download("./localFile.css", qs: {
+  cacheBuster: Date.now()
+});
+```
+
+Typically the return value here is a string, unless you have passed in opts that compell it to download the raw bytes... in which case the return value will be a Buffer object. If you used `downloadBinary` instead, this will automatically set it to download as a Buffer.
+
+If the request fails or is invalid, null will be returned instead.
+
+### downloadBinary(): Promise<Buffer | null>
+
+This is pretty much the same thing as the `.download` method, so reference that info for more details (including the allowed overloads);
+
+The difference here is that it will return the raw bytes as a Buffer object, rather than a string response.
+
 ### fillForm(data: { [key: string]: any }): Promise<Value>
 
 Fill out a form element with this data. The data object should match the input/select name attributes of elements within the form. For multi-select inputs pass in an array of values to be checked.
