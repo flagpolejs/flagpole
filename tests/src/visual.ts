@@ -9,6 +9,7 @@ suite
   .open("/")
   .next("Logo", async context => {
     const logo = await context.exists("#hplogo");
+    // await logo.download("google.png");
     context
       .assert("Logo should look like the control.", await logo.download())
       .looksLike("./tests/src/images/google.png");
@@ -20,7 +21,7 @@ suite
   })
   .open("/")
   .next("Screenshot", async context => {
-    const logo = await context.waitForExists("#hplogo");
+    await context.waitForExists("#hplogo");
     //await context.screenshot("google-screenshot.png");
     context
       .assert(await context.screenshot())
