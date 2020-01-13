@@ -7,7 +7,8 @@ import {
   iAssertionContext,
   iScenario,
   iSuite,
-  iAssertionResult
+  iAssertionResult,
+  ScreenshotOpts
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -369,8 +370,23 @@ export class AssertionContext implements iAssertionContext {
     return filePath;
   }
 
-  public async screenshot(opts: any): Promise<Buffer | string> {
-    const output: Buffer | string = await this.response.screenshot(opts);
+  public screenshot(): Promise<Buffer>;
+  public screenshot(localFilePath: string): Promise<Buffer>;
+  public screenshot(
+    localFilePath: string,
+    opts: ScreenshotOpts
+  ): Promise<Buffer>;
+  public screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  public screenshot(
+    a?: string | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ): Promise<Buffer> {
+    const output = (() => {
+      if (typeof a === "string") {
+        return b ? this.response.screenshot(a, b) : this.response.screenshot(a);
+      }
+      return a ? this.response.screenshot(a) : this.response.screenshot();
+    })();
     this._completedAction("SCREENSHOT");
     return output;
   }

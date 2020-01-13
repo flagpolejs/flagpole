@@ -1,4 +1,10 @@
-import { iAssertionContext, iScenario, iBounds, iValue } from "./interfaces";
+import {
+  iAssertionContext,
+  iScenario,
+  iBounds,
+  iValue,
+  ScreenshotOpts
+} from "./interfaces";
 import { JSHandle, Page, ElementHandle, BoxModel } from "puppeteer";
 import { DOMElement } from "./domelement";
 import {
@@ -6,7 +12,6 @@ import {
   toType,
   getMessageAndCallbackFromOverloading
 } from "./util";
-import { Value } from "./value";
 
 export class PuppeteerElement extends DOMElement implements iValue {
   protected _input: ElementHandle;
@@ -473,6 +478,26 @@ export class PuppeteerElement extends DOMElement implements iValue {
     else {
       await (<ElementHandle>this._input).click();
     }
+  }
+
+  public screenshot(): Promise<Buffer>;
+  public screenshot(localFilePath: string): Promise<Buffer>;
+  public screenshot(
+    localFilePath: string,
+    opts: ScreenshotOpts
+  ): Promise<Buffer>;
+  public screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  public screenshot(
+    a?: string | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ): Promise<Buffer> {
+    const localFilePath = typeof a == "string" ? a : undefined;
+    const opts: ScreenshotOpts = (typeof a !== "string" ? a : b) || {};
+    return (<ElementHandle>this._input).screenshot({
+      path: localFilePath || opts.path,
+      encoding: "binary",
+      omitBackground: opts.omitBackground || false
+    });
   }
 
   protected _getTagName(): Promise<string> {

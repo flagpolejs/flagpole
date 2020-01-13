@@ -234,7 +234,7 @@ export abstract class ProtoResponse implements iResponse {
     return this._wrapAsValue(null, selector);
   }
 
-  public async screenshot(opts: any): Promise<Buffer | string> {
+  public async screenshot(): Promise<Buffer> {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support screenshots.`
     );

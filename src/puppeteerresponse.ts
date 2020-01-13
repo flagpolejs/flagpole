@@ -1,5 +1,5 @@
 import { Page, ElementHandle, Browser, Response } from "puppeteer";
-import { iResponse, iValue } from "./interfaces";
+import { iResponse, iValue, ScreenshotOpts } from "./interfaces";
 import { BrowserControl } from "./browsercontrol";
 import { DOMResponse } from "./domresponse";
 import { PuppeteerElement } from "./puppeteerelement";
@@ -182,9 +182,27 @@ export abstract class PuppeteerResponse extends DOMResponse
     throw new Error("waitForExists is not available in this context");
   }
 
-  public async screenshot(opts: any): Promise<Buffer | string> {
+  public screenshot(): Promise<Buffer>;
+  public screenshot(localFilePath: string): Promise<Buffer>;
+  public screenshot(
+    localFilePath: string,
+    opts: ScreenshotOpts
+  ): Promise<Buffer>;
+  public screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  public screenshot(
+    a?: string | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ): Promise<Buffer> {
+    const localFilePath = typeof a == "string" ? a : undefined;
+    const opts: ScreenshotOpts = (typeof a !== "string" ? a : b) || {};
     if (this.page !== null) {
-      return await this.page.screenshot(opts);
+      return this.page.screenshot({
+        path: localFilePath || opts.path,
+        encoding: "binary",
+        omitBackground: opts.omitBackground || false,
+        clip: opts.clip || undefined,
+        fullPage: opts.fullPage || false
+      });
     }
     throw new Error(`No page found, so can't take a screenshot.`);
   }

@@ -1,4 +1,10 @@
-import { iAssertionContext, iValue, iScenario } from "./interfaces";
+import {
+  iAssertionContext,
+  iValue,
+  iScenario,
+  RequestOptions,
+  RequestOptionsWithEncoding
+} from "./interfaces";
 import { toType, isNullOrUndefined } from "./util";
 import {
   AssertionActionCompleted,
@@ -275,12 +281,8 @@ export class Value implements iValue {
     return this._wrapAsValue(null, `Style of ${key}`);
   }
 
-  public async download(): Promise<string | Buffer | null> {
-    return null;
-  }
-
-  public async downloadBinary(): Promise<Buffer | null> {
-    return null;
+  public async download(): Promise<any> {
+    throw new Error("Download is not supported on this value type.");
   }
 
   public async getValue(): Promise<iValue> {
@@ -293,6 +295,14 @@ export class Value implements iValue {
       this.name,
       this.parent,
       this.highlight
+    );
+  }
+
+  public async screenshot(): Promise<Buffer> {
+    throw new Error(
+      `This value type (${this.toType()}) or scenario type (${
+        this._context.scenario.responseType
+      }) does not support screenshots.`
     );
   }
 

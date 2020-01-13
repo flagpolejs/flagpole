@@ -9,6 +9,24 @@ import {
 import { HttpResponse } from "./httpresponse";
 import { URL } from "url";
 import { CookieJar } from "tough-cookie";
+import { RequestPromiseOptions } from "request-promise";
+
+export interface RequestOptions extends RequestPromiseOptions {
+  encoding?: never;
+  resolveWithFullResponse?: never | false;
+}
+
+export interface RequestOptionsWithEncoding extends RequestPromiseOptions {
+  encoding: string;
+  resolveWithFullResponse?: never | false;
+}
+
+export interface ScreenshotOpts {
+  path?: string;
+  fullPage?: boolean;
+  clip?: { x: number; y: number; width: number; height: number };
+  omitBackground?: boolean;
+}
 
 export interface iNextCallback {
   (context: iAssertionContext): Promise<any> | void;
@@ -123,14 +141,19 @@ export interface iValue {
   getValue(): Promise<iValue>;
   getText(): Promise<iValue>;
   getStyleProperty(key: string): Promise<iValue>;
-  download(): Promise<Buffer | string | null>;
-  download(localFilePath: string): Promise<Buffer | string | null>;
-  download(localFilePath: string, opts: {}): Promise<Buffer | string | null>;
-  download(opts: {}): Promise<Buffer | string | null>;
-  downloadBinary(): Promise<Buffer | null>;
-  downloadBinary(localFilePath: string): Promise<Buffer | null>;
-  downloadBinary(localFilePath: string, opts: {}): Promise<Buffer | null>;
-  downloadBinary(opts: {}): Promise<Buffer | null>;
+  download(): Promise<Buffer | null>;
+  download(localFilePath: string): Promise<Buffer | null>;
+  download(localFilePath: string, opts: RequestOptions): Promise<Buffer | null>;
+  download(opts: RequestOptions): Promise<Buffer | null>;
+  download(
+    localFilePath: string,
+    opts: RequestOptionsWithEncoding
+  ): Promise<string | null>;
+  download(opts: RequestOptionsWithEncoding): Promise<string | null>;
+  screenshot(): Promise<Buffer>;
+  screenshot(localFilePath: string): Promise<Buffer>;
+  screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
+  screenshot(opts: ScreenshotOpts): Promise<Buffer>;
 }
 
 /**
@@ -177,7 +200,10 @@ export interface iResponse {
   waitForHidden(selector: string, timeout: number): Promise<iValue>;
   waitForVisible(selector: string, timeout: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
-  screenshot(opts: any): Promise<Buffer | string>;
+  screenshot(): Promise<Buffer>;
+  screenshot(localFilePath: string): Promise<Buffer>;
+  screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
+  screenshot(opts: ScreenshotOpts): Promise<Buffer>;
   clear(selector: string): Promise<any>;
   type(selector: string, textToType: string, opts: any): Promise<any>;
   selectOption(selector: string, value: string | string[]): Promise<string[]>;
@@ -285,7 +311,10 @@ export interface iAssertionContext {
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
   openInBrowser(): Promise<string>;
-  screenshot(opts: any): Promise<Buffer | string>;
+  screenshot(): Promise<Buffer>;
+  screenshot(localFilePath: string): Promise<Buffer>;
+  screenshot(localFilePath: string, opts: {}): Promise<Buffer>;
+  screenshot(opts: {}): Promise<Buffer>;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;

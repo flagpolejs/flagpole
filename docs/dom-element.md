@@ -102,7 +102,7 @@ await context.waitForNavigation();
 
 This will download the URL that is referenced by this element. It will automatically pull the `src` attribute from an `img` tag, for example. Or extract the `href` from a link.
 
-When called without any arguments, it will use the default and return the response as a string;
+When called without any arguments, it will use the default and return the response as a Buffer;
 
 ```typescript
 const cssContent = await cssLinkElement.download();
@@ -117,28 +117,36 @@ await cssLinkElement.download("./localFile.css");
 If you want to pass in opts for the HTTP request. This will use the `request-promise` library, so any valid opts for this library will work.
 
 ```typescript
-const cssContent = await cssLink.download(qs: {
-  cacheBuster: Date.now()
+const cssContent = await cssLink.download({
+  qs: {
+    cacheBuster: Date.now()
+  }
 });
 ```
 
 You can also pass in both `localFilePath` and `opts` arguments.
 
 ```typescript
-await cssLink.download("./localFile.css", qs: {
-  cacheBuster: Date.now()
+await cssLink.download("./localFile.css", {
+  qs: {
+    cacheBuster: Date.now()
+  }
 });
 ```
 
-Typically the return value here is a string, unless you have passed in opts that compell it to download the raw bytes... in which case the return value will be a Buffer object. If you used `downloadBinary` instead, this will automatically set it to download as a Buffer.
+For all cases above, Flagpole will return a Promise with a Buffer response unless the download fails. In that case the promise will resolve with a null.
 
-If the request fails or is invalid, null will be returned instead.
+If you want the response to be in text instead of the raw bytes of the Buffer, you must set the encoding value in the opts argument. Here are some examples:
 
-### downloadBinary(): Promise<Buffer | null>
-
-This is pretty much the same thing as the `.download` method, so reference that info for more details (including the allowed overloads);
-
-The difference here is that it will return the raw bytes as a Buffer object, rather than a string response.
+```typescript
+const download1 = await cssLink.download({
+  encoding: "base64"
+});
+const download2 = await cssLink.download("./localFile.css", {
+  encoding: "utf8",
+  headers: { foo: "bar" }
+});
+```
 
 ### fillForm(data: { [key: string]: any }): Promise<Value>
 
@@ -350,6 +358,10 @@ The difference between the two is that `click` will only work for clickable thin
 const image = await context.find("img.logo");
 image.load("Make sure logo is a valid image");
 ```
+
+### screenshot(): Promise<Buffer>
+
+This is currently only supported with browser type scenarios. See documentation for `context.screenshot()` because the arguments are the same. The only difference is calling it on an Element will grab the image just of this element.
 
 ### submit(): Promise<Scenario>
 

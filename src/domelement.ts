@@ -3,7 +3,9 @@ import {
   iValue,
   iAssertionContext,
   iScenario,
-  iMessageAndCallback
+  iMessageAndCallback,
+  RequestOptions,
+  RequestOptionsWithEncoding
 } from "./interfaces";
 import { Link } from "./link";
 import { ResponseType } from "./enums";
@@ -197,16 +199,32 @@ export abstract class DOMElement extends Value {
    *
    * @param opts
    */
-  public download(): Promise<Buffer | string | null>;
-  public download(localFilePath: string): Promise<Buffer | string | null>;
+  public download(): Promise<Buffer | null>;
+  public download(localFilePath: string): Promise<Buffer | null>;
   public download(
     localFilePath: string,
-    opts: {}
-  ): Promise<Buffer | string | null>;
-  public download(opts: {}): Promise<Buffer | string | null>;
-  public async download(a?: any, b = {}): Promise<Buffer | string | null> {
+    opts: RequestOptions
+  ): Promise<Buffer | null>;
+  public download(opts: RequestOptions): Promise<Buffer | null>;
+  public download(
+    localFilePath: string,
+    opts: RequestOptionsWithEncoding
+  ): Promise<string | null>;
+  public download(opts: RequestOptionsWithEncoding): Promise<string | null>;
+  public async download(
+    a?: string | RequestOptions | RequestOptionsWithEncoding,
+    b?: RequestOptions | RequestOptionsWithEncoding
+  ): Promise<any> {
     const localFilePath: string | null = typeof a == "string" ? a : null;
-    const opts = typeof a == "object" && a !== null ? a : b;
+    const opts = (() => {
+      if (typeof a == "object" && a !== null) {
+        return a;
+      }
+      if (typeof b == "object" && b !== null) {
+        return b;
+      }
+      return { encoding: null };
+    })();
     const link = await this._getLink();
     if (link.isNavigation()) {
       const response = rp(link.getUri(), opts);
@@ -216,33 +234,6 @@ export abstract class DOMElement extends Value {
       return response;
     }
     return null;
-  }
-
-  /**
-   * This is a shorthand object to get binary, which in turn calls download.
-   * That way you don't have to remember the encoding:null step in opts
-   *
-   * @param opts
-   */
-  public downloadBinary(): Promise<Buffer | null>;
-  public downloadBinary(localFilePath: string): Promise<Buffer | null>;
-  public downloadBinary(
-    localFilePath: string,
-    opts: {}
-  ): Promise<Buffer | null>;
-  public downloadBinary(opts: {}): Promise<Buffer | null>;
-  public async downloadBinary(a?: any, b = {}): Promise<Buffer | null> {
-    const localFilePath: string | null = typeof a == "string" ? a : null;
-    const opts = {
-      ...(typeof a == "object" && a !== null ? a : b),
-      ...{ encoding: null }
-    };
-    const buffer =
-      localFilePath !== null
-        ? this.download(localFilePath, opts)
-        : this.download(opts);
-    //@ts-ignore
-    return typeof buffer !== "string" ? buffer : null;
   }
 
   /**

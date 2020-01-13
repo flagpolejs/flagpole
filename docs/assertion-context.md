@@ -204,14 +204,36 @@ Delay the execution by this much
 await context.pause(1000);
 ```
 
-### screenshot(opts?: any): Promise<Buffer | string>
+### screenshot(): Promise<Buffer>
 
-Takes a screenshot of that point in time. Currently this is only supported in a browser-based scenario. For the opts argument, see the [Puppeteer documentation for page.screenshot](https://pptr.dev/#?product=Puppeteer&version=v1.19.0&show=api-pagescreenshotoptions).
+Takes a screenshot of that point in time. Currently this is only supported in a browser-based scenario. The return value is a promise that resolves with a Buffer of the image bytes.
 
-```javascript
+```typescript
+const screenshot = await context.screenshot();
+```
+
+If you want to save the screenshot to a local file, pass the file path in as the first argument.
+
+```typescript
+await context.screenshot("capture.png");
+```
+
+There are also some options that can optionally be passed in like. For example:
+
+```typescript
 const screenshot = await context.screenshot({
-  type: "png",
-  omitBackground: true
+  path: "/path/to/local/file.png", // To save to a local file
+  fullPage: true, // Takes screenshot of entire page, not just the current viewport
+  clip: { x: 100, y, 200, width: 50, height: 50 } // Crop screenshot to this region
+  omitBackground: true // Ignores the background image or color to return a transparent PNG background
+});
+```
+
+You can also combine the two arguments. In this case, the first argument of the local file path would override a `path` property in the `opts` second argument.
+
+```typescript
+const screenshot = await context.screenshot("/path/to/local/file.png", {
+  fullPage: true
 });
 ```
 

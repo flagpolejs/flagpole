@@ -26,8 +26,6 @@ import { Assertion } from "./assertion";
 import { URL } from "url";
 import * as rp from "request-promise";
 import * as r from "request";
-import { toType } from "./util";
-import { IncomingMessage } from "http";
 import request = require("request");
 
 const probeImage = require("probe-image-size");
