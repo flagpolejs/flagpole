@@ -353,7 +353,7 @@ export class Assertion implements iAssertion {
   public looksLike(imageLocalPath: string, thresholdPercent: string): Assertion;
   public looksLike(
     controlImage: string | Buffer,
-    threshold: number | string = 0.1
+    allowedDifference: number | string = 0
   ): Assertion {
     let assertionPassed: boolean = false;
     let details: string = "";
@@ -362,21 +362,27 @@ export class Assertion implements iAssertion {
       this._getCompareValue(this._input),
       controlImage
     );
-    const thresholdValue: number = (() => {
-      if (typeof threshold === "number") {
-        return threshold >= 0 && threshold < 1 ? threshold : 0.1;
+    // Return a number between 0 and 99.99 to represent a percentage
+    const percentDifferenceAllowed: number = (() => {
+      if (typeof allowedDifference === "number") {
+        return allowedDifference >= 0 && allowedDifference < 1
+          ? allowedDifference * 100
+          : 0;
       }
-      const n = parseFloat(threshold);
-      return !isNaN(n) && n >= 0 && n < 100 ? n / 100 : 0.1;
+      const n = parseFloat(allowedDifference);
+      return !isNaN(n) && n >= 0 && n < 100 ? n : 0;
     })();
     // Do the comparison
     try {
-      const result = imageCompare.compare(thresholdValue);
-      assertionPassed = result.pixelsDifferent === 0;
+      const result = imageCompare.compare({
+        threshold: 0.1
+      });
+      assertionPassed = result.percentDifferent <= percentDifferenceAllowed;
       if (!assertionPassed) {
         details =
           result.percentDifferent.toFixed(2) +
           `% of the image did not match (${result.pixelsDifferent} pixels).` +
+          ` This is over the allowed difference of ${percentDifferenceAllowed}%.` +
           `  Diff image: ${result.diffPath}`;
       }
     } catch (err) {

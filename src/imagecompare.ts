@@ -29,9 +29,7 @@ export class ImageCompare {
     this._controlImage = this._getImage(control);
   }
 
-  public compare(
-    threshold: number
-  ): {
+  public compare(opts: {}): {
     pixelsDifferent: number;
     percentDifferent: number;
     diffPath: string | null;
@@ -55,9 +53,6 @@ export class ImageCompare {
       );
     }
     // Now let's do the actual compare
-    const opts = {
-      threshold: threshold
-    };
     const diff = new PNG({ width, height });
     const pixelsDifferent: number = pixelmatch(
       this._inputImage.data,
