@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 "use strict";
 import { Cli, parseConfigFile } from "./cli";
-import { normalizePath } from "../util";
+import { normalizePath, emptyFolder } from "../util";
 import { FlagpoleExecution } from "../flagpoleexecutionoptions";
 
 const path = require("path");
@@ -92,7 +92,7 @@ let argv = require("yargs")
   )
   .epilogue("For more information, go to https://github.com/flocasts/flagpole")
   .wrap(Math.min(100, yargs.terminalWidth()))
-  .fail(function (msg, err, yargs) {
+  .fail(function(msg, err, yargs) {
     Cli.log(yargs.help());
     Cli.log(msg);
     Cli.exit(1);
@@ -134,6 +134,7 @@ if (argv.c && !Cli.config.isValid()) {
 }
 
 // Settings from config file
+FlagpoleExecution.opts.configPath = Cli.configPath;
 FlagpoleExecution.opts.baseDomain = (() => {
   if (argv.base) {
     return argv.base;
@@ -154,7 +155,15 @@ if (argv.d || Cli.command == "debug") {
 if (Cli.command == "list") {
   require("./list").list();
 } else if (Cli.command == "run") {
-  require("./run").run(argv.s, argv.t);
+  // Empty previous cache before running a new job
+  const cacheFolder = Cli.config.getCacheFolder();
+  emptyFolder(cacheFolder)
+    .then(() => {
+      require("./run").run(argv.s, argv.t);
+    })
+    .catch(err => {
+      console.log(err);
+    });
 } else if (Cli.command == "login") {
   require("./login").login();
 } else if (Cli.command == "logout") {

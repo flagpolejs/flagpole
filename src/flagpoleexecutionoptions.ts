@@ -1,3 +1,6 @@
+import { FlagpoleConfig } from "./cli/config";
+import { parseConfigFile } from "./cli/cli";
+
 export enum FlagpoleOutput {
   console = 1,
   text = 2,
@@ -10,6 +13,16 @@ export enum FlagpoleOutput {
 }
 
 export class FlagpoleExecutionOptions {
+  /**
+   * Set path to flagpole.json
+   */
+  public configPath: string = "";
+
+  /**
+   * Get config file
+   */
+  public config: FlagpoleConfig | undefined;
+
   /**
    * Set base path
    */
@@ -79,6 +92,8 @@ export class FlagpoleExecutionOptions {
         opts.automaticallyPrintToConsole = true;
       } else if (lastArg == "--base") {
         opts.baseDomain = arg;
+      } else if (lastArg == "--config") {
+        opts.configPath = arg;
       } else if (arg == "-q") {
         opts.quietMode = true;
         lastArg = null;
@@ -94,6 +109,10 @@ export class FlagpoleExecutionOptions {
       }
       lastArg = arg;
     });
+    // Load config file
+    if (opts.configPath) {
+      opts.config = parseConfigFile(opts.configPath);
+    }
     return opts;
   }
 
@@ -138,6 +157,9 @@ export class FlagpoleExecutionOptions {
     let opts: string = "";
     if (this.baseDomain) {
       opts += ` --base ${this.baseDomain}`;
+    }
+    if (this.configPath) {
+      opts += ` --config ${this.configPath}`;
     }
     if (this.environment !== null) {
       opts += " -e " + this.environment;

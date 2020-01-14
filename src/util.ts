@@ -1,6 +1,7 @@
 import { iMessageAndCallback, iScenario, iNextCallback } from "./interfaces";
+import * as fs from "fs";
+import * as path from "path";
 
-const path = require("path");
 const cheerio = require("cheerio");
 
 /**
@@ -61,7 +62,6 @@ export function uniqueId(): string {
 
 export async function openInBrowser(content: string): Promise<string> {
   const open = require("open");
-  const fs = require("fs");
   const tmp = require("tmp");
   const tmpObj = tmp.fileSync({ postfix: ".html" });
   const filePath: string = tmpObj.name;
@@ -97,6 +97,31 @@ export function normalizePath(uri: string): string {
     uri = uri.endsWith(path.sep) ? uri : uri + path.sep;
   }
   return uri;
+}
+
+export function ensureFolderExists(path: string) {
+  fs.mkdirSync(path, { recursive: true });
+}
+
+export function emptyFolder(folderPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    folderPath = path.resolve(folderPath);
+    ensureFolderExists(folderPath);
+    fs.readdir(folderPath, (err, files) => {
+      if (err) reject(err);
+      const promises: Promise<any>[] = [];
+      for (const file of files) {
+        promises.push(fs.promises.unlink(path.join(folderPath, file)));
+      }
+      Promise.all(promises)
+        .then(() => {
+          resolve();
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
+  });
 }
 
 export function exitProcess(passed: boolean) {

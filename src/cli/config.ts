@@ -22,6 +22,8 @@ export interface iProjectOpts {
   path: string;
   source?: string;
   output?: string;
+  images?: string;
+  cache?: string;
 }
 
 export interface iConfigOpts {
@@ -121,6 +123,8 @@ export class ProjectConfig {
   public path: string;
   public source: string | undefined;
   public output: string | undefined;
+  public images: string;
+  public cache: string;
 
   public get isSourceAndOutput(): boolean {
     return this.source !== undefined && this.output !== undefined;
@@ -135,6 +139,8 @@ export class ProjectConfig {
     this.id = opts.id || "";
     this.name = opts.name || "default";
     this.path = opts.path || "tests";
+    this.images = opts.images || "images";
+    this.cache = opts.cache || "cache";
     this.source = opts.source;
     this.output = opts.output;
   }
@@ -156,7 +162,9 @@ export class ProjectConfig {
       name: this.name,
       path: this.path,
       source: this.source,
-      output: this.output
+      output: this.output,
+      images: this.images,
+      cache: this.cache
     };
   }
 }
@@ -206,6 +214,18 @@ export class FlagpoleConfig {
   public getSourceFolder(): string {
     return normalizePath(
       path.join(this.getRootFolder(), this.project.source || "")
+    );
+  }
+
+  public getImagesFolder(): string {
+    return normalizePath(
+      path.join(this.getRootFolder(), this.project.images || "images")
+    );
+  }
+
+  public getCacheFolder(): string {
+    return normalizePath(
+      path.join(this.getRootFolder(), this.project.cache || "cache")
     );
   }
 

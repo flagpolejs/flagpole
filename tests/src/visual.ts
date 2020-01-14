@@ -12,7 +12,7 @@ suite
     // await logo.download("google.png");
     context
       .assert("Logo should look like the control.", await logo.download())
-      .looksLike("./tests/src/images/google.png");
+      .looksLike("./tests/images/google.png");
   });
 
 suite
@@ -22,8 +22,19 @@ suite
   .open("/")
   .next("Screenshot", async context => {
     await context.waitForExists("#hplogo");
-    //await context.screenshot("google-screenshot.png");
+    const screenshot = await context.screenshot();
     context
-      .assert(await context.screenshot())
-      .looksLike("./tests/src/images/google-screenshot.png");
+      .assert("Compare using local file path", screenshot)
+      .looksLike("./tests/images/google-screenshot.png");
+    context.assert("Compare using the @", screenshot).looksLike("@homepage");
+  });
+
+suite
+  .browser("Puppeteer test of Google Search Results screenshot", {
+    headless: false
+  })
+  .open("/search?q=flagpole+qa")
+  .next("Screenshot", async context => {
+    await context.waitForExists("div.logo");
+    context.assert(await context.screenshot()).looksLike("@search_results");
   });

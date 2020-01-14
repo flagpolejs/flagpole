@@ -2,6 +2,7 @@
 examples/houston*
 tests/out
 tests/src/internal*
+tests/cache
 
 # Logs
 logs

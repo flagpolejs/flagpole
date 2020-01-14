@@ -10,6 +10,7 @@ import { HttpResponse } from "./httpresponse";
 import { URL } from "url";
 import { CookieJar } from "tough-cookie";
 import { RequestPromiseOptions } from "request-promise";
+import { FlagpoleExecutionOptions } from "./flagpoleexecutionoptions";
 
 export interface RequestOptions extends RequestPromiseOptions {
   encoding?: never;
@@ -256,6 +257,7 @@ export interface iAssertionContext {
   scenario: iScenario;
   suite: iSuite;
   browserControl: BrowserControl | null;
+  executionOptions: FlagpoleExecutionOptions;
   page: Page | null;
   incompleteAssertions: iAssertion[];
   assertionsResolved: Promise<(iAssertionResult | null)[]>;

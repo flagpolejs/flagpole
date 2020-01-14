@@ -10,13 +10,7 @@ import * as Ajv from "ajv";
 import { iAssertionContext, iAssertion } from "./interfaces";
 import { toType } from "./util";
 import { isNullOrUndefined } from "util";
-import { PNG } from "pngjs";
-import * as fs from "fs";
-import * as rp from "request-promise";
-import { path } from "./cli/path";
-import { resolve } from "path";
-
-const pixelmatch = require("pixelmatch");
+import { ImageCompare } from "./imagecompare";
 
 export class Assertion implements iAssertion {
   /**
@@ -358,77 +352,40 @@ export class Assertion implements iAssertion {
   public looksLike(imageData: Buffer, thresholdPercent: string): Assertion;
   public looksLike(imageLocalPath: string, thresholdPercent: string): Assertion;
   public looksLike(
-    image: string | Buffer,
+    controlImage: string | Buffer,
     threshold: number | string = 0.1
   ): Assertion {
-    let bool: boolean = false;
-    let numDiffPixels: number | null = null;
-    let error: string | null = null;
-    const thisValue = this._getCompareValue(this._input);
-    threshold = (() => {
+    let assertionPassed: boolean = false;
+    let details: string = "";
+    const imageCompare = new ImageCompare(
+      this._context,
+      this._getCompareValue(this._input),
+      controlImage
+    );
+    const thresholdValue: number = (() => {
       if (typeof threshold === "number") {
         return threshold >= 0 && threshold < 1 ? threshold : 0.1;
       }
       const n = parseFloat(threshold);
       return !isNaN(n) && n >= 0 && n < 100 ? n / 100 : 0.1;
     })();
-    const opts = {
-      threshold: threshold
-    };
-    // Get image
-    const img1: PNG | null = (() => {
-      const type = toType(this._input);
-      if (type == "buffer") {
-        return PNG.sync.read(thisValue);
+    // Do the comparison
+    try {
+      const result = imageCompare.compare(thresholdValue);
+      assertionPassed = result.pixelsDifferent === 0;
+      if (!assertionPassed) {
+        details =
+          result.percentDifferent.toFixed(2) +
+          `% of the image did not match (${result.pixelsDifferent} pixels).` +
+          `  Diff image: ${result.diffPath}`;
       }
-      return null;
-    })();
-    const img2: PNG | null = (() => {
-      try {
-        const type = toType(this._input);
-        // Need to do typeof here to make TypeScript happy, even though already have type argument
-        if (typeof image == "string") {
-          const absPath = resolve(image);
-          // Local file exists
-          if (fs.existsSync(absPath)) {
-            return PNG.sync.read(fs.readFileSync(absPath));
-          } else {
-            error = `Local file does not exist. ${absPath}`;
-          }
-        }
-        // Is it a buffer?
-        else if (type == "buffer") {
-          return PNG.sync.read(image);
-        }
-      } catch (err) {
-        error = `Problem loading compare file. ${err}`;
-      }
-      return null;
-    })();
-    if (img1 && img2) {
-      // Dimensions must match
-      if (img1.width !== img2.width || img1.height !== img2.height) {
-        error = `Dimensions did not match. ${img1.width}x${img1.height} and ${img2.width}x${img2.height}`;
-      } else {
-        const { width, height } = img1;
-        const diff = new PNG({ width, height });
-        numDiffPixels = pixelmatch(
-          img1.data,
-          img2.data,
-          diff.data,
-          width,
-          height,
-          opts
-        );
-        bool = numDiffPixels === 0;
-      }
+    } catch (err) {
+      details = err;
     }
     this._assert(
-      bool,
+      assertionPassed,
       this._not ? `Images do not match.` : `Images match.`,
-      numDiffPixels === null
-        ? `Image could not be loaded: ${error}`
-        : `${numDiffPixels} pixels did not match`
+      details
     );
     return this;
   }
@@ -494,8 +451,6 @@ export class Assertion implements iAssertion {
   public includes(value: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = String(this._getCompareValue(value));
-    const thisType = toType(thisValue);
-    const thatType = toType(thatValue);
     let bool: boolean = false;
     if (thisValue && thisValue.indexOf) {
       bool = thisValue.indexOf(thatValue) >= 0;
