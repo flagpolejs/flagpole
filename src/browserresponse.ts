@@ -41,18 +41,15 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
       const puppeteerElements: PuppeteerElement[] = [];
       if (this.context.page !== null) {
         const elements: ElementHandle[] = await this.context.page.$$(path);
-        await asyncForEach(
-          elements,
-          async (el: ElementHandle<Element>, i: number) => {
-            const element = await PuppeteerElement.create(
-              el,
-              response.context,
-              `${path} [${i}]`,
-              path
-            );
-            puppeteerElements.push(element);
-          }
-        );
+        await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
+          const element = await PuppeteerElement.create(
+            el,
+            response.context,
+            `${path} [${i}]`,
+            path
+          );
+          puppeteerElements.push(element);
+        });
       }
       resolve(puppeteerElements);
     });

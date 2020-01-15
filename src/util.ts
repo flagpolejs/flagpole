@@ -1,4 +1,9 @@
-import { iMessageAndCallback, iScenario, iNextCallback } from "./interfaces";
+import {
+  iMessageAndCallback,
+  iScenario,
+  iNextCallback,
+  IteratorCallback
+} from "./interfaces";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -79,19 +84,28 @@ export function runAsync(callback: Function, delay: number = 1) {
   setTimeout(callback, delay);
 }
 
-export function asyncForEach(array: any[], callback: Function): Promise<void> {
+export function asyncForEach(
+  array: any[],
+  callback: IteratorCallback
+): Promise<void> {
   return new Promise(resolve => {
-    const promises: Promise<any>[] = [];
-    for (let i = 0; i < array.length; i++) {
-      promises.push(callback(array[i], i, array));
-    }
-    Promise.all(promises).then(() => {
+    Promise.all(array.map(callback)).then(() => {
       resolve();
     });
   });
 }
 
-export function asyncEvery(array: any[], callback: Function): Promise<boolean> {
+export async function asyncEvery(
+  array: any[],
+  callback: IteratorCallback
+): Promise<boolean> {
+  return Promise.all(array.map(callback)).then(values => values.every(v => v));
+}
+
+export function asyncEvery2(
+  array: any[],
+  callback: Function
+): Promise<boolean> {
   return new Promise(resolve => {
     const promises: Promise<any>[] = [];
     for (let i = 0; i < array.length; i++) {
@@ -106,7 +120,14 @@ export function asyncEvery(array: any[], callback: Function): Promise<boolean> {
   });
 }
 
-export function asyncNone(array: any[], callback: Function): Promise<boolean> {
+export async function asyncNone(
+  array: any[],
+  callback: IteratorCallback
+): Promise<boolean> {
+  return Promise.all(array.map(callback)).then(values => !values.some(v => v));
+}
+
+export function asyncNone2(array: any[], callback: Function): Promise<boolean> {
   return new Promise(resolve => {
     const promises: Promise<any>[] = [];
     for (let i = 0; i < array.length; i++) {
@@ -121,7 +142,14 @@ export function asyncNone(array: any[], callback: Function): Promise<boolean> {
   });
 }
 
-export function asyncSome(array: any[], callback: Function): Promise<boolean> {
+export async function asyncSome(
+  array: any[],
+  callback: IteratorCallback
+): Promise<boolean> {
+  return Promise.all(array.map(callback)).then(values => values.some(v => v));
+}
+
+export function asyncSome2(array: any[], callback: Function): Promise<boolean> {
   return new Promise(resolve => {
     const promises: Promise<any>[] = [];
     for (let i = 0; i < array.length; i++) {

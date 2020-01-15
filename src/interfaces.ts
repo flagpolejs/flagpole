@@ -33,6 +33,8 @@ export interface iNextCallback {
   (context: iAssertionContext): Promise<any> | void;
 }
 
+export type IteratorCallback = (value: any, index: number, arr: any[]) => any;
+
 export interface iConsoleLine {
   timestamp: Date;
   color: ConsoleColor;
@@ -222,6 +224,8 @@ export interface iAssertion {
   result: Promise<any>;
   assertionMade: boolean;
   name: string;
+  passed: boolean | null;
+  isFinalized: boolean;
   as(aliasName: string): iAssertion;
   exactly(value: any): iAssertion;
   equals(value: any): iAssertion;
@@ -240,12 +244,12 @@ export interface iAssertion {
   exists(): iAssertion;
   resolves(continueOnReject?: boolean): Promise<iAssertion>;
   rejects(continueOnReject?: boolean): Promise<any>;
-  none(callback: Function): iAssertion;
-  none(asyncCallback: Function): Promise<iAssertion>;
-  every(callback: Function): iAssertion;
-  every(asyncCallback: Function): Promise<iAssertion>;
-  some(callback: Function): iAssertion;
-  some(asyncCallback: Function): Promise<iAssertion>;
+  none(callback: IteratorCallback): iAssertion;
+  none(asyncCallback: IteratorCallback): Promise<iAssertion>;
+  every(callback: IteratorCallback): iAssertion;
+  every(asyncCallback: IteratorCallback): Promise<iAssertion>;
+  some(callback: IteratorCallback): iAssertion;
+  some(asyncCallback: IteratorCallback): Promise<iAssertion>;
   schema(schema: any, simple?: boolean): Promise<iAssertion>;
   assert(a: any, b?: any): iAssertion;
   comment(message: string): iAssertionContext;

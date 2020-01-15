@@ -7,7 +7,7 @@ import {
 } from "./logging/assertionresult";
 import { AssertionSchema, iAjvLike } from "./assertionschema";
 import * as Ajv from "ajv";
-import { iAssertionContext, iAssertion } from "./interfaces";
+import { iAssertionContext, iAssertion, IteratorCallback } from "./interfaces";
 import {
   toType,
   isNullOrUndefined,
@@ -149,8 +149,16 @@ export class Assertion implements iAssertion {
     return this._assertionMade || this._finishedPromise.isResolved();
   }
 
+  public get isFinalized(): boolean {
+    return this._result !== null || this._statement !== null;
+  }
+
   public get name(): string {
     return this._message || String(this._input);
+  }
+
+  public get passed(): boolean | null {
+    return this._statement;
   }
 
   private _context: iAssertionContext;
@@ -510,9 +518,9 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public none(callback: Function): Assertion;
-  public none(asyncCallback: Function): Promise<Assertion>;
-  public none(callback: Function): Assertion | Promise<Assertion> {
+  public none(callback: IteratorCallback): Assertion;
+  public none(asyncCallback: IteratorCallback): Promise<Assertion>;
+  public none(callback: IteratorCallback): Assertion | Promise<Assertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} some were true`,
@@ -523,7 +531,7 @@ export class Assertion implements iAssertion {
       throw new Error("Input value must be an array.");
     }
     // If callback is async then we'll return a promise
-    if (isAsyncCallback(callback)) {
+    if (this._returnsPromise(callback, thisValue)) {
       return new Promise(async resolve => {
         resolve(
           this._evalulate(await asyncNone(thisValue, callback), thisValue)
@@ -539,9 +547,9 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public every(callback: Function): Assertion;
-  public every(asyncCallback: Function): Promise<Assertion>;
-  public every(callback: Function): Assertion | Promise<Assertion> {
+  public every(callback: IteratorCallback): Assertion;
+  public every(asyncCallback: IteratorCallback): Promise<Assertion>;
+  public every(callback: IteratorCallback): Assertion | Promise<Assertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} some were true`,
@@ -552,7 +560,7 @@ export class Assertion implements iAssertion {
       throw new Error("Input value must be an array.");
     }
     // If callback is async then we'll return a promise
-    if (isAsyncCallback(callback)) {
+    if (this._returnsPromise(callback, thisValue)) {
       return new Promise(async resolve => {
         resolve(
           this._evalulate(await asyncEvery(thisValue, callback), thisValue)
@@ -568,9 +576,9 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public some(callback: Function): Assertion;
-  public some(asyncCallback: Function): Promise<Assertion>;
-  public some(callback: Function): Assertion | Promise<Assertion> {
+  public some(callback: IteratorCallback): Assertion;
+  public some(asyncCallback: IteratorCallback): Promise<Assertion>;
+  public some(callback: IteratorCallback): Assertion | Promise<Assertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} none were true`,
@@ -582,7 +590,7 @@ export class Assertion implements iAssertion {
       throw new Error("Input value must be an array.");
     }
     // If callback is async then we'll return a promise
-    if (isAsyncCallback(callback)) {
+    if (this._returnsPromise(callback, thisValue)) {
       return new Promise(async resolve => {
         resolve(
           this._evalulate(await asyncSome(thisValue, callback), thisValue)
@@ -673,6 +681,14 @@ export class Assertion implements iAssertion {
     }
   }
 
+  private _returnsPromise(callback: Function, values: any[]): boolean {
+    return (
+      isAsyncCallback(callback) ||
+      (values.length > 0 &&
+        toType(callback(values[0], 0, values)) === "promise")
+    );
+  }
+
   private _getMessage(): string {
     return this._message
       ? this._message
@@ -712,7 +728,7 @@ export class Assertion implements iAssertion {
     highlightText: string | null = null
   ): Assertion {
     // Result is immutable, so only let them assert once
-    if (this._result !== null || this._statement !== null) {
+    if (this.isFinalized) {
       throw new Error("Assertion result is immutable.");
     }
     // Evalulate assertion
