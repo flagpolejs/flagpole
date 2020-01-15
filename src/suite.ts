@@ -146,6 +146,11 @@ export class Suite implements iSuite {
     this._finishedPromise = new Promise(resolve => {
       this._finishedResolver = resolve;
     });
+    // Spinner to wait for all
+    // const interval = setInterval(() => {}, 300);
+    // this.finally(() => {
+    //   clearInterval(interval);
+    // });
   }
 
   /**
@@ -537,7 +542,7 @@ export class Suite implements iSuite {
   private _fireAfterEach(scenario: Scenario): Promise<void> {
     const suite: Suite = this;
     return new Promise((resolve, reject) => {
-      // Do all all fthe finally callbacks first
+      // Do all of the finally callbacks first
       Promise.mapSeries(this._afterEachCallbacks, _then => {
         return _then.apply(suite, [scenario]);
       })

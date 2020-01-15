@@ -262,7 +262,7 @@ export function refreshConfig(): FlagpoleConfig {
       name: path.basename(process.cwd()),
       path: "tests"
     },
-    environments: [{ name: "dev", defaultDomain: "" }],
+    environments: [],
     suites: []
   };
   // Is there a config file?

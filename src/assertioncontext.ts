@@ -12,7 +12,9 @@ import {
 } from "./interfaces";
 import {
   AssertionActionCompleted,
-  AssertionActionFailed
+  AssertionActionFailed,
+  AssertionFail,
+  AssertionPass
 } from "./logging/assertionresult";
 import { openInBrowser, getMessageAndCallbackFromOverloading } from "./util";
 import {
@@ -291,11 +293,21 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public async exists(selector: string): Promise<iValue> {
+  public async exists(selector: string): Promise<iValue>;
+  public async exists(message: string, selector: string): Promise<iValue>;
+  public async exists(a: string, b?: string): Promise<iValue> {
+    const selector = typeof b === "string" ? b : a;
+    const message = typeof b === "string" ? a : null;
     const el = await this.response.find(selector);
-    el.isNull()
-      ? this._failedAction("EXISTS", `${selector}`)
-      : this._completedAction("EXISTS", `${selector}`);
+    if (!!message) {
+      el.isNull()
+        ? this.scenario.result(new AssertionFail(message, selector))
+        : this.scenario.result(new AssertionPass(message));
+    } else {
+      el.isNull()
+        ? this._failedAction("EXISTS", `${selector}`)
+        : this._completedAction("EXISTS", `${selector}`);
+    }
     return el;
   }
 

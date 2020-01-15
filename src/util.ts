@@ -14,6 +14,10 @@ export function isNullOrUndefined(obj: any): boolean {
   return typeof obj === "undefined" || obj === null;
 }
 
+export function isAsyncCallback(func: Function): boolean {
+  return func.toString().indexOf("=> __awaiter(") > 0;
+}
+
 /**
  * Get the real and normalized type of object
  *
@@ -83,6 +87,51 @@ export function asyncForEach(array: any[], callback: Function): Promise<void> {
     }
     Promise.all(promises).then(() => {
       resolve();
+    });
+  });
+}
+
+export function asyncEvery(array: any[], callback: Function): Promise<boolean> {
+  return new Promise(resolve => {
+    const promises: Promise<any>[] = [];
+    for (let i = 0; i < array.length; i++) {
+      promises.push(callback(array[i], i, array));
+    }
+    Promise.all(promises).then((values: boolean[]) => {
+      const boo = values.every(value => {
+        return value;
+      });
+      resolve(boo);
+    });
+  });
+}
+
+export function asyncNone(array: any[], callback: Function): Promise<boolean> {
+  return new Promise(resolve => {
+    const promises: Promise<any>[] = [];
+    for (let i = 0; i < array.length; i++) {
+      promises.push(callback(array[i], i, array));
+    }
+    Promise.all(promises).then((values: boolean[]) => {
+      const boo = !values.some(value => {
+        return value;
+      });
+      resolve(boo);
+    });
+  });
+}
+
+export function asyncSome(array: any[], callback: Function): Promise<boolean> {
+  return new Promise(resolve => {
+    const promises: Promise<any>[] = [];
+    for (let i = 0; i < array.length; i++) {
+      promises.push(callback(array[i], i, array));
+    }
+    Promise.all(promises).then((values: boolean[]) => {
+      const boo = values.some(value => {
+        return value;
+      });
+      resolve(boo);
     });
   });
 }

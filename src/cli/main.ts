@@ -61,7 +61,6 @@ let argv = require("yargs")
   .boolean("q")
   .string("o")
   .string("base")
-  .default("e", "dev")
   .default("o", "console")
   .default("s", [])
   .default("t", "")
@@ -111,7 +110,6 @@ if (commands.indexOf(String(Cli.command)) < 0) {
 /**
  * Settings
  */
-FlagpoleExecution.opts.environment = argv.e;
 FlagpoleExecution.opts.setOutputFromString(argv.o);
 FlagpoleExecution.opts.automaticallyPrintToConsole = true;
 FlagpoleExecution.opts.automaticallyPrintToConsole = !argv.q;
@@ -132,6 +130,21 @@ if (argv.c && !Cli.config.isValid()) {
   Cli.log("The config file you specified did not exist.\n");
   Cli.exit(1);
 }
+
+// Set environment
+FlagpoleExecution.opts.environment = (() => {
+  // Use commandline if we got it
+  if (argv.e) {
+    return argv.e;
+  }
+  // Otherwise use the first env from config
+  const envs = Object.keys(Cli.config.environments);
+  if (envs.length > 0) {
+    return envs[0];
+  }
+  // Lastly return dev as final fallback
+  return "dev";
+})();
 
 // Settings from config file
 FlagpoleExecution.opts.configPath = Cli.configPath;

@@ -117,8 +117,6 @@ export abstract class DOMElement extends Value {
   public async getStyleProperty(key: string): Promise<iValue> {
     const name: string = `${this.name} -> style[${key}]`;
     const style: string | null = await this._getAttribute("style");
-    console.log(this.tagName);
-    console.log(style);
     let attr: null | string = null;
     if (style) {
       const properties = style.split(";").map(value => {

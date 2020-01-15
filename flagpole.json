@@ -4,9 +4,15 @@
     "name": "flagpole",
     "path": "tests",
     "source": "src",
-    "output": "out"
+    "output": "out",
+    "images": "images",
+    "cache": "cache"
   },
   "environments": {
+    "local": {
+      "name": "local",
+      "defaultDomain": "http://localhost:8000"
+    },
     "dev": {
       "name": "dev",
       "defaultDomain": "http://localhost:8000"
@@ -51,6 +57,11 @@
     "visual": {
       "id": "",
       "name": "visual",
+      "tags": []
+    },
+    "wait": {
+      "id": "",
+      "name": "wait",
       "tags": []
     }
   }

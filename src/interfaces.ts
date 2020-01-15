@@ -241,8 +241,11 @@ export interface iAssertion {
   resolves(continueOnReject?: boolean): Promise<iAssertion>;
   rejects(continueOnReject?: boolean): Promise<any>;
   none(callback: Function): iAssertion;
+  none(asyncCallback: Function): Promise<iAssertion>;
   every(callback: Function): iAssertion;
+  every(asyncCallback: Function): Promise<iAssertion>;
   some(callback: Function): iAssertion;
+  some(asyncCallback: Function): Promise<iAssertion>;
   schema(schema: any, simple?: boolean): Promise<iAssertion>;
   assert(a: any, b?: any): iAssertion;
   comment(message: string): iAssertionContext;

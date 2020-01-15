@@ -8,8 +8,14 @@ import {
 import { AssertionSchema, iAjvLike } from "./assertionschema";
 import * as Ajv from "ajv";
 import { iAssertionContext, iAssertion } from "./interfaces";
-import { toType } from "./util";
-import { isNullOrUndefined } from "util";
+import {
+  toType,
+  isNullOrUndefined,
+  asyncEvery,
+  asyncNone,
+  asyncSome,
+  isAsyncCallback
+} from "./util";
 import { ImageCompare } from "./imagecompare";
 
 export class Assertion implements iAssertion {
@@ -158,6 +164,7 @@ export class Assertion implements iAssertion {
   private _finishedResolver: Function = () => {};
   private _statement: boolean | null = null;
   private _assertionMade: boolean = false;
+  private _defaultMessages: [string, string] = ["True", "False"];
 
   public static async create(
     context: iAssertionContext,
@@ -183,166 +190,133 @@ export class Assertion implements iAssertion {
   public exactly(value: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    const bool: boolean = this._eval(thisValue === thatValue);
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} is not exactly ${thatValue}`
-        : `${this._getSubject()} is exactly ${thatValue}`,
-      thatValue
+    this._setDefaultMessages(
+      `${this._getSubject()} is not exactly ${thatValue}`,
+      `${this._getSubject()} is exactly ${thatValue}`
     );
-    return this;
+    return this._evalulate(thisValue === thatValue, thisValue);
   }
 
   public equals(value: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    const bool: boolean = this._eval(thisValue == thatValue);
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} does not equal ${thatValue}`
-        : `${this._getSubject()} equals ${thatValue}`,
-      thisValue
+    this._setDefaultMessages(
+      `${this._getSubject()} does not equal ${thatValue}`,
+      `${this._getSubject()} equals ${thatValue}`
     );
-    return this;
+    return this._evalulate(thisValue == thatValue, thisValue);
   }
 
   public like(value: any): Assertion {
-    const thisVal: any = String(this._getCompareValue(this._input))
+    const thisValue: any = String(this._getCompareValue(this._input))
       .toLowerCase()
       .trim();
-    const thatVal: any = String(this._getCompareValue(value))
+    const thatValue: any = String(this._getCompareValue(value))
       .toLowerCase()
       .trim();
-    const bool: boolean = this._eval(thisVal == thatVal);
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} is not like ${thatVal}`
-        : `${this._getSubject()} is like ${thatVal}`,
-      thisVal
+    this._setDefaultMessages(
+      `${this._getSubject()} is not like ${thatValue}`,
+      `${this._getSubject()} is like ${thatValue}`
     );
-    return this;
+    return this._evalulate(thisValue == thatValue, thisValue);
   }
 
   public greaterThan(value: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    const bool: boolean = this._eval(
-      parseFloat(thisValue) > parseFloat(thatValue)
+    this._setDefaultMessages(
+      `${this._getSubject()} is not greater than ${thatValue}`,
+      `${this._getSubject()} is greater than ${thatValue}`
     );
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} is not greater than ${thatValue}`
-        : `${this._getSubject()} is greater than ${thatValue}`,
+    return this._evalulate(
+      parseFloat(thisValue) > parseFloat(thatValue),
       thisValue
     );
-    return this;
   }
 
   public greaterThanOrEquals(value: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    const bool: boolean = this._eval(
-      parseFloat(thisValue) >= parseFloat(thatValue)
+    this._setDefaultMessages(
+      `${this._getSubject()} is not greater than or equal to ${thatValue}`,
+      `${this._getSubject()} is greater than or equal to ${thatValue}`
     );
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} is not greater than or equal to ${thatValue}`
-        : `${this._getSubject()} is greater than or equal to ${thatValue}`,
+    return this._evalulate(
+      parseFloat(thisValue) >= parseFloat(thatValue),
       thisValue
     );
-    return this;
   }
 
   public lessThan(value: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    const bool: boolean = this._eval(
-      parseFloat(thisValue) < parseFloat(thatValue)
+    this._setDefaultMessages(
+      `${this._getSubject()} is not less than ${thatValue}`,
+      `${this._getSubject()} is less than ${thatValue}`
     );
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} is not less than ${thatValue}`
-        : `${this._getSubject()} is less than ${thatValue}`,
+    return this._evalulate(
+      parseFloat(thisValue) < parseFloat(thatValue),
       thisValue
     );
-    return this;
   }
 
   public lessThanOrEquals(value: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    const bool: boolean = this._eval(
-      parseFloat(thisValue) <= parseFloat(thatValue)
+    this._setDefaultMessages(
+      `${this._getSubject()} is not less than or equal to ${thatValue}`,
+      `${this._getSubject()} is less than or equal to ${thatValue}`
     );
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} is not less than or equal to ${thatValue}`
-        : `${this._getSubject()} is less than or equal to ${thatValue}`,
+    return this._evalulate(
+      parseFloat(thisValue) <= parseFloat(thatValue),
       thisValue
     );
-    return this;
   }
 
   public between(min: any, max: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatMin: number = parseFloat(this._getCompareValue(min));
     const thatMax: number = parseFloat(this._getCompareValue(max));
-    const bool: boolean = this._eval(
-      parseFloat(thisValue) >= thatMin && parseFloat(thisValue) <= thatMax
+    this._setDefaultMessages(
+      `${this._getSubject()} is not between ${min} and ${max}`,
+      `${this._getSubject()} is between ${min} and ${max}`
     );
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} is not between ${min} and ${max}`
-        : `${this._getSubject()} is between ${min} and ${max}`,
+    return this._evalulate(
+      parseFloat(thisValue) >= thatMin && parseFloat(thisValue) <= thatMax,
       thisValue
     );
-    return this;
   }
 
   public matches(value: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     const pattern = toType(value) == "regexp" ? thatValue : new RegExp(value);
-    const bool: boolean = this._eval(pattern.test(thisValue));
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} does not match ${String(pattern)}`
-        : `${this._getSubject()} matches ${String(pattern)}`,
-      thisValue
+    this._setDefaultMessages(
+      `${this._getSubject()} does not match ${String(pattern)}`,
+      `${this._getSubject()} matches ${String(pattern)}`
     );
-    return this;
+    return this._evalulate(pattern.test(thisValue), thisValue);
   }
 
   public contains(value: any): Assertion {
-    let bool: boolean = false;
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    if (isNullOrUndefined(this._input)) {
-      bool = this._eval(thisValue === thatValue);
-    } else if (toType(this._input) == "array") {
-      bool = this._eval(thisValue.indexOf(thatValue) >= 0);
-    } else if (toType(this._input) == "object") {
-      bool = this._eval(typeof this._input[thatValue] !== "undefined");
-    } else {
-      bool = this._eval(String(this._input).indexOf(thatValue) >= 0);
-    }
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} does not contain ${thatValue}`
-        : `${this._getSubject()} contains ${thatValue}`,
-      thisValue
+    const bool: boolean = (() => {
+      if (isNullOrUndefined(this._input)) {
+        return thisValue === thatValue;
+      } else if (toType(this._input) == "array") {
+        return thisValue.indexOf(thatValue) >= 0;
+      } else if (toType(this._input) == "object") {
+        return typeof this._input[thatValue] !== "undefined";
+      } else {
+        return String(this._input).indexOf(thatValue) >= 0;
+      }
+    })();
+    this._setDefaultMessages(
+      `${this._getSubject()} does not contain ${thatValue}`,
+      `${this._getSubject()} contains ${thatValue}`
     );
-    return this;
+    return this._evalulate(bool, thisValue);
   }
 
   public looksLike(imageData: Buffer): Assertion;
@@ -355,6 +329,7 @@ export class Assertion implements iAssertion {
     controlImage: string | Buffer,
     allowedDifference: number | string = 0
   ): Assertion {
+    this._setDefaultMessages(`Images do not match.`, `Images match.`);
     let assertionPassed: boolean = false;
     let details: string = "";
     const imageCompare = new ImageCompare(
@@ -388,114 +363,104 @@ export class Assertion implements iAssertion {
     } catch (err) {
       details = err;
     }
-    this._assert(
-      assertionPassed,
-      this._not ? `Images do not match.` : `Images match.`,
-      details
-    );
-    return this;
+    return this._evalulate(assertionPassed, details);
   }
 
   public startsWith(value: any): Assertion {
-    let bool: boolean = false;
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    if (toType(thisValue) == "array") {
-      bool = this._eval(thisValue[0] == value);
-    }
-    if (!isNullOrUndefined(thisValue)) {
-      bool = this._eval(String(thisValue).indexOf(thatValue) === 0);
-    }
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} does not start with ${thatValue}`
-        : `${this._getSubject()} starts with ${thatValue}`,
-      String(thisValue)
+    const bool: boolean = (() => {
+      if (toType(thisValue) == "array") {
+        return thisValue[0] == value;
+      }
+      if (!isNullOrUndefined(thisValue)) {
+        return String(thisValue).indexOf(thatValue) === 0;
+      }
+      return false;
+    })();
+    this._setDefaultMessages(
+      `${this._getSubject()} does not start with ${thatValue}`,
+      `${this._getSubject()} starts with ${thatValue}`
     );
-    return this;
+    return this._evalulate(bool, String(thisValue));
   }
 
   public endsWith(value: any): Assertion {
-    let bool: boolean = false;
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    if (toType(thisValue) == "array") {
-      bool = this._eval(thisValue[thisValue.length - 1] == thatValue);
-    }
-    if (!isNullOrUndefined(thisValue)) {
-      bool = this._eval(
-        String(thisValue).substr(
-          0,
-          String(thisValue).length - String(thatValue).length
-        ) == thatValue
-      );
-    }
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} does not end with ${thatValue}`
-        : `${this._getSubject()} ends with ${thatValue}`,
-      String(this._input)
+    const bool: boolean = (() => {
+      if (toType(thisValue) == "array") {
+        return thisValue[thisValue.length - 1] == thatValue;
+      }
+      if (!isNullOrUndefined(thisValue)) {
+        return (
+          String(thisValue).substr(
+            0,
+            String(thisValue).length - String(thatValue).length
+          ) == thatValue
+        );
+      }
+      return false;
+    })();
+    this._setDefaultMessages(
+      `${this._getSubject()} does not end with ${thatValue}`,
+      `${this._getSubject()} ends with ${thatValue}`
     );
-    return this;
+    return this._evalulate(bool, String(this._input));
   }
 
   public in(values: any[]): Assertion {
     const thisValue = this._getCompareValue(this._input);
-    let bool: boolean = this._eval(values.indexOf(thisValue) >= 0);
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} is not in list: ${values.join(", ")}`
-        : `${this._getSubject()} is in list: ${values.join(", ")}`,
-      thisValue
+    this._setDefaultMessages(
+      `${this._getSubject()} is not in list: ${values.join(", ")}`,
+      `${this._getSubject()} is in list: ${values.join(", ")}`
     );
-    return this;
+    return this._evalulate(values.indexOf(thisValue) >= 0, thisValue);
   }
 
   public includes(value: any): Assertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = String(this._getCompareValue(value));
-    let bool: boolean = false;
-    if (thisValue && thisValue.indexOf) {
-      bool = thisValue.indexOf(thatValue) >= 0;
-    }
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} does not include ${thatValue}`
-        : `${this._getSubject()} includes ${thatValue}`,
-      thisValue
+    const bool: boolean = (() => {
+      if (thisValue && thisValue.indexOf) {
+        return thisValue.indexOf(thatValue) >= 0;
+      }
+      return false;
+    })();
+    this._setDefaultMessages(
+      `${this._getSubject()} does not include ${thatValue}`,
+      `${this._getSubject()} includes ${thatValue}`
     );
-    return this;
+    return this._evalulate(bool, thisValue);
   }
 
   public exists(): Assertion {
     const thisValue = this._getCompareValue(this._input);
-    const bool: boolean = this._eval(!isNullOrUndefined(thisValue));
-    this._assert(
-      bool,
-      this._not
-        ? `${this._getSubject()} does not exist`
-        : `${this._getSubject()} exists`,
-      thisValue
+    this._setDefaultMessages(
+      `${this._getSubject()} does not exist`,
+      `${this._getSubject()} exists`
     );
-    return this;
+    return this._evalulate(
+      !isNullOrUndefined(thisValue),
+      this._getName(this._input),
+      thisValue && thisValue.path
+        ? thisValue.path
+            .split(" ")
+            .pop()
+            .replace(/[\. "'=\[\]]/g, "")
+        : null
+    );
   }
 
   public resolves(continueOnReject: boolean = false): Promise<Assertion> {
-    const assertion: Assertion = this;
     const thisValue = this._getCompareValue(this._input);
+    this._setDefaultMessages(
+      `${this._getSubject()} was not resolved`,
+      `${this._getSubject()} was resolved`
+    );
     return new Promise((resolve, reject) => {
       const result = (bool: boolean) => {
-        this._assert(
-          this._eval(bool),
-          this._not
-            ? `${this._getSubject()} was not resolved`
-            : `${this._getSubject()} was resolved`,
-          bool
-        );
+        const assertion = this._evalulate(bool, bool);
         if (bool) {
           resolve(assertion);
         } else {
@@ -517,17 +482,14 @@ export class Assertion implements iAssertion {
   }
 
   public rejects(continueOnReject: boolean = false): Promise<any> {
-    const assertion: Assertion = this;
     const thisValue = this._getCompareValue(this._input);
+    this._setDefaultMessages(
+      `${this._getSubject()} was not rejected`,
+      `${this._getSubject()} was rejected`
+    );
     return new Promise((resolve, reject) => {
       const result = (bool: boolean) => {
-        this._assert(
-          this._eval(bool),
-          this._not
-            ? `${this._getSubject()} was not rejected`
-            : `${this._getSubject()} was rejected`,
-          bool
-        );
+        const assertion = this._evalulate(bool, bool);
         if (bool) {
           resolve(assertion);
         } else {
@@ -548,61 +510,92 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public none(callback: Function): Assertion {
-    let bool: boolean = false;
+  public none(callback: Function): Assertion;
+  public none(asyncCallback: Function): Promise<Assertion>;
+  public none(callback: Function): Assertion | Promise<Assertion> {
     const thisValue = this._getCompareValue(this._input);
-    if (toType(thisValue) == "array") {
-      const arr: Array<any> = thisValue;
-      bool = arr.every((value: any, index: number, array: any[]) => {
-        return !callback(value, index, array);
+    this._setDefaultMessages(
+      `${this._getSubject()} some were true`,
+      `${this._getSubject()} none were true`
+    );
+    // This must be an array
+    if (toType(thisValue) !== "array") {
+      throw new Error("Input value must be an array.");
+    }
+    // If callback is async then we'll return a promise
+    if (isAsyncCallback(callback)) {
+      return new Promise(async resolve => {
+        resolve(
+          this._evalulate(await asyncNone(thisValue, callback), thisValue)
+        );
       });
     }
-    this._assert(
-      this._eval(bool),
-      this._not
-        ? `${this._getSubject()} some were true`
-        : `${this._getSubject()} none were true`,
+    // Process synchronously
+    return this._evalulate(
+      !thisValue.some((value: any, index: number, array: any[]) => {
+        return callback(value, index, array);
+      }),
       thisValue
     );
-    return this;
   }
 
-  public every(callback: Function): Assertion {
-    let bool: boolean = false;
+  public every(callback: Function): Assertion;
+  public every(asyncCallback: Function): Promise<Assertion>;
+  public every(callback: Function): Assertion | Promise<Assertion> {
     const thisValue = this._getCompareValue(this._input);
-    if (toType(thisValue) == "array") {
-      const arr: Array<any> = thisValue;
-      bool = arr.every((value: any, index: number, array: any[]) => {
-        return callback(value, index, array);
+    this._setDefaultMessages(
+      `${this._getSubject()} some were true`,
+      `${this._getSubject()} none were true`
+    );
+    // This must be an array
+    if (toType(thisValue) !== "array") {
+      throw new Error("Input value must be an array.");
+    }
+    // If callback is async then we'll return a promise
+    if (isAsyncCallback(callback)) {
+      return new Promise(async resolve => {
+        resolve(
+          this._evalulate(await asyncEvery(thisValue, callback), thisValue)
+        );
       });
     }
-    this._assert(
-      this._eval(bool),
-      this._not
-        ? `${this._getSubject()} not all were true`
-        : `${this._getSubject()} all were true`,
+    // Process synchronously
+    return this._evalulate(
+      thisValue.every((value: any, index: number, array: any[]) => {
+        return callback(value, index, array);
+      }),
       thisValue
     );
-    return this;
   }
 
-  public some(callback: Function): Assertion {
-    let bool: boolean = false;
+  public some(callback: Function): Assertion;
+  public some(asyncCallback: Function): Promise<Assertion>;
+  public some(callback: Function): Assertion | Promise<Assertion> {
     const thisValue = this._getCompareValue(this._input);
-    if (toType(thisValue) == "array") {
-      const arr: Array<any> = thisValue;
-      bool = arr.some((value: any, index: number, array: any[]) => {
-        return callback(value, index, array);
+    this._setDefaultMessages(
+      `${this._getSubject()} none were true`,
+      `${this._getSubject()} some were true`
+    );
+
+    // This must be an array
+    if (toType(thisValue) !== "array") {
+      throw new Error("Input value must be an array.");
+    }
+    // If callback is async then we'll return a promise
+    if (isAsyncCallback(callback)) {
+      return new Promise(async resolve => {
+        resolve(
+          this._evalulate(await asyncSome(thisValue, callback), thisValue)
+        );
       });
     }
-    this._assert(
-      this._eval(bool),
-      this._not
-        ? `${this._getSubject()} none were true`
-        : `${this._getSubject()} some were true`,
+    // Process synchronously
+    return this._evalulate(
+      thisValue.some((value: any, index: number, array: any[]) => {
+        return callback(value, index, array);
+      }),
       thisValue
     );
-    return this;
   }
 
   public async schema(
@@ -624,13 +617,11 @@ export class Assertion implements iAssertion {
         error += err.message + " ";
       });
     }
-    return this._assert(
-      this._eval(isValid),
-      this._not
-        ? `${this._getSubject()} does not match schema`
-        : `${this._getSubject()} matches schema`,
-      error
+    this._setDefaultMessages(
+      `${this._getSubject()} does not match schema`,
+      `${this._getSubject()} matches schema`
     );
+    return this._evalulate(isValid, error);
   }
 
   /**
@@ -682,33 +673,67 @@ export class Assertion implements iAssertion {
     }
   }
 
-  private async _assert(
-    statement: boolean,
-    defaultMessage: string,
-    actualValue: any
-  ): Promise<Assertion> {
+  private _getMessage(): string {
+    return this._message
+      ? this._message
+      : this._not
+      ? this._defaultMessages[0]
+      : this._defaultMessages[1];
+  }
+
+  private _getSourceCode(): string {
+    let source: string =
+      this._input && this._input.sourceCode ? this._input.sourceCode : "";
+    // Limit long source code output
+    if (source.length > 500) {
+      source = source.substring(0, 500);
+    }
+    return source;
+  }
+
+  private _getHighlightText(
+    actualValue: any,
+    highlightText: string | null
+  ): string {
+    return highlightText
+      ? highlightText
+      : this._input && this._input.highlight
+      ? this._input.highlight
+      : String(actualValue);
+  }
+
+  private _getActualValueText(actualValue: any): string {
+    return `Actual value: ${String(actualValue)}`;
+  }
+
+  private _evalulate(
+    bool: boolean,
+    actualValue: any,
+    highlightText: string | null = null
+  ): Assertion {
     // Result is immutable, so only let them assert once
     if (this._result !== null || this._statement !== null) {
       throw new Error("Assertion result is immutable.");
     }
-    this._statement = statement;
-    const message: string = this._message || defaultMessage;
-    // Assertion passes
-    if (!!statement) {
-      this._result = new AssertionPass(message);
+    // Evalulate assertion
+    this._statement = this._not ? !bool : bool;
+    // Passed
+    if (!!this._statement) {
+      this._result = new AssertionPass(this._getMessage());
     }
-    // Assertion fails
+    // Failed
     else {
-      const source: string =
-        this._input && this._input.sourceCode ? this._input.sourceCode : "";
-      const highlight: string =
-        this._input && this._input.highlight
-          ? this._input.highlight
-          : String(actualValue);
-      let details: string = `Actual value: ${String(actualValue)}`;
       this._result = this._optional
-        ? new AssertionFailOptional(message, details)
-        : new AssertionFail(message, details, source, highlight);
+        ? new AssertionFailOptional(
+            this._getMessage(),
+            this._getActualValueText(actualValue)
+          )
+        : new AssertionFail(
+            this._getMessage(),
+            this._getActualValueText(actualValue),
+            this._getSourceCode(),
+            this._getHighlightText(actualValue, highlightText)
+          );
     }
     // Log this result
     this._context.scenario.result(this._result);
@@ -724,6 +749,15 @@ export class Assertion implements iAssertion {
     } else {
       return value;
     }
+  }
+
+  private _getName(value: any): any {
+    if (value && value["path"]) {
+      return value["tagName"]
+        ? `<${value["tagName"]}> @ ${value.path}`
+        : value.path;
+    }
+    return this._input.toString().substr(0, 255);
   }
 
   private _getSubject(): string {
@@ -752,15 +786,14 @@ export class Assertion implements iAssertion {
       : String(name);
   }
 
-  private _eval(bool: boolean): boolean {
-    this._not && (bool = !bool);
-    return bool;
-  }
-
   private _resolveAssertion() {
     if (this._statement === null) {
       this._statement = false;
       this._finishedResolver(null);
     }
+  }
+
+  private _setDefaultMessages(standardMessage: string, notMessage?: string) {
+    this._defaultMessages = [standardMessage, notMessage || standardMessage];
   }
 }

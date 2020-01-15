@@ -20,8 +20,7 @@ suite
   .open("/")
   .next("Screenshot", async context => {
     await context.waitForExists("#hplogo");
-    const screenshot = await context.screenshot();
     context
-      .assert("Screenshot should match our control", screenshot)
+      .assert("Homepage matches control screenshot", await context.screenshot())
       .looksLike("@homepage");
   });

@@ -190,6 +190,7 @@ export class Scenario implements iScenario {
   protected _finalUrl: string | null = null;
   protected _url: string | null = null;
   protected _waitToExecute: boolean = false;
+  protected _waitTime: number = 0;
   protected _flipAssertion: boolean = false;
   protected _ignoreAssertion: boolean = false;
   protected _cookieJar: r.CookieJar;
@@ -412,6 +413,11 @@ export class Scenario implements iScenario {
    * @param bool
    */
   public wait(bool: boolean = true): iScenario {
+    // Was waiting but not anymore
+    if (this._waitToExecute && !bool) {
+      this._waitTime = Date.now() - this._timeScenarioInitialized;
+    }
+    // Set waiting value
     this._waitToExecute = bool;
     return this;
   }
@@ -421,8 +427,9 @@ export class Scenario implements iScenario {
       throw new Error("Scenario can't wait for itself");
     }
     this.wait();
-    thatScenario.success(() => {
-      this.execute();
+    thatScenario.success(async () => {
+      this.wait(false);
+      await this.execute();
     });
     return this;
   }
@@ -572,8 +579,9 @@ export class Scenario implements iScenario {
       await this._fireBefore();
       this._pushToLog(new LogScenarioHeading(this.title));
       // If we waited first
-      if (this._waitToExecute) {
-        this.comment(`Waited ${Date.now() - this._timeScenarioInitialized}ms`);
+      this.wait(false);
+      if (this._waitTime > 0) {
+        this.comment(`Waited ${this._waitTime}ms`);
       }
       // Execute it
       this._publish(ScenarioStatusEvent.executionProgress);
@@ -948,10 +956,12 @@ export class Scenario implements iScenario {
   /**
    * Execute now if we are able to do so
    */
-  protected _executeWhenReady() {
+  protected _executeWhenReady(): boolean {
     if (!this._waitToExecute && this.canExecute) {
       this.execute();
+      return true;
     }
+    return false;
   }
 
   /**
