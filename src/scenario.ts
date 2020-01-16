@@ -27,6 +27,7 @@ import { URL } from "url";
 import * as rp from "request-promise";
 import * as r from "request";
 import request = require("request");
+import { iValue } from ".";
 
 const probeImage = require("probe-image-size");
 
@@ -437,7 +438,11 @@ export class Scenario implements iScenario {
   /**
    * Add a neutral line to the output
    */
-  public comment(message: string): iScenario {
+  public comment(value: iValue): iScenario;
+  public comment(message: string): iScenario;
+  public comment(input: string | iValue): iScenario {
+    const message: string =
+      typeof input === "string" ? input : input.toString();
     return this._pushToLog(new LogComment(message));
   }
 

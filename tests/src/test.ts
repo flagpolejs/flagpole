@@ -17,8 +17,33 @@ fp.suite("Just random tests", suite => {
           const text = (await link.getInnerText()).toString();
           return text.length > 0;
         });
-      context.assert("All tags are <a>", navLinks).every((link: iValue) => {
+      context.comment("before");
+      /*context.assert("All tags are <a>", navLinks).every((link: iValue) => {
         return link.tagName == "a";
       });
+
+      */
+      await context
+        .assert("all links have text", navLinks)
+        .every(async link => {
+          return (await link.getInnerText()).toString().length > 0;
+        });
+      context.comment("after");
+
+      /*
+      context.assert("All links have text", navLinks).every((link: iValue) => {
+        return link.getInnerText().then(text => {
+          return text.toString().length > 0;
+        });
+      });
+      context.assert("Some links have text", navLinks).some(async link => {
+        return (await link.getInnerText()).toString().length > 0;
+      });
+      context.assert("No links are empty", []).none((link: iValue) => {
+        return link.getInnerText().then(text => {
+          return text.toString().length == 0;
+        });
+      });
+      */
     });
 });

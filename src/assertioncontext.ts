@@ -92,8 +92,10 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param message
    */
-  public comment(message: string): iAssertionContext {
-    this._scenario.comment(message);
+  public comment(message: string): iAssertionContext;
+  public comment(value: iValue): iAssertionContext;
+  public comment(input: string | iValue): iAssertionContext {
+    this._scenario.comment(input);
     return this;
   }
 

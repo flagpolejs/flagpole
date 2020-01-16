@@ -90,13 +90,30 @@ This can be used with any type of value. It uses a rough (double equals) equalit
 context.assert(myValue).equals(5);
 ```
 
-### every(callback: Function): Assertion
+### every(callback: Function): Promise<Assertion>
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that every one is true.
 
 ```javascript
 context.assert(["eminem", "dre", "ice cube"]).every(rapper => {
   return rapper.indexOf("e") >= 0;
+});
+```
+
+This method can also handle async callbacks.
+
+```javascript
+context.assert(navBarLinks).every(async link => {
+  const innerText = await link.getInnerText();
+  return innerText.toString().length > 0;
+});
+```
+
+Since it returns a promise, if you need your asseretions to run in order be sure to prefix it with `await`
+
+```javascript
+await context.assert(links).every(link => {
+  return link.tagName === "a";
 });
 ```
 
@@ -202,7 +219,7 @@ Regular express compare of strings.
 context.assert(myValue).matches(/^[a-z0-9]{3,32}$/i);
 ```
 
-### none(callback: Function): Assertion
+### none(callback: Function): Promise<Assertion>
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that none are true.
 
@@ -248,7 +265,7 @@ If you have AJV installed, but want to use our built in simpler syntax in some p
 await context.assert(jsonResponse).schema(mySchema, true);
 ```
 
-### some(callback: Function): Assertion
+### some(callback: Function): Promise<Assertion>
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that at least one is true.
 

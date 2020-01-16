@@ -17,6 +17,7 @@ import {
   isAsyncCallback
 } from "./util";
 import { ImageCompare } from "./imagecompare";
+import { iValue } from ".";
 
 export class Assertion implements iAssertion {
   /**
@@ -518,9 +519,7 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public none(callback: IteratorCallback): Assertion;
-  public none(asyncCallback: IteratorCallback): Promise<Assertion>;
-  public none(callback: IteratorCallback): Assertion | Promise<Assertion> {
+  public none(callback: IteratorCallback): Promise<Assertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} some were true`,
@@ -530,26 +529,12 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    // If callback is async then we'll return a promise
-    if (this._returnsPromise(callback, thisValue)) {
-      return new Promise(async resolve => {
-        resolve(
-          this._evalulate(await asyncNone(thisValue, callback), thisValue)
-        );
-      });
-    }
-    // Process synchronously
-    return this._evalulate(
-      !thisValue.some((value: any, index: number, array: any[]) => {
-        return callback(value, index, array);
-      }),
-      thisValue
-    );
+    return new Promise(async resolve => {
+      resolve(this._evalulate(await asyncNone(thisValue, callback), thisValue));
+    });
   }
 
-  public every(callback: IteratorCallback): Assertion;
-  public every(asyncCallback: IteratorCallback): Promise<Assertion>;
-  public every(callback: IteratorCallback): Assertion | Promise<Assertion> {
+  public every(callback: IteratorCallback): Promise<Assertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} some were true`,
@@ -559,15 +544,23 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    // If callback is async then we'll return a promise
-    if (this._returnsPromise(callback, thisValue)) {
-      return new Promise(async resolve => {
-        resolve(
-          this._evalulate(await asyncEvery(thisValue, callback), thisValue)
-        );
-      });
+    return new Promise(async resolve => {
+      resolve(
+        this._evalulate(await asyncEvery(thisValue, callback), thisValue)
+      );
+    });
+  }
+
+  public everySync(callback: IteratorCallback): Assertion {
+    const thisValue = this._getCompareValue(this._input);
+    this._setDefaultMessages(
+      `${this._getSubject()} some were true`,
+      `${this._getSubject()} none were true`
+    );
+    // This must be an array
+    if (toType(thisValue) !== "array") {
+      throw new Error("Input value must be an array.");
     }
-    // Process synchronously
     return this._evalulate(
       thisValue.every((value: any, index: number, array: any[]) => {
         return callback(value, index, array);
@@ -576,9 +569,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public some(callback: IteratorCallback): Assertion;
-  public some(asyncCallback: IteratorCallback): Promise<Assertion>;
-  public some(callback: IteratorCallback): Assertion | Promise<Assertion> {
+  public some(callback: IteratorCallback): Promise<Assertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} none were true`,
@@ -589,21 +580,9 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    // If callback is async then we'll return a promise
-    if (this._returnsPromise(callback, thisValue)) {
-      return new Promise(async resolve => {
-        resolve(
-          this._evalulate(await asyncSome(thisValue, callback), thisValue)
-        );
-      });
-    }
-    // Process synchronously
-    return this._evalulate(
-      thisValue.some((value: any, index: number, array: any[]) => {
-        return callback(value, index, array);
-      }),
-      thisValue
-    );
+    return new Promise(async resolve => {
+      resolve(this._evalulate(await asyncSome(thisValue, callback), thisValue));
+    });
   }
 
   public async schema(
@@ -650,8 +629,11 @@ export class Assertion implements iAssertion {
    * @param message
    * @param value
    */
-  public comment(message: string): iAssertionContext {
-    return this._context.comment(message);
+  public comment(value: iValue): iAssertion;
+  public comment(message: string): iAssertion;
+  public comment(input: string | iValue): iAssertion {
+    this._context.comment(input);
+    return this;
   }
 
   public as(aliasName: string): iAssertion {
