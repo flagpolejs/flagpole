@@ -139,7 +139,7 @@ export class AssertionContext implements iAssertionContext {
     selector: string,
     searchForText: string | RegExp
   ): Promise<iValue> {
-    return this.findHavingText(selector, searchForText);
+    return this.response.findHavingText(selector, searchForText);
   }
 
   /**
@@ -152,7 +152,7 @@ export class AssertionContext implements iAssertionContext {
     selector: string,
     searchForText: string | RegExp
   ): Promise<iValue[]> {
-    return this.findAllHavingText(selector, searchForText);
+    return this.response.findAllHavingText(selector, searchForText);
   }
 
   /**
