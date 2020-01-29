@@ -455,6 +455,11 @@ export interface iBounds {
   points: { x: number; y: number }[];
 }
 
+export enum BrowserProduct {
+  chrome = "chrome",
+  firefox = "firefox"
+}
+
 export interface BrowserOptions extends LaunchOptions {
   uri?: string;
   width?: number;
@@ -462,4 +467,5 @@ export interface BrowserOptions extends LaunchOptions {
   jar?: CookieJar;
   recordConsole?: boolean;
   outputConsole?: boolean;
+  product?: BrowserProduct;
 }

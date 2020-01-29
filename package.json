@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.1.13",
+  "version": "2.1.15",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -20,9 +20,6 @@
   "author": "Jason Byrne <jason.byrne@flosports.tv>",
   "license": "MIT",
   "dependencies": {
-    "@types/cheerio": "^0.22.15",
-    "@types/puppeteer": "^2.0.0",
-    "@types/puppeteer-core": "^2.0.0",
     "ansi-align": "^2.0.0",
     "archiver": "^3.0.0",
     "bluebird": "^3.5.3",
@@ -36,7 +33,7 @@
     "pixelmatch": "^5.1.0",
     "probe-image-size": "^4.0.0",
     "prompts": "^2.3.0",
-    "puppeteer-core": "1.11.0",
+    "puppeteer-core": "^2.1.0",
     "request-promise": "^4.2.5",
     "tmp": "^0.1.0",
     "tough-cookie": "^3.0.1",
@@ -61,10 +58,13 @@
   "devDependencies": {
     "@types/bluebird": "^3.5.26",
     "@types/bluebird-global": "^3.5.12",
+    "@types/cheerio": "^0.22.15",
     "@types/node": "^12.12.8",
     "@types/pixelmatch": "^5.0.0",
     "@types/pngjs": "^3.4.0",
     "@types/prompts": "^2.0.3",
+    "@types/puppeteer": "^2.0.0",
+    "@types/puppeteer-core": "^2.0.0",
     "@types/request": "^2.48.4",
     "@types/request-promise": "^4.1.45",
     "ajv": "^6.10.2",
