@@ -1,4 +1,4 @@
-const Flagpole = require("../../dist/index.js").Flagpole;
+const Flagpole = require("../../../dist/index.js").Flagpole;
 
 const suite = Flagpole.Suite("Test Google Search")
   .base("https://fl.milesplit.com/")

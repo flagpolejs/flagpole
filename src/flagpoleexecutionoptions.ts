@@ -39,6 +39,11 @@ export class FlagpoleExecutionOptions {
   public quietMode: boolean = false;
 
   /**
+   * Execute suite asynchronously
+   */
+  public asyncExecution: boolean = false;
+
+  /**
    * If true will automatically print out test results to the console
    */
   public automaticallyPrintToConsole: boolean = false;

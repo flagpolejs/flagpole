@@ -32,7 +32,12 @@
     "smoke": {
       "id": "",
       "name": "smoke",
-      "tags": ["basic"]
+      "tags": ["basic", "foo"]
+    },
+    "html/flrunners": {
+      "id": "",
+      "name": "html/flrunners",
+      "tags": ["basic", "foo"]
     },
     "error": {
       "id": "",
