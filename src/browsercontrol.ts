@@ -1,5 +1,11 @@
 import * as puppeteer from "puppeteer-core";
-import { Page, Browser, Response, SetCookie } from "puppeteer-core";
+import {
+  Page,
+  Browser,
+  Response,
+  SetCookie,
+  AuthOptions
+} from "puppeteer-core";
 import { Cookie } from "tough-cookie";
 import { BrowserOptions } from "./interfaces";
 
@@ -122,6 +128,7 @@ export class BrowserControl {
         this._page = await this._onBrowserReady(this._browser);
         this._recordConsoleOutput();
         this._applyCookies();
+        this._setBasicAuth();
         resolve({
           response: await this._openUri(),
           body: await this._page.content(),
@@ -154,6 +161,12 @@ export class BrowserControl {
           source: consoleMesssage
         });
       });
+    }
+  }
+
+  private _setBasicAuth() {
+    if (this._page !== null) {
+      this._page.authenticate(this._opts["auth"]);
     }
   }
 

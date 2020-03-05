@@ -22,7 +22,9 @@
     "debug": {
       "id": "",
       "name": "debug",
-      "tags": ["basic"]
+      "tags": [
+        "basic"
+      ]
     },
     "foobar": {
       "id": "",
@@ -32,7 +34,9 @@
     "smoke": {
       "id": "",
       "name": "smoke",
-      "tags": ["basic"]
+      "tags": [
+        "basic"
+      ]
     },
     "error": {
       "id": "",
@@ -72,6 +76,11 @@
     "cookie": {
       "id": "",
       "name": "cookie",
+      "tags": []
+    },
+    "browser/setBasicAuth": {
+      "id": "",
+      "name": "browser/setBasicAuth",
       "tags": []
     }
   }
