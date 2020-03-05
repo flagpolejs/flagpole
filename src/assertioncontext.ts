@@ -1,5 +1,5 @@
 import { BrowserControl } from "./browsercontrol";
-import { Page } from "puppeteer";
+import { Page } from "puppeteer-core";
 import { Assertion } from "./assertion";
 import {
   iResponse,

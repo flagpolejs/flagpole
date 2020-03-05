@@ -56,6 +56,7 @@ let argv = require("yargs")
   .array("s")
   .string("t")
   .string("e")
+  .boolean("a")
   .boolean("d")
   .boolean("h")
   .boolean("q")
@@ -114,6 +115,7 @@ FlagpoleExecution.opts.setOutputFromString(argv.o);
 FlagpoleExecution.opts.automaticallyPrintToConsole = true;
 FlagpoleExecution.opts.automaticallyPrintToConsole = !argv.q;
 FlagpoleExecution.opts.quietMode = !!argv.q;
+FlagpoleExecution.opts.asyncExecution = !!argv.a;
 Cli.hideBanner = !!argv.h || argv.q || argv.o !== "console";
 Cli.projectPath = normalizePath(
   typeof argv.p !== "undefined" ? argv.p : process.cwd()

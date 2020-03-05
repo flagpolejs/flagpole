@@ -1,4 +1,4 @@
-import { Page, ElementHandle, Browser, Response } from "puppeteer";
+import { Page, ElementHandle, Browser, Response } from "puppeteer-core";
 import { iResponse, iValue, ScreenshotOpts } from "./interfaces";
 import { BrowserControl } from "./browsercontrol";
 import { DOMResponse } from "./domresponse";

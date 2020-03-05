@@ -5,7 +5,7 @@ import {
   iValue,
   ScreenshotOpts
 } from "./interfaces";
-import { JSHandle, Page, ElementHandle, BoxModel } from "puppeteer";
+import { JSHandle, Page, ElementHandle, BoxModel } from "puppeteer-core";
 import { DOMElement } from "./domelement";
 import {
   asyncForEach,

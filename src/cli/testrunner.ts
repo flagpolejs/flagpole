@@ -74,6 +74,12 @@ export class TestRunner {
   }
 
   public async runSpawn(): Promise<SuiteExecutionResult[]> {
+    return FlagpoleExecution.opts.asyncExecution
+      ? this._runSpawnAync()
+      : this._runSpawn();
+  }
+
+  protected async _runSpawn(): Promise<SuiteExecutionResult[]> {
     this._executionResults = [];
     // Loop through each suite and run it
     const totalSuites = Object.keys(this._suiteConfigs).length;
@@ -90,6 +96,32 @@ export class TestRunner {
     }
     this._onDone();
     return this._executionResults;
+  }
+
+  protected async _runSpawnAync(): Promise<SuiteExecutionResult[]> {
+    return new Promise((resolve, reject) => {
+      // Loop through each suite and run it
+      const totalSuites = Object.keys(this._suiteConfigs).length;
+      const suitePromises: Promise<SuiteExecutionResult>[] = [];
+      let count: number = 1;
+      for (let suiteName in this._suiteConfigs) {
+        this._publish(
+          `Running suite ${suiteName} (${count} of ${totalSuites})...`
+        );
+        let execution: SuiteExecution = SuiteExecution.executeSuite(
+          this._suiteConfigs[suiteName]
+        );
+        suitePromises.push(execution.result);
+        count++;
+      }
+      Promise.all(suitePromises)
+        .then(results => {
+          this._executionResults = results;
+          this._onDone();
+          resolve(this._executionResults);
+        })
+        .catch(reject);
+    });
   }
 
   private _onDone() {
