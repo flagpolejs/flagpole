@@ -397,10 +397,7 @@ export interface iScenario {
   setFormData(form: {}): iScenario;
   setMaxRedirects(n: number): iScenario;
   shouldFollowRedirects(onRedirect: boolean | Function): iScenario;
-  setBasicAuth(authorization: {
-    username: string;
-    password: string;
-  }): iScenario;
+  setBasicAuth(authorization: iBasicAuth): iScenario;
   setBearerToken(token: string): iScenario;
   setCookie(key: string, value: string, opts?: any): iScenario;
   setHeaders(headers: {}): iScenario;
@@ -447,6 +444,11 @@ export interface iMessageAndCallback {
   scenario?: iScenario;
 }
 
+export interface iBasicAuth {
+  username: string;
+  password: string;
+}
+
 export interface iBounds {
   x: number;
   y: number;
@@ -468,4 +470,5 @@ export interface BrowserOptions extends LaunchOptions {
   recordConsole?: boolean;
   outputConsole?: boolean;
   product?: BrowserProduct;
+  auth?: iBasicAuth;
 }

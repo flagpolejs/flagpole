@@ -111,7 +111,7 @@ export class BrowserControl {
     if (typeof this._opts.uri == "undefined") {
       throw new Error("Must have a URL to load.");
     }
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       this._dynamicPuppeteer.then(async puppeteer => {
         // Hoist width/height into defaultViewport if not already set
         this._opts.defaultViewport = this._opts.defaultViewport || {};
@@ -127,13 +127,15 @@ export class BrowserControl {
         this._browser = await puppeteer.launch(this._opts);
         this._page = await this._onBrowserReady(this._browser);
         this._recordConsoleOutput();
-        this._applyCookies();
-        this._setBasicAuth();
-        resolve({
-          response: await this._openUri(),
-          body: await this._page.content(),
-          cookies: await this.getCookies()
-        });
+        Promise.all([this._applyCookies(), this._setBasicAuth()])
+          .then(async () => {
+            resolve({
+              response: await this._openUri(),
+              body: this._page ? await this._page.content() : "",
+              cookies: await this.getCookies()
+            });
+          })
+          .catch(reject);
       });
     });
   }
@@ -164,13 +166,13 @@ export class BrowserControl {
     }
   }
 
-  private _setBasicAuth() {
-    if (this._page !== null) {
-      this._page.authenticate(this._opts["auth"]);
+  private async _setBasicAuth() {
+    if (this._page !== null && this._opts.auth) {
+      return this._page.authenticate(this._opts.auth);
     }
   }
 
-  private _applyCookies() {
+  private async _applyCookies() {
     if (typeof this._opts.jar != "undefined" && this._page !== null) {
       this._opts.jar.getCookies(
         this._opts.uri || "/",
@@ -193,7 +195,7 @@ export class BrowserControl {
               httpOnly: cookie.httpOnly
             });
           });
-          this._page.setCookie(...puppeteerCookies);
+          return this._page.setCookie(...puppeteerCookies);
         }
       );
     }

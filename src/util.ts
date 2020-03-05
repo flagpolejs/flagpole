@@ -177,7 +177,9 @@ export function normalizePath(uri: string): string {
 }
 
 export function ensureFolderExists(path: string) {
-  fs.mkdirSync(path, { recursive: true });
+  if (!fs.existsSync(path)) {
+    fs.mkdirSync(path, { recursive: true });
+  }
 }
 
 export function emptyFolder(folderPath: string): Promise<void> {
