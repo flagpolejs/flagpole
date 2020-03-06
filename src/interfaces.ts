@@ -8,7 +8,7 @@ import {
 } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import { URL } from "url";
-import { CookieJar } from "tough-cookie";
+import { CookieJar } from "request";
 import { RequestPromiseOptions } from "request-promise";
 import { FlagpoleExecutionOptions } from "./flagpoleexecutionoptions";
 

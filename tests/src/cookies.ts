@@ -1,17 +1,15 @@
 import { Flagpole } from "../../dist/index.js";
 
 const suite = Flagpole.suite("setCookie method").base(
-  "https://examples.sencha.com/"
+  "https://www.milesplit.com/"
 );
 
 suite
   .browser("Homepage Loads")
   .before(async context => {
-    await context.setCookie("abc", "123");
+    await context.setCookie("foo", "bar");
   })
+  .open("/")
   .next(async context => {
-    // @ts-ignore
-    //  context.comment(JSON.stringify(context.page));
-    context.comment(context.response.cookies);
-  })
-  .open("/");
+    context.assert(context.response.cookie("foo").toString()).equals("bar");
+  });
