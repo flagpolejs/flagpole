@@ -174,30 +174,24 @@ export class BrowserControl {
 
   private async _applyCookies() {
     if (typeof this._opts.jar != "undefined" && this._page !== null) {
-      this._opts.jar.getCookies(
-        this._opts.uri || "/",
-        {},
-        (err: Error | null, cookies: Cookie[]) => {
-          // If there was an error
-          if (err !== null || this._page === null) {
-            throw err;
-          }
-          // If not then apply these cookies
-          const puppeteerCookies: SetCookie[] = [];
-          cookies.forEach((cookie: Cookie) => {
-            puppeteerCookies.push({
-              name: cookie.key,
-              value: cookie.value,
-              url: this._opts.uri,
-              domain: cookie.domain || undefined,
-              path: cookie.path || "/",
-              secure: cookie.secure,
-              httpOnly: cookie.httpOnly
-            });
-          });
-          return this._page.setCookie(...puppeteerCookies);
-        }
+      const cookies: Cookie[] | undefined = this.opts.jar?.getCookies(
+        this._opts.uri || "/"
       );
+      if (cookies) {
+        const puppeteerCookies: SetCookie[] = [];
+        cookies.forEach((cookie: Cookie) => {
+          puppeteerCookies.push({
+            name: cookie.key,
+            value: cookie.value,
+            url: this._opts.uri,
+            domain: cookie.domain || undefined,
+            path: cookie.path || "/",
+            secure: cookie.secure,
+            httpOnly: cookie.httpOnly
+          });
+        });
+        return this._page.setCookie(...puppeteerCookies);
+      }
     }
   }
 

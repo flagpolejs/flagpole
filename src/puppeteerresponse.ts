@@ -234,7 +234,6 @@ export abstract class PuppeteerResponse extends DOMResponse
     value: string | string[]
   ): Promise<string[]> {
     if (this.page !== null) {
-      console.log("test");
       const values: string[] = typeof value == "string" ? [value] : value;
       return this.page.select.apply(
         this.page,
