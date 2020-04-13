@@ -1,13 +1,7 @@
 import * as puppeteer from "puppeteer-core";
-import {
-  Page,
-  Browser,
-  Response,
-  SetCookie,
-  AuthOptions
-} from "puppeteer-core";
+import { Page, Browser, Response, SetCookie } from "puppeteer-core";
 import { Cookie } from "tough-cookie";
-import { BrowserOptions } from "./interfaces";
+import { BrowserOptions, HttpRequest } from "./httprequest";
 
 export type BrowserConsoleMessage = {
   type: string;
@@ -22,7 +16,7 @@ export interface iBrowserControlResponse {
 }
 
 export class BrowserControl {
-  private _opts: BrowserOptions = {};
+  private _request: HttpRequest = new HttpRequest({});
   private _browser: Browser | null = null;
   private _page: Page | null = null;
   private _response: Response | null = null;
@@ -31,10 +25,6 @@ export class BrowserControl {
 
   public get consoleMessages(): BrowserConsoleMessage[] {
     return this._consoleMessages;
-  }
-
-  public get opts(): BrowserOptions {
-    return this._opts;
   }
 
   public get response(): Response | null {
@@ -53,18 +43,26 @@ export class BrowserControl {
     return this._puppeteer;
   }
 
+  public get request(): HttpRequest {
+    return this._request;
+  }
+
+  public get browserOpts(): BrowserOptions {
+    return this._request.browser;
+  }
+
   private get _dynamicPuppeteer(): Promise<typeof puppeteer> {
     if (!this._puppeteer) {
       // Try importing puppeteer.
       return (
         import("puppeteer")
-          .then(newPuppeteer => {
+          .then((newPuppeteer) => {
             this._puppeteer = newPuppeteer;
             // Return our imported puppeteer.
             return this._puppeteer;
           })
           // If puppeteer could not be loaded then load core.
-          .catch(e => {
+          .catch((e) => {
             this._puppeteer = puppeteer;
             // Fallback to our current import.
             return this._puppeteer;
@@ -80,7 +78,7 @@ export class BrowserControl {
     }
     const puppeteerCookies: puppeteer.Cookie[] = await this._page.cookies();
     const cookies: Cookie[] = [];
-    puppeteerCookies.forEach(puppeteerCookie => {
+    puppeteerCookies.forEach((puppeteerCookie) => {
       cookies.push(
         new Cookie({
           key: puppeteerCookie.name,
@@ -88,7 +86,7 @@ export class BrowserControl {
           domain: puppeteerCookie.domain,
           path: puppeteerCookie.path,
           httpOnly: puppeteerCookie.httpOnly,
-          secure: puppeteerCookie.secure
+          secure: puppeteerCookie.secure,
         })
       );
     });
@@ -105,26 +103,31 @@ export class BrowserControl {
     return this._find404Errors().length > 0;
   }
 
-  public open(opts: BrowserOptions): Promise<iBrowserControlResponse> {
-    this._opts = opts;
+  public open(request: HttpRequest): Promise<iBrowserControlResponse> {
+    this._request = request;
     // Must have a uri
-    if (typeof this._opts.uri == "undefined") {
+    if (typeof this.request.uri == "undefined") {
       throw new Error("Must have a URL to load.");
     }
     return new Promise((resolve, reject) => {
-      this._dynamicPuppeteer.then(async puppeteer => {
+      this._dynamicPuppeteer.then(async (puppeteer) => {
         // Hoist width/height into defaultViewport if not already set
-        this._opts.defaultViewport = this._opts.defaultViewport || {};
-        this._opts.defaultViewport.width =
-          this._opts.defaultViewport.width || this._opts.width || 800;
-        this._opts.defaultViewport.height =
-          this._opts.defaultViewport.height || this._opts.width || 600;
+        this.browserOpts.defaultViewport =
+          this.browserOpts.defaultViewport || {};
+        this.browserOpts.defaultViewport.width =
+          this.browserOpts.defaultViewport.width ||
+          this.browserOpts.width ||
+          800;
+        this.browserOpts.defaultViewport.height =
+          this.browserOpts.defaultViewport.height ||
+          this.browserOpts.width ||
+          600;
         // Need some default args
-        this._opts.args = this._opts.args || [];
-        this._opts.args.push("--no-sandbox");
-        this._opts.args.push("--disable-setuid-sandbox");
+        this.browserOpts.args = this.browserOpts.args || [];
+        this.browserOpts.args.push("--no-sandbox");
+        this.browserOpts.args.push("--disable-setuid-sandbox");
         // Start up the browser
-        this._browser = await puppeteer.launch(this._opts);
+        this._browser = await puppeteer.launch(this.browserOpts);
         this._page = await this._onBrowserReady(this._browser);
         this._recordConsoleOutput();
         Promise.all([this._applyCookies(), this._setBasicAuth()])
@@ -132,7 +135,7 @@ export class BrowserControl {
             resolve({
               response: await this._openUri(),
               body: this._page ? await this._page.content() : "",
-              cookies: await this.getCookies()
+              cookies: await this.getCookies(),
             });
           })
           .catch(reject);
@@ -148,9 +151,9 @@ export class BrowserControl {
   }
 
   private _recordConsoleOutput() {
-    if (this._opts.recordConsole && this._page !== null) {
+    if (this.browserOpts.recordConsole && this._page !== null) {
       this._page.on("console", (consoleMesssage: puppeteer.ConsoleMessage) => {
-        if (this._opts.outputConsole) {
+        if (this.browserOpts.outputConsole) {
           console.log(
             `Console: ${consoleMesssage
               .type()
@@ -160,38 +163,30 @@ export class BrowserControl {
         this._consoleMessages.push({
           type: consoleMesssage.type(),
           text: consoleMesssage.text(),
-          source: consoleMesssage
+          source: consoleMesssage,
         });
       });
     }
   }
 
   private async _setBasicAuth() {
-    if (this._page !== null && this._opts.auth) {
-      return this._page.authenticate(this._opts.auth);
+    if (this._page !== null && this.request.credentials) {
+      return this._page.authenticate(this.request.credentials);
     }
   }
 
   private async _applyCookies() {
-    if (typeof this._opts.jar != "undefined" && this._page !== null) {
-      const cookies: Cookie[] | undefined = this.opts.jar?.getCookies(
-        this._opts.uri || "/"
-      );
-      if (cookies) {
-        const puppeteerCookies: SetCookie[] = [];
-        cookies.forEach((cookie: Cookie) => {
-          puppeteerCookies.push({
-            name: cookie.key,
-            value: cookie.value,
-            url: this._opts.uri,
-            domain: cookie.domain || undefined,
-            path: cookie.path || "/",
-            secure: cookie.secure,
-            httpOnly: cookie.httpOnly
-          });
-        });
-        return this._page.setCookie(...puppeteerCookies);
-      }
+    if (Object.values(this.request.cookies).length && this._page) {
+      const puppeteerCookies: SetCookie[] = Object.keys(
+        this.request.cookies
+      ).map((key) => {
+        return {
+          name: key,
+          value: this.request.cookies[key],
+          url: this.request.uri,
+        };
+      });
+      return this._page.setCookie(...puppeteerCookies);
     }
   }
 
@@ -199,13 +194,10 @@ export class BrowserControl {
     if (this._page === null) {
       throw new Error("Page is null.");
     }
-    const response: Response | null = await this._page.goto(
-      this._opts.uri || "/",
-      {
-        timeout: 30000,
-        waitUntil: "networkidle2"
-      }
-    );
+    const response: Response | null = await this._page.goto(this.request.uri, {
+      timeout: 30000,
+      waitUntil: "networkidle2",
+    });
     if (response === null) {
       throw new Error("Browser response is null.");
     }
@@ -216,7 +208,7 @@ export class BrowserControl {
   // TODO: We might be better detecting 404s with .on('response')
   // See- https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#event-response
   private _find404Errors(): BrowserConsoleMessage[] {
-    return this._consoleMessages.filter(consoleMessage => {
+    return this._consoleMessages.filter((consoleMessage) => {
       const text: string = consoleMessage.text;
       return text.indexOf("404 (Not Found)") > -1;
     });

@@ -4,15 +4,14 @@ import {
   iAssertionContext,
   iScenario,
   iMessageAndCallback,
-  RequestOptions,
-  RequestOptionsWithEncoding
 } from "./interfaces";
 import { Link } from "./link";
 import { ResponseType } from "./enums";
 import { isPuppeteer } from "./response";
 import { runAsync, getMessageAndCallbackFromOverloading } from "./util";
-import * as rp from "request-promise";
 import * as fs from "fs";
+import needle = require("needle");
+import { HttpRequestOptions } from "./httprequest";
 
 export abstract class DOMElement extends Value {
   public get name(): string {
@@ -119,10 +118,10 @@ export abstract class DOMElement extends Value {
     const style: string | null = await this._getAttribute("style");
     let attr: null | string = null;
     if (style) {
-      const properties = style.split(";").map(value => {
+      const properties = style.split(";").map((value) => {
         return value.trim();
       });
-      properties.some(property => {
+      properties.some((property) => {
         if (new RegExp(`^{$key}:`).test(property)) {
           attr = property.substring(property.indexOf(":") + 1);
           return true;
@@ -201,17 +200,17 @@ export abstract class DOMElement extends Value {
   public download(localFilePath: string): Promise<Buffer | null>;
   public download(
     localFilePath: string,
-    opts: RequestOptions
+    opts: HttpRequestOptions
   ): Promise<Buffer | null>;
-  public download(opts: RequestOptions): Promise<Buffer | null>;
+  public download(opts: HttpRequestOptions): Promise<Buffer | null>;
   public download(
     localFilePath: string,
-    opts: RequestOptionsWithEncoding
+    opts: HttpRequestOptions
   ): Promise<string | null>;
-  public download(opts: RequestOptionsWithEncoding): Promise<string | null>;
+  public download(opts: HttpRequestOptions): Promise<string | null>;
   public async download(
-    a?: string | RequestOptions | RequestOptionsWithEncoding,
-    b?: RequestOptions | RequestOptionsWithEncoding
+    a?: string | HttpRequestOptions,
+    b?: HttpRequestOptions
   ): Promise<any> {
     const localFilePath: string | null = typeof a == "string" ? a : null;
     const opts = (() => {
@@ -225,11 +224,11 @@ export abstract class DOMElement extends Value {
     })();
     const link = await this._getLink();
     if (link.isNavigation()) {
-      const response = rp(link.getUri(), opts);
+      const resp = await needle("get", link.getUri());
       if (localFilePath) {
-        fs.writeFileSync(localFilePath, response);
+        fs.writeFileSync(localFilePath, resp.body);
       }
-      return response;
+      return resp.body;
     }
     return null;
   }
@@ -378,7 +377,7 @@ export abstract class DOMElement extends Value {
     );
     // Carry over the opts, unless we change from non-browser to browser (or vice versa)
     return newScenarioIsBrowser == curScenarioIsBrowser
-      ? this._context.scenario.requestOptions
+      ? this._context.scenario.request.options
       : {};
   }
 

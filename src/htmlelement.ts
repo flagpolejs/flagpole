@@ -3,6 +3,7 @@ import { Link } from "./link";
 import { ResponseType } from "./enums";
 import { iAssertionContext, iScenario, iValue } from "./interfaces";
 import { asyncForEach, getMessageAndCallbackFromOverloading } from "./util";
+import { HttpMethodVerb } from "./httprequest";
 
 const cheerio: CheerioAPI = require("cheerio");
 let $: CheerioStatic;
@@ -296,12 +297,12 @@ export class HTMLElement extends DOMElement implements iValue {
             value: string;
           }[] = this.el.serializeArray();
           const formData: any = {};
-          formDataArray.forEach(function(input: any) {
+          formDataArray.forEach(function (input: any) {
             formData[input.name] = input.value;
           });
           scenario.setFormData(formData);
         }
-        scenario.setMethod(method);
+        scenario.setMethod(<HttpMethodVerb>method);
         scenario.next(overloaded.callback);
         scenario.open(link.getUri());
         this._completedAction("SUBMIT");

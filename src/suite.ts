@@ -6,6 +6,7 @@ import { iSuite, iScenario } from "./interfaces";
 import { exitProcess } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecutionoptions";
 import { FlagpoleExecutionOptions } from ".";
+import { BrowserOptions, HttpRequestOptions } from "./httprequest";
 
 /**
  * A suite contains many scenarios
@@ -23,7 +24,7 @@ export class Suite implements iSuite {
 
   public get failCount(): number {
     let count: number = 0;
-    this.scenarios.forEach(scenario => {
+    this.scenarios.forEach((scenario) => {
       if (!scenario.hasPassed) {
         count += 1;
       }
@@ -33,7 +34,7 @@ export class Suite implements iSuite {
 
   public get waitingToExecuteCount(): number {
     let count: number = 0;
-    this.scenarios.forEach(scenario => {
+    this.scenarios.forEach((scenario) => {
       if (!scenario.hasExecuted) {
         count += 1;
       }
@@ -43,7 +44,7 @@ export class Suite implements iSuite {
 
   public get executingCount(): number {
     let count: number = 0;
-    this.scenarios.forEach(scenario => {
+    this.scenarios.forEach((scenario) => {
       if (scenario.hasExecuted && !scenario.hasFinished) {
         count += 1;
       }
@@ -55,7 +56,7 @@ export class Suite implements iSuite {
    * Did every scenario in this suite pass?
    */
   public get hasPassed(): boolean {
-    return this.scenarios.every(function(scenario) {
+    return this.scenarios.every(function (scenario) {
       return scenario.hasPassed;
     });
   }
@@ -64,7 +65,7 @@ export class Suite implements iSuite {
    * Did any scenario in this suite fail?
    */
   public get hasFailed(): boolean {
-    return this.scenarios.some(function(scenario) {
+    return this.scenarios.some(function (scenario) {
       return scenario.hasFailed;
     });
   }
@@ -140,10 +141,10 @@ export class Suite implements iSuite {
     if (FlagpoleExecution.opts.baseDomain) {
       this._baseUrl = new URL(FlagpoleExecution.opts.baseDomain);
     }
-    this._beforeAllPromise = new Promise(resolve => {
+    this._beforeAllPromise = new Promise((resolve) => {
       this._beforeAllResolver = resolve;
     });
-    this._finishedPromise = new Promise(resolve => {
+    this._finishedPromise = new Promise((resolve) => {
       this._finishedResolver = resolve;
     });
     // Spinner to wait for all
@@ -235,7 +236,7 @@ export class Suite implements iSuite {
       return this._fireError(errorMessage);
     });
     // Some local tests fail with SSL verify on, so may have been disabled on this suite
-    scenario.verifySslCert(this._verifySslCert);
+    scenario.verifyCert(this._verifySslCert);
     // Should we hold off on executing?
     this._waitToExecute && scenario.wait();
     // Add this to our collection of scenarios
@@ -246,63 +247,63 @@ export class Suite implements iSuite {
   /**
    * Create a new JSON/REST API Scenario
    */
-  public json(title: string, opts: any = {}): iScenario {
+  public json(title: string, opts: HttpRequestOptions = {}): iScenario {
     return this.scenario(title, ResponseType.json, opts);
   }
 
   /**
    * Create a new Image Scenario
    */
-  public image(title: string, opts: any = {}): iScenario {
+  public image(title: string, opts: HttpRequestOptions = {}): iScenario {
     return this.scenario(title, ResponseType.image, opts);
   }
 
   /**
    * Create a new Video Scenario
    */
-  public video(title: string, opts: any = {}): iScenario {
+  public video(title: string, opts: HttpRequestOptions = {}): iScenario {
     return this.scenario(title, ResponseType.video, opts);
   }
 
   /**
    * Create a new HTML/DOM Scenario
    */
-  public html(title: string, opts: any = {}): iScenario {
+  public html(title: string, opts: HttpRequestOptions = {}): iScenario {
     return this.scenario(title, ResponseType.html, opts);
   }
 
   /**
    * Create a new CSS Scenario
    */
-  public stylesheet(title: string, opts: any = {}): iScenario {
+  public stylesheet(title: string, opts: HttpRequestOptions = {}): iScenario {
     return this.scenario(title, ResponseType.stylesheet, opts);
   }
 
   /**
    * Create a new Script Scenario
    */
-  public script(title: string, opts: any = {}): iScenario {
+  public script(title: string, opts: HttpRequestOptions = {}): iScenario {
     return this.scenario(title, ResponseType.script, opts);
   }
 
   /**
    * Create a generic resource scenario
    */
-  public resource(title: string, opts: any = {}): iScenario {
+  public resource(title: string, opts: HttpRequestOptions = {}): iScenario {
     return this.scenario(title, ResponseType.resource, opts);
   }
 
   /**
    * Create a Browser/Puppeteer Scenario
    */
-  public browser(title: string, opts: any = {}): iScenario {
+  public browser(title: string, opts: BrowserOptions = {}): iScenario {
     return this.scenario(title, ResponseType.browser, opts);
   }
 
   /**
    * Create an ExtJS Scenario
    */
-  public extjs(title: string, opts: any = {}): iScenario {
+  public extjs(title: string, opts: BrowserOptions = {}): iScenario {
     return this.scenario(title, ResponseType.extjs, opts);
   }
 
@@ -364,7 +365,7 @@ export class Suite implements iSuite {
       throw new Error(`Suite already executed.`);
     }
     this._timeSuiteExecuted = Date.now();
-    this.scenarios.forEach(function(scenario) {
+    this.scenarios.forEach(function (scenario) {
       scenario.execute();
     });
     return this;
@@ -499,7 +500,7 @@ export class Suite implements iSuite {
    * Have all of the scenarios in this suite completed?
    */
   private _haveAllScenariosFinished(): boolean {
-    return this.scenarios.every(function(scenario) {
+    return this.scenarios.every(function (scenario) {
       return scenario.hasFinished;
     });
   }
@@ -508,7 +509,7 @@ export class Suite implements iSuite {
     const suite: Suite = this;
     this._timeSuiteExecuted = Date.now();
     return new Promise((resolve, reject) => {
-      Promise.mapSeries(this._beforeAllCallbacks, _then => {
+      Promise.mapSeries(this._beforeAllCallbacks, (_then) => {
         return _then(suite);
       })
         .then(() => {
@@ -516,7 +517,7 @@ export class Suite implements iSuite {
           this._beforeAllResolver();
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -526,14 +527,14 @@ export class Suite implements iSuite {
     const suite: Suite = this;
     return new Promise((resolve, reject) => {
       // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._beforeEachCallbacks, _then => {
+      Promise.mapSeries(this._beforeEachCallbacks, (_then) => {
         return _then.apply(suite, [scenario]);
       })
         .then(() => {
           this._publish(SuiteStatusEvent.beforeEachExecute);
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -543,14 +544,14 @@ export class Suite implements iSuite {
     const suite: Suite = this;
     return new Promise((resolve, reject) => {
       // Do all of the finally callbacks first
-      Promise.mapSeries(this._afterEachCallbacks, _then => {
+      Promise.mapSeries(this._afterEachCallbacks, (_then) => {
         return _then.apply(suite, [scenario]);
       })
         .then(() => {
           this._publish(SuiteStatusEvent.afterEachExecute);
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -561,14 +562,14 @@ export class Suite implements iSuite {
     this._timeSuiteFinished = Date.now();
     return new Promise((resolve, reject) => {
       // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._afterAllCallbacks, _then => {
+      Promise.mapSeries(this._afterAllCallbacks, (_then) => {
         return _then.apply(suite, [suite]);
       })
         .then(() => {
           this._publish(SuiteStatusEvent.afterAllExecute);
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -578,13 +579,13 @@ export class Suite implements iSuite {
     const suite: Suite = this;
     return new Promise((resolve, reject) => {
       // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._successCallbacks, _then => {
+      Promise.mapSeries(this._successCallbacks, (_then) => {
         return _then.apply(suite, [suite]);
       })
         .then(() => {
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -594,13 +595,13 @@ export class Suite implements iSuite {
     const suite: Suite = this;
     return new Promise((resolve, reject) => {
       // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._failureCallbacks, _then => {
+      Promise.mapSeries(this._failureCallbacks, (_then) => {
         return _then.apply(suite, [suite]);
       })
         .then(() => {
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -610,13 +611,13 @@ export class Suite implements iSuite {
     const suite: Suite = this;
     return new Promise((resolve, reject) => {
       // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._errorCallbacks, _then => {
+      Promise.mapSeries(this._errorCallbacks, (_then) => {
         return _then.apply(suite, [errorMessage]);
       })
         .then(() => {
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -625,7 +626,7 @@ export class Suite implements iSuite {
   private _fireFinally(): Promise<void> {
     const suite: Suite = this;
     return new Promise((resolve, reject) => {
-      Promise.mapSeries(this._finallyCallbacks, _then => {
+      Promise.mapSeries(this._finallyCallbacks, (_then) => {
         return _then.apply(suite, [suite]);
       })
         .then(() => {
@@ -633,7 +634,7 @@ export class Suite implements iSuite {
           this._finishedResolver();
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -681,7 +682,7 @@ export class Suite implements iSuite {
         .then(() => {
           resolve(true);
         })
-        .catch(ex => {
+        .catch((ex) => {
           reject(ex);
         });
     });
@@ -694,7 +695,7 @@ export class Suite implements iSuite {
   }
 
   protected _executeNext(): void {
-    this.scenarios.some(scenario => {
+    this.scenarios.some((scenario) => {
       if (!scenario.hasExecuted && scenario.canExecute) {
         scenario.execute();
         return true;

@@ -4,8 +4,9 @@ import {
   iResponse,
   iScenario,
   iSuite,
-  BrowserOptions,
-  iNextCallback
+  iValue,
+  iNextCallback,
+  KeyValue,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import { BrowserControl, iBrowserControlResponse } from "./browsercontrol";
@@ -15,7 +16,7 @@ import {
   AssertionResult,
   AssertionPass,
   AssertionFail,
-  AssertionFailWarning
+  AssertionFailWarning,
 } from "./logging/assertionresult";
 import { HttpResponse } from "./httpresponse";
 import { ResourceResponse } from "./resourceresponse";
@@ -23,11 +24,19 @@ import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/logcollection";
 import { Assertion } from "./assertion";
-import { URL } from "url";
-import * as rp from "request-promise";
-import * as r from "request";
-import request = require("request");
-import { iValue } from ".";
+import { CookieJar, Cookie } from "tough-cookie";
+import * as needle from "needle";
+import {
+  HttpRequestOptions,
+  HttpProxy,
+  HttpAuth,
+  HttpRequest,
+  HttpTimeout,
+  HttpMethodVerb,
+  HttpMethodVerbAllowedValues,
+  BrowserOptions,
+  HttpRequestType,
+} from "./httprequest";
 
 const probeImage = require("probe-image-size");
 
@@ -129,10 +138,7 @@ export class Scenario implements iScenario {
   }
 
   public get requestUrl(): string {
-    if (!this._options.uri) {
-      this._options.uri = this._buildUrl();
-    }
-    return this._options.uri;
+    return this.suite.buildUrl(this._url || "");
   }
 
   /**
@@ -159,8 +165,16 @@ export class Scenario implements iScenario {
   /**
    * Retrieve the options that itialized the request in this scenario
    */
-  public get requestOptions(): any {
-    return this._options;
+  public get request(): HttpRequest {
+    return this._request;
+  }
+
+  public get requestType(): HttpRequestType {
+    return this._responseType === ResponseType.json
+      ? "json"
+      : this._responseType === ResponseType.image
+      ? "image"
+      : "generic";
   }
 
   protected _title: string;
@@ -194,8 +208,7 @@ export class Scenario implements iScenario {
   protected _waitTime: number = 0;
   protected _flipAssertion: boolean = false;
   protected _ignoreAssertion: boolean = false;
-  protected _cookieJar: r.CookieJar;
-  protected _options: any = {};
+  protected _request: HttpRequest;
   protected _followRedirect: boolean | Function | null = null;
   protected _browserControl: BrowserControl | null = null;
   protected _isMock: boolean = false;
@@ -203,11 +216,11 @@ export class Scenario implements iScenario {
   protected _defaultBrowserOptions: BrowserOptions = {
     headless: true,
     recordConsole: true,
-    outputConsole: false
+    outputConsole: false,
   };
-  protected _defaultRequestOptions: any = {
-    method: "GET",
-    headers: {}
+  protected _defaultRequestOptions: HttpRequestOptions = {
+    uri: "/",
+    method: "get",
   };
   protected _aliasedData: any = {};
 
@@ -230,8 +243,7 @@ export class Scenario implements iScenario {
     onCompletedCallback: Function
   ) {
     this.suite = suite;
-    this._cookieJar = rp.jar();
-    this._options = this._defaultRequestOptions;
+    this._request = new HttpRequest(this._defaultRequestOptions);
     this._title = title;
     this._onCompletedCallback = onCompletedCallback;
     this._response = new ResourceResponse(this);
@@ -268,41 +280,45 @@ export class Scenario implements iScenario {
    *
    * @param jsonObject
    */
-  public setJsonBody(jsonObject: any): iScenario {
+  public setJsonBody(json: KeyValue): iScenario {
     this.setHeader("Content-Type", "application/json");
-    return this.setRawBody(JSON.stringify(jsonObject));
+    this._request.data = json;
+    return this;
   }
 
   /**
    * Set body to submit as raw string
    */
   public setRawBody(str: string): iScenario {
-    this._options.body = str;
+    this._request.data = str;
     return this;
   }
 
   /**
    * Make sure the web page has valid SSL certificate
    */
-  public verifySslCert(verify: boolean): iScenario {
-    this._options.strictSSL = verify;
-    this._options.rejectUnauthorized = verify;
+  public verifyCert(verify: boolean): iScenario {
+    this._request.verifyCert = verify;
     return this;
   }
 
-  /**
-   * Set the proxy URL for the request
-   */
-  public setProxyUrl(proxyUrl: string): iScenario {
-    this._options.proxy = proxyUrl;
+  public setProxy(proxy: HttpProxy): iScenario {
+    this._request.proxy = proxy;
     return this;
   }
 
   /**
    * Set the timeout for how long the request should wait for a response
    */
-  public setTimeout(timeout: number): iScenario {
-    this._options.timeout = timeout;
+  public setTimeout(n: number): iScenario;
+  public setTimeout(timeouts: HttpTimeout): iScenario;
+  public setTimeout(timeout: HttpTimeout | number): iScenario {
+    this._request.timeout =
+      typeof timeout === "number"
+        ? {
+            open: timeout,
+          }
+        : timeout;
     return this;
   }
 
@@ -311,8 +327,8 @@ export class Scenario implements iScenario {
    *
    * @param form
    */
-  public setFormData(form: {}): iScenario {
-    this._options.form = form;
+  public setFormData(form: KeyValue): iScenario {
+    this._request.data = form;
     return this;
   }
 
@@ -322,7 +338,7 @@ export class Scenario implements iScenario {
    * @param n
    */
   public setMaxRedirects(n: number): iScenario {
-    this._options.maxRedirects = n;
+    this._request.maxRedirects = n;
     return this;
   }
 
@@ -341,11 +357,8 @@ export class Scenario implements iScenario {
    *
    * @param authorization
    */
-  public setBasicAuth(authorization: {
-    username: string;
-    password: string;
-  }): iScenario {
-    this._options.auth = authorization;
+  public setBasicAuth(authorization: HttpAuth): iScenario {
+    this._request.credentials = authorization;
     return this;
   }
 
@@ -366,13 +379,8 @@ export class Scenario implements iScenario {
    * @param value
    * @param opts
    */
-  public setCookie(key: string, value: string, opts?: any): iScenario {
-    let cookie: r.Cookie | undefined = rp.cookie(key + "=" + value);
-    if (cookie !== undefined) {
-      this._cookieJar.setCookie(cookie, this._buildUrl(), opts);
-    } else {
-      throw new Error("error setting cookie");
-    }
+  public setCookie(key: string, value: string): iScenario {
+    this._request.setCookie(key, value);
     return this;
   }
 
@@ -381,8 +389,8 @@ export class Scenario implements iScenario {
    *
    * @param headers
    */
-  public setHeaders(headers: {}): iScenario {
-    this._options.headers = { ...this._options.headers, ...headers };
+  public setHeaders(headers: KeyValue): iScenario {
+    this._request.headers = { ...this._request.headers, ...headers };
     return this;
   }
 
@@ -393,8 +401,7 @@ export class Scenario implements iScenario {
    * @param value
    */
   public setHeader(key: string, value: any): iScenario {
-    this._options.headers = this._options.headers || {};
-    this._options.headers[key] = value;
+    this._request.setHeader(key, value);
     return this;
   }
 
@@ -403,8 +410,8 @@ export class Scenario implements iScenario {
    *
    * @param {string} method
    */
-  public setMethod(method: string): iScenario {
-    this._options.method = method.toUpperCase();
+  public setMethod(method: HttpMethodVerb): iScenario {
+    this._request.method = method;
     return this;
   }
 
@@ -473,7 +480,7 @@ export class Scenario implements iScenario {
    * @param milliseconds
    */
   public pause(milliseconds: number): iScenario {
-    this.next(context => {
+    this.next((context) => {
       context.comment(`Pause for ${milliseconds}ms`);
       return context.pause(milliseconds);
     });
@@ -485,18 +492,25 @@ export class Scenario implements iScenario {
    *
    * @param {string} url
    */
-  public open(url: string): iScenario {
+  public open(url: string, opts?: HttpRequestOptions): iScenario {
     // You can only load the url once per scenario
     if (!this.hasExecuted) {
       // If the HTTP method was part of open
       const match = /([A-Z]+) (.*)/.exec(url);
       if (match !== null) {
-        this.setMethod(match[1]);
+        const verb: string = match[1].toLowerCase();
+        if (HttpMethodVerbAllowedValues.includes(verb)) {
+          this.setMethod(<HttpMethodVerb>verb);
+        }
         url = match[2];
       }
       // If the URL had parameters in it, implicitly wait for execute parameters
       if (/{[A-Za-z0-9_ -]+}/.test(url)) {
         this.wait();
+      }
+      // Merge in options
+      if (opts) {
+        this._request.setOptions(opts);
       }
       // Okay now set the open method
       this._url = String(url);
@@ -576,7 +590,7 @@ export class Scenario implements iScenario {
   }): Promise<Scenario> {
     if (!this.hasExecuted && this._url !== null) {
       if (params) {
-        Object.keys(params).forEach(key => {
+        Object.keys(params).forEach((key) => {
           this._url =
             this._url?.replace(`{${key}}`, String(params[key])) || null;
         });
@@ -724,13 +738,6 @@ export class Scenario implements iScenario {
   }
 
   /**
-   * Get the cookie jar for this url
-   */
-  protected _getCookies(): r.Cookie[] {
-    return this._cookieJar.getCookies(this.requestUrl);
-  }
-
-  /**
    * Handle the normalized response once the request comes back
    * This will loop through each next
    */
@@ -771,23 +778,16 @@ export class Scenario implements iScenario {
       return Promise.all([
         lastReturnValue,
         context.assertionsResolved,
-        context.subScenariosResolved
+        context.subScenariosResolved,
       ]).timeout(30000);
     })
       .then(() => {
         scenario._markScenarioCompleted();
       })
-      .catch(err => {
+      .catch((err) => {
         scenario._markScenarioCompleted(err);
       });
     this._publish(ScenarioStatusEvent.executionProgress);
-  }
-
-  /**
-   * Build URL for this scenario, relative to the Suite's base
-   */
-  protected _buildUrl(): string {
-    return this.suite.buildUrl(this._url || "");
   }
 
   /**
@@ -801,12 +801,20 @@ export class Scenario implements iScenario {
       throw new Error("Scenario was already executed. Can not change type.");
     }
     // Merge passed in opts with default opts
-    opts = (() => {
-      return type == ResponseType.browser || type == ResponseType.extjs
-        ? { ...this._defaultBrowserOptions, ...opts }
-        : { ...this._defaultRequestOptions, ...opts };
-    })();
-    this._options = opts;
+    this._request
+      .setOptions(
+        type == ResponseType.browser || type == ResponseType.extjs
+          ? {
+              browser: { ...this._defaultBrowserOptions, ...opts },
+            }
+          : {
+              ...this._defaultRequestOptions,
+              ...opts,
+            }
+      )
+      .setOptions({
+        type: this.requestType,
+      });
     this._responseType = type;
     this._response = createResponse(this);
     return this;
@@ -821,48 +829,25 @@ export class Scenario implements iScenario {
   }
 
   /**
-   * Start an image scenario
-   */
-  private _executeImageRequest() {
-    const scenario: Scenario = this;
-    probeImage(this.requestUrl, this._options)
-      .then((result: any) => {
-        const response: HttpResponse = HttpResponse.fromProbeImage(
-          result,
-          scenario._getCookies()
-        );
-        scenario._finalUrl = scenario.url;
-        scenario._processResponse(response);
-      })
-      .catch((err: any) => {
-        scenario._markScenarioCompleted(
-          `Failed to load image ${scenario._url}`,
-          err
-        );
-      });
-  }
-
-  /**
    * Start a browser scenario
    */
   private _executeBrowserRequest() {
-    const scenario: Scenario = this;
     const browserControl: BrowserControl = this.getBrowserControl();
     browserControl
-      .open(this._options)
+      .open(this._request)
       .then((next: iBrowserControlResponse) => {
         const puppeteerResponse: puppeteer.Response = next.response;
         if (puppeteerResponse !== null) {
-          scenario._finalUrl = puppeteerResponse.url();
+          this._finalUrl = puppeteerResponse.url();
           // Loop through the redirects to populate our array
           puppeteerResponse
             .request()
             .redirectChain()
-            .forEach(req => {
+            .forEach((req) => {
               this._redirectChain.push(req.url());
             });
           // Finishing processing the response
-          scenario._processResponse(
+          this._processResponse(
             HttpResponse.fromPuppeteer(
               puppeteerResponse,
               next.body,
@@ -870,12 +855,12 @@ export class Scenario implements iScenario {
             )
           );
         } else {
-          scenario._markScenarioCompleted(`Failed to load ${scenario._url}`);
+          this._markScenarioCompleted(`Failed to load ${this._url}`);
         }
         return;
       })
-      .catch(err =>
-        scenario._markScenarioCompleted(`Failed to load ${scenario._url}`, err)
+      .catch((err) =>
+        this._markScenarioCompleted(`Failed to load ${this._url}`, err)
       );
   }
 
@@ -883,37 +868,19 @@ export class Scenario implements iScenario {
    * Start a regular request scenario
    */
   private _executeDefaultRequest() {
-    // Handle ridrects
-    this._options.followRedirect = (response: any) => {
-      const shouldFollow: boolean =
-        this._followRedirect === null
-          ? true
-          : typeof this._followRedirect === "function"
-          ? this._followRedirect(response)
-          : !!this._followRedirect;
-      if (shouldFollow) {
-        this._finalUrl = new URL(
-          response.headers.location,
-          response.request.href
-        ).href;
-        this._redirectChain.push(this._finalUrl);
-      }
-      return shouldFollow;
-    };
-    // Get full response object, not just body
-    this._options.resolveWithFullResponse = true;
-    // Don't reject non-2XX reponses
-    this._options.simple = false;
-    (async () => {
-      try {
-        const res: request.Response = await rp(this.requestUrl, this._options);
-        this._processResponse(
-          HttpResponse.fromRequest(res, this._getCookies())
-        );
-      } catch (err) {
+    this._request
+      .fetch({
+        redirect: (url: string) => {
+          this._finalUrl = url;
+          this._redirectChain.push(url);
+        },
+      })
+      .then((response) => {
+        this._processResponse(response);
+      })
+      .catch((err) => {
         this._markScenarioCompleted(`Failed to load ${this._url}`, err);
-      }
-    })();
+      });
   }
 
   /**
@@ -922,12 +889,9 @@ export class Scenario implements iScenario {
   protected _executeRequest() {
     if (!this._timeRequestStarted && this._url !== null) {
       this._timeRequestStarted = Date.now();
-      this._options.uri = this._buildUrl();
-      this._options.jar = this._cookieJar;
-      this._finalUrl = this._buildUrl();
-      if (this._responseType == ResponseType.image) {
-        this._executeImageRequest();
-      } else if (
+      this._request.uri = this.requestUrl;
+      this._finalUrl = this._request.uri;
+      if (
         this._responseType == ResponseType.browser ||
         this._responseType == ResponseType.extjs
       ) {
@@ -949,7 +913,7 @@ export class Scenario implements iScenario {
         .then((mock: HttpResponse) => {
           scenario._processResponse(mock);
         })
-        .catch(err => {
+        .catch((err) => {
           scenario._markScenarioCompleted(
             `Failed to load page ${scenario._url}`,
             err
@@ -1021,7 +985,7 @@ export class Scenario implements iScenario {
           scenario._publish(ScenarioStatusEvent.beforeExecute);
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -1046,7 +1010,7 @@ export class Scenario implements iScenario {
           this._publish(ScenarioStatusEvent.afterExecute);
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -1067,7 +1031,7 @@ export class Scenario implements iScenario {
           this._publish(ScenarioStatusEvent.finished);
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -1088,7 +1052,7 @@ export class Scenario implements iScenario {
           this._publish(ScenarioStatusEvent.finished);
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -1109,7 +1073,7 @@ export class Scenario implements iScenario {
           this._publish(ScenarioStatusEvent.finished);
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -1131,7 +1095,7 @@ export class Scenario implements iScenario {
           this._publish(ScenarioStatusEvent.finished);
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -1143,7 +1107,7 @@ export class Scenario implements iScenario {
   ): { message: string | null; callback: Function } {
     return {
       message: this._getMessageOverload(a),
-      callback: this._getCallbackOverload(a, b)
+      callback: this._getCallbackOverload(a, b),
     };
   }
 
@@ -1163,7 +1127,7 @@ export class Scenario implements iScenario {
   }
 
   protected _getMessageOverload(a: any): string | null {
-    return (function() {
+    return (function () {
       if (typeof a == "string" && a.trim().length > 0) {
         return a;
       }
@@ -1204,7 +1168,7 @@ export class Scenario implements iScenario {
    */
   protected async _publish(statusEvent: ScenarioStatusEvent) {
     const scenario = this;
-    this._subscribers.forEach(async function(callback: Function) {
+    this._subscribers.forEach(async function (callback: Function) {
       callback(scenario, statusEvent);
     });
   }

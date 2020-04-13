@@ -1,14 +1,8 @@
-import {
-  iAssertionContext,
-  iValue,
-  iScenario,
-  RequestOptions,
-  RequestOptionsWithEncoding
-} from "./interfaces";
+import { iAssertionContext, iValue, iScenario } from "./interfaces";
 import { toType, isNullOrUndefined } from "./util";
 import {
   AssertionActionCompleted,
-  AssertionActionFailed
+  AssertionActionFailed,
 } from "./logging/assertionresult";
 
 export class Value implements iValue {

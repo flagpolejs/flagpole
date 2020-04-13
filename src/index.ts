@@ -4,7 +4,7 @@ import { AssertionResult } from "./logging/assertionresult";
 import {
   iAssertionSchema,
   iAssertionSchemaItem,
-  AssertionSchema
+  AssertionSchema,
 } from "./assertionschema";
 import { BrowserControl } from "./browsercontrol";
 import { BrowserResponse } from "./browserresponse";
@@ -25,17 +25,12 @@ import { Value } from "./value";
 import { VideoResponse } from "./videoresponse";
 import {
   FlagpoleExecutionOptions,
-  FlagpoleOutput
+  FlagpoleOutput,
 } from "./flagpoleexecutionoptions";
 import { Flagpole } from "./flagpole";
 import { ResponseType } from "./enums";
-import {
-  iResponse,
-  iValue,
-  BrowserOptions,
-  iScenario,
-  iSuite
-} from "./interfaces";
+import { iResponse, iValue, iScenario, iSuite } from "./interfaces";
+import { BrowserOptions, HttpRequest } from "./httprequest";
 import * as Promise from "bluebird";
 
 // Have Bluebird replace default promises
@@ -73,6 +68,7 @@ export {
   ResponseType,
   ProtoResponse,
   iResponse,
+  HttpRequest,
   HttpResponse,
   ScriptResponse,
   iValue,
@@ -83,5 +79,5 @@ export {
   iScenario,
   iSuite,
   fp,
-  suite
+  suite,
 };

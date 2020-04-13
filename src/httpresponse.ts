@@ -1,7 +1,8 @@
 import { Cookie } from "tough-cookie";
-import { IncomingMessage } from "http";
 import * as puppeteer from "puppeteer-core";
 import request = require("request");
+import { NeedleResponse } from "needle";
+import { KeyValue } from "./interfaces";
 
 export class HttpResponse {
   public body: string = "";
@@ -14,6 +15,23 @@ export class HttpResponse {
 
   static createEmpty() {
     const r = new HttpResponse();
+    return r;
+  }
+
+  static fromNeedle(response: NeedleResponse): HttpResponse {
+    const r = new HttpResponse();
+    r.statusCode = response.statusCode || 0;
+    r.statusMessage = response.statusMessage || "";
+    r.headers = <KeyValue>response.headers;
+    r.body = response.body;
+    r.cookies = response.cookies
+      ? Object.keys(response.cookies).map((key) => {
+          return new Cookie({
+            key: key,
+            value: response.cookies ? response.cookies[key] : undefined,
+          });
+        })
+      : [];
     return r;
   }
 
@@ -48,7 +66,7 @@ export class HttpResponse {
   static fromProbeImage(response: any, cookies: Cookie[]): HttpResponse {
     const r = new HttpResponse();
     r.headers = {
-      "content-type": response.mime
+      "content-type": response.mime,
     };
     r.body = JSON.stringify(response);
     return r;
@@ -59,7 +77,7 @@ export class HttpResponse {
     let fs = require("fs");
     let path: string = __dirname + "/" + relativePath;
     return new Promise((resolve, reject) => {
-      fs.readFile(path, function(err, data) {
+      fs.readFile(path, function (err, data) {
         if (err) {
           return reject(err);
         }

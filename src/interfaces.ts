@@ -1,26 +1,23 @@
 import { BrowserControl } from "./browsercontrol";
-import { Page, LaunchOptions } from "puppeteer-core";
+import { Page } from "puppeteer-core";
 import {
   LogItemType,
   ConsoleLineType,
   ConsoleColor,
-  ResponseType
+  ResponseType,
 } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import { URL } from "url";
-import { CookieJar } from "request";
-import { RequestPromiseOptions } from "request-promise";
 import { FlagpoleExecutionOptions } from "./flagpoleexecutionoptions";
-
-export interface RequestOptions extends RequestPromiseOptions {
-  encoding?: never;
-  resolveWithFullResponse?: never | false;
-}
-
-export interface RequestOptionsWithEncoding extends RequestPromiseOptions {
-  encoding: string;
-  resolveWithFullResponse?: never | false;
-}
+import {
+  HttpRequest,
+  HttpRequestOptions,
+  HttpProxy,
+  HttpTimeout,
+  HttpAuth,
+  HttpMethodVerb,
+  BrowserOptions,
+} from "./httprequest";
 
 export interface ScreenshotOpts {
   path?: string;
@@ -146,13 +143,16 @@ export interface iValue {
   getStyleProperty(key: string): Promise<iValue>;
   download(): Promise<Buffer | null>;
   download(localFilePath: string): Promise<Buffer | null>;
-  download(localFilePath: string, opts: RequestOptions): Promise<Buffer | null>;
-  download(opts: RequestOptions): Promise<Buffer | null>;
   download(
     localFilePath: string,
-    opts: RequestOptionsWithEncoding
+    opts: HttpRequestOptions
+  ): Promise<Buffer | null>;
+  download(opts: HttpRequestOptions): Promise<Buffer | null>;
+  download(
+    localFilePath: string,
+    opts: HttpRequestOptions
   ): Promise<string | null>;
-  download(opts: RequestOptionsWithEncoding): Promise<string | null>;
+  download(opts: HttpRequestOptions): Promise<string | null>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
@@ -343,17 +343,21 @@ export interface iSuite {
   verifySslCert(verify: boolean): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
-  scenario(title: string, type: ResponseType, opts: any): iScenario;
-  json(title: string, opts?: any): iScenario;
-  image(title: string, opts?: any): iScenario;
-  video(title: string, opts?: any): iScenario;
-  html(title: string, opts?: any): iScenario;
-  stylesheet(title: string, opts?: any): iScenario;
-  script(title: string, opts?: any): iScenario;
-  resource(title: string, opts?: any): iScenario;
-  browser(title: string, opts?: any): iScenario;
-  extjs(title: string, opts?: any): iScenario;
-  base(url: string | {}): iSuite;
+  scenario(
+    title: string,
+    type: ResponseType,
+    opts: BrowserOptions | HttpRequestOptions
+  ): iScenario;
+  json(title: string, opts?: HttpRequestOptions): iScenario;
+  image(title: string, opts?: HttpRequestOptions): iScenario;
+  video(title: string, opts?: HttpRequestOptions): iScenario;
+  html(title: string, opts?: HttpRequestOptions): iScenario;
+  stylesheet(title: string, opts?: HttpRequestOptions): iScenario;
+  script(title: string, opts?: HttpRequestOptions): iScenario;
+  resource(title: string, opts?: HttpRequestOptions): iScenario;
+  browser(title: string, opts?: BrowserOptions): iScenario;
+  extjs(title: string, opts?: BrowserOptions): iScenario;
+  base(url: string | KeyValue): iSuite;
   buildUrl(path: string): string;
   execute(): iSuite;
   beforeAll(callback: Function): iSuite;
@@ -384,32 +388,32 @@ export interface iScenario {
   requestUrl: string;
   redirectCount: number;
   redirectChain: string[];
-  requestOptions: any;
+  request: HttpRequest;
   set(aliasName: string, value: any): iScenario;
   get(aliasName: string): any;
   getLog(): Promise<iLogItem[]>;
   subscribe(callback: Function): iScenario;
   setJsonBody(jsonObject: any): iScenario;
   setRawBody(str: string): iScenario;
-  verifySslCert(verify: boolean): iScenario;
-  setProxyUrl(proxyUrl: string): iScenario;
+  verifyCert(verify: boolean): iScenario;
+  setProxy(proxy: HttpProxy): iScenario;
   setTimeout(timeout: number): iScenario;
-  setFormData(form: {}): iScenario;
+  setTimeout(timeout: HttpTimeout): iScenario;
+  setFormData(form: KeyValue): iScenario;
   setMaxRedirects(n: number): iScenario;
-  shouldFollowRedirects(onRedirect: boolean | Function): iScenario;
-  setBasicAuth(authorization: iBasicAuth): iScenario;
+  setBasicAuth(authorization: HttpAuth): iScenario;
   setBearerToken(token: string): iScenario;
-  setCookie(key: string, value: string, opts?: any): iScenario;
-  setHeaders(headers: {}): iScenario;
+  setCookie(key: string, value: string): iScenario;
+  setHeaders(headers: KeyValue): iScenario;
   setHeader(key: string, value: any): iScenario;
-  setMethod(method: string): iScenario;
+  setMethod(method: HttpMethodVerb): iScenario;
   wait(bool?: boolean): iScenario;
   comment(value: iValue): iScenario;
   comment(message: string): iScenario;
   comment(input: string | iValue): iScenario;
   result(result: iAssertionResult): iScenario;
   ignore(assertions?: boolean | Function): iScenario;
-  open(url: string): iScenario;
+  open(url: string, opts?: HttpRequestOptions): iScenario;
   next(callback: iNextCallback): iScenario;
   next(message: string, callback: iNextCallback): iScenario;
   nextPrepend(callback: iNextCallback): iScenario;
@@ -432,7 +436,10 @@ export interface iScenario {
   finally(message: string, callback: Function): iScenario;
   finally(callback: Function): iScenario;
   mock(localPath: string): iScenario;
-  setResponseType(type: ResponseType, opts?: any): iScenario;
+  setResponseType(
+    type: ResponseType,
+    opts?: BrowserOptions | HttpRequestOptions
+  ): iScenario;
   promise(): Promise<iScenario>;
   waitFor(thatScenario: iScenario): iScenario;
 }
@@ -444,11 +451,6 @@ export interface iMessageAndCallback {
   scenario?: iScenario;
 }
 
-export interface iBasicAuth {
-  username: string;
-  password: string;
-}
-
 export interface iBounds {
   x: number;
   y: number;
@@ -457,18 +459,6 @@ export interface iBounds {
   points: { x: number; y: number }[];
 }
 
-export enum BrowserProduct {
-  chrome = "chrome",
-  firefox = "firefox"
-}
-
-export interface BrowserOptions extends LaunchOptions {
-  uri?: string;
-  width?: number;
-  height?: number;
-  jar?: CookieJar;
-  recordConsole?: boolean;
-  outputConsole?: boolean;
-  product?: BrowserProduct;
-  auth?: iBasicAuth;
-}
+export type KeyValue = {
+  [key: string]: any;
+};
