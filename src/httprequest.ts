@@ -4,7 +4,7 @@ import needle = require("needle");
 import tunnel = require("tunnel");
 import probeImage = require("probe-image-size");
 import * as http from "http";
-import { LaunchOptions } from "puppeteer";
+import { LaunchOptions } from "puppeteer-core";
 import { probeImageResponse } from "./httpresponse";
 
 const CONTENT_TYPE_JSON = "application/json";
@@ -264,7 +264,7 @@ export class HttpRequest {
       multipart: this.headers["Content-Type"] === CONETNT_TYPE_MULTIPART,
       open_timeout: this.timeout.open,
       parse_cookies: true,
-      parse_response: true,
+      parse_response: false,
       password: this.auth?.password,
       read_timeout: this.timeout.read,
       rejectUnauthorized: this.verifyCert,

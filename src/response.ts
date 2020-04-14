@@ -87,7 +87,7 @@ export abstract class ProtoResponse implements iResponse {
       const json = JSON.parse(this.httpResponse.body);
       return this._wrapAsValue(json, "JSON Response");
     } catch (ex) {
-      return this._wrapAsValue(null, "JSON Response");
+      return this._wrapAsValue(null, `JSON Response: ${ex}`);
     }
   }
 

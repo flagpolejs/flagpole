@@ -1,24 +1,12 @@
-import { Flagpole, iScenario } from "../../dist/index.js";
+import { Flagpole } from "../../dist/index.js";
 
-const suite = Flagpole.Suite("Basic Cookie Test of Site")
-  .base("https://fl.milesplit.com/")
-  .verifySslCert(false)
-  .finally(() => {
-    suite.print();
-  });
-
+const suite = Flagpole.suite("Basic Smoke Test of Site").base(
+  "https://www.milesplit.com/"
+);
 suite
-  .html("Something simple")
-  .open("/rankings")
+  .json("Homepage Loads")
+  .open("/api/v1/videos")
   .next(async (context) => {
-    const allLinks = await context.findAll("a");
-    context.assert(allLinks.length).greaterThan(0);
-  });
-
-suite
-  .browser("Something simple")
-  .open("/rankings")
-  .next(async (context) => {
-    const allLinks = await context.findAll("a");
-    context.assert(allLinks.length).greaterThan(0);
+    context.assert(context.response.statusCode).equals(200);
+    //console.log(context.response.body.$.data);
   });

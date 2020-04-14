@@ -68,7 +68,7 @@ So now that you have this scenario waiting on parameters, you will call the `exe
 
 ```typescript
 myScenario.execute({
-  eventId: 53322
+  eventId: 53322,
 });
 ```
 
@@ -86,7 +86,7 @@ Additionally you can return a promise. Execution will be delayed until the promi
 
 ```typescript
 scenario.failure((scenario: Scenario) => {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     console.log(
       "I am sad that we failed an assertion, so I will delay further execution one second."
     );
@@ -132,10 +132,10 @@ These callbacks will contain the assertions and other parts of the scenario we w
 #### next(message: string, callback: any): Scenario
 
 ```javascript
-scenario.next("Fill out the form", async context => {
+scenario.next("Fill out the form", async (context) => {
   const form = await context.find("form");
   await form.fillForm({
-    q: "Flagpole JS QA"
+    q: "Flagpole JS QA",
   });
 });
 ```
@@ -143,10 +143,10 @@ scenario.next("Fill out the form", async context => {
 #### next(callback: any): Scenario
 
 ```javascript
-scenario.next(async context => {
+scenario.next(async (context) => {
   const form = await context.find("form");
   await form.fillForm({
-    q: "Flagpole JS QA"
+    q: "Flagpole JS QA",
   });
 });
 ```
@@ -170,7 +170,25 @@ You can also include URL parameters in the path. Surround these by brackets like
 ```typescript
 scenario.open("POST /api/articles/{articleId}");
 scenario.execute({
-  articleId: 32423
+  articleId: 32423,
+});
+```
+
+#### open(url: string, requestOpts): Scenario
+
+You can pass an object of request options as the second argument, which can be a really convenient way to set some parameters.
+
+```typescript
+scenario.open("POST /api/articles/{articleId}", {
+  headers: {
+    "X-My-Header": "value",
+  },
+  cookies: {
+    token: "ASDFASDFASDF1123",
+  },
+  data: {
+    name: "Jason",
+  },
 });
 ```
 
@@ -180,11 +198,11 @@ Insert a `next` callback that pauses for this amount of time.
 
 ```javascript
 scenario
-  .next(context => {
+  .next((context) => {
     context.assert(true).equals(true);
   })
   .pause(3000)
-  .next(context => {
+  .next((context) => {
     context.assert(true).equals(true);
   });
 ```
@@ -210,10 +228,10 @@ Save `value` to alias `aliasName` so it that it can be retrieved later with a `.
 
 ```javascript
 scenario
-  .before(scenario => {
+  .before((scenario) => {
     scenario.set("foo", "bar");
   })
-  .next(context => {
+  .next((context) => {
     context.assert(context.get("foo")).equals("bar");
   });
 ```
@@ -225,7 +243,7 @@ Set basic authentication schema for sites that expect this old fashioned auth st
 ```javascript
 scenario.setBasicAuth({
   username: "john_doe",
-  password: "abc123"
+  password: "abc123",
 });
 ```
 
@@ -260,7 +278,7 @@ When you want to simulate a form submission, pass in those values here. It expec
 ```javascript
 scenario.setFormData({
   firstName: "George",
-  lastName: "Brett"
+  lastName: "Brett",
 });
 ```
 
@@ -291,8 +309,8 @@ Sets the JSON Body that will be submitted with the request. This can only be cal
 scenario.setJsonBody({
   athlete: {
     firstName: "Jose",
-    lastName: "Canseco"
-  }
+    lastName: "Canseco",
+  },
 });
 ```
 
