@@ -31,7 +31,10 @@ export class HttpResponse {
     r.statusCode = response.statusCode || 0;
     r.statusMessage = response.statusMessage || "";
     r.headers = <KeyValue>response.headers;
-    r.body = response.body;
+    r.body =
+      typeof response.body === "string"
+        ? response.body
+        : response.body.toString("utf8");
     r.cookies = response.cookies ? <KeyValue>response.cookies : {};
     return r;
   }

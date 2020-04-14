@@ -6,10 +6,13 @@ import probeImage = require("probe-image-size");
 import * as http from "http";
 import { LaunchOptions } from "puppeteer-core";
 import { probeImageResponse } from "./httpresponse";
+import * as FormData from "form-data";
+import formurlencoded from "form-urlencoded";
 
 const CONTENT_TYPE_JSON = "application/json";
-const CONETNT_TYPE_MULTIPART = "multipart/form-data";
+const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
 const CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
+const ENCODING_GZIP = "gzip,deflate";
 
 export type HttpRequestType = "generic" | "json" | "image";
 
@@ -31,6 +34,8 @@ export type HttpMethodVerb =
   | "post"
   | "put"
   | "options";
+
+export type HttpAuthType = "basic" | "digest" | "auto";
 
 export interface BrowserOptions extends LaunchOptions {
   width?: number;
@@ -67,11 +72,13 @@ export type HttpData =
 export type HttpRequestOptions = {
   browserOptions?: BrowserOptions;
   auth?: HttpAuth;
+  authType?: HttpAuthType;
   data?: HttpData;
   cookies?: KeyValue;
   headers?: KeyValue;
   maxRedirects?: number;
   method?: HttpMethodVerb;
+  outputFile?: string;
   proxy?: HttpProxy;
   timeout?: HttpTimeout | number;
   type?: HttpRequestType;
@@ -92,10 +99,12 @@ export class HttpRequest {
   private _timeout: HttpTimeout = { open: 10000 };
   private _maxRedirects: number = 10;
   private _auth: HttpAuth | undefined;
+  private _authType: HttpAuthType | undefined;
   private _data: HttpData;
   private _fetched: boolean = false;
   private _browser: BrowserOptions = {};
   private _type: HttpRequestType = "generic";
+  private _outputFile?: string;
 
   public get uri(): string | null {
     return this._uri;
@@ -157,6 +166,16 @@ export class HttpRequest {
   public set auth(value: HttpAuth | undefined) {
     if (!this.isImmutable) {
       this._auth = value;
+    }
+  }
+
+  public get authType(): HttpAuthType | undefined {
+    return this._authType;
+  }
+
+  public set authType(value: HttpAuthType | undefined) {
+    if (!this.isImmutable) {
+      this._authType = value;
     }
   }
 
@@ -239,6 +258,16 @@ export class HttpRequest {
     return this._fetched;
   }
 
+  public get outputFile(): string | undefined {
+    return this._outputFile;
+  }
+
+  public set outputFile(value: string | undefined) {
+    if (!this.isImmutable) {
+      this._outputFile = value;
+    }
+  }
+
   public get options(): HttpRequestOptions {
     return {
       uri: this._uri,
@@ -250,25 +279,30 @@ export class HttpRequest {
       maxRedirects: this._maxRedirects,
       timeout: this._timeout,
       auth: this._auth,
+      authType: this._authType,
+      outputFile: this._outputFile,
     };
   }
 
   private get needleOptions(): needle.NeedleOptions {
     return {
       agent: this.proxyAgent,
-      auth: "auto",
+      auth: this._authType || "auto",
+      compressed: this.headers["Accept-Encoding"] === ENCODING_GZIP,
       cookies: this.cookies,
       follow_max: this.maxRedirects,
       headers: this.headers,
       json: this.headers["Content-Type"] === CONTENT_TYPE_JSON,
-      multipart: this.headers["Content-Type"] === CONETNT_TYPE_MULTIPART,
+      multipart: this.headers["Content-Type"] === CONTENT_TYPE_FORM_MULTIPART,
       open_timeout: this.timeout.open,
+      output: this.outputFile,
       parse_cookies: true,
       parse_response: false,
       password: this.auth?.password,
       read_timeout: this.timeout.read,
       rejectUnauthorized: this.verifyCert,
       username: this.auth?.username,
+      user_agent: "Flagpole",
     };
   }
 
@@ -354,6 +388,25 @@ export class HttpRequest {
 
   public getHeader(key: string): any {
     return this._headers[key];
+  }
+
+  public setJsonData(data: KeyValue) {
+    this.setHeader("Content-Type", CONTENT_TYPE_JSON);
+    this.data = data;
+  }
+
+  public setFormData(data: KeyValue, isMultipart: boolean = false) {
+    this.setHeader(
+      "Content-Type",
+      isMultipart ? CONTENT_TYPE_FORM_MULTIPART : CONTENT_TYPE_FORM
+    );
+    if (isMultipart) {
+      const formData = new FormData();
+      Object.keys(data).forEach((key) => formData.append(key, data[key]));
+      this.data = formData;
+    } else {
+      this.data = formurlencoded(data);
+    }
   }
 
   /**

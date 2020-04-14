@@ -269,8 +269,7 @@ export class Scenario implements iScenario {
    * @param jsonObject
    */
   public setJsonBody(json: KeyValue): iScenario {
-    this.setHeader("Content-Type", "application/json");
-    this._request.data = json;
+    this.request.setJsonData(json);
     return this;
   }
 
@@ -315,8 +314,8 @@ export class Scenario implements iScenario {
    *
    * @param form
    */
-  public setFormData(form: KeyValue): iScenario {
-    this._request.data = form;
+  public setFormData(form: KeyValue, isMultipart: boolean = false): iScenario {
+    this._request.setFormData(form, isMultipart);
     return this;
   }
 

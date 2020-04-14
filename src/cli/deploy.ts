@@ -3,11 +3,10 @@ import { printHeader, printSubheader } from "./cli-helper";
 import { Cli } from "./cli";
 
 const request = require("request");
-const FormData = require("form-data");
 const fs = require("fs");
 
-const uploadPackage = function(token: string) {
-  createZipArchive(process.cwd() + "/flagpole.zip", function(
+const uploadPackage = function (token: string) {
+  createZipArchive(process.cwd() + "/flagpole.zip", function (
     err: any,
     fileName: string
   ) {
@@ -33,10 +32,10 @@ const uploadPackage = function(token: string) {
         url: uri,
         formData: {
           token: token,
-          file: fs.createReadStream(fileName)
-        }
+          file: fs.createReadStream(fileName),
+        },
       },
-      function(err, response, body) {
+      function (err, response, body) {
         // Error sending
         if (err) {
           Cli.log("");
@@ -75,21 +74,21 @@ function uploadProject(token: string) {
       {
         body: JSON.stringify({
           token: token,
-          name: Cli.config.project.name
+          name: Cli.config.project.name,
         }),
         headers: {
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       },
-      function(err, response, body) {
+      function (err, response, body) {
         let json = JSON.parse(body);
         Cli.config.project.id = json.data.id || "";
         Cli.config
           .save()
-          .then(function() {
+          .then(function () {
             uploadPackage(token);
           })
-          .catch(function(err) {
+          .catch(function (err) {
             Cli.log("");
             Cli.log("Error uploading project: " + err);
             Cli.log("");
@@ -108,10 +107,10 @@ export function deploy() {
   printSubheader("Deploy Project to FlagpoleJS.com");
 
   Cli.getCredentials()
-    .then(function(credentials: { email: string; token: string }) {
+    .then(function (credentials: { email: string; token: string }) {
       uploadProject(credentials.token);
     })
-    .catch(function(err) {
+    .catch(function (err) {
       Cli.log("");
       Cli.log(err + " Must be logged in to deploy.");
       Cli.log("Use command: flagpole login");
