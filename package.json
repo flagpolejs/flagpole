@@ -23,7 +23,7 @@
     "@types/cheerio": "^0.22.15",
     "ansi-align": "^2.0.0",
     "archiver": "^3.0.0",
-    "bluebird": "^3.5.3",
+    "bluebird": "^3.7.2",
     "cheerio": "^1.0.0-rc.3",
     "clortho-lite": "^2.0.6",
     "common-tags": "^1.8.0",
@@ -34,13 +34,12 @@
     "open": "^6.4.0",
     "pixelmatch": "^5.1.0",
     "probe-image-size": "^4.0.0",
-    "prompts": "^2.3.0",
-    "puppeteer-core": "^2.1.0",
+    "prompts": "^2.3.2",
+    "puppeteer-core": "^2.1.1",
     "tmp": "^0.1.0",
-    "tough-cookie": "^3.0.1",
     "tunnel": "0.0.6",
     "valid-data-url": "^1.0.0",
-    "yargs": "^11.1.0"
+    "yargs": "^15.3.1"
   },
   "keywords": [
     "qa",
@@ -60,19 +59,18 @@
   "devDependencies": {
     "@types/bluebird": "^3.5.26",
     "@types/bluebird-global": "^3.5.12",
+    "@types/jmespath": "^0.15.0",
     "@types/needle": "^2.0.4",
     "@types/node": "^12.12.8",
     "@types/pixelmatch": "^5.0.0",
     "@types/pngjs": "^3.4.0",
-    "@types/prompts": "^2.0.3",
     "@types/puppeteer": "^2.0.0",
     "@types/puppeteer-core": "^2.0.0",
-    "@types/tough-cookie": "^4.0.0",
     "@types/tunnel": "0.0.1",
+    "@types/yargs": "^15.0.4",
     "ajv": "^6.10.2",
     "jmespath": "^0.15.0",
-    "puppeteer": "^1.15.0",
-    "request": "^2.88.0",
+    "puppeteer": "^1.20.0",
     "typescript": "^3.7.2"
   }
 }

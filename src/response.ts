@@ -1,5 +1,4 @@
 import { URL } from "url";
-import { Cookie } from "request";
 import { Value } from "./value";
 import { iValue, iResponse, iScenario, iAssertionContext } from "./interfaces";
 import { ResponseType } from "./enums";
@@ -182,13 +181,10 @@ export abstract class ProtoResponse implements iResponse {
    * @param key
    */
   public cookie(key: string): iValue {
-    let cookie: Cookie | null = null;
-    this.httpResponse.cookies.forEach((c: Cookie) => {
-      if (c.key === key) {
-        cookie = c;
-      }
-    });
-    return this._wrapAsValue(cookie, "HTTP Cookies[" + key + "]");
+    return this._wrapAsValue(
+      this.httpResponse.cookies[key],
+      "HTTP Cookies[" + key + "]"
+    );
   }
 
   public async waitForNavigation(

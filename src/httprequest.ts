@@ -5,6 +5,7 @@ import tunnel = require("tunnel");
 import probeImage = require("probe-image-size");
 import * as http from "http";
 import { LaunchOptions } from "puppeteer";
+import { probeImageResponse } from "./httpresponse";
 
 const CONTENT_TYPE_JSON = "application/json";
 const CONETNT_TYPE_MULTIPART = "multipart/form-data";
@@ -64,22 +65,25 @@ export type HttpData =
   | undefined;
 
 export type HttpRequestOptions = {
-  uri?: string;
-  method?: HttpMethodVerb;
-  headers?: KeyValue;
-  cookies?: KeyValue;
-  verifyCert?: boolean;
-  proxy?: HttpProxy;
-  timeout?: HttpTimeout;
-  maxRedirects?: number;
-  credentials?: HttpAuth;
-  data?: HttpData;
   browserOptions?: BrowserOptions;
+  auth?: HttpAuth;
+  data?: HttpData;
+  cookies?: KeyValue;
+  headers?: KeyValue;
+  maxRedirects?: number;
+  method?: HttpMethodVerb;
+  proxy?: HttpProxy;
+  timeout?: HttpTimeout | number;
   type?: HttpRequestType;
+  uri?: string | null;
+  /**
+   * For https, should we reject unauthorized certs?
+   */
+  verifyCert?: boolean;
 };
 
 export class HttpRequest {
-  private _uri: string = "http://localhost/";
+  private _uri: string | null = null;
   private _method: HttpMethodVerb = "get";
   private _headers: KeyValue = {};
   private _cookies: KeyValue = {};
@@ -87,17 +91,17 @@ export class HttpRequest {
   private _proxy: HttpProxy | undefined;
   private _timeout: HttpTimeout = { open: 10000 };
   private _maxRedirects: number = 10;
-  private _credentials: HttpAuth | undefined;
+  private _auth: HttpAuth | undefined;
   private _data: HttpData;
   private _fetched: boolean = false;
   private _browser: BrowserOptions = {};
   private _type: HttpRequestType = "generic";
 
-  public get uri(): string {
+  public get uri(): string | null {
     return this._uri;
   }
 
-  public set uri(value: string) {
+  public set uri(value: string | null) {
     if (!this.isImmutable) {
       this._uri = value;
     }
@@ -146,13 +150,13 @@ export class HttpRequest {
     }
   }
 
-  public get credentials(): HttpAuth | undefined {
-    return this._credentials;
+  public get auth(): HttpAuth | undefined {
+    return this._auth;
   }
 
-  public set credentials(value: HttpAuth | undefined) {
+  public set auth(value: HttpAuth | undefined) {
     if (!this.isImmutable) {
-      this._credentials = value;
+      this._auth = value;
     }
   }
 
@@ -216,14 +220,21 @@ export class HttpRequest {
     }
   }
 
-  public get proxyAgent(): http.Agent | undefined {
+  private get proxyAgent(): http.Agent | undefined {
     if (this._proxy) {
       return tunnel.httpOverHttp({
-        proxy: this._proxy,
+        proxy: {
+          host: this._proxy.host,
+          port: this._proxy.port,
+          proxyAuth: `${this._proxy.auth.username}:${this._proxy.auth.password}`,
+        },
       });
     }
   }
 
+  /**
+   * Once this request has been fetched, changes can no longer be made
+   */
   public get isImmutable(): boolean {
     return this._fetched;
   }
@@ -238,11 +249,11 @@ export class HttpRequest {
       proxy: this._proxy,
       maxRedirects: this._maxRedirects,
       timeout: this._timeout,
-      credentials: this._credentials,
+      auth: this._auth,
     };
   }
 
-  public get needleOptions(): needle.NeedleOptions {
+  private get needleOptions(): needle.NeedleOptions {
     return {
       agent: this.proxyAgent,
       auth: "auto",
@@ -254,14 +265,14 @@ export class HttpRequest {
       open_timeout: this.timeout.open,
       parse_cookies: true,
       parse_response: true,
-      password: this.credentials?.password,
+      password: this.auth?.password,
       read_timeout: this.timeout.read,
       rejectUnauthorized: this.verifyCert,
-      username: this.credentials?.username,
+      username: this.auth?.username,
     };
   }
 
-  public get httpOptions(): http.RequestOptions {
+  private get httpOptions(): http.RequestOptions {
     return {
       agent: this.proxyAgent,
       headers: this.headers,
@@ -270,7 +281,7 @@ export class HttpRequest {
     };
   }
 
-  public get gotOptions(): any {
+  private get gotOptions(): any {
     return {
       agent: this.proxyAgent,
       allowGetBody: true,
@@ -287,6 +298,11 @@ export class HttpRequest {
     this.setOptions(opts);
   }
 
+  /**
+   * Overlay these options on top of existing ones
+   *
+   * @param opts
+   */
   public setOptions(opts: HttpRequestOptions): HttpRequest {
     if (!this.isImmutable) {
       this._type = opts.type || this._type;
@@ -303,8 +319,18 @@ export class HttpRequest {
         typeof opts.maxRedirects === "undefined"
           ? this._maxRedirects
           : opts.maxRedirects;
-      this._timeout = opts.timeout || this._timeout;
-      this._credentials = opts.credentials || this._credentials;
+      this._timeout = (() => {
+        if (!opts.timeout) {
+          return this._timeout;
+        }
+        if (typeof opts.timeout == "number") {
+          return {
+            open: opts.timeout,
+          };
+        }
+        return opts.timeout;
+      })();
+      this._auth = opts.auth || this._auth;
       this._browser = opts.browserOptions || this._browser;
     }
     return this;
@@ -330,11 +356,19 @@ export class HttpRequest {
     return this._headers[key];
   }
 
+  /**
+   * Execute the request
+   *
+   * @param opts
+   */
   public fetch(opts?: KeyValue): Promise<HttpResponse> {
     if (this._fetched) {
       throw new Error("This request was already fetched.");
     }
     this._fetched = true;
+    if (this._uri === null) {
+      throw new Error("Invalid URI");
+    }
     if (this.type === "image") {
       return this._fetchImage(opts);
     } else {
@@ -347,7 +381,7 @@ export class HttpRequest {
       const stream = needle.request(
         // Needle doesn't support "options"
         this.method === "options" ? "head" : this.method,
-        this.uri,
+        this.uri || "/",
         this.data || null,
         this.needleOptions,
         (err, resp) => {
@@ -365,8 +399,11 @@ export class HttpRequest {
 
   protected _fetchImage(opts?: KeyValue): Promise<HttpResponse> {
     return new Promise(async (resolve) => {
-      const result = await probeImage(this.uri, this.gotOptions);
-      resolve(HttpResponse.fromProbeImage(result, []));
+      const result: probeImageResponse = await probeImage(
+        this.uri,
+        this.gotOptions
+      );
+      resolve(HttpResponse.fromProbeImage(result));
     });
   }
 }

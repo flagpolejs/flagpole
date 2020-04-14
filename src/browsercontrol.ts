@@ -1,7 +1,7 @@
 import * as puppeteer from "puppeteer-core";
 import { Page, Browser, Response, SetCookie } from "puppeteer-core";
-import { Cookie } from "tough-cookie";
 import { BrowserOptions, HttpRequest } from "./httprequest";
+import { KeyValue } from "./interfaces";
 
 export type BrowserConsoleMessage = {
   type: string;
@@ -12,7 +12,7 @@ export type BrowserConsoleMessage = {
 export interface iBrowserControlResponse {
   response: Response;
   body: string;
-  cookies: Cookie[];
+  cookies: KeyValue;
 }
 
 export class BrowserControl {
@@ -72,23 +72,14 @@ export class BrowserControl {
     return Promise.resolve(this._puppeteer);
   }
 
-  public async getCookies(): Promise<Cookie[]> {
+  private async _getCookies(): Promise<KeyValue> {
     if (this._page === null) {
       throw new Error("Page is null");
     }
     const puppeteerCookies: puppeteer.Cookie[] = await this._page.cookies();
-    const cookies: Cookie[] = [];
+    const cookies: KeyValue = {};
     puppeteerCookies.forEach((puppeteerCookie) => {
-      cookies.push(
-        new Cookie({
-          key: puppeteerCookie.name,
-          value: puppeteerCookie.value,
-          domain: puppeteerCookie.domain,
-          path: puppeteerCookie.path,
-          httpOnly: puppeteerCookie.httpOnly,
-          secure: puppeteerCookie.secure,
-        })
-      );
+      cookies[puppeteerCookie.name] = puppeteerCookie.value;
     });
     return cookies;
   }
@@ -135,7 +126,7 @@ export class BrowserControl {
             resolve({
               response: await this._openUri(),
               body: this._page ? await this._page.content() : "",
-              cookies: await this.getCookies(),
+              cookies: await this._getCookies(),
             });
           })
           .catch(reject);
@@ -170,8 +161,8 @@ export class BrowserControl {
   }
 
   private async _setBasicAuth() {
-    if (this._page !== null && this.request.credentials) {
-      return this._page.authenticate(this.request.credentials);
+    if (this._page !== null && this.request.auth) {
+      return this._page.authenticate(this.request.auth);
     }
   }
 
@@ -183,7 +174,7 @@ export class BrowserControl {
         return {
           name: key,
           value: this.request.cookies[key],
-          url: this.request.uri,
+          url: this.request.uri || "/",
         };
       });
       return this._page.setCookie(...puppeteerCookies);
@@ -194,10 +185,13 @@ export class BrowserControl {
     if (this._page === null) {
       throw new Error("Page is null.");
     }
-    const response: Response | null = await this._page.goto(this.request.uri, {
-      timeout: 30000,
-      waitUntil: "networkidle2",
-    });
+    const response: Response | null = await this._page.goto(
+      this.request.uri || "/",
+      {
+        timeout: 30000,
+        waitUntil: "networkidle2",
+      }
+    );
     if (response === null) {
       throw new Error("Browser response is null.");
     }

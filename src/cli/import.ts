@@ -1,7 +1,7 @@
 import {
   printSubheader,
   printHeader,
-  stringArrayToPromptChoices
+  stringArrayToPromptChoices,
 } from "./cli-helper";
 import { Cli } from "./cli";
 import * as prompts from "prompts";
@@ -30,16 +30,15 @@ export async function importSuite() {
       type: "multiselect",
       name: "suitesNames",
       message: "Which suites do you want to import?",
-      choices: suitesAvailableToImport
+      choices: suitesAvailableToImport,
     },
     {
       type: "list",
       name: "tags",
       message: "Add Tags (Optional)",
       initial: "",
-      // @ts-ignore
-      separator: " "
-    }
+      separator: " ",
+    },
   ]);
 
   if (responses && responses.suitesNames && responses.suitesNames.length > 0) {

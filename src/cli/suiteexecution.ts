@@ -2,7 +2,7 @@ import { SuiteConfig } from "./config";
 import {
   FlagpoleExecutionOptions,
   FlagpoleOutput,
-  FlagpoleExecution
+  FlagpoleExecution,
 } from "../flagpoleexecutionoptions";
 import { Suite } from "../suite";
 import { FlagpoleReport } from "../logging/flagpolereport";
@@ -12,7 +12,7 @@ import { spawn, fork, ForkOptions, exec } from "child_process";
 
 export enum SuiteExecutionExitCode {
   success = 0,
-  failure = 1
+  failure = 1,
 }
 
 /**
@@ -78,7 +78,7 @@ export class SuiteExecution {
   }
 
   constructor() {
-    this._finishedPromise = new Promise(resolve => {
+    this._finishedPromise = new Promise((resolve) => {
       this._finishedResolver = resolve;
     });
   }
@@ -129,7 +129,7 @@ export class SuiteExecution {
     filePath: string,
     opts: FlagpoleExecutionOptions
   ): Promise<SuiteExecutionResult> {
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       opts.exitOnDone = true;
       opts.isChildProcess = true;
       //this._executeWithFork(filePath, opts, resolve);
@@ -167,10 +167,16 @@ export class SuiteExecution {
   ) {
     const command: string[] = [filePath].concat(opts.toArgs());
     const proc = spawn("node", command);
-    proc.stdout.on("data", data => {
+    proc.stdout.on("data", (data) => {
       this._logLine(data);
     });
-    proc.on("close", exitCode => {
+    proc.stderr.on("data", (data) => {
+      this._logLine(data);
+    });
+    proc.on("error", (err) => {
+      this._logLine(err.message);
+    });
+    proc.on("close", (exitCode) => {
       if (exitCode > 0 && opts.output == FlagpoleOutput.console) {
         this._logLine("FAILED TEST SUITE:");
         this._logLine(filePath + " exited with error code " + exitCode);
@@ -186,10 +192,10 @@ export class SuiteExecution {
     resolve: Function
   ) {
     const options: ForkOptions = {
-      stdio: ["pipe", "pipe", "pipe", "ipc"]
+      stdio: ["pipe", "pipe", "pipe", "ipc"],
     };
     const proc = fork(filePath, opts.toArgs(), options);
-    proc.on("exit", exitCode => {
+    proc.on("exit", (exitCode) => {
       if (
         (exitCode == null || exitCode !== 0) &&
         opts.output == FlagpoleOutput.console
@@ -205,7 +211,7 @@ export class SuiteExecution {
         )
       );
     });
-    proc.on("message", msg => {
+    proc.on("message", (msg) => {
       console.log("child message received!");
       this._logLine(msg);
     });
@@ -213,10 +219,8 @@ export class SuiteExecution {
 
   protected _logLine(data: string | Buffer) {
     if (data) {
-      const lines = String(data)
-        .trim()
-        .split("\n");
-      lines.forEach(line => {
+      const lines = String(data).trim().split("\n");
+      lines.forEach((line) => {
         this._output.push(line);
         this._subscribers.forEach((callback: Function) => {
           callback.apply(this, [line, this]);

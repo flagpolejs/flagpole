@@ -24,7 +24,8 @@ let commands = [
   "serve",
   "watch",
   "build",
-  "debug"
+  "debug",
+  "audit",
 ];
 let yargs = require("yargs");
 let argv = require("yargs")
@@ -41,7 +42,7 @@ let argv = require("yargs")
     d: "debug",
     h: "hide_banner",
     o: "output",
-    q: "quiet"
+    q: "quiet",
   })
   .describe({
     s: "Specify one or more suites to run",
@@ -51,7 +52,7 @@ let argv = require("yargs")
     d: "Show extra debug info",
     h: "Hide the output banner",
     o: "Output: console, text, html, json, csv, browser",
-    q: "Quiet Mode: Silence all output"
+    q: "Quiet Mode: Silence all output",
   })
   .array("s")
   .string("t")
@@ -92,7 +93,7 @@ let argv = require("yargs")
   )
   .epilogue("For more information, go to https://github.com/flocasts/flagpole")
   .wrap(Math.min(100, yargs.terminalWidth()))
-  .fail(function(msg, err, yargs) {
+  .fail(function (msg, err, yargs) {
     Cli.log(yargs.help());
     Cli.log(msg);
     Cli.exit(1);
@@ -169,6 +170,8 @@ if (argv.d || Cli.command == "debug") {
 }
 if (Cli.command == "list") {
   require("./list").list();
+} else if (Cli.command == "audit") {
+  require("./audit").audit();
 } else if (Cli.command == "run") {
   // Empty previous cache before running a new job
   const cacheFolder = Cli.config.getCacheFolder();
@@ -176,7 +179,7 @@ if (Cli.command == "list") {
     .then(() => {
       require("./run").run(argv.s, argv.t);
     })
-    .catch(err => {
+    .catch((err) => {
       console.log(err);
     });
 } else if (Cli.command == "login") {

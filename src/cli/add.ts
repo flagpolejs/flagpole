@@ -2,7 +2,7 @@ import {
   printHeader,
   printSubheader,
   trimInput,
-  stringArrayToPromptChoices
+  stringArrayToPromptChoices,
 } from "./cli-helper";
 import { Cli } from "./cli";
 import { SuiteConfig } from "./config";
@@ -12,12 +12,12 @@ const typesOfTest: any[] = [
   { title: "HTML Page", value: "html" },
   {
     title: "REST API (JSON Format)",
-    value: "json"
+    value: "json",
   },
   {
     title: "Browser (Puppeteer)",
-    value: "browser"
-  }
+    value: "browser",
+  },
 ];
 
 const canAdd: string[] = ["suite", "scenario", "env", "tag"];
@@ -34,13 +34,13 @@ async function addSuite() {
   const standardQuestions = await prompts([
     {
       type: "text",
-      name: "suiteName",
+      name: "suiteName2",
       message: "Name of Suite",
       initial: Cli.commandArg2 || "smoke",
       format: trimInput,
-      validate: function(input) {
+      validate: function (input) {
         return /^[a-z0-9][a-z0-9/\/_-]{1,62}[a-z0-9]$/i.test(input);
-      }
+      },
     },
     {
       type: "text",
@@ -48,9 +48,9 @@ async function addSuite() {
       message: "Description of Suite",
       initial: "Basic Smoke Test of Site",
       format: trimInput,
-      validate: function(input) {
+      validate: function (input) {
         return /^[a-z0-9].{1,63}$/i.test(input);
-      }
+      },
     },
     {
       type: "text",
@@ -58,16 +58,16 @@ async function addSuite() {
       message: "First Scenario",
       initial: "Homepage Loads",
       format: trimInput,
-      validate: function(input) {
+      validate: function (input) {
         return /^[a-z0-9].{1,63}$/i.test(input);
-      }
+      },
     },
     {
       type: "select",
       name: "type",
       message: "What type of test is this scenario?",
       initial: 0,
-      choices: typesOfTest
+      choices: typesOfTest,
     },
     {
       type: "text",
@@ -75,18 +75,17 @@ async function addSuite() {
       message: "Scenario Start Path",
       initial: "/",
       format: trimInput,
-      validate: function(input) {
+      validate: function (input) {
         return /^\/.{0,63}$/i.test(input);
-      }
+      },
     },
     {
       type: "list",
       name: "tags",
       message: "Add Tags (Optional)",
       initial: "",
-      // @ts-ignore
-      separator: " "
-    }
+      separator: " ",
+    },
   ]);
 
   Cli.log("");
@@ -94,12 +93,12 @@ async function addSuite() {
     {
       name: standardQuestions.suiteName,
       description: standardQuestions.suiteDescription,
-      tags: standardQuestions.tags
+      tags: standardQuestions.tags,
     },
     {
       description: standardQuestions.scenarioDescription,
       type: standardQuestions.type,
-      path: standardQuestions.scenarioPath
+      path: standardQuestions.scenarioPath,
     }
   );
 
@@ -107,7 +106,7 @@ async function addSuite() {
   Cli.list([
     "Suite file created: " + standardQuestions.suiteName,
     "Scenario added: " + standardQuestions.scenarioDescription,
-    "Config file updated"
+    "Config file updated",
   ]);
   Cli.log("");
   Cli.exit(0);
@@ -137,16 +136,16 @@ async function addScenario() {
       message: "What suite do you want to add it to?",
       initial: Cli.commandArg2 || "",
       choices: suites,
-      validate: function(input) {
+      validate: function (input) {
         return input.length > 0;
-      }
+      },
     },
     {
       type: "select",
       name: "type",
       message: "What type of test is this scenario?",
       initial: 0,
-      choices: typesOfTest
+      choices: typesOfTest,
     },
     {
       type: "text",
@@ -154,9 +153,9 @@ async function addScenario() {
       message: "Description of Scenario",
       initial: "Some Other Page Loads",
       format: trimInput,
-      validate: function(input) {
+      validate: function (input) {
         return /^[a-z0-9].{1,63}$/i.test(input);
-      }
+      },
     },
     {
       type: "text",
@@ -164,10 +163,10 @@ async function addScenario() {
       message: "Scenario Start Path",
       initial: "/some-other-page",
       format: trimInput,
-      validate: function(input) {
+      validate: function (input) {
         return /^\/.{0,63}$/i.test(input);
-      }
-    }
+      },
+    },
   ]);
 
   const suite: SuiteConfig = Cli.config.suites[responses.suite];
@@ -180,7 +179,7 @@ async function addScenario() {
   await Cli.addScenario(suite, {
     description: responses.scenarioDescription,
     path: responses.scenarioPath,
-    type: responses.type
+    type: responses.type,
   });
 
   Cli.log("Appended new scenario to suite:");
@@ -200,21 +199,21 @@ async function addEnv() {
       name: "name",
       message: "What do you want to call the environment?",
       initial: Cli.commandArg2 || "",
-      validate: function(input) {
+      validate: function (input) {
         return /^[a-z0-9]{1,12}$/i.test(input);
-      }
+      },
     },
     {
       type: "text",
       name: "defaultDomain",
       message: "Default Domain (optional)",
-      format: trimInput
-    }
+      format: trimInput,
+    },
   ]);
 
   Cli.config.addEnvironment({
     name: responses.name,
-    defaultDomain: responses.defaultDomain
+    defaultDomain: responses.defaultDomain,
   });
   await Cli.config.save();
   Cli.log("Added new environment.");
@@ -229,20 +228,20 @@ async function addTag() {
       type: "text",
       name: "tag",
       message: "Tag to Add",
-      validate: tag => {
+      validate: (tag) => {
         return /^[a-z][a-z0-9_-][a-z0-0]+$/i.test(tag)
           ? true
           : "Tag should be a single alpha-numeric word";
       },
-      format: trimInput
+      format: trimInput,
     },
     {
       type: "multiselect",
       name: "suites",
       min: 1,
       message: "Suites to apply it to",
-      choices: stringArrayToPromptChoices(Cli.config.getSuiteNames())
-    }
+      choices: stringArrayToPromptChoices(Cli.config.getSuiteNames()),
+    },
   ]);
 
   responses.suites.forEach((suiteName: string) => {
@@ -267,8 +266,8 @@ export async function add() {
           { value: "suite", title: "Suite" },
           { value: "scenario", title: "Scenario" },
           { value: "env", title: "Environment" },
-          { value: "tag", title: "Tag" }
-        ]
+          { value: "tag", title: "Tag" },
+        ],
       })
     ).thingToAdd;
   }

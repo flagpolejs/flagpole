@@ -30,6 +30,8 @@ export interface iNextCallback {
   (context: iAssertionContext): Promise<any> | void;
 }
 
+export type ResponsePipe = (resp: HttpResponse) => void | HttpResponse;
+
 export type IteratorCallback = (value: any, index: number, arr: any[]) => any;
 
 export interface iConsoleLine {
@@ -343,18 +345,14 @@ export interface iSuite {
   verifySslCert(verify: boolean): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
-  scenario(
-    title: string,
-    type: ResponseType,
-    opts: BrowserOptions | HttpRequestOptions
-  ): iScenario;
-  json(title: string, opts?: HttpRequestOptions): iScenario;
-  image(title: string, opts?: HttpRequestOptions): iScenario;
-  video(title: string, opts?: HttpRequestOptions): iScenario;
-  html(title: string, opts?: HttpRequestOptions): iScenario;
-  stylesheet(title: string, opts?: HttpRequestOptions): iScenario;
-  script(title: string, opts?: HttpRequestOptions): iScenario;
-  resource(title: string, opts?: HttpRequestOptions): iScenario;
+  scenario(title: string, type: ResponseType, opts?: BrowserOptions): iScenario;
+  json(title: string): iScenario;
+  image(title: string): iScenario;
+  video(title: string): iScenario;
+  html(title: string): iScenario;
+  stylesheet(title: string): iScenario;
+  script(title: string): iScenario;
+  resource(title: string): iScenario;
   browser(title: string, opts?: BrowserOptions): iScenario;
   extjs(title: string, opts?: BrowserOptions): iScenario;
   base(url: string | KeyValue): iSuite;
@@ -385,7 +383,6 @@ export interface iScenario {
   hasFinished: boolean;
   url: string | null;
   finalUrl: string | null;
-  requestUrl: string;
   redirectCount: number;
   redirectChain: string[];
   request: HttpRequest;
@@ -415,6 +412,7 @@ export interface iScenario {
   ignore(assertions?: boolean | Function): iScenario;
   open(url: string, opts?: HttpRequestOptions): iScenario;
   next(callback: iNextCallback): iScenario;
+  next(...callbacks: iNextCallback[]): iScenario;
   next(message: string, callback: iNextCallback): iScenario;
   nextPrepend(callback: iNextCallback): iScenario;
   nextPrepend(message: string, callback: iNextCallback): iScenario;
@@ -429,10 +427,15 @@ export interface iScenario {
   success(callback: Function): iScenario;
   failure(message: string, callback: Function): iScenario;
   failure(callback: Function): iScenario;
+  pipe(message: string, callback: ResponsePipe): iScenario;
+  pipe(callback: ResponsePipe): iScenario;
+  pipe(...callbacks: ResponsePipe[]): iScenario;
   before(message: string, callback: Function): iScenario;
   before(callback: Function): iScenario;
+  before(...callbacks: Function[]): iScenario;
   after(message: string, callback: Function): iScenario;
   after(callback: Function): iScenario;
+  after(...callbacks: Function[]): iScenario;
   finally(message: string, callback: Function): iScenario;
   finally(callback: Function): iScenario;
   mock(localPath: string): iScenario;

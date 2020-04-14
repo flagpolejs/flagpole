@@ -15,7 +15,7 @@ export function printHeader() {
     "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[47m                 \u001b[0m"
   );
   console.log(
-    "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[238m   Version 2.1"
+    "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[238m   Version 2.2"
   );
   console.log(
     "\u001b[0m \u001b[47m \u001b[0m \u001b[47m                         \u001b[0m"
@@ -65,7 +65,7 @@ export function printSubheader(heading: string) {
 
 export function printLine(...messages: string[]) {
   if (!FlagpoleExecution.opts.quietMode) {
-    messages.forEach(message => {
+    messages.forEach((message) => {
       console.log(message);
     });
   }
@@ -77,7 +77,7 @@ export function trimInput(input) {
 
 export function stringArrayToPromptChoices(arr: string[]): prompts.Choice[] {
   const out: prompts.Choice[] = [];
-  arr.forEach(item => {
+  arr.forEach((item) => {
     out.push({ title: item, value: item });
   });
   return out;

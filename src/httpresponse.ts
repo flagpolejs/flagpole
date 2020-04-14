@@ -1,15 +1,23 @@
-import { Cookie } from "tough-cookie";
 import * as puppeteer from "puppeteer-core";
-import request = require("request");
 import { NeedleResponse } from "needle";
 import { KeyValue } from "./interfaces";
+
+export type probeImageResponse = {
+  width: number;
+  height: number;
+  type: string;
+  mime: string;
+  wUnits: string;
+  hUnits: string;
+  url: string;
+};
 
 export class HttpResponse {
   public body: string = "";
   public statusCode: number = 0;
   public statusMessage: string = "";
-  public headers: { [key: string]: string } = {};
-  public cookies: Cookie[] = [];
+  public headers: KeyValue = {};
+  public cookies: KeyValue = {};
 
   private constructor() {}
 
@@ -24,51 +32,34 @@ export class HttpResponse {
     r.statusMessage = response.statusMessage || "";
     r.headers = <KeyValue>response.headers;
     r.body = response.body;
-    r.cookies = response.cookies
-      ? Object.keys(response.cookies).map((key) => {
-          return new Cookie({
-            key: key,
-            value: response.cookies ? response.cookies[key] : undefined,
-          });
-        })
-      : [];
-    return r;
-  }
-
-  static fromRequest(
-    response: request.Response,
-    cookies: Cookie[]
-  ): HttpResponse {
-    const r = new HttpResponse();
-    r.statusCode = response.statusCode || 0;
-    r.statusMessage = response.statusMessage || "";
-    r.headers = <{ [key: string]: string }>response.headers;
-    r.body = response.body;
-    r.cookies = cookies;
+    r.cookies = response.cookies ? <KeyValue>response.cookies : {};
     return r;
   }
 
   static fromPuppeteer(
     response: puppeteer.Response,
     body: string,
-    cookies: Cookie[]
+    cookies?: KeyValue
   ): HttpResponse {
     const r = new HttpResponse();
     r.statusCode = response.status();
     r.statusMessage = response.statusText();
     r.headers = response.headers();
     r.body = body;
-    r.cookies = cookies;
-    //r.url = response.url();
+    r.cookies = cookies || {};
     return r;
   }
 
-  static fromProbeImage(response: any, cookies: Cookie[]): HttpResponse {
+  static fromProbeImage(
+    response: probeImageResponse,
+    cookies?: KeyValue
+  ): HttpResponse {
     const r = new HttpResponse();
     r.headers = {
       "content-type": response.mime,
     };
     r.body = JSON.stringify(response);
+    r.cookies = cookies || {};
     return r;
   }
 
@@ -82,7 +73,6 @@ export class HttpResponse {
           return reject(err);
         }
         r.body = data.toString();
-        //r.url = path;
         resolve(r);
       });
     });

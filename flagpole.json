@@ -22,9 +22,7 @@
     "debug": {
       "id": "",
       "name": "debug",
-      "tags": [
-        "basic"
-      ]
+      "tags": ["basic"]
     },
     "foobar": {
       "id": "",

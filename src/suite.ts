@@ -215,7 +215,11 @@ export class Suite implements iSuite {
    * @returns {Scenario}
    * @constructor
    */
-  public scenario(title: string, type: ResponseType, opts: any): iScenario {
+  public scenario(
+    title: string,
+    type: ResponseType,
+    opts?: BrowserOptions
+  ): iScenario {
     const scenario: iScenario = Scenario.create(
       this,
       title,
@@ -247,50 +251,50 @@ export class Suite implements iSuite {
   /**
    * Create a new JSON/REST API Scenario
    */
-  public json(title: string, opts: HttpRequestOptions = {}): iScenario {
-    return this.scenario(title, ResponseType.json, opts);
+  public json(title: string): iScenario {
+    return this.scenario(title, ResponseType.json);
   }
 
   /**
    * Create a new Image Scenario
    */
-  public image(title: string, opts: HttpRequestOptions = {}): iScenario {
-    return this.scenario(title, ResponseType.image, opts);
+  public image(title: string): iScenario {
+    return this.scenario(title, ResponseType.image);
   }
 
   /**
    * Create a new Video Scenario
    */
-  public video(title: string, opts: HttpRequestOptions = {}): iScenario {
-    return this.scenario(title, ResponseType.video, opts);
+  public video(title: string): iScenario {
+    return this.scenario(title, ResponseType.video);
   }
 
   /**
    * Create a new HTML/DOM Scenario
    */
-  public html(title: string, opts: HttpRequestOptions = {}): iScenario {
-    return this.scenario(title, ResponseType.html, opts);
+  public html(title: string): iScenario {
+    return this.scenario(title, ResponseType.html);
   }
 
   /**
    * Create a new CSS Scenario
    */
-  public stylesheet(title: string, opts: HttpRequestOptions = {}): iScenario {
-    return this.scenario(title, ResponseType.stylesheet, opts);
+  public stylesheet(title: string): iScenario {
+    return this.scenario(title, ResponseType.stylesheet);
   }
 
   /**
    * Create a new Script Scenario
    */
-  public script(title: string, opts: HttpRequestOptions = {}): iScenario {
-    return this.scenario(title, ResponseType.script, opts);
+  public script(title: string): iScenario {
+    return this.scenario(title, ResponseType.script);
   }
 
   /**
    * Create a generic resource scenario
    */
-  public resource(title: string, opts: HttpRequestOptions = {}): iScenario {
-    return this.scenario(title, ResponseType.resource, opts);
+  public resource(title: string): iScenario {
+    return this.scenario(title, ResponseType.resource);
   }
 
   /**

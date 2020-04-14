@@ -7,6 +7,7 @@ import {
   iValue,
   iNextCallback,
   KeyValue,
+  ResponsePipe,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import { BrowserControl, iBrowserControlResponse } from "./browsercontrol";
@@ -24,8 +25,6 @@ import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/logcollection";
 import { Assertion } from "./assertion";
-import { CookieJar, Cookie } from "tough-cookie";
-import * as needle from "needle";
 import {
   HttpRequestOptions,
   HttpProxy,
@@ -112,7 +111,7 @@ export class Scenario implements iScenario {
    */
   public get canExecute(): boolean {
     return (
-      !this.hasExecuted && this._url !== null && this._nextCallbacks.length > 0
+      !this.hasExecuted && this.url !== null && this._nextCallbacks.length > 0
     );
   }
 
@@ -134,11 +133,7 @@ export class Scenario implements iScenario {
    * Get the url
    */
   public get url(): string | null {
-    return this._url;
-  }
-
-  public get requestUrl(): string {
-    return this.suite.buildUrl(this._url || "");
+    return this._request.uri;
   }
 
   /**
@@ -149,7 +144,7 @@ export class Scenario implements iScenario {
   }
 
   /**
-   * Cound the redirects
+   * Count the redirects
    */
   public get redirectCount(): number {
     return this._redirectChain.length;
@@ -169,14 +164,6 @@ export class Scenario implements iScenario {
     return this._request;
   }
 
-  public get requestType(): HttpRequestType {
-    return this._responseType === ResponseType.json
-      ? "json"
-      : this._responseType === ResponseType.image
-      ? "image"
-      : "generic";
-  }
-
   protected _title: string;
   protected _log: LogCollection = new LogCollection();
   protected _subscribers: Function[] = [];
@@ -194,6 +181,8 @@ export class Scenario implements iScenario {
   protected _failureMessages: Array<string | null> = [];
   protected _successCallbacks: Function[] = [];
   protected _successMessages: Array<string | null> = [];
+  protected _pipeCallbacks: ResponsePipe[] = [];
+  protected _pipeMessages: Array<string | null> = [];
   protected _onCompletedCallback: Function;
   protected _timeScenarioInitialized: number = Date.now();
   protected _timeScenarioExecuted: number | null = null;
@@ -203,7 +192,6 @@ export class Scenario implements iScenario {
   protected _responseType: ResponseType = ResponseType.html;
   protected _redirectChain: string[] = [];
   protected _finalUrl: string | null = null;
-  protected _url: string | null = null;
   protected _waitToExecute: boolean = false;
   protected _waitTime: number = 0;
   protected _flipAssertion: boolean = false;
@@ -357,8 +345,8 @@ export class Scenario implements iScenario {
    *
    * @param authorization
    */
-  public setBasicAuth(authorization: HttpAuth): iScenario {
-    this._request.credentials = authorization;
+  public setBasicAuth(auth: HttpAuth): iScenario {
+    this._request.auth = auth;
     return this;
   }
 
@@ -513,7 +501,7 @@ export class Scenario implements iScenario {
         this._request.setOptions(opts);
       }
       // Okay now set the open method
-      this._url = String(url);
+      this._request.uri = String(url);
       this._isMock = false;
       this._executeWhenReady();
     }
@@ -525,8 +513,19 @@ export class Scenario implements iScenario {
    */
   public next(message: string, callback: iNextCallback): iScenario;
   public next(callback: iNextCallback): iScenario;
-  public next(a: iNextCallback | string, b?: iNextCallback): iScenario {
-    return this._next(a, b, true);
+  public next(...callbacks: iNextCallback[]): iScenario;
+  public next(
+    a: iNextCallback | iNextCallback[] | string,
+    b?: iNextCallback
+  ): iScenario {
+    if (Array.isArray(a)) {
+      a.forEach((callback) => {
+        this._next(callback, null, true);
+      });
+    } else {
+      this._next(a, b, true);
+    }
+    return this;
   }
 
   /**
@@ -588,11 +587,11 @@ export class Scenario implements iScenario {
   public async execute(params?: {
     [key: string]: string | number;
   }): Promise<Scenario> {
-    if (!this.hasExecuted && this._url !== null) {
+    if (!this.hasExecuted && this.url !== null) {
       if (params) {
         Object.keys(params).forEach((key) => {
-          this._url =
-            this._url?.replace(`{${key}}`, String(params[key])) || null;
+          this._request.uri =
+            this.url?.replace(`{${key}}`, String(params[key])) || null;
         });
       }
       await this._fireBefore();
@@ -665,21 +664,59 @@ export class Scenario implements iScenario {
   }
 
   /**
+   * Alter the response before we process assertions
+   *
+   * @param callback
+   */
+  public pipe(callback: ResponsePipe): iScenario;
+  public pipe(...callbacks: ResponsePipe[]): iScenario;
+  public pipe(message: string, callback: ResponsePipe): iScenario;
+  public pipe(
+    a: string | ResponsePipe | ResponsePipe[],
+    b?: ResponsePipe
+  ): iScenario {
+    if (this.hasExecuted) {
+      throw new Error(
+        "Can not add pipe callbacks after execution has started."
+      );
+    }
+    if (Array.isArray(a)) {
+      a.forEach((callback) => {
+        this._pipeMessages.push(null);
+        this._pipeCallbacks.push(callback);
+      });
+    } else {
+      const { message, callback } = this._getOverloads(a, b);
+      this._pipeMessages.push(message);
+      this._pipeCallbacks.push(<ResponsePipe>callback);
+    }
+    return this;
+  }
+
+  /**
    * callback just before the scenario starts to execute
    *
    * @param callback
    */
   public before(callback: Function): iScenario;
+  public before(...callbacks: Function[]): iScenario;
   public before(message: string, callback: Function): iScenario;
-  public before(a: string | Function, b?: Function): iScenario {
+  public before(a: string | Function | Function[], b?: Function): iScenario {
     if (this.hasExecuted) {
       throw new Error(
         "Can not add before callbacks after execution has started."
       );
     }
-    const { message, callback } = this._getOverloads(a, b);
-    this._beforeMessages.push(message);
-    this._beforeCallbacks.push(callback);
+    if (Array.isArray(a)) {
+      a.forEach((callback) => {
+        this._beforeMessages.push(null);
+        this._beforeCallbacks.push(callback);
+      });
+    } else {
+      const { message, callback } = this._getOverloads(a, b);
+      this._beforeMessages.push(message);
+      this._beforeCallbacks.push(callback);
+    }
     return this;
   }
 
@@ -687,6 +724,7 @@ export class Scenario implements iScenario {
    * callback just after the scenario completes
    */
   public after(callback: Function): iScenario;
+  public after(...callbacks: Function[]): iScenario;
   public after(message: string, callback: Function): iScenario;
   public after(a: string | Function, b?: Function): iScenario {
     if (this.hasFinished) {
@@ -694,9 +732,16 @@ export class Scenario implements iScenario {
         "Can not add after callbacks after execution has finished."
       );
     }
-    const { message, callback } = this._getOverloads(a, b);
-    this._afterMessages.push(message);
-    this._afterCallbacks.push(callback);
+    if (Array.isArray(a)) {
+      a.forEach((callback) => {
+        this._afterMessages.push(null);
+        this._afterCallbacks.push(callback);
+      });
+    } else {
+      const { message, callback } = this._getOverloads(a, b);
+      this._afterMessages.push(message);
+      this._afterCallbacks.push(callback);
+    }
     return this;
   }
 
@@ -723,7 +768,7 @@ export class Scenario implements iScenario {
    * Fake response from local file for testing
    */
   public mock(localPath: string): iScenario {
-    this._url = localPath;
+    this._request.uri = localPath;
     this._isMock = true;
     this._executeWhenReady();
     return this;
@@ -738,27 +783,45 @@ export class Scenario implements iScenario {
   }
 
   /**
+   * Send responses through the pipeline before we make assertions
+   *
+   * @param httpResponse
+   */
+  protected _pipeResponses(httpResponse: HttpResponse): HttpResponse {
+    this._pipeCallbacks.forEach((callback: ResponsePipe, i: number) => {
+      if (this._pipeMessages[i]) {
+        this.comment(this._pipeMessages[i] || "");
+      }
+      const result = callback(httpResponse);
+      if (result) {
+        httpResponse = result;
+      }
+    });
+    return httpResponse;
+  }
+
+  /**
    * Handle the normalized response once the request comes back
    * This will loop through each next
    */
   protected _processResponse(httpResponse: HttpResponse) {
+    httpResponse = this._pipeResponses(httpResponse);
     this._response.init(httpResponse);
-    const scenario: Scenario = this;
     this._timeRequestLoaded = Date.now();
     this.result(
       new AssertionPass(
-        "Loaded " + this._response.responseTypeName + " " + this._url
+        "Loaded " + this._response.responseTypeName + " " + this.url
       )
     );
     let lastReturnValue: any = null;
     // Execute all the assertion callbacks one by one
     this._publish(ScenarioStatusEvent.executionProgress);
-    Promise.mapSeries(scenario._nextCallbacks, (_then, index) => {
+    Promise.mapSeries(this._nextCallbacks, (_then, index) => {
       const context: AssertionContext = new AssertionContext(
-        scenario,
+        this,
         this._response
       );
-      const comment: string | null = scenario._nextMessages[index];
+      const comment: string | null = this._nextMessages[index];
       if (comment !== null) {
         this._pushToLog(new LogScenarioSubHeading(comment));
       }
@@ -782,10 +845,10 @@ export class Scenario implements iScenario {
       ]).timeout(30000);
     })
       .then(() => {
-        scenario._markScenarioCompleted();
+        this._markScenarioCompleted();
       })
       .catch((err) => {
-        scenario._markScenarioCompleted(err);
+        this._markScenarioCompleted(err);
       });
     this._publish(ScenarioStatusEvent.executionProgress);
   }
@@ -813,7 +876,12 @@ export class Scenario implements iScenario {
             }
       )
       .setOptions({
-        type: this.requestType,
+        type:
+          this._responseType === ResponseType.json
+            ? "json"
+            : this._responseType === ResponseType.image
+            ? "image"
+            : "generic",
       });
     this._responseType = type;
     this._response = createResponse(this);
@@ -855,12 +923,12 @@ export class Scenario implements iScenario {
             )
           );
         } else {
-          this._markScenarioCompleted(`Failed to load ${this._url}`);
+          this._markScenarioCompleted(`Failed to load ${this._request.uri}`);
         }
         return;
       })
       .catch((err) =>
-        this._markScenarioCompleted(`Failed to load ${this._url}`, err)
+        this._markScenarioCompleted(`Failed to load ${this._request.uri}`, err)
       );
   }
 
@@ -879,7 +947,7 @@ export class Scenario implements iScenario {
         this._processResponse(response);
       })
       .catch((err) => {
-        this._markScenarioCompleted(`Failed to load ${this._url}`, err);
+        this._markScenarioCompleted(`Failed to load ${this._request.uri}`, err);
       });
   }
 
@@ -887,9 +955,9 @@ export class Scenario implements iScenario {
    * Used by all request types to kick off the request
    */
   protected _executeRequest() {
-    if (!this._timeRequestStarted && this._url !== null) {
+    if (!this._timeRequestStarted && this.url !== null) {
       this._timeRequestStarted = Date.now();
-      this._request.uri = this.requestUrl;
+      this._request.uri = this.suite.buildUrl(this._request.uri || "");
       this._finalUrl = this._request.uri;
       if (
         this._responseType == ResponseType.browser ||
@@ -906,16 +974,16 @@ export class Scenario implements iScenario {
    * Start a mock scenario, which will load a local file
    */
   protected _executeMock() {
-    if (!this._timeRequestStarted && this._url !== null) {
+    if (!this._timeRequestStarted && this.url !== null) {
       const scenario: Scenario = this;
       this._timeRequestStarted = Date.now();
-      HttpResponse.fromLocalFile(this._url)
+      HttpResponse.fromLocalFile(this.url)
         .then((mock: HttpResponse) => {
           scenario._processResponse(mock);
         })
         .catch((err) => {
           scenario._markScenarioCompleted(
-            `Failed to load page ${scenario._url}`,
+            `Failed to load page ${scenario.url}`,
             err
           );
         });
