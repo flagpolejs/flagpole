@@ -342,6 +342,7 @@ export interface iSuite {
   suite: iSuite;
   finished: Promise<void>;
   subscribe(callback: Function): iSuite;
+  verifyCert(verify: boolean): iSuite;
   verifySslCert(verify: boolean): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
@@ -396,9 +397,11 @@ export interface iScenario {
   setProxy(proxy: HttpProxy): iScenario;
   setTimeout(timeout: number): iScenario;
   setTimeout(timeout: HttpTimeout): iScenario;
-  setFormData(form: KeyValue): iScenario;
+  setFormData(form: FormData): iScenario;
+  setFormData(form: KeyValue, isMultipart?: boolean): iScenario;
   setMaxRedirects(n: number): iScenario;
   setBasicAuth(authorization: HttpAuth): iScenario;
+  setDigestAuth(authorization: HttpAuth): iScenario;
   setBearerToken(token: string): iScenario;
   setCookie(key: string, value: string): iScenario;
   setHeaders(headers: KeyValue): iScenario;

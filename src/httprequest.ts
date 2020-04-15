@@ -332,6 +332,16 @@ export class HttpRequest {
     this.setOptions(opts);
   }
 
+  private urlEncodeForm(data: KeyValue): string {
+    const encoded: string[] = [];
+    Object.keys(data).forEach((key) => {
+      encoded.push(
+        `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`
+      );
+    });
+    return encoded.join("&");
+  }
+
   /**
    * Overlay these options on top of existing ones
    *
@@ -395,18 +405,37 @@ export class HttpRequest {
     this.data = data;
   }
 
-  public setFormData(data: KeyValue, isMultipart: boolean = false) {
+  public setFormData(formData: FormData): HttpRequest;
+  public setFormData(data: KeyValue, isMultipart?: boolean): HttpRequest;
+  public setFormData(
+    data: KeyValue | FormData,
+    isMultipart?: boolean
+  ): HttpRequest {
+    // If submitted FormData, the default should be multipart
+    if (data instanceof FormData && !isMultipart) {
+      throw new Error("This format of form data must be multipart.");
+    }
+    // Set header
     this.setHeader(
       "Content-Type",
       isMultipart ? CONTENT_TYPE_FORM_MULTIPART : CONTENT_TYPE_FORM
     );
-    if (isMultipart) {
+    // Already is form data, don't need to change it
+    if (data instanceof FormData) {
+      this.data = data;
+    }
+    // Convert JSON object to multipart format
+    else if (isMultipart) {
       const formData = new FormData();
       Object.keys(data).forEach((key) => formData.append(key, data[key]));
       this.data = formData;
-    } else {
-      this.data = formurlencoded(data);
     }
+    // Convert JSON object to URL encoded form
+    else {
+      this.data = formurlencoded(data);
+      //this.data = this.urlEncodeForm(data);
+    }
+    return this;
   }
 
   /**

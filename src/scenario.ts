@@ -314,7 +314,12 @@ export class Scenario implements iScenario {
    *
    * @param form
    */
-  public setFormData(form: KeyValue, isMultipart: boolean = false): iScenario {
+  public setFormData(form: FormData): iScenario;
+  public setFormData(form: KeyValue, isMultipart?: boolean): iScenario;
+  public setFormData(
+    form: KeyValue | FormData,
+    isMultipart?: boolean
+  ): iScenario {
     this._request.setFormData(form, isMultipart);
     return this;
   }
@@ -346,6 +351,18 @@ export class Scenario implements iScenario {
    */
   public setBasicAuth(auth: HttpAuth): iScenario {
     this._request.auth = auth;
+    this._request.authType = "basic";
+    return this;
+  }
+
+  /**
+   * Set the digest authentication headers to be sent with this request
+   *
+   * @param authorization
+   */
+  public setDigestAuth(auth: HttpAuth): iScenario {
+    this._request.auth = auth;
+    this._request.authType = "digest";
     return this;
   }
 

@@ -6,9 +6,9 @@ const suite = Flagpole.suite("Basic Smoke Test of Site").base(
 suite
   .html("Homepage Loads")
   .open("POST /json-pretty-print")
-  .before((scenario: iScenario) => {
-    scenario.setFormData({ json_string: `{ "foo": "dsaf" }` });
-  })
+  .setFormData({ json_string: `{ "foo": "dsaf" }` })
   .next(async (context) => {
-    context.comment(context.response.body.$);
+    const body = await context.exists("body");
+    const pre = await body.exists("pre");
+    context.comment((await pre.getInnerHtml()).$);
   });

@@ -167,6 +167,7 @@ export class Suite implements iSuite {
   /**
    * Turn on or off SSL verification for any new scenarios added to suite
    */
+  public verifyCert = this.verifySslCert;
   public verifySslCert(verify: boolean): Suite {
     this._verifySslCert = verify;
     return this;
