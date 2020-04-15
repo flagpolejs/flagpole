@@ -86,19 +86,27 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     return this.find(selector);
   }
 
+  public async waitForHavingText(
+    selector: string,
+    text: string,
+    timeout: number = 100
+  ): Promise<iValue> {
+    return this.findHavingText(selector, text);
+  }
+
   public async type(
     selector: string,
     textToType: string,
     opts: any = {}
   ): Promise<any> {
-    return await this.evaluate(this, function($) {
+    return await this.evaluate(this, function ($) {
       let currentValue = $(selector).val();
       $(selector).val(currentValue + textToType);
     });
   }
 
   public async clear(selector: string): Promise<any> {
-    return await this.evaluate(this, function($: Cheerio) {
+    return await this.evaluate(this, function ($: Cheerio) {
       $.find(selector).val("");
     });
   }

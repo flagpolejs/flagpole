@@ -8,6 +8,10 @@ import {
   iNextCallback,
   KeyValue,
   ResponsePipe,
+  ScenarioCallback,
+  ScenarioErrorCallback,
+  ScenarioStatusCallback,
+  ScenarioOnCompleted,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import { BrowserControl, iBrowserControlResponse } from "./browsercontrol";
@@ -166,24 +170,24 @@ export class Scenario implements iScenario {
 
   protected _title: string;
   protected _log: LogCollection = new LogCollection();
-  protected _subscribers: Function[] = [];
-  protected _nextCallbacks: Function[] = [];
+  protected _subscribers: ScenarioStatusCallback[] = [];
+  protected _nextCallbacks: iNextCallback[] = [];
   protected _nextMessages: Array<string | null> = [];
-  protected _beforeCallbacks: Function[] = [];
+  protected _beforeCallbacks: ScenarioCallback[] = [];
   protected _beforeMessages: Array<string | null> = [];
-  protected _afterCallbacks: Function[] = [];
+  protected _afterCallbacks: ScenarioCallback[] = [];
   protected _afterMessages: Array<string | null> = [];
-  protected _finallyCallbacks: Function[] = [];
+  protected _finallyCallbacks: ScenarioCallback[] = [];
   protected _finallyMessages: Array<string | null> = [];
-  protected _errorCallbacks: Function[] = [];
+  protected _errorCallbacks: ScenarioErrorCallback[] = [];
   protected _errorMessages: Array<string | null> = [];
-  protected _failureCallbacks: Function[] = [];
+  protected _failureCallbacks: ScenarioCallback[] = [];
   protected _failureMessages: Array<string | null> = [];
-  protected _successCallbacks: Function[] = [];
+  protected _successCallbacks: ScenarioCallback[] = [];
   protected _successMessages: Array<string | null> = [];
   protected _pipeCallbacks: ResponsePipe[] = [];
   protected _pipeMessages: Array<string | null> = [];
-  protected _onCompletedCallback: Function;
+  protected _onCompletedCallback: ScenarioOnCompleted;
   protected _timeScenarioInitialized: number = Date.now();
   protected _timeScenarioExecuted: number | null = null;
   protected _timeRequestStarted: number | null = null;
@@ -217,7 +221,7 @@ export class Scenario implements iScenario {
     title: string,
     type: ResponseType,
     opts: any,
-    onCompletedCallback: Function
+    onCompletedCallback: ScenarioOnCompleted
   ): iScenario {
     return new Scenario(suite, title, onCompletedCallback).setResponseType(
       type,
@@ -228,7 +232,7 @@ export class Scenario implements iScenario {
   protected constructor(
     suite: iSuite,
     title: string,
-    onCompletedCallback: Function
+    onCompletedCallback: ScenarioOnCompleted
   ) {
     this.suite = suite;
     this._request = new HttpRequest(this._defaultRequestOptions);
@@ -258,7 +262,7 @@ export class Scenario implements iScenario {
    *
    * @param callback
    */
-  public subscribe(callback: Function): iScenario {
+  public subscribe(callback: ScenarioStatusCallback): iScenario {
     this._subscribers.push(callback);
     return this;
   }
@@ -624,21 +628,55 @@ export class Scenario implements iScenario {
     return this;
   }
 
+  private _pushCallbacks(
+    name: string,
+    messages: string,
+    callbacks: string,
+    a:
+      | string
+      | ScenarioCallback
+      | ScenarioCallback[]
+      | ResponsePipe
+      | ResponsePipe[]
+      | ScenarioErrorCallback
+      | ScenarioErrorCallback[],
+    b?: ScenarioCallback | ResponsePipe | ScenarioErrorCallback
+  ): iScenario {
+    if (this.hasFinished) {
+      throw new Error(
+        `Can not add ${name} callbacks after execution has finished.`
+      );
+    }
+    if (Array.isArray(a)) {
+      a.forEach((callback: any) => {
+        this[messages].push(null);
+        this[callbacks].push(callback);
+      });
+    } else {
+      const { message, callback } = this._getOverloads(a, b);
+      this[messages].push(message);
+      this[callbacks].push(callback);
+    }
+    return this;
+  }
+
   /**
    * Callback when someting in the scenario throws an error
    */
-  public error(callback: Function): iScenario;
-  public error(message: string, callback: Function): iScenario;
-  public error(a: string | Function, b?: Function): iScenario {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add error callbacks after execution has finished."
-      );
-    }
-    const { message, callback } = this._getOverloads(a, b);
-    this._errorMessages.push(message);
-    this._errorCallbacks.push(callback);
-    return this;
+  public error(callback: ScenarioErrorCallback): iScenario;
+  public error(message: string, callback: ScenarioErrorCallback): iScenario;
+  public error(...callbacks: ScenarioErrorCallback[]): iScenario;
+  public error(
+    a: string | ScenarioErrorCallback | ScenarioErrorCallback[],
+    b?: ScenarioErrorCallback
+  ): iScenario {
+    return this._pushCallbacks(
+      "error",
+      "_errorMessages",
+      "_errorCallbacks",
+      a,
+      b
+    );
   }
 
   /**
@@ -646,18 +684,20 @@ export class Scenario implements iScenario {
    *
    * @param callback
    */
-  public success(callback: Function): iScenario;
-  public success(message: string, callback: Function): iScenario;
-  public success(a: string | Function, b?: Function): iScenario {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add success callbacks after execution has finished."
-      );
-    }
-    const { message, callback } = this._getOverloads(a, b);
-    this._successMessages.push(message);
-    this._successCallbacks.push(callback);
-    return this;
+  public success(callback: ScenarioCallback): iScenario;
+  public success(message: string, callback: ScenarioCallback): iScenario;
+  public success(...callbacks: ScenarioCallback[]): iScenario;
+  public success(
+    a: string | ScenarioCallback | ScenarioCallback[],
+    b?: ScenarioCallback
+  ): iScenario {
+    return this._pushCallbacks(
+      "success",
+      "_successMessages",
+      "_successCallbacks",
+      a,
+      b
+    );
   }
 
   /**
@@ -665,18 +705,20 @@ export class Scenario implements iScenario {
    *
    * @param callback
    */
-  public failure(callback: Function): iScenario;
-  public failure(message: string, callback: Function): iScenario;
-  public failure(a: string | Function, b?: Function): iScenario {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add failure callbacks after execution has finished."
-      );
-    }
-    const { message, callback } = this._getOverloads(a, b);
-    this._failureMessages.push(message);
-    this._failureCallbacks.push(callback);
-    return this;
+  public failure(callback: ScenarioCallback): iScenario;
+  public failure(message: string, callback: ScenarioCallback): iScenario;
+  public failure(...callbacks: ScenarioCallback[]): iScenario;
+  public failure(
+    a: string | ScenarioCallback | ScenarioCallback[],
+    b?: ScenarioCallback
+  ): iScenario {
+    return this._pushCallbacks(
+      "failure",
+      "_failureMessages",
+      "_failureCallbacks",
+      a,
+      b
+    );
   }
 
   /**
@@ -691,22 +733,7 @@ export class Scenario implements iScenario {
     a: string | ResponsePipe | ResponsePipe[],
     b?: ResponsePipe
   ): iScenario {
-    if (this.hasExecuted) {
-      throw new Error(
-        "Can not add pipe callbacks after execution has started."
-      );
-    }
-    if (Array.isArray(a)) {
-      a.forEach((callback) => {
-        this._pipeMessages.push(null);
-        this._pipeCallbacks.push(callback);
-      });
-    } else {
-      const { message, callback } = this._getOverloads(a, b);
-      this._pipeMessages.push(message);
-      this._pipeCallbacks.push(<ResponsePipe>callback);
-    }
-    return this;
+    return this._pushCallbacks("pipe", "_pipeMessages", "_pipeCallbacks", a, b);
   }
 
   /**
@@ -714,51 +741,39 @@ export class Scenario implements iScenario {
    *
    * @param callback
    */
-  public before(callback: Function): iScenario;
-  public before(...callbacks: Function[]): iScenario;
-  public before(message: string, callback: Function): iScenario;
-  public before(a: string | Function | Function[], b?: Function): iScenario {
-    if (this.hasExecuted) {
-      throw new Error(
-        "Can not add before callbacks after execution has started."
-      );
-    }
-    if (Array.isArray(a)) {
-      a.forEach((callback) => {
-        this._beforeMessages.push(null);
-        this._beforeCallbacks.push(callback);
-      });
-    } else {
-      const { message, callback } = this._getOverloads(a, b);
-      this._beforeMessages.push(message);
-      this._beforeCallbacks.push(callback);
-    }
-    return this;
+  public before(callback: ScenarioCallback): iScenario;
+  public before(...callbacks: ScenarioCallback[]): iScenario;
+  public before(message: string, callback: ScenarioCallback): iScenario;
+  public before(
+    a: string | ScenarioCallback | ScenarioCallback[],
+    b?: ScenarioCallback
+  ): iScenario {
+    return this._pushCallbacks(
+      "before",
+      "_beforeMessages",
+      "_beforeCallbacks",
+      a,
+      b
+    );
   }
 
   /**
    * callback just after the scenario completes
    */
-  public after(callback: Function): iScenario;
-  public after(...callbacks: Function[]): iScenario;
-  public after(message: string, callback: Function): iScenario;
-  public after(a: string | Function, b?: Function): iScenario {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add after callbacks after execution has finished."
-      );
-    }
-    if (Array.isArray(a)) {
-      a.forEach((callback) => {
-        this._afterMessages.push(null);
-        this._afterCallbacks.push(callback);
-      });
-    } else {
-      const { message, callback } = this._getOverloads(a, b);
-      this._afterMessages.push(message);
-      this._afterCallbacks.push(callback);
-    }
-    return this;
+  public after(callback: ScenarioCallback): iScenario;
+  public after(...callbacks: ScenarioCallback[]): iScenario;
+  public after(message: string, callback: ScenarioCallback): iScenario;
+  public after(
+    a: string | ScenarioCallback | ScenarioCallback[],
+    b?: ScenarioCallback
+  ): iScenario {
+    return this._pushCallbacks(
+      "after",
+      "_afterMessages",
+      "_afterCallbacks",
+      a,
+      b
+    );
   }
 
   /**
@@ -766,18 +781,20 @@ export class Scenario implements iScenario {
    *
    * @param callback
    */
-  public finally(callback: Function): iScenario;
-  public finally(message: string, callback: Function): iScenario;
-  public finally(a: string | Function, b?: Function): iScenario {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add failure callbacks after execution has finished."
-      );
-    }
-    const { message, callback } = this._getOverloads(a, b);
-    this._finallyMessages.push(message);
-    this._finallyCallbacks.push(callback);
-    return this;
+  public finally(callback: ScenarioCallback): iScenario;
+  public finally(...callbacks: ScenarioCallback[]): iScenario;
+  public finally(message: string, callback: ScenarioCallback): iScenario;
+  public finally(
+    a: string | ScenarioCallback | ScenarioCallback[],
+    b?: ScenarioCallback
+  ): iScenario {
+    return this._pushCallbacks(
+      "finally",
+      "_finallyMessages",
+      "_finallyCallbacks",
+      a,
+      b
+    );
   }
 
   /**
@@ -904,7 +921,7 @@ export class Scenario implements iScenario {
     return this;
   }
 
-  public promise(): Promise<Scenario> {
+  public promise(): Promise<iScenario> {
     return new Promise((resolve, reject) => {
       this.success(resolve);
       this.error(reject);
@@ -1186,8 +1203,8 @@ export class Scenario implements iScenario {
   }
 
   protected _getOverloads(
-    a: Function | string,
-    b?: Function | null
+    a: any,
+    b?: any
   ): { message: string | null; callback: Function } {
     return {
       message: this._getMessageOverload(a),
@@ -1195,10 +1212,7 @@ export class Scenario implements iScenario {
     };
   }
 
-  protected _getCallbackOverload(
-    a: Function | string,
-    b?: Function | null
-  ): Function {
+  protected _getCallbackOverload(a: any, b?: any): Function {
     return (() => {
       if (typeof b == "function") {
         return b;
@@ -1220,11 +1234,13 @@ export class Scenario implements iScenario {
   }
 
   protected _next(
-    a: Function | string,
-    b?: Function | null,
+    a: iNextCallback | string,
+    b?: iNextCallback | null,
     append: boolean = true
   ): iScenario {
-    const callback: Function = this._getCallbackOverload(a, b);
+    const callback: iNextCallback = <iNextCallback>(
+      this._getCallbackOverload(a, b)
+    );
     const message: string | null = this._getMessageOverload(a);
     // If it hasn't already finished
     if (!this.hasFinished) {
@@ -1252,7 +1268,7 @@ export class Scenario implements iScenario {
    */
   protected async _publish(statusEvent: ScenarioStatusEvent) {
     const scenario = this;
-    this._subscribers.forEach(async function (callback: Function) {
+    this._subscribers.forEach(async (callback) => {
       callback(scenario, statusEvent);
     });
   }

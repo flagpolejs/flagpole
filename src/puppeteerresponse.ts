@@ -41,7 +41,7 @@ export abstract class PuppeteerResponse extends DOMResponse
       const functionName: string = `flagpole_${Date.now()}`;
       const jsToInject: string = `window.${functionName} = ${callback}`;
       await this.page.addScriptTag({ content: jsToInject });
-      return await this.page.evaluate(functionName => {
+      return await this.page.evaluate((functionName) => {
         // @ts-ignore This is calling into the browser, so don't do an IDE error
         return window[functionName]();
       }, functionName);
@@ -58,7 +58,7 @@ export abstract class PuppeteerResponse extends DOMResponse
     if (this.page !== null) {
       await this.page.waitForNavigation({
         timeout: timeout,
-        waitUntil: "networkidle0"
+        waitUntil: "networkidle0",
       });
       return;
     }
@@ -79,7 +79,7 @@ export abstract class PuppeteerResponse extends DOMResponse
         "load",
         "domcontentloaded",
         "networkidle0",
-        "networkidle2"
+        "networkidle2",
       ];
       // @ts-ignore VS Code freaks out about this, but it's valid return output for LoadEvent
       const waitForEvent: LoadEvent[] = (() => {
@@ -90,7 +90,7 @@ export abstract class PuppeteerResponse extends DOMResponse
           return [waitFor];
         } else if (
           toType(waitFor) == "array" &&
-          (<string[]>waitFor).every(waitForItem => {
+          (<string[]>waitFor).every((waitForItem) => {
             return allowedOptions.indexOf(waitForItem) >= 0;
           })
         ) {
@@ -101,7 +101,7 @@ export abstract class PuppeteerResponse extends DOMResponse
       })();
       await this.page.waitForNavigation({
         timeout: timeout,
-        waitUntil: waitForEvent
+        waitUntil: waitForEvent,
       });
       return;
     }
@@ -117,7 +117,7 @@ export abstract class PuppeteerResponse extends DOMResponse
     if (this.page !== null) {
       await this.page.waitForNavigation({
         timeout: timeout,
-        waitUntil: "load"
+        waitUntil: "load",
       });
       return;
     }
@@ -133,7 +133,7 @@ export abstract class PuppeteerResponse extends DOMResponse
     if (this.page !== null) {
       await this.page.waitForNavigation({
         timeout: timeout,
-        waitUntil: "domcontentloaded"
+        waitUntil: "domcontentloaded",
       });
       return;
     }
@@ -182,6 +182,34 @@ export abstract class PuppeteerResponse extends DOMResponse
     throw new Error("waitForExists is not available in this context");
   }
 
+  public async waitForXPath(
+    xPath: string,
+    timeout?: number
+  ): Promise<PuppeteerElement> {
+    if (this.page !== null) {
+      const opts = { timeout: timeout || 100 };
+      const element = await this.page.waitForXPath(xPath, opts);
+      return PuppeteerElement.create(element, this.context, xPath, xPath);
+    }
+    throw new Error("waitForXPath is not available in this context");
+  }
+
+  public async waitForHavingText(
+    selector: string,
+    text: string,
+    timeout?: number
+  ): Promise<PuppeteerElement> {
+    if (this.page !== null) {
+      const opts = { timeout: timeout || 100 };
+      const element = await this.page.waitForFunction(
+        `document.querySelector("${selector}").innerText.includes("${text}")`,
+        opts
+      );
+      return PuppeteerElement.create(element, this.context, selector, selector);
+    }
+    throw new Error("waitForExists is not available in this context");
+  }
+
   public screenshot(): Promise<Buffer>;
   public screenshot(localFilePath: string): Promise<Buffer>;
   public screenshot(
@@ -201,7 +229,7 @@ export abstract class PuppeteerResponse extends DOMResponse
         encoding: "binary",
         omitBackground: opts.omitBackground || false,
         clip: opts.clip || undefined,
-        fullPage: opts.fullPage || false
+        fullPage: opts.fullPage || false,
       });
     }
     throw new Error(`No page found, so can't take a screenshot.`);

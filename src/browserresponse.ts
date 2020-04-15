@@ -36,7 +36,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
    * @param path
    */
   public findAll(path: string): Promise<PuppeteerElement[]> {
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       const response: iResponse = this;
       const puppeteerElements: PuppeteerElement[] = [];
       if (this.context.page !== null) {
@@ -47,6 +47,42 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
             response.context,
             `${path} [${i}]`,
             path
+          );
+          puppeteerElements.push(element);
+        });
+      }
+      resolve(puppeteerElements);
+    });
+  }
+
+  public async findXPath(xPath: string): Promise<iValue> {
+    const page: Page | null = this.context.page;
+    if (page !== null) {
+      const elements: ElementHandle<Element>[] = await page.$x(xPath);
+      if (elements.length > 0) {
+        return await PuppeteerElement.create(
+          elements[0],
+          this.context,
+          null,
+          xPath
+        );
+      }
+    }
+    return this._wrapAsValue(null, xPath);
+  }
+
+  public findAllXPath(xPath: string): Promise<PuppeteerElement[]> {
+    return new Promise(async (resolve) => {
+      const response: iResponse = this;
+      const puppeteerElements: PuppeteerElement[] = [];
+      if (this.context.page !== null) {
+        const elements: ElementHandle[] = await this.context.page.$x(xPath);
+        await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
+          const element = await PuppeteerElement.create(
+            el,
+            response.context,
+            `${xPath} [${i}]`,
+            xPath
           );
           puppeteerElements.push(element);
         });

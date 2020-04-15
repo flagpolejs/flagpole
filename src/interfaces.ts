@@ -5,6 +5,8 @@ import {
   ConsoleLineType,
   ConsoleColor,
   ResponseType,
+  SuiteStatusEvent,
+  ScenarioStatusEvent,
 } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import { URL } from "url";
@@ -31,7 +33,20 @@ export interface iNextCallback {
 }
 
 export type ResponsePipe = (resp: HttpResponse) => void | HttpResponse;
-
+export type ScenarioCallback = (scenario: iScenario) => any;
+export type ScenarioErrorCallback = (error: string, scenario: iScenario) => any;
+export type ScenarioStatusCallback = (
+  scenario: iScenario,
+  status: ScenarioStatusEvent
+) => any;
+export type ScenarioOnCompleted = (scenario: iScenario) => Promise<void>;
+export type SuiteCallback = (scenario: iSuite) => any;
+export type SuiteErrorCallback = (error: string, scenario: iSuite) => any;
+export type SuiteStatusCallback = (
+  suite: iSuite,
+  statusEvent: SuiteStatusEvent
+) => any;
+export type SuiteBaseCallback = (suite: iSuite) => string;
 export type IteratorCallback = (value: any, index: number, arr: any[]) => any;
 
 export interface iConsoleLine {
@@ -191,6 +206,8 @@ export interface iResponse {
     selector: string,
     searchForText: string | RegExp
   ): Promise<iValue[]>;
+  findXPath(xPath: string): Promise<iValue>;
+  findAllXPath(xPath: string): Promise<iValue[]>;
   header(key?: string): iValue;
   cookie(key?: string): iValue;
   absolutizeUri(uri: string): string;
@@ -205,6 +222,12 @@ export interface iResponse {
   waitForHidden(selector: string, timeout: number): Promise<iValue>;
   waitForVisible(selector: string, timeout: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForHavingText(
+    selector: string,
+    text: string,
+    timeout?: number
+  ): Promise<iValue>;
+  waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
@@ -341,7 +364,7 @@ export interface iSuite {
   title: string;
   suite: iSuite;
   finished: Promise<void>;
-  subscribe(callback: Function): iSuite;
+  subscribe(callback: SuiteStatusCallback): iSuite;
   verifyCert(verify: boolean): iSuite;
   verifySslCert(verify: boolean): iSuite;
   wait(bool?: boolean): iSuite;
@@ -359,14 +382,14 @@ export interface iSuite {
   base(url: string | KeyValue): iSuite;
   buildUrl(path: string): string;
   execute(): iSuite;
-  beforeAll(callback: Function): iSuite;
-  beforeEach(callback: Function): iSuite;
-  afterEach(callback: Function): iSuite;
-  afterAll(callback: Function): iSuite;
-  error(callback: Function): iSuite;
-  success(callback: Function): iSuite;
-  failure(callback: Function): iSuite;
-  finally(callback: Function): iSuite;
+  beforeAll(callback: SuiteCallback): iSuite;
+  beforeEach(callback: ScenarioCallback): iSuite;
+  afterEach(callback: ScenarioCallback): iSuite;
+  afterAll(callback: SuiteCallback): iSuite;
+  error(callback: SuiteErrorCallback): iSuite;
+  success(callback: SuiteCallback): iSuite;
+  failure(callback: SuiteCallback): iSuite;
+  finally(callback: SuiteCallback): iSuite;
   promise(): Promise<iSuite>;
 }
 
@@ -390,7 +413,7 @@ export interface iScenario {
   set(aliasName: string, value: any): iScenario;
   get(aliasName: string): any;
   getLog(): Promise<iLogItem[]>;
-  subscribe(callback: Function): iScenario;
+  subscribe(callback: ScenarioStatusCallback): iScenario;
   setJsonBody(jsonObject: any): iScenario;
   setRawBody(str: string): iScenario;
   verifyCert(verify: boolean): iScenario;
@@ -424,23 +447,27 @@ export interface iScenario {
   getBrowserControl(): BrowserControl;
   execute(): Promise<iScenario>;
   execute(params: { [key: string]: string | number }): Promise<iScenario>;
-  error(message: string, callback: Function): iScenario;
-  error(callback: Function): iScenario;
-  success(message: string, callback: Function): iScenario;
-  success(callback: Function): iScenario;
-  failure(message: string, callback: Function): iScenario;
-  failure(callback: Function): iScenario;
+  error(message: string, callback: ScenarioErrorCallback): iScenario;
+  error(callback: ScenarioErrorCallback): iScenario;
+  error(...callbacks: ScenarioErrorCallback[]): iScenario;
+  success(message: string, callback: ScenarioCallback): iScenario;
+  success(callback: ScenarioCallback): iScenario;
+  success(...callbacks: ScenarioCallback[]): iScenario;
+  failure(message: string, callback: ScenarioCallback): iScenario;
+  failure(callback: ScenarioCallback): iScenario;
+  failure(...callbacks: ScenarioCallback[]): iScenario;
   pipe(message: string, callback: ResponsePipe): iScenario;
   pipe(callback: ResponsePipe): iScenario;
   pipe(...callbacks: ResponsePipe[]): iScenario;
-  before(message: string, callback: Function): iScenario;
-  before(callback: Function): iScenario;
-  before(...callbacks: Function[]): iScenario;
-  after(message: string, callback: Function): iScenario;
-  after(callback: Function): iScenario;
-  after(...callbacks: Function[]): iScenario;
-  finally(message: string, callback: Function): iScenario;
-  finally(callback: Function): iScenario;
+  before(message: string, callback: ScenarioCallback): iScenario;
+  before(callback: ScenarioCallback): iScenario;
+  before(...callbacks: ScenarioCallback[]): iScenario;
+  after(message: string, callback: ScenarioCallback): iScenario;
+  after(callback: ScenarioCallback): iScenario;
+  after(...callbacks: ScenarioCallback[]): iScenario;
+  finally(message: string, callback: ScenarioCallback): iScenario;
+  finally(callback: ScenarioCallback): iScenario;
+  finally(...callbacks: ScenarioCallback[]): iScenario;
   mock(localPath: string): iScenario;
   setResponseType(
     type: ResponseType,

@@ -230,6 +230,15 @@ export abstract class ProtoResponse implements iResponse {
     return this._wrapAsValue(null, selector);
   }
 
+  public async waitForHavingText(
+    selector: string,
+    text: string,
+    timeout: number = 30000
+  ): Promise<iValue> {
+    await this.context.pause(1);
+    return this._wrapAsValue(null, selector);
+  }
+
   public async screenshot(): Promise<Buffer> {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support screenshots.`
@@ -249,6 +258,24 @@ export abstract class ProtoResponse implements iResponse {
   public async clear(selector: string): Promise<any> {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support clear.`
+    );
+  }
+
+  public async waitForXPath(xPath: string): Promise<iValue> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support waitForXPath.`
+    );
+  }
+
+  public async findXPath(xPath: string): Promise<iValue> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support findXPath.`
+    );
+  }
+
+  public async findAllXPath(xPath: string): Promise<iValue[]> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support findAllXPath.`
     );
   }
 

@@ -2,7 +2,15 @@ import { ResponseType, SuiteStatusEvent } from "./enums";
 import { Scenario } from "./scenario";
 import { URL } from "url";
 import { FlagpoleReport } from "./logging/flagpolereport";
-import { iSuite, iScenario } from "./interfaces";
+import {
+  iSuite,
+  iScenario,
+  SuiteStatusCallback,
+  SuiteErrorCallback,
+  SuiteCallback,
+  ScenarioCallback,
+  SuiteBaseCallback,
+} from "./interfaces";
 import { exitProcess } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecutionoptions";
 import { FlagpoleExecutionOptions } from ".";
@@ -114,15 +122,15 @@ export class Suite implements iSuite {
     return FlagpoleExecution.opts;
   }
 
-  protected _subscribers: Function[] = [];
-  protected _errorCallbacks: Function[] = [];
-  protected _successCallbacks: Function[] = [];
-  protected _failureCallbacks: Function[] = [];
-  protected _finallyCallbacks: Function[] = [];
-  protected _beforeAllCallbacks: Function[] = [];
-  protected _afterAllCallbacks: Function[] = [];
-  protected _beforeEachCallbacks: Function[] = [];
-  protected _afterEachCallbacks: Function[] = [];
+  protected _subscribers: SuiteStatusCallback[] = [];
+  protected _errorCallbacks: SuiteErrorCallback[] = [];
+  protected _successCallbacks: SuiteCallback[] = [];
+  protected _failureCallbacks: SuiteCallback[] = [];
+  protected _finallyCallbacks: SuiteCallback[] = [];
+  protected _beforeAllCallbacks: SuiteCallback[] = [];
+  protected _afterAllCallbacks: SuiteCallback[] = [];
+  protected _beforeEachCallbacks: ScenarioCallback[] = [];
+  protected _afterEachCallbacks: ScenarioCallback[] = [];
   protected _beforeAllPromise: Promise<void>;
   protected _beforeAllResolver: Function = () => {};
   protected _finishedPromise: Promise<void>;
@@ -159,7 +167,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public subscribe(callback: Function): iSuite {
+  public subscribe(callback: SuiteStatusCallback): iSuite {
     this._subscribers.push(callback);
     return this;
   }
@@ -226,15 +234,15 @@ export class Suite implements iSuite {
       title,
       type,
       opts,
-      (scenario: Scenario) => {
+      (scenario: iScenario) => {
         return this._onAfterScenarioFinished(scenario);
       }
     );
     // Notify suite on any changes to scenario
-    scenario.before((scenario: Scenario) => {
+    scenario.before((scenario: iScenario) => {
       return this._onBeforeScenarioExecutes(scenario);
     });
-    scenario.after((scenario: Scenario) => {
+    scenario.after((scenario: iScenario) => {
       return this._onAfterScenarioExecutes(scenario);
     });
     scenario.error((errorMessage: string) => {
@@ -321,7 +329,7 @@ export class Suite implements iSuite {
    */
   public base(url: string): Suite;
   public base(basePathsByEnvironment: {}): Suite;
-  public base(callback: Function): Suite;
+  public base(callback: SuiteBaseCallback): Suite;
   public base(url: string | {} | Function): Suite {
     let baseUrl: string = "";
     if (typeof url == "string") {
@@ -381,7 +389,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public beforeAll(callback: Function): Suite {
+  public beforeAll(callback: SuiteCallback): Suite {
     if (this.hasExecuted) {
       throw new Error(
         "Can not add beforeAll callbacks after execution has started."
@@ -396,7 +404,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public beforeEach(callback: Function): Suite {
+  public beforeEach(callback: ScenarioCallback): Suite {
     if (this.hasExecuted) {
       throw new Error(
         "Can not add beforeEach callbacks after execution has started."
@@ -411,7 +419,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public afterEach(callback: Function): Suite {
+  public afterEach(callback: ScenarioCallback): Suite {
     if (this.hasFinished) {
       throw new Error(
         "Can not add afterEach callbacks after execution has finished."
@@ -426,7 +434,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public afterAll(callback: Function): Suite {
+  public afterAll(callback: SuiteCallback): Suite {
     if (this.hasFinished) {
       throw new Error(
         "Can not add afterAll callbacks after execution has finished."
@@ -442,7 +450,7 @@ export class Suite implements iSuite {
    * @param callback
    */
   public error = this.catch;
-  public catch(callback: Function): Suite {
+  public catch(callback: SuiteErrorCallback): iSuite {
     if (this.hasFinished) {
       throw new Error(
         "Can not add catch callbacks after execution has finished."
@@ -457,7 +465,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public success(callback: Function): Suite {
+  public success(callback: SuiteCallback): Suite {
     if (this.hasFinished) {
       throw new Error(
         "Can not add success callbacks after execution has finished."
@@ -470,7 +478,7 @@ export class Suite implements iSuite {
   /**
    * This callback runs once the suite is done, if it failed
    */
-  public failure(callback: Function): Suite {
+  public failure(callback: SuiteCallback): Suite {
     if (this.hasFinished) {
       throw new Error(
         "Can not add failure callbacks after execution has finished."
@@ -483,7 +491,7 @@ export class Suite implements iSuite {
   /**
    * This callback will run once everything else is completed, whether pass or fail
    */
-  public finally(callback: Function): Suite {
+  public finally(callback: SuiteCallback): Suite {
     if (this.hasFinished) {
       throw new Error(
         "Can not add finally callbacks after execution has finished."
@@ -493,7 +501,7 @@ export class Suite implements iSuite {
     return this;
   }
 
-  public promise(): Promise<Suite> {
+  public promise(): Promise<iSuite> {
     return new Promise((resolve, reject) => {
       this.success(resolve);
       this.error(reject);
@@ -528,7 +536,7 @@ export class Suite implements iSuite {
     });
   }
 
-  private _fireBeforeEach(scenario: Scenario): Promise<void> {
+  private _fireBeforeEach(scenario: iScenario): Promise<void> {
     const suite: Suite = this;
     return new Promise((resolve, reject) => {
       // Do all all fthe finally callbacks first
@@ -545,7 +553,7 @@ export class Suite implements iSuite {
     });
   }
 
-  private _fireAfterEach(scenario: Scenario): Promise<void> {
+  private _fireAfterEach(scenario: iScenario): Promise<void> {
     const suite: Suite = this;
     return new Promise((resolve, reject) => {
       // Do all of the finally callbacks first
@@ -617,7 +625,7 @@ export class Suite implements iSuite {
     return new Promise((resolve, reject) => {
       // Do all all fthe finally callbacks first
       Promise.mapSeries(this._errorCallbacks, (_then) => {
-        return _then.apply(suite, [errorMessage]);
+        return _then.apply(suite, [errorMessage, suite]);
       })
         .then(() => {
           resolve();
@@ -646,8 +654,8 @@ export class Suite implements iSuite {
   }
 
   private async _onBeforeScenarioExecutes(
-    scenario: Scenario
-  ): Promise<Scenario> {
+    scenario: iScenario
+  ): Promise<iScenario> {
     // This scenario is executing, suite was not previously executing
     if (scenario.hasExecuted && !this.hasExecuted) {
       await this._fireBeforeAll();
@@ -658,13 +666,13 @@ export class Suite implements iSuite {
   }
 
   private async _onAfterScenarioExecutes(
-    scenario: Scenario
-  ): Promise<Scenario> {
+    scenario: iScenario
+  ): Promise<iScenario> {
     await this._fireAfterEach(scenario);
     return scenario;
   }
 
-  private async _onAfterScenarioFinished(scenario: Scenario): Promise<void> {
+  private async _onAfterScenarioFinished(scenario: iScenario): Promise<void> {
     // Is every scenario completed? And only run it once
     if (this._haveAllScenariosFinished() && !this.hasFinished) {
       await this._fireAfterAll();
@@ -694,7 +702,7 @@ export class Suite implements iSuite {
   }
 
   protected _publish(statusEvent: SuiteStatusEvent) {
-    this._subscribers.forEach((callback: Function) => {
+    this._subscribers.forEach((callback: SuiteStatusCallback) => {
       callback(this, statusEvent);
     });
   }
