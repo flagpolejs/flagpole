@@ -146,10 +146,7 @@ export abstract class ProtoResponse implements iResponse {
    * @param uri
    */
   public absolutizeUri(uri: string): string {
-    let baseUrl: URL = new URL(
-      this.scenario.suite.buildUrl(this.scenario.url || "")
-    );
-    return new URL(uri, baseUrl.href).href;
+    return new URL(uri, this.scenario.buildUrl()).href;
   }
 
   public getRoot(): any {

@@ -14,7 +14,7 @@ import {
 import { exitProcess } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecutionoptions";
 import { FlagpoleExecutionOptions } from ".";
-import { BrowserOptions, HttpRequestOptions } from "./httprequest";
+import { BrowserOptions } from "./httprequest";
 
 /**
  * A suite contains many scenarios
@@ -352,23 +352,6 @@ export class Suite implements iSuite {
   }
 
   /**
-   * Used by scenario to build its url
-   *
-   * @param {string} path
-   * @returns {string}
-   */
-  public buildUrl(path: string): string {
-    if (this._baseUrl === null) {
-      return path;
-    } else if (/^https?:\/\//.test(path) || /^data:/.test(path)) {
-      return path;
-    } else if (/^\//.test(path)) {
-      return this._baseUrl.protocol + "//" + this._baseUrl.host + path;
-    }
-    return new URL(path, this._baseUrl.href).href;
-  }
-
-  /**
    * If suite was told to wait, this will tell each scenario in it to run
    *
    * @returns {Suite}
@@ -513,17 +496,15 @@ export class Suite implements iSuite {
    * Have all of the scenarios in this suite completed?
    */
   private _haveAllScenariosFinished(): boolean {
-    return this.scenarios.every(function (scenario) {
+    return this.scenarios.every((scenario) => {
       return scenario.hasFinished;
     });
   }
 
   private _fireBeforeAll(): Promise<void> {
-    const suite: Suite = this;
-    this._timeSuiteExecuted = Date.now();
     return new Promise((resolve, reject) => {
       Promise.mapSeries(this._beforeAllCallbacks, (_then) => {
-        return _then(suite);
+        return _then(this);
       })
         .then(() => {
           this._publish(SuiteStatusEvent.beforeAllExecute);

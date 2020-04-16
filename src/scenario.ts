@@ -140,6 +140,10 @@ export class Scenario implements iScenario {
     return this._request.uri;
   }
 
+  public set url(value: string | null) {
+    this._request.uri = value;
+  }
+
   /**
    * URL after redirects
    */
@@ -604,17 +608,20 @@ export class Scenario implements iScenario {
   public async execute(params: {
     [key: string]: string | number;
   }): Promise<Scenario>;
-  public async execute(params?: {
+  public async execute(pathParams?: {
     [key: string]: string | number;
   }): Promise<Scenario> {
     if (!this.hasExecuted && this.url !== null) {
-      if (params) {
-        Object.keys(params).forEach((key) => {
+      // Apply path parameters when the url was like /articles/{id}
+      if (pathParams) {
+        Object.keys(pathParams).forEach((key) => {
           this._request.uri =
-            this.url?.replace(`{${key}}`, String(params[key])) || null;
+            this.url?.replace(`{${key}}`, String(pathParams[key])) || null;
         });
       }
+      // Do before callbacks
       await this._fireBefore();
+      // Log the start of this scenario
       this._pushToLog(new LogScenarioHeading(this.title));
       // If we waited first
       this.wait(false);
@@ -929,6 +936,29 @@ export class Scenario implements iScenario {
     });
   }
 
+  public buildUrl(): URL {
+    const path = this.url || "/";
+    // If there was no base URL, skip this
+    if (this.suite.baseUrl === null) {
+      return new URL(path);
+    }
+    // If it is already an absolute URL, don't apply the base
+    else if (/^https?:\/\//.test(path) || /^data:/.test(path)) {
+      return new URL(path);
+    }
+    // If the path starts in // then it has domain, just inherit the protocol from the base
+    else if (/^\/\//.test(path)) {
+      return new URL(`${this.suite.baseUrl.protocol}//${path}`);
+    }
+    // if it starts with / then it's absolute
+    else if (/^\//.test(path)) {
+      return new URL(
+        `${this.suite.baseUrl.protocol}//${this.suite.baseUrl.host}${path}`
+      );
+    }
+    return new URL(path, this.suite.baseUrl.href);
+  }
+
   /**
    * Start a browser scenario
    */
@@ -990,7 +1020,7 @@ export class Scenario implements iScenario {
   protected _executeRequest() {
     if (!this._timeRequestStarted && this.url !== null) {
       this._timeRequestStarted = Date.now();
-      this._request.uri = this.suite.buildUrl(this._request.uri || "");
+      this._request.uri = this.buildUrl().href;
       this._finalUrl = this._request.uri;
       if (
         this._responseType == ResponseType.browser ||

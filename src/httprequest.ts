@@ -1,5 +1,5 @@
 import { KeyValue } from "./interfaces";
-import { HttpResponse } from ".";
+import { HttpResponse } from "./httpresponse";
 import needle = require("needle");
 import tunnel = require("tunnel");
 import probeImage = require("probe-image-size");
@@ -281,6 +281,8 @@ export class HttpRequest {
       auth: this._auth,
       authType: this._authType,
       outputFile: this._outputFile,
+      data: this._data,
+      type: this._type,
     };
   }
 
@@ -376,6 +378,8 @@ export class HttpRequest {
       })();
       this._auth = opts.auth || this._auth;
       this._browser = opts.browserOptions || this._browser;
+      this._data = opts.data || this._data;
+      this._outputFile = opts.outputFile || this._outputFile;
     }
     return this;
   }

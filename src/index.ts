@@ -30,7 +30,7 @@ import {
 import { Flagpole } from "./flagpole";
 import { ResponseType } from "./enums";
 import { iResponse, iValue, iScenario, iSuite } from "./interfaces";
-import { BrowserOptions, HttpRequest } from "./httprequest";
+import { BrowserOptions, HttpRequest, HttpAuth } from "./httprequest";
 import * as Promise from "bluebird";
 
 // Have Bluebird replace default promises
@@ -70,6 +70,7 @@ export {
   iResponse,
   HttpRequest,
   HttpResponse,
+  HttpAuth,
   ScriptResponse,
   iValue,
   Value,

@@ -380,7 +380,6 @@ export interface iSuite {
   browser(title: string, opts?: BrowserOptions): iScenario;
   extjs(title: string, opts?: BrowserOptions): iScenario;
   base(url: string | KeyValue): iSuite;
-  buildUrl(path: string): string;
   execute(): iSuite;
   beforeAll(callback: SuiteCallback): iSuite;
   beforeEach(callback: ScenarioCallback): iSuite;
@@ -405,6 +404,7 @@ export interface iScenario {
   canExecute: boolean;
   hasExecuted: boolean;
   hasFinished: boolean;
+  buildUrl(): URL;
   url: string | null;
   finalUrl: string | null;
   redirectCount: number;
