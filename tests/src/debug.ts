@@ -4,7 +4,7 @@ const suite = Flagpole.suite("Basic Smoke Test of Site").base(
   "http://jsonprettyprint.net/"
 );
 suite
-  .html("Homepage Loads")
+  .html("Submit JSON Pretty Print")
   .open("POST /json-pretty-print")
   .setFormData({ json_string: `{ "foo": "dsaf" }` })
   .next(async (context) => {

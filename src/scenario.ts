@@ -215,7 +215,6 @@ export class Scenario implements iScenario {
     outputConsole: false,
   };
   protected _defaultRequestOptions: HttpRequestOptions = {
-    uri: "/",
     method: "get",
   };
   protected _aliasedData: any = {};
@@ -525,7 +524,7 @@ export class Scenario implements iScenario {
         this._request.setOptions(opts);
       }
       // Okay now set the open method
-      this._request.uri = String(url);
+      this.url = String(url);
       this._isMock = false;
       this._executeWhenReady();
     }
@@ -615,7 +614,7 @@ export class Scenario implements iScenario {
       // Apply path parameters when the url was like /articles/{id}
       if (pathParams) {
         Object.keys(pathParams).forEach((key) => {
-          this._request.uri =
+          this.url =
             this.url?.replace(`{${key}}`, String(pathParams[key])) || null;
         });
       }
@@ -808,7 +807,7 @@ export class Scenario implements iScenario {
    * Fake response from local file for testing
    */
   public mock(localPath: string): iScenario {
-    this._request.uri = localPath;
+    this.url = localPath;
     this._isMock = true;
     this._executeWhenReady();
     return this;
@@ -1020,7 +1019,7 @@ export class Scenario implements iScenario {
   protected _executeRequest() {
     if (!this._timeRequestStarted && this.url !== null) {
       this._timeRequestStarted = Date.now();
-      this._request.uri = this.buildUrl().href;
+      this.url = this.buildUrl().href;
       this._finalUrl = this._request.uri;
       if (
         this._responseType == ResponseType.browser ||
