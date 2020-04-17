@@ -174,7 +174,7 @@ scenario.execute({
 });
 ```
 
-#### open(url: string, requestOpts): Scenario
+#### open(url: string, requestOpts: HttpRequestOptions): Scenario
 
 You can pass an object of request options as the second argument, which can be a really convenient way to set some parameters.
 

@@ -312,6 +312,8 @@ export interface iAssertionContext {
     selector: string,
     searchForText: string | RegExp
   ): Promise<iValue[]>;
+  findXPath(xPath: string): Promise<iValue>;
+  findAllXPath(xPath: string): Promise<iValue[]>;
   clearThenType(selector: string, textToType: string, opts?: any): Promise<any>;
   clear(selector: string): Promise<void>;
   click(selector: string): Promise<void>;
@@ -345,6 +347,12 @@ export interface iAssertionContext {
   waitForHidden(selector: string, timeout?: number): Promise<iValue>;
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForHavingText(
+    selector: string,
+    text: string,
+    timeout?: number
+  ): Promise<iValue>;
+  waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
   openInBrowser(): Promise<string>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;

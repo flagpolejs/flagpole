@@ -8,18 +8,18 @@ import {
   iScenario,
   iSuite,
   iAssertionResult,
-  ScreenshotOpts
+  ScreenshotOpts,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
   AssertionFail,
-  AssertionPass
+  AssertionPass,
 } from "./logging/assertionresult";
 import { openInBrowser, getMessageAndCallbackFromOverloading } from "./util";
 import {
   FlagpoleExecution,
-  FlagpoleExecutionOptions
+  FlagpoleExecutionOptions,
 } from "./flagpoleexecutionoptions";
 import { Value } from ".";
 
@@ -60,7 +60,7 @@ export class AssertionContext implements iAssertionContext {
 
   public get incompleteAssertions(): Assertion[] {
     const incompleteAssertions: Assertion[] = [];
-    this._assertions.forEach(assertion => {
+    this._assertions.forEach((assertion) => {
       if (!assertion.assertionMade) {
         incompleteAssertions.push(assertion);
       }
@@ -70,7 +70,7 @@ export class AssertionContext implements iAssertionContext {
 
   public get assertionsResolved(): Promise<(iAssertionResult | null)[]> {
     const promises: Promise<iAssertionResult | null>[] = [];
-    this._assertions.forEach(assertion => {
+    this._assertions.forEach((assertion) => {
       if (assertion.assertionMade) {
         promises.push(assertion.result);
       }
@@ -121,7 +121,7 @@ export class AssertionContext implements iAssertionContext {
    * @param milliseconds
    */
   public pause(milliseconds: number): Promise<any> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         this._completedAction("PAUSE", `${milliseconds}ms`);
         resolve();
@@ -239,6 +239,31 @@ export class AssertionContext implements iAssertionContext {
     this._completedAction("WAIT", "Navigation");
   }
 
+  public async waitForHavingText(
+    selector: string,
+    text: string,
+    timeout?: number
+  ): Promise<iValue> {
+    const el: iValue = await this.response.waitForHavingText(
+      selector,
+      text,
+      timeout
+    );
+    const label = `Having Text: ${text}`;
+    el.isNull()
+      ? this._failedAction(label, selector)
+      : this._completedAction(label, selector);
+    return el;
+  }
+
+  public async waitForXPath(xPath: string, timeout?: number): Promise<iValue> {
+    const el: iValue = await this.response.waitForXPath(xPath, timeout);
+    el.isNull()
+      ? this._failedAction("XPATH", xPath)
+      : this._completedAction("XPATH", xPath);
+    return el;
+  }
+
   /**
    * Wait for element at the selected path to be hidden
    *
@@ -329,6 +354,14 @@ export class AssertionContext implements iAssertionContext {
    */
   public async findAll(selector: string): Promise<iValue[]> {
     return this.response.findAll(selector);
+  }
+
+  public async findXPath(xPath: string): Promise<iValue> {
+    return this.response.findXPath(xPath);
+  }
+
+  public findAllXPath(xPath: string): Promise<iValue[]> {
+    return this.response.findAllXPath(xPath);
   }
 
   /**

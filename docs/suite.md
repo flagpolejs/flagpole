@@ -9,7 +9,7 @@ A Suite is essentially a collection of test Scenarios. You will be able to choos
 Hit this callback after all Scenarios finish executing.
 
 ```javascript
-suite.afterAll(suite => {});
+suite.afterAll((suite) => {});
 ```
 
 ### afterEach(callback: Function): Suite
@@ -17,7 +17,7 @@ suite.afterAll(suite => {});
 Hit this callback after each Scenario finishes executing.
 
 ```javascript
-suite.afterEach(scenario => {});
+suite.afterEach((scenario) => {});
 ```
 
 ### base(parms: string | {} | Function): Suite
@@ -43,7 +43,7 @@ suite.base({
 Or it can be a callback function
 
 ```javascript
-suite.base(suite => {
+suite.base((suite) => {
   if (suite.executionOptions.environment == "prod") {
     return "https://www.google.com/";
   } else {
@@ -57,7 +57,7 @@ suite.base(suite => {
 Hit this callback before the first Scenario starts executing.
 
 ```javascript
-suite.beforeAll(suite => {});
+suite.beforeAll((suite) => {});
 ```
 
 ### beforeEach(callback: Function): Suite
@@ -65,10 +65,10 @@ suite.beforeAll(suite => {});
 Hit this callback before each Scenario starts executing.
 
 ```javascript
-suite.beforeEach(scenario => {});
+suite.beforeEach((scenario) => {});
 ```
 
-### browser(title: string, opts: any = {}): Scenario
+### browser(title: string, opts: BrowserOptions): Scenario
 
 Creates a new Scenario of the Browser request type. This will run a version of Chrominium with Puppeteer.
 
@@ -76,7 +76,7 @@ Creates a new Scenario of the Browser request type. This will run a version of C
 suite.browser("User Sign Up Work Flow", {
   headless: true,
   width: 1280,
-  height: 800
+  height: 800,
 });
 ```
 
@@ -112,7 +112,7 @@ Creates a new Scenario of the ExtJS request type. This will use Puppeteer just l
 suite.extjs("User Sign Up Work Flow", {
   headless: true,
   width: 1280,
-  height: 800
+  height: 800,
 });
 ```
 
@@ -161,7 +161,7 @@ suite.next(() => {});
 Prints the results from the test execution to the console. This is often run inside the finally callback. If you leave the default argument as true, the process will terminate after it prints. So be sure to set that to false if you don't want it to do so.
 
 ```javascript
-suite.finally(suite => suite.print(false));
+suite.finally((suite) => suite.print(false));
 ```
 
 ### promise(): Promise<Scenario>

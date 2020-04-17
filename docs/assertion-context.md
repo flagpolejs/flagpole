@@ -117,17 +117,15 @@ As you can see, you can not only execute the code in that browser's context, but
 If this is a Cheerio html type scenario, you can execute against the raw Cheerio jQuery-like DOM parser.
 
 ```javascript
-const loginText = await context.evaluate($ => {
-  return $("a.login")
-    .first("span")
-    .text();
+const loginText = await context.evaluate(($) => {
+  return $("a.login").first("span").text();
 });
 ```
 
 For a REST API response context.is less useful perhaps, but you are passed the JSON response to do something with like this.
 
 ```javascript
-const loginText = await context.evaluate(json => {
+const loginText = await context.evaluate((json) => {
   return json.meta.totalResults;
 });
 ```
@@ -167,6 +165,14 @@ const itemsContainingTupac = await context.findAllHavingText("li", /tupac/i);
 const itemsExactlyTupac = await context.findAllHavingText("li", "tupac");
 ```
 
+### findAllXPath(xPath: string): Promise<DOMElement[]>
+
+Checks for any and all elements at XPath of `xPath`. Usually a CSS selector is preferable, but sometimes XPath is more powerful.
+
+```javascript
+const links = await context.findAllXpath("//a");
+```
+
 ### findHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement | Value>
 
 Find the first element matching the given selector that have the given text. The second argument can either be a string, which will match on an equality basis, or a regular expression if you want some more leeway.
@@ -176,6 +182,14 @@ Returns an array of DOM Elements for any that match.
 ```javascript
 const buttonContainingYes = await context.findAllHavingText("button", /yes/i);
 const buttonExactlyYes = await context.findAllHavingText("button", "Yes");
+```
+
+### findXPath(xPath: string): Promise<DOMElement>
+
+Checks for an element to exist with XPath of `xPath`. Usually a CSS selector is preferable, but sometimes XPath is more powerful.
+
+```javascript
+const title = await context.findXpath("/main/h1[1]/span");
 ```
 
 ### get(aliasName: string): any
@@ -233,7 +247,7 @@ You can also combine the two arguments. In this case, the first argument of the 
 
 ```typescript
 const screenshot = await context.screenshot("/path/to/local/file.png", {
-  fullPage: true
+  fullPage: true,
 });
 ```
 
@@ -260,7 +274,7 @@ await context.submit("form#search");
 For html types, the promise will return a new dynamic scenario that will load the resulting page navigation.
 
 ```javascript
-(await context.submit("form.search")).next(context => {
+(await context.submit("form.search")).next((context) => {
   context.assert(context.response.statusCode).equals(200);
 });
 ```
@@ -289,12 +303,20 @@ Test if an element exists at that path. For a browser scenario it will wait a ce
 const button = await context.waitForExists("a.submit", 2000);
 ```
 
-### waitFoHidden(path: string): Promise<DOMElement>
+### waitFoHavingText(path: string, text, timeout?: number): Promise<DOMElement>
+
+Checks for an element to exist at `path` CSS selector, which also contains the string `text` inside of its `innerText`. By default it will wait for 100ms for the element, you can change the timeout with the third argument.
+
+```javascript
+await context.waitForHavingText("h1", "Features", 2000);
+```
+
+### waitForHidden(path: string): Promise<DOMElement>
 
 Checks if an element at this selector is hidden (display none or visibility hidden). This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change the timeout with the second argument.
 
 ```javascript
-const button = await context.waitFoHidden('button[type="submit"]', 2000);
+const button = await context.waitForHidden('button[type="submit"]', 2000);
 ```
 
 ### waitForLoad(timeout: number = 10000): Promise<void>
@@ -331,4 +353,12 @@ Checks if an element at this selector is visible. This only makes sense for brow
 
 ```javascript
 const button = await context.waitForVisible('button[type="submit"]', 2000);
+```
+
+### waitForXpath(xPath: string, timeout?: number): Promise<DOMElement>
+
+Checks for an element to exist with XPath of `path`. Usually a CSS selector is preferable, but sometimes XPath is more powerful. By default it will wait for 100ms for the element, you can change the timeout with the second argument.
+
+```javascript
+await context.waitForXpath("/main/h1[1]/span", 2000);
 ```

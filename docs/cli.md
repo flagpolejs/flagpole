@@ -36,6 +36,14 @@ Adds a new suite to the project. This will create the suite file and add in the 
 flagpole add suite
 ```
 
+### audit
+
+This will show you any suites you have referenced in `flagpole.json` whose corresponding files no longer exist in the text folder. This allows you to do a manual clean up. Hoping to add more functionality here in the future to automatically do some work for you to clean it.
+
+```bash
+flagpole audit
+```
+
 ### deploy
 
 In the future there will be a web based control panel where you can view, manage and run your tests in the cloud. This feature is not available in 2.0 but maybe in 3.0!
@@ -116,6 +124,14 @@ Runs your test suites. With no switches like this. it will run every one of the 
 flagpole run
 ```
 
+#### -a
+
+Tells Flagpole to run in asynchronous exeuction mode. This means all suites fire off in parallel, instead of one at a time. This can greatly speed up the overall execution time of all tests.
+
+```bash
+flagpole run -a
+```
+
 #### -e environmentName
 
 Specifies the environment name, which will be the context that the tests execute with.
@@ -128,14 +144,14 @@ flagpole run -e staging
 
 Specifies that type of output you want Flagpole to create. The defualt is this pretty colored console ASCII text. But there are other options:
 
-* browser - Formats it into HTML and opens it in your default web browser after
-* console - Default
-* csv - Comma separated
-* html - Outputs HTML to the console
-* json - JSON formatted 
-* psv - Pipe separated
-* text - Same as default but without the ASCII colors
-* tsv - Tab separated
+- browser - Formats it into HTML and opens it in your default web browser after
+- console - Default
+- csv - Comma separated
+- html - Outputs HTML to the console
+- json - JSON formatted
+- psv - Pipe separated
+- text - Same as default but without the ASCII colors
+- tsv - Tab separated
 
 ```bash
 flagpole run -o browser
@@ -189,7 +205,7 @@ Hides the ASCII banner graphic.
 flagpole run -h
 ```
 
-### -q 
+### -q
 
 Quiet mode. Silences all Flagpole command line output. This is useful when you don't want to capture what it has to say, you just want to know if it passed or failed. Which a script running this could get from the exit code of 0 or 1.
 
