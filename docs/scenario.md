@@ -316,7 +316,11 @@ scenario.setJsonBody({
 
 ### setMaxRedirects(n: number): Scenario
 
-Sometimes tests can get stuck in a redirect loop. This limits how many times to allow redirects.
+Sometimes tests can get stuck in a redirect loop. This limits how many times to allow redirects... or prevents it from following any at all (if you set it to 0).
+
+```javascript
+scenario.setMaxRedirects(1);
+```
 
 ### setMethod(method: string): Scenario
 
@@ -346,10 +350,6 @@ scenario.setRawBody("what up");
 ### setTimeout(timeout: number): Scenario
 
 Set the request timeout for how long to wait for a response.
-
-### shouldFollowRedirects(onRedirect: boolean | Function): Scenario
-
-Redirects can be tricky. Passing in false as the argument prevents the request from following any redirects. Passing in a callback function instead allows you to determine if it should follow a given redirect by returning a boolean.
 
 ### skip(message?: string): Promise<Scenario>
 

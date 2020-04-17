@@ -10,11 +10,14 @@ import {
   SuiteCallback,
   ScenarioCallback,
   SuiteBaseCallback,
+  KeyValue,
 } from "./interfaces";
 import { exitProcess } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecutionoptions";
 import { FlagpoleExecutionOptions } from ".";
 import { BrowserOptions } from "./httprequest";
+
+type BaseDomainCallback = (suite: iSuite) => string;
 
 /**
  * A suite contains many scenarios
@@ -64,7 +67,7 @@ export class Suite implements iSuite {
    * Did every scenario in this suite pass?
    */
   public get hasPassed(): boolean {
-    return this.scenarios.every(function (scenario) {
+    return this.scenarios.every((scenario) => {
       return scenario.hasPassed;
     });
   }
@@ -73,7 +76,7 @@ export class Suite implements iSuite {
    * Did any scenario in this suite fail?
    */
   public get hasFailed(): boolean {
-    return this.scenarios.some(function (scenario) {
+    return this.scenarios.some((scenario) => {
       return scenario.hasFailed;
     });
   }
@@ -330,12 +333,12 @@ export class Suite implements iSuite {
   public base(url: string): Suite;
   public base(basePathsByEnvironment: {}): Suite;
   public base(callback: SuiteBaseCallback): Suite;
-  public base(url: string | {} | Function): Suite {
+  public base(url: string | KeyValue | BaseDomainCallback): Suite {
     let baseUrl: string = "";
     if (typeof url == "string") {
       baseUrl = url;
     } else if (typeof url == "function") {
-      baseUrl = url.call(this, [this]);
+      baseUrl = url(this);
     } else if (Object.keys(url).length > 0) {
       baseUrl = url[FlagpoleExecution.opts.environment];
       // If env didn't match one, just pick the first one
@@ -361,7 +364,7 @@ export class Suite implements iSuite {
       throw new Error(`Suite already executed.`);
     }
     this._timeSuiteExecuted = Date.now();
-    this.scenarios.forEach(function (scenario) {
+    this.scenarios.forEach((scenario) => {
       scenario.execute();
     });
     return this;

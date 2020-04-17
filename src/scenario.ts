@@ -205,7 +205,6 @@ export class Scenario implements iScenario {
   protected _flipAssertion: boolean = false;
   protected _ignoreAssertion: boolean = false;
   protected _request: HttpRequest;
-  protected _followRedirect: boolean | Function | null = null;
   protected _browserControl: BrowserControl | null = null;
   protected _isMock: boolean = false;
   protected _response: iResponse;
@@ -338,16 +337,6 @@ export class Scenario implements iScenario {
    */
   public setMaxRedirects(n: number): iScenario {
     this._request.maxRedirects = n;
-    return this;
-  }
-
-  /**
-   * Should we follow redirects? This can be boolean or a function callback which returns boolean
-   *
-   * @param onRedirect
-   */
-  public shouldFollowRedirects(onRedirect: boolean | Function): iScenario {
-    this._followRedirect = onRedirect;
     return this;
   }
 
@@ -1254,7 +1243,7 @@ export class Scenario implements iScenario {
   }
 
   protected _getMessageOverload(a: any): string | null {
-    return (function () {
+    return (() => {
       if (typeof a == "string" && a.trim().length > 0) {
         return a;
       }
