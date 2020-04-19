@@ -65,6 +65,7 @@
     "@types/node": "^12.12.8",
     "@types/pixelmatch": "^5.0.0",
     "@types/pngjs": "^3.4.0",
+    "@types/prompts": "^2.0.5",
     "@types/puppeteer": "^2.0.0",
     "@types/puppeteer-core": "^2.0.0",
     "@types/tunnel": "0.0.1",

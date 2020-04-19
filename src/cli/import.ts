@@ -33,17 +33,19 @@ export async function importSuite() {
       choices: suitesAvailableToImport,
     },
     {
-      type: "list",
+      type: "text",
       name: "tags",
-      message: "Add Tags (Optional)",
+      message: "Add Tags (Optional, Space Delimited)",
       initial: "",
-      separator: " ",
+      validate: function (input) {
+        return /^[A-Z0-9 -_]*$/i.test(input);
+      },
     },
   ]);
 
   if (responses && responses.suitesNames && responses.suitesNames.length > 0) {
     responses.suitesNames.forEach((suiteName: string) => {
-      Cli.config.addSuite({ name: suiteName, tags: responses.tags });
+      Cli.config.addSuite({ name: suiteName, tags: responses.tags.split(" ") });
     });
     await Cli.config.save();
     Cli.log(`Imported Suites:`);

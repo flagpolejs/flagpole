@@ -12,3 +12,8 @@ suite
     const pre = await body.exists("pre");
     context.comment((await pre.getInnerHtml()).$);
   });
+
+suite
+  .browser("Homepage Loads", { headless: false })
+  .open("/")
+  .next(async (context) => {});

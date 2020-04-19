@@ -34,11 +34,11 @@ async function addSuite() {
   const standardQuestions = await prompts([
     {
       type: "text",
-      name: "suiteName2",
+      name: "suiteName",
       message: "Name of Suite",
       initial: Cli.commandArg2 || "smoke",
       format: trimInput,
-      validate: function (input) {
+      validate: (input: string) => {
         return /^[a-z0-9][a-z0-9/\/_-]{1,62}[a-z0-9]$/i.test(input);
       },
     },
@@ -48,7 +48,7 @@ async function addSuite() {
       message: "Description of Suite",
       initial: "Basic Smoke Test of Site",
       format: trimInput,
-      validate: function (input) {
+      validate: (input: string) => {
         return /^[a-z0-9].{1,63}$/i.test(input);
       },
     },
@@ -58,7 +58,7 @@ async function addSuite() {
       message: "First Scenario",
       initial: "Homepage Loads",
       format: trimInput,
-      validate: function (input) {
+      validate: (input: string) => {
         return /^[a-z0-9].{1,63}$/i.test(input);
       },
     },
@@ -80,11 +80,13 @@ async function addSuite() {
       },
     },
     {
-      type: "list",
+      type: "text",
       name: "tags",
-      message: "Add Tags (Optional)",
+      message: "Add Tags (Optional, Space Delimited)",
       initial: "",
-      separator: " ",
+      validate: function (input) {
+        return /^[A-Z0-9 -_]*$/i.test(input);
+      },
     },
   ]);
 
@@ -93,7 +95,7 @@ async function addSuite() {
     {
       name: standardQuestions.suiteName,
       description: standardQuestions.suiteDescription,
-      tags: standardQuestions.tags,
+      tags: standardQuestions.tags.split(" "),
     },
     {
       description: standardQuestions.scenarioDescription,
