@@ -82,3 +82,73 @@ export function stringArrayToPromptChoices(arr: string[]): prompts.Choice[] {
   });
   return out;
 }
+
+export function promptTextName(
+  name: string,
+  message: string,
+  initial?: string
+): prompts.PromptObject<string> {
+  return {
+    type: "text",
+    name: name,
+    message: message,
+    initial: initial || "",
+    format: trimInput,
+    validate: (input: string) => {
+      return /^[a-z0-9][a-z0-9/\/_-]{1,62}[a-z0-9]$/i.test(input);
+    },
+  };
+}
+
+export function promptTextDescription(
+  name: string,
+  message: string,
+  initial?: string
+): prompts.PromptObject<string> {
+  return {
+    type: "text",
+    name: name,
+    message: message,
+    initial: initial || "",
+    format: trimInput,
+  };
+}
+
+export function promptSelect(
+  name: string,
+  message: string,
+  choices: prompts.Choice[],
+  required: boolean = false,
+  initial?: string | number
+): prompts.PromptObject<string> {
+  const obj: prompts.PromptObject<string> = {
+    type: "select",
+    name: name,
+    message: message,
+    choices: choices,
+  };
+  if (required) {
+    obj.validate = (input: string) => {
+      return input.length > 0;
+    };
+  }
+  if (initial !== undefined) {
+    obj.initial = initial || 0;
+  }
+  return obj;
+}
+
+export function promptList(
+  name: string,
+  message: string
+): prompts.PromptObject<string> {
+  return {
+    type: "text",
+    name: name,
+    message: message,
+    initial: "",
+    validate: function (input) {
+      return /^[A-Z0-9 -_]*$/i.test(input);
+    },
+  };
+}

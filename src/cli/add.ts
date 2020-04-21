@@ -3,6 +3,10 @@ import {
   printSubheader,
   trimInput,
   stringArrayToPromptChoices,
+  promptTextName,
+  promptTextDescription,
+  promptSelect,
+  promptList,
 } from "./cli-helper";
 import { Cli } from "./cli";
 import { SuiteConfig } from "./config";
@@ -32,62 +36,26 @@ async function addSuite() {
 
   // Standard questions
   const standardQuestions = await prompts([
-    {
-      type: "text",
-      name: "suiteName",
-      message: "Name of Suite",
-      initial: Cli.commandArg2 || "smoke",
-      format: trimInput,
-      validate: (input: string) => {
-        return /^[a-z0-9][a-z0-9/\/_-]{1,62}[a-z0-9]$/i.test(input);
-      },
-    },
-    {
-      type: "text",
-      name: "suiteDescription",
-      message: "Description of Suite",
-      initial: "Basic Smoke Test of Site",
-      format: trimInput,
-      validate: (input: string) => {
-        return /^[a-z0-9].{1,63}$/i.test(input);
-      },
-    },
-    {
-      type: "text",
-      name: "scenarioDescription",
-      message: "First Scenario",
-      initial: "Homepage Loads",
-      format: trimInput,
-      validate: (input: string) => {
-        return /^[a-z0-9].{1,63}$/i.test(input);
-      },
-    },
-    {
-      type: "select",
-      name: "type",
-      message: "What type of test is this scenario?",
-      initial: 0,
-      choices: typesOfTest,
-    },
-    {
-      type: "text",
-      name: "scenarioPath",
-      message: "Scenario Start Path",
-      initial: "/",
-      format: trimInput,
-      validate: function (input) {
-        return /^\/.{0,63}$/i.test(input);
-      },
-    },
-    {
-      type: "text",
-      name: "tags",
-      message: "Add Tags (Optional, Space Delimited)",
-      initial: "",
-      validate: function (input) {
-        return /^[A-Z0-9 -_]*$/i.test(input);
-      },
-    },
+    promptTextName("suiteName", "Name of Suite", Cli.commandArg2 || "smoke"),
+    promptTextDescription(
+      "suiteDescription",
+      "Description of Suite",
+      "Basic Smoke Test of Site"
+    ),
+    promptTextDescription(
+      "scenarioDescription",
+      "First Scenario",
+      "Homepage Loads"
+    ),
+    promptSelect(
+      "type",
+      "What type of test is this scenario?",
+      typesOfTest,
+      true,
+      0
+    ),
+    promptTextName("scenarioPath", "Scenario Start Path", "/"),
+    promptList("tags", "Add Tags (Optional, Space Delimited)"),
   ]);
 
   Cli.log("");
@@ -132,43 +100,26 @@ async function addScenario() {
   }
 
   const responses = await prompts([
-    {
-      type: "select",
-      name: "suite",
-      message: "What suite do you want to add it to?",
-      initial: Cli.commandArg2 || "",
-      choices: suites,
-      validate: function (input) {
-        return input.length > 0;
-      },
-    },
-    {
-      type: "select",
-      name: "type",
-      message: "What type of test is this scenario?",
-      initial: 0,
-      choices: typesOfTest,
-    },
-    {
-      type: "text",
-      name: "scenarioDescription",
-      message: "Description of Scenario",
-      initial: "Some Other Page Loads",
-      format: trimInput,
-      validate: function (input) {
-        return /^[a-z0-9].{1,63}$/i.test(input);
-      },
-    },
-    {
-      type: "text",
-      name: "scenarioPath",
-      message: "Scenario Start Path",
-      initial: "/some-other-page",
-      format: trimInput,
-      validate: function (input) {
-        return /^\/.{0,63}$/i.test(input);
-      },
-    },
+    promptSelect(
+      "suite",
+      "What suite do you want to add it to?",
+      suites,
+      true,
+      Cli.commandArg2 || ""
+    ),
+    promptSelect(
+      "type",
+      "What type of test is this scenario?",
+      typesOfTest,
+      true,
+      0
+    ),
+    promptTextDescription(
+      "scenarioDescription",
+      "Description of Scenario",
+      "Some Other Page Loads"
+    ),
+    promptTextName("scenarioPath", "Scenario Start Path", "/some-other-page"),
   ]);
 
   const suite: SuiteConfig = Cli.config.suites[responses.suite];
