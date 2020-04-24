@@ -170,7 +170,11 @@ if (Cli.command == "list") {
   const cacheFolder = Cli.config.getCacheFolder();
   emptyFolder(cacheFolder)
     .then(() => {
-      require("./run").run(argv.s, argv.t, argv.all);
+      require("./run").run(
+        argv.s,
+        argv.t,
+        argv.all || Cli.commandArg === "all"
+      );
     })
     .catch((err) => {
       console.log(err);
