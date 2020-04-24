@@ -1,42 +1,51 @@
 import { printSubheader, printHeader } from "./cli-helper";
-import { Cli } from './cli';
+import { Cli } from "./cli";
 
 export function list(suite: string[] = []) {
+  Cli.hideBanner = true;
 
-    Cli.hideBanner = true;
-
-    if (Cli.commandArg == 'env') {
-        printHeader();
-        printSubheader('List Environments');
-        Cli.log('');
-        let envNames: string[] = Cli.config.getEnvironmentNames();
-        if (envNames.length > 0) {
-            Cli.log('Found these environments:');
-            Cli.list(envNames);
-            Cli.log("\n");
-            Cli.exit(0);
-        }
-        else {
-            Cli.log("Did not find any environments.\n");
-            Cli.exit(2);
-        }
+  if (Cli.commandArg == "env") {
+    printHeader();
+    printSubheader("List Environments");
+    Cli.log("");
+    let envNames: string[] = Cli.config.getEnvironmentNames();
+    if (envNames.length > 0) {
+      Cli.log("Found these environments:");
+      Cli.list(envNames);
+      Cli.log("\n");
+      Cli.exit(0);
+    } else {
+      Cli.log("Did not find any environments.\n");
+      Cli.exit(2);
     }
-    else {
-        printHeader();
-        printSubheader('List Suites');
-        Cli.log('Looking in folder: ' + Cli.config.getTestsFolder());
-        Cli.log('');
-        let suiteNames: string[] = Cli.config.getSuiteNames();
-        if (suiteNames.length > 0) {
-            Cli.log('Found these test suites:');
-            Cli.list(suiteNames);
-            Cli.log("\n");
-            Cli.exit(0);
-        }
-        else {
-            Cli.log("Did not find any test suites.\n");
-            Cli.exit(2);
-        }
+  } else if (Cli.commandArg == "tags") {
+    printHeader();
+    printSubheader("List Tags");
+    Cli.log("");
+    let tags: string[] = Cli.config.getTags();
+    if (tags.length > 0) {
+      Cli.log("Found these tags:");
+      Cli.list(tags);
+      Cli.log("\n");
+      Cli.exit(0);
+    } else {
+      Cli.log("Did not find any tags.\n");
+      Cli.exit(2);
     }
-
+  } else {
+    printHeader();
+    printSubheader("List Suites");
+    Cli.log("Looking in folder: " + Cli.config.getTestsFolder());
+    Cli.log("");
+    let suiteNames: string[] = Cli.config.getSuiteNames();
+    if (suiteNames.length > 0) {
+      Cli.log("Found these test suites:");
+      Cli.list(suiteNames);
+      Cli.log("\n");
+      Cli.exit(0);
+    } else {
+      Cli.log("Did not find any test suites.\n");
+      Cli.exit(2);
+    }
+  }
 }

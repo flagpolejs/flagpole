@@ -60,7 +60,7 @@ export class EnvConfig {
   public toJson(): iEnvOpts {
     return {
       name: this.name,
-      defaultDomain: this.defaultDomain
+      defaultDomain: this.defaultDomain,
     };
   }
 }
@@ -76,7 +76,7 @@ export class SuiteConfig {
     this.name = opts.name || "";
     this.id = opts.id || "";
     if (opts.tags) {
-      opts.tags.forEach(tag => {
+      opts.tags.forEach((tag) => {
         this.tags.push(String(tag));
       });
     }
@@ -108,9 +108,9 @@ export class SuiteConfig {
       id: this.id,
       name: this.name,
       // Remove duplicates and empty strings
-      tags: [...new Set(this.tags)].filter(value => {
+      tags: [...new Set(this.tags)].filter((value) => {
         return value.trim().length > 0;
-      })
+      }),
     };
   }
 }
@@ -164,7 +164,7 @@ export class ProjectConfig {
       source: this.source,
       output: this.output,
       images: this.images,
-      cache: this.cache
+      cache: this.cache,
     };
   }
 }
@@ -184,11 +184,11 @@ export class FlagpoleConfig {
     // Explicit (can be set and show in config file output)
     this.project = new ProjectConfig(this, opts.project);
     if (opts.suites !== undefined) {
-      opts.suites.forEach(suiteOpts => {
+      opts.suites.forEach((suiteOpts) => {
         this.suites[suiteOpts.name] = new SuiteConfig(this, suiteOpts);
       });
     }
-    opts.environments.forEach(envOpts => {
+    opts.environments.forEach((envOpts) => {
       this.environments[envOpts.name] = new EnvConfig(this, envOpts);
     });
   }
@@ -265,6 +265,19 @@ export class FlagpoleConfig {
     return envs;
   }
 
+  public getTags(): string[] {
+    let tags: string[] = [];
+    // Get all tags from config
+    for (let key in this.suites) {
+      tags = tags.concat(this.suites[key].tags);
+    }
+    // Uniqueify it
+    tags = tags.filter((tag, i) => {
+      return tags.indexOf(tag) === i;
+    });
+    return tags.sort();
+  }
+
   public getSuites(): SuiteConfig[] {
     let suiteConfigs: SuiteConfig[] = [];
     for (let key in this.suites) {
@@ -306,18 +319,18 @@ export class FlagpoleConfig {
       project: this.project.toJson(),
       environments: (() => {
         let envs: any = {};
-        Object.values(this.environments).forEach(env => {
+        Object.values(this.environments).forEach((env) => {
           envs[env.name] = env.toJson();
         });
         return envs;
       })(),
       suites: (() => {
         let suites: any = {};
-        Object.values(this.suites).forEach(suite => {
+        Object.values(this.suites).forEach((suite) => {
           suites[suite.name] = suite.toJson();
         });
         return suites;
-      })()
+      })(),
     };
   }
 
@@ -335,7 +348,7 @@ export class FlagpoleConfig {
         if (err) {
           return reject(err);
         }
-        this._onSave.forEach(callback => {
+        this._onSave.forEach((callback) => {
           callback();
         });
         resolve();
@@ -363,10 +376,10 @@ export class FlagpoleConfig {
           strict: true,
           moduleResolution: "node",
           removeComments: true,
-          preserveConstEnums: true
+          preserveConstEnums: true,
         },
         include: [`src${path.sep}**${path.sep}*`],
-        exclude: ["node_modules", `**${path.sep}*.spec.ts`]
+        exclude: ["node_modules", `**${path.sep}*.spec.ts`],
       };
       const tsconfigPath = path.join(this.getRootFolder(), "tsconfig.json");
       fs.writeFile(

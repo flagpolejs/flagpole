@@ -12,10 +12,7 @@ interface iFileWatcher {
 const files: { [filename: string]: iFileWatcher } = {};
 
 const hash = (input: string): string => {
-  return crypto
-    .createHash("md5")
-    .update(input)
-    .digest("hex");
+  return crypto.createHash("md5").update(input).digest("hex");
 };
 
 let fsWait: any = null;
@@ -37,7 +34,7 @@ export const watch = (suiteNames: string[], tag: string) => {
         if (typeof files[fileName] == "undefined") {
           files[fileName] = {
             contentMd5: null,
-            fileWait: null
+            fileWait: null,
           };
         }
         // If we are waiting, ignore this
@@ -65,7 +62,7 @@ export const watch = (suiteNames: string[], tag: string) => {
           changeCount = 0;
           fsWait = null;
           console.log(`${changeCount} files changed. Running tests...`);
-          run(suiteNames, tag);
+          run(suiteNames, tag, false);
         }, 1000);
       }
     }

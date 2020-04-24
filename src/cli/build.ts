@@ -3,7 +3,7 @@ import { execSync } from "child_process";
 import * as prompts from "prompts";
 import { printSubheader, printLine } from "./cli-helper";
 
-export async function build() {
+export async function build(exitOnSuccess: boolean = true) {
   Cli.hideBanner = true;
   printSubheader("Build TypeScript Tests");
   // Is TSC installed?
@@ -24,7 +24,9 @@ export async function build() {
     try {
       await Cli.config.tsc();
       printLine("Done!");
-      Cli.exit(0);
+      if (exitOnSuccess) {
+        Cli.exit(0);
+      }
     } catch (err) {
       Cli.log(String(err));
       Cli.exit(1);
@@ -64,7 +66,7 @@ const isTscInstalled = async (
   if (match === null) {
     return false;
   }
-  const version = match[1].split(".").map(n => parseInt(n));
+  const version = match[1].split(".").map((n) => parseInt(n));
   return (
     version[0] > major ||
     (version[0] == major && version[1] > minor) ||
@@ -73,50 +75,50 @@ const isTscInstalled = async (
 };
 
 const doYouWantToConfigureTypeScript = (): Promise<boolean> => {
-  return new Promise(async resolve => {
+  return new Promise(async (resolve) => {
     const response = await prompts({
       type: "toggle",
       name: "useTypeScript",
       message: "Configure this project to use TypeScript?",
       initial: true,
       active: "Yes",
-      inactive: "No"
+      inactive: "No",
     });
     resolve(response.useTypeScript);
   });
 };
 
 const setRootFolder = (): Promise<string> => {
-  return new Promise(async resolve => {
+  return new Promise(async (resolve) => {
     const response = await prompts({
       type: "text",
       name: "rootFolder",
       message: "Flagpole Root Folder",
-      initial: `${Cli.config.project.path}`
+      initial: `${Cli.config.project.path}`,
     });
     resolve(response.rootFolder);
   });
 };
 
 const setSourceFolder = (rootFolder: string): Promise<string> => {
-  return new Promise(async resolve => {
+  return new Promise(async (resolve) => {
     const response = await prompts({
       type: "text",
       name: "sourceFolder",
       message: `Source Folder ${rootFolder}/`,
-      initial: `src`
+      initial: `src`,
     });
     resolve(response.sourceFolder);
   });
 };
 
 const setOutputFolder = (rootFolder: string): Promise<string> => {
-  return new Promise(async resolve => {
+  return new Promise(async (resolve) => {
     const response = await prompts({
       type: "text",
       name: "outputFolder",
       message: `Output Folder ${rootFolder}/`,
-      initial: `out`
+      initial: `out`,
     });
     resolve(response.outputFolder);
   });

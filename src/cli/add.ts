@@ -48,13 +48,7 @@ async function addSuite() {
       "First Scenario",
       "Homepage Loads"
     ),
-    promptSelect(
-      "type",
-      "What type of test is this scenario?",
-      typesOfTest,
-      true,
-      0
-    ),
+    promptSelect("type", "What type of test is this scenario?", typesOfTest, 0),
     promptTextPath("scenarioPath", "Scenario Start Path", "/"),
     promptList("tags", "Add Tags (Optional, Space Delimited)"),
   ]);
@@ -101,20 +95,8 @@ async function addScenario() {
   }
 
   const responses = await prompts([
-    promptSelect(
-      "suite",
-      "What suite do you want to add it to?",
-      suites,
-      true,
-      Cli.commandArg2 || ""
-    ),
-    promptSelect(
-      "type",
-      "What type of test is this scenario?",
-      typesOfTest,
-      true,
-      0
-    ),
+    promptSelect("suite", "What suite do you want to add it to?", suites),
+    promptSelect("type", "What type of test is this scenario?", typesOfTest, 0),
     promptTextDescription(
       "scenarioDescription",
       "Description of Scenario",

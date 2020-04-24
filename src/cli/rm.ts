@@ -68,13 +68,7 @@ async function removeSuite() {
   }
 
   const responses = await prompts([
-    promptSelect(
-      "suite",
-      "Which suite do you want to remove?",
-      suites,
-      true,
-      Cli.commandArg2 || ""
-    ),
+    promptSelect("suite", "Which suite do you want to remove?", suites),
     promptConfirm("delete", "Do you want to delete the files too?", false),
   ]);
 

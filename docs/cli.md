@@ -76,6 +76,18 @@ Lists out all of the suites available in this project.
 flagpole list
 ```
 
+You can list out environments with:
+
+```bash
+flagpole list env
+```
+
+Or list tags
+
+```bash
+flagpole list tags
+```
+
 ### login
 
 In the future there will be a web based control panel where you can view, manage and run your tests in the cloud. This feature is not available in 2.0 but maybe in 3.0!
@@ -118,10 +130,18 @@ flagpole rm suite
 
 ### run
 
-Runs your test suites. With no switches like this. it will run every one of the tests. See the -s switch about selecting which suite(s) specifically to run.
+Runs your test suites. With no switches like this. it will run every one of the tests. Running this command with no argments will give you a prompt on which tests you would like to run.
 
 ```bash
 flagpole run
+```
+
+#### --all
+
+Run all test suites.
+
+```bash
+flagpole run --all
 ```
 
 #### -a
@@ -171,12 +191,32 @@ You can list out multiple suite, space separated.
 flagpole run -s smoke api e2e
 ```
 
+Or you can use a wildcard to match tests matching a pattern or in a certain folder:
+
+```bash
+flagpole run -s browser/*
+```
+
 #### -t tagName
 
 Run all suites with the given tag. This can only be a single string value.
 
 ```bash
 flagpole run -t basic
+```
+
+### run build
+
+This is the same as run (it supports all of the same arguments), except that it will build your TypeScript tests first.
+
+```bash
+flagpole run build
+```
+
+This combines the "run" and "build" commands, much like this would do:
+
+```bash
+flagpole build && flagpole run
 ```
 
 ### serve

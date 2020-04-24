@@ -63,6 +63,7 @@ let argv = require("yargs")
   .boolean("q")
   .string("o")
   .string("base")
+  .boolean("all")
   .default("o", "console")
   .default("s", [])
   .default("t", "")
@@ -70,22 +71,14 @@ let argv = require("yargs")
   .default("q", false)
   .default("l", false)
   .example("flagpole list", "To show a list of test suites")
-  .example("flagpole run", "To run all test suites")
+  .example("flagpole run --all", "To run all test suites")
   .example("flagpole run -s smoke", "To run just the suite called smoke")
-  .example(
-    "flagpole run -s smoke api",
-    "Or you can run multiple suites (smoke and api)"
-  )
+  .example("flagpole run -s browser/*", "Or you can run all tests in a folder")
   .example("flagpole run -t basic", 'To run all suites with tag "basic"')
   .example("flagpole init", "Initialize a new Flagpole project")
   .example("flagpole add suite", "Add a new test suite")
   .example("flagpole add scenario", "Add a new scenario to a test suite")
-  .example("flagpole login", "Login to your FlagpoleJS.com account")
-  .example("flagpole logout", "Logout of your FlagpoleJS.com account")
-  .example(
-    "flagpole deploy",
-    "Send your test project to your FlagpoleJS.com account"
-  )
+  .example("flagpole rm suite", "Temove a suite")
   //.example("flagpole pack", "Pack this Flagpole project into a zip achive")
   .example(
     "flagpole build",
@@ -177,7 +170,7 @@ if (Cli.command == "list") {
   const cacheFolder = Cli.config.getCacheFolder();
   emptyFolder(cacheFolder)
     .then(() => {
-      require("./run").run(argv.s, argv.t);
+      require("./run").run(argv.s, argv.t, argv.all);
     })
     .catch((err) => {
       console.log(err);

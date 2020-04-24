@@ -35,62 +35,8 @@
       "id": "",
       "name": "smoke",
       "tags": [
-        "basic",
-        "foo"
+        "smoke"
       ]
-    },
-    "html/flrunners": {
-      "id": "",
-      "name": "html/flrunners",
-      "tags": [
-        "basic",
-        "foo"
-      ]
-    },
-    "error": {
-      "id": "",
-      "name": "error",
-      "tags": []
-    },
-    "test": {
-      "id": "",
-      "name": "test",
-      "tags": []
-    },
-    "internal/recursion": {
-      "id": "",
-      "name": "internal/recursion",
-      "tags": []
-    },
-    "internal/recursion-google": {
-      "id": "",
-      "name": "internal/recursion-google",
-      "tags": []
-    },
-    "visual": {
-      "id": "",
-      "name": "visual",
-      "tags": []
-    },
-    "wait": {
-      "id": "",
-      "name": "wait",
-      "tags": []
-    },
-    "cookies": {
-      "id": "",
-      "name": "cookies",
-      "tags": []
-    },
-    "cookie": {
-      "id": "",
-      "name": "cookie",
-      "tags": []
-    },
-    "browser/setBasicAuth": {
-      "id": "",
-      "name": "browser/setBasicAuth",
-      "tags": []
     }
   }
 }

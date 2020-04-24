@@ -133,8 +133,7 @@ export function promptSelect(
   name: string,
   message: string,
   choices: prompts.Choice[],
-  required: boolean = false,
-  initial?: string | number
+  initial?: number
 ): prompts.PromptObject<string> {
   const obj: prompts.PromptObject<string> = {
     type: "select",
@@ -142,11 +141,6 @@ export function promptSelect(
     message: message,
     choices: choices,
   };
-  if (required) {
-    obj.validate = (input: string) => {
-      return input.length > 0;
-    };
-  }
   if (initial !== undefined) {
     obj.initial = initial || 0;
   }
