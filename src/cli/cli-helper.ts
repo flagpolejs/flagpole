@@ -1,5 +1,6 @@
 import { FlagpoleExecution } from "../flagpoleexecutionoptions";
 import prompts = require("prompts");
+import { isMainThread } from "worker_threads";
 
 const ansiAlign = require("ansi-align");
 
@@ -100,6 +101,20 @@ export function promptTextName(
   };
 }
 
+export function promptTextPath(
+  name: string,
+  message: string,
+  initial?: string
+): prompts.PromptObject<string> {
+  return {
+    type: "text",
+    name: name,
+    message: message,
+    initial: initial || "/",
+    format: trimInput,
+  };
+}
+
 export function promptTextDescription(
   name: string,
   message: string,
@@ -138,14 +153,28 @@ export function promptSelect(
   return obj;
 }
 
+export function promptConfirm(
+  name: string,
+  message: string,
+  initial: boolean = false
+): prompts.PromptObject<string> {
+  return {
+    type: "confirm",
+    name: name,
+    message: message,
+    initial: initial,
+  };
+}
+
 export function promptList(
   name: string,
   message: string
 ): prompts.PromptObject<string> {
   return {
-    type: "text",
+    type: "list",
     name: name,
     message: message,
+    separator: " ",
     initial: "",
     validate: function (input) {
       return /^[A-Z0-9 -_]*$/i.test(input);

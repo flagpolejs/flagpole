@@ -4,7 +4,7 @@ import { Cli } from "./cli";
 export function audit(suite: string[] = []) {
   Cli.hideBanner = true;
 
-  const suiteNames: string[] = Cli.config.getSuiteNames();
+  const suiteNames: string[] = Cli.config.getSuiteNames().sort();
   const suitesInFolder: string[] = Cli.findJsFilesInTestFolder();
   const suitesNotExisting = suiteNames.filter(
     (x) => !suitesInFolder.includes(x)

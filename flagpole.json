@@ -22,7 +22,9 @@
     "debug": {
       "id": "",
       "name": "debug",
-      "tags": ["basic"]
+      "tags": [
+        "basic"
+      ]
     },
     "foobar": {
       "id": "",
@@ -32,12 +34,18 @@
     "smoke": {
       "id": "",
       "name": "smoke",
-      "tags": ["basic", "foo"]
+      "tags": [
+        "basic",
+        "foo"
+      ]
     },
     "html/flrunners": {
       "id": "",
       "name": "html/flrunners",
-      "tags": ["basic", "foo"]
+      "tags": [
+        "basic",
+        "foo"
+      ]
     },
     "error": {
       "id": "",

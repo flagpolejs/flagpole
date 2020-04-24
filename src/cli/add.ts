@@ -7,6 +7,7 @@ import {
   promptTextDescription,
   promptSelect,
   promptList,
+  promptTextPath,
 } from "./cli-helper";
 import { Cli } from "./cli";
 import { SuiteConfig } from "./config";
@@ -54,7 +55,7 @@ async function addSuite() {
       true,
       0
     ),
-    promptTextName("scenarioPath", "Scenario Start Path", "/"),
+    promptTextPath("scenarioPath", "Scenario Start Path", "/"),
     promptList("tags", "Add Tags (Optional, Space Delimited)"),
   ]);
 
@@ -63,7 +64,7 @@ async function addSuite() {
     {
       name: standardQuestions.suiteName,
       description: standardQuestions.suiteDescription,
-      tags: standardQuestions.tags.split(" "),
+      tags: standardQuestions.tags,
     },
     {
       description: standardQuestions.scenarioDescription,
@@ -85,7 +86,7 @@ async function addSuite() {
 async function addScenario() {
   printSubheader("Add New Scenaio");
 
-  const suites = stringArrayToPromptChoices(Cli.config.getSuiteNames());
+  const suites = stringArrayToPromptChoices(Cli.config.getSuiteNames().sort());
 
   if (suites.length == 0) {
     Cli.log("");
@@ -119,7 +120,7 @@ async function addScenario() {
       "Description of Scenario",
       "Some Other Page Loads"
     ),
-    promptTextName("scenarioPath", "Scenario Start Path", "/some-other-page"),
+    promptTextPath("scenarioPath", "Scenario Start Path", "/some-other-page"),
   ]);
 
   const suite: SuiteConfig = Cli.config.suites[responses.suite];
@@ -193,7 +194,7 @@ async function addTag() {
       name: "suites",
       min: 1,
       message: "Suites to apply it to",
-      choices: stringArrayToPromptChoices(Cli.config.getSuiteNames()),
+      choices: stringArrayToPromptChoices(Cli.config.getSuiteNames().sort()),
     },
   ]);
 

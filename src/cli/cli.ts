@@ -3,7 +3,7 @@ import {
   SuiteConfig,
   iScenarioOpts,
   iSuiteOpts,
-  iConfigOpts
+  iConfigOpts,
 } from "./config";
 import { ClorthoService, iCredentials } from "clortho-lite";
 import { printHeader } from "./cli-helper";
@@ -38,7 +38,7 @@ export class Cli {
   }
 
   static list(list: Array<string>) {
-    list.forEach(function(message: string) {
+    list.forEach(function (message: string) {
       Cli.log("  » " + message);
     });
   }
@@ -47,9 +47,9 @@ export class Cli {
     if (!Cli.hideBanner) {
       printHeader();
     }
-    Cli.consoleLog.forEach(output => {
+    Cli.consoleLog.forEach((output) => {
       const lines = output.split("\n");
-      lines.forEach(line => {
+      lines.forEach((line) => {
         process.send ? process.send(line) : console.log(line);
       });
     });
@@ -66,33 +66,33 @@ export class Cli {
         new Promise((resolve, reject) => {
           service
             .get("token")
-            .then(function(credentials: iCredentials) {
+            .then(function (credentials: iCredentials) {
               token = credentials.password;
               resolve();
             })
-            .catch(function() {
+            .catch(function () {
               reject("No saved token.");
             });
         }),
         new Promise((resolve, reject) => {
           service
             .get("email")
-            .then(function(credentials: iCredentials) {
+            .then(function (credentials: iCredentials) {
               email = credentials.password;
               resolve();
             })
-            .catch(function() {
+            .catch(function () {
               reject("No saved email.");
             });
-        })
+        }),
       ])
-        .then(function() {
+        .then(function () {
           resolve({
             email: email,
-            token: token
+            token: token,
           });
         })
-        .catch(function(err) {
+        .catch(function (err) {
           reject("Not logged in. " + err);
         });
     });
@@ -107,7 +107,7 @@ export class Cli {
       if (fs.existsSync(dir)) {
         // Read contents
         let files = fs.readdirSync(dir);
-        files.forEach(function(file) {
+        files.forEach(function (file) {
           // Drill into sub-folders, but only once!
           if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
             findSuites(dir + file + "/", true);
@@ -131,7 +131,7 @@ export class Cli {
     const suitesInFolder: string[] = Cli.findJsFilesInTestFolder();
     let suitesAvailableToImport: string[] = [];
     let suitesInConfig: string[] = Cli.config.getSuiteNames();
-    suitesInFolder.forEach(function(suiteName: string) {
+    suitesInFolder.forEach(function (suiteName: string) {
       if (!suitesInConfig.includes(suiteName)) {
         suitesAvailableToImport.push(suiteName);
       }
@@ -151,7 +151,7 @@ export class Cli {
         "\n" +
         `   .open("${opts.path}")` +
         "\n" +
-        `   .next(async context => {` +
+        `   .next(async (context) => {` +
         "\n" +
         `       ` +
         "\n" +
@@ -160,7 +160,7 @@ export class Cli {
       if (!fs.existsSync(suitePath)) {
         reject(`Suite file ${suitePath} does not exist.`);
       }
-      fs.appendFile(suitePath, fileContents, function(err: string) {
+      fs.appendFile(suitePath, fileContents, function (err: string) {
         if (err) {
           reject(err);
         }
@@ -187,13 +187,13 @@ export class Cli {
         "\n" +
         `   .open("${scenario.path}")` +
         "\n" +
-        `   .next(async context => {` +
+        `   .next(async (context) => {` +
         "\n" +
         `       ` +
         "\n" +
         `   });` +
         "\n\n";
-      fs.writeFile(suitePath, fileContents, function(err: string) {
+      fs.writeFile(suitePath, fileContents, function (err: string) {
         if (err) {
           return reject(err);
         }
@@ -209,11 +209,11 @@ export class Cli {
   }
 
   static async init(opts: iConfigOpts): Promise<string[]> {
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       const configFile: FlagpoleConfig = new FlagpoleConfig(opts);
       let tasks: string[] = [];
       // Add environemnts
-      opts.environments.forEach(envName => {
+      opts.environments.forEach((envName) => {
         configFile.addEnvironment(envName);
       });
       // Create root folder
@@ -260,10 +260,10 @@ export function refreshConfig(): FlagpoleConfig {
   const defaultConfig = {
     project: {
       name: path.basename(process.cwd()),
-      path: "tests"
+      path: "tests",
     },
     environments: [],
-    suites: []
+    suites: [],
   };
   // Is there a config file?
   if (Cli.configFileExists()) {
@@ -282,7 +282,7 @@ export function refreshConfig(): FlagpoleConfig {
       ),
       suites: Object.values(
         Object.assign(defaultConfig.suites, configData.suites || {})
-      )
+      ),
     };
     Cli.config = new FlagpoleConfig(opts);
   }
