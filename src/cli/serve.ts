@@ -6,9 +6,9 @@ import { URL } from "url";
 import { FlagpoleExecutionOptions } from "../flagpoleexecutionoptions";
 import { SuiteExecutionResult, SuiteExecution } from "./suiteexecution";
 import { FlagpoleExecution } from "../flagpoleexecutionoptions";
-
-const open = require("open");
-const qs = require("querystring");
+import { sep } from "path";
+import open = require("open");
+import qs = require("querystring");
 
 const possibleEnvironments = [
   "dev",
@@ -18,7 +18,7 @@ const possibleEnvironments = [
   "rc",
   "preprod",
   "alpha",
-  "beta"
+  "beta",
 ];
 
 const routes = {
@@ -36,7 +36,7 @@ const routes = {
     const name: string = postData.name;
     if (name) {
       Cli.config.addSuite({
-        name: name
+        name: name,
       });
       Cli.config.save();
       return sendOutput(
@@ -80,7 +80,7 @@ const routes = {
     Cli.addScenario(suite, {
       description: postData.description,
       path: postData.path,
-      type: postData.type
+      type: postData.type,
     })
       .then(() => {
         return sendOutput(
@@ -91,7 +91,7 @@ const routes = {
             `
         );
       })
-      .catch(err => {
+      .catch((err) => {
         return sendOutput(response, `<p>${err}</p>`);
       });
   },
@@ -133,12 +133,12 @@ const routes = {
       response,
       {
         name: postData.suiteName,
-        description: postData.suiteDescription
+        description: postData.suiteDescription,
       },
       {
         description: postData.scenarioDescription,
         path: postData.scenarioPath,
-        type: postData.scenarioType
+        type: postData.scenarioType,
       }
     );
   },
@@ -158,7 +158,7 @@ const routes = {
       Cli.config.suites[suite.name].clearTags();
       String(postData.tags)
         .split(",")
-        .forEach(tag => {
+        .forEach((tag) => {
           Cli.config.suites[suite.name].addTag(tag);
         });
       Cli.config
@@ -169,7 +169,7 @@ const routes = {
             `<p>Saved changes to suite.</p><p><a href="/">Back</a>`
           );
         })
-        .catch(err => {
+        .catch((err) => {
           sendOutput(
             response,
             `<p>Error adding tag. ${err}</p><p><a href="/suite?name=${suite.name}">Back</a>`
@@ -204,7 +204,7 @@ const routes = {
         response,
         new EnvConfig(Cli.config, {
           name: envName,
-          defaultDomain: defaultDomain
+          defaultDomain: defaultDomain,
         })
       );
     }
@@ -220,7 +220,7 @@ const routes = {
       );
     }
     fileNotFound(response);
-  }
+  },
 };
 
 const getSuite = (
@@ -252,7 +252,7 @@ const getTemplate = (httpResponse: http.ServerResponse): WebResponse => {
 
 const sendOutput = (response: http.ServerResponse, output: string): void => {
   getTemplate(response).send({
-    output: output
+    output: output,
   });
 };
 
@@ -275,7 +275,7 @@ const sendGetInit = (response: http.ServerResponse): void => {
                 <label for="name">Project Name</label>
                 <input type="text" name="projectName" id="name" value="${process
                   .cwd()
-                  .split("/")
+                  .split(sep)
                   .pop()}">
             </div>
             <div class="field">
@@ -496,7 +496,7 @@ const removeSuite = (
         `Removed suite <em>${suiteName}</em>, but did not delete the file. <a href="/">Back</a>`
       );
     })
-    .catch(ex => {
+    .catch((ex) => {
       sendOutput(response, `Error: ${ex}`);
     });
 };
@@ -511,7 +511,7 @@ const removeEnv = (response: http.ServerResponse, envName: string): void => {
         `Removed environment <em>${envName}</em>, no test scenarios were altered. <a href="/">Back</a>`
       );
     })
-    .catch(ex => {
+    .catch((ex) => {
       sendOutput(response, `Error: ${ex}`);
     });
 };
@@ -526,20 +526,20 @@ const initProject = (response: http.ServerResponse, postData: any): void => {
   Cli.init({
     project: {
       name: postData.projectName,
-      path: postData.testsPath
+      path: postData.testsPath,
     },
-    environments: []
+    environments: [],
   })
     .then(() => {
       // Loop through all of the possible environments and see which they checked
       let countEnvs: number = 0;
-      possibleEnvironments.forEach(env => {
+      possibleEnvironments.forEach((env) => {
         // If this env was checked
         if (postData[`envName[${env}]`]) {
           const domain: string = postData[`envDomain[${env}]`];
           Cli.config.addEnvironment({
             name: env,
-            defaultDomain: domain
+            defaultDomain: domain,
           });
           countEnvs++;
         }
@@ -547,7 +547,7 @@ const initProject = (response: http.ServerResponse, postData: any): void => {
       // Require at least one environment
       if (countEnvs == 0) {
         Cli.config.addEnvironment({
-          name: "dev"
+          name: "dev",
         });
         countEnvs++;
       }
@@ -564,7 +564,7 @@ const initProject = (response: http.ServerResponse, postData: any): void => {
                         `
           );
         })
-        .catch(err => {
+        .catch((err) => {
           sendOutput(
             response,
             `
@@ -574,7 +574,7 @@ const initProject = (response: http.ServerResponse, postData: any): void => {
           );
         });
     })
-    .catch(err => {
+    .catch((err) => {
       sendOutput(
         response,
         `<p>Error initializing: ${err}</p>p><a href="/init">Try again</a></p>`
@@ -594,7 +594,7 @@ const addSuite = (
         `Added new suite <em>${suite.name}</em>. <a href="/">Back</a>`
       );
     })
-    .catch(err => {
+    .catch((err) => {
       sendOutput(response, `Error: ${err}`);
     });
 };
@@ -605,7 +605,7 @@ const addEnv = (response: http.ServerResponse, env: EnvConfig): void => {
   } else {
     Cli.config.addEnvironment({
       name: env.name,
-      defaultDomain: env.defaultDomain
+      defaultDomain: env.defaultDomain,
     });
     Cli.config
       .save()
@@ -615,7 +615,7 @@ const addEnv = (response: http.ServerResponse, env: EnvConfig): void => {
           `Added new environment <em>${env.name}</em>. <a href="/">Back</a>`
         );
       })
-      .catch(ex => {
+      .catch((ex) => {
         sendOutput(response, `Error: ${ex}`);
       });
   }
@@ -650,7 +650,7 @@ const runSuite = (
       output += `<p><a href="/">Back</a></p>`;
       sendOutput(response, output);
     })
-    .catch(err => {
+    .catch((err) => {
       sendOutput(response, err);
     });
 };
@@ -800,7 +800,7 @@ export function serve(port: number = 3000) {
     // If this is a POST, we need to process the post data
     else if (method == "POST") {
       let body: string = "";
-      request.on("data", function(data) {
+      request.on("data", function (data) {
         body += String(data);
         // Too much POST data, kill the connection!
         // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
@@ -808,7 +808,7 @@ export function serve(port: number = 3000) {
           request.connection.destroy();
         }
       });
-      request.on("end", function() {
+      request.on("end", function () {
         respond(qs.parse(body));
       });
     }

@@ -7,6 +7,7 @@ import {
 } from "./config";
 import { ClorthoService, iCredentials } from "clortho-lite";
 import { printHeader } from "./cli-helper";
+import { join, sep } from "path";
 
 const fs = require("fs");
 const path = require("path");
@@ -110,7 +111,7 @@ export class Cli {
         files.forEach(function (file) {
           // Drill into sub-folders, but only once!
           if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
-            findSuites(dir + file + "/", true);
+            findSuites(`${dir}${file}${sep}`, true);
           }
           // Push in any JS files
           else if (file.match(/.js$/)) {

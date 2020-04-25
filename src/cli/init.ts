@@ -2,6 +2,7 @@ import { printSubheader, printHeader, trimInput } from "./cli-helper";
 import { Cli } from "./cli";
 import { iConfigOpts, iEnvOpts } from "./config";
 import * as prompts from "prompts";
+import { sep } from "path";
 
 export async function init() {
   printHeader();
@@ -12,11 +13,8 @@ export async function init() {
       type: "text",
       name: "project",
       message: "What is the name of your project?",
-      initial: process
-        .cwd()
-        .split("/")
-        .pop(),
-      format: trimInput
+      initial: process.cwd().split(sep).pop(),
+      format: trimInput,
     },
     {
       type: "multiselect",
@@ -34,12 +32,13 @@ export async function init() {
         { value: "qa", title: "qa" },
         { value: "local", title: "local" },
         { value: "alpha", title: "alpha" },
-        { value: "beta", title: "beta" }
+        { value: "beta", title: "beta" },
       ],
       validate: function (input) {
         return input.length > 0;
-      }
-    }]);
+      },
+    },
+  ]);
 
   const domainPrompts: prompts.PromptObject[] = [];
   initialResponses.env.forEach((env: string) => {
@@ -48,24 +47,25 @@ export async function init() {
       name: `domain_${env}`,
       message: `Default Domain for ${env}`,
       format: trimInput,
-      validate: domain => {
-        return /^https?:\/\/[a-z][a-z0-9_.-]+[a-z](:[0-9]+)?(\/.*)?$/i.test(domain) ?
-          true : 'Must be a valid URL, starting with http:// or https://'
-      }
+      validate: (domain) => {
+        return /^https?:\/\/[a-z][a-z0-9_.-]+[a-z](:[0-9]+)?(\/.*)?$/i.test(
+          domain
+        )
+          ? true
+          : "Must be a valid URL, starting with http:// or https://";
+      },
     });
   });
   const domains = await prompts(domainPrompts);
 
-  const tsResponse = await prompts(
-    {
-      type: "toggle",
-      name: "useTypeScript",
-      message: "Do you want Flagpole to use TypeScript?",
-      initial: true,
-      active: "Yes",
-      inactive: "No"
-    }
-  );
+  const tsResponse = await prompts({
+    type: "toggle",
+    name: "useTypeScript",
+    message: "Do you want Flagpole to use TypeScript?",
+    initial: true,
+    active: "Yes",
+    inactive: "No",
+  });
 
   const rootFolder = await prompts({
     type: "text",
@@ -74,7 +74,7 @@ export async function init() {
       ? "What is the root subfolder you want to put your tests in? (tsconfig.json will go here)"
       : "What subfolder do you want to put your tests in?",
     initial: "tests",
-    format: trimInput
+    format: trimInput,
   });
 
   let tsFolders: undefined | prompts.Answers<string> = undefined;
@@ -84,14 +84,14 @@ export async function init() {
         type: "text",
         name: "sourceFolder",
         message: `Source Folder ${rootFolder.path}/`,
-        initial: `src`
+        initial: `src`,
       },
       {
         type: "text",
         name: "outputFolder",
         message: `Output Folder ${rootFolder.path}/`,
-        initial: `out`
-      }
+        initial: `out`,
+      },
     ]);
   }
 
@@ -101,19 +101,19 @@ export async function init() {
       name: initialResponses.project,
       path: rootFolder.path,
       source: tsFolders == undefined ? undefined : tsFolders.sourceFolder,
-      output: tsFolders == undefined ? undefined : tsFolders.outputFolder
+      output: tsFolders == undefined ? undefined : tsFolders.outputFolder,
     },
     environments: ((): iEnvOpts[] => {
       const out: iEnvOpts[] = [];
       initialResponses.env.forEach((env: string) => {
         out.push({
           name: env,
-          defaultDomain: domains[`domain_${env}`]
+          defaultDomain: domains[`domain_${env}`],
         });
       });
       return out;
     })(),
-    suites: []
+    suites: [],
   };
   Cli.hideBanner = true;
   Cli.log("Creating your Flagpole project...");

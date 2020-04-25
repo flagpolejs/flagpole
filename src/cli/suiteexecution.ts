@@ -9,6 +9,7 @@ import { FlagpoleReport } from "../logging/flagpolereport";
 import { asyncForEach } from "../util";
 import { Flagpole } from "../flagpole";
 import { spawn, fork, ForkOptions, exec } from "child_process";
+import { fstat, existsSync } from "fs";
 
 export enum SuiteExecutionExitCode {
   success = 0,
@@ -104,8 +105,16 @@ export class SuiteExecution {
     if (this._result !== null || this._started !== null) {
       throw new Error(`This execution has already run.`);
     }
+
     this._started = Date.now();
-    this._result = await this._execute(filePath, opts);
+    if (existsSync(filePath)) {
+      this._result = await this._execute(filePath, opts);
+    } else {
+      this._result = new SuiteExecutionResult(
+        ["Suite was not found in the output folder. Did you forget to build?"],
+        1
+      );
+    }
     this._finished = Date.now();
     this._finally.forEach((callback: Function) => {
       callback.apply(this, [this]);

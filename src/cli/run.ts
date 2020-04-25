@@ -8,6 +8,7 @@ import {
   promptSelect,
   stringArrayToPromptChoices,
   printSubheader,
+  printConsoleLine,
 } from "./cli-helper";
 import { build } from "./build";
 
@@ -123,7 +124,7 @@ export const run = async (
   }
   // Now run them
   if (selectedSuites.length) {
-    Cli.log(
+    printConsoleLine(
       "Running Suites: " +
         selectedSuites
           .map((suite) => {
@@ -134,7 +135,7 @@ export const run = async (
     return runSuites(selectedSuites);
   }
   // None to run
-  Cli.log("No tests selected to run.");
+  printConsoleLine("No tests selected to run.");
   Cli.exit(0);
 };
 

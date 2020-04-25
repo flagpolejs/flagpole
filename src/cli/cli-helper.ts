@@ -1,39 +1,35 @@
 import { FlagpoleExecution } from "../flagpoleexecutionoptions";
 import prompts = require("prompts");
-import { isMainThread } from "worker_threads";
-
-const ansiAlign = require("ansi-align");
+import ansiAlign = require("ansi-align");
+import { Cli } from "./cli";
 
 export function printHeader() {
-  if (FlagpoleExecution.opts.quietMode) {
-    return;
+  if (FlagpoleExecution.opts.shouldPrintTextOutput) {
+    console.log("\u001b[0m \u001b[37m^\u001b[0m ");
+    console.log(
+      "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[37;1m\u001b[1m   F L A G P O L E   J S"
+    );
+    console.log(
+      "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[47m                 \u001b[0m"
+    );
+    console.log(
+      "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[238m   Version 2.2"
+    );
+    console.log(
+      "\u001b[0m \u001b[47m \u001b[0m \u001b[47m                         \u001b[0m"
+    );
+    console.log(
+      "\u001b[0m \u001b[47m \u001b[0m \u001b[41m                         \u001b[0m"
+    );
+    console.log("\u001b[0m \u001b[47m \u001b[0m ");
   }
-  console.log("\u001b[0m \u001b[37m^\u001b[0m ");
-  console.log(
-    "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[37;1m\u001b[1m   F L A G P O L E   J S"
-  );
-  console.log(
-    "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[47m                 \u001b[0m"
-  );
-  console.log(
-    "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[238m   Version 2.2"
-  );
-  console.log(
-    "\u001b[0m \u001b[47m \u001b[0m \u001b[47m                         \u001b[0m"
-  );
-  console.log(
-    "\u001b[0m \u001b[47m \u001b[0m \u001b[41m                         \u001b[0m"
-  );
-  console.log("\u001b[0m \u001b[47m \u001b[0m ");
 }
 
 export function printOldHeader() {
-  if (FlagpoleExecution.opts.quietMode) {
-    return;
-  }
-  console.log(
-    "\x1b[32m",
-    `
+  if (FlagpoleExecution.opts.shouldPrintTextOutput) {
+    console.log(
+      "\x1b[32m",
+      `
         \x1b[31m $$$$$$$$\\ $$\\                                         $$\\           
         \x1b[31m $$  _____|$$ |                                        $$ |          
         \x1b[31m $$ |      $$ | $$$$$$\\   $$$$$$\\   $$$$$$\\   $$$$$$\\  $$ | $$$$$$\\  
@@ -45,13 +41,20 @@ export function printOldHeader() {
         \x1b[34m                         $$\\   $$ |$$ |                              
         \x1b[34m                         \\$$$$$$  |$$ |                              
         \x1b[34m                          \\______/ \\__|`,
-    "\x1b[0m",
-    "\n"
-  );
+      "\x1b[0m",
+      "\n"
+    );
+  }
+}
+
+export function printConsoleLine(message: string) {
+  if (FlagpoleExecution.opts.shouldPrintTextOutput) {
+    Cli.log(message);
+  }
 }
 
 export function printSubheader(heading: string) {
-  if (!FlagpoleExecution.opts.quietMode) {
+  if (FlagpoleExecution.opts.shouldPrintTextOutput) {
     console.log(
       ansiAlign.center(
         "\x1b[31m===========================================================================\x1b[0m\n" +
@@ -65,7 +68,7 @@ export function printSubheader(heading: string) {
 }
 
 export function printLine(...messages: string[]) {
-  if (!FlagpoleExecution.opts.quietMode) {
+  if (FlagpoleExecution.opts.shouldPrintTextOutput) {
     messages.forEach((message) => {
       console.log(message);
     });

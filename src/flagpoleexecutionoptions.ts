@@ -9,7 +9,7 @@ export enum FlagpoleOutput {
   csv = 5,
   tsv = 6,
   psv = 7,
-  browser = 8
+  browser = 8,
 }
 
 export class FlagpoleExecutionOptions {
@@ -64,6 +64,17 @@ export class FlagpoleExecutionOptions {
   public isChildProcess: boolean = false;
 
   /**
+   * Should we print text output?
+   */
+  public get shouldPrintTextOutput(): boolean {
+    return (
+      (this.output == FlagpoleOutput.console ||
+        this.output == FlagpoleOutput.text) &&
+      !this.quietMode
+    );
+  }
+
+  /**
    * Create a blank instance
    */
   public static create(): FlagpoleExecutionOptions {
@@ -88,7 +99,7 @@ export class FlagpoleExecutionOptions {
     const opts = new FlagpoleExecutionOptions();
     let lastArg: string | null = null;
     let env: string | null = null;
-    args.forEach(function(arg: string) {
+    args.forEach(function (arg: string) {
       if (lastArg == "-e") {
         env = arg;
         opts.environment = env;
@@ -145,7 +156,7 @@ export class FlagpoleExecutionOptions {
 
   public getOutputAsString(): string {
     let out: string = "console";
-    Object.keys(FlagpoleOutput).some(key => {
+    Object.keys(FlagpoleOutput).some((key) => {
       if (FlagpoleOutput[key] == this.output) {
         out = key;
         return true;
