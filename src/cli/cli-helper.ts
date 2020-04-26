@@ -1,10 +1,11 @@
-import { FlagpoleExecution } from "../flagpoleexecutionoptions";
 import prompts = require("prompts");
-import ansiAlign = require("ansi-align");
-import { Cli } from "./cli";
+import { FlagpoleExecution } from "../flagpoleexecution";
+import * as fs from "fs-extra";
+import { sep } from "path";
+import { CliAnsi } from "./cli-ansi";
 
-export function printHeader() {
-  if (FlagpoleExecution.opts.shouldPrintTextOutput) {
+export function printHeader(alwaysPrint: boolean = false) {
+  if (alwaysPrint || FlagpoleExecution.opts.shouldOutputToConsole) {
     console.log("\u001b[0m \u001b[37m^\u001b[0m ");
     console.log(
       "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[37;1m\u001b[1m   F L A G P O L E   J S"
@@ -26,7 +27,7 @@ export function printHeader() {
 }
 
 export function printOldHeader() {
-  if (FlagpoleExecution.opts.shouldPrintTextOutput) {
+  if (FlagpoleExecution.opts.shouldOutputToConsole) {
     console.log(
       "\x1b[32m",
       `
@@ -47,16 +48,11 @@ export function printOldHeader() {
   }
 }
 
-export function printConsoleLine(message: string) {
-  if (FlagpoleExecution.opts.shouldPrintTextOutput) {
-    Cli.log(message);
-  }
-}
-
 export function printSubheader(heading: string) {
-  if (FlagpoleExecution.opts.shouldPrintTextOutput) {
+  if (FlagpoleExecution.opts.shouldOutputToConsole) {
+    const ansi = new CliAnsi();
     console.log(
-      ansiAlign.center(
+      ansi.center(
         "\x1b[31m===========================================================================\x1b[0m\n" +
           "\x1b[0m" +
           heading +
@@ -68,14 +64,59 @@ export function printSubheader(heading: string) {
 }
 
 export function printLine(...messages: string[]) {
-  if (FlagpoleExecution.opts.shouldPrintTextOutput) {
+  if (FlagpoleExecution.opts.shouldOutputToConsole) {
     messages.forEach((message) => {
       console.log(message);
     });
   }
 }
 
-export function trimInput(input) {
+export async function findDetachedSuites(): Promise<string[]> {
+  const suitesInFolder: string[] = await findJsFilesInTestFolder();
+  let suitesAvailableToImport: string[] = [];
+  let suitesInConfig: string[] =
+    FlagpoleExecution.config?.getSuiteNames() || [];
+  suitesInFolder.forEach(function (suiteName: string) {
+    if (!suitesInConfig.includes(suiteName)) {
+      suitesAvailableToImport.push(suiteName);
+    }
+  });
+  return suitesAvailableToImport;
+}
+
+export async function findJsFilesInTestFolder(): Promise<string[]> {
+  if (!FlagpoleExecution.config) {
+    throw "Flagpole config not found";
+  }
+  let startFolder: string = FlagpoleExecution.config.getTestsFolder();
+  let suitesInFolder: string[] = [];
+
+  async function findSuites(dir: string, isSubFolder: boolean = false) {
+    // Does this folder exist?
+    if (await fs.pathExists(dir)) {
+      // Read contents
+      let files = fs.readdirSync(dir);
+      files.forEach(function (file) {
+        // Drill into sub-folders, but only once!
+        if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
+          findSuites(`${dir}${file}${sep}`, true);
+        }
+        // Push in any JS files
+        else if (file.endsWith(".js")) {
+          let name: string = (dir + file)
+            .replace(startFolder, "")
+            .replace(/\.js$/i, "");
+          suitesInFolder.push(name);
+        }
+      });
+    }
+  }
+
+  findSuites(startFolder);
+  return suitesInFolder;
+}
+
+export function trimInput(input: string) {
   return input.trim();
 }
 
@@ -100,6 +141,25 @@ export function promptTextName(
     format: trimInput,
     validate: (input: string) => {
       return /^[a-z0-9][a-z0-9/\/_-]{1,62}[a-z0-9]$/i.test(input);
+    },
+  };
+}
+
+export function promptUrl(
+  name: string,
+  message: string,
+  initial?: string
+): prompts.PromptObject<string> {
+  return {
+    type: "text",
+    name: name,
+    message: message,
+    initial: initial || "",
+    format: trimInput,
+    validate: (input: string) => {
+      return /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/i.test(
+        input
+      );
     },
   };
 }
@@ -132,6 +192,23 @@ export function promptTextDescription(
   };
 }
 
+export function promptMultiSelect(
+  name: string,
+  message: string,
+  choices: prompts.Choice[],
+  minSelections: number = 1,
+  maxSeletions?: number
+): prompts.PromptObject<string> {
+  return {
+    type: "multiselect",
+    name: name,
+    min: minSelections,
+    max: maxSeletions,
+    message: message,
+    choices: choices,
+  };
+}
+
 export function promptSelect(
   name: string,
   message: string,
@@ -160,6 +237,23 @@ export function promptConfirm(
     name: name,
     message: message,
     initial: initial,
+  };
+}
+
+export function promptToggle(
+  name: string,
+  message: string,
+  initial: boolean = false,
+  yesText: string = "yes",
+  noText: string = "no"
+): prompts.PromptObject<string> {
+  return {
+    type: "toggle",
+    name: name,
+    message: message,
+    initial: initial,
+    active: yesText,
+    inactive: noText,
   };
 }
 

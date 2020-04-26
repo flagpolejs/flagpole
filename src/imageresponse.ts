@@ -10,8 +10,6 @@ export interface ImageProperties {
   height: number;
   type: string;
   mime: string;
-  wUnits: string;
-  hUnits: string;
   length: number;
   url: string;
 }
@@ -22,10 +20,8 @@ export class ImageResponse extends ProtoResponse implements iResponse {
     height: 0,
     type: "",
     mime: "",
-    wUnits: "0",
-    hUnits: "0",
     length: 0,
-    url: ""
+    url: "",
   };
 
   public get length(): iValue {

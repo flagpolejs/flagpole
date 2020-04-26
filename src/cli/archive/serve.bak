@@ -1,11 +1,11 @@
-import { WebServer, WebResponse } from "../webserver";
+import { WebServer, WebResponse } from "../../webserver";
 import * as http from "http";
-import { Cli } from "./cli";
-import { iSuiteOpts, SuiteConfig, EnvConfig, iScenarioOpts } from "./config";
+import { Cli } from "../cli";
+import { iSuiteOpts, SuiteConfig, EnvConfig, iScenarioOpts } from "../config";
 import { URL } from "url";
-import { FlagpoleExecutionOptions } from "../flagpoleexecutionoptions";
-import { SuiteExecutionResult, SuiteExecution } from "./suiteexecution";
-import { FlagpoleExecution } from "../flagpoleexecutionoptions";
+import { FlagpoleExecutionOptions } from "../../flagpoleexecutionoptions";
+import { SuiteExecutionResult, SuiteExecution } from "../suiteexecution";
+import { FlagpoleExecution } from "../../flagpoleexecutionoptions";
 import { sep } from "path";
 import open = require("open");
 import qs = require("querystring");

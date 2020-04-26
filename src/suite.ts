@@ -13,9 +13,8 @@ import {
   KeyValue,
 } from "./interfaces";
 import { exitProcess } from "./util";
-import { FlagpoleExecution } from "./flagpoleexecutionoptions";
-import { FlagpoleExecutionOptions } from ".";
 import { BrowserOptions } from "./httprequest";
+import { FlagpoleExecution } from ".";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 
@@ -121,8 +120,8 @@ export class Suite implements iSuite {
     return this._finishedPromise;
   }
 
-  public get executionOptions(): FlagpoleExecutionOptions {
-    return FlagpoleExecution.opts;
+  public get executionOptions(): FlagpoleExecution {
+    return FlagpoleExecution.global;
   }
 
   protected _subscribers: SuiteStatusCallback[] = [];
@@ -149,8 +148,8 @@ export class Suite implements iSuite {
 
   constructor(title: string) {
     this._title = title;
-    if (FlagpoleExecution.opts.baseDomain) {
-      this._baseUrl = new URL(FlagpoleExecution.opts.baseDomain);
+    if (FlagpoleExecution.baseDomain) {
+      this._baseUrl = new URL(FlagpoleExecution.baseDomain);
     }
     this._beforeAllPromise = new Promise((resolve) => {
       this._beforeAllResolver = resolve;
@@ -210,10 +209,7 @@ export class Suite implements iSuite {
    * @returns {Suite}
    */
   public print(exitAfterPrint: boolean = true): void {
-    const report: FlagpoleReport = new FlagpoleReport(
-      this,
-      FlagpoleExecution.opts
-    );
+    const report: FlagpoleReport = new FlagpoleReport(this);
     report.print().then(() => {
       exitAfterPrint && exitProcess(this.hasPassed);
     });
@@ -340,7 +336,7 @@ export class Suite implements iSuite {
     } else if (typeof url == "function") {
       baseUrl = url(this);
     } else if (Object.keys(url).length > 0) {
-      baseUrl = url[FlagpoleExecution.opts.environment];
+      baseUrl = url[FlagpoleExecution.environmentName];
       // If env didn't match one, just pick the first one
       if (!baseUrl) {
         baseUrl = url[Object.keys(url)[0]];
@@ -665,7 +661,7 @@ export class Suite implements iSuite {
       // All Done
       await this._fireFinally();
       // Should we print automatically?
-      if (FlagpoleExecution.opts.automaticallyPrintToConsole) {
+      if (FlagpoleExecution.automaticallyPrintToConsole) {
         this.print(FlagpoleExecution.opts.exitOnDone);
       } else {
         FlagpoleExecution.opts.exitOnDone && exitProcess(this.hasPassed);

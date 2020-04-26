@@ -1,11 +1,8 @@
 import { SuiteConfig } from "./config";
 import { Cli } from "./cli";
-import { FlagpoleOutput, FlagpoleExecution } from "../flagpoleexecutionoptions";
-import {
-  SuiteExecution,
-  SuiteExecutionResult,
-  SuiteExecutionInline
-} from "./suiteexecution";
+import { SuiteExecution, SuiteExecutionResult } from "./suiteexecution";
+import { FlagpoleExecution } from "..";
+import { SuiteExecutionInline } from "./suiteexecutioninline";
 
 export class TestRunner {
   private _suiteConfigs: { [s: string]: SuiteConfig } = {};
@@ -15,7 +12,7 @@ export class TestRunner {
 
   public get suites(): SuiteConfig[] {
     let arr: SuiteConfig[] = [];
-    Object.keys(this._suiteConfigs).forEach(suiteName => {
+    Object.keys(this._suiteConfigs).forEach((suiteName) => {
       arr.push(this._suiteConfigs[suiteName]);
     });
     return arr;
@@ -27,14 +24,14 @@ export class TestRunner {
 
   public get exitCode(): number {
     let exitCode: number = 0;
-    this._executionResults.forEach(result => {
+    this._executionResults.forEach((result) => {
       exitCode = result.exitCode > exitCode ? result.exitCode : exitCode;
     });
     return exitCode;
   }
 
   public get allPassing(): boolean {
-    return this._executionResults.every(result => {
+    return this._executionResults.every((result) => {
       return result.exitCode == 0;
     });
   }
@@ -73,10 +70,10 @@ export class TestRunner {
     return this._executionResults;
   }
 
-  public async runSpawn(): Promise<SuiteExecutionResult[]> {
-    return FlagpoleExecution.opts.asyncExecution
-      ? this._runSpawnAync()
-      : this._runSpawn();
+  public async runSpawn(
+    asyncExecution: boolean
+  ): Promise<SuiteExecutionResult[]> {
+    return asyncExecution ? this._runSpawnAync() : this._runSpawn();
   }
 
   protected async _runSpawn(): Promise<SuiteExecutionResult[]> {
@@ -115,7 +112,7 @@ export class TestRunner {
         count++;
       }
       Promise.all(suitePromises)
-        .then(results => {
+        .then((results) => {
           this._executionResults = results;
           this._onDone();
           resolve(this._executionResults);
@@ -127,13 +124,13 @@ export class TestRunner {
   private _onDone() {
     const duration: number = Date.now() - this._timeStart;
     let output: string = "";
-    if (FlagpoleExecution.opts.output == FlagpoleOutput.json) {
+    if (FlagpoleExecution.opts.isJsonOutput) {
       let suiteOutput: string[] = [];
       let overall = {
         pass: 0,
-        fail: 0
+        fail: 0,
       };
-      this._executionResults.forEach(result => {
+      this._executionResults.forEach((result) => {
         suiteOutput.push(result.toString());
         if (result.exitCode == 0) {
           overall.pass += 1;
@@ -155,11 +152,11 @@ export class TestRunner {
                 }
             `;
     } else {
-      this._executionResults.forEach(result => {
+      this._executionResults.forEach((result) => {
         output += result.toString() + "\n";
       });
     }
-    if (FlagpoleExecution.opts.output == FlagpoleOutput.browser) {
+    if (FlagpoleExecution.opts.isBrowserOutput) {
       const open = require("open");
       const fs = require("fs");
       const tmp = require("tmp");
@@ -178,10 +175,7 @@ export class TestRunner {
       })();
     } else {
       Cli.log(output);
-      if (
-        !this.allPassing &&
-        FlagpoleExecution.opts.output == FlagpoleOutput.console
-      ) {
+      if (!this.allPassing && FlagpoleExecution.opts.shouldOutputToConsole) {
         Cli.log("Some suites failed.");
       }
     }
@@ -189,14 +183,14 @@ export class TestRunner {
 
   public toString(): string {
     let output: string = "";
-    this._executionResults.forEach(result => {
+    this._executionResults.forEach((result) => {
       output += result.toString() + "\n";
     });
     return output;
   }
 
   protected _publish(message: string) {
-    this._subscribers.forEach(callback => {
+    this._subscribers.forEach((callback) => {
       callback.apply(this, [message]);
     });
   }

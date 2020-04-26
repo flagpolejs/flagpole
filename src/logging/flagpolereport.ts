@@ -3,25 +3,19 @@ import {
   CommentLine,
   LineBreak,
   PassLine,
-  FailLine
+  FailLine,
 } from "./consoleline";
-import {
-  FlagpoleOutput,
-  FlagpoleExecutionOptions,
-  FlagpoleExecution
-} from "../flagpoleexecutionoptions";
 import { LogComment } from "./comment";
 import { iConsoleLine, iLogItem, iScenario, iSuite } from "../interfaces";
 import { LogItemType } from "../enums";
 import { asyncForEach } from "../util";
+import { FlagpoleExecution } from "../flagpoleexecution";
 
 export class FlagpoleReport {
   public readonly suite: iSuite;
-  public readonly opts: FlagpoleExecutionOptions;
 
-  constructor(suite: iSuite, opts: FlagpoleExecutionOptions) {
+  constructor(suite: iSuite) {
     this.suite = suite;
-    this.opts = opts;
   }
 
   /**
@@ -32,7 +26,7 @@ export class FlagpoleReport {
     lines.push(new HeadingLine(this.suite.title));
     lines.push(new CommentLine(`Base URL: ${this.suite.baseUrl}`));
     lines.push(
-      new CommentLine(`Environment: ${FlagpoleExecution.opts.environment}`)
+      new CommentLine(`Environment: ${FlagpoleExecution.environment?.name}`)
     );
     lines.push(new CommentLine(`Took ${this.suite.executionDuration}ms`));
     const failCount: number = this.suite.failCount;
@@ -73,7 +67,7 @@ export class FlagpoleReport {
       title: this.suite.title,
       baseUrl: String(this.suite.baseUrl),
       summary: {},
-      scenarios: []
+      scenarios: [],
     };
     let failCount: number = 0;
     let passCount: number = 0;
@@ -85,7 +79,7 @@ export class FlagpoleReport {
         done: scenario.hasFinished,
         failCount: 0,
         passCount: 0,
-        log: []
+        log: [],
       };
       log.forEach((item: iLogItem) => {
         out.scenarios[i].log.push(item.toJson());
@@ -104,7 +98,7 @@ export class FlagpoleReport {
       passed: failCount == 0,
       passCount: passCount,
       failCount: failCount,
-      duration: this.suite.executionDuration
+      duration: this.suite.executionDuration,
     };
     return out;
   }
@@ -122,7 +116,7 @@ export class FlagpoleReport {
     html += `
             <li>Duration: ${this.suite.executionDuration}ms</li>
             <li>Base URL: ${this.suite.baseUrl}</li>
-            <li>Environment: ${FlagpoleExecution.opts.environment}</li>
+            <li>Environment: ${FlagpoleExecution.environment?.name}</li>
         `;
     html += "</ul>\n";
     html += "</aside>\n";
@@ -157,7 +151,7 @@ export class FlagpoleReport {
       throw new Error(`Method for ${funcName} does not exist.`);
     }
     let lines: string[] = [];
-    await this.suite.scenarios.forEach(async function(scenario) {
+    await this.suite.scenarios.forEach(async function (scenario) {
       const log = await scenario.getLog();
       log.forEach((item: iLogItem) => {
         lines.push(item[funcName]());
@@ -169,7 +163,7 @@ export class FlagpoleReport {
   public async print(): Promise<any> {
     const output = await this.toString();
     const lines = output.split("\n");
-    lines.forEach(line => {
+    lines.forEach((line) => {
       process.send ? process.send(line) : console.log(line);
     });
   }
@@ -177,36 +171,29 @@ export class FlagpoleReport {
   public async toString(): Promise<string> {
     let out: string = "";
     // HTML
-    if (
-      this.opts.output == FlagpoleOutput.html ||
-      this.opts.output == FlagpoleOutput.browser
-    ) {
+    if (FlagpoleExecution.opts.shouldWriteHtml) {
       out += await this.toHTML();
     }
     // JSON
-    else if (this.opts.output == FlagpoleOutput.json) {
+    else if (FlagpoleExecution.opts.isJsonOutput) {
       const json: any = await this.toJson();
       out += JSON.stringify(json, null, 2);
     }
     // Console
-    else if (this.opts.output == FlagpoleOutput.console) {
+    else if (FlagpoleExecution.opts.isConsoleOutput) {
       (await this.toConsole()).forEach((line: iConsoleLine) => {
         out += line.toConsoleString() + "\n";
       });
     }
     // Text
-    else if (this.opts.output == FlagpoleOutput.text) {
+    else if (FlagpoleExecution.opts.isTextOutput) {
       (await this.toConsole()).forEach((line: iConsoleLine) => {
         out += line.toString() + "\n";
       });
     }
     // CSV
-    else if (
-      this.opts.output == FlagpoleOutput.csv ||
-      this.opts.output == FlagpoleOutput.psv ||
-      this.opts.output == FlagpoleOutput.tsv
-    ) {
-      const format: string = FlagpoleOutput[this.opts.output];
+    else if (FlagpoleExecution.opts.isDelimitedOutput) {
+      const format = FlagpoleExecution.opts.outputFormat;
       (await this.toDelimited(format)).forEach((line: string) => {
         out += line + "\n";
       });

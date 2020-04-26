@@ -1,39 +1,48 @@
-import { Cli } from "./cli";
+import { Command } from "../command";
+import { Cli } from "../cli";
+import { FlagpoleExecution } from "../../flagpoleexecution";
 import { execSync } from "child_process";
-import * as prompts from "prompts";
-import { printSubheader, printLine } from "./cli-helper";
+import prompts = require("prompts");
+import { promptTextPath } from "../cli-helper";
 
-export async function build(exitOnSuccess: boolean = true) {
-  Cli.hideBanner = true;
-  printSubheader("Build TypeScript Tests");
+export default class Build extends Command {
+  public commandString = "build";
+  public async action() {
+    await tsc(true);
+  }
+}
+
+export async function tsc(exitOnSuccess: boolean = true) {
+  if (!FlagpoleExecution.config) {
+    throw "Flagpole config not found";
+  }
+  Cli.subheader("Build TypeScript Tests");
   // Is TSC installed?
   if (!(await isTscInstalled(3, 7, 0))) {
-    printLine(
+    return Cli.log(
       `Must have TypeScript installed globally, with at least version 3.7.0`,
       "",
       "Use this command:",
       "npm i -g typescript",
       ""
-    );
-    Cli.exit(1);
-    return;
+    ).exit(1);
   }
-  // TypeScript is configured
-  if (Cli.config.project.isSourceAndOutput) {
-    printLine("Transpiling TypeScript to JavaScript...");
+  // Project is configured to use TypeScript
+  if (FlagpoleExecution.config.project.isTypeScript) {
+    Cli.log("Transpiling TypeScript to JavaScript...");
     try {
-      await Cli.config.tsc();
-      printLine("Done!");
+      await FlagpoleExecution.config.tsc();
+      Cli.log("Done!");
       if (exitOnSuccess) {
         Cli.exit(0);
       }
     } catch (err) {
-      Cli.log(String(err));
-      Cli.exit(1);
+      Cli.log(String(err)).exit(1);
     }
     return;
   }
-  printLine(
+  // No TypeScript in this project
+  Cli.log(
     "This project is not currently configured to use TypeScript with Flagpole.",
     ""
   );
@@ -46,14 +55,14 @@ export async function build(exitOnSuccess: boolean = true) {
   const rootFolder = await setRootFolder();
   const sourceFolder = await setSourceFolder(rootFolder);
   const outputFolder = await setOutputFolder(rootFolder);
-  Cli.config.project.setTypeScriptFolders(
+  FlagpoleExecution.config.project.setTypeScriptFolders(
     rootFolder,
     sourceFolder,
     outputFolder
   );
-  await Cli.config.save();
-  const tsconfigPath = await Cli.config.writeTsConfig();
-  printLine("");
+  await FlagpoleExecution.config.save();
+  await FlagpoleExecution.config.writeTsConfig();
+  Cli.log("");
 }
 
 const isTscInstalled = async (
@@ -88,38 +97,27 @@ const doYouWantToConfigureTypeScript = (): Promise<boolean> => {
   });
 };
 
-const setRootFolder = (): Promise<string> => {
-  return new Promise(async (resolve) => {
-    const response = await prompts({
-      type: "text",
-      name: "rootFolder",
-      message: "Flagpole Root Folder",
-      initial: `${Cli.config.project.path}`,
-    });
-    resolve(response.rootFolder);
-  });
+const setRootFolder = async (): Promise<string> => {
+  const response = await prompts(
+    promptTextPath(
+      "rootFolder",
+      "Flagpole Root Folder",
+      `${FlagpoleExecution.config?.project.path}`
+    )
+  );
+  return response.rootFolder;
 };
 
-const setSourceFolder = (rootFolder: string): Promise<string> => {
-  return new Promise(async (resolve) => {
-    const response = await prompts({
-      type: "text",
-      name: "sourceFolder",
-      message: `Source Folder ${rootFolder}/`,
-      initial: `src`,
-    });
-    resolve(response.sourceFolder);
-  });
+const setSourceFolder = async (rootFolder: string): Promise<string> => {
+  const response = await prompts(
+    promptTextPath("sourceFolder", `Source Folder ${rootFolder}/`, `src`)
+  );
+  return response.sourceFolder;
 };
 
-const setOutputFolder = (rootFolder: string): Promise<string> => {
-  return new Promise(async (resolve) => {
-    const response = await prompts({
-      type: "text",
-      name: "outputFolder",
-      message: `Output Folder ${rootFolder}/`,
-      initial: `out`,
-    });
-    resolve(response.outputFolder);
-  });
+const setOutputFolder = async (rootFolder: string): Promise<string> => {
+  const response = await prompts(
+    promptTextPath("outputFolder", `Output Folder ${rootFolder}/`, `out`)
+  );
+  return response.outputFolder;
 };

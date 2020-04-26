@@ -10,7 +10,6 @@ import {
 } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import { URL } from "url";
-import { FlagpoleExecutionOptions } from "./flagpoleexecutionoptions";
 import {
   HttpRequest,
   HttpRequestOptions,
@@ -20,6 +19,7 @@ import {
   HttpMethodVerb,
   BrowserOptions,
 } from "./httprequest";
+import { FlagpoleExecution } from ".";
 
 export interface ScreenshotOpts {
   path?: string;
@@ -288,7 +288,7 @@ export interface iAssertionContext {
   scenario: iScenario;
   suite: iSuite;
   browserControl: BrowserControl | null;
-  executionOptions: FlagpoleExecutionOptions;
+  executionOptions: FlagpoleExecution;
   page: Page | null;
   incompleteAssertions: iAssertion[];
   assertionsResolved: Promise<(iAssertionResult | null)[]>;

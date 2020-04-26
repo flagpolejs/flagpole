@@ -2,12 +2,12 @@ import { KeyValue } from "./interfaces";
 import { HttpResponse } from "./httpresponse";
 import needle = require("needle");
 import tunnel = require("tunnel");
-import probeImage = require("probe-image-size");
 import * as http from "http";
 import { LaunchOptions } from "puppeteer-core";
 import { probeImageResponse } from "./httpresponse";
 import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
+import { ImageProbe } from "@zerodeps/image-probe";
 
 const CONTENT_TYPE_JSON = "application/json";
 const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
@@ -509,12 +509,49 @@ export class HttpRequest {
   }
 
   protected _fetchImage(opts?: KeyValue): Promise<HttpResponse> {
-    return new Promise(async (resolve) => {
-      const result: probeImageResponse = await probeImage(
-        this.uri,
-        this.gotOptions
+    return new Promise((resolve, reject) => {
+      const stream = needle.request(
+        "get",
+        this.uri || "/",
+        null,
+        this.needleOptions
       );
-      resolve(HttpResponse.fromProbeImage(result));
+      if (opts?.redirect) {
+        stream.on("redirect", opts.redirect);
+      }
+      // Process response
+      const response: probeImageResponse = {
+        statusCode: 0,
+        length: 0,
+        url: this.uri || "",
+        headers: {},
+        imageData: {
+          width: 0,
+          height: 0,
+          type: "",
+          mimeType: "",
+        },
+      };
+      stream
+        .on("header", (statusCode: number, headers: KeyValue) => {
+          response.statusCode = statusCode;
+          response.headers = headers;
+          response.length = Number(headers["content-length"]);
+        })
+        .on("readable", () => {
+          // Read the first 512 bytes and process image
+          const chunk = <Buffer>stream.read(512);
+          response.imageData =
+            ImageProbe.fromBuffer(chunk) || response.imageData;
+          // We have enough! Stop processing any more data!
+          stream.pause();
+          try {
+            // @ts-ignore
+            stream.destroy();
+          } catch {}
+          // Set the response
+          resolve(HttpResponse.fromProbeImage(response));
+        });
     });
   }
 }

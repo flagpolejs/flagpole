@@ -2,14 +2,19 @@ import * as puppeteer from "puppeteer-core";
 import { NeedleResponse } from "needle";
 import { KeyValue } from "./interfaces";
 
-export type probeImageResponse = {
+export interface probeImageResponse {
+  headers: KeyValue;
+  statusCode: number;
+  url: string;
+  length: number;
+  imageData: probeImageData;
+}
+
+export type probeImageData = {
   width: number;
   height: number;
   type: string;
-  mime: string;
-  wUnits: string;
-  hUnits: string;
-  url: string;
+  mimeType: string;
 };
 
 export class HttpResponse {
@@ -58,10 +63,16 @@ export class HttpResponse {
     cookies?: KeyValue
   ): HttpResponse {
     const r = new HttpResponse();
-    r.headers = {
-      "content-type": response.mime,
-    };
-    r.body = JSON.stringify(response);
+    r.headers = response.headers;
+    r.statusCode = response.statusCode;
+    r.body = JSON.stringify({
+      ...response.imageData,
+      ...{
+        length: response.length,
+        url: response.url,
+        mime: response.imageData.mimeType,
+      },
+    });
     r.cookies = cookies || {};
     return r;
   }

@@ -1,15 +1,8 @@
 import { SuiteConfig } from "./config";
-import {
-  FlagpoleExecutionOptions,
-  FlagpoleOutput,
-  FlagpoleExecution,
-} from "../flagpoleexecutionoptions";
-import { Suite } from "../suite";
-import { FlagpoleReport } from "../logging/flagpolereport";
-import { asyncForEach } from "../util";
-import { Flagpole } from "../flagpole";
 import { spawn, fork, ForkOptions, exec } from "child_process";
-import { fstat, existsSync } from "fs";
+import { existsSync } from "fs";
+import { FlagpoleExecution } from "../flagpoleexecution";
+import { FlagpoleOptions } from "../flagpoleoptions";
 
 export enum SuiteExecutionExitCode {
   success = 0,
@@ -63,12 +56,9 @@ export class SuiteExecution {
     return this._output;
   }
 
-  public static executePath(
-    filePath: string,
-    opts: FlagpoleExecutionOptions
-  ): SuiteExecution {
+  public static executePath(filePath: string): SuiteExecution {
     const execution: SuiteExecution = new SuiteExecution();
-    execution.executePath(filePath, opts);
+    execution.executePath(filePath);
     return execution;
   }
 
@@ -98,17 +88,14 @@ export class SuiteExecution {
     return this._output.join("\n");
   }
 
-  public async executePath(
-    filePath: string,
-    opts: FlagpoleExecutionOptions
-  ): Promise<SuiteExecutionResult> {
+  public async executePath(filePath: string): Promise<SuiteExecutionResult> {
     if (this._result !== null || this._started !== null) {
       throw new Error(`This execution has already run.`);
     }
-
+    // Start execution
     this._started = Date.now();
     if (existsSync(filePath)) {
-      this._result = await this._execute(filePath, opts);
+      this._result = await this._execute(filePath);
     } else {
       this._result = new SuiteExecutionResult(
         ["Suite was not found in the output folder. Did you forget to build?"],
@@ -128,19 +115,17 @@ export class SuiteExecution {
    *
    * @param {string} filePath
    */
-  public async executeSuite(
-    config: SuiteConfig
-  ): Promise<SuiteExecutionResult> {
-    return this.executePath(config.getTestPath(), FlagpoleExecution.opts);
+  public async executeSuite(suite: SuiteConfig): Promise<SuiteExecutionResult> {
+    return this.executePath(suite.getTestPath());
   }
 
-  protected _execute(
-    filePath: string,
-    opts: FlagpoleExecutionOptions
-  ): Promise<SuiteExecutionResult> {
+  protected _execute(filePath: string): Promise<SuiteExecutionResult> {
     return new Promise(async (resolve) => {
-      opts.exitOnDone = true;
-      opts.isChildProcess = true;
+      const opts = FlagpoleExecution.opts.clone({
+        exitOnDone: true,
+        isChildProcess: true,
+        automaticallyPrintToConsole: true,
+      });
       //this._executeWithFork(filePath, opts, resolve);
       this._executeWithSpawn(filePath, opts, resolve);
       //this._executeWithExec(filePath, opts, resolve);
@@ -149,7 +134,7 @@ export class SuiteExecution {
 
   private _executeWithExec(
     filePath: string,
-    opts: FlagpoleExecutionOptions,
+    opts: FlagpoleOptions,
     resolve: Function
   ) {
     const command: string = `node ${filePath} ${opts.toString()}`;
@@ -171,7 +156,7 @@ export class SuiteExecution {
 
   private _executeWithSpawn(
     filePath: string,
-    opts: FlagpoleExecutionOptions,
+    opts: FlagpoleOptions,
     resolve: Function
   ) {
     const command: string[] = [filePath].concat(opts.toArgs());
@@ -186,7 +171,7 @@ export class SuiteExecution {
       this._logLine(err.message);
     });
     proc.on("close", (exitCode) => {
-      if (exitCode > 0 && opts.output == FlagpoleOutput.console) {
+      if (exitCode > 0 && opts.shouldOutputToConsole) {
         this._logLine("FAILED TEST SUITE:");
         this._logLine(filePath + " exited with error code " + exitCode);
         this._logLine("\n");
@@ -197,7 +182,7 @@ export class SuiteExecution {
 
   private _executeWithFork(
     filePath: string,
-    opts: FlagpoleExecutionOptions,
+    opts: FlagpoleOptions,
     resolve: Function
   ) {
     const options: ForkOptions = {
@@ -205,10 +190,7 @@ export class SuiteExecution {
     };
     const proc = fork(filePath, opts.toArgs(), options);
     proc.on("exit", (exitCode) => {
-      if (
-        (exitCode == null || exitCode !== 0) &&
-        opts.output == FlagpoleOutput.console
-      ) {
+      if ((exitCode == null || exitCode !== 0) && opts.shouldOutputToConsole) {
         this._logLine("FAILED TEST SUITE:");
         this._logLine(filePath + " exited with error code " + exitCode);
         this._logLine("\n");
@@ -236,65 +218,5 @@ export class SuiteExecution {
         });
       });
     }
-  }
-}
-
-export class SuiteExecutionInline extends SuiteExecution {
-  public static executePath(
-    filePath: string,
-    opts: FlagpoleExecutionOptions
-  ): SuiteExecutionInline {
-    const execution: SuiteExecutionInline = new SuiteExecutionInline();
-    execution.executePath(filePath, opts);
-    return execution;
-  }
-
-  public static executeSuite(config: SuiteConfig): SuiteExecutionInline {
-    const execution: SuiteExecutionInline = new SuiteExecutionInline();
-    execution.executeSuite(config);
-    return execution;
-  }
-
-  protected async _execute(
-    filePath: string,
-    opts: FlagpoleExecutionOptions
-  ): Promise<SuiteExecutionResult> {
-    // Start with success
-    let exitCode: number = SuiteExecutionExitCode.success;
-    // Override the automatically print value
-    opts = Object.assign({}, opts);
-    opts.automaticallyPrintToConsole = false;
-    // Save current global output options
-    const globalOpts = Object.assign({}, FlagpoleExecution.opts);
-    // Set it to our temporary opts
-    FlagpoleExecution.opts = opts;
-    // How many suites do we have now?
-    const preSuiteCount: number = Flagpole.suites.length;
-    // Embed the suite file... it should add at least one suite
-    await require(`${filePath}`);
-    // How many suites do we have now?
-    const postSuiteCount: number = Flagpole.suites.length;
-    // If the require added at least one
-    if (postSuiteCount > preSuiteCount) {
-      // Get the added suites
-      const createdSuites = Flagpole.suites.slice(preSuiteCount);
-      // Loop through each added suite and grab the "finished" promise, which will be resolved once it is done
-      let promises: Promise<void>[] = [];
-      createdSuites.forEach((suite: Suite) => {
-        promises.push(suite.finished);
-      });
-      // Wait for every suite to finish executing
-      await Promise.all(promises);
-      // Loop through the added suites again and capture output
-      await asyncForEach(createdSuites, async (suite: Suite) => {
-        if (suite.hasFailed) {
-          exitCode = SuiteExecutionExitCode.failure;
-        }
-        const report: FlagpoleReport = new FlagpoleReport(suite, opts);
-        this._logLine(await report.toString());
-      });
-    }
-    FlagpoleExecution.opts = globalOpts;
-    return new SuiteExecutionResult(this._output, exitCode);
   }
 }

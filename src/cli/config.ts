@@ -1,8 +1,19 @@
 import { normalizePath } from "../util";
 import { exec } from "child_process";
+import * as fs from "fs-extra";
+import * as path from "path";
 
-const fs = require("fs");
-const path = require("path");
+export const getDefaultConfig = (configFilePath: string): iConfigOpts => {
+  const projectPath = path.dirname(configFilePath);
+  return {
+    project: {
+      name: path.basename(projectPath),
+      path: "tests",
+    },
+    environments: [],
+    suites: [],
+  };
+};
 
 export interface iEnvOpts {
   name: string;
@@ -27,10 +38,9 @@ export interface iProjectOpts {
 }
 
 export interface iConfigOpts {
-  configPath?: string;
   project: iProjectOpts;
   environments: iEnvOpts[];
-  suites?: iSuiteOpts[];
+  suites: iSuiteOpts[];
 }
 
 export interface iConfigFile {
@@ -130,6 +140,10 @@ export class ProjectConfig {
     return this.source !== undefined && this.output !== undefined;
   }
 
+  public get isTypeScript(): boolean {
+    return this.isSourceAndOutput;
+  }
+
   public get hasId(): boolean {
     return this.id.length > 0;
   }
@@ -177,56 +191,89 @@ export class FlagpoleConfig {
   public suites: { [key: string]: SuiteConfig } = {};
   public environments: { [key: string]: EnvConfig } = {};
 
-  constructor(opts: iConfigOpts) {
-    // Implicit (do not show up in the config file output)
-    this.configPath =
-      opts.configPath || path.join(process.cwd(), "flagpole.json");
+  constructor(opts: iConfigOpts, configPath: string) {
+    this.configPath = configPath;
     // Explicit (can be set and show in config file output)
     this.project = new ProjectConfig(this, opts.project);
     if (opts.suites !== undefined) {
-      opts.suites.forEach((suiteOpts) => {
+      Object.values(opts.suites).forEach((suiteOpts) => {
         this.suites[suiteOpts.name] = new SuiteConfig(this, suiteOpts);
       });
     }
-    opts.environments.forEach((envOpts) => {
+    Object.values(opts.environments).forEach((envOpts) => {
       this.environments[envOpts.name] = new EnvConfig(this, envOpts);
     });
   }
 
+  /**
+   * Default; _project_/
+   */
   public getConfigFolder(): string {
-    return path.dirname(this.configPath);
+    return normalizePath(path.dirname(this.configPath));
   }
 
+  /**
+   * Default; _project_/flagpole.json
+   */
   public getConfigPath(): string {
     return this.configPath;
   }
 
+  /**
+   * Default; _project_/tests/
+   */
   public getRootFolder(): string {
     return normalizePath(path.join(this.getConfigFolder(), this.project.path));
   }
 
+  /**
+   * Default; _project_/tests/out/
+   */
   public getTestsFolder(): string {
     return normalizePath(
       path.join(this.getRootFolder(), this.project.output || "")
     );
   }
 
+  /**
+   * Default; _project_/tests/src
+   */
   public getSourceFolder(): string {
     return normalizePath(
       path.join(this.getRootFolder(), this.project.source || "")
     );
   }
 
+  /**
+   * Default; _project_/tests/images
+   */
   public getImagesFolder(): string {
     return normalizePath(
       path.join(this.getRootFolder(), this.project.images || "images")
     );
   }
 
+  /**
+   * Default; _project_/tests/cache
+   */
   public getCacheFolder(): string {
     return normalizePath(
       path.join(this.getRootFolder(), this.project.cache || "cache")
     );
+  }
+
+  public getSuite(suiteName: string): SuiteConfig {
+    return this.suites[suiteName];
+  }
+
+  public addTagToSuite(suite: string | string[], tag: string) {
+    if (typeof suite === "string") {
+      this.suites[suite].addTag(tag);
+    } else {
+      suite.forEach((suiteName: string) => {
+        this.suites[suiteName].addTag(tag);
+      });
+    }
   }
 
   public addEnvironment(opts: iEnvOpts) {
@@ -342,17 +389,10 @@ export class FlagpoleConfig {
     this._onSave.push(callback);
   }
 
-  public save(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      fs.writeFile(this.getConfigPath(), this.toString(), (err: any) => {
-        if (err) {
-          return reject(err);
-        }
-        this._onSave.forEach((callback) => {
-          callback();
-        });
-        resolve();
-      });
+  public async save(): Promise<void> {
+    await fs.writeFile(this.getConfigPath(), this.toString());
+    this._onSave.forEach((callback) => {
+      callback();
     });
   }
 

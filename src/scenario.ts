@@ -41,8 +41,6 @@ import {
   HttpRequestType,
 } from "./httprequest";
 
-const probeImage = require("probe-image-size");
-
 /**
  * A scenario contains tests that run against one request
  */
@@ -892,6 +890,7 @@ export class Scenario implements iScenario {
       throw new Error("Scenario was already executed. Can not change type.");
     }
     // Merge passed in opts with default opts
+    this._responseType = type;
     this._request
       .setOptions(
         type == ResponseType.browser || type == ResponseType.extjs
@@ -911,7 +910,6 @@ export class Scenario implements iScenario {
             ? "image"
             : "generic",
       });
-    this._responseType = type;
     this._response = createResponse(this);
     return this;
   }

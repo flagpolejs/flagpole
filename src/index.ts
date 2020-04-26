@@ -23,14 +23,11 @@ import { ScriptResponse } from "./scriptresponse";
 import { Suite } from "./suite";
 import { Value } from "./value";
 import { VideoResponse } from "./videoresponse";
-import {
-  FlagpoleExecutionOptions,
-  FlagpoleOutput,
-} from "./flagpoleexecutionoptions";
 import { Flagpole } from "./flagpole";
 import { ResponseType } from "./enums";
 import { iResponse, iValue, iScenario, iSuite } from "./interfaces";
 import { BrowserOptions, HttpRequest, HttpAuth } from "./httprequest";
+import { FlagpoleExecution } from "./flagpoleexecution";
 import * as Promise from "bluebird";
 
 // Have Bluebird replace default promises
@@ -45,8 +42,7 @@ const suite = (...args: any) => {
 
 export {
   Flagpole,
-  FlagpoleExecutionOptions,
-  FlagpoleOutput,
+  FlagpoleExecution,
   Suite,
   Scenario,
   Assertion,

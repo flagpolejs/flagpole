@@ -17,11 +17,7 @@ import {
   AssertionPass,
 } from "./logging/assertionresult";
 import { openInBrowser, getMessageAndCallbackFromOverloading } from "./util";
-import {
-  FlagpoleExecution,
-  FlagpoleExecutionOptions,
-} from "./flagpoleexecutionoptions";
-import { Value } from ".";
+import { FlagpoleExecution } from "./flagpoleexecution";
 
 export class AssertionContext implements iAssertionContext {
   protected _scenario: iScenario;
@@ -50,8 +46,8 @@ export class AssertionContext implements iAssertionContext {
     return this.response.isBrowser ? this._scenario.getBrowserControl() : null;
   }
 
-  public get executionOptions(): FlagpoleExecutionOptions {
-    return FlagpoleExecution.opts;
+  public get executionOptions(): FlagpoleExecution {
+    return FlagpoleExecution.global;
   }
 
   public get page(): Page | null {

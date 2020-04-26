@@ -26,11 +26,6 @@
         "basic"
       ]
     },
-    "foobar": {
-      "id": "",
-      "name": "foobar",
-      "tags": []
-    },
     "smoke": {
       "id": "",
       "name": "smoke",

@@ -134,7 +134,7 @@ suite.html("Homepage Test");
 
 ### image(title: string, opts: any = {}): Scenario
 
-Creates a new Scenario of the Image request type. This will use probe-image-size library to grab only the first few bytes of the image (not download the entire thing). This allows us to quickly test the basic properties.
+Creates a new Scenario of the Image request type. This will grab only the first few bytes of the image (not download the entire thing). This allows us to quickly test the basic properties.
 
 ```javascript
 suite.image("Make sure image loads and is correct width");
