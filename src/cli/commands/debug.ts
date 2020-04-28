@@ -9,17 +9,20 @@ export default class Debug extends Command {
     Cli.subheader("DEBUG INFO");
     Cli.log("", "Settings:")
       .list([
-        "Environment: " + FlagpoleExecution.environmentName,
-        "Config file directory: " + FlagpoleExecution.config?.getConfigFolder(),
-        "Config path: " + FlagpoleExecution.config?.getConfigPath(),
-        "Project Path: " + FlagpoleExecution.config?.getConfigFolder(),
-        "Tests Root Path: " + FlagpoleExecution.config?.getRootFolder(),
-        "Tests Source Path: " + FlagpoleExecution.config?.getSourceFolder(),
-        "Tests Output Path: " + FlagpoleExecution.config?.getTestsFolder(),
-        "Base Domain: " + FlagpoleExecution.baseDomain,
-        "Output format: " + FlagpoleExecution.opts.outputFormat,
-        "Verbosity: " + FlagpoleExecution.opts.verbosity,
-        "Opts: " + FlagpoleExecution.opts.toString(),
+        "Environment: " + FlagpoleExecution.global.environment?.name,
+        "Config file directory: " +
+          FlagpoleExecution.global.config.getConfigFolder(),
+        "Config path: " + FlagpoleExecution.global.config.getConfigPath(),
+        "Project Path: " + FlagpoleExecution.global.config.getConfigFolder(),
+        "Tests Root Path: " + FlagpoleExecution.global.config.getRootFolder(),
+        "Tests Source Path: " +
+          FlagpoleExecution.global.config.getSourceFolder(),
+        "Tests Output Path: " +
+          FlagpoleExecution.global.config.getTestsFolder(),
+        "Base Domain: " + FlagpoleExecution.global.baseDomain,
+        "Output format: " + FlagpoleExecution.global.outputFormat,
+        "Verbosity: " + FlagpoleExecution.global.verbosity,
+        "Opts: " + FlagpoleExecution.global.getOptionsString(),
       ])
       .log("")
       .exit(0);

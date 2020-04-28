@@ -1,8 +1,7 @@
-import * as fs from "fs";
+import * as fs from "fs-extra";
 import { resolve } from "path";
 import { PNG } from "pngjs";
 import { toType, ensureFolderExists } from "./util";
-import { isNullOrUndefined } from "util";
 import { iAssertionContext } from "./interfaces";
 
 const pixelmatch = require("pixelmatch");
@@ -65,7 +64,7 @@ export class ImageCompare {
     return {
       pixelsDifferent: pixelsDifferent,
       percentDifferent: (pixelsDifferent / (width * height)) * 100,
-      diffPath: pixelsDifferent > 0 ? this._writeDiffFile(diff) : null
+      diffPath: pixelsDifferent > 0 ? this._writeDiffFile(diff) : null,
     };
   }
 

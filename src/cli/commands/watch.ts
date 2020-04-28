@@ -21,7 +21,7 @@ export default class About extends Command {
 
   private watch(suiteNames: string[], tag: string) {
     const packageJson = require(path.join(
-      FlagpoleExecution.config?.getConfigFolder() || process.cwd(),
+      FlagpoleExecution.global.config?.getConfigFolder() || process.cwd(),
       "package.json"
     ));
     const entryPoint = packageJson.main;

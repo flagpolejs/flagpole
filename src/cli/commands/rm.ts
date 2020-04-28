@@ -7,7 +7,7 @@ import {
 } from "../cli-helper";
 import { FlagpoleExecution } from "../../flagpoleexecution";
 import prompts = require("prompts");
-import { SuiteConfig } from "../config";
+import { SuiteConfig } from "../../flagpoleconfig";
 import * as fs from "fs-extra";
 
 export default class Rm extends Command {
@@ -25,7 +25,7 @@ export default class Rm extends Command {
 async function removeEnv() {
   Cli.subheader("Remove Environment");
   const envs = stringArrayToPromptChoices(
-    FlagpoleExecution.config?.getEnvironmentNames() || []
+    FlagpoleExecution.global.config?.getEnvironmentNames() || []
   );
   if (envs.length == 0) {
     Cli.log("", "There are no environments defined in this project.", "").exit(
@@ -35,9 +35,9 @@ async function removeEnv() {
   const response = await prompts(
     promptSelect("name", "Which environment do you want to remove?", envs)
   );
-  if (FlagpoleExecution.config) {
-    FlagpoleExecution.config.removeEnvironment(response.name);
-    await FlagpoleExecution.config.save();
+  if (FlagpoleExecution.global.config) {
+    FlagpoleExecution.global.config.removeEnvironment(response.name);
+    await FlagpoleExecution.global.config.save();
     return Cli.log("Removed environment " + response.name)
       .list(["Config file updated"])
       .log("")
@@ -49,7 +49,7 @@ async function removeEnv() {
 async function removeSuite() {
   Cli.subheader("Remove Suite");
   const suites = stringArrayToPromptChoices(
-    FlagpoleExecution.config?.getSuiteNames().sort() || []
+    FlagpoleExecution.global.config?.getSuiteNames().sort() || []
   );
   if (suites.length == 0) {
     return Cli.fatalError("There are no suites in this project.");
@@ -58,14 +58,15 @@ async function removeSuite() {
     promptSelect("suite", "Which suite do you want to remove?", suites),
     promptConfirm("delete", "Do you want to delete the files too?", false),
   ]);
-  if (responses.suite && FlagpoleExecution.config) {
+  if (responses.suite && FlagpoleExecution.global.config) {
     Cli.log(`Removing ${responses.suite}...`, "");
-    const suite: SuiteConfig = FlagpoleExecution.config.suites[responses.suite];
+    const suite: SuiteConfig =
+      FlagpoleExecution.global.config.suites[responses.suite];
     const suiteSourcePath = suite.getSourcePath();
     const suiteTestPath = suite.getTestPath();
     // Remove suite from flagpole.json
-    FlagpoleExecution.config.removeSuite(responses.suite);
-    await FlagpoleExecution.config.save();
+    FlagpoleExecution.global.config.removeSuite(responses.suite);
+    await FlagpoleExecution.global.config.save();
     const thingsWeDid: string[] = [
       `Removed suite ${responses.suite} from config file`,
     ];

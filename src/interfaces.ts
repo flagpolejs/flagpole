@@ -139,7 +139,8 @@ export interface iValue {
   load(scenario: iScenario): iScenario;
   load(callback: Function): iScenario;
   load(message: string, callback: Function): iScenario;
-  fillForm(formData: any): Promise<void>;
+  fillForm(attribute: string, formData: KeyValue): Promise<iValue>;
+  fillForm(formData: KeyValue): Promise<iValue>;
   exists(): Promise<iValue>;
   exists(selector: string): Promise<iValue>;
   find(selector: string): Promise<iValue>;
@@ -272,11 +273,12 @@ export interface iAssertion {
   none(callback: IteratorCallback): Promise<iAssertion>;
   every(callback: IteratorCallback): Promise<iAssertion>;
   some(callback: IteratorCallback): Promise<iAssertion>;
-  schema(schema: any, simple?: boolean): Promise<iAssertion>;
   assert(a: any, b?: any): iAssertion;
   comment(value: iValue): iAssertion;
   comment(message: string): iAssertion;
   comment(input: string | iValue): iAssertion;
+  schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
+  schema(schema: iAssertionSchema, simple?: boolean): Promise<iAssertion>;
   looksLike(image: Buffer | string): iAssertion;
   looksLike(image: Buffer | string, threshhold: number): iAssertion;
   looksLike(image: Buffer | string, percent: string): iAssertion;
@@ -503,3 +505,26 @@ export interface iBounds {
 export type KeyValue = {
   [key: string]: any;
 };
+
+export interface iAssertionSchema {
+  [key: string]: string | any[] | iAssertionSchemaItem;
+}
+
+export interface iAssertionSchemaTestOpts {
+  path: string;
+  parent: any;
+  root: any;
+}
+
+export interface iAssertionSchemaItem {
+  type?: string | string[];
+  items?: iAssertionSchema | string;
+  enum?: any[];
+  matches?: RegExp | string;
+  test: (value: any, opts: iAssertionSchemaTestOpts) => boolean;
+}
+
+export interface iAjvLike {
+  errors: Error[];
+  validate(schema: any, root: any): Promise<boolean>;
+}

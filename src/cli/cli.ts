@@ -1,5 +1,5 @@
 import { FlagpoleExecution } from "../flagpoleexecution";
-import { iSuiteOpts, iScenarioOpts, SuiteConfig } from "./config";
+import { iSuiteOpts, iScenarioOpts, SuiteConfig } from "../flagpoleconfig";
 import * as fs from "fs-extra";
 import { printSubheader } from "./cli-helper";
 
@@ -91,12 +91,13 @@ export const addSuite = async (
   suite: iSuiteOpts,
   scenario: iScenarioOpts
 ): Promise<iSuiteOpts> => {
-  if (!FlagpoleExecution.config) {
+  if (!FlagpoleExecution.global.config) {
     throw "Flagpole config not found";
   }
-  const suiteConfig = new SuiteConfig(FlagpoleExecution.config, suite);
+  const suiteConfig = new SuiteConfig(FlagpoleExecution.global.config, suite);
   const suitePath: string = suiteConfig.getSourcePath();
-  let fileContents: string = FlagpoleExecution.config.project.isTypeScript
+  let fileContents: string = FlagpoleExecution.global.config.project
+    .isTypeScript
     ? `import { Flagpole } from "flagpole";`
     : `const { Flagpole } = require("flagpole");`;
   fileContents +=
@@ -114,8 +115,8 @@ export const addSuite = async (
     `   });` +
     "\n\n";
   await fs.writeFile(suitePath, fileContents);
-  FlagpoleExecution.config.addSuite(suite);
-  await FlagpoleExecution.config.save();
+  FlagpoleExecution.global.config.addSuite(suite);
+  await FlagpoleExecution.global.config.save();
   return suite;
 };
 

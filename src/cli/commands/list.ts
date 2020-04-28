@@ -19,8 +19,8 @@ export default class List extends Command {
 
 function listEnvironments() {
   Cli.subheader("List Environments").log("");
-  if (FlagpoleExecution.config) {
-    const envNames: string[] = FlagpoleExecution.config.getEnvironmentNames();
+  if (FlagpoleExecution.global.config) {
+    const envNames: string[] = FlagpoleExecution.global.config.getEnvironmentNames();
     if (envNames.length > 0) {
       return Cli.log("Found these environments:")
         .list(envNames)
@@ -33,7 +33,7 @@ function listEnvironments() {
 
 function listTags() {
   Cli.subheader("List Tags").log("");
-  const tags: string[] = FlagpoleExecution.config?.getTags() || [];
+  const tags: string[] = FlagpoleExecution.global.config?.getTags() || [];
   if (tags.length > 0) {
     return Cli.log("Found these tags:").list(tags).log("").exit(0);
   } else {
@@ -42,14 +42,14 @@ function listTags() {
 }
 
 function listSuites() {
-  if (!FlagpoleExecution.config) {
+  if (!FlagpoleExecution.global.config) {
     throw "Flagpole config not found";
   }
   Cli.subheader("List Suites").log(
-    `Looking in folder: ${FlagpoleExecution.config.getTestsFolder()}`,
+    `Looking in folder: ${FlagpoleExecution.global.config.getTestsFolder()}`,
     ""
   );
-  let suiteNames: string[] = FlagpoleExecution.config.getSuiteNames();
+  let suiteNames: string[] = FlagpoleExecution.global.config.getSuiteNames();
   if (suiteNames.length > 0) {
     Cli.log("Found these test suites:").list(suiteNames).log("").exit(0);
   } else {

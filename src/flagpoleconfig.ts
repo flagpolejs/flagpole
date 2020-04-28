@@ -1,4 +1,4 @@
-import { normalizePath } from "../util";
+import { normalizePath } from "./util";
 import { exec } from "child_process";
 import * as fs from "fs-extra";
 import * as path from "path";
@@ -43,18 +43,13 @@ export interface iProjectOpts {
   output?: string;
   images?: string;
   cache?: string;
+  schemas?: string;
 }
 
 export interface iConfigOpts {
   project: iProjectOpts;
   environments: iEnvCollection;
   suites: iSuiteCollection;
-}
-
-export interface iConfigFile {
-  project: iProjectOpts;
-  environments: { [key: string]: iEnvOpts };
-  suites: { [key: string]: iSuiteOpts };
 }
 
 export interface iScenarioOpts {
@@ -143,6 +138,7 @@ export class ProjectConfig {
   public output: string | undefined;
   public images: string;
   public cache: string;
+  public schemas: string;
 
   public get isSourceAndOutput(): boolean {
     return this.source !== undefined && this.output !== undefined;
@@ -163,6 +159,7 @@ export class ProjectConfig {
     this.path = opts.path || "tests";
     this.images = opts.images || "images";
     this.cache = opts.cache || "cache";
+    this.schemas = opts.schemas || "schemas";
     this.source = opts.source;
     this.output = opts.output;
   }
@@ -187,6 +184,7 @@ export class ProjectConfig {
       output: this.output,
       images: this.images,
       cache: this.cache,
+      schemas: this.schemas,
     };
   }
 }
@@ -198,6 +196,10 @@ export class FlagpoleConfig {
   public project: ProjectConfig;
   public suites: { [key: string]: SuiteConfig } = {};
   public environments: { [key: string]: EnvConfig } = {};
+
+  public get defaultEnvironment(): EnvConfig | undefined {
+    return Object.values(this.environments)[0];
+  }
 
   constructor(opts: iConfigOpts, configPath: string) {
     this.configPath = configPath;
@@ -258,6 +260,15 @@ export class FlagpoleConfig {
   public getImagesFolder(): string {
     return normalizePath(
       path.join(this.getRootFolder(), this.project.images || "images")
+    );
+  }
+
+  /**
+   * Default; _project_/tests/schemas
+   */
+  public getSchemasFolder(): string {
+    return normalizePath(
+      path.join(this.getRootFolder(), this.project.schemas || "schemas")
     );
   }
 
@@ -369,7 +380,7 @@ export class FlagpoleConfig {
     return true;
   }
 
-  public toFileObject(): iConfigFile {
+  public toFileObject(): iConfigOpts {
     return {
       project: this.project.toJson(),
       environments: (() => {

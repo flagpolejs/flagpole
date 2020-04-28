@@ -1,7 +1,7 @@
 import { DOMElement } from "./domelement";
 import { Link } from "./link";
 import { ResponseType } from "./enums";
-import { iAssertionContext, iScenario, iValue } from "./interfaces";
+import { iAssertionContext, iScenario, iValue, KeyValue } from "./interfaces";
 import { asyncForEach, getMessageAndCallbackFromOverloading } from "./util";
 import { HttpMethodVerb } from "./httprequest";
 
@@ -247,16 +247,24 @@ export class HTMLElement extends DOMElement implements iValue {
    *
    * @param formData
    */
-  public async fillForm(formData: any): Promise<void> {
+  public async fillForm(
+    attributeName: string,
+    formData: KeyValue
+  ): Promise<iValue>;
+  public async fillForm(formData: KeyValue): Promise<iValue>;
+  public async fillForm(a: string | KeyValue, b?: KeyValue): Promise<iValue> {
     if (!(await this._isFormTag())) {
       throw new Error("This is not a form element.");
     }
+    const attributeName: string = typeof a === "string" ? a : "name";
+    const formData: KeyValue = (typeof a === "string" ? b : a) || {};
     const form: Cheerio = this.el;
     for (let name in formData) {
       const value = formData[name];
-      form.find(`[name="${name}"]`).val(value);
+      form.find(`[${attributeName}="${name}"]`).val(value);
     }
     this._completedAction("FILL");
+    return this;
   }
 
   /**

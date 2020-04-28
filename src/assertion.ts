@@ -3,21 +3,31 @@ import {
   AssertionResult,
   AssertionFail,
   AssertionFailOptional,
-  AssertionPass
+  AssertionPass,
 } from "./logging/assertionresult";
-import { AssertionSchema, iAjvLike } from "./assertionschema";
+import {
+  AssertionSchema,
+  getSchemaPath,
+  getSchema,
+  writeSchema,
+} from "./assertionschema";
 import * as Ajv from "ajv";
-import { iAssertionContext, iAssertion, IteratorCallback } from "./interfaces";
+import {
+  iAssertionContext,
+  iAssertion,
+  IteratorCallback,
+  iAjvLike,
+} from "./interfaces";
 import {
   toType,
   isNullOrUndefined,
   asyncEvery,
   asyncNone,
   asyncSome,
-  isAsyncCallback
+  isAsyncCallback,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
-import { iValue } from ".";
+import { iValue, iAssertionSchema } from ".";
 
 export class Assertion implements iAssertion {
   /**
@@ -191,7 +201,7 @@ export class Assertion implements iAssertion {
     this._context = context;
     this._input = thisValue;
     this._message = typeof message == "undefined" ? null : message;
-    this._finishedPromise = new Promise(resolve => {
+    this._finishedPromise = new Promise((resolve) => {
       this._finishedResolver = resolve;
     });
   }
@@ -359,7 +369,7 @@ export class Assertion implements iAssertion {
     // Do the comparison
     try {
       const result = imageCompare.compare({
-        threshold: 0.1
+        threshold: 0.1,
       });
       assertionPassed = result.percentDifferent <= percentDifferenceAllowed;
       if (!assertionPassed) {
@@ -529,7 +539,7 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       resolve(this._evalulate(await asyncNone(thisValue, callback), thisValue));
     });
   }
@@ -544,7 +554,7 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       resolve(
         this._evalulate(await asyncEvery(thisValue, callback), thisValue)
       );
@@ -580,22 +590,33 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       resolve(this._evalulate(await asyncSome(thisValue, callback), thisValue));
     });
   }
 
+  schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
+  schema(schema: iAssertionSchema, simple?: boolean): Promise<iAssertion>;
   public async schema(
-    schema: any,
+    schema: iAssertionSchema | string,
     simple: boolean = false
-  ): Promise<Assertion> {
+  ): Promise<iAssertion> {
+    const thisValue = this._getCompareValue(this._input);
+    if (typeof schema === "string") {
+      const schemaName: string = schema;
+      try {
+        schema = getSchema(schemaName);
+      } catch {
+        this._context.comment(
+          `Created new schema snapshot called ${schemaName}`
+        );
+        schema = writeSchema(thisValue, schemaName);
+      }
+    }
     const validator = simple
       ? new AssertionSchema()
       : await this._loadSchemaValidator();
-    const isValid: boolean = await validator.validate(
-      schema,
-      this._getCompareValue(this._input)
-    );
+    const isValid: boolean = await validator.validate(schema, thisValue);
     const errors: Error[] | Ajv.ErrorObject[] | null | undefined =
       validator.errors;
     let error: string = "";
@@ -648,12 +669,12 @@ export class Assertion implements iAssertion {
       return (
         import("ajv")
           // Got it, so save it and return it
-          .then(ajv => {
+          .then((ajv) => {
             this._ajv = new Ajv();
             return this._ajv;
           })
           // Couldn't load jmespath, so set it to null
-          .catch(e => {
+          .catch((e) => {
             this._ajv = new AssertionSchema();
             return this._ajv;
           })

@@ -15,7 +15,7 @@ import {
   iEnvOpts,
   FlagpoleConfig,
   iEnvCollection,
-} from "../config";
+} from "../../flagpoleconfig";
 import * as fs from "fs-extra";
 
 export default class Init extends Command {
@@ -27,7 +27,7 @@ export default class Init extends Command {
     Cli.log("Creating your Flagpole project...");
     const configFile: FlagpoleConfig = new FlagpoleConfig(
       opts,
-      FlagpoleExecution.opts.configFilePath || process.cwd()
+      FlagpoleExecution.global.config.getConfigPath() || process.cwd()
     );
     await fs.ensureDir(configFile.getConfigFolder());
     await fs.ensureDir(configFile.getRootFolder());

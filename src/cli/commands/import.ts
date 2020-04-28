@@ -14,7 +14,7 @@ export default class Import extends Command {
   public description =
     "find files in the tests folder that are not in Flagpole config and import them";
   public async action() {
-    if (!FlagpoleExecution.config) {
+    if (!FlagpoleExecution.global.config) {
       throw "Flagpole config not found";
     }
     Cli.subheader("Import Suite");
@@ -44,13 +44,13 @@ export default class Import extends Command {
       responses.suitesNames.length > 0
     ) {
       responses.suitesNames.forEach((suiteName: string) => {
-        FlagpoleExecution.config &&
-          FlagpoleExecution.config.addSuite({
+        FlagpoleExecution.global.config &&
+          FlagpoleExecution.global.config.addSuite({
             name: suiteName,
             tags: responses.tags.split(" "),
           });
       });
-      await FlagpoleExecution.config.save();
+      await FlagpoleExecution.global.config.save();
       Cli.log(`Imported Suites:`).list(responses.suitesNames).log("").exit(0);
     } else {
       Cli.log("No suites selected. Nothing imported.").log("").exit(1);

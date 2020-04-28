@@ -148,8 +148,8 @@ export class Suite implements iSuite {
 
   constructor(title: string) {
     this._title = title;
-    if (FlagpoleExecution.baseDomain) {
-      this._baseUrl = new URL(FlagpoleExecution.baseDomain);
+    if (FlagpoleExecution.global.baseDomain) {
+      this._baseUrl = new URL(FlagpoleExecution.global.baseDomain);
     }
     this._beforeAllPromise = new Promise((resolve) => {
       this._beforeAllResolver = resolve;
@@ -336,7 +336,8 @@ export class Suite implements iSuite {
     } else if (typeof url == "function") {
       baseUrl = url(this);
     } else if (Object.keys(url).length > 0) {
-      baseUrl = url[FlagpoleExecution.environmentName];
+      const env = FlagpoleExecution.global.environment?.name || "";
+      baseUrl = url[env];
       // If env didn't match one, just pick the first one
       if (!baseUrl) {
         baseUrl = url[Object.keys(url)[0]];
@@ -661,10 +662,10 @@ export class Suite implements iSuite {
       // All Done
       await this._fireFinally();
       // Should we print automatically?
-      if (FlagpoleExecution.automaticallyPrintToConsole) {
-        this.print(FlagpoleExecution.opts.exitOnDone);
+      if (FlagpoleExecution.global.automaticallyPrintToConsole) {
+        this.print(FlagpoleExecution.global.exitOnDone);
       } else {
-        FlagpoleExecution.opts.exitOnDone && exitProcess(this.hasPassed);
+        FlagpoleExecution.global.exitOnDone && exitProcess(this.hasPassed);
       }
     }
   }

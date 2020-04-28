@@ -5,7 +5,7 @@ import { sep } from "path";
 import { CliAnsi } from "./cli-ansi";
 
 export function printHeader(alwaysPrint: boolean = false) {
-  if (alwaysPrint || FlagpoleExecution.opts.shouldOutputToConsole) {
+  if (alwaysPrint || FlagpoleExecution.global.shouldOutputToConsole) {
     console.log("\u001b[0m \u001b[37m^\u001b[0m ");
     console.log(
       "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[37;1m\u001b[1m   F L A G P O L E   J S"
@@ -27,7 +27,7 @@ export function printHeader(alwaysPrint: boolean = false) {
 }
 
 export function printOldHeader() {
-  if (FlagpoleExecution.opts.shouldOutputToConsole) {
+  if (FlagpoleExecution.global.shouldOutputToConsole) {
     console.log(
       "\x1b[32m",
       `
@@ -49,7 +49,7 @@ export function printOldHeader() {
 }
 
 export function printSubheader(heading: string) {
-  if (FlagpoleExecution.opts.shouldOutputToConsole) {
+  if (FlagpoleExecution.global.shouldOutputToConsole) {
     const ansi = new CliAnsi();
     console.log(
       ansi.center(
@@ -64,7 +64,7 @@ export function printSubheader(heading: string) {
 }
 
 export function printLine(...messages: string[]) {
-  if (FlagpoleExecution.opts.shouldOutputToConsole) {
+  if (FlagpoleExecution.global.shouldOutputToConsole) {
     messages.forEach((message) => {
       console.log(message);
     });
@@ -75,7 +75,7 @@ export async function findDetachedSuites(): Promise<string[]> {
   const suitesInFolder: string[] = await findJsFilesInTestFolder();
   let suitesAvailableToImport: string[] = [];
   let suitesInConfig: string[] =
-    FlagpoleExecution.config?.getSuiteNames() || [];
+    FlagpoleExecution.global.config.getSuiteNames() || [];
   suitesInFolder.forEach(function (suiteName: string) {
     if (!suitesInConfig.includes(suiteName)) {
       suitesAvailableToImport.push(suiteName);
@@ -85,10 +85,10 @@ export async function findDetachedSuites(): Promise<string[]> {
 }
 
 export async function findJsFilesInTestFolder(): Promise<string[]> {
-  if (!FlagpoleExecution.config) {
+  if (!FlagpoleExecution.global.config) {
     throw "Flagpole config not found";
   }
-  let startFolder: string = FlagpoleExecution.config.getTestsFolder();
+  let startFolder: string = FlagpoleExecution.global.config.getTestsFolder();
   let suitesInFolder: string[] = [];
 
   async function findSuites(dir: string, isSubFolder: boolean = false) {

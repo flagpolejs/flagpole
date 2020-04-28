@@ -32,6 +32,11 @@
       "tags": [
         "smoke"
       ]
+    },
+    "api-snapshot": {
+      "id": "",
+      "name": "api-snapshot",
+      "tags": []
     }
   }
 }

@@ -303,7 +303,7 @@ Test if an element exists at that path. For a browser scenario it will wait a ce
 const button = await context.waitForExists("a.submit", 2000);
 ```
 
-### waitFoHavingText(path: string, text, timeout?: number): Promise<DOMElement>
+### waitForHavingText(path: string, text, timeout?: number): Promise<DOMElement>
 
 Checks for an element to exist at `path` CSS selector, which also contains the string `text` inside of its `innerText`. By default it will wait for 100ms for the element, you can change the timeout with the third argument.
 

@@ -26,7 +26,9 @@ export class FlagpoleReport {
     lines.push(new HeadingLine(this.suite.title));
     lines.push(new CommentLine(`Base URL: ${this.suite.baseUrl}`));
     lines.push(
-      new CommentLine(`Environment: ${FlagpoleExecution.environmentName}`)
+      new CommentLine(
+        `Environment: ${FlagpoleExecution.global.environment?.name}`
+      )
     );
     lines.push(new CommentLine(`Took ${this.suite.executionDuration}ms`));
     const failCount: number = this.suite.failCount;
@@ -116,7 +118,7 @@ export class FlagpoleReport {
     html += `
             <li>Duration: ${this.suite.executionDuration}ms</li>
             <li>Base URL: ${this.suite.baseUrl}</li>
-            <li>Environment: ${FlagpoleExecution.environment?.name}</li>
+            <li>Environment: ${FlagpoleExecution.global.environment?.name}</li>
         `;
     html += "</ul>\n";
     html += "</aside>\n";
@@ -171,29 +173,29 @@ export class FlagpoleReport {
   public async toString(): Promise<string> {
     let out: string = "";
     // HTML
-    if (FlagpoleExecution.opts.shouldWriteHtml) {
+    if (FlagpoleExecution.global.shouldWriteHtml) {
       out += await this.toHTML();
     }
     // JSON
-    else if (FlagpoleExecution.opts.isJsonOutput) {
+    else if (FlagpoleExecution.global.isJsonOutput) {
       const json: any = await this.toJson();
       out += JSON.stringify(json, null, 2);
     }
     // Console
-    else if (FlagpoleExecution.opts.isConsoleOutput) {
+    else if (FlagpoleExecution.global.isConsoleOutput) {
       (await this.toConsole()).forEach((line: iConsoleLine) => {
         out += line.toConsoleString() + "\n";
       });
     }
     // Text
-    else if (FlagpoleExecution.opts.isTextOutput) {
+    else if (FlagpoleExecution.global.isTextOutput) {
       (await this.toConsole()).forEach((line: iConsoleLine) => {
         out += line.toString() + "\n";
       });
     }
     // CSV
-    else if (FlagpoleExecution.opts.isDelimitedOutput) {
-      const format = FlagpoleExecution.opts.outputFormat;
+    else if (FlagpoleExecution.global.isDelimitedOutput) {
+      const format = FlagpoleExecution.global.outputFormat;
       (await this.toDelimited(format)).forEach((line: string) => {
         out += line + "\n";
       });

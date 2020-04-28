@@ -4,12 +4,11 @@ import {
   SuiteExecutionResult,
   SuiteExecutionExitCode,
 } from "./suiteexecution";
-import { SuiteConfig } from "./config";
+import { SuiteConfig } from "../flagpoleconfig";
 import { FlagpoleReport } from "../logging/flagpolereport";
 import { iSuite } from "../interfaces";
 import { asyncForEach } from "../util";
 import { Flagpole } from "../flagpole";
-import { FlagpoleOptions } from "../flagpoleoptions";
 
 export class SuiteExecutionInline extends SuiteExecution {
   public static executePath(filePath: string): SuiteExecutionInline {
@@ -28,13 +27,13 @@ export class SuiteExecutionInline extends SuiteExecution {
     // Start with success
     let exitCode: number = SuiteExecutionExitCode.success;
     // Override the automatically print value
-    const opts = FlagpoleExecution.opts.clone({
+    const opts = FlagpoleExecution.global.clone({
       automaticallyPrintToConsole: true,
     });
     // Save current global output options
-    const globalOpts = FlagpoleExecution.opts.clone({});
+    const globalOpts = FlagpoleExecution.global.clone();
     // Set it to our temporary opts
-    FlagpoleExecution.setGlobalExecutionScope(opts);
+    FlagpoleExecution.global = opts;
     // How many suites do we have now?
     const preSuiteCount: number = Flagpole.suites.length;
     // Embed the suite file... it should add at least one suite
@@ -61,7 +60,7 @@ export class SuiteExecutionInline extends SuiteExecution {
         this._logLine(await report.toString());
       });
     }
-    FlagpoleExecution.setGlobalExecutionScope(globalOpts);
+    FlagpoleExecution.global = globalOpts;
     return new SuiteExecutionResult(this._output, exitCode);
   }
 }

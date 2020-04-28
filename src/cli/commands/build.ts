@@ -14,7 +14,7 @@ export default class Build extends Command {
 }
 
 export async function tsc(exitOnSuccess: boolean = true) {
-  if (!FlagpoleExecution.config) {
+  if (!FlagpoleExecution.global.config) {
     throw "Flagpole config not found";
   }
   Cli.subheader("Build TypeScript Tests");
@@ -29,10 +29,10 @@ export async function tsc(exitOnSuccess: boolean = true) {
     ).exit(1);
   }
   // Project is configured to use TypeScript
-  if (FlagpoleExecution.config.project.isTypeScript) {
+  if (FlagpoleExecution.global.config.project.isTypeScript) {
     Cli.log("Transpiling TypeScript to JavaScript...");
     try {
-      await FlagpoleExecution.config.tsc();
+      await FlagpoleExecution.global.config.tsc();
       Cli.log("Done!");
       if (exitOnSuccess) {
         Cli.exit(0);
@@ -56,13 +56,13 @@ export async function tsc(exitOnSuccess: boolean = true) {
   const rootFolder = await setRootFolder();
   const sourceFolder = await setSourceFolder(rootFolder);
   const outputFolder = await setOutputFolder(rootFolder);
-  FlagpoleExecution.config.project.setTypeScriptFolders(
+  FlagpoleExecution.global.config.project.setTypeScriptFolders(
     rootFolder,
     sourceFolder,
     outputFolder
   );
-  await FlagpoleExecution.config.save();
-  await FlagpoleExecution.config.writeTsConfig();
+  await FlagpoleExecution.global.config.save();
+  await FlagpoleExecution.global.config.writeTsConfig();
   Cli.log("");
 }
 
@@ -103,7 +103,7 @@ const setRootFolder = async (): Promise<string> => {
     promptTextPath(
       "rootFolder",
       "Flagpole Root Folder",
-      `${FlagpoleExecution.config?.project.path}`
+      `${FlagpoleExecution.global.config?.project.path}`
     )
   );
   return response.rootFolder;

@@ -3,14 +3,15 @@ import {
   iScenario,
   iBounds,
   iValue,
-  ScreenshotOpts
+  ScreenshotOpts,
+  KeyValue,
 } from "./interfaces";
 import { JSHandle, Page, ElementHandle, BoxModel } from "puppeteer-core";
 import { DOMElement } from "./domelement";
 import {
   asyncForEach,
   toType,
-  getMessageAndCallbackFromOverloading
+  getMessageAndCallbackFromOverloading,
 } from "./util";
 
 export class PuppeteerElement extends DOMElement implements iValue {
@@ -26,7 +27,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     name: string | null = null,
     path?: string
   ): Promise<PuppeteerElement> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const element = new PuppeteerElement(input, context, name, path);
       if (name === null) {
         element._name = String(path);
@@ -230,7 +231,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
       throw new Error("Page is null.");
     }
     return this._wrapAsValue(
-      await this._context.page.evaluate(e => e.innerText, this.$),
+      await this._context.page.evaluate((e) => e.innerText, this.$),
       `Inner Text of ${this.name}`
     );
   }
@@ -240,7 +241,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
       throw new Error("Page is null.");
     }
     return this._wrapAsValue(
-      await this._context.page.evaluate(e => e.innerHTML, this.$),
+      await this._context.page.evaluate((e) => e.innerHTML, this.$),
       `Inner Html of ${this.name}`
     );
   }
@@ -250,7 +251,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
       throw new Error("Page is null.");
     }
     const html: string = await this.$.executionContext().evaluate(
-      e => e.outerHTML,
+      (e) => e.outerHTML,
       this.$
     );
     return this._wrapAsValue(html, `Outer Html of ${this.name}`);
@@ -301,7 +302,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
         y: boxModel[boxType][0].y,
         width: boxModel.width,
         height: boxModel.height,
-        points: boxModel[boxType]
+        points: boxModel[boxType],
       };
     }
     return null;
@@ -364,7 +365,12 @@ export class PuppeteerElement extends DOMElement implements iValue {
     this._completedAction("CLEAR");
   }
 
-  public async fillForm(formData: any): Promise<any> {
+  public async fillForm(
+    attributeName: string,
+    formData: KeyValue
+  ): Promise<iValue>;
+  public async fillForm(formData: KeyValue): Promise<iValue>;
+  public async fillForm(a: string | KeyValue, b?: KeyValue): Promise<iValue> {
     const element: PuppeteerElement = this;
     const isForm: boolean = await this._isFormTag();
     if (this._context.page == null) {
@@ -377,9 +383,11 @@ export class PuppeteerElement extends DOMElement implements iValue {
     if (page === null) {
       throw new Error("Page is null");
     }
+    const attributeName: string = typeof a === "string" ? a : "name";
+    const formData: KeyValue = (typeof a === "string" ? b : a) || {};
     for (let name in formData) {
       const value: any = formData[name];
-      const selector: string = `${element._path} [name="${name}"]`;
+      const selector: string = `${element._path} [${attributeName}="${name}"]`;
       const inputs: ElementHandle[] = await page.$$(selector);
       if (inputs.length > 0) {
         const input: ElementHandle = inputs[0];
@@ -438,6 +446,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
       }
       this._completedAction("FILL");
     }
+    return this;
   }
 
   public async submit(): Promise<void>;
@@ -455,7 +464,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     if (this._context.page === null) {
       throw new Error("Page was null");
     }
-    await this._context.page.evaluate(form => form.submit(), this.$);
+    await this._context.page.evaluate((form) => form.submit(), this.$);
     this._completedAction("SUBMIT");
   }
 
@@ -496,12 +505,12 @@ export class PuppeteerElement extends DOMElement implements iValue {
     return (<ElementHandle>this._input).screenshot({
       path: localFilePath || opts.path,
       encoding: "binary",
-      omitBackground: opts.omitBackground || false
+      omitBackground: opts.omitBackground || false,
     });
   }
 
   protected _getTagName(): Promise<string> {
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       const handle: JSHandle = await this._input.getProperty("tagName");
       const value: string = String(await handle.jsonValue());
       this._tagName = value.toLowerCase();
@@ -510,7 +519,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
   }
 
   protected _getSourceCode(): Promise<void> {
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       const outerHtml: string = (await this.getOuterHtml()).toString();
       this._sourceCode = outerHtml;
       resolve();

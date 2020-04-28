@@ -1,7 +1,6 @@
 import { Command } from "commander";
 import * as fs from "fs";
 import { join } from "path";
-import { FlagpoleExecution } from "../flagpoleexecution";
 import { printHeader } from "./cli-helper";
 import { Cli } from "./cli";
 

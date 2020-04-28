@@ -60,22 +60,22 @@ const askForType = async (): Promise<string> => {
 };
 
 async function promptToAddEnv() {
-  if (!FlagpoleExecution.config) {
+  if (!FlagpoleExecution.global.config) {
     throw "Flagpole config not found";
   }
   const responses = await prompts([
     promptTextName("name", "What do you want to call the environment?"),
     promptUrl("defaultDomain", "Default Domain (optional)"),
   ]);
-  FlagpoleExecution.config.addEnvironment({
+  FlagpoleExecution.global.config.addEnvironment({
     name: responses.name,
     defaultDomain: responses.defaultDomain,
   });
-  await FlagpoleExecution.config.save();
+  await FlagpoleExecution.global.config.save();
 }
 
 async function promptToAddTag() {
-  if (!FlagpoleExecution.config) {
+  if (!FlagpoleExecution.global.config) {
     throw "Flagpole config not found";
   }
   const responses = await prompts([
@@ -84,20 +84,23 @@ async function promptToAddTag() {
       "suites",
       "Suites to apply it to",
       stringArrayToPromptChoices(
-        FlagpoleExecution.config.getSuiteNames().sort()
+        FlagpoleExecution.global.config.getSuiteNames().sort()
       )
     ),
   ]);
-  FlagpoleExecution.config.addTagToSuite(responses.suites, responses.tag);
-  await FlagpoleExecution.config.save();
+  FlagpoleExecution.global.config.addTagToSuite(
+    responses.suites,
+    responses.tag
+  );
+  await FlagpoleExecution.global.config.save();
 }
 
 async function promptToAddScenario() {
-  if (!FlagpoleExecution.config) {
+  if (!FlagpoleExecution.global.config) {
     throw "Flagpole config not found";
   }
   const suites = stringArrayToPromptChoices(
-    FlagpoleExecution.config.getSuiteNames().sort()
+    FlagpoleExecution.global.config.getSuiteNames().sort()
   );
 
   if (suites.length == 0) {
@@ -123,7 +126,7 @@ async function promptToAddScenario() {
     promptTextPath("scenarioPath", "Scenario Start Path", "/some-other-page"),
   ]);
 
-  const suite = FlagpoleExecution.config.getSuite(responses.suite);
+  const suite = FlagpoleExecution.global.config.getSuite(responses.suite);
   if (!suite) {
     return Cli.log(`Invalid suite: ${responses.suite}`, "").exit(1);
   }

@@ -1,8 +1,7 @@
-import { SuiteConfig } from "./config";
+import { SuiteConfig } from "../flagpoleconfig";
 import { spawn, fork, ForkOptions, exec } from "child_process";
 import { existsSync } from "fs";
 import { FlagpoleExecution } from "../flagpoleexecution";
-import { FlagpoleOptions } from "../flagpoleoptions";
 
 export enum SuiteExecutionExitCode {
   success = 0,
@@ -121,7 +120,7 @@ export class SuiteExecution {
 
   protected _execute(filePath: string): Promise<SuiteExecutionResult> {
     return new Promise(async (resolve) => {
-      const opts = FlagpoleExecution.opts.clone({
+      const opts = FlagpoleExecution.global.clone({
         exitOnDone: true,
         isChildProcess: true,
         automaticallyPrintToConsole: true,
@@ -134,7 +133,7 @@ export class SuiteExecution {
 
   private _executeWithExec(
     filePath: string,
-    opts: FlagpoleOptions,
+    opts: FlagpoleExecution,
     resolve: Function
   ) {
     const command: string = `node ${filePath} ${opts.toString()}`;
@@ -156,10 +155,10 @@ export class SuiteExecution {
 
   private _executeWithSpawn(
     filePath: string,
-    opts: FlagpoleOptions,
+    opts: FlagpoleExecution,
     resolve: Function
   ) {
-    const command: string[] = [filePath].concat(opts.toArgs());
+    const command: string[] = [filePath].concat(opts.getOptionsArray());
     const proc = spawn("node", command);
     proc.stdout.on("data", (data) => {
       this._logLine(data);
@@ -182,13 +181,13 @@ export class SuiteExecution {
 
   private _executeWithFork(
     filePath: string,
-    opts: FlagpoleOptions,
+    opts: FlagpoleExecution,
     resolve: Function
   ) {
     const options: ForkOptions = {
       stdio: ["pipe", "pipe", "pipe", "ipc"],
     };
-    const proc = fork(filePath, opts.toArgs(), options);
+    const proc = fork(filePath, opts.getOptionsArray(), options);
     proc.on("exit", (exitCode) => {
       if ((exitCode == null || exitCode !== 0) && opts.shouldOutputToConsole) {
         this._logLine("FAILED TEST SUITE:");

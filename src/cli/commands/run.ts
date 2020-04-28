@@ -1,7 +1,7 @@
 import { Command, CliCommandOption } from "../command";
 import { Cli } from "../cli";
 import { tsc } from "./build";
-import { SuiteConfig } from "../config";
+import { SuiteConfig } from "../../flagpoleconfig";
 import prompts = require("prompts");
 import { promptSelect, stringArrayToPromptChoices } from "../cli-helper";
 import { FlagpoleExecution } from "../../flagpoleexecution";
@@ -46,6 +46,14 @@ export default class Run extends Command {
       flags: "--build",
       description: "build first",
     }),
+    new CliCommandOption({
+      flags: "--headed",
+      description: "override tests to show a headful browser",
+    }),
+    new CliCommandOption({
+      flags: "--headless",
+      description: "override tests to keep browser headless",
+    }),
   ];
   public async action(args: commander.Command) {
     // Build first
@@ -55,7 +63,7 @@ export default class Run extends Command {
     Cli.subheader("Run Test Suites");
     // Default is to run all
     const suitesInProject: SuiteConfig[] =
-      FlagpoleExecution.config?.getSuites() || [];
+      FlagpoleExecution.global.config?.getSuites() || [];
     let selectedSuites: SuiteConfig[] = suitesInProject;
     let tag: string = args.tag || "";
     let suiteNames: string[] = args.suite ? args.suite.split(",") : [];
@@ -167,7 +175,7 @@ const promptForSuites = async (
 };
 
 const promptForTag = async (): Promise<string> => {
-  const tags: string[] = FlagpoleExecution.config?.getTags() || [];
+  const tags: string[] = FlagpoleExecution.global.config?.getTags() || [];
   if (tags.length > 0) {
     const response = await prompts(
       promptSelect(
@@ -192,7 +200,7 @@ const runSuites = async (
   });
 
   // If console output, then give feedback
-  if (FlagpoleExecution.opts.shouldOutputToConsole) {
+  if (FlagpoleExecution.global.shouldOutputToConsole) {
     // If no matching tests found to run
     if (runner.suites.length == 0) {
       Cli.log("Did not find any test suites to run.\n");

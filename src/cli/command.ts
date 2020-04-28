@@ -53,7 +53,7 @@ export abstract class Command {
     command.on("--help", this.helpCallback);
     command.action(async (...args: any[]) => {
       // Initialize Flagpole
-      await FlagpoleExecution.setGlobalExecutionScope({
+      FlagpoleExecution.global = await FlagpoleExecution.create({
         configFilePath: program.config,
         environmentName: program.env,
         exitOnDone: !!program.exitOnDone,

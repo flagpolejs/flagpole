@@ -1,9 +1,19 @@
-import { iAssertionContext, iValue, iScenario } from "./interfaces";
+import {
+  iAssertionContext,
+  iValue,
+  iScenario,
+  KeyValue,
+  iAssertionSchema,
+} from "./interfaces";
 import { toType, isNullOrUndefined } from "./util";
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
 } from "./logging/assertionresult";
+import { ResponseType } from "./enums";
+import { generateAjvSchema, getSchemaPath } from "./assertionschema";
+import { writeFile, ensureDir } from "fs-extra";
+import { resolve } from "path";
 
 export class Value implements iValue {
   protected _input: any;
@@ -204,7 +214,14 @@ export class Value implements iValue {
   public load(callback: Function): iScenario;
   public load(a?: any, b?: any): iScenario | void {}
 
-  public async fillForm(formData: any): Promise<void> {}
+  public async fillForm(
+    attributeName: string,
+    formData: KeyValue
+  ): Promise<iValue>;
+  public async fillForm(formData: KeyValue): Promise<iValue>;
+  public async fillForm(a: string | KeyValue, b?: KeyValue): Promise<iValue> {
+    return this;
+  }
 
   public async exists(): Promise<iValue>;
   public async exists(selector: string): Promise<iValue>;

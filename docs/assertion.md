@@ -95,7 +95,7 @@ context.assert(myValue).equals(5);
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that every one is true.
 
 ```javascript
-context.assert(["eminem", "dre", "ice cube"]).every(rapper => {
+context.assert(["eminem", "dre", "ice cube"]).every((rapper) => {
   return rapper.indexOf("e") >= 0;
 });
 ```
@@ -103,7 +103,7 @@ context.assert(["eminem", "dre", "ice cube"]).every(rapper => {
 This method can also handle async callbacks.
 
 ```javascript
-context.assert(navBarLinks).every(async link => {
+context.assert(navBarLinks).every(async (link) => {
   const innerText = await link.getInnerText();
   return innerText.toString().length > 0;
 });
@@ -112,7 +112,7 @@ context.assert(navBarLinks).every(async link => {
 Since it returns a promise, if you need your asseretions to run in order be sure to prefix it with `await`
 
 ```javascript
-await context.assert(links).every(link => {
+await context.assert(links).every((link) => {
   return link.tagName === "a";
 });
 ```
@@ -211,6 +211,8 @@ Alternately, you can pass the `threshold` argument as a string. In this mode, it
 context.assert(screenshot).looksLike("./screenshots/homepage.png", "5%");
 ```
 
+The first time that you run the test, if the control image does not exist, the assertion will automatically pass. The screenshot that you passed in will be saved in the file path specified and will become the control for future test runs. If your page changes dramatically in the future, simply delete your control image to reset the base case.
+
 ### matches(pattern: RegExp | string): Assertion
 
 Regular express compare of strings.
@@ -224,7 +226,7 @@ context.assert(myValue).matches(/^[a-z0-9]{3,32}$/i);
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that none are true.
 
 ```javascript
-context.assert(["2pac", "biggie", "daz"]).none(rapper => {
+context.assert(["2pac", "biggie", "daz"]).none((rapper) => {
   return rapper == "snoop";
 });
 ```
@@ -270,7 +272,7 @@ await context.assert(jsonResponse).schema(mySchema, true);
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that at least one is true.
 
 ```javascript
-context.assert(["dre", "snoop", "2pac"]).some(rapper => {
+context.assert(["dre", "snoop", "2pac"]).some((rapper) => {
   return rapper.indexOf("e") >= 0;
 });
 ```

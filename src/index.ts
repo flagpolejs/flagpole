@@ -1,11 +1,7 @@
 import { Assertion } from "./assertion";
 import { AssertionContext } from "./assertioncontext";
 import { AssertionResult } from "./logging/assertionresult";
-import {
-  iAssertionSchema,
-  iAssertionSchemaItem,
-  AssertionSchema,
-} from "./assertionschema";
+import { AssertionSchema } from "./assertionschema";
 import { BrowserControl } from "./browsercontrol";
 import { BrowserResponse } from "./browserresponse";
 import { CssResponse } from "./cssresponse";
@@ -25,7 +21,14 @@ import { Value } from "./value";
 import { VideoResponse } from "./videoresponse";
 import { Flagpole } from "./flagpole";
 import { ResponseType } from "./enums";
-import { iResponse, iValue, iScenario, iSuite } from "./interfaces";
+import {
+  iResponse,
+  iValue,
+  iScenario,
+  iSuite,
+  iAssertionSchema,
+  iAssertionSchemaItem,
+} from "./interfaces";
 import { BrowserOptions, HttpRequest, HttpAuth } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import * as Promise from "bluebird";

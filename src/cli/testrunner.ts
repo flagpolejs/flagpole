@@ -1,4 +1,4 @@
-import { SuiteConfig } from "./config";
+import { SuiteConfig } from "../flagpoleconfig";
 import { Cli } from "./cli";
 import { SuiteExecution, SuiteExecutionResult } from "./suiteexecution";
 import { FlagpoleExecution } from "..";
@@ -124,7 +124,7 @@ export class TestRunner {
   private _onDone() {
     const duration: number = Date.now() - this._timeStart;
     let output: string = "";
-    if (FlagpoleExecution.opts.isJsonOutput) {
+    if (FlagpoleExecution.global.isJsonOutput) {
       let suiteOutput: string[] = [];
       let overall = {
         pass: 0,
@@ -156,7 +156,7 @@ export class TestRunner {
         output += result.toString() + "\n";
       });
     }
-    if (FlagpoleExecution.opts.isBrowserOutput) {
+    if (FlagpoleExecution.global.isBrowserOutput) {
       const open = require("open");
       const fs = require("fs");
       const tmp = require("tmp");
@@ -175,7 +175,7 @@ export class TestRunner {
       })();
     } else {
       Cli.log(output);
-      if (!this.allPassing && FlagpoleExecution.opts.shouldOutputToConsole) {
+      if (!this.allPassing && FlagpoleExecution.global.shouldOutputToConsole) {
         Cli.log("Some suites failed.");
       }
     }
