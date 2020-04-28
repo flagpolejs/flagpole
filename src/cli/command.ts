@@ -25,6 +25,7 @@ export class CliCommandOption {
 
 export abstract class Command {
   public abstract commandString: string;
+  public description: string = "";
   public isHidden: boolean = false;
   public isDefault: boolean = false;
   public noHelp: boolean = false;
@@ -48,6 +49,7 @@ export abstract class Command {
         command.option(option.flags, option.description, option.default);
       }
     });
+    command.description(this.description);
     command.on("--help", this.helpCallback);
     command.action(async (...args: any[]) => {
       // Initialize Flagpole

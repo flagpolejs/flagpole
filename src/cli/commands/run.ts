@@ -13,6 +13,7 @@ const ansi = new CliAnsi();
 
 export default class Run extends Command {
   public commandString = "run";
+  public description = "run test suites";
   public helpCallback() {
     console.log("");
     console.log("Examples:");

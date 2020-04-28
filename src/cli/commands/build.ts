@@ -7,6 +7,7 @@ import { promptTextPath } from "../cli-helper";
 
 export default class Build extends Command {
   public commandString = "build";
+  public description = "transpile tests from TypeScript to JavaScript";
   public async action() {
     await tsc(true);
   }

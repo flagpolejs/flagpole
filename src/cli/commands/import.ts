@@ -11,6 +11,8 @@ import prompts = require("prompts");
 
 export default class Import extends Command {
   public commandString = "import";
+  public description =
+    "find files in the tests folder that are not in Flagpole config and import them";
   public async action() {
     if (!FlagpoleExecution.config) {
       throw "Flagpole config not found";

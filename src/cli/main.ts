@@ -49,7 +49,20 @@ files.forEach((file) => {
 // When no command is entered
 program.action(() => {
   printHeader(true);
-  Cli.log("", program.helpInformation()).exit(0);
+  //Cli.log(program.helpInformation());
+  Cli.log(`
+  about                  credits
+  add [type]             add a new suite, scenario, environment or tag
+  audit                  find problems in Flagpole configuration, such as suites whose files do not exist
+  build                  transpile tests from TypeScript to JavaScript
+  debug                  give some debug information
+  import                 find files in the tests folder that are not in Flagpole config and import them
+  init                   initialize Flagpole in this project
+  list [type]            list out the suites, environments or tags in this project
+  rm [type]              remove a suite or environment
+  run [options]          run test suites
+  `);
+  Cli.exit(0);
 });
 // Help men
 program.on("--help", () => {

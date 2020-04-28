@@ -5,6 +5,8 @@ import { findJsFilesInTestFolder } from "../cli-helper";
 
 export default class Audit extends Command {
   public commandString = "audit";
+  public description =
+    "find problems in Flagpole configuration, such as suites whose files do not exist";
   public async action() {
     const suiteNames: string[] = (
       FlagpoleExecution.config?.getSuiteNames() || []

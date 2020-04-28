@@ -25,6 +25,11 @@ export class FlagpoleExecution {
     const configOptions = opts.configFilePath
       ? await FlagpoleExecution.loadOptsFromConfigFile(opts.configFilePath)
       : undefined;
+    const defaultEnv = configOptions?.environments
+      ? Object.values(configOptions?.environments)[0]
+      : undefined;
+    opts.environmentName = opts.environmentName || defaultEnv?.name;
+    opts.baseDomain = opts.baseDomain || defaultEnv?.defaultDomain;
     return new FlagpoleExecution(
       new FlagpoleOptions(opts),
       configOptions && opts.configFilePath

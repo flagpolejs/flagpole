@@ -11,8 +11,9 @@ interface iFileWatcher {
 }
 
 export default class About extends Command {
-  public commandString = "about";
+  public commandString = "watch";
   public files: { [filename: string]: iFileWatcher } = {};
+  public isHidden = true;
   private fsWait: any = null;
   private changeCount: number = 0;
 

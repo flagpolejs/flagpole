@@ -10,14 +10,22 @@ export const getDefaultConfig = (configFilePath: string): iConfigOpts => {
       name: path.basename(projectPath),
       path: "tests",
     },
-    environments: [],
-    suites: [],
+    environments: {},
+    suites: {},
   };
 };
+
+export interface iEnvCollection {
+  [name: string]: iEnvOpts;
+}
 
 export interface iEnvOpts {
   name: string;
   defaultDomain?: string;
+}
+
+export interface iSuiteCollection {
+  [name: string]: iSuiteOpts;
 }
 
 export interface iSuiteOpts {
@@ -39,8 +47,8 @@ export interface iProjectOpts {
 
 export interface iConfigOpts {
   project: iProjectOpts;
-  environments: iEnvOpts[];
-  suites: iSuiteOpts[];
+  environments: iEnvCollection;
+  suites: iSuiteCollection;
 }
 
 export interface iConfigFile {

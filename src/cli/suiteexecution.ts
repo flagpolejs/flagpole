@@ -160,6 +160,7 @@ export class SuiteExecution {
     resolve: Function
   ) {
     const command: string[] = [filePath].concat(opts.toArgs());
+    console.log(command);
     const proc = spawn("node", command);
     proc.stdout.on("data", (data) => {
       this._logLine(data);

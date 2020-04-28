@@ -159,7 +159,7 @@ export class FlagpoleOptions implements iFlagpoleOptions {
       configFilePath: newOpts.configFilePath || this.configFilePath,
       outputFormat: newOpts.outputFormat || this.outputFormat,
       baseDomain: newOpts.baseDomain || this.baseDomain,
-      environmentName: newOpts.configFilePath || this.environmentName,
+      environmentName: newOpts.environmentName || this.environmentName,
       exitOnDone:
         newOpts.exitOnDone !== undefined ? newOpts.exitOnDone : this.exitOnDone,
       isChildProcess:

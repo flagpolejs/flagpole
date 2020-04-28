@@ -26,7 +26,7 @@ export class FlagpoleReport {
     lines.push(new HeadingLine(this.suite.title));
     lines.push(new CommentLine(`Base URL: ${this.suite.baseUrl}`));
     lines.push(
-      new CommentLine(`Environment: ${FlagpoleExecution.environment?.name}`)
+      new CommentLine(`Environment: ${FlagpoleExecution.environmentName}`)
     );
     lines.push(new CommentLine(`Took ${this.suite.executionDuration}ms`));
     const failCount: number = this.suite.failCount;

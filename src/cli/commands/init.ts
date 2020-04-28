@@ -10,11 +10,17 @@ import {
   promptTextPath,
 } from "../cli-helper";
 import { sep } from "path";
-import { iConfigOpts, iEnvOpts, FlagpoleConfig } from "../config";
+import {
+  iConfigOpts,
+  iEnvOpts,
+  FlagpoleConfig,
+  iEnvCollection,
+} from "../config";
 import * as fs from "fs-extra";
 
 export default class Init extends Command {
   public commandString = "init";
+  public description = "initialize Flagpole in this project";
   public async action() {
     Cli.subheader("Initialize Flagpole Project");
     const opts = await getConfigOpts();
@@ -51,17 +57,17 @@ async function getConfigOpts(): Promise<iConfigOpts> {
       source: tsFolders === undefined ? undefined : tsFolders.sourceFolder,
       output: tsFolders === undefined ? undefined : tsFolders.outputFolder,
     },
-    environments: ((): iEnvOpts[] => {
-      const out: iEnvOpts[] = [];
+    environments: ((): iEnvCollection => {
+      const out: iEnvCollection = {};
       environments.forEach((env: string) => {
-        out.push({
+        out[env] = {
           name: env,
           defaultDomain: domains[`domain_${env}`],
-        });
+        };
       });
       return out;
     })(),
-    suites: [],
+    suites: {},
   };
 }
 

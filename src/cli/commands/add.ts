@@ -32,6 +32,25 @@ const choicesOfType = [
   { value: "tag", title: "Tag" },
 ];
 
+export default class Add extends Command {
+  public commandString = "add [type]";
+  public description = "add a new suite, scenario, environment or tag";
+  public async action(type: string) {
+    if (!type || !choicesOfType.map((choice) => choice.value).includes(type)) {
+      type = await askForType();
+    }
+    if (type == "tag") {
+      promptToAddTag();
+    } else if (type == "env") {
+      promptToAddEnv();
+    } else if (type == "scenario") {
+      promptToAddScenario();
+    } else {
+      promptToAddSuite();
+    }
+  }
+}
+
 const askForType = async (): Promise<string> => {
   return (
     await prompts(
@@ -165,22 +184,4 @@ async function promptToAddSuite(defaultSuiteName: string = "smoke") {
     )
     .log("")
     .exit(0);
-}
-
-export default class Add extends Command {
-  public commandString = "add [type]";
-  public async action(type: string) {
-    if (!type || !choicesOfType.map((choice) => choice.value).includes(type)) {
-      type = await askForType();
-    }
-    if (type == "tag") {
-      promptToAddTag();
-    } else if (type == "env") {
-      promptToAddEnv();
-    } else if (type == "scenario") {
-      promptToAddScenario();
-    } else {
-      promptToAddSuite();
-    }
-  }
 }

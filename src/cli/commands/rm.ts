@@ -11,7 +11,8 @@ import { SuiteConfig } from "../config";
 import * as fs from "fs-extra";
 
 export default class Rm extends Command {
-  public commandString = "rm";
+  public commandString = "rm [type]";
+  public description = "remove a suite or environment";
   public async action(type: string) {
     if (type == "env") {
       await removeEnv();
