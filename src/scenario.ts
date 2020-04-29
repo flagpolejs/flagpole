@@ -551,7 +551,7 @@ export class Scenario implements iScenario {
   /**
    * Skip this scenario completely and mark it done
    */
-  public async skip(message?: string): Promise<Scenario> {
+  public async skip(message?: string): Promise<iScenario> {
     if (this.hasExecuted) {
       throw new Error(
         `Can't skip Scenario since it already started executing.`
@@ -565,7 +565,7 @@ export class Scenario implements iScenario {
     return this;
   }
 
-  public async cancel(): Promise<Scenario> {
+  public async cancel(): Promise<iScenario> {
     if (this.hasExecuted) {
       throw new Error(
         `Can't cancel Scenario since it already started executing.`
@@ -591,13 +591,13 @@ export class Scenario implements iScenario {
   /**
    * Execute this scenario
    */
-  public async execute(): Promise<Scenario>;
+  public async execute(): Promise<iScenario>;
   public async execute(params: {
     [key: string]: string | number;
-  }): Promise<Scenario>;
+  }): Promise<iScenario>;
   public async execute(pathParams?: {
     [key: string]: string | number;
-  }): Promise<Scenario> {
+  }): Promise<iScenario> {
     if (!this.hasExecuted && this.url !== null) {
       // Apply path parameters when the url was like /articles/{id}
       if (pathParams) {
@@ -1066,7 +1066,7 @@ export class Scenario implements iScenario {
   protected async _markScenarioCompleted(
     errorMessage: string | null = null,
     errorDetails?: string
-  ): Promise<Scenario> {
+  ): Promise<iScenario> {
     // Only run this once
     if (!this.hasFinished) {
       await this._fireAfter();

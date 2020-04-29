@@ -28,11 +28,11 @@ export class Assertion implements iAssertion {
   /**
    * Creates a new assertion with the same value and settings, just no result
    */
-  public get and(): Assertion {
+  public get and(): iAssertion {
     // If no assertion statement was made, skip it by marking it resolved
     this._resolveAssertion();
     // Create new assertion
-    const assertion: Assertion = new Assertion(
+    const assertion: iAssertion = new Assertion(
       this._context,
       this._input,
       this._message ? `&& ${this._message}` : null
@@ -45,7 +45,7 @@ export class Assertion implements iAssertion {
   /**
    * Creates a new assertion with the type of this one
    */
-  public get type(): Assertion {
+  public get type(): iAssertion {
     // If no assertion statement was made, skip it by marking it resolved
     this._resolveAssertion();
     // Generate type value object
@@ -55,7 +55,7 @@ export class Assertion implements iAssertion {
       `Type of ${this._getSubject()}`
     );
     // Generate new assertion
-    const assertion: Assertion = new Assertion(
+    const assertion: iAssertion = new Assertion(
       this._context,
       type,
       this._message
@@ -68,7 +68,7 @@ export class Assertion implements iAssertion {
   /**
    * Creates a new assertion with the lengh of this one
    */
-  public get length(): Assertion {
+  public get length(): iAssertion {
     // If no assertion statement was made, skip it by marking it resolved
     this._resolveAssertion();
     // Generate length Value object
@@ -90,7 +90,7 @@ export class Assertion implements iAssertion {
   /**
    * Creates a new assertion with the keys of the object as the value
    */
-  public get keys(): Assertion {
+  public get keys(): iAssertion {
     // If no assertion statement was made, skip it by marking it resolved
     this._resolveAssertion();
     // Get keys
@@ -112,7 +112,7 @@ export class Assertion implements iAssertion {
   /**
    * Creates a new assertion with the values of the object as the value
    */
-  public get values(): Assertion {
+  public get values(): iAssertion {
     // If no assertion statement was made, skip it by marking it resolved
     this._resolveAssertion();
     // Get values
@@ -134,7 +134,7 @@ export class Assertion implements iAssertion {
   /**
    * Flips the expected assertion evaluation
    */
-  public get not(): Assertion {
+  public get not(): iAssertion {
     this._not = true;
     return this;
   }
@@ -142,7 +142,7 @@ export class Assertion implements iAssertion {
   /**
    * Marks this assertion optional if it fails
    */
-  public get optional(): Assertion {
+  public get optional(): iAssertion {
     this._optional = true;
     return this;
   }
@@ -201,7 +201,7 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public exactly(value: any): Assertion {
+  public exactly(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     this._setDefaultMessages(
@@ -211,7 +211,7 @@ export class Assertion implements iAssertion {
     return this._evalulate(thisValue === thatValue, thisValue);
   }
 
-  public equals(value: any): Assertion {
+  public equals(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     this._setDefaultMessages(
@@ -221,7 +221,7 @@ export class Assertion implements iAssertion {
     return this._evalulate(thisValue == thatValue, thisValue);
   }
 
-  public like(value: any): Assertion {
+  public like(value: any): iAssertion {
     const thisValue: any = String(this._getCompareValue(this._input))
       .toLowerCase()
       .trim();
@@ -235,7 +235,7 @@ export class Assertion implements iAssertion {
     return this._evalulate(thisValue == thatValue, thisValue);
   }
 
-  public greaterThan(value: any): Assertion {
+  public greaterThan(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     this._setDefaultMessages(
@@ -248,7 +248,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public greaterThanOrEquals(value: any): Assertion {
+  public greaterThanOrEquals(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     this._setDefaultMessages(
@@ -261,7 +261,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public lessThan(value: any): Assertion {
+  public lessThan(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     this._setDefaultMessages(
@@ -274,7 +274,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public lessThanOrEquals(value: any): Assertion {
+  public lessThanOrEquals(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     this._setDefaultMessages(
@@ -287,7 +287,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public between(min: any, max: any): Assertion {
+  public between(min: any, max: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatMin: number = parseFloat(this._getCompareValue(min));
     const thatMax: number = parseFloat(this._getCompareValue(max));
@@ -301,7 +301,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public matches(value: any): Assertion {
+  public matches(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     const pattern = toType(value) == "regexp" ? thatValue : new RegExp(value);
@@ -312,7 +312,7 @@ export class Assertion implements iAssertion {
     return this._evalulate(pattern.test(thisValue), thisValue);
   }
 
-  public contains(value: any): Assertion {
+  public contains(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     const bool: boolean = (() => {
@@ -333,16 +333,19 @@ export class Assertion implements iAssertion {
     return this._evalulate(bool, thisValue);
   }
 
-  public looksLike(imageData: Buffer): Assertion;
-  public looksLike(imageLocalPath: string): Assertion;
-  public looksLike(imageData: Buffer, threshold: number): Assertion;
-  public looksLike(imageLocalPath: string, threshold: number): Assertion;
-  public looksLike(imageData: Buffer, thresholdPercent: string): Assertion;
-  public looksLike(imageLocalPath: string, thresholdPercent: string): Assertion;
+  public looksLike(imageData: Buffer): iAssertion;
+  public looksLike(imageLocalPath: string): iAssertion;
+  public looksLike(imageData: Buffer, threshold: number): iAssertion;
+  public looksLike(imageLocalPath: string, threshold: number): iAssertion;
+  public looksLike(imageData: Buffer, thresholdPercent: string): iAssertion;
+  public looksLike(
+    imageLocalPath: string,
+    thresholdPercent: string
+  ): iAssertion;
   public looksLike(
     controlImage: string | Buffer,
     allowedDifference: number | string = 0
-  ): Assertion {
+  ): iAssertion {
     this._setDefaultMessages(`Images do not match.`, `Images match.`);
     let assertionPassed: boolean = false;
     let details: string = "";
@@ -380,7 +383,7 @@ export class Assertion implements iAssertion {
     return this._evalulate(assertionPassed, details);
   }
 
-  public startsWith(value: any): Assertion {
+  public startsWith(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     const bool: boolean = (() => {
@@ -399,7 +402,7 @@ export class Assertion implements iAssertion {
     return this._evalulate(bool, String(thisValue));
   }
 
-  public endsWith(value: any): Assertion {
+  public endsWith(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     const bool: boolean = (() => {
@@ -423,7 +426,7 @@ export class Assertion implements iAssertion {
     return this._evalulate(bool, String(this._input));
   }
 
-  public in(values: any[]): Assertion {
+  public in(values: any[]): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} is not in list: ${values.join(", ")}`,
@@ -432,7 +435,7 @@ export class Assertion implements iAssertion {
     return this._evalulate(values.indexOf(thisValue) >= 0, thisValue);
   }
 
-  public includes(value: any): Assertion {
+  public includes(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = String(this._getCompareValue(value));
     const bool: boolean = (() => {
@@ -448,7 +451,7 @@ export class Assertion implements iAssertion {
     return this._evalulate(bool, thisValue);
   }
 
-  public exists(): Assertion {
+  public exists(): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} does not exist`,
@@ -466,7 +469,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public resolves(continueOnReject: boolean = false): Promise<Assertion> {
+  public resolves(continueOnReject: boolean = false): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} was not resolved`,
@@ -524,7 +527,7 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public none(callback: IteratorCallback): Promise<Assertion> {
+  public none(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} some were true`,
@@ -539,7 +542,7 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public every(callback: IteratorCallback): Promise<Assertion> {
+  public every(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} some were true`,
@@ -556,7 +559,7 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public everySync(callback: IteratorCallback): Assertion {
+  public everySync(callback: IteratorCallback): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} some were true`,
@@ -574,7 +577,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public some(callback: IteratorCallback): Promise<Assertion> {
+  public some(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
       `${this._getSubject()} none were true`,
@@ -633,8 +636,8 @@ export class Assertion implements iAssertion {
    * @param message
    * @param value
    */
-  public assert(message: string, value: any): Assertion;
-  public assert(value: any): Assertion;
+  public assert(message: string, value: any): iAssertion;
+  public assert(value: any): iAssertion;
   public assert(a: any, b?: any): iAssertion {
     return this._context.assert(a, b);
   }
@@ -720,7 +723,7 @@ export class Assertion implements iAssertion {
     bool: boolean,
     actualValue: any,
     highlightText: string | null = null
-  ): Assertion {
+  ): iAssertion {
     // Result is immutable, so only let them assert once
     if (this.isFinalized) {
       throw new Error("Assertion result is immutable.");

@@ -9,6 +9,7 @@ import {
   iSuite,
   iAssertionResult,
   ScreenshotOpts,
+  iAssertion,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -101,9 +102,9 @@ export class AssertionContext implements iAssertionContext {
    * @param message
    * @param value
    */
-  public assert(message: string, value: any): Assertion;
-  public assert(value: any): Assertion;
-  public assert(a: any, b?: any): Assertion {
+  public assert(message: string, value: any): iAssertion;
+  public assert(value: any): iAssertion;
+  public assert(a: any, b?: any): iAssertion {
     const value = typeof b !== "undefined" ? b : a;
     const message = typeof b !== "undefined" ? a : undefined;
     const assertion = new Assertion(this, value, message);
