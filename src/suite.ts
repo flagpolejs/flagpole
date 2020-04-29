@@ -225,7 +225,7 @@ export class Suite implements iSuite {
    */
   public scenario(
     title: string,
-    type: ResponseType,
+    type: ResponseType = "html",
     opts?: BrowserOptions
   ): iScenario {
     const scenario: iScenario = Scenario.create(
@@ -260,63 +260,63 @@ export class Suite implements iSuite {
    * Create a new JSON/REST API Scenario
    */
   public json(title: string): iScenario {
-    return this.scenario(title, ResponseType.json);
+    return this.scenario(title, "json");
   }
 
   /**
    * Create a new Image Scenario
    */
   public image(title: string): iScenario {
-    return this.scenario(title, ResponseType.image);
+    return this.scenario(title, "image");
   }
 
   /**
    * Create a new Video Scenario
    */
   public video(title: string): iScenario {
-    return this.scenario(title, ResponseType.video);
+    return this.scenario(title, "video");
   }
 
   /**
    * Create a new HTML/DOM Scenario
    */
   public html(title: string): iScenario {
-    return this.scenario(title, ResponseType.html);
+    return this.scenario(title, "html");
   }
 
   /**
    * Create a new CSS Scenario
    */
   public stylesheet(title: string): iScenario {
-    return this.scenario(title, ResponseType.stylesheet);
+    return this.scenario(title, "stylesheet");
   }
 
   /**
    * Create a new Script Scenario
    */
   public script(title: string): iScenario {
-    return this.scenario(title, ResponseType.script);
+    return this.scenario(title, "script");
   }
 
   /**
    * Create a generic resource scenario
    */
   public resource(title: string): iScenario {
-    return this.scenario(title, ResponseType.resource);
+    return this.scenario(title, "resource");
   }
 
   /**
    * Create a Browser/Puppeteer Scenario
    */
   public browser(title: string, opts: BrowserOptions = {}): iScenario {
-    return this.scenario(title, ResponseType.browser, opts);
+    return this.scenario(title, "browser", opts);
   }
 
   /**
    * Create an ExtJS Scenario
    */
   public extjs(title: string, opts: BrowserOptions = {}): iScenario {
-    return this.scenario(title, ResponseType.extjs, opts);
+    return this.scenario(title, "extjs", opts);
   }
 
   /**
@@ -640,6 +640,7 @@ export class Suite implements iSuite {
     // This scenario is executing, suite was not previously executing
     if (scenario.hasExecuted && !this.hasExecuted) {
       await this._fireBeforeAll();
+      this._timeSuiteExecuted = Date.now();
     }
     await this._beforeAllResolved();
     await this._fireBeforeEach(scenario);

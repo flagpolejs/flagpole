@@ -1,12 +1,19 @@
-import { Flagpole } from "../../dist/index";
+import flagpole from "../../dist/index";
 
-const suite = Flagpole.suite("Test creating an api snapshot").base(
+const suite = flagpole("Test creating an api snapshot").base(
   "https://www.milesplit.com"
 );
 
 suite
-  .json("Snapshot created")
+  .scenario("Meet List API", "json")
   .open("/api/v1/meets")
   .next(async (context) => {
     await context.assert(context.response.jsonBody).schema("meetsList");
+  });
+
+suite
+  .scenario("Test meet page", "json")
+  .open("/api/v1/meets/5322")
+  .next(async (context) => {
+    await context.assert(context.response.jsonBody).schema("meet");
   });

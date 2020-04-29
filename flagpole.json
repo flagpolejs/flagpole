@@ -6,7 +6,8 @@
     "source": "src",
     "output": "out",
     "images": "images",
-    "cache": "cache"
+    "cache": "cache",
+    "schemas": "schemas"
   },
   "environments": {
     "local": {
@@ -36,6 +37,11 @@
     "api-snapshot": {
       "id": "",
       "name": "api-snapshot",
+      "tags": []
+    },
+    "google": {
+      "id": "",
+      "name": "google",
       "tags": []
     }
   }

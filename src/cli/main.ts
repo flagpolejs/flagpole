@@ -29,7 +29,6 @@ program
     process.cwd()
   )
   .option("-e, --env <name>", "set the environment")
-  .option("-o, --output <format>", "set output format", "console")
   .option("-q, --quiet", "silence all command line output", false)
   .option("-b, --base <domain>", "override base domain")
   .option("-x, --exitOnDone", "exit process after suites finish runs")

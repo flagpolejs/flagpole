@@ -35,6 +35,11 @@ export default class Run extends Command {
       default: false,
     }),
     new CliCommandOption({
+      flags: "-o, --output <format>",
+      description: "set output format",
+      default: "console",
+    }),
+    new CliCommandOption({
       flags: "-s, --suite <suite>",
       description: "run these test suites, supports wildcard",
     }),
@@ -56,6 +61,12 @@ export default class Run extends Command {
     }),
   ];
   public async action(args: commander.Command) {
+    if (args.headed || args.headless) {
+      FlagpoleExecution.global.headless = !!args.headless || !args.headed;
+    }
+    if (args.output) {
+      FlagpoleExecution.global.outputFormat = args.output;
+    }
     // Build first
     if (!!args.build) {
       await tsc(false);
@@ -89,16 +100,18 @@ export default class Run extends Command {
     }
     // Now run them
     if (selectedSuites.length) {
-      Cli.log(
-        "",
-        "Running Suites: " +
+      if (FlagpoleExecution.global.shouldOutputToConsole) {
+        Cli.log(
+          "",
+          selectedSuites.length === 1 ? "Running Suite:" : "Running Suites: ",
           selectedSuites
             .map((suite) => {
               return suite.name;
             })
             .join(", "),
-        ""
-      );
+          ""
+        );
+      }
       return runSuites(selectedSuites, !!args.async);
     }
     // None to run

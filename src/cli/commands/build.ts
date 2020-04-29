@@ -3,7 +3,7 @@ import { Cli } from "../cli";
 import { FlagpoleExecution } from "../../flagpoleexecution";
 import { execSync } from "child_process";
 import prompts = require("prompts");
-import { promptTextPath } from "../cli-helper";
+import { promptTextPath, printSubheader, printLine } from "../cli-helper";
 
 export default class Build extends Command {
   public commandString = "build";
@@ -17,7 +17,7 @@ export async function tsc(exitOnSuccess: boolean = true) {
   if (!FlagpoleExecution.global.config) {
     throw "Flagpole config not found";
   }
-  Cli.subheader("Build TypeScript Tests");
+  printSubheader("Build TypeScript Tests");
   // Is TSC installed?
   if (!(await isTscInstalled(3, 7, 0))) {
     return Cli.log(
@@ -30,10 +30,10 @@ export async function tsc(exitOnSuccess: boolean = true) {
   }
   // Project is configured to use TypeScript
   if (FlagpoleExecution.global.config.project.isTypeScript) {
-    Cli.log("Transpiling TypeScript to JavaScript...");
+    printLine("Transpiling TypeScript to JavaScript...");
     try {
       await FlagpoleExecution.global.config.tsc();
-      Cli.log("Done!");
+      printLine("Done!");
       if (exitOnSuccess) {
         Cli.exit(0);
       }

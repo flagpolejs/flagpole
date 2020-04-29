@@ -353,15 +353,15 @@ export abstract class DOMElement extends Value {
       // If we are loading an html page, stay in our current mode
       return this._context.scenario.responseType;
     } else if (await this._isImageTag()) {
-      return ResponseType.image;
+      return "image";
     } else if (await this._isStylesheetTag()) {
-      return ResponseType.stylesheet;
+      return "stylesheet";
     } else if (await this._isScriptTag()) {
-      return ResponseType.script;
+      return "script";
     } else if (await this._isVideoTag()) {
-      return ResponseType.video;
+      return "video";
     } else {
-      return ResponseType.resource;
+      return "resource";
     }
   }
 
@@ -383,7 +383,7 @@ export abstract class DOMElement extends Value {
 
   protected _createSubScenario(
     overloaded: iMessageAndCallback,
-    defaultResponseType: ResponseType = ResponseType.resource,
+    defaultResponseType: ResponseType = "resource",
     defaultOpts: any = {}
   ): iScenario {
     return overloaded.scenario === undefined

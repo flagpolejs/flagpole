@@ -40,6 +40,7 @@ import {
   BrowserOptions,
   HttpRequestType,
 } from "./httprequest";
+import { FlagpoleExecution } from ".";
 
 /**
  * A scenario contains tests that run against one request
@@ -195,7 +196,7 @@ export class Scenario implements iScenario {
   protected _timeRequestStarted: number | null = null;
   protected _timeRequestLoaded: number | null = null;
   protected _timeScenarioFinished: number | null = null;
-  protected _responseType: ResponseType = ResponseType.html;
+  protected _responseType: ResponseType = "html";
   protected _redirectChain: string[] = [];
   protected _finalUrl: string | null = null;
   protected _waitToExecute: boolean = false;
@@ -891,25 +892,35 @@ export class Scenario implements iScenario {
     }
     // Merge passed in opts with default opts
     this._responseType = type;
-    this._request
-      .setOptions(
-        type == ResponseType.browser || type == ResponseType.extjs
-          ? {
-              browser: { ...this._defaultBrowserOptions, ...opts },
-            }
-          : {
-              ...this._defaultRequestOptions,
-              ...opts,
-            }
-      )
-      .setOptions({
-        type:
-          this._responseType === ResponseType.json
-            ? "json"
-            : this._responseType === ResponseType.image
-            ? "image"
-            : "generic",
+    if (["browser", "extjs"].includes(type)) {
+      // Overrides from command line
+      const overrides: any = {};
+      if (FlagpoleExecution.global.headless !== undefined) {
+        overrides.headless = FlagpoleExecution.global.headless;
+      }
+      // Set browser options
+      this._request.setOptions({
+        browserOptions: {
+          ...this._defaultBrowserOptions, // Flagpole defaults
+          ...opts, // What was in the code
+          ...overrides, // What was in the command line
+        },
       });
+    } else {
+      this._request
+        .setOptions({
+          ...this._defaultRequestOptions,
+          ...opts,
+        })
+        .setOptions({
+          type:
+            this._responseType === "json"
+              ? "json"
+              : this._responseType === "image"
+              ? "image"
+              : "generic",
+        });
+    }
     this._response = createResponse(this);
     return this;
   }
@@ -1008,10 +1019,7 @@ export class Scenario implements iScenario {
       this._timeRequestStarted = Date.now();
       this.url = this.buildUrl().href;
       this._finalUrl = this._request.uri;
-      if (
-        this._responseType == ResponseType.browser ||
-        this._responseType == ResponseType.extjs
-      ) {
+      if (["extjs", "browser"].includes(this._responseType)) {
         this._executeBrowserRequest();
       } else {
         this._executeDefaultRequest();

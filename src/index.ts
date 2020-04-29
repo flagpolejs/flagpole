@@ -38,10 +38,8 @@ global.Promise = Promise;
 
 // Aliases
 const fp = Flagpole;
-const suite = (...args: any) => {
-  // Not sure why I needed to do this proxy way, but Flagpole was undefined once transpiled if I didn't.
-  return Flagpole.suite(args[0], args[1]);
-};
+
+export default Flagpole.suite;
 
 export {
   Flagpole,
@@ -79,5 +77,4 @@ export {
   iScenario,
   iSuite,
   fp,
-  suite,
 };

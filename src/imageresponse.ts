@@ -40,7 +40,7 @@ export class ImageResponse extends ProtoResponse implements iResponse {
   }
 
   public get responseType(): ResponseType {
-    return ResponseType.image;
+    return "image";
   }
 
   public get responseTypeName(): string {

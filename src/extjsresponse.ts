@@ -10,17 +10,17 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
   }
 
   public get responseType(): ResponseType {
-    return ResponseType.extjs;
+    return "extjs";
   }
 
   constructor(scenario: iScenario) {
     super(scenario);
     // Before this scenario starts to run
     scenario.before(() => {
-      scenario.nextPrepend(async context => {
+      scenario.nextPrepend(async (context) => {
         if (context.page !== null) {
           // Wait for Ext
-          const extExists = await context.evaluate(function() {
+          const extExists = await context.evaluate(function () {
             return !!window["Ext"];
           });
           context.assert("ExtJS was found.", extExists).equals(true);
@@ -102,7 +102,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
         `Ext.onReady(() => { window.flagpoleExtReady = true; });`
       );
       await this.page.waitForFunction(`window.flagpoleExtReady`, {
-        timeout: timeout
+        timeout: timeout,
       });
       return;
     }

@@ -30,6 +30,7 @@ export interface iFlagpoleOptions {
   isChildProcess?: boolean;
   verbosity?: number;
   automaticallyPrintToConsole?: boolean;
+  headless?: boolean;
 }
 
 function loadOptsFromConfigFile(configFilePath: string): iConfigOpts {
@@ -103,6 +104,14 @@ export class FlagpoleExecution {
         opts.isChildProcess = true;
         lastArg = null;
         return;
+      } else if (arg == "--headless") {
+        opts.headless = true;
+        lastArg = null;
+        return;
+      } else if (arg == "--headed") {
+        opts.headless = false;
+        lastArg = null;
+        return;
       }
       lastArg = arg;
     });
@@ -155,6 +164,10 @@ export class FlagpoleExecution {
     return this._opts.verbosity === undefined ? 0 : this._opts.verbosity;
   }
 
+  public set outputFormat(value: FlagpoleOutput) {
+    this._opts.outputFormat = value;
+  }
+
   public get outputFormat(): FlagpoleOutput {
     return (this._opts.outputFormat =
       this._opts.outputFormat === undefined
@@ -170,6 +183,14 @@ export class FlagpoleExecution {
 
   public get baseDomain(): string | undefined {
     return this.environment?.defaultDomain;
+  }
+
+  public get headless(): boolean | undefined {
+    return this._opts.headless;
+  }
+
+  public set headless(value: boolean | undefined) {
+    this._opts.headless = value;
   }
 
   public get isQuietMode(): boolean {
@@ -251,6 +272,9 @@ export class FlagpoleExecution {
     }
     if (this.outputFormat !== undefined) {
       opts += " -o " + this.outputFormat;
+    }
+    if (this.headless !== undefined) {
+      opts += ` --${this.headless ? "headless" : "headed"}`;
     }
     return opts;
   }

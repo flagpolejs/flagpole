@@ -14,7 +14,7 @@ export class JsonResponse extends ProtoResponse implements iResponse {
   }
 
   public get responseType(): ResponseType {
-    return ResponseType.json;
+    return "json";
   }
 
   public init(httpResponse: HttpResponse) {
@@ -60,12 +60,12 @@ export class JsonResponse extends ProtoResponse implements iResponse {
       return (
         import("jmespath")
           // Got it, so save it and return it
-          .then(jpath => {
+          .then((jpath) => {
             this._jPath = jpath;
             return this._jPath;
           })
           // Couldn't load jmespath, so set it to null
-          .catch(e => {
+          .catch((e) => {
             this._jPath = new jPath();
             return this._jPath;
           })

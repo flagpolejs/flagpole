@@ -15,7 +15,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
   }
 
   public get responseType(): ResponseType {
-    return ResponseType.html;
+    return "html";
   }
 
   public init(httpResponse: HttpResponse) {

@@ -1,7 +1,7 @@
-import { suite, iSuite } from "../../dist/index.js";
+import flagpole from "../../dist/index.js";
 
 (async () => {
-  await suite("Test", (foobar: iSuite) => {
+  await flagpole("Test", (foobar) => {
     foobar
       .base("https://fl.milesplit.com/")
       .html("MileSplit Florida - Front Page Test")

@@ -10,6 +10,7 @@ import {
   readFileSync,
   writeFileSync,
   existsSync,
+  ensureFileSync,
 } from "fs-extra";
 import { resolve } from "path";
 
@@ -20,7 +21,9 @@ export function getSchemaPath(schemaName: string): string {
     throw "Flagpole schema folder path not found.";
   }
   ensureDirSync(schemasFolder);
-  return resolve(schemasFolder, `${schemaName}.json`);
+  const path = resolve(schemasFolder, `${schemaName}.json`);
+  ensureFileSync(path);
+  return path;
 }
 
 export function getSchema(schemaName: string): iAssertionSchema {

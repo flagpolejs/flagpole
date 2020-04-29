@@ -6,7 +6,7 @@ import { HttpResponse } from "./httpresponse";
 import { AssertionContext } from "./assertioncontext";
 
 export function isPuppeteer(type: ResponseType): boolean {
-  return [ResponseType.browser, ResponseType.extjs].indexOf(type) >= 0;
+  return ["browser", "extjs"].indexOf(type) >= 0;
 }
 
 export abstract class ProtoResponse implements iResponse {

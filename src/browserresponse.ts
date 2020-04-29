@@ -11,7 +11,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
   }
 
   public get responseType(): ResponseType {
-    return ResponseType.browser;
+    return "browser";
   }
 
   /**
