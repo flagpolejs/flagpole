@@ -661,7 +661,7 @@ export class Assertion implements iAssertion {
     // We haven't tried to load query engines yet
     if (typeof this._ajv == "undefined") {
       // Try importing ajv
-      return require("ajv")
+      return import("ajv")
         .then((Ajv: any) => {
           this._ajv = new Ajv();
           return this._ajv;

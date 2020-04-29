@@ -1,4 +1,4 @@
-import flagpole from "../../dist/index";
+import flagpole, { FlagpoleExecution } from "../../dist/index";
 
 const suite = flagpole("Test creating an api snapshot").base(
   "https://www.milesplit.com"
@@ -8,7 +8,7 @@ suite
   .scenario("Meet List API", "json")
   .open("/api/v1/meets")
   .next(async (context) => {
-    await context.assert(context.response.statusCode).equals(200);
+    context.assert(context.response.statusCode).equals(200);
     await context.assert(context.response.jsonBody).schema("@meetsList");
   });
 
