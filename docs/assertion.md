@@ -194,7 +194,7 @@ context.assert(myValue).like("FooBar");
 Do a visual comparison of two images. This can be used with screenshots or comparing any two other images. Normally you'd have a control image saved with in the repository to compare against.
 
 ```typescript
-context.assert(screenshot).looksLike("./screenshots/homepage.png");
+context.assert(screenshot).looksLike("homepage");
 ```
 
 The second (optional) argument is `threshold`. This represents the allowed range of difference to give it some wiggle room. A lower number would indicate less allowed difference.
@@ -247,7 +247,7 @@ Tests whether the input promise resolves.
 await context.assert(myPromise).resolves();
 ```
 
-### schema(schema: iAssertionSchema | any): Promise<Assertion>
+### schema(schema: iAssertionSchema): Promise<Assertion>
 
 Test whether the input matches the schema provided. This currently is only valid for testing JSON. This assertion is async (returns a promise) so you should either await it or return it at the end of a next block.
 
@@ -266,6 +266,16 @@ If you have AJV installed, but want to use our built in simpler syntax in some p
 ```typescript
 await context.assert(jsonResponse).schema(mySchema, true);
 ```
+
+### schema(schemaName: string): Promise<Assertion>
+
+Pass in a name of a schema to check against. Schemas are stored by default in the `tests/schemas` folder. The first time you run this assertion (or if the file doesn't exist), it will PASS the test and CREATE the schema file for you from a snapshot of the current JSON response. This makes it trivial to create your control schema to test against on future runs
+
+```typescript
+await context.assert(context.response.jsonBody).schema("article-list");
+```
+
+This functions very similar to how the `looksLike` method works for image screenshots.
 
 ### some(callback: Function): Promise<Assertion>
 
