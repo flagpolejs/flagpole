@@ -3,7 +3,6 @@ import { Page } from "puppeteer-core";
 import {
   LogItemType,
   ConsoleLineType,
-  ConsoleColor,
   ResponseType,
   SuiteStatusEvent,
   ScenarioStatusEvent,
@@ -51,7 +50,7 @@ export type IteratorCallback = (value: any, index: number, arr: any[]) => any;
 
 export interface iConsoleLine {
   timestamp: Date;
-  color: ConsoleColor;
+  fg: [number, number, number];
   message: string;
   type: ConsoleLineType;
   toConsoleString(): string;

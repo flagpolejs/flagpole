@@ -25,7 +25,7 @@ export default class Rm extends Command {
 async function removeEnv() {
   Cli.subheader("Remove Environment");
   const envs = stringArrayToPromptChoices(
-    FlagpoleExecution.global.config?.getEnvironmentNames() || []
+    FlagpoleExecution.global.config.getEnvironmentNames() || []
   );
   if (envs.length == 0) {
     Cli.log("", "There are no environments defined in this project.", "").exit(
@@ -35,21 +35,18 @@ async function removeEnv() {
   const response = await prompts(
     promptSelect("name", "Which environment do you want to remove?", envs)
   );
-  if (FlagpoleExecution.global.config) {
-    FlagpoleExecution.global.config.removeEnvironment(response.name);
-    await FlagpoleExecution.global.config.save();
-    return Cli.log("Removed environment " + response.name)
-      .list(["Config file updated"])
-      .log("")
-      .exit(0);
-  }
-  Cli.fatalError("Flagpole config not found.");
+  FlagpoleExecution.global.config.removeEnvironment(response.name);
+  await FlagpoleExecution.global.config.save();
+  return Cli.log("Removed environment " + response.name)
+    .list(["Config file updated"])
+    .log("")
+    .exit(0);
 }
 
 async function removeSuite() {
   Cli.subheader("Remove Suite");
   const suites = stringArrayToPromptChoices(
-    FlagpoleExecution.global.config?.getSuiteNames().sort() || []
+    FlagpoleExecution.global.config.getSuiteNames().sort() || []
   );
   if (suites.length == 0) {
     return Cli.fatalError("There are no suites in this project.");
@@ -58,7 +55,7 @@ async function removeSuite() {
     promptSelect("suite", "Which suite do you want to remove?", suites),
     promptConfirm("delete", "Do you want to delete the files too?", false),
   ]);
-  if (responses.suite && FlagpoleExecution.global.config) {
+  if (responses.suite) {
     Cli.log(`Removing ${responses.suite}...`, "");
     const suite: SuiteConfig =
       FlagpoleExecution.global.config.suites[responses.suite];

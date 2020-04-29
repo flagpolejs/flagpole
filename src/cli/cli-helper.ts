@@ -2,7 +2,7 @@ import prompts = require("prompts");
 import { FlagpoleExecution } from "../flagpoleexecution";
 import * as fs from "fs-extra";
 import { sep } from "path";
-import { CliAnsi } from "./cli-ansi";
+import Ansi from "cli-ansi";
 
 export function printHeader(alwaysPrint: boolean = false) {
   if (alwaysPrint || FlagpoleExecution.global.shouldOutputToConsole) {
@@ -50,9 +50,8 @@ export function printOldHeader() {
 
 export function printSubheader(heading: string) {
   if (FlagpoleExecution.global.shouldOutputToConsole) {
-    const ansi = new CliAnsi();
     console.log(
-      ansi.center(
+      Ansi.center(
         "\x1b[31m===========================================================================\x1b[0m\n" +
           "\x1b[0m" +
           heading +
@@ -85,9 +84,6 @@ export async function findDetachedSuites(): Promise<string[]> {
 }
 
 export async function findJsFilesInTestFolder(): Promise<string[]> {
-  if (!FlagpoleExecution.global.config) {
-    throw "Flagpole config not found";
-  }
   let startFolder: string = FlagpoleExecution.global.config.getTestsFolder();
   let suitesInFolder: string[] = [];
 

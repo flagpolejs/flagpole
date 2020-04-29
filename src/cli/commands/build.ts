@@ -14,9 +14,6 @@ export default class Build extends Command {
 }
 
 export async function tsc(exitOnSuccess: boolean = true) {
-  if (!FlagpoleExecution.global.config) {
-    throw "Flagpole config not found";
-  }
   printSubheader("Build TypeScript Tests");
   // Is TSC installed?
   if (!(await isTscInstalled(3, 7, 0))) {
@@ -103,7 +100,7 @@ const setRootFolder = async (): Promise<string> => {
     promptTextPath(
       "rootFolder",
       "Flagpole Root Folder",
-      `${FlagpoleExecution.global.config?.project.path}`
+      `${FlagpoleExecution.global.config.project.path}`
     )
   );
   return response.rootFolder;

@@ -23,6 +23,7 @@
     "@types/cheerio": "^0.22.15",
     "bluebird": "^3.7.2",
     "cheerio": "^1.0.0-rc.3",
+    "cli-ansi": "^1.0.4",
     "commander": "^5.1.0",
     "common-tags": "^1.8.0",
     "css": "^2.2.4",

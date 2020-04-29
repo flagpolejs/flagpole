@@ -20,7 +20,9 @@ export class ImageCompare {
   ) {
     this._context = context;
     this._autoCreateIfNotExists =
-      typeof control === "string" && control.startsWith("@");
+      typeof control === "string" &&
+      control.startsWith("@") &&
+      control.length > 1;
     this._inputImage = this._getImage(input);
     this._control = control;
     this._controlImage = this._getImage(control);
@@ -112,7 +114,11 @@ export class ImageCompare {
     if (type == "buffer") {
       return PNG.sync.read(image);
     }
-    if (typeof image === "string" && image.startsWith("@")) {
+    if (
+      typeof image === "string" &&
+      image.startsWith("@") &&
+      image.length > 1
+    ) {
       const imagesFolder = this._context.executionOptions.config.getImagesFolder();
       fs.ensureDirSync(imagesFolder);
       // Build the image file path

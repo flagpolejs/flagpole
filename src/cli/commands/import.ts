@@ -14,9 +14,6 @@ export default class Import extends Command {
   public description =
     "find files in the tests folder that are not in Flagpole config and import them";
   public async action() {
-    if (!FlagpoleExecution.global.config) {
-      throw "Flagpole config not found";
-    }
     Cli.subheader("Import Suite");
     const suitesAvailableToImport = stringArrayToPromptChoices(
       await findDetachedSuites()

@@ -9,7 +9,7 @@ export default class Audit extends Command {
     "find problems in Flagpole configuration, such as suites whose files do not exist";
   public async action() {
     const suiteNames: string[] = (
-      FlagpoleExecution.global.config?.getSuiteNames() || []
+      FlagpoleExecution.global.config.getSuiteNames() || []
     ).sort();
     const suitesInFolder: string[] = await findJsFilesInTestFolder();
     const suitesNotExisting = suiteNames.filter(
@@ -17,7 +17,7 @@ export default class Audit extends Command {
     );
 
     Cli.subheader("Audit Suites").log(
-      "Looking in folder: " + FlagpoleExecution.global.config?.getTestsFolder(),
+      "Looking in folder: " + FlagpoleExecution.global.config.getTestsFolder(),
       ""
     );
 

@@ -193,8 +193,16 @@ context.assert(myValue).like("FooBar");
 
 Do a visual comparison of two images. This can be used with screenshots or comparing any two other images. Normally you'd have a control image saved with in the repository to compare against.
 
+If you pass a string starting with `@` it will automatically look in Flagpole's images folder (located at `./tests/images/` by default). This is the preferred way to use the method. No file extension is necessary.
+
 ```typescript
-context.assert(screenshot).looksLike("homepage");
+context.assert(screenshot).looksLike("@homepage");
+```
+
+Alternately, you can pass in the file path.
+
+```typescript
+context.assert(screenshot).looksLike("./my-screenshots/homepage.png");
 ```
 
 The second (optional) argument is `threshold`. This represents the allowed range of difference to give it some wiggle room. A lower number would indicate less allowed difference.
@@ -212,6 +220,12 @@ context.assert(screenshot).looksLike("./screenshots/homepage.png", "5%");
 ```
 
 The first time that you run the test, if the control image does not exist, the assertion will automatically pass. The screenshot that you passed in will be saved in the file path specified and will become the control for future test runs. If your page changes dramatically in the future, simply delete your control image to reset the base case.
+
+If you prefer, you can pass in the buffer of the image file that you've read from disk or a web site or elsewhere.
+
+```typescript
+context.assert(screenshot).looksLike(imageBuffer, 0.05);
+```
 
 ### matches(pattern: RegExp | string): Assertion
 
@@ -267,12 +281,22 @@ If you have AJV installed, but want to use our built in simpler syntax in some p
 await context.assert(jsonResponse).schema(mySchema, true);
 ```
 
-### schema(schemaName: string): Promise<Assertion>
+### schema(shemaPath: string): Promise<Assertion>
 
-Pass in a name of a schema to check against. Schemas are stored by default in the `tests/schemas` folder. The first time you run this assertion (or if the file doesn't exist), it will PASS the test and CREATE the schema file for you from a snapshot of the current JSON response. This makes it trivial to create your control schema to test against on future runs
+Pass in a name or path of a schema to check against. The first time you run this assertion (or if the file doesn't exist), it will PASS the test and CREATE the schema file for you from a snapshot of the current JSON response. This makes it trivial to create your control schema to test against on future runs.
+
+You can run it was a file path, pointing to the location of your schema file.
 
 ```typescript
-await context.assert(context.response.jsonBody).schema("article-list");
+await context
+  .assert(context.response.jsonBody)
+  .schema("./some/path/article-list.json");
+```
+
+But if you start the path with `@` then you only need to provide a name. This will automatically store it in the Flagpole schemas folder (by default is `./tests/schemas/`) as a `.json` file with that name. This is the preferred way to use the method.
+
+```typescript
+await context.assert(context.response.jsonBody).schema("@article-list");
 ```
 
 This functions very similar to how the `looksLike` method works for image screenshots.

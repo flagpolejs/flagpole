@@ -15,13 +15,18 @@ import {
 import { resolve } from "path";
 
 export function getSchemaPath(schemaName: string): string {
-  // Schemas folder
-  const schemasFolder = FlagpoleExecution.global.config.getSchemasFolder();
-  if (!schemasFolder) {
-    throw "Flagpole schema folder path not found.";
+  let path: string;
+  if (schemaName.startsWith("@") && schemaName.length > 1) {
+    // Schemas folder
+    const schemasFolder = FlagpoleExecution.global.config.getSchemasFolder();
+    if (!schemasFolder) {
+      throw "Flagpole schema folder path not found.";
+    }
+    ensureDirSync(schemasFolder);
+    path = resolve(schemasFolder, `${schemaName.substr(1)}.json`);
+  } else {
+    path = resolve(schemaName);
   }
-  ensureDirSync(schemasFolder);
-  const path = resolve(schemasFolder, `${schemaName}.json`);
   ensureFileSync(path);
   return path;
 }

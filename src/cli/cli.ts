@@ -91,9 +91,6 @@ export const addSuite = async (
   suite: iSuiteOpts,
   scenario: iScenarioOpts
 ): Promise<iSuiteOpts> => {
-  if (!FlagpoleExecution.global.config) {
-    throw "Flagpole config not found";
-  }
   const suiteConfig = new SuiteConfig(FlagpoleExecution.global.config, suite);
   const suitePath: string = suiteConfig.getSourcePath();
   let fileContents: string = FlagpoleExecution.global.config.project

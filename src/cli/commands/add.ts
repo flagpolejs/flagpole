@@ -60,9 +60,6 @@ const askForType = async (): Promise<string> => {
 };
 
 async function promptToAddEnv() {
-  if (!FlagpoleExecution.global.config) {
-    throw "Flagpole config not found";
-  }
   const responses = await prompts([
     promptTextName("name", "What do you want to call the environment?"),
     promptUrl("defaultDomain", "Default Domain (optional)"),
@@ -75,9 +72,6 @@ async function promptToAddEnv() {
 }
 
 async function promptToAddTag() {
-  if (!FlagpoleExecution.global.config) {
-    throw "Flagpole config not found";
-  }
   const responses = await prompts([
     promptTextName("tag", "Tag to Add"),
     promptMultiSelect(
@@ -96,9 +90,6 @@ async function promptToAddTag() {
 }
 
 async function promptToAddScenario() {
-  if (!FlagpoleExecution.global.config) {
-    throw "Flagpole config not found";
-  }
   const suites = stringArrayToPromptChoices(
     FlagpoleExecution.global.config.getSuiteNames().sort()
   );

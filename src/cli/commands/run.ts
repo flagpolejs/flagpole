@@ -6,10 +6,8 @@ import prompts = require("prompts");
 import { promptSelect, stringArrayToPromptChoices } from "../cli-helper";
 import { FlagpoleExecution } from "../../flagpoleexecution";
 import commander = require("commander");
-import { CliAnsi } from "../cli-ansi";
+import Ansi from "cli-ansi";
 import { TestRunner } from "../testrunner";
-
-const ansi = new CliAnsi();
 
 export default class Run extends Command {
   public commandString = "run";
@@ -74,7 +72,7 @@ export default class Run extends Command {
     Cli.subheader("Run Test Suites");
     // Default is to run all
     const suitesInProject: SuiteConfig[] =
-      FlagpoleExecution.global.config?.getSuites() || [];
+      FlagpoleExecution.global.config.getSuites() || [];
     let selectedSuites: SuiteConfig[] = suitesInProject;
     let tag: string = args.tag || "";
     let suiteNames: string[] = args.suite ? args.suite.split(",") : [];
@@ -188,7 +186,7 @@ const promptForSuites = async (
 };
 
 const promptForTag = async (): Promise<string> => {
-  const tags: string[] = FlagpoleExecution.global.config?.getTags() || [];
+  const tags: string[] = FlagpoleExecution.global.config.getTags() || [];
   if (tags.length > 0) {
     const response = await prompts(
       promptSelect(
@@ -220,15 +218,15 @@ const runSuites = async (
       Cli.exit(2);
     }
 
-    ansi.writeLine();
+    Ansi.writeLine();
 
     const states = ["/", "—", "\\", "|"];
     let stateIndex: number = 0;
     let statusMessage: string = `Loading ${runner.suites.length} test suites...`;
     let timer = setInterval(() => {
-      ansi.writeLine(
-        ansi.cursorUp(),
-        ansi.eraseLine(),
+      Ansi.writeLine(
+        Ansi.cursorUp(),
+        Ansi.eraseLine(),
         `${states[stateIndex]} ${statusMessage}`
       );
       stateIndex = stateIndex < states.length - 1 ? stateIndex + 1 : 0;
@@ -241,7 +239,7 @@ const runSuites = async (
     await runner.runSpawn(asyncExecution);
 
     clearInterval(timer);
-    ansi.write(ansi.eraseLines(2));
+    Ansi.write(Ansi.eraseLines(2));
   }
   // If other output, just give final out
   else {

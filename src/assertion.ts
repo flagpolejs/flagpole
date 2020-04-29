@@ -5,12 +5,7 @@ import {
   AssertionFailOptional,
   AssertionPass,
 } from "./logging/assertionresult";
-import {
-  AssertionSchema,
-  getSchemaPath,
-  getSchema,
-  writeSchema,
-} from "./assertionschema";
+import { AssertionSchema, getSchema, writeSchema } from "./assertionschema";
 import * as Ajv from "ajv";
 import {
   iAssertionContext,

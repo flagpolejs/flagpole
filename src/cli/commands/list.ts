@@ -19,21 +19,16 @@ export default class List extends Command {
 
 function listEnvironments() {
   Cli.subheader("List Environments").log("");
-  if (FlagpoleExecution.global.config) {
-    const envNames: string[] = FlagpoleExecution.global.config.getEnvironmentNames();
-    if (envNames.length > 0) {
-      return Cli.log("Found these environments:")
-        .list(envNames)
-        .log("")
-        .exit(0);
-    }
+  const envNames: string[] = FlagpoleExecution.global.config.getEnvironmentNames();
+  if (envNames.length > 0) {
+    return Cli.log("Found these environments:").list(envNames).log("").exit(0);
   }
   return Cli.log("Did not find any environments.").exit(2);
 }
 
 function listTags() {
   Cli.subheader("List Tags").log("");
-  const tags: string[] = FlagpoleExecution.global.config?.getTags() || [];
+  const tags: string[] = FlagpoleExecution.global.config.getTags() || [];
   if (tags.length > 0) {
     return Cli.log("Found these tags:").list(tags).log("").exit(0);
   } else {
@@ -42,9 +37,6 @@ function listTags() {
 }
 
 function listSuites() {
-  if (!FlagpoleExecution.global.config) {
-    throw "Flagpole config not found";
-  }
   Cli.subheader("List Suites").log(
     `Looking in folder: ${FlagpoleExecution.global.config.getTestsFolder()}`,
     ""
