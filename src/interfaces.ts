@@ -527,3 +527,18 @@ export interface iAjvLike {
   errors: Error[];
   validate(schema: any, root: any): Promise<boolean>;
 }
+
+export interface iAjvErrorObject {
+  keyword: string;
+  dataPath: string;
+  schemaPath: string;
+  params: any;
+  // Added to validation errors of propertyNames keyword schema
+  propertyName?: string;
+  // Excluded if messages set to false.
+  message?: string;
+  // These are added with the `verbose` option.
+  schema?: any;
+  parentSchema?: object;
+  data?: any;
+}

@@ -6,12 +6,12 @@ import {
   AssertionPass,
 } from "./logging/assertionresult";
 import { AssertionSchema, getSchema, writeSchema } from "./assertionschema";
-import * as Ajv from "ajv";
 import {
   iAssertionContext,
   iAssertion,
   IteratorCallback,
   iAjvLike,
+  iAjvErrorObject,
 } from "./interfaces";
 import {
   toType,
@@ -612,11 +612,11 @@ export class Assertion implements iAssertion {
       ? new AssertionSchema()
       : await this._loadSchemaValidator();
     const isValid: boolean = await validator.validate(schema, thisValue);
-    const errors: Error[] | Ajv.ErrorObject[] | null | undefined =
+    const errors: Error[] | iAjvErrorObject[] | null | undefined =
       validator.errors;
     let error: string = "";
     if (typeof errors != "undefined" && errors !== null) {
-      errors.forEach((err: Error | Ajv.ErrorObject) => {
+      errors.forEach((err: Error | iAjvErrorObject) => {
         error += err.message + " ";
       });
     }
@@ -660,20 +660,16 @@ export class Assertion implements iAssertion {
   private async _loadSchemaValidator(): Promise<iAjvLike> {
     // We haven't tried to load query engines yet
     if (typeof this._ajv == "undefined") {
-      // Try importing jmespath
-      return (
-        import("ajv")
-          // Got it, so save it and return it
-          .then((ajv) => {
-            this._ajv = new Ajv();
-            return this._ajv;
-          })
-          // Couldn't load jmespath, so set it to null
-          .catch((e) => {
-            this._ajv = new AssertionSchema();
-            return this._ajv;
-          })
-      );
+      // Try importing ajv
+      return require("ajv")
+        .then((Ajv: any) => {
+          this._ajv = new Ajv();
+          return this._ajv;
+        })
+        .catch(() => {
+          this._ajv = new AssertionSchema();
+          return this._ajv;
+        });
     } else {
       return this._ajv;
     }

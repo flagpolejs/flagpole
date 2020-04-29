@@ -83,10 +83,7 @@
             "type": "string"
           },
           "registrationActive": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           }
         }
       }

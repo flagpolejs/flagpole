@@ -14,7 +14,7 @@ export function printHeader(alwaysPrint: boolean = false) {
       "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[47m                 \u001b[0m"
     );
     console.log(
-      "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[238m   Version 2.2"
+      "\u001b[0m \u001b[47m \u001b[0m \u001b[44m\u001b[37m ****** \u001b[41m                 \u001b[0m\u001b[238m   Version 2.3"
     );
     console.log(
       "\u001b[0m \u001b[47m \u001b[0m \u001b[47m                         \u001b[0m"

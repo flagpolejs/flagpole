@@ -8,6 +8,7 @@ suite
   .scenario("Meet List API", "json")
   .open("/api/v1/meets")
   .next(async (context) => {
+    await context.assert(context.response.statusCode).equals(200);
     await context.assert(context.response.jsonBody).schema("@meetsList");
   });
 
