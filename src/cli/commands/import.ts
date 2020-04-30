@@ -16,7 +16,7 @@ export default class Import extends Command {
   public async action() {
     Cli.subheader("Import Suite");
     const suitesAvailableToImport = stringArrayToPromptChoices(
-      await findDetachedSuites()
+      findDetachedSuites()
     );
     // If no suites available to import
     if (!suitesAvailableToImport.length) {

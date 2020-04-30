@@ -1,19 +1,9 @@
-import {
-  iAssertionContext,
-  iValue,
-  iScenario,
-  KeyValue,
-  iAssertionSchema,
-} from "./interfaces";
+import { iAssertionContext, iValue, iScenario, KeyValue } from "./interfaces";
 import { toType, isNullOrUndefined } from "./util";
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
 } from "./logging/assertionresult";
-import { ResponseType } from "./enums";
-import { generateAjvSchema, getSchemaPath } from "./assertionschema";
-import { writeFile, ensureDir } from "fs-extra";
-import { resolve } from "path";
 
 export class Value implements iValue {
   protected _input: any;
@@ -64,6 +54,10 @@ export class Value implements iValue {
 
   public get sourceCode(): string {
     return this._sourceCode === null ? "" : this._sourceCode;
+  }
+
+  public get isFlagpoleValue(): true {
+    return true;
   }
 
   constructor(
@@ -200,7 +194,9 @@ export class Value implements iValue {
   public click(message: string): Promise<iScenario>;
   public click(callback: Function): Promise<iScenario>;
   public click(message: string, callback: Function): Promise<iScenario>;
-  public async click(a?: any, b?: any): Promise<void | iScenario> {}
+  public async click(a?: any, b?: any): Promise<void | iScenario> {
+    this._context.logFailure(`Element could not be clicked on: ${this.name}`);
+  }
 
   public submit(): Promise<void>;
   public submit(scenario: iScenario): Promise<iScenario>;

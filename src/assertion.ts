@@ -1,14 +1,9 @@
 import { Value } from "./value";
-import {
-  AssertionResult,
-  AssertionFail,
-  AssertionFailOptional,
-  AssertionPass,
-} from "./logging/assertionresult";
 import { AssertionSchema, getSchema, writeSchema } from "./assertionschema";
 import {
   iAssertionContext,
   iAssertion,
+  iAssertionResult,
   IteratorCallback,
   iAjvLike,
   iAjvErrorObject,
@@ -147,7 +142,7 @@ export class Assertion implements iAssertion {
     return this;
   }
 
-  public get result(): Promise<AssertionResult | null> {
+  public get result(): Promise<iAssertionResult | null> {
     return this._finishedPromise;
   }
 
@@ -173,8 +168,8 @@ export class Assertion implements iAssertion {
   private _message: string | null;
   private _not: boolean = false;
   private _optional: boolean = false;
-  private _result: AssertionResult | null = null;
-  private _finishedPromise: Promise<AssertionResult | null>;
+  private _result: iAssertionResult | null = null;
+  private _finishedPromise: Promise<iAssertionResult | null>;
   private _finishedResolver: Function = () => {};
   private _statement: boolean | null = null;
   private _assertionMade: boolean = false;
@@ -645,12 +640,9 @@ export class Assertion implements iAssertion {
   /**
    * Add a comment on the AssertionContext, allows chaining
    *
-   * @param message
-   * @param value
+   * @param input
    */
-  public comment(value: iValue): iAssertion;
-  public comment(message: string): iAssertion;
-  public comment(input: string | iValue): iAssertion {
+  public comment(input: any): iAssertion {
     this._context.comment(input);
     return this;
   }
@@ -732,16 +724,16 @@ export class Assertion implements iAssertion {
     this._statement = this._not ? !bool : bool;
     // Passed
     if (!!this._statement) {
-      this._result = new AssertionPass(this._getMessage());
+      this._result = this._context.logPassing(this._getMessage());
     }
     // Failed
     else {
       this._result = this._optional
-        ? new AssertionFailOptional(
+        ? this._context.logOptionalFailure(
             this._getMessage(),
             this._getActualValueText(actualValue)
           )
-        : new AssertionFail(
+        : this._context.logFailure(
             this._getMessage(),
             this._getActualValueText(actualValue),
             this._getSourceCode(),

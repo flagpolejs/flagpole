@@ -8,7 +8,6 @@ import {
   ScenarioStatusEvent,
 } from "./enums";
 import { HttpResponse } from "./httpresponse";
-import { URL } from "url";
 import {
   HttpRequest,
   HttpRequestOptions,
@@ -18,7 +17,7 @@ import {
   HttpMethodVerb,
   BrowserOptions,
 } from "./httprequest";
-import { FlagpoleExecution } from ".";
+import { FlagpoleExecution } from "./flagpoleexecution";
 
 export interface ScreenshotOpts {
   path?: string;
@@ -100,6 +99,7 @@ export interface iValue {
   highlight: string;
   parent: any;
   sourceCode: string;
+  isFlagpoleValue: true;
   valueOf(): any;
   toArray(): any[];
   toString(): string;
@@ -273,9 +273,7 @@ export interface iAssertion {
   every(callback: IteratorCallback): Promise<iAssertion>;
   some(callback: IteratorCallback): Promise<iAssertion>;
   assert(a: any, b?: any): iAssertion;
-  comment(value: iValue): iAssertion;
-  comment(message: string): iAssertion;
-  comment(input: string | iValue): iAssertion;
+  comment(input: any): iAssertion;
   schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
   schema(schema: iAssertionSchema, simple?: boolean): Promise<iAssertion>;
   looksLike(image: Buffer | string): iAssertion;
@@ -294,9 +292,7 @@ export interface iAssertionContext {
   incompleteAssertions: iAssertion[];
   assertionsResolved: Promise<(iAssertionResult | null)[]>;
   subScenariosResolved: Promise<any[]>;
-  comment(value: iValue): iAssertionContext;
-  comment(message: string): iAssertionContext;
-  comment(input: string | iValue): iAssertionContext;
+  comment(input: any): iAssertionContext;
   assert(a: any, b?: any): iAssertion;
   pause(milliseconds: number): Promise<void>;
   exists(message: string, selector: string): Promise<iValue>;
@@ -359,6 +355,14 @@ export interface iAssertionContext {
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: {}): Promise<Buffer>;
   screenshot(opts: {}): Promise<Buffer>;
+  logFailure(
+    message: string,
+    errorDetails?: any,
+    sourceCode?: any,
+    highlightText?: any
+  ): iAssertionResult;
+  logOptionalFailure(message: string, errorDetails?: any): iAssertionResult;
+  logPassing(message: string): iAssertionResult;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
@@ -440,9 +444,7 @@ export interface iScenario {
   setHeader(key: string, value: any): iScenario;
   setMethod(method: HttpMethodVerb): iScenario;
   wait(bool?: boolean): iScenario;
-  comment(value: iValue): iScenario;
-  comment(message: string): iScenario;
-  comment(input: string | iValue): iScenario;
+  comment(input: any): iScenario;
   result(result: iAssertionResult): iScenario;
   ignore(assertions?: boolean | Function): iScenario;
   open(url: string, opts?: HttpRequestOptions): iScenario;

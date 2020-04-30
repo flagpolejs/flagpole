@@ -38,9 +38,9 @@ import {
   HttpMethodVerb,
   HttpMethodVerbAllowedValues,
   BrowserOptions,
-  HttpRequestType,
 } from "./httprequest";
-import { FlagpoleExecution } from ".";
+import { FlagpoleExecution } from "./flagpoleexecution";
+import { toType } from "./util";
 
 /**
  * A scenario contains tests that run against one request
@@ -444,11 +444,14 @@ export class Scenario implements iScenario {
   /**
    * Add a neutral line to the output
    */
-  public comment(value: iValue): iScenario;
-  public comment(message: string): iScenario;
-  public comment(input: string | iValue): iScenario {
+  public comment(input: any): iScenario {
+    const type = toType(input);
     const message: string =
-      typeof input === "string" ? input : input.toString();
+      type === "string"
+        ? input
+        : input.isFlagpoleValue
+        ? input.toString()
+        : JSON.stringify(input, null, 2);
     return this._pushToLog(new LogComment(message));
   }
 

@@ -70,8 +70,8 @@ export function printLine(...messages: string[]) {
   }
 }
 
-export async function findDetachedSuites(): Promise<string[]> {
-  const suitesInFolder: string[] = await findJsFilesInTestFolder();
+export function findDetachedSuites(): string[] {
+  const suitesInFolder: string[] = findJsFilesInTestFolder();
   let suitesAvailableToImport: string[] = [];
   let suitesInConfig: string[] =
     FlagpoleExecution.global.config.getSuiteNames() || [];
@@ -83,13 +83,13 @@ export async function findDetachedSuites(): Promise<string[]> {
   return suitesAvailableToImport;
 }
 
-export async function findJsFilesInTestFolder(): Promise<string[]> {
-  let startFolder: string = FlagpoleExecution.global.config.getTestsFolder();
-  let suitesInFolder: string[] = [];
+export function findJsFilesInTestFolder(): string[] {
+  const startFolder: string = FlagpoleExecution.global.config.getTestsFolder();
+  const suitesInFolder: string[] = [];
 
-  async function findSuites(dir: string, isSubFolder: boolean = false) {
+  function findSuites(dir: string, isSubFolder: boolean = false) {
     // Does this folder exist?
-    if (await fs.pathExists(dir)) {
+    if (fs.pathExistsSync(dir)) {
       // Read contents
       let files = fs.readdirSync(dir);
       files.forEach(function (file) {

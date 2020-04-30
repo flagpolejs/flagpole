@@ -16,6 +16,7 @@ import {
   AssertionActionFailed,
   AssertionFail,
   AssertionPass,
+  AssertionFailOptional,
 } from "./logging/assertionresult";
 import { openInBrowser, getMessageAndCallbackFromOverloading } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
@@ -87,11 +88,9 @@ export class AssertionContext implements iAssertionContext {
   /**
    * Make a comment in the scenario output
    *
-   * @param message
+   * @param input
    */
-  public comment(message: string): iAssertionContext;
-  public comment(value: iValue): iAssertionContext;
-  public comment(input: string | iValue): iAssertionContext {
+  public comment(input: any): iAssertionContext {
     this._scenario.comment(input);
     return this;
   }
@@ -377,6 +376,37 @@ export class AssertionContext implements iAssertionContext {
     return null;
   }
 
+  public logFailure(
+    message: string,
+    errorDetails?: any,
+    sourceCode?: any,
+    highlightText?: any
+  ): iAssertionResult {
+    const result = new AssertionFail(
+      message,
+      errorDetails,
+      sourceCode,
+      highlightText
+    );
+    this.scenario.result(result);
+    return result;
+  }
+
+  public logOptionalFailure(
+    message: string,
+    errorDetails?: any
+  ): iAssertionResult {
+    const result = new AssertionFailOptional(message, errorDetails);
+    this.scenario.result(result);
+    return result;
+  }
+
+  public logPassing(message: string): iAssertionResult {
+    const result = new AssertionPass(message);
+    this.scenario.result(result);
+    return result;
+  }
+
   /**
    * Click on this element
    *
@@ -393,7 +423,8 @@ export class AssertionContext implements iAssertionContext {
   ): Promise<iScenario | void> {
     const el: iValue = await this.find(selector);
     const overloaded = getMessageAndCallbackFromOverloading(a, b, selector);
-    if ("click" in el) {
+    console.log(el);
+    if (!el.isNull && "click" in el) {
       if (overloaded.scenario) {
         return el.click(overloaded.scenario);
       }
@@ -401,6 +432,8 @@ export class AssertionContext implements iAssertionContext {
         return el.click(overloaded.message, overloaded.callback);
       }
       return el.click();
+    } else {
+      this.logFailure(`Element could not be clicked on: ${selector}`);
     }
   }
 
