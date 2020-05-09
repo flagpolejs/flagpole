@@ -30,21 +30,49 @@ export interface iNextCallback {
   (context: iAssertionContext): Promise<any> | void;
 }
 
-export type ResponsePipe = (resp: HttpResponse) => void | HttpResponse;
-export type ScenarioCallback = (scenario: iScenario) => any;
-export type ScenarioErrorCallback = (error: string, scenario: iScenario) => any;
+export interface iCallbackAndMessage {
+  message: string;
+  callback: Function;
+}
+
+export type ResponseSyncPipe = (resp: HttpResponse) => void | HttpResponse;
+export type ResponseAsyncPipe = (
+  resp: HttpResponse
+) => Promise<void | HttpResponse>;
+export type ResponsePipe = ResponseSyncPipe | ResponseAsyncPipe;
+export type ResponsePipeCallbackAndMessage = {
+  message: string;
+  callback: ResponsePipe;
+};
+
 export type ScenarioStatusCallback = (
   scenario: iScenario,
   status: ScenarioStatusEvent
 ) => any;
-export type ScenarioOnCompleted = (scenario: iScenario) => Promise<void>;
-export type SuiteCallback = (scenario: iSuite) => any;
-export type SuiteErrorCallback = (error: string, scenario: iSuite) => any;
 export type SuiteStatusCallback = (
   suite: iSuite,
   statusEvent: SuiteStatusEvent
 ) => any;
-export type SuiteBaseCallback = (suite: iSuite) => string;
+
+export type SuiteAsyncCallback = (suite: iSuite) => Promise<void>;
+export type SuiteSyncCallback = (suite: iSuite) => void;
+export type SuiteCallback = SuiteAsyncCallback | SuiteSyncCallback;
+export type SuiteCallbackAndMessage = {
+  message: string;
+  callback: SuiteCallback;
+};
+
+export type ScenarioAsyncCallback = (
+  scenario: iScenario,
+  suite: iSuite
+) => Promise<void>;
+export type ScenarioSyncCallback = (scenario: iScenario, suite: iSuite) => void;
+export type ScenarioCallback = ScenarioAsyncCallback | ScenarioSyncCallback;
+export type ScenarioCallbackAndMessage = {
+  message: string;
+  callback: ScenarioCallback;
+};
+
 export type IteratorCallback = (value: any, index: number, arr: any[]) => any;
 
 export interface iConsoleLine {
@@ -375,7 +403,6 @@ export interface iSuite {
   totalDuration: number | null;
   executionDuration: number | null;
   title: string;
-  suite: iSuite;
   finished: Promise<void>;
   subscribe(callback: SuiteStatusCallback): iSuite;
   verifyCert(verify: boolean): iSuite;
@@ -398,7 +425,6 @@ export interface iSuite {
   beforeEach(callback: ScenarioCallback): iSuite;
   afterEach(callback: ScenarioCallback): iSuite;
   afterAll(callback: SuiteCallback): iSuite;
-  error(callback: SuiteErrorCallback): iSuite;
   success(callback: SuiteCallback): iSuite;
   failure(callback: SuiteCallback): iSuite;
   finally(callback: SuiteCallback): iSuite;
@@ -414,7 +440,7 @@ export interface iScenario {
   requestDuration: number | null;
   hasFailed: boolean;
   hasPassed: boolean;
-  canExecute: boolean;
+  isReadyToExecute: boolean;
   hasExecuted: boolean;
   hasFinished: boolean;
   buildUrl(): URL;
@@ -458,9 +484,6 @@ export interface iScenario {
   getBrowserControl(): BrowserControl;
   execute(): Promise<iScenario>;
   execute(params: { [key: string]: string | number }): Promise<iScenario>;
-  error(message: string, callback: ScenarioErrorCallback): iScenario;
-  error(callback: ScenarioErrorCallback): iScenario;
-  error(...callbacks: ScenarioErrorCallback[]): iScenario;
   success(message: string, callback: ScenarioCallback): iScenario;
   success(callback: ScenarioCallback): iScenario;
   success(...callbacks: ScenarioCallback[]): iScenario;
@@ -485,6 +508,7 @@ export interface iScenario {
     opts?: BrowserOptions | HttpRequestOptions
   ): iScenario;
   promise(): Promise<iScenario>;
+  waitForFinished(): Promise<void>;
   waitFor(thatScenario: iScenario): iScenario;
 }
 

@@ -1,4 +1,4 @@
-import { ResponseType, SuiteStatusEvent } from "./enums";
+import { ResponseType } from "./enums";
 import { Scenario } from "./scenario";
 import { URL } from "url";
 import { FlagpoleReport } from "./logging/flagpolereport";
@@ -6,15 +6,14 @@ import {
   iSuite,
   iScenario,
   SuiteStatusCallback,
-  SuiteErrorCallback,
   SuiteCallback,
   ScenarioCallback,
-  SuiteBaseCallback,
   KeyValue,
 } from "./interfaces";
 import { exitProcess } from "./util";
 import { BrowserOptions } from "./httprequest";
-import { FlagpoleExecution } from ".";
+import { FlagpoleExecution } from "./flagpoleexecution";
+import { SuiteTaskManager } from "./suitetaskmanager";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 
@@ -22,94 +21,62 @@ type BaseDomainCallback = (suite: iSuite) => string;
  * A suite contains many scenarios
  */
 export class Suite implements iSuite {
-  public scenarios: Array<iScenario> = [];
-
-  public get suite(): Suite {
-    return this;
-  }
-
   public get baseUrl(): URL | null {
     return this._baseUrl;
   }
 
   public get failCount(): number {
-    let count: number = 0;
-    this.scenarios.forEach((scenario) => {
-      if (!scenario.hasPassed) {
-        count += 1;
-      }
-    });
-    return count;
+    return this._taskManager.scenariosFailed.length;
   }
 
   public get waitingToExecuteCount(): number {
-    let count: number = 0;
-    this.scenarios.forEach((scenario) => {
-      if (!scenario.hasExecuted) {
-        count += 1;
-      }
-    });
-    return count;
+    return this._taskManager.scenariosWaitingToExecute.length;
   }
 
   public get executingCount(): number {
-    let count: number = 0;
-    this.scenarios.forEach((scenario) => {
-      if (scenario.hasExecuted && !scenario.hasFinished) {
-        count += 1;
-      }
-    });
-    return count;
+    return this._taskManager.scenariosCurrentlyExcuting.length;
   }
 
   /**
    * Did every scenario in this suite pass?
    */
   public get hasPassed(): boolean {
-    return this.scenarios.every((scenario) => {
-      return scenario.hasPassed;
-    });
+    return this._taskManager.haveAllPassed;
   }
 
   /**
    * Did any scenario in this suite fail?
    */
   public get hasFailed(): boolean {
-    return this.scenarios.some((scenario) => {
-      return scenario.hasFailed;
-    });
+    return this._taskManager.haveAnyFailed;
   }
 
   /**
    * Did this suite start running yet?
    */
   public get hasExecuted(): boolean {
-    return this._timeSuiteExecuted !== null;
+    return this._taskManager.hasExecutionBegan;
   }
 
   /**
    * Has this suite finished running?
    */
   public get hasFinished(): boolean {
-    return this._timeSuiteFinished !== null;
+    return this._taskManager.hasFinished;
   }
 
   /**
    * Total duration in milliseconds from initialization to completion
    */
   public get totalDuration(): number | null {
-    return this._timeSuiteFinished !== null
-      ? this._timeSuiteFinished - this._timeSuiteInitialized
-      : null;
+    return this.totalDuration;
   }
 
   /**
    * Duration in milliseconds between execution start and completion
    */
   public get executionDuration(): number | null {
-    return this._timeSuiteExecuted !== null && this._timeSuiteFinished !== null
-      ? this._timeSuiteFinished - this._timeSuiteExecuted
-      : null;
+    return this._taskManager.executionDuration;
   }
 
   public get title(): string {
@@ -117,51 +84,37 @@ export class Suite implements iSuite {
   }
 
   public get finished(): Promise<void> {
-    return this._finishedPromise;
+    return this._taskManager.finished;
   }
 
   public get executionOptions(): FlagpoleExecution {
     return FlagpoleExecution.global;
   }
 
-  protected _subscribers: SuiteStatusCallback[] = [];
-  protected _errorCallbacks: SuiteErrorCallback[] = [];
-  protected _successCallbacks: SuiteCallback[] = [];
-  protected _failureCallbacks: SuiteCallback[] = [];
-  protected _finallyCallbacks: SuiteCallback[] = [];
-  protected _beforeAllCallbacks: SuiteCallback[] = [];
-  protected _afterAllCallbacks: SuiteCallback[] = [];
-  protected _beforeEachCallbacks: ScenarioCallback[] = [];
-  protected _afterEachCallbacks: ScenarioCallback[] = [];
-  protected _beforeAllPromise: Promise<void>;
-  protected _beforeAllResolver: Function = () => {};
-  protected _finishedPromise: Promise<void>;
-  protected _finishedResolver: Function = () => {};
+  public get scenarios(): iScenario[] {
+    return this._taskManager.scenarios;
+  }
+
   protected _title: string;
   protected _baseUrl: URL | null = null;
-  protected _timeSuiteInitialized: number = Date.now();
-  protected _timeSuiteExecuted: number | null = null;
-  protected _timeSuiteFinished: number | null = null;
   protected _waitToExecute: boolean = false;
   protected _verifySslCert: boolean = true;
-  protected _concurrencyLimit: number = 0;
+  protected _taskManager: SuiteTaskManager;
 
   constructor(title: string) {
     this._title = title;
     if (FlagpoleExecution.global.baseDomain) {
       this._baseUrl = new URL(FlagpoleExecution.global.baseDomain);
     }
-    this._beforeAllPromise = new Promise((resolve) => {
-      this._beforeAllResolver = resolve;
+    this._taskManager = new SuiteTaskManager(this);
+    this._taskManager.finally(() => {
+      // Should we print automatically?
+      if (FlagpoleExecution.global.automaticallyPrintToConsole) {
+        this.print(FlagpoleExecution.global.exitOnDone);
+      } else {
+        FlagpoleExecution.global.exitOnDone && exitProcess(this.hasPassed);
+      }
     });
-    this._finishedPromise = new Promise((resolve) => {
-      this._finishedResolver = resolve;
-    });
-    // Spinner to wait for all
-    // const interval = setInterval(() => {}, 300);
-    // this.finally(() => {
-    //   clearInterval(interval);
-    // });
   }
 
   /**
@@ -170,7 +123,7 @@ export class Suite implements iSuite {
    * @param callback
    */
   public subscribe(callback: SuiteStatusCallback): iSuite {
-    this._subscribers.push(callback);
+    this._taskManager.subscribe(callback);
     return this;
   }
 
@@ -200,7 +153,7 @@ export class Suite implements iSuite {
    * @param maxExecutions
    */
   public setConcurrencyLimit(maxExecutions: number) {
-    this._concurrencyLimit = maxExecutions > 0 ? Math.floor(maxExecutions) : 0;
+    this._taskManager.concurrencyLimit = maxExecutions;
   }
 
   /**
@@ -228,31 +181,13 @@ export class Suite implements iSuite {
     type: ResponseType = "html",
     opts?: BrowserOptions
   ): iScenario {
-    const scenario: iScenario = Scenario.create(
-      this,
-      title,
-      type,
-      opts,
-      (scenario: iScenario) => {
-        return this._onAfterScenarioFinished(scenario);
-      }
-    );
-    // Notify suite on any changes to scenario
-    scenario.before((scenario: iScenario) => {
-      return this._onBeforeScenarioExecutes(scenario);
-    });
-    scenario.after((scenario: iScenario) => {
-      return this._onAfterScenarioExecutes(scenario);
-    });
-    scenario.error((errorMessage: string) => {
-      return this._fireError(errorMessage);
-    });
+    const scenario: iScenario = Scenario.create(this, title, type, opts);
     // Some local tests fail with SSL verify on, so may have been disabled on this suite
     scenario.verifyCert(this._verifySslCert);
     // Should we hold off on executing?
     this._waitToExecute && scenario.wait();
     // Add this to our collection of scenarios
-    this.scenarios.push(scenario);
+    this._taskManager.registerScenario(scenario);
     return scenario;
   }
 
@@ -328,7 +263,7 @@ export class Suite implements iSuite {
    */
   public base(url: string): Suite;
   public base(basePathsByEnvironment: {}): Suite;
-  public base(callback: SuiteBaseCallback): Suite;
+  public base(callback: SuiteCallback): Suite;
   public base(url: string | KeyValue | BaseDomainCallback): Suite {
     let baseUrl: string = "";
     if (typeof url == "string") {
@@ -352,7 +287,7 @@ export class Suite implements iSuite {
   }
 
   /**
-   * If suite was told to wait, this will tell each scenario in it to run
+   * If suite was told to wait, this will tell each scenario in it to stop waiting
    *
    * @returns {Suite}
    */
@@ -360,9 +295,8 @@ export class Suite implements iSuite {
     if (this.hasExecuted) {
       throw new Error(`Suite already executed.`);
     }
-    this._timeSuiteExecuted = Date.now();
     this.scenarios.forEach((scenario) => {
-      scenario.execute();
+      scenario.wait(false);
     });
     return this;
   }
@@ -372,13 +306,8 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public beforeAll(callback: SuiteCallback): Suite {
-    if (this.hasExecuted) {
-      throw new Error(
-        "Can not add beforeAll callbacks after execution has started."
-      );
-    }
-    this._beforeAllCallbacks.push(callback);
+  public beforeAll(callback: SuiteCallback, prepend: boolean = false): Suite {
+    this._taskManager.beforeAll(callback, prepend);
     return this;
   }
 
@@ -387,13 +316,11 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public beforeEach(callback: ScenarioCallback): Suite {
-    if (this.hasExecuted) {
-      throw new Error(
-        "Can not add beforeEach callbacks after execution has started."
-      );
-    }
-    this._beforeEachCallbacks.push(callback);
+  public beforeEach(
+    callback: ScenarioCallback,
+    prepend: boolean = false
+  ): Suite {
+    this._taskManager.beforeEach(callback, prepend);
     return this;
   }
 
@@ -402,13 +329,11 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public afterEach(callback: ScenarioCallback): Suite {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add afterEach callbacks after execution has finished."
-      );
-    }
-    this._afterEachCallbacks.push(callback);
+  public afterEach(
+    callback: ScenarioCallback,
+    prepend: boolean = false
+  ): Suite {
+    this._taskManager.afterEach(callback, prepend);
     return this;
   }
 
@@ -417,29 +342,8 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public afterAll(callback: SuiteCallback): Suite {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add afterAll callbacks after execution has finished."
-      );
-    }
-    this._afterAllCallbacks.push(callback);
-    return this;
-  }
-
-  /**
-   * This callback runs once the suite is done, if it errored
-   *
-   * @param callback
-   */
-  public error = this.catch;
-  public catch(callback: SuiteErrorCallback): iSuite {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add catch callbacks after execution has finished."
-      );
-    }
-    this._errorCallbacks.push(callback);
+  public afterAll(callback: SuiteCallback, prepend: boolean = false): Suite {
+    this._taskManager.afterAll(callback, prepend);
     return this;
   }
 
@@ -448,253 +352,34 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public success(callback: SuiteCallback): Suite {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add success callbacks after execution has finished."
-      );
-    }
-    this._successCallbacks.push(callback);
+  public success(callback: SuiteCallback, prepend: boolean = false): Suite {
+    this._taskManager.success(callback, prepend);
     return this;
   }
 
   /**
    * This callback runs once the suite is done, if it failed
    */
-  public failure(callback: SuiteCallback): Suite {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add failure callbacks after execution has finished."
-      );
-    }
-    this._failureCallbacks.push(callback);
+  public failure(callback: SuiteCallback, prepend: boolean = false): Suite {
+    this._taskManager.failure(callback, prepend);
     return this;
   }
 
   /**
    * This callback will run once everything else is completed, whether pass or fail
    */
-  public finally(callback: SuiteCallback): Suite {
-    if (this.hasFinished) {
-      throw new Error(
-        "Can not add finally callbacks after execution has finished."
-      );
-    }
-    this._finallyCallbacks.push(callback);
+  public finally(callback: SuiteCallback, prepend: boolean = false): Suite {
+    this._taskManager.finally(callback, prepend);
     return this;
   }
 
+  /**
+   * Promisify the suite: resolves on pass, rejects on failure
+   */
   public promise(): Promise<iSuite> {
     return new Promise((resolve, reject) => {
       this.success(resolve);
-      this.error(reject);
       this.failure(reject);
-    });
-  }
-
-  /**
-   * Have all of the scenarios in this suite completed?
-   */
-  private _haveAllScenariosFinished(): boolean {
-    return this.scenarios.every((scenario) => {
-      return scenario.hasFinished;
-    });
-  }
-
-  private _fireBeforeAll(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      Promise.mapSeries(this._beforeAllCallbacks, (_then) => {
-        return _then(this);
-      })
-        .then(() => {
-          this._publish(SuiteStatusEvent.beforeAllExecute);
-          this._beforeAllResolver();
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  }
-
-  private _fireBeforeEach(scenario: iScenario): Promise<void> {
-    const suite: Suite = this;
-    return new Promise((resolve, reject) => {
-      // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._beforeEachCallbacks, (_then) => {
-        return _then.apply(suite, [scenario]);
-      })
-        .then(() => {
-          this._publish(SuiteStatusEvent.beforeEachExecute);
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  }
-
-  private _fireAfterEach(scenario: iScenario): Promise<void> {
-    const suite: Suite = this;
-    return new Promise((resolve, reject) => {
-      // Do all of the finally callbacks first
-      Promise.mapSeries(this._afterEachCallbacks, (_then) => {
-        return _then.apply(suite, [scenario]);
-      })
-        .then(() => {
-          this._publish(SuiteStatusEvent.afterEachExecute);
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  }
-
-  private _fireAfterAll(): Promise<void> {
-    const suite: Suite = this;
-    this._timeSuiteFinished = Date.now();
-    return new Promise((resolve, reject) => {
-      // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._afterAllCallbacks, (_then) => {
-        return _then.apply(suite, [suite]);
-      })
-        .then(() => {
-          this._publish(SuiteStatusEvent.afterAllExecute);
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  }
-
-  private _fireSuccess(): Promise<void> {
-    const suite: Suite = this;
-    return new Promise((resolve, reject) => {
-      // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._successCallbacks, (_then) => {
-        return _then.apply(suite, [suite]);
-      })
-        .then(() => {
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  }
-
-  private _fireFailure(): Promise<void> {
-    const suite: Suite = this;
-    return new Promise((resolve, reject) => {
-      // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._failureCallbacks, (_then) => {
-        return _then.apply(suite, [suite]);
-      })
-        .then(() => {
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  }
-
-  private _fireError(errorMessage: string): Promise<void> {
-    const suite: Suite = this;
-    return new Promise((resolve, reject) => {
-      // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._errorCallbacks, (_then) => {
-        return _then.apply(suite, [errorMessage, suite]);
-      })
-        .then(() => {
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  }
-
-  private _fireFinally(): Promise<void> {
-    const suite: Suite = this;
-    return new Promise((resolve, reject) => {
-      Promise.mapSeries(this._finallyCallbacks, (_then) => {
-        return _then.apply(suite, [suite]);
-      })
-        .then(() => {
-          this._publish(SuiteStatusEvent.finished);
-          this._finishedResolver();
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  }
-
-  private async _onBeforeScenarioExecutes(
-    scenario: iScenario
-  ): Promise<iScenario> {
-    // This scenario is executing, suite was not previously executing
-    if (scenario.hasExecuted && !this.hasExecuted) {
-      await this._fireBeforeAll();
-      this._timeSuiteExecuted = Date.now();
-    }
-    await this._beforeAllResolved();
-    await this._fireBeforeEach(scenario);
-    return scenario;
-  }
-
-  private async _onAfterScenarioExecutes(
-    scenario: iScenario
-  ): Promise<iScenario> {
-    await this._fireAfterEach(scenario);
-    return scenario;
-  }
-
-  private async _onAfterScenarioFinished(scenario: iScenario): Promise<void> {
-    // Is every scenario completed? And only run it once
-    if (this._haveAllScenariosFinished() && !this.hasFinished) {
-      await this._fireAfterAll();
-      // Success or failure?
-      this.hasPassed ? await this._fireSuccess() : await this._fireFailure();
-      // All Done
-      await this._fireFinally();
-      // Should we print automatically?
-      if (FlagpoleExecution.global.automaticallyPrintToConsole) {
-        this.print(FlagpoleExecution.global.exitOnDone);
-      } else {
-        FlagpoleExecution.global.exitOnDone && exitProcess(this.hasPassed);
-      }
-    }
-  }
-
-  protected async _beforeAllResolved(): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this._beforeAllPromise
-        .then(() => {
-          resolve(true);
-        })
-        .catch((ex) => {
-          reject(ex);
-        });
-    });
-  }
-
-  protected _publish(statusEvent: SuiteStatusEvent) {
-    this._subscribers.forEach((callback: SuiteStatusCallback) => {
-      callback(this, statusEvent);
-    });
-  }
-
-  protected _executeNext(): void {
-    this.scenarios.some((scenario) => {
-      if (!scenario.hasExecuted && scenario.canExecute) {
-        scenario.execute();
-        return true;
-      }
     });
   }
 }

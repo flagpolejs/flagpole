@@ -1,16 +1,18 @@
 export enum ScenarioStatusEvent {
-  beforeExecute,
-  executionProgress,
-  afterExecute,
-  finished,
+  beforeExecute = "beforeExecute",
+  executionStart = "executionStart",
+  executionSkipped = "executionSkipped",
+  executionProgress = "executionProgress",
+  afterExecute = "afterExecute",
+  finished = "finished",
 }
 
 export enum SuiteStatusEvent {
-  beforeAllExecute,
-  beforeEachExecute,
-  afterEachExecute,
-  afterAllExecute,
-  finished,
+  beforeAllExecute = "beforeAllExecute",
+  beforeEachExecute = "beforeEachExecute",
+  afterEachExecute = "afterEachExecute",
+  afterAllExecute = "afterAllExecute",
+  finished = "finished",
 }
 
 export type ResponseType =

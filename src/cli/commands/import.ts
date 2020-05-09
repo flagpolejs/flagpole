@@ -44,7 +44,7 @@ export default class Import extends Command {
         FlagpoleExecution.global.config &&
           FlagpoleExecution.global.config.addSuite({
             name: suiteName,
-            tags: responses.tags.split(" "),
+            tags: responses.tags,
           });
       });
       await FlagpoleExecution.global.config.save();

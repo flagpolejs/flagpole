@@ -1,22 +1,22 @@
 import { ResponseType, LogItemType, ScenarioStatusEvent } from "./enums";
 import {
+  iAssertion,
+  iAssertionContext,
   iLogItem,
   iResponse,
   iScenario,
   iSuite,
-  iValue,
   iNextCallback,
   KeyValue,
   ResponsePipe,
   ScenarioCallback,
-  ScenarioErrorCallback,
   ScenarioStatusCallback,
-  ScenarioOnCompleted,
+  ScenarioCallbackAndMessage,
+  ResponsePipeCallbackAndMessage,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import { BrowserControl, iBrowserControlResponse } from "./browsercontrol";
 import { createResponse } from "./responsefactory";
-import { AssertionContext } from "./assertioncontext";
 import {
   AssertionResult,
   AssertionPass,
@@ -28,7 +28,6 @@ import { ResourceResponse } from "./resourceresponse";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/logcollection";
-import { Assertion } from "./assertion";
 import {
   HttpRequestOptions,
   HttpProxy,
@@ -41,6 +40,8 @@ import {
 } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { toType } from "./util";
+import { AssertionContext } from "./assertioncontext";
+import * as bluebird from "bluebird";
 
 /**
  * A scenario contains tests that run against one request
@@ -58,9 +59,7 @@ export class Scenario implements iScenario {
 
   public set title(newTitle: string) {
     if (this.hasExecuted) {
-      throw new Error(
-        "Can not change the scenario's title after execution has started."
-      );
+      throw "Can not change the scenario's title after execution has started.";
     }
     this._title = newTitle;
   }
@@ -112,9 +111,12 @@ export class Scenario implements iScenario {
   /**
    * We ready to pull the trigger on this one?
    */
-  public get canExecute(): boolean {
+  public get isReadyToExecute(): boolean {
     return (
-      !this.hasExecuted && this.url !== null && this._nextCallbacks.length > 0
+      !this.hasExecuted &&
+      !this.isImplicitWait &&
+      !this.isExplicitWait &&
+      this.hasNextCallbacks
     );
   }
 
@@ -140,6 +142,24 @@ export class Scenario implements iScenario {
   }
 
   public set url(value: string | null) {
+    if (this.hasRequestStarted) {
+      throw "Can not change the URL after the request has already started.";
+    }
+    if (value !== null) {
+      // If the HTTP method was part of open
+      const match = /([A-Z]+) (.*)/.exec(value);
+      if (match !== null) {
+        const verb: string = match[1].toLowerCase();
+        if (HttpMethodVerbAllowedValues.includes(verb)) {
+          this.setMethod(<HttpMethodVerb>verb);
+        }
+        value = match[2];
+      }
+      // If the URL had parameters in it, implicitly wait for execute parameters
+      if (/{[A-Za-z0-9_ -]+}/.test(value)) {
+        this.wait();
+      }
+    }
     this._request.uri = value;
   }
 
@@ -171,26 +191,36 @@ export class Scenario implements iScenario {
     return this._request;
   }
 
+  /**
+   * We will implicitly wait if the URL is not defined or has params in it
+   */
+  private get isImplicitWait(): boolean {
+    return this.url === null || /{[A-Za-z0-9_ -]+}/.test(this.url);
+  }
+
+  private get isExplicitWait(): boolean {
+    return this._waitToExecute;
+  }
+
+  private get hasNextCallbacks(): boolean {
+    return this._nextCallbacks.length > 0;
+  }
+
+  private get hasRequestStarted(): boolean {
+    return this._timeRequestStarted !== null;
+  }
+
   protected _title: string;
   protected _log: LogCollection = new LogCollection();
   protected _subscribers: ScenarioStatusCallback[] = [];
   protected _nextCallbacks: iNextCallback[] = [];
   protected _nextMessages: Array<string | null> = [];
-  protected _beforeCallbacks: ScenarioCallback[] = [];
-  protected _beforeMessages: Array<string | null> = [];
-  protected _afterCallbacks: ScenarioCallback[] = [];
-  protected _afterMessages: Array<string | null> = [];
-  protected _finallyCallbacks: ScenarioCallback[] = [];
-  protected _finallyMessages: Array<string | null> = [];
-  protected _errorCallbacks: ScenarioErrorCallback[] = [];
-  protected _errorMessages: Array<string | null> = [];
-  protected _failureCallbacks: ScenarioCallback[] = [];
-  protected _failureMessages: Array<string | null> = [];
-  protected _successCallbacks: ScenarioCallback[] = [];
-  protected _successMessages: Array<string | null> = [];
-  protected _pipeCallbacks: ResponsePipe[] = [];
-  protected _pipeMessages: Array<string | null> = [];
-  protected _onCompletedCallback: ScenarioOnCompleted;
+  protected _beforeCallbacks: ScenarioCallbackAndMessage[] = [];
+  protected _afterCallbacks: ScenarioCallbackAndMessage[] = [];
+  protected _finallyCallbacks: ScenarioCallbackAndMessage[] = [];
+  protected _failureCallbacks: ScenarioCallbackAndMessage[] = [];
+  protected _successCallbacks: ScenarioCallbackAndMessage[] = [];
+  protected _pipeCallbacks: ResponsePipeCallbackAndMessage[] = [];
   protected _timeScenarioInitialized: number = Date.now();
   protected _timeScenarioExecuted: number | null = null;
   protected _timeRequestStarted: number | null = null;
@@ -216,30 +246,26 @@ export class Scenario implements iScenario {
     method: "get",
   };
   protected _aliasedData: any = {};
+  protected _finishedPromise: Promise<void>;
+  protected _finishedResolve: Function = () => {};
 
   public static create(
     suite: iSuite,
     title: string,
     type: ResponseType,
-    opts: any,
-    onCompletedCallback: ScenarioOnCompleted
+    opts: any
   ): iScenario {
-    return new Scenario(suite, title, onCompletedCallback).setResponseType(
-      type,
-      opts
-    );
+    return new Scenario(suite, title).setResponseType(type, opts);
   }
 
-  protected constructor(
-    suite: iSuite,
-    title: string,
-    onCompletedCallback: ScenarioOnCompleted
-  ) {
+  protected constructor(suite: iSuite, title: string) {
     this.suite = suite;
     this._request = new HttpRequest(this._defaultRequestOptions);
     this._title = title;
-    this._onCompletedCallback = onCompletedCallback;
     this._response = new ResourceResponse(this);
+    this._finishedPromise = new Promise((resolve) => {
+      this._finishedResolve = resolve;
+    });
   }
 
   public set(aliasName: string, value: any): iScenario {
@@ -436,7 +462,6 @@ export class Scenario implements iScenario {
     this.wait();
     thatScenario.success(async () => {
       this.wait(false);
-      await this.execute();
     });
     return this;
   }
@@ -495,30 +520,16 @@ export class Scenario implements iScenario {
    * @param {string} url
    */
   public open(url: string, opts?: HttpRequestOptions): iScenario {
-    // You can only load the url once per scenario
-    if (!this.hasExecuted) {
-      // If the HTTP method was part of open
-      const match = /([A-Z]+) (.*)/.exec(url);
-      if (match !== null) {
-        const verb: string = match[1].toLowerCase();
-        if (HttpMethodVerbAllowedValues.includes(verb)) {
-          this.setMethod(<HttpMethodVerb>verb);
-        }
-        url = match[2];
-      }
-      // If the URL had parameters in it, implicitly wait for execute parameters
-      if (/{[A-Za-z0-9_ -]+}/.test(url)) {
-        this.wait();
-      }
-      // Merge in options
-      if (opts) {
-        this._request.setOptions(opts);
-      }
-      // Okay now set the open method
-      this.url = String(url);
-      this._isMock = false;
-      this._executeWhenReady();
+    if (this.hasExecuted) {
+      throw `Can call open after scenario has executed`;
     }
+    // Merge in options
+    if (opts) {
+      this._request.setOptions(opts);
+    }
+    // Okay now set the open method
+    this.url = String(url);
+    this._isMock = false;
     return this;
   }
 
@@ -556,13 +567,13 @@ export class Scenario implements iScenario {
    */
   public async skip(message?: string): Promise<iScenario> {
     if (this.hasExecuted) {
-      throw new Error(
-        `Can't skip Scenario since it already started executing.`
-      );
+      throw `Can't skip Scenario since it already started executing.`;
     }
+    this._markExecutionAsStarted();
     await this._fireBefore();
-    this._publish(ScenarioStatusEvent.executionProgress);
+    this._publish(ScenarioStatusEvent.executionSkipped);
     this.comment(`Skipped${message ? ": " + message : ""}`);
+    this._publish(ScenarioStatusEvent.executionProgress);
     await this._fireAfter();
     await this._fireFinally();
     return this;
@@ -574,6 +585,7 @@ export class Scenario implements iScenario {
         `Can't cancel Scenario since it already started executing.`
       );
     }
+    this._markExecutionAsStarted();
     await this._fireBefore();
     await this._fireAfter();
     await this._fireFinally();
@@ -601,79 +613,35 @@ export class Scenario implements iScenario {
   public async execute(pathParams?: {
     [key: string]: string | number;
   }): Promise<iScenario> {
-    if (!this.hasExecuted && this.url !== null) {
-      // Apply path parameters when the url was like /articles/{id}
-      if (pathParams) {
-        Object.keys(pathParams).forEach((key) => {
-          this.url =
-            this.url?.replace(`{${key}}`, String(pathParams[key])) || null;
-        });
-      }
+    if (this.hasExecuted) {
+      throw "Scenario has already started executing. Can not call execute again.";
+    }
+    // Apply path parameters when the url was like /articles/{id}
+    if (pathParams) {
+      Object.keys(pathParams).forEach((key) => {
+        this.url =
+          this.url?.replace(`{${key}}`, String(pathParams[key])) || null;
+      });
+    }
+    // Execute was called, so stop any explicit wait
+    this.wait(false);
+    // We ready to go?
+    if (this.isReadyToExecute) {
+      this._markExecutionAsStarted();
       // Do before callbacks
       await this._fireBefore();
       // Log the start of this scenario
       this._pushToLog(new LogScenarioHeading(this.title));
       // If we waited first
-      this.wait(false);
       if (this._waitTime > 0) {
         this.comment(`Waited ${this._waitTime}ms`);
       }
       // Execute it
-      this._publish(ScenarioStatusEvent.executionProgress);
+      this._publish(ScenarioStatusEvent.executionStart);
       this._isMock ? this._executeMock() : this._executeRequest();
+      this._publish(ScenarioStatusEvent.executionProgress);
     }
     return this;
-  }
-
-  private _pushCallbacks(
-    name: string,
-    messages: string,
-    callbacks: string,
-    a:
-      | string
-      | ScenarioCallback
-      | ScenarioCallback[]
-      | ResponsePipe
-      | ResponsePipe[]
-      | ScenarioErrorCallback
-      | ScenarioErrorCallback[],
-    b?: ScenarioCallback | ResponsePipe | ScenarioErrorCallback
-  ): iScenario {
-    if (this.hasFinished) {
-      throw new Error(
-        `Can not add ${name} callbacks after execution has finished.`
-      );
-    }
-    if (Array.isArray(a)) {
-      a.forEach((callback: any) => {
-        this[messages].push(null);
-        this[callbacks].push(callback);
-      });
-    } else {
-      const { message, callback } = this._getOverloads(a, b);
-      this[messages].push(message);
-      this[callbacks].push(callback);
-    }
-    return this;
-  }
-
-  /**
-   * Callback when someting in the scenario throws an error
-   */
-  public error(callback: ScenarioErrorCallback): iScenario;
-  public error(message: string, callback: ScenarioErrorCallback): iScenario;
-  public error(...callbacks: ScenarioErrorCallback[]): iScenario;
-  public error(
-    a: string | ScenarioErrorCallback | ScenarioErrorCallback[],
-    b?: ScenarioErrorCallback
-  ): iScenario {
-    return this._pushCallbacks(
-      "error",
-      "_errorMessages",
-      "_errorCallbacks",
-      a,
-      b
-    );
   }
 
   /**
@@ -688,13 +656,7 @@ export class Scenario implements iScenario {
     a: string | ScenarioCallback | ScenarioCallback[],
     b?: ScenarioCallback
   ): iScenario {
-    return this._pushCallbacks(
-      "success",
-      "_successMessages",
-      "_successCallbacks",
-      a,
-      b
-    );
+    return this._pushCallbacks("success", "_successCallbacks", a, b);
   }
 
   /**
@@ -709,13 +671,7 @@ export class Scenario implements iScenario {
     a: string | ScenarioCallback | ScenarioCallback[],
     b?: ScenarioCallback
   ): iScenario {
-    return this._pushCallbacks(
-      "failure",
-      "_failureMessages",
-      "_failureCallbacks",
-      a,
-      b
-    );
+    return this._pushCallbacks("failure", "_failureCallbacks", a, b);
   }
 
   /**
@@ -730,7 +686,7 @@ export class Scenario implements iScenario {
     a: string | ResponsePipe | ResponsePipe[],
     b?: ResponsePipe
   ): iScenario {
-    return this._pushCallbacks("pipe", "_pipeMessages", "_pipeCallbacks", a, b);
+    return this._pushCallbacks("pipe", "_pipeCallbacks", a, b);
   }
 
   /**
@@ -745,13 +701,7 @@ export class Scenario implements iScenario {
     a: string | ScenarioCallback | ScenarioCallback[],
     b?: ScenarioCallback
   ): iScenario {
-    return this._pushCallbacks(
-      "before",
-      "_beforeMessages",
-      "_beforeCallbacks",
-      a,
-      b
-    );
+    return this._pushCallbacks("before", "_beforeCallbacks", a, b);
   }
 
   /**
@@ -764,13 +714,7 @@ export class Scenario implements iScenario {
     a: string | ScenarioCallback | ScenarioCallback[],
     b?: ScenarioCallback
   ): iScenario {
-    return this._pushCallbacks(
-      "after",
-      "_afterMessages",
-      "_afterCallbacks",
-      a,
-      b
-    );
+    return this._pushCallbacks("after", "_afterCallbacks", a, b);
   }
 
   /**
@@ -785,13 +729,7 @@ export class Scenario implements iScenario {
     a: string | ScenarioCallback | ScenarioCallback[],
     b?: ScenarioCallback
   ): iScenario {
-    return this._pushCallbacks(
-      "finally",
-      "_finallyMessages",
-      "_finallyCallbacks",
-      a,
-      b
-    );
+    return this._pushCallbacks("finally", "_finallyCallbacks", a, b);
   }
 
   /**
@@ -800,87 +738,7 @@ export class Scenario implements iScenario {
   public mock(localPath: string): iScenario {
     this.url = localPath;
     this._isMock = true;
-    this._executeWhenReady();
     return this;
-  }
-
-  /**
-   * Clear out any previous settings
-   */
-  protected _reset(): iScenario {
-    this._flipAssertion = false;
-    return this;
-  }
-
-  /**
-   * Send responses through the pipeline before we make assertions
-   *
-   * @param httpResponse
-   */
-  protected _pipeResponses(httpResponse: HttpResponse): HttpResponse {
-    this._pipeCallbacks.forEach((callback: ResponsePipe, i: number) => {
-      if (this._pipeMessages[i]) {
-        this.comment(this._pipeMessages[i] || "");
-      }
-      const result = callback(httpResponse);
-      if (result) {
-        httpResponse = result;
-      }
-    });
-    return httpResponse;
-  }
-
-  /**
-   * Handle the normalized response once the request comes back
-   * This will loop through each next
-   */
-  protected _processResponse(httpResponse: HttpResponse) {
-    httpResponse = this._pipeResponses(httpResponse);
-    this._response.init(httpResponse);
-    this._timeRequestLoaded = Date.now();
-    this.result(
-      new AssertionPass(
-        "Loaded " + this._response.responseTypeName + " " + this.url
-      )
-    );
-    let lastReturnValue: any = null;
-    // Execute all the assertion callbacks one by one
-    this._publish(ScenarioStatusEvent.executionProgress);
-    Promise.mapSeries(this._nextCallbacks, (_then, index) => {
-      const context: AssertionContext = new AssertionContext(
-        this,
-        this._response
-      );
-      const comment: string | null = this._nextMessages[index];
-      if (comment !== null) {
-        this._pushToLog(new LogScenarioSubHeading(comment));
-      }
-      context.result = lastReturnValue;
-      // Run this next
-      lastReturnValue = _then.apply(context, [context]);
-      // Warn about any incomplete assertions
-      context.incompleteAssertions.forEach((assertion: Assertion) => {
-        this.result(
-          new AssertionFailWarning(
-            `Incomplete assertion: ${assertion.name}`,
-            assertion
-          )
-        );
-      });
-      // Don't continue until last value and all assertions resolve
-      return Promise.all([
-        lastReturnValue,
-        context.assertionsResolved,
-        context.subScenariosResolved,
-      ]).timeout(30000);
-    })
-      .then(() => {
-        this._markScenarioCompleted();
-      })
-      .catch((err) => {
-        this._markScenarioCompleted(err);
-      });
-    this._publish(ScenarioStatusEvent.executionProgress);
   }
 
   /**
@@ -891,7 +749,7 @@ export class Scenario implements iScenario {
    */
   public setResponseType(type: ResponseType, opts: any = {}): iScenario {
     if (this.hasExecuted) {
-      throw new Error("Scenario was already executed. Can not change type.");
+      throw "Scenario was already executed. Can not change type.";
     }
     // Merge passed in opts with default opts
     this._responseType = type;
@@ -928,10 +786,13 @@ export class Scenario implements iScenario {
     return this;
   }
 
+  public waitForFinished(): Promise<void> {
+    return this._finishedPromise;
+  }
+
   public promise(): Promise<iScenario> {
     return new Promise((resolve, reject) => {
       this.success(resolve);
-      this.error(reject);
       this.failure(reject);
     });
   }
@@ -957,6 +818,116 @@ export class Scenario implements iScenario {
       );
     }
     return new URL(path, this.suite.baseUrl.href);
+  }
+
+  private _pushCallbacks(
+    name: string,
+    callbacksName: string,
+    a:
+      | string
+      | ScenarioCallback
+      | ScenarioCallback[]
+      | ResponsePipe
+      | ResponsePipe[],
+    b?: ScenarioCallback | ResponsePipe
+  ): iScenario {
+    if (this.hasFinished) {
+      throw `Can not add ${name} callbacks after execution has finished.`;
+    }
+    if (Array.isArray(a)) {
+      a.forEach((callback: any) => {
+        this[callbacksName].push({
+          message: "",
+          callback: callback,
+        });
+      });
+    } else {
+      const { message, callback } = this._getOverloads(a, b);
+      this[callbacksName].push({
+        callback: callback,
+        message: message,
+      });
+    }
+    return this;
+  }
+
+  /**
+   * Clear out any previous settings
+   */
+  protected _reset(): iScenario {
+    this._flipAssertion = false;
+    return this;
+  }
+
+  /**
+   * Send responses through the pipeline before we make assertions
+   *
+   * @param httpResponse
+   */
+  protected async _pipeResponses(
+    httpResponse: HttpResponse
+  ): Promise<HttpResponse> {
+    await bluebird.mapSeries(this._pipeCallbacks, async (cb) => {
+      cb.message && this.comment(cb.message);
+      const result = await cb.callback(httpResponse);
+      if (result) {
+        httpResponse = result;
+      }
+    });
+    return httpResponse;
+  }
+
+  /**
+   * Handle the normalized response once the request comes back
+   * This will loop through each next
+   */
+  protected async _processResponse(httpResponse: HttpResponse) {
+    httpResponse = await this._pipeResponses(httpResponse);
+    this._response.init(httpResponse);
+    this._timeRequestLoaded = Date.now();
+    this.result(
+      new AssertionPass(
+        "Loaded " + this._response.responseTypeName + " " + this.url
+      )
+    );
+    let lastReturnValue: any = null;
+    // Execute all the assertion callbacks one by one
+    this._publish(ScenarioStatusEvent.executionProgress);
+    Promise.mapSeries(this._nextCallbacks, (_then, index) => {
+      const context: iAssertionContext = new AssertionContext(
+        this,
+        this._response
+      );
+      const comment: string | null = this._nextMessages[index];
+      if (comment !== null) {
+        this._pushToLog(new LogScenarioSubHeading(comment));
+      }
+      context.result = lastReturnValue;
+      // Run this next
+      lastReturnValue = _then.apply(context, [context]);
+      // Warn about any incomplete assertions
+      context.incompleteAssertions.forEach((assertion: iAssertion) => {
+        this.result(
+          new AssertionFailWarning(
+            `Incomplete assertion: ${assertion.name}`,
+            assertion
+          )
+        );
+      });
+      // Don't continue until last value and all assertions resolve
+      return Promise.all([
+        lastReturnValue,
+        context.assertionsResolved,
+        context.subScenariosResolved,
+      ]).timeout(30000);
+    })
+      .then(() => {
+        this._markScenarioCompleted();
+      })
+      .catch((err) => {
+        this._markScenarioCompleted(err);
+      });
+    this._publish(ScenarioStatusEvent.executionProgress);
   }
 
   /**
@@ -1014,19 +985,27 @@ export class Scenario implements iScenario {
       });
   }
 
+  private _markRequestAsStarted() {
+    this._timeRequestStarted = Date.now();
+  }
+
   /**
    * Used by all request types to kick off the request
    */
   protected _executeRequest() {
-    if (!this._timeRequestStarted && this.url !== null) {
-      this._timeRequestStarted = Date.now();
-      this.url = this.buildUrl().href;
-      this._finalUrl = this._request.uri;
-      if (["extjs", "browser"].includes(this._responseType)) {
-        this._executeBrowserRequest();
-      } else {
-        this._executeDefaultRequest();
-      }
+    if (this.url === null) {
+      throw "Can not execute request with null URL.";
+    }
+    if (this.hasRequestStarted) {
+      throw "Request has already started.";
+    }
+    this.url = this.buildUrl().href;
+    this._markRequestAsStarted();
+    this._finalUrl = this._request.uri;
+    if (["extjs", "browser"].includes(this._responseType)) {
+      this._executeBrowserRequest();
+    } else {
+      this._executeDefaultRequest();
     }
   }
 
@@ -1034,31 +1013,24 @@ export class Scenario implements iScenario {
    * Start a mock scenario, which will load a local file
    */
   protected _executeMock() {
-    if (!this._timeRequestStarted && this.url !== null) {
-      const scenario: Scenario = this;
-      this._timeRequestStarted = Date.now();
-      HttpResponse.fromLocalFile(this.url)
-        .then((mock: HttpResponse) => {
-          scenario._processResponse(mock);
-        })
-        .catch((err) => {
-          scenario._markScenarioCompleted(
-            `Failed to load page ${scenario.url}`,
-            err
-          );
-        });
+    if (this.url === null) {
+      throw "Can not execute request with null URL.";
     }
-  }
-
-  /**
-   * Execute now if we are able to do so
-   */
-  protected _executeWhenReady(): boolean {
-    if (!this._waitToExecute && this.canExecute) {
-      this.execute();
-      return true;
+    if (this.hasRequestStarted) {
+      throw "Request has already started.";
     }
-    return false;
+    this._markRequestAsStarted();
+    const scenario: Scenario = this;
+    HttpResponse.fromLocalFile(this.url)
+      .then((mock: HttpResponse) => {
+        scenario._processResponse(mock);
+      })
+      .catch((err) => {
+        scenario._markScenarioCompleted(
+          `Failed to load page ${scenario.url}`,
+          err
+        );
+      });
   }
 
   /**
@@ -1081,7 +1053,7 @@ export class Scenario implements iScenario {
       // Scenario compelted with an error
       else {
         this.result(new AssertionFail(errorMessage, errorDetails));
-        await this._fireError(errorDetails || errorMessage);
+        await this._fireFailure(errorDetails || errorMessage);
       }
       // Finally
       await this._fireFinally();
@@ -1093,140 +1065,49 @@ export class Scenario implements iScenario {
     return this;
   }
 
+  private async _fireCallbacks(callbacks: ScenarioCallbackAndMessage[]) {
+    await bluebird.mapSeries(callbacks, (cb) => {
+      cb.message && this._pushToLog(new LogComment(cb.message));
+      return cb.callback(this, this.suite);
+    });
+  }
+
+  private _markExecutionAsStarted() {
+    this._timeScenarioExecuted = Date.now();
+  }
+
   /**
    * Run the before execution and wait for any response.
    */
-  protected _fireBefore(): Promise<any> {
-    const scenario = this;
-    this._timeScenarioExecuted = Date.now();
-    return new Promise(async (resolve, reject) => {
-      // Do all of the befores first, so they can do setup, and then actually execute
-      Promise.mapSeries(scenario._beforeCallbacks, (_then, index) => {
-        const comment: string | null = scenario._beforeMessages[index];
-        if (comment !== null) {
-          this._pushToLog(new LogComment(comment));
-        }
-        return _then.apply(scenario, [scenario]);
-      })
-        .then(() => {
-          // Then do notifications
-          scenario._publish(ScenarioStatusEvent.beforeExecute);
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
+  protected async _fireBefore(): Promise<any> {
+    await this._fireCallbacks(this._beforeCallbacks);
+    this._publish(ScenarioStatusEvent.beforeExecute);
   }
 
   /**
    * Run after execution and wait for any response
    */
-  protected _fireAfter(): Promise<void> {
-    const scenario = this;
+  protected async _fireAfter(): Promise<void> {
     this._timeScenarioFinished = Date.now();
-    return new Promise((resolve, reject) => {
-      // Do all of the afters first, so they can tear down, and then mark it as finished
-      Promise.mapSeries(this._afterCallbacks, (_then, index) => {
-        const comment: string | null = scenario._afterMessages[index];
-        if (comment !== null) {
-          this._pushToLog(new LogComment(comment));
-        }
-        return _then.apply(scenario, [scenario]);
-      })
-        .then(() => {
-          this._publish(ScenarioStatusEvent.afterExecute);
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
+    await this._fireCallbacks(this._afterCallbacks);
+    this._publish(ScenarioStatusEvent.afterExecute);
   }
 
-  protected _fireSuccess(): Promise<void> {
-    const scenario = this;
-    return new Promise((resolve, reject) => {
-      // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._successCallbacks, (_then, index) => {
-        const comment: string | null = scenario._successMessages[index];
-        if (comment !== null) {
-          this._pushToLog(new LogComment(comment));
-        }
-        return _then.apply(scenario, [scenario]);
-      })
-        .then(() => {
-          this._publish(ScenarioStatusEvent.finished);
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
+  protected async _fireSuccess(): Promise<void> {
+    await this._fireCallbacks(this._successCallbacks);
+    this._publish(ScenarioStatusEvent.finished);
   }
 
-  protected _fireFailure(): Promise<void> {
-    const scenario = this;
-    return new Promise((resolve, reject) => {
-      // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._failureCallbacks, (_then, index) => {
-        const comment: string | null = scenario._failureMessages[index];
-        if (comment !== null) {
-          this._pushToLog(new LogComment(comment));
-        }
-        return _then.apply(scenario, [scenario]);
-      })
-        .then(() => {
-          this._publish(ScenarioStatusEvent.finished);
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
+  protected async _fireFailure(errorMessage?: string): Promise<void> {
+    await this._fireCallbacks(this._failureCallbacks);
+    errorMessage && this._pushToLog(new LogComment(errorMessage));
+    this._publish(ScenarioStatusEvent.finished);
   }
 
-  protected _fireError(error: string): Promise<void> {
-    const scenario = this;
-    return new Promise((resolve, reject) => {
-      // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._errorCallbacks, (_then, index) => {
-        const comment: string | null = scenario._errorMessages[index];
-        if (comment !== null) {
-          this._pushToLog(new LogComment(comment));
-        }
-        return _then.apply(scenario, [error, scenario]);
-      })
-        .then(() => {
-          this._publish(ScenarioStatusEvent.finished);
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  }
-
-  protected _fireFinally(): Promise<void> {
-    const scenario = this;
-    return new Promise((resolve, reject) => {
-      // Do all all fthe finally callbacks first
-      Promise.mapSeries(this._finallyCallbacks, (_then, index) => {
-        const comment: string | null = scenario._finallyMessages[index];
-        if (comment !== null) {
-          this._pushToLog(new LogComment(comment));
-        }
-        return _then.apply(scenario, [scenario]);
-      })
-        .then(() => {
-          this._onCompletedCallback(scenario);
-          this._publish(ScenarioStatusEvent.finished);
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
+  protected async _fireFinally(): Promise<void> {
+    await this._fireCallbacks(this._finallyCallbacks);
+    this._publish(ScenarioStatusEvent.finished);
+    this._finishedResolve();
   }
 
   protected _getOverloads(
@@ -1278,12 +1159,8 @@ export class Scenario implements iScenario {
         this._nextCallbacks.unshift(callback);
         this._nextMessages.unshift(message);
       }
-      // Execute at the next opportunity.
-      setTimeout(() => {
-        this._executeWhenReady();
-      }, 0);
     } else {
-      throw new Error("Scenario already finished.");
+      throw "Scenario already finished.";
     }
     return this;
   }

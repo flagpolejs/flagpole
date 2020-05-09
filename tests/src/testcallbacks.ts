@@ -4,7 +4,7 @@ const suite = Flagpole.suite("Test order of callbacks")
   .base("https://www.whatismyip.com")
   .beforeAll(() => {
     console.log("Before All");
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         console.log("Resolved Before All");
         resolve();
@@ -26,11 +26,11 @@ const suite = Flagpole.suite("Test order of callbacks")
   .failure(() => {
     console.log("Suite Failure");
   })
-  .error(() => {
-    console.log("Suite Error");
-  })
   .finally(() => {
     console.log("Suite Finally");
+  })
+  .subscribe((suite, status) => {
+    console.log(`suite: ${status}`);
   });
 
 suite
@@ -48,14 +48,14 @@ suite
   .failure(() => {
     console.log("Failure First Scenario");
   })
-  .error(() => {
-    console.log("Error First Scenario");
-  })
   .finally(() => {
     console.log("Finally First Scenario");
   })
-  .next(async function() {
+  .next(async function () {
     console.log("Next First Scenario");
+  })
+  .subscribe((scenario, status) => {
+    console.log(`scenario 1: ${status}`);
   });
 
 suite
@@ -73,14 +73,14 @@ suite
   .failure(() => {
     console.log("Failure Second Scenario");
   })
-  .error(() => {
-    console.log("Error Second Scenario");
-  })
   .finally(() => {
     console.log("Finally Second Scenario");
   })
-  .next(async function() {
+  .next(async function () {
     console.log("Next Second Scenario");
+  })
+  .subscribe((scenario, status) => {
+    console.log(`scenario 2: ${status}`);
   });
 
 suite
@@ -98,12 +98,12 @@ suite
   .failure(() => {
     console.log("Failure Third Scenario");
   })
-  .error(() => {
-    console.log("Error Third Scenario");
-  })
   .finally(() => {
     console.log("Finally Third Scenario");
   })
-  .next(async function() {
+  .next(async function () {
     console.log("Next Third Scenario");
+  })
+  .subscribe((scenario, status) => {
+    console.log(`scenario 3: ${status}`);
   });

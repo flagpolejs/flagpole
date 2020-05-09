@@ -9,11 +9,8 @@ suite
   .open("/api/v1/meets")
   .next(async (context) => {
     context.assert(context.response.statusCode).equals(200);
-    await context.assert(context.response.jsonBody).schema("@meetsList");
-    context.comment({
-      name: "Jason",
-      say: "Hello",
-    });
+    await context.assert(context.response.jsonBody).schema("@meetsList", true);
+    context.comment(context.response.jsonBody.$.data[0]);
   });
 
 suite
