@@ -58,6 +58,7 @@ export default class Run extends Command {
       description: "override tests to keep browser headless",
     }),
   ];
+
   public async action(args: commander.Command) {
     if (args.headed || args.headless) {
       FlagpoleExecution.global.headless = !!args.headless || !args.headed;

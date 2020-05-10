@@ -53,14 +53,14 @@ export abstract class Command {
     command.on("--help", this.helpCallback);
     command.action(async (...args: any[]) => {
       // Initialize Flagpole
-      FlagpoleExecution.global = await FlagpoleExecution.create({
+      FlagpoleExecution.global = FlagpoleExecution.create({
         configFilePath: program.config,
         environmentName: program.env,
         exitOnDone: !!program.exitOnDone,
         isChildProcess: !!program.isChildProcess,
         baseDomain: program.base,
         outputFormat: program.output,
-        verbosity: program.quiet ? -100 : 0,
+        volume: Number(program.volume || 50),
         automaticallyPrintToConsole: true,
       });
       // Call the action callback

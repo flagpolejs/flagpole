@@ -1,11 +1,10 @@
 import { BrowserControl } from "./browsercontrol";
 import { Page } from "puppeteer-core";
 import {
-  LogItemType,
-  ConsoleLineType,
   ResponseType,
   SuiteStatusEvent,
   ScenarioStatusEvent,
+  LineType,
 } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import {
@@ -79,13 +78,13 @@ export interface iConsoleLine {
   timestamp: Date;
   fg: [number, number, number];
   message: string;
-  type: ConsoleLineType;
+  type: LineType;
   toConsoleString(): string;
   toString(): string;
 }
 
 export interface iLogItem {
-  type: LogItemType;
+  type: LineType;
   className: string;
   message: string;
   passed: boolean;
@@ -103,7 +102,7 @@ export interface iLogItem {
 export interface iAssertionResult {
   className: string;
   toConsole(): iConsoleLine[];
-  type: LogItemType;
+  type: LineType;
   message: string;
   passed: boolean;
   failed: boolean;

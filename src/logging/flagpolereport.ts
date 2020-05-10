@@ -7,9 +7,9 @@ import {
 } from "./consoleline";
 import { LogComment } from "./comment";
 import { iConsoleLine, iLogItem, iScenario, iSuite } from "../interfaces";
-import { LogItemType } from "../enums";
 import { asyncForEach } from "../util";
 import { FlagpoleExecution } from "../flagpoleexecution";
+import { lineToVerbosity } from "./verbosity";
 
 export class FlagpoleReport {
   public readonly suite: iSuite;
@@ -85,7 +85,7 @@ export class FlagpoleReport {
       };
       log.forEach((item: iLogItem) => {
         out.scenarios[i].log.push(item.toJson());
-        if (item.type == LogItemType.Result) {
+        if (item.type.startsWith("result")) {
           if (item.passed) {
             out.scenarios[i].passCount++;
             passCount++;
@@ -131,10 +131,7 @@ export class FlagpoleReport {
             `;
       html += "<ul>\n";
       log.forEach((item: iLogItem) => {
-        if (
-          item.type == LogItemType.Result ||
-          item.type == LogItemType.Comment
-        ) {
+        if (item.type.startsWith("result") || item.type == "comment") {
           html += item.toHtml();
         }
       });
@@ -184,13 +181,17 @@ export class FlagpoleReport {
     // Console
     else if (FlagpoleExecution.global.isConsoleOutput) {
       (await this.toConsole()).forEach((line: iConsoleLine) => {
-        out += line.toConsoleString() + "\n";
+        if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
+          out += line.toConsoleString() + "\n";
+        }
       });
     }
     // Text
     else if (FlagpoleExecution.global.isTextOutput) {
       (await this.toConsole()).forEach((line: iConsoleLine) => {
-        out += line.toString() + "\n";
+        if (lineToVerbosity[line.type] >= FlagpoleExecution.global.volume) {
+          out += line.toString() + "\n";
+        }
       });
     }
     // CSV

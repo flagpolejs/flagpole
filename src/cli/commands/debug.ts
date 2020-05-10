@@ -21,7 +21,7 @@ export default class Debug extends Command {
           FlagpoleExecution.global.config.getTestsFolder(),
         "Base Domain: " + FlagpoleExecution.global.baseDomain,
         "Output format: " + FlagpoleExecution.global.outputFormat,
-        "Verbosity: " + FlagpoleExecution.global.verbosity,
+        `Verbosity Volume: ${FlagpoleExecution.global.volume}%`,
         "Opts: " + FlagpoleExecution.global.getOptionsString(),
       ])
       .log("")

@@ -741,7 +741,7 @@ export class Assertion implements iAssertion {
           );
     }
     // Log this result
-    this._context.scenario.result(this._result);
+    //this._context.scenario.result(this._result);
     this._finishedResolver(this._result);
     return this;
   }

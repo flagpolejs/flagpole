@@ -27,19 +27,15 @@ export type ResponseType =
   | "browser"
   | "extjs";
 
-export enum LogItemType {
-  Result,
-  Comment,
-  Heading,
-  SummaryData,
-}
-
-export enum ConsoleLineType {
-  Pass,
-  Fail,
-  Comment,
-  Detail,
-  Heading,
-  Subheading,
-  Decoration,
-}
+export type LineType =
+  | "resultPass"
+  | "resultFailure"
+  | "resultOptionalFailure"
+  | "comment"
+  | "detail"
+  | "h1"
+  | "h2"
+  | "h3"
+  | "decoration"
+  | "debugInfo"
+  | "summaryData";

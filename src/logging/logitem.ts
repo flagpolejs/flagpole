@@ -1,9 +1,9 @@
 import { iConsoleLine, iLogItem } from "../interfaces";
-import { LogItemType } from "../enums";
+import { LineType } from "../enums";
 import { CustomLine } from "./consoleline";
 
 export abstract class LogItem implements iLogItem {
-  public abstract readonly type: LogItemType;
+  public abstract readonly type: LineType;
   public abstract readonly className: string;
 
   public get passed(): boolean {

@@ -1,4 +1,4 @@
-import { ResponseType, LogItemType, ScenarioStatusEvent } from "./enums";
+import { ResponseType, LineType, ScenarioStatusEvent } from "./enums";
 import {
   iAssertion,
   iAssertionContext,
@@ -97,7 +97,7 @@ export class Scenario implements iScenario {
    */
   public get hasFailed(): boolean {
     return this._log.items.some((item: iLogItem) => {
-      return item.type == LogItemType.Result && item.failed && !item.isOptional;
+      return item.type == "resultFailure";
     });
   }
 

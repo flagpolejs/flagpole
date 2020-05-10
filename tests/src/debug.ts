@@ -1,4 +1,4 @@
-import { Flagpole, iScenario } from "../../dist/index.js";
+import { Flagpole } from "../../dist/index.js";
 
 const suite = Flagpole.suite("Basic Smoke Test of Site").base(
   "http://jsonprettyprint.net/"

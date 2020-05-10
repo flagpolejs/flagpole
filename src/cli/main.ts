@@ -12,10 +12,34 @@ const FLAGPOLE_VERSION = pkg.version;
 
 // Initialize CLI
 const program = new Command("flagpole").passCommandToAction(false);
+// Set verbosity level
+const setVolume = (value: number | string = 50, defaultValue: number = 50) => {
+  if (typeof value === "string") {
+    if (value.startsWith("-") || value.startsWith("+")) {
+      value = 50 + parseInt(value);
+    } else if (value == "verbose" || value == "debug" || value == "loud") {
+      value = 100;
+    } else if (value == "normal" || value == "default") {
+      value = 50;
+    } else if (value == "quiet") {
+      value = 30;
+    } else if (value == "silent") {
+      value = 0;
+    } else {
+      value = parseInt(value);
+    }
+  }
+  return String(
+    !isNaN(value)
+      ? // Between 0 and 100
+        Math.max(0, Math.min(100, value))
+      : defaultValue
+  );
+};
 // Set version
 program.version(
   FLAGPOLE_VERSION,
-  "-v, --version",
+  "-V, --version",
   "Output the current version of Flagpole CLI"
 );
 // Global arguments
@@ -31,8 +55,15 @@ program
     process.cwd()
   )
   .option("-e, --env <name>", "set the environment")
-  .option("-q, --quiet", "silence all command line output", false)
   .option("-b, --base <domain>", "override base domain")
+  .option(
+    "-v, --volume <level>",
+    "set volume (verbosity) level beteen 0 and 100",
+    (value) => {
+      return setVolume(value);
+    },
+    process.env.VOLUME || "50"
+  )
   .option("-x, --exitOnDone", "exit process after suites finish runs")
   .option("-z, --isChildProcess");
 // Usage tips

@@ -4,11 +4,7 @@ import {
   getDefaultConfig,
   EnvConfig,
 } from "./flagpoleconfig";
-import { readFile, readFileSync } from "fs-extra";
-
-export const VERBOSITY_SILENT = -100;
-export const VERBOSITY_NORMAL = 0;
-export const VERBOSITY_VERBOSE = 100;
+import { readFileSync } from "fs-extra";
 
 export enum FlagpoleOutput {
   console = "console",
@@ -28,7 +24,7 @@ export interface iFlagpoleOptions {
   environmentName?: string;
   exitOnDone?: boolean;
   isChildProcess?: boolean;
-  verbosity?: number;
+  volume?: number;
   automaticallyPrintToConsole?: boolean;
   headless?: boolean;
 }
@@ -80,7 +76,9 @@ export class FlagpoleExecution {
    * @param args
    */
   public static createWithArgs(args: string[]): FlagpoleExecution {
-    const opts: any = {};
+    const opts: iFlagpoleOptions = {
+      configFilePath: "./flagpole.json",
+    };
     let lastArg: string | null = null;
     args.forEach(function (arg: string) {
       if (lastArg == "-e") {
@@ -92,10 +90,8 @@ export class FlagpoleExecution {
         opts.baseDomain = arg;
       } else if (lastArg == "--config") {
         opts.configFilePath = arg;
-      } else if (arg == "-q") {
-        opts.verbosity = VERBOSITY_SILENT;
-        lastArg = null;
-        return;
+      } else if (lastArg == "--volume") {
+        opts.volume = parseInt(arg);
       } else if (arg == "-x") {
         opts.exitOnDone = true;
         lastArg = null;
@@ -115,10 +111,6 @@ export class FlagpoleExecution {
       }
       lastArg = arg;
     });
-    // Config file path is required, default to current folder
-    if (!opts.configFilePath) {
-      opts.configFilePath = "./flagpole.json";
-    }
     return FlagpoleExecution.create(<iFlagpoleOptions>opts);
   }
 
@@ -160,8 +152,8 @@ export class FlagpoleExecution {
     return !!this._opts.isChildProcess;
   }
 
-  public get verbosity(): number {
-    return this._opts.verbosity === undefined ? 0 : this._opts.verbosity;
+  public get volume(): number {
+    return this._opts.volume === undefined ? 50 : this._opts.volume;
   }
 
   public set outputFormat(value: FlagpoleOutput) {
@@ -194,11 +186,11 @@ export class FlagpoleExecution {
   }
 
   public get isQuietMode(): boolean {
-    return this.verbosity === VERBOSITY_SILENT;
+    return this.volume === 0;
   }
 
   public get shouldOutputToConsole(): boolean {
-    return this.isConsoleOutput && this.verbosity >= 0;
+    return this.isConsoleOutput && this.volume > 0;
   }
 
   public get shouldWriteHtml(): boolean {
@@ -251,7 +243,7 @@ export class FlagpoleExecution {
   }
 
   public getOptionsString(): string {
-    let opts: string = "";
+    let opts: string = `--volume ${this.volume}`;
     if (this.baseDomain) {
       opts += ` --base ${this._opts.baseDomain}`;
     }
@@ -260,9 +252,6 @@ export class FlagpoleExecution {
     }
     if (this.environment !== undefined) {
       opts += " -e " + this.environment.name;
-    }
-    if (this._opts.verbosity === VERBOSITY_SILENT) {
-      opts += " -q";
     }
     if (this.exitOnDone === true) {
       opts += " -x";
