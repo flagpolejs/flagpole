@@ -9,6 +9,10 @@ export class TestRunner {
   private _executionResults: SuiteExecutionResult[] = [];
   private _timeStart: number = Date.now();
   private _subscribers: Function[] = [];
+  private _finishedPromise: Promise<SuiteExecutionResult[]>;
+  private _finishedResolver: (
+    results: SuiteExecutionResult[]
+  ) => void = () => {};
 
   public get suites(): SuiteConfig[] {
     let arr: SuiteConfig[] = [];
@@ -34,6 +38,16 @@ export class TestRunner {
     return this._executionResults.every((result) => {
       return result.exitCode == 0;
     });
+  }
+
+  public constructor() {
+    this._finishedPromise = new Promise((resolve) => {
+      this._finishedResolver = resolve;
+    });
+  }
+
+  public after(callback: (results: SuiteExecutionResult[]) => void) {
+    this._finishedPromise.then(callback);
   }
 
   public subscribe(callback: Function) {
@@ -124,6 +138,7 @@ export class TestRunner {
   private _onDone() {
     const duration: number = Date.now() - this._timeStart;
     let output: string = "";
+    this._finishedResolver(this._executionResults);
     if (FlagpoleExecution.global.isJsonOutput) {
       let suiteOutput: string[] = [];
       let overall = {

@@ -8,6 +8,7 @@ import { FlagpoleExecution } from "../../flagpoleexecution";
 import commander = require("commander");
 import Ansi from "cli-ansi";
 import { TestRunner } from "../testrunner";
+import { lineToVerbosity } from "../../logging/verbosity";
 
 export default class Run extends Command {
   public commandString = "run";
@@ -218,34 +219,22 @@ const runSuites = async (
       Cli.log("Did not find any test suites to run.\n");
       Cli.exit(2);
     }
-
-    Ansi.writeLine();
-
-    const states = ["/", "—", "\\", "|"];
-    let stateIndex: number = 0;
-    let statusMessage: string = `Loading ${runner.suites.length} test suites...`;
-    let timer = setInterval(() => {
-      Ansi.writeLine(
-        Ansi.cursorUp(),
-        Ansi.eraseLine(),
-        `${states[stateIndex]} ${statusMessage}`
+    if (FlagpoleExecution.global.volume >= lineToVerbosity["decoration"]) {
+      Ansi.writeLine();
+      const spinner = Cli.instance.spinner(
+        `Loading ${runner.suites.length} test suites...`
       );
-      stateIndex = stateIndex < states.length - 1 ? stateIndex + 1 : 0;
-    }, 100);
-
-    runner.subscribe((message: string) => {
-      statusMessage = message;
-    });
-
-    await runner.runSpawn(asyncExecution);
-
-    clearInterval(timer);
-    Ansi.write(Ansi.eraseLines(2));
+      runner.subscribe((message: string) => {
+        spinner.updateMessage(message);
+      });
+      runner.after(() => {
+        spinner.stop();
+        Ansi.write(Ansi.eraseLines(2));
+      });
+    }
   }
-  // If other output, just give final out
-  else {
-    await runner.runSpawn(asyncExecution);
-  }
+
+  await runner.runSpawn(asyncExecution);
 
   // Adios
   Cli.exit(runner.exitCode);

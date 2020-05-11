@@ -2,6 +2,12 @@ import { FlagpoleExecution } from "../flagpoleexecution";
 import { iSuiteOpts, iScenarioOpts, SuiteConfig } from "../flagpoleconfig";
 import * as fs from "fs-extra";
 import { printSubheader } from "./cli-helper";
+import Ansi from "cli-ansi";
+
+type SpinnerResponse = {
+  updateMessage: (updatedMessage: string) => void;
+  stop: () => void;
+};
 
 export class Cli {
   private static _singleton: Cli;
@@ -84,6 +90,29 @@ export class Cli {
       });
     });
     process.exit(exitCode);
+  }
+
+  public spinner(
+    message: string,
+    states: string[] = ["/", "—", "\\", "|"]
+  ): SpinnerResponse {
+    let stateIndex: number = 0;
+    const timer = setInterval(() => {
+      Ansi.writeLine(
+        Ansi.cursorUp(),
+        Ansi.eraseLine(),
+        `${states[stateIndex]} ${message}`
+      );
+      stateIndex = stateIndex < states.length - 1 ? stateIndex + 1 : 0;
+    }, 100);
+    return {
+      updateMessage: (updatedMessage: string) => {
+        message = updatedMessage;
+      },
+      stop: () => {
+        clearInterval(timer);
+      },
+    };
   }
 }
 
