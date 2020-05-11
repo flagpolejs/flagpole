@@ -420,6 +420,22 @@ Sometimes you may NOT want to execute a scenario until another scenario has succ
 scenario2.waitFor(scenario1);
 ```
 
+### waitForFinished(): Promise<void>;
+
+Wait for this scenario to complete, either success or failure.
+
+```javascript
+await scenario.waitForFinished();
+```
+
+### waitForResponse(): Promise<void>;
+
+Wait for the response to come back from the scenario's HTTP request.
+
+```javascript
+await scenario.waitForResponse();
+```
+
 ## Properties
 
 Most of these properties are read only. You can not set any of them directly, unless otherwise designated.

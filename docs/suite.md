@@ -185,6 +185,14 @@ Creates a new Scenario of the Generic Resource request type. This is any other r
 suite.resource("Make sure this file loads");
 ```
 
+### setConcurrencyLimit(maxConccurentRequests: number): Scenario
+
+Limit the number of scenario HTTP requests that can fire at a time. It will execute them in batches and wait for the response to continue the next one.
+
+```javascript
+suite.setConcurrencyLimit(10);
+```
+
 ### script(title: string, opts: any = {}): Scenario
 
 Creates a new Scenario of the Script request type. It doesn't currently do anything more than load it. You can test the file size, mime type, HTTP Status, and such... so it may have some use but does not currently validate the JS.
