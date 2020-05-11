@@ -406,6 +406,7 @@ export interface iSuite {
   subscribe(callback: SuiteStatusCallback): iSuite;
   verifyCert(verify: boolean): iSuite;
   verifySslCert(verify: boolean): iSuite;
+  setConcurrencyLimit(maxExecutions: number): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
   scenario(title: string, type: ResponseType, opts?: BrowserOptions): iScenario;
@@ -508,6 +509,7 @@ export interface iScenario {
   ): iScenario;
   promise(): Promise<iScenario>;
   waitForFinished(): Promise<void>;
+  waitForResponse(): Promise<void>;
   waitFor(thatScenario: iScenario): iScenario;
 }
 

@@ -19,3 +19,11 @@ suite
       context.assert(width).equals(620);
     });
   });
+
+suite
+  .scenario("Click me", "browser")
+  .open("https://stackoverflow.com/")
+  .next(async (context) => {
+    await context.waitForExists("a.login-link");
+    await context.click("a.login-link");
+  });

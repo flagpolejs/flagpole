@@ -423,7 +423,7 @@ export class AssertionContext implements iAssertionContext {
   ): Promise<iScenario | void> {
     const el: iValue = await this.find(selector);
     const overloaded = getMessageAndCallbackFromOverloading(a, b, selector);
-    if (!el.isNull && "click" in el) {
+    if (!el.isNull() && "click" in el) {
       if (overloaded.scenario) {
         return el.click(overloaded.scenario);
       }

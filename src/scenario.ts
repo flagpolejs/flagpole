@@ -246,6 +246,8 @@ export class Scenario implements iScenario {
     method: "get",
   };
   protected _aliasedData: any = {};
+  protected _requestPromise: Promise<void>;
+  protected _requestResolve: Function = () => {};
   protected _finishedPromise: Promise<void>;
   protected _finishedResolve: Function = () => {};
 
@@ -263,6 +265,9 @@ export class Scenario implements iScenario {
     this._request = new HttpRequest(this._defaultRequestOptions);
     this._title = title;
     this._response = new ResourceResponse(this);
+    this._requestPromise = new Promise((resolve) => {
+      this._requestResolve = resolve;
+    });
     this._finishedPromise = new Promise((resolve) => {
       this._finishedResolve = resolve;
     });
@@ -790,6 +795,10 @@ export class Scenario implements iScenario {
     return this._finishedPromise;
   }
 
+  public waitForResponse(): Promise<void> {
+    return this._requestPromise;
+  }
+
   public promise(): Promise<iScenario> {
     return new Promise((resolve, reject) => {
       this.success(resolve);
@@ -885,6 +894,7 @@ export class Scenario implements iScenario {
     httpResponse = await this._pipeResponses(httpResponse);
     this._response.init(httpResponse);
     this._timeRequestLoaded = Date.now();
+    this._requestResolve();
     this.result(
       new AssertionPass(
         "Loaded " + this._response.responseTypeName + " " + this.url

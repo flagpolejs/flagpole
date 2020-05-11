@@ -88,7 +88,7 @@ export class SuiteTaskManager {
 
   public get haveAllPassed(): boolean {
     return this._scenarios.every((scenario) => {
-      return !scenario.hasFailed;
+      return !scenario.hasFailed && scenario.hasFinished;
     });
   }
 
@@ -356,6 +356,7 @@ export class SuiteTaskManager {
           batch,
           async (scenario) => {
             await this._executeScenario(scenario);
+            await scenario.waitForResponse();
           },
           {
             concurrency: this._concurrencyLimit,

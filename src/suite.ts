@@ -152,8 +152,9 @@ export class Suite implements iSuite {
    *
    * @param maxExecutions
    */
-  public setConcurrencyLimit(maxExecutions: number) {
+  public setConcurrencyLimit(maxExecutions: number): iSuite {
     this._taskManager.concurrencyLimit = maxExecutions;
+    return this;
   }
 
   /**
