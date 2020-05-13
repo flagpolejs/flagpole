@@ -4,7 +4,7 @@ const suite = Flagpole.suite("Basic Smoke Test of Site").base(
   "https://www.milesplit.com/"
 );
 
-suite
+const scenario1 = suite
   .html("Homepage Loads")
   .open("/")
   .next(async (context) => {
@@ -20,7 +20,7 @@ suite
     });
   });
 
-suite
+const scenario2 = suite
   .scenario("Click me", "browser")
   .open("https://stackoverflow.com/")
   .next(async (context) => {

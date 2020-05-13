@@ -116,6 +116,12 @@ export class Cli {
   }
 }
 
+/**
+ * Create a new suite and update flagpole.json
+ *
+ * @param suite
+ * @param scenario
+ */
 export const addSuite = async (
   suite: iSuiteOpts,
   scenario: iScenarioOpts
@@ -146,6 +152,12 @@ export const addSuite = async (
   return suite;
 };
 
+/**
+ * Add new scenario into a suite
+ *
+ * @param suite
+ * @param opts
+ */
 export const addScenario = async (
   suite: SuiteConfig,
   opts: iScenarioOpts

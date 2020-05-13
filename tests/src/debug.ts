@@ -1,10 +1,10 @@
-import { Flagpole } from "../../dist/index.js";
+import flagpole from "../../dist/index.js";
 
-const suite = Flagpole.suite("Basic Smoke Test of Site").base(
+const suite = flagpole("Basic Smoke Test of Site").base(
   "http://jsonprettyprint.net/"
 );
 suite
-  .html("Submit JSON Pretty Print")
+  .scenario("Submit JSON Pretty Print", "html")
   .open("POST /json-pretty-print")
   .setFormData({ json_string: `{ "foo": "dsaf" }` })
   .next(async (context) => {
@@ -14,6 +14,6 @@ suite
   });
 
 suite
-  .browser("Homepage Loads", { headless: false })
+  .scenario("Homepage Loads", "browser", { headless: false })
   .open("/")
   .next(async (context) => {});

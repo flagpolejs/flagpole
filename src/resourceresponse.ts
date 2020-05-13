@@ -1,9 +1,7 @@
 import { ProtoResponse } from "./response";
-import { iResponse } from "./interfaces";
+import { iResponse, iValue } from "./interfaces";
 import { ResponseType } from "./enums";
-import { Value } from "./value";
 import { HttpResponse } from "./httpresponse";
-import { iValue } from ".";
 
 export class ResourceResponse extends ProtoResponse implements iResponse {
   public get responseType(): ResponseType {
@@ -16,7 +14,6 @@ export class ResourceResponse extends ProtoResponse implements iResponse {
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
-    this.context.assert(this.statusCode).between(200, 299);
   }
 
   public async evaluate(context: any, callback: Function): Promise<any> {

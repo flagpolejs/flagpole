@@ -1,5 +1,5 @@
 import * as http from "http";
-const fs = require("fs");
+import fs = require("fs");
 
 export class WebResponse {
   private _response: http.ServerResponse;
@@ -90,7 +90,7 @@ export class WebServer {
   }
 
   public close(): Promise<void> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       if (this.isListening) {
         this._server.close(() => {
           resolve();

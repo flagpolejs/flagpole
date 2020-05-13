@@ -94,7 +94,7 @@ Add a comment to the Scenario output.
 
 ### exists(path: string): Promise<DOMElement | CSSRule | Value>
 
-This is just like an `exists`, but it also does an assertion that the element actually exists. It is similar to `waitForExists` except that it doesn't wait around.
+This is just like an `find`, but it also does an assertion that the element actually exists. It is similar to `waitForExists` except that it doesn't wait around.
 
 ```javascript
 const firstArticle = await context.exists("section.topStories article");
