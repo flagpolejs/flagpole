@@ -338,7 +338,11 @@ export interface iAssertionContext {
   ): Promise<iValue[]>;
   findXPath(xPath: string): Promise<iValue>;
   findAllXPath(xPath: string): Promise<iValue[]>;
-  clearThenType(selector: string, textToType: string, opts?: any): Promise<any>;
+  clearThenType(
+    selector: string,
+    textToType: string,
+    opts?: any
+  ): Promise<void>;
   clear(selector: string): Promise<void>;
   click(selector: string): Promise<void>;
   click(selector: string, scenario: iScenario): Promise<iScenario>;

@@ -36,18 +36,6 @@ scenario.before((scenario: Scenario) => {
 
 Write a comment line to the output log.
 
-### error(callback: Function, scenario: Scenario): Scenario
-
-Set an error callback. This function will be called if there are any exceptions encountered in this scenario. It is important to understand, this is not the same as an assertion failure. This will be unhandled errors. You can set more than one of these callbacks and they will be called in the order set.
-
-```typescript
-scenario.error((msg: string) => {
-  console.log(msg);
-});
-```
-
-Additionally you can return a promise. Execution will be delayed until the promise is resolved.
-
 ### execute(): Promise<Scenario>
 
 A scenario will automatically execute, unless told otherwise by the `.wait()` method, once it has the necessary properties set to do so. Namely, it must know the URL to open (with the `.open(...)` method) and have at least one `.next()` block to run tests against.

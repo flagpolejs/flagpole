@@ -2,6 +2,18 @@
 
 A Suite is essentially a collection of test Scenarios. You will be able to choose which suite or suites you want to run, so it's important to think how you want to group them.
 
+The best way to create a suite is with the default Flagpole function, which you can call `flagpole` by importing like this:
+
+```typescript
+import flagpole from "flagpole";
+```
+
+Then to create a new suite just use that as a function like this:
+
+```javascript
+const suite = flagpole("The title of my suite");
+```
+
 ## Methods
 
 ### afterAll(callback: Function): Suite
@@ -68,18 +80,6 @@ Hit this callback before each Scenario starts executing.
 suite.beforeEach((scenario) => {});
 ```
 
-### browser(title: string, opts: BrowserOptions): Scenario
-
-Creates a new Scenario of the Browser request type. This will run a version of Chrominium with Puppeteer.
-
-```javascript
-suite.browser("User Sign Up Work Flow", {
-  headless: true,
-  width: 1280,
-  height: 800,
-});
-```
-
 ### buildUrl(path: string): string
 
 Creates a fully qualified URL based on the input string. This will be relative to the Suite's base.
@@ -98,22 +98,10 @@ suite.catch(() => {});
 
 ### execute(): Suite
 
-If this string was told to wait() to execute, this will kick it off. This method will trigger the execute to then be called on each Scenario in the Suite.
+If this scenario was told to wait() to execute, this will set them all to no longer wait. If the scenario has everything it needs, it will be queued up to execute.
 
 ```javascript
 suite.execute();
-```
-
-### extjs(title: string, opts: any = {}): Scenario
-
-Creates a new Scenario of the ExtJS request type. This will use Puppeteer just like the browser variety. The only difference is that it has Ext specific select methods and other helper methods to dig into this framework's custom internals.
-
-```javascript
-suite.extjs("User Sign Up Work Flow", {
-  headless: true,
-  width: 1280,
-  height: 800,
-});
 ```
 
 ### finally(callback: Function): Suite
@@ -122,30 +110,6 @@ Hit this callback after all Scenarios finish executing and after the Suite has b
 
 ```javascript
 suite.finally(() => {});
-```
-
-### html(title: string, opts: any = {}): Scenario
-
-Creates a new Scenario of the HTML/DOM Only request type. This will use Cheerio to grab the HTML and load it into a jQuery-like DOM that we can test against. We can fake a browser here, allowing form completion, clicks, etc. However, it just is not a full browser so does not have JavaScript and won't work on SPAs, unless they have server side rendering as well.
-
-```javascript
-suite.html("Homepage Test");
-```
-
-### image(title: string, opts: any = {}): Scenario
-
-Creates a new Scenario of the Image request type. This will grab only the first few bytes of the image (not download the entire thing). This allows us to quickly test the basic properties.
-
-```javascript
-suite.image("Make sure image loads and is correct width");
-```
-
-### json(title: string, opts: any = {}): Scenario
-
-Creates a new Scenario of the JSON/API End Point request type.
-
-```javascript
-suite.json("Articles API Test");
 ```
 
 ### next(callback: Function): Suite
@@ -193,12 +157,70 @@ Limit the number of scenario HTTP requests that can fire at a time. It will exec
 suite.setConcurrencyLimit(10);
 ```
 
-### script(title: string, opts: any = {}): Scenario
+### scenario(title: string, type: string, opts?): Scenario
+
+Creates a new scenario and adds it to the suite.
+
+```javascript
+suite.scenario("Load this HTML page", "html");
+```
+
+The allowed types for the second argument are:
+
+#### browser
+
+Creates a new Scenario of the Browser request type. This will run a version of Chrominium with Puppeteer.
+
+```javascript
+suite.scenario("User Sign Up Work Flow", "browser", {
+  headless: true,
+  width: 1280,
+  height: 800,
+});
+```
+
+#### extjs
+
+Creates a new Scenario of the ExtJS request type. This will use Puppeteer just like the browser variety. The only difference is that it has Ext specific select methods and other helper methods to dig into this framework's custom internals.
+
+```javascript
+suite.extjs("User Sign Up Work Flow", {
+  headless: true,
+  width: 1280,
+  height: 800,
+});
+```
+
+#### html
+
+Creates a new Scenario of the HTML/DOM Only request type. This will use Cheerio to grab the HTML and load it into a jQuery-like DOM that we can test against. We can fake a browser here, allowing form completion, clicks, etc. However, it just is not a full browser so does not have JavaScript and won't work on SPAs, unless they have server side rendering as well.
+
+#### image
+
+An image scenario will load only the first 512 bytes of the image, which includes the meta data that we need to assert things like height and width.
+
+#### json
+
+Creates a Scenario for REST API endpoints. Asserts that the response is valid JSON.
+
+#### resource
+
+Generic resource
+
+#### script
 
 Creates a new Scenario of the Script request type. It doesn't currently do anything more than load it. You can test the file size, mime type, HTTP Status, and such... so it may have some use but does not currently validate the JS.
 
+#### stylesheet
+
+Loads a stylesheet and asserts that it is valid CSS. You can do assertions against the properties.
+
+#### video
+
+Creates a new Scenario of the Video request type.
+
 ```javascript
-suite.script("Make sure JS file loads");
+suite.scenario("Make sure video loads", "video");
 ```
 
 ### subscribe(callback: Function): void
@@ -225,14 +247,6 @@ Tells the request not to worry about verifying any SSL certs for HTTPS requests.
 
 ```javascript
 suite.verifySslCert(false);
-```
-
-### video(title: string, opts: any = {}): Suite
-
-Creates a new Scenario of the Video request type.
-
-```javascript
-suite.video("Make sure video loads");
 ```
 
 ### wait(verify: boolean = true): Suite

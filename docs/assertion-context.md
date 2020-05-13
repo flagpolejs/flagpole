@@ -72,27 +72,63 @@ Clear the existing text in this input and then type this text into the selected 
 await context.clearThenType('input[name="q"]', "who shot 2pac?");
 ```
 
-### click(path: string): Promise<void | Scenario>
+### click(...): Promise<...>
 
 Issues a click on the selected element. This works on both browser and html types. For browser, the click event will be passed through to the underlying browser. For html scenarios, it will navigate a link or submit a form, if you click on a submit button or a link.
+
+There are a few forms of this
+
+#### click(selector: string): Promise<void>
 
 ```javascript
 await context.click('input[name="q"]');
 ```
 
-For html types, the promise will return a new dynamic scenario that will load the resulting page navigation.
+#### click(selector: string, message: string): Promise<iScenario>
+
+This will select the object and, if it is a clickable element (like a link), it will create a new dynamic scenario with that URL loaded.
 
 ```
-(await context.click('a.login')).next(fuction() {
-  context.assert(response.statusCode.equals(200);
+context.click('a.login', 'Load login page')).next((loginContext) => {
+  loginContext.assert(response.statusCode.equals(200));
 });
+```
+
+It returns a promise that resolves to the dynamic scenario.
+
+#### click(selector: string, callback: Function): Promise<iScenario>
+
+Alternately, you can pass a callback for the dynamic scenario as the second argument. The title of the scenario will be automatically created.
+
+```
+await context.click('a.login', (loginContext) => {
+  loginContext.assert(response.statusCode.equals(200));
+});
+```
+
+#### click(selector: string, message: string, callback: Function): Promise<iScenario>
+
+Or combine the two methods with a message and callback.
+
+```
+context.click('a.login', 'Load login page', (loginContext) => {
+  loginContext.assert(response.statusCode.equals(200));
+});
+```
+
+#### click(selector: string, subScenario: iScenario): Promise<iScenario>
+
+Finally if you have a scenario already and you want to execute it with the link from the element, pass in the reference to that scenario.
+
+```
+context.click('a.login', scenario2);
 ```
 
 ### comment(message: string): AssertionContext
 
 Add a comment to the Scenario output.
 
-### exists(path: string): Promise<DOMElement | CSSRule | Value>
+### exists(path: string): Promise<iValue>
 
 This is just like an `find`, but it also does an assertion that the element actually exists. It is similar to `waitForExists` except that it doesn't wait around.
 
@@ -132,7 +168,7 @@ const loginText = await context.evaluate((json) => {
 
 In theory, with any of these types, you could also manipulate the response with this method.
 
-### find(path: string): Promise<DOMElement | CSSRule | Value>
+### find(path: string): Promise<iValue>
 
 Select the element or value at the given path. What this actually does varies by the type of scenario.
 
@@ -144,7 +180,7 @@ Note it returns only one element. If multiple match the path then it returns the
 const firstArticle = await context.find("section.topStories article");
 ```
 
-### findAll(path: string): Promise<DOMElement[] | CSSRule[] | Value[]>
+### findAll(path: string): Promise<iValue[]>
 
 Select the elements or values at the given path. What this actually does varies by the type of scenario. Browser and Html tests both return DOMElement. Stylesheet requests return CSSRule and JSON/REST scenarios return a Value.
 
@@ -173,7 +209,7 @@ Checks for any and all elements at XPath of `xPath`. Usually a CSS selector is p
 const links = await context.findAllXpath("//a");
 ```
 
-### findHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement | Value>
+### findHavingText(selector: string, searchForText: string | RegExp): Promise<iValue>
 
 Find the first element matching the given selector that have the given text. The second argument can either be a string, which will match on an equality basis, or a regular expression if you want some more leeway.
 
@@ -263,21 +299,11 @@ await context.select('select[name="favoriteSport"]', "Track & Field");
 
 Save `value` to alias `aliasName` so it that it can be retrieved later with a `.get(aliasName)` call.
 
-### submit(path: string): Promise<void | Scenario>
+### submit(selector: string, ...): Promise<iScenario | void>
 
 Submits the form, if the selected element is a form. This works on both browser and html types. For browser, it will do whatever submitting the form would do in the browser window. For html scenarios, it will serialize the form input and then submit it, navigating to the next page.
 
-```javascript
-await context.submit("form#search");
-```
-
-For html types, the promise will return a new dynamic scenario that will load the resulting page navigation.
-
-```javascript
-(await context.submit("form.search")).next((context) => {
-  context.assert(context.response.statusCode).equals(200);
-});
-```
+Other than that, it works mostly the same as a `click()`.
 
 ### type(path: string, textToType: string, opts: any): Promise<void>
 

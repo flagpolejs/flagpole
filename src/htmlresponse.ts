@@ -4,7 +4,6 @@ import { DOMResponse } from "./domresponse";
 import { iResponse, iValue } from "./interfaces";
 import { ResponseType } from "./enums";
 import { Value } from "./value";
-import { asyncForEach } from "./util";
 
 const cheerio: CheerioAPI = require("cheerio");
 let $: CheerioStatic;
