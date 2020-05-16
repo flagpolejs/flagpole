@@ -12,7 +12,6 @@ import {
 import { sep } from "path";
 import {
   iConfigOpts,
-  iEnvOpts,
   FlagpoleConfig,
   iEnvCollection,
 } from "../../flagpoleconfig";

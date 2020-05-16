@@ -9,6 +9,13 @@ import * as path from "path";
 
 const cheerio = require("cheerio");
 
+export const jsonParse = (json: string): any => {
+  try {
+    return JSON.parse(json);
+  } catch (ex) {}
+  return {};
+};
+
 /**
  * Is this object null or undefined?
  *

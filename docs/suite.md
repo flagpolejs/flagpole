@@ -272,9 +272,7 @@ The amount of time, in milliseconds, between when the first Scenario in the Suit
 The execution options specified from the command line arguments or defaults. This notably includes environment.
 
 ```javascript
-if (suite.executionOptions.quietMode) {
-  console.log("shhhh!");
-}
+const baseDomain = suite.executionOptions.environment?.defaultDomain;
 ```
 
 ### title: string

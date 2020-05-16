@@ -194,6 +194,8 @@ export class Suite implements iSuite {
 
   /**
    * Create a new JSON/REST API Scenario
+   *
+   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
    */
   public json(title: string): iScenario {
     return this.scenario(title, "json");
@@ -201,6 +203,8 @@ export class Suite implements iSuite {
 
   /**
    * Create a new Image Scenario
+   *
+   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
    */
   public image(title: string): iScenario {
     return this.scenario(title, "image");
@@ -208,6 +212,8 @@ export class Suite implements iSuite {
 
   /**
    * Create a new Video Scenario
+   *
+   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
    */
   public video(title: string): iScenario {
     return this.scenario(title, "video");
@@ -215,6 +221,8 @@ export class Suite implements iSuite {
 
   /**
    * Create a new HTML/DOM Scenario
+   *
+   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
    */
   public html(title: string): iScenario {
     return this.scenario(title, "html");
@@ -222,6 +230,8 @@ export class Suite implements iSuite {
 
   /**
    * Create a new CSS Scenario
+   *
+   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
    */
   public stylesheet(title: string): iScenario {
     return this.scenario(title, "stylesheet");
@@ -229,6 +239,8 @@ export class Suite implements iSuite {
 
   /**
    * Create a new Script Scenario
+   *
+   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
    */
   public script(title: string): iScenario {
     return this.scenario(title, "script");
@@ -236,6 +248,8 @@ export class Suite implements iSuite {
 
   /**
    * Create a generic resource scenario
+   *
+   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
    */
   public resource(title: string): iScenario {
     return this.scenario(title, "resource");
@@ -243,6 +257,8 @@ export class Suite implements iSuite {
 
   /**
    * Create a Browser/Puppeteer Scenario
+   *
+   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
    */
   public browser(title: string, opts: BrowserOptions = {}): iScenario {
     return this.scenario(title, "browser", opts);
@@ -250,6 +266,8 @@ export class Suite implements iSuite {
 
   /**
    * Create an ExtJS Scenario
+   *
+   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
    */
   public extjs(title: string, opts: BrowserOptions = {}): iScenario {
     return this.scenario(title, "extjs", opts);

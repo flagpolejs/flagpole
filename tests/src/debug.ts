@@ -3,6 +3,7 @@ import flagpole from "../../dist/index.js";
 const suite = flagpole("Basic Smoke Test of Site").base(
   "http://jsonprettyprint.net/"
 );
+
 suite
   .scenario("Submit JSON Pretty Print", "html")
   .open("POST /json-pretty-print")

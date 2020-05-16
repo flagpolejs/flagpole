@@ -23,16 +23,12 @@
     "debug": {
       "id": "",
       "name": "debug",
-      "tags": [
-        "basic"
-      ]
+      "tags": ["basic"]
     },
     "smoke": {
       "id": "",
       "name": "smoke",
-      "tags": [
-        "smoke"
-      ]
+      "tags": ["smoke"]
     },
     "api-snapshot": {
       "id": "",

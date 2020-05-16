@@ -5,6 +5,8 @@ import {
   EnvConfig,
 } from "./flagpoleconfig";
 import { readFileSync } from "fs-extra";
+import { fstat, exists, existsSync } from "fs";
+import { jsonParse } from "./util";
 
 export enum FlagpoleOutput {
   console = "console",
@@ -30,11 +32,15 @@ export interface iFlagpoleOptions {
 }
 
 function loadOptsFromConfigFile(configFilePath: string): iConfigOpts {
+  const defaultConfig = getDefaultConfig(configFilePath);
+  // No config
+  if (!existsSync(configFilePath)) {
+    return defaultConfig;
+  }
   // Read file
   const configContent: string = readFileSync(configFilePath, "utf8");
   // Parse JSON from the file, or catch it to return default
-  const defaultConfig = getDefaultConfig(configFilePath);
-  const configData: iConfigOpts = JSON.parse(configContent);
+  const configData: iConfigOpts = jsonParse(configContent);
   // Assemble our output
   return {
     project: {
