@@ -1,7 +1,16 @@
+export type ScenarioDisposition =
+  | "pending"
+  | "executing"
+  | "completed"
+  | "skipped"
+  | "cancelled"
+  | "aborted";
+
 export enum ScenarioStatusEvent {
   beforeExecute = "beforeExecute",
   executionStart = "executionStart",
   executionSkipped = "executionSkipped",
+  executionCancelled = "executionCancelled",
   executionProgress = "executionProgress",
   afterExecute = "afterExecute",
   finished = "finished",

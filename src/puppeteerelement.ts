@@ -98,9 +98,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     return out;
   }
 
-  public async getClosest(
-    selector: string = "*"
-  ): Promise<PuppeteerElement | iValue> {
+  public async getClosest(selector: string = "*"): Promise<iValue> {
     const closest: ElementHandle[] = await this.$.$x(
       `ancestor-or-self::${selector}`
     );
@@ -112,9 +110,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     return this._wrapAsValue(null, name, this);
   }
 
-  public async getChildren(
-    selector: string = "*"
-  ): Promise<PuppeteerElement[]> {
+  public async getChildren(selector: string = "*"): Promise<iValue[]> {
     const children: ElementHandle[] = await this.$.$x(`child::${selector}`);
     const out: PuppeteerElement[] = [];
     await asyncForEach(children, async (child: ElementHandle, i: number) => {
@@ -125,7 +121,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     return out;
   }
 
-  public async getParent(): Promise<PuppeteerElement | iValue> {
+  public async getParent(): Promise<iValue> {
     const parents: ElementHandle[] = await this.$.$x("..");
     const name: string = `Parent of ${this.name}`;
     const path: string = `${this.path}[..]`;
@@ -135,9 +131,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     return this._wrapAsValue(null, name, this);
   }
 
-  public async getSiblings(
-    selector: string = "*"
-  ): Promise<PuppeteerElement[]> {
+  public async getSiblings(selector: string = "*"): Promise<iValue[]> {
     const prevSiblings: ElementHandle[] = await this.$.$x(
       `preceding-sibling::${selector}`
     );
@@ -158,9 +152,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     return siblings;
   }
 
-  public async getPreviousSibling(
-    selector: string = "*"
-  ): Promise<PuppeteerElement | iValue> {
+  public async getPreviousSibling(selector: string = "*"): Promise<iValue> {
     const siblings: ElementHandle[] = await this.$.$x(
       `preceding-sibling::${selector}`
     );
@@ -172,9 +164,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     return this._wrapAsValue(null, name, this);
   }
 
-  public async getPreviousSiblings(
-    selector: string = "*"
-  ): Promise<PuppeteerElement[]> {
+  public async getPreviousSiblings(selector: string = "*"): Promise<iValue[]> {
     const siblingElements: ElementHandle[] = await this.$.$x(
       `preceding-sibling::${selector}`
     );
@@ -206,9 +196,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
     return this._wrapAsValue(null, name, this);
   }
 
-  public async getNextSiblings(
-    selector: string = "*"
-  ): Promise<PuppeteerElement[]> {
+  public async getNextSiblings(selector: string = "*"): Promise<iValue[]> {
     const siblingElements: ElementHandle[] = await this.$.$x(
       `following-sibling::${selector}`
     );

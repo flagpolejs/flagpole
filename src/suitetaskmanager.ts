@@ -315,23 +315,36 @@ export class SuiteTaskManager {
     this._dateExecutionBegan = Date.now();
     return new Promise(async (resolve) => {
       const execute = async () => {
-        await this._startExecutingScenarios();
-        await this._waitForScenariosToFinish();
+        // Execute this batch
+        const scenariosExecuting = await this._startExecutingScenarios();
+        await this._waitForScenariosToFinish(scenariosExecuting);
+        // If there are no more left to execute, we are done
         if (this.scenariosWaitingToExecute.length === 0) {
-          this._markSuiteExecutionAsCompleted();
-          resolve(true);
-        } else {
+          resolve(this._markSuiteExecutionAsCompleted());
+        }
+        // If last time around, we started some scenarios, execute pending ones
+        else if (scenariosExecuting.length > 0) {
           await execute();
+        }
+        // If we have some pending + we didn't start any new ones, kill them
+        else {
+          this.scenariosNotReadyToExecute.forEach((scenario) => {
+            scenario.skip("Not able to execute");
+          });
+          resolve(this._markSuiteExecutionAsCompleted());
         }
       };
       await execute();
     });
   }
 
-  private async _waitForScenariosToFinish(timeout = 30000): Promise<true> {
+  private async _waitForScenariosToFinish(
+    scenarios: iScenario[],
+    timeout = 30000
+  ): Promise<true> {
     await bluebird
       .all(
-        this._scenarios.map((scenario) => {
+        scenarios.map((scenario) => {
           return scenario.waitForFinished();
         })
       )
@@ -339,16 +352,8 @@ export class SuiteTaskManager {
     return true;
   }
 
-  private async _startExecutingScenarios(): Promise<void> {
-    const began = this._dateExecutionBegan || Date.now();
-    const millisToWaitBetweenBatches = 10;
-    // Create promise
-    let resolve: Function;
-    const executionPromise: Promise<void> = new Promise((myResolver) => {
-      resolve = myResolver;
-    });
-    // May execute in multiple batches
-    const executeBatch = async () => {
+  private async _startExecutingScenarios(): Promise<iScenario[]> {
+    return new Promise(async (resolve) => {
       // Execute all scenarios that are ready to go
       const batch = this.scenariosReadyToExecute;
       if (batch.length > 0) {
@@ -363,34 +368,13 @@ export class SuiteTaskManager {
           }
         );
       }
-      // How many we have left still waiting?
-      const scenariosWaitingCount = this.scenariosWaitingToExecute.length;
-      // None? Cool... then we done.
-      if (scenariosWaitingCount === 0) {
-        return resolve();
-      }
-      // Some still pending... if under time limit then retry in just a few ms
-      const delta = Date.now() - began;
-      if (delta < this._maxTimeToWaitForPendingScenariosToBeReady) {
-        setTimeout(() => {
-          executeBatch();
-        }, millisToWaitBetweenBatches);
-        return;
-      }
-      // Stop waiting... we have passed the time limit
-      throw (
-        `There are ${scenariosWaitingCount} pending execution, ` +
-        `but max time of ${this._maxTimeToWaitForPendingScenariosToBeReady} ms has elapsed.`
-      );
-    };
-    // Start executing
-    executeBatch();
-    // Return our promise so it can be awaited
-    return executionPromise;
+      resolve(batch);
+    });
   }
 
-  private _markSuiteExecutionAsCompleted() {
+  private _markSuiteExecutionAsCompleted(): true {
     this._dateExecutionCompleted = Date.now();
+    return true;
   }
 
   private async _executeScenario(scenario: iScenario): Promise<iScenario> {

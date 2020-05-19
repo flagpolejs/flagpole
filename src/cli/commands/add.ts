@@ -94,7 +94,7 @@ async function promptToAddScenario() {
     FlagpoleExecution.global.config.getSuiteNames().sort()
   );
 
-  if (suites.length == 0) {
+  if (suites?.length == 0) {
     Cli.log(
       "",
       "You have not created any test suites yet. You should do that first.",
@@ -157,25 +157,38 @@ async function promptToAddSuite(defaultSuiteName: string = "smoke") {
     promptList("tags", "Add Tags (Optional, Space Delimited)"),
   ]);
 
-  await addSuite(
-    {
-      name: standardQuestions.suiteName,
-      description: standardQuestions.suiteDescription,
-      tags: standardQuestions.tags,
-    },
-    {
-      description: standardQuestions.scenarioDescription,
-      type: standardQuestions.type,
-      path: standardQuestions.scenarioPath,
-    }
-  );
+  // If they answered all the required questions
+  if (
+    standardQuestions.suiteName &&
+    standardQuestions.suiteDescription &&
+    standardQuestions.scenarioDescription &&
+    standardQuestions.type &&
+    standardQuestions.scenarioPath
+  ) {
+    await addSuite(
+      {
+        name: standardQuestions.suiteName,
+        description: standardQuestions.suiteDescription,
+        tags: standardQuestions.tags,
+      },
+      {
+        description: standardQuestions.scenarioDescription,
+        type: standardQuestions.type,
+        path: standardQuestions.scenarioPath,
+      }
+    );
 
-  Cli.log("", "Created new test suite.")
-    .list(
-      "Suite file created: " + standardQuestions.suiteName,
-      "Scenario added: " + standardQuestions.scenarioDescription,
-      "Config file updated"
-    )
-    .log("")
-    .exit(0);
+    Cli.log("", "Created new test suite.")
+      .list(
+        "Suite file created: " + standardQuestions.suiteName,
+        "Scenario added: " + standardQuestions.scenarioDescription,
+        "Config file updated"
+      )
+      .log("")
+      .exit(0);
+  }
+  // Did not answer qll questions
+  else {
+    Cli.log("", "No suite created.", "").exit(0);
+  }
 }

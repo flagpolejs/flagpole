@@ -180,6 +180,15 @@ export interface iValue {
   hasAttribute(key: string): Promise<iValue>;
   getAttribute(key: string): Promise<iValue>;
   getProperty(key: string): Promise<iValue>;
+  getClosest(selector?: string): Promise<iValue>;
+  getChildren(selector?: string): Promise<iValue[]>;
+  getParent(): Promise<iValue>;
+  getSiblings(selector?: string): Promise<iValue[]>;
+  getPreviousSibling(selector?: string): Promise<iValue>;
+  getPreviousSiblings(selector?: string): Promise<iValue[]>;
+  getNextSibling(selector?: string): Promise<iValue>;
+  getNextSiblings(selector?: string): Promise<iValue[]>;
+  getBounds(boxType: string): Promise<iBounds | null>;
   hasData(key: string): Promise<iValue>;
   getData(key: string): Promise<iValue>;
   getValue(): Promise<iValue>;
@@ -201,6 +210,13 @@ export interface iValue {
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  focus(): Promise<any>;
+  hover(): Promise<void>;
+  tap(): Promise<void>;
+  press(key: string, opts?: any): Promise<void>;
+  clearThenType(textToType: string, opts?: any): Promise<void>;
+  type(textToType: string, opts?: any): Promise<void>;
+  clear(): Promise<void>;
 }
 
 /**
@@ -484,7 +500,7 @@ export interface iScenario {
   nextPrepend(callback: iNextCallback): iScenario;
   nextPrepend(message: string, callback: iNextCallback): iScenario;
   skip(message?: string): Promise<iScenario>;
-  cancel(): Promise<iScenario>;
+  cancel(message?: string): Promise<iScenario>;
   getBrowserControl(): BrowserControl;
   execute(): Promise<iScenario>;
   execute(params: { [key: string]: string | number }): Promise<iScenario>;

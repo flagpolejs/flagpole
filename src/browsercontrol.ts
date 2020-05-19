@@ -168,13 +168,16 @@ export class BrowserControl {
 
   private async _applyCookies() {
     if (Object.values(this.request.cookies).length && this._page) {
+      const tld = this._request.uri
+        ? new URL(this._request.uri).hostname.split(".").slice(-2).join(".")
+        : undefined;
       const puppeteerCookies: SetCookie[] = Object.keys(
         this.request.cookies
       ).map((key) => {
         return {
           name: key,
           value: this.request.cookies[key],
-          url: this.request.uri || "/",
+          domain: `.${tld}`,
         };
       });
       return this._page.setCookie(...puppeteerCookies);

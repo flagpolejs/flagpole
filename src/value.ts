@@ -1,4 +1,10 @@
-import { iAssertionContext, iValue, iScenario, KeyValue } from "./interfaces";
+import {
+  iAssertionContext,
+  iValue,
+  iScenario,
+  KeyValue,
+  iBounds,
+} from "./interfaces";
 import { toType, isNullOrUndefined } from "./util";
 import {
   AssertionActionCompleted,
@@ -311,6 +317,78 @@ export class Value implements iValue {
         this._context.scenario.responseType
       }) does not support screenshots.`
     );
+  }
+
+  public async focus() {
+    throw `This element does not support focus().`;
+  }
+
+  public async hover() {
+    throw `This element does not support hover().`;
+  }
+
+  public async tap() {
+    throw `This element does not support tap().`;
+  }
+
+  public async press(key: string, opts?: any) {
+    throw `This element does not support press().`;
+  }
+
+  public async clearThenType(textToType: string, opts?: any) {
+    throw `This element does not support clearThenType().`;
+  }
+
+  public async type(textToType: string, opts?: any) {
+    throw `This element does not support type().`;
+  }
+
+  public async clear() {
+    throw `This element does not support clear().`;
+  }
+
+  public async getClosest(selector?: string): Promise<iValue> {
+    return this;
+  }
+
+  public async getChildren(selector?: string): Promise<iValue[]> {
+    return [];
+  }
+
+  public async getParent(): Promise<iValue> {
+    return this;
+  }
+
+  public async getSiblings(selector?: string): Promise<iValue[]> {
+    return [];
+  }
+
+  public async getPreviousSibling(selector?: string) {
+    return this._wrapAsValue(
+      null,
+      `Previous Sibling ${selector} of ${this.name}`,
+      this
+    );
+  }
+
+  public async getPreviousSiblings(selector?: string): Promise<iValue[]> {
+    return [];
+  }
+
+  public async getNextSibling(selector?: string): Promise<iValue> {
+    return this._wrapAsValue(
+      null,
+      `Next Sibling ${selector} of ${this.name}`,
+      this
+    );
+  }
+
+  public async getNextSiblings(selector?: string): Promise<iValue[]> {
+    return [];
+  }
+
+  public async getBounds(boxType: string): Promise<iBounds | null> {
+    return null;
   }
 
   protected async _completedAction(verb: string, noun?: string) {

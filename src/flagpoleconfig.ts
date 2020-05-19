@@ -296,13 +296,13 @@ export class FlagpoleConfig {
   }
 
   public addEnvironment(opts: iEnvOpts) {
-    if (opts.name.length) {
+    if (opts.name?.length) {
       this.environments[opts.name] = new EnvConfig(this, opts);
     }
   }
 
   public addSuite(opts: iSuiteOpts) {
-    if (opts.name.length) {
+    if (opts.name?.length) {
       this.suites[opts.name] = new SuiteConfig(this, opts);
     }
   }

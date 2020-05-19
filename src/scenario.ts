@@ -1,4 +1,8 @@
-import { ResponseType, LineType, ScenarioStatusEvent } from "./enums";
+import {
+  ResponseType,
+  ScenarioStatusEvent,
+  ScenarioDisposition,
+} from "./enums";
 import {
   iAssertion,
   iAssertionContext,
@@ -135,6 +139,25 @@ export class Scenario implements iScenario {
   }
 
   /**
+   * We will implicitly wait if the URL is not defined or has params in it
+   */
+  private get isImplicitWait(): boolean {
+    return this.url === null || /{[A-Za-z0-9_ -]+}/.test(this.url);
+  }
+
+  private get isExplicitWait(): boolean {
+    return this._waitToExecute;
+  }
+
+  private get hasNextCallbacks(): boolean {
+    return this._nextCallbacks.length > 0;
+  }
+
+  private get hasRequestStarted(): boolean {
+    return this._timeRequestStarted !== null;
+  }
+
+  /**
    * Get the url
    */
   public get url(): string | null {
@@ -191,25 +214,6 @@ export class Scenario implements iScenario {
     return this._request;
   }
 
-  /**
-   * We will implicitly wait if the URL is not defined or has params in it
-   */
-  private get isImplicitWait(): boolean {
-    return this.url === null || /{[A-Za-z0-9_ -]+}/.test(this.url);
-  }
-
-  private get isExplicitWait(): boolean {
-    return this._waitToExecute;
-  }
-
-  private get hasNextCallbacks(): boolean {
-    return this._nextCallbacks.length > 0;
-  }
-
-  private get hasRequestStarted(): boolean {
-    return this._timeRequestStarted !== null;
-  }
-
   protected _title: string;
   protected _log: LogCollection = new LogCollection();
   protected _subscribers: ScenarioStatusCallback[] = [];
@@ -250,6 +254,7 @@ export class Scenario implements iScenario {
   protected _requestResolve: Function = () => {};
   protected _finishedPromise: Promise<void>;
   protected _finishedResolve: Function = () => {};
+  protected _disposition: ScenarioDisposition = "pending";
 
   public static create(
     suite: iSuite,
@@ -574,26 +579,26 @@ export class Scenario implements iScenario {
     if (this.hasExecuted) {
       throw `Can't skip Scenario since it already started executing.`;
     }
-    this._markExecutionAsStarted();
     await this._fireBefore();
-    this._publish(ScenarioStatusEvent.executionSkipped);
-    this.comment(`Skipped${message ? ": " + message : ""}`);
     this._publish(ScenarioStatusEvent.executionProgress);
-    await this._fireAfter();
-    await this._fireFinally();
+    this.comment(`Skipped ${message ? ": " + message : ""}`);
+    await this._markScenarioCompleted(null, null, "skipped");
     return this;
   }
 
-  public async cancel(): Promise<iScenario> {
+  public async cancel(message?: string): Promise<iScenario> {
     if (this.hasExecuted) {
       throw new Error(
         `Can't cancel Scenario since it already started executing.`
       );
     }
-    this._markExecutionAsStarted();
     await this._fireBefore();
-    await this._fireAfter();
-    await this._fireFinally();
+    this._publish(ScenarioStatusEvent.executionProgress);
+    this._markScenarioCompleted(
+      `Cancelled ${message ? ": " + message : ""}`,
+      null,
+      "cancelled"
+    );
     return this;
   }
 
@@ -632,17 +637,8 @@ export class Scenario implements iScenario {
     this.wait(false);
     // We ready to go?
     if (this.isReadyToExecute) {
-      this._markExecutionAsStarted();
       // Do before callbacks
       await this._fireBefore();
-      // Log the start of this scenario
-      this._pushToLog(new LogScenarioHeading(this.title));
-      // If we waited first
-      if (this._waitTime > 0) {
-        this.comment(`Waited ${this._waitTime}ms`);
-      }
-      // Execute it
-      this._publish(ScenarioStatusEvent.executionStart);
       this._isMock ? this._executeMock() : this._executeRequest();
       this._publish(ScenarioStatusEvent.executionProgress);
     }
@@ -1050,12 +1046,19 @@ export class Scenario implements iScenario {
    */
   protected async _markScenarioCompleted(
     errorMessage: string | null = null,
-    errorDetails?: string
+    errorDetails: string | null = null,
+    disposition: ScenarioDisposition = "completed"
   ): Promise<iScenario> {
     // Only run this once
     if (!this.hasFinished) {
+      if (disposition == "cancelled") {
+        this._publish(ScenarioStatusEvent.executionCancelled);
+      } else if (disposition == "skipped") {
+        this._publish(ScenarioStatusEvent.executionSkipped);
+      }
       await this._fireAfter();
       this.comment(`Took ${this.executionDuration}ms`);
+      this._disposition = disposition;
       // Scenario completed without an error (could be pass or fail)
       if (errorMessage === null) {
         this.hasPassed ? await this._fireSuccess() : await this._fireFailure();
@@ -1082,6 +1085,15 @@ export class Scenario implements iScenario {
     });
   }
 
+  private _logScenarioHeading() {
+    // Log the start of this scenario
+    this._pushToLog(new LogScenarioHeading(this.title));
+    // If we waited first
+    if (this._waitTime > 0) {
+      this.comment(`Waited ${this._waitTime}ms`);
+    }
+  }
+
   private _markExecutionAsStarted() {
     this._timeScenarioExecuted = Date.now();
   }
@@ -1090,8 +1102,11 @@ export class Scenario implements iScenario {
    * Run the before execution and wait for any response.
    */
   protected async _fireBefore(): Promise<any> {
+    this._markExecutionAsStarted();
     await this._fireCallbacks(this._beforeCallbacks);
     this._publish(ScenarioStatusEvent.beforeExecute);
+    this._logScenarioHeading();
+    this._publish(ScenarioStatusEvent.executionStart);
   }
 
   /**
