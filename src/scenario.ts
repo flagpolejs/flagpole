@@ -43,7 +43,7 @@ import {
   BrowserOptions,
 } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
-import { toType } from "./util";
+import { toType, asyncForEach } from "./util";
 import { AssertionContext } from "./assertioncontext";
 import * as bluebird from "bluebird";
 
@@ -931,7 +931,7 @@ export class Scenario implements iScenario {
         this._markScenarioCompleted();
       })
       .catch((err) => {
-        this._markScenarioCompleted(err);
+        this._markScenarioCompleted(err, null, "aborted");
       });
     this._publish(ScenarioStatusEvent.executionProgress);
   }
@@ -963,12 +963,20 @@ export class Scenario implements iScenario {
             )
           );
         } else {
-          this._markScenarioCompleted(`Failed to load ${this._request.uri}`);
+          this._markScenarioCompleted(
+            `Failed to load ${this._request.uri}`,
+            null,
+            "aborted"
+          );
         }
         return;
       })
       .catch((err) =>
-        this._markScenarioCompleted(`Failed to load ${this._request.uri}`, err)
+        this._markScenarioCompleted(
+          `Failed to load ${this._request.uri}`,
+          err,
+          "aborted"
+        )
       );
   }
 
@@ -987,7 +995,11 @@ export class Scenario implements iScenario {
         this._processResponse(response);
       })
       .catch((err) => {
-        this._markScenarioCompleted(`Failed to load ${this._request.uri}`, err);
+        this._markScenarioCompleted(
+          `Failed to load ${this._request.uri}`,
+          err,
+          "aborted"
+        );
       });
   }
 
@@ -1034,7 +1046,8 @@ export class Scenario implements iScenario {
       .catch((err) => {
         scenario._markScenarioCompleted(
           `Failed to load page ${scenario.url}`,
-          err
+          err,
+          "aborted"
         );
       });
   }
@@ -1045,43 +1058,51 @@ export class Scenario implements iScenario {
    * @returns {Scenario}
    */
   protected async _markScenarioCompleted(
-    errorMessage: string | null = null,
-    errorDetails: string | null = null,
+    message: string | null = null,
+    details: string | null = null,
     disposition: ScenarioDisposition = "completed"
   ): Promise<iScenario> {
     // Only run this once
     if (!this.hasFinished) {
+      this._disposition = disposition;
       if (disposition == "cancelled") {
         this._publish(ScenarioStatusEvent.executionCancelled);
       } else if (disposition == "skipped") {
         this._publish(ScenarioStatusEvent.executionSkipped);
+        this.comment(message);
+      } else if (disposition == "aborted") {
+        this._publish(ScenarioStatusEvent.executionAborted);
       }
+      // Save time finished
+      this._timeScenarioFinished = Date.now();
+      // If execution started, show time took
+      if (disposition == "completed" || disposition == "aborted") {
+        this.comment(`Took ${this.executionDuration}ms`);
+      }
+      // Scenario completed with an error
+      if (disposition !== "completed" && disposition !== "skipped") {
+        this.result(new AssertionFail(message || disposition, details));
+      }
+      // After
       await this._fireAfter();
-      this.comment(`Took ${this.executionDuration}ms`);
-      this._disposition = disposition;
-      // Scenario completed without an error (could be pass or fail)
-      if (errorMessage === null) {
-        this.hasPassed ? await this._fireSuccess() : await this._fireFailure();
-      }
-      // Scenario compelted with an error
-      else {
-        this.result(new AssertionFail(errorMessage, errorDetails));
-        await this._fireFailure(errorDetails || errorMessage);
-      }
+      // Success or failure
+      this.hasPassed
+        ? await this._fireSuccess()
+        : await this._fireFailure(details || message || disposition);
       // Finally
       await this._fireFinally();
       // Close the browser window
       if (this._browserControl !== null) {
-        //this._browserControl.close();
+        await this._browserControl.close();
       }
     }
     return this;
   }
 
   private async _fireCallbacks(callbacks: ScenarioCallbackAndMessage[]) {
-    await bluebird.mapSeries(callbacks, (cb) => {
+    await asyncForEach(callbacks, async (cb) => {
       cb.message && this._pushToLog(new LogComment(cb.message));
-      return cb.callback(this, this.suite);
+      return await cb.callback(this, this.suite);
     });
   }
 
@@ -1113,7 +1134,6 @@ export class Scenario implements iScenario {
    * Run after execution and wait for any response
    */
   protected async _fireAfter(): Promise<void> {
-    this._timeScenarioFinished = Date.now();
     await this._fireCallbacks(this._afterCallbacks);
     this._publish(ScenarioStatusEvent.afterExecute);
   }

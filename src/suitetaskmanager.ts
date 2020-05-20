@@ -280,7 +280,7 @@ export class SuiteTaskManager {
       this._fireScenarioCallbacks(this._beforeEachCallbacks, scenario);
     });
     // Subscribe to after to fire afterEach
-    scenario.after(() => {
+    scenario.after(async () => {
       this._fireScenarioCallbacks(this._afterEachCallbacks, scenario);
     });
     // Start executing
@@ -329,7 +329,7 @@ export class SuiteTaskManager {
         // If we have some pending + we didn't start any new ones, kill them
         else {
           this.scenariosNotReadyToExecute.forEach((scenario) => {
-            scenario.skip("Not able to execute");
+            scenario.cancel("Not able to execute");
           });
           resolve(this._markSuiteExecutionAsCompleted());
         }

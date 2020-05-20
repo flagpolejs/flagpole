@@ -11,6 +11,7 @@ export enum ScenarioStatusEvent {
   executionStart = "executionStart",
   executionSkipped = "executionSkipped",
   executionCancelled = "executionCancelled",
+  executionAborted = "executionAborted",
   executionProgress = "executionProgress",
   afterExecute = "afterExecute",
   finished = "finished",
