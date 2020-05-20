@@ -525,8 +525,8 @@ export class Assertion implements iAssertion {
   public none(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
-      `${this._getSubject()} some were true`,
-      `${this._getSubject()} none were true`
+      `Some were true in ${this._getSubject()}`,
+      `None were true in ${this._getSubject()}`
     );
     // This must be an array
     if (toType(thisValue) !== "array") {
@@ -540,8 +540,8 @@ export class Assertion implements iAssertion {
   public every(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
-      `${this._getSubject()} some were true`,
-      `${this._getSubject()} none were true`
+      `Some or none were true in ${this._getSubject()}`,
+      `All were true in ${this._getSubject()}`
     );
     // This must be an array
     if (toType(thisValue) !== "array") {
@@ -557,8 +557,8 @@ export class Assertion implements iAssertion {
   public everySync(callback: IteratorCallback): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
-      `${this._getSubject()} some were true`,
-      `${this._getSubject()} none were true`
+      `Some or none were true in ${this._getSubject()}`,
+      `All were true in ${this._getSubject()}`
     );
     // This must be an array
     if (toType(thisValue) !== "array") {
@@ -575,8 +575,8 @@ export class Assertion implements iAssertion {
   public some(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
     this._setDefaultMessages(
-      `${this._getSubject()} none were true`,
-      `${this._getSubject()} some were true`
+      `None were true in ${this._getSubject()}`,
+      `Some were true in ${this._getSubject()}`
     );
 
     // This must be an array
