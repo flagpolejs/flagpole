@@ -123,6 +123,7 @@ export interface iValue {
   outerHTML: string;
   path: string;
   length: iValue;
+  trim: iValue;
   highlight: string;
   parent: any;
   sourceCode: string;
@@ -285,6 +286,7 @@ export interface iAssertion {
   and: iAssertion;
   type: iAssertion;
   length: iAssertion;
+  trim: iAssertion;
   keys: iAssertion;
   values: iAssertion;
   not: iAssertion;

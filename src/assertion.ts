@@ -82,6 +82,25 @@ export class Assertion implements iAssertion {
     return assertion;
   }
 
+  public get trim(): iAssertion {
+    // If no assertion statement was made, skip it by marking it resolved
+    this._resolveAssertion();
+    // Generate length Value object
+    const trimmedValue: string = (() => {
+      const thisValue: any = String(this._getCompareValue(this._input));
+      return thisValue.trim();
+    })();
+    // Create new assertion
+    const assertion: Assertion = new Assertion(
+      this._context,
+      new Value(trimmedValue, this._context, `Trim of ${this._getSubject()}`),
+      this._message
+    );
+    this._not && assertion.not;
+    this._optional && assertion.optional;
+    return assertion;
+  }
+
   /**
    * Creates a new assertion with the keys of the object as the value
    */

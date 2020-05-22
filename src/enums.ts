@@ -35,7 +35,10 @@ export type ResponseType =
   | "audio"
   | "resource"
   | "browser"
-  | "extjs";
+  | "extjs"
+  | "xml"
+  | "rss"
+  | "atom";
 
 export type LineType =
   | "resultPass"

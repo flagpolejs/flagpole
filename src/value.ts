@@ -42,6 +42,15 @@ export class Value implements iValue {
     );
   }
 
+  public get trim(): iValue {
+    const thisValue: any = this.$;
+    return new Value(
+      typeof thisValue === "string" ? thisValue.trim() : thisValue,
+      this._context,
+      `Trim of ${this._name}`
+    );
+  }
+
   public get path(): string {
     return this._path || "";
   }

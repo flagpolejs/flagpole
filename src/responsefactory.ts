@@ -9,6 +9,9 @@ import { VideoResponse } from "./videoresponse";
 import { ExtJSResponse } from "./extjsresponse";
 import { ResponseType } from "./enums";
 import { iResponse, iScenario } from "./interfaces";
+import { XmlResponse } from "./xmlresponse";
+import { RssResponse } from "./rssresponse";
+import { AtomResponse } from "./atomresponse";
 
 export function createResponse(scenario: iScenario): iResponse {
   const type: ResponseType = scenario.responseType;
@@ -29,6 +32,12 @@ export function createResponse(scenario: iScenario): iResponse {
     className = ScriptResponse;
   } else if (type == "video") {
     className = VideoResponse;
+  } else if (type == "xml") {
+    className = XmlResponse;
+  } else if (type == "rss") {
+    className = RssResponse;
+  } else if (type == "atom") {
+    className = AtomResponse;
   } else {
     className = ResourceResponse;
   }

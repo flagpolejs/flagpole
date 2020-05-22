@@ -73,6 +73,11 @@
       "id": "",
       "name": "internal/repro",
       "tags": []
+    },
+    "xml": {
+      "id": "",
+      "name": "xml",
+      "tags": []
     }
   }
 }
