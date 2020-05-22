@@ -5,7 +5,11 @@ Flagpole is a QA testing framework that is easy to learn, flexible, portable, an
 - [Flagpole Developer Documentation](https://flocasts.github.io/flagpole/)
 - [Examples](https://github.com/flocasts/flagpole/tree/master/tests)
 
-## Developer Style Guide
+## Want to contribute?
+
+Sure! Please contirbute your pull request.
+
+### Developer Style Guide
 
 - Class is ordered: public properties, private/protected properties, constructor, public methods, private/protected methods
 - Private/protected properties and methods are prefixed with \_
