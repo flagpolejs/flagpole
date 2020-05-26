@@ -313,6 +313,7 @@ export class SuiteTaskManager {
       throw "Execution already started";
     }
     this._dateExecutionBegan = Date.now();
+    let i = 0;
     return new Promise(async (resolve) => {
       const execute = async () => {
         // Execute this batch

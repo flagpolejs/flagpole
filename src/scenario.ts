@@ -628,19 +628,21 @@ export class Scenario implements iScenario {
     }
     // Apply path parameters when the url was like /articles/{id}
     if (pathParams) {
+      // Change the URL
       Object.keys(pathParams).forEach((key) => {
         this.url =
           this.url?.replace(`{${key}}`, String(pathParams[key])) || null;
       });
+      // Execute was called, so stop any explicit wait
+      this.wait(false);
     }
-    // Execute was called, so stop any explicit wait
-    this.wait(false);
     // We ready to go?
-    if (this.isReadyToExecute) {
+    else if (this.isReadyToExecute) {
       // Do before callbacks
       await this._fireBefore();
       this._isMock ? this._executeMock() : this._executeRequest();
       this._publish(ScenarioStatusEvent.executionProgress);
+      return this;
     }
     return this;
   }
