@@ -219,12 +219,12 @@ This combines the "run" and "build" commands, much like this would do:
 flagpole build && flagpole run
 ```
 
-### serve
+### watch
 
-Runs a local web server on port 3000 and opens default web browser to this port. This allows you to view your local Flagpole project configuration in a friendly user interface. You can run tests and do other things from here.
+Starts a file watcher that looks for changes in the Flagpole source folder. If any file changes, it will automatically run `flagpole build` to re-transpile the tests.
 
 ```bash
-flagpole serve
+flagpole watch
 ```
 
 ## General Switches

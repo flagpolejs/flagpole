@@ -8,6 +8,7 @@ import {
   ScenarioCallbackAndMessage,
 } from "./interfaces";
 import * as bluebird from "bluebird";
+import { Scenario } from "./scenario";
 
 type WhichCallback =
   | "beforeAll"
@@ -385,7 +386,7 @@ export class SuiteTaskManager {
     if (!scenario.isReadyToExecute) {
       throw `Scenario ${scenario.title} is not ready to execute`;
     }
-    await scenario.execute();
+    await (scenario as Scenario).go();
     return scenario;
   }
 
