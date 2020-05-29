@@ -24,7 +24,8 @@
       "id": "",
       "name": "debug",
       "tags": [
-        "basic"
+        "basic",
+        "hello"
       ]
     },
     "smoke": {
@@ -52,7 +53,9 @@
     "foobar": {
       "id": "",
       "name": "foobar",
-      "tags": []
+      "tags": [
+        "hello"
+      ]
     },
     "helpme": {
       "id": "",

@@ -238,6 +238,7 @@ export interface iResponse {
   headers: iValue;
   cookies: iValue;
   isBrowser: boolean;
+  readonly scenario: iScenario;
   init(httpResponse: HttpResponse): void;
   getRoot(): any;
   find(path: string): Promise<iValue>;
@@ -279,7 +280,6 @@ export interface iResponse {
   clear(selector: string): Promise<any>;
   type(selector: string, textToType: string, opts: any): Promise<any>;
   selectOption(selector: string, value: string | string[]): Promise<string[]>;
-  readonly scenario: iScenario;
 }
 
 export interface iAssertion {
