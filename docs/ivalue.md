@@ -174,6 +174,24 @@ const download2 = await cssLink.download("./localFile.css", {
 });
 ```
 
+### exists(selector?: string): Promise<iValue>;
+
+This method call makes an assertion. Does this item exist or not? If the underlying value is `null` or `undefined` then it is considered to not exist.
+
+If it is called with no argument, it is making this assertion against its underlying value. It will return itself in this use case.
+
+```javascript
+const h1 = await context.find("h1");
+h1.exists();
+```
+
+If you pass in the `selector` argument, it will query the DOM for a child element with that selector. And it will return a new iValue object containing the selected element (if found) or null.
+
+```javascript
+const h1 = await context.find("h1");
+const strong = h1.exists("strong");
+```
+
 ### fillForm(data: { [key: string]: any }): Promise<Value>
 
 Fill out a form element with this data. The data object should match the input/select name attributes of elements within the form. For multi-select inputs pass in an array of values to be checked.
@@ -206,6 +224,10 @@ Find all of the elements in the descendents of the current element that match th
 const li = await someElement.findAll("li");
 ```
 
+### focus(): Promise<any>;
+
+Give this element focus.
+
 ### getAttribute(key: string): Promise<Value>
 
 Get the attribute of the element with this key and return its value. If it is not present the Value object will contain null.
@@ -213,6 +235,10 @@ Get the attribute of the element with this key and return its value. If it is no
 ```javascript
 const src = await img.getAttribute("src");
 ```
+
+### getBounds(boxType: string): Promise<iBounds | null>;
+
+Get the bounds of this DOM Element.
 
 ### getChildren(selector?: string): Promise<DOMElement[]>
 
@@ -374,6 +400,10 @@ If this element is an object of some sort, does it have the property matching ke
 context.assert(await element.hasProperty("qa-name")).equals(true);
 ```
 
+### hover(): Promise<void>;
+
+Hover over this element with the virtual mouse.
+
 ### isNullOrUndefined(): boolean
 
 Self explanatory.
@@ -433,6 +463,10 @@ const image = await context.find("img.logo");
 image.load("Make sure logo is a valid image");
 ```
 
+### press(key: string, opts?: any): Promise<void>;
+
+Press these keys on the keyboard.
+
 ### screenshot(): Promise<Buffer>
 
 This is currently only supported with browser type scenarios. See documentation for `context.screenshot()` because the arguments are the same. The only difference is calling it on an Element will grab the image just of this element.
@@ -452,6 +486,10 @@ await form.fillForm({
 await form.submit();
 await context.waitForNavigation();
 ```
+
+### tap(): Promise<void>;
+
+Tap the element.
 
 ### toArray(): any[]
 
