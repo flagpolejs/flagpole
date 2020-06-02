@@ -210,7 +210,7 @@ flagpole run -t basic
 This is the same as run (it supports all of the same arguments), except that it will build your TypeScript tests first.
 
 ```bash
-flagpole run build
+flagpole run --build
 ```
 
 This combines the "run" and "build" commands, much like this would do:
