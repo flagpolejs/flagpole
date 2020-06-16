@@ -185,10 +185,10 @@ Specifies a certain suite or suites to run.
 flagpole run -s smoke
 ```
 
-You can list out multiple suite, space separated.
+You can list out multiple suites, comma separated.
 
 ```bash
-flagpole run -s smoke api e2e
+flagpole run -s smoke,api,e2e
 ```
 
 Or you can use a wildcard to match tests matching a pattern or in a certain folder:
