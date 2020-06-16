@@ -42,6 +42,14 @@ This makes the assertion consider optional, meaning its failure won't cause the 
 context.assert(5).optional.equals(6);
 ```
 
+### trim: Assertion
+
+This will create a new assertion with the string value of the original input trimmed.
+
+```javascript
+context.assert(" foobar ").trim.equals("foobar");
+```
+
 ### type: Assertion
 
 This causes the assertion to evaluate the type of the value, rather than the actual input value. The type will always be a lowercase string. It is a smart typeof that can tell things like 'promise' and 'regexp' that might otherewise evaluate to plain old object.

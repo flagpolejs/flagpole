@@ -153,9 +153,7 @@ export function promptUrl(
     initial: initial || "",
     format: trimInput,
     validate: (input: string) => {
-      return /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/i.test(
-        input
-      );
+      return /^https?:\/\/[a-z0-9]/i.test(input);
     },
   };
 }

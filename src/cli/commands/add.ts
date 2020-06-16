@@ -14,14 +14,33 @@ import {
 import { Cli, addScenario, addSuite } from "../cli";
 
 const typesOfTest: any[] = [
-  { title: "HTML Page", value: "html" },
   {
-    title: "REST API (JSON Format)",
+    title: "HTML Page/DOM",
+    value: "html",
+  },
+  {
+    title: "REST API/JSON",
     value: "json",
   },
   {
     title: "Browser (Puppeteer)",
     value: "browser",
+  },
+  {
+    title: "XML",
+    value: "xml",
+  },
+  {
+    title: "RSS Feed",
+    value: "rss",
+  },
+  {
+    title: "Atom Feed",
+    value: "atom",
+  },
+  {
+    title: "ExtJS",
+    value: "extjs",
   },
 ];
 

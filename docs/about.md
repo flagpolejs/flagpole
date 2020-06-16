@@ -13,6 +13,8 @@ Flagpole is a flexible framework that can support a number of different types of
 - Stylesheets including basic CSS validation
 - Basic validation for other resources like JavaScript
 - Visual comparisons of a screenshot against a control image
+- Generic XML
+- RSS or Atom feeds
 
 Flagpole is designed to be simple so that the most junior engineer or QA analyst can pick it up within hours.
 

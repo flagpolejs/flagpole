@@ -167,6 +167,10 @@ suite.scenario("Load this HTML page", "html");
 
 The allowed types for the second argument are:
 
+#### atom
+
+Validate your Atom feed. Will automatically apply assertions to do basic validation to Atom specifications.
+
 #### browser
 
 Creates a new Scenario of the Browser request type. This will run a version of Chrominium with Puppeteer.
@@ -207,6 +211,10 @@ Creates a Scenario for REST API endpoints. Asserts that the response is valid JS
 
 Generic resource
 
+#### rss
+
+Validate your RSS feed. Will automatically apply assertions to do basic validation to RSS 2.0 specifications.
+
 #### script
 
 Creates a new Scenario of the Script request type. It doesn't currently do anything more than load it. You can test the file size, mime type, HTTP Status, and such... so it may have some use but does not currently validate the JS.
@@ -222,6 +230,10 @@ Creates a new Scenario of the Video request type.
 ```javascript
 suite.scenario("Make sure video loads", "video");
 ```
+
+#### xml
+
+Generic XML format.
 
 ### subscribe(callback: Function): void
 

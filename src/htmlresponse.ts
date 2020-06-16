@@ -4,11 +4,22 @@ import { DOMResponse } from "./domresponse";
 import { iResponse, iValue } from "./interfaces";
 import { ResponseType } from "./enums";
 import { Value } from "./value";
-
-const cheerio: CheerioAPI = require("cheerio");
-let $: CheerioStatic;
+import * as cheerio from "cheerio";
 
 export class HtmlResponse extends DOMResponse implements iResponse {
+  private _cheerio: CheerioStatic | null = null;
+
+  protected set cheerio(value: CheerioStatic) {
+    this._cheerio = value;
+  }
+
+  protected get cheerio(): CheerioStatic {
+    if (this._cheerio === null) {
+      throw "Cheerio root element is null";
+    }
+    return this._cheerio;
+  }
+
   public get responseTypeName(): string {
     return "HTML";
   }
@@ -19,19 +30,19 @@ export class HtmlResponse extends DOMResponse implements iResponse {
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
-    $ = cheerio.load(httpResponse.body);
+    this._cheerio = cheerio.load(httpResponse.body);
   }
 
   public getRoot(): CheerioStatic {
-    return $;
+    return this.cheerio;
   }
 
   public async evaluate(context: any, callback: Function): Promise<any> {
-    return callback.apply(context, [$]);
+    return callback.apply(context, [this.cheerio]);
   }
 
   public async find(path: string): Promise<iValue> {
-    const selection: Cheerio = $(path);
+    const selection: Cheerio = this.cheerio(path);
     if (selection.length > 0) {
       return await HTMLElement.create(
         selection.eq(0),
@@ -45,13 +56,13 @@ export class HtmlResponse extends DOMResponse implements iResponse {
 
   public async findAll(path: string): Promise<iValue[]> {
     const response: HtmlResponse = this;
-    const elements: Cheerio = $(path);
+    const elements: Cheerio = this.cheerio(path);
     if (elements.length > 0) {
       const nodeElements: HTMLElement[] = [];
       for (let i = 0; i < elements.length; i++) {
         nodeElements.push(
           await HTMLElement.create(
-            $(elements.get(i)),
+            this.cheerio(elements.get(i)),
             response.context,
             `${path} [${i}]`,
             path

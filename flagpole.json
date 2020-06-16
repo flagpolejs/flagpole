@@ -24,7 +24,8 @@
       "id": "",
       "name": "debug",
       "tags": [
-        "basic"
+        "basic",
+        "hello"
       ]
     },
     "smoke": {
@@ -52,7 +53,9 @@
     "foobar": {
       "id": "",
       "name": "foobar",
-      "tags": []
+      "tags": [
+        "hello"
+      ]
     },
     "helpme": {
       "id": "",
@@ -77,6 +80,11 @@
     "some-every-none": {
       "id": "",
       "name": "some-every-none",
+      "tags": []
+    },
+    "xml": {
+      "id": "",
+      "name": "xml",
       "tags": []
     }
   }

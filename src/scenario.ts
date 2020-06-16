@@ -614,7 +614,7 @@ export class Scenario implements iScenario {
   }
 
   /**
-   * Execute this scenario
+   * Prepare this scenario to execute
    */
   public async execute(): Promise<iScenario>;
   public async execute(params: {
@@ -628,6 +628,7 @@ export class Scenario implements iScenario {
     }
     // Apply path parameters when the url was like /articles/{id}
     if (pathParams) {
+      // Change the URL
       Object.keys(pathParams).forEach((key) => {
         this.url =
           this.url?.replace(`{${key}}`, String(pathParams[key])) || null;
@@ -635,13 +636,23 @@ export class Scenario implements iScenario {
     }
     // Execute was called, so stop any explicit wait
     this.wait(false);
-    // We ready to go?
-    if (this.isReadyToExecute) {
-      // Do before callbacks
-      await this._fireBefore();
-      this._isMock ? this._executeMock() : this._executeRequest();
-      this._publish(ScenarioStatusEvent.executionProgress);
+    return this;
+  }
+
+  /**
+   * Do not call this directly. Only Suite Task Manager should call it.
+   */
+  public async go() {
+    if (this.hasExecuted) {
+      throw "Scenario has already started executing. Can not call execute again.";
     }
+    if (!this.isReadyToExecute) {
+      throw "This scenario is not ready to execute.";
+    }
+    // Do before callbacks
+    await this._fireBefore();
+    this._isMock ? this._executeMock() : this._executeRequest();
+    this._publish(ScenarioStatusEvent.executionProgress);
     return this;
   }
 

@@ -27,12 +27,12 @@ This is often used to pull something like the load time, HTTP Status, headers, m
 If you chain multiple next callbacks together in a Scenario, you can return a value from one and then pull it into the following. To do this you will use this result to grab that previously returned value. You may find that it is wrapped in a promise and then do await this result to handle that.
 
 ```
-.next(await function() {
+.next(await (context) => {
   const articles = context.selectAll('article');
-  context.assert(articles.length).greaterThan(0);
+  context.assert(articles).length.greaterThan(0);
   return articles;
 })
-.next(await function() {
+.next(await (context) => {
   const articles = await context.result;
   context.comment(await articles[0].getAttribute('id'));
 })
@@ -54,6 +54,12 @@ Creates an assertion with the input value.
 
 ```javascript
 context.assert(await context.find("article.topStory h1"));
+```
+
+The above example alone would not do anything. It would return an assertion object, but you would have not yet made the actual assertion. You would chain on to the end of it to do so:
+
+```javascript
+context.assert(await context.find("article.topStory h1")).exists();
 ```
 
 ### clear(selector: string): Promise<void>
@@ -88,7 +94,7 @@ await context.click('input[name="q"]');
 
 This will select the object and, if it is a clickable element (like a link), it will create a new dynamic scenario with that URL loaded.
 
-```
+```javascript
 context.click('a.login', 'Load login page')).next((loginContext) => {
   loginContext.assert(response.statusCode.equals(200));
 });
@@ -100,8 +106,8 @@ It returns a promise that resolves to the dynamic scenario.
 
 Alternately, you can pass a callback for the dynamic scenario as the second argument. The title of the scenario will be automatically created.
 
-```
-await context.click('a.login', (loginContext) => {
+```javascript
+await context.click("a.login", (loginContext) => {
   loginContext.assert(response.statusCode.equals(200));
 });
 ```
@@ -110,8 +116,8 @@ await context.click('a.login', (loginContext) => {
 
 Or combine the two methods with a message and callback.
 
-```
-context.click('a.login', 'Load login page', (loginContext) => {
+```javascript
+context.click("a.login", "Load login page", (loginContext) => {
   loginContext.assert(response.statusCode.equals(200));
 });
 ```
@@ -120,13 +126,25 @@ context.click('a.login', 'Load login page', (loginContext) => {
 
 Finally if you have a scenario already and you want to execute it with the link from the element, pass in the reference to that scenario.
 
-```
-context.click('a.login', scenario2);
+```javascript
+context.click("a.login", scenario2);
 ```
 
-### comment(message: string): AssertionContext
+### comment(message: any): AssertionContext
 
 Add a comment to the Scenario output.
+
+```javascript
+context.comment("Hello world");
+context.comment(`Response length was: ${context.response.length}`);
+```
+
+You can also comment out an object or other data type, which will print as JSON.
+
+```javascript
+context.comment(context.response.body);
+context.comment(json.data);
+```
 
 ### exists(path: string): Promise<iValue>
 
@@ -172,8 +190,6 @@ In theory, with any of these types, you could also manipulate the response with 
 
 Select the element or value at the given path. What this actually does varies by the type of scenario.
 
-Browser and Html tests both return DOMElement. Stylesheet requests return CSSRule and JSON/REST scenarios return a Value.
-
 Note it returns only one element. If multiple match the path then it returns the first. If none match then it returns null.
 
 ```javascript
@@ -182,7 +198,7 @@ const firstArticle = await context.find("section.topStories article");
 
 ### findAll(path: string): Promise<iValue[]>
 
-Select the elements or values at the given path. What this actually does varies by the type of scenario. Browser and Html tests both return DOMElement. Stylesheet requests return CSSRule and JSON/REST scenarios return a Value.
+Select the elements or values at the given path. What this actually does varies by the type of scenario.
 
 This always returns an array. It will be an empty array if nothing matched. The array elements themselves will be the same object types that you'd have gotten from .find(path).
 
@@ -194,7 +210,7 @@ const articles = await context.findAll("section.topStories article");
 
 Find the elements matching the given selector that have the given text. The second argument can either be a string, which will match on an equality basis, or a regular expression if you want some more leeway.
 
-Returns an array of DOM Elements for any that match.
+Returns an array of DOM Elements for any that match. The array will be empty if none match.
 
 ```javascript
 const itemsContainingTupac = await context.findAllHavingText("li", /tupac/i);
@@ -203,7 +219,7 @@ const itemsExactlyTupac = await context.findAllHavingText("li", "tupac");
 
 ### findAllXPath(xPath: string): Promise<DOMElement[]>
 
-Checks for any and all elements at XPath of `xPath`. Usually a CSS selector is preferable, but sometimes XPath is more powerful.
+Checks for any and all elements at XPath of `xPath`. Usually a CSS selector is preferable, but sometimes XPath is more powerful. This only works with Puppetteer tests currently.
 
 ```javascript
 const links = await context.findAllXpath("//a");
@@ -222,7 +238,7 @@ const buttonExactlyYes = await context.findAllHavingText("button", "Yes");
 
 ### findXPath(xPath: string): Promise<DOMElement>
 
-Checks for an element to exist with XPath of `xPath`. Usually a CSS selector is preferable, but sometimes XPath is more powerful.
+Checks for an element to exist with XPath of `xPath`. Usually a CSS selector is preferable, but sometimes XPath is more powerful. This only works with Puppeteer test currently.
 
 ```javascript
 const title = await context.findXpath("/main/h1[1]/span");
@@ -246,9 +262,13 @@ scenario
 
 Saves the response body to a temporary file and opens it in a browser. This is really only for debugging. The promise resolves to the string of the temporary file.
 
+```javascript
+await context.openInBrowser();
+```
+
 ### pause(milleseconds: number): Promise<void>
 
-Delay the execution by this much
+Delay the execution by this much.
 
 ```javascript
 await context.pause(1000);

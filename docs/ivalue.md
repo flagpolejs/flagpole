@@ -1,37 +1,63 @@
-# DOMElement
+# iValue
 
-This is an abstract class for elements that is extended by HTMLElement, PuppeteerElement, and ExtJSComponent. Use it a base reference for all of these. You typically get this element by way of `context.find('css selector path')` from the AssertionContext.
+This is an interface that covers most things that you select within Flagpole. It (and the classes that implement it) is a wrapper of the actual underlying value that lets you do some nice things.
 
-This class is extended more specifically by other classes:
+The main purpose of the Value object as a wrapper, rather than just dealing with the underlying data itself, is that Value has a name property, along with other contextual properties of what it is and how it was selected. This is what allows Flagpole to devine intelligent assertion messages and other types of messages when you have not explicitly set one. Some other nice methods are also thrown in as a value add.
 
-- PuppeteerElement
-- BrowserElement
-- ExtJsComponent
-- HTMLElement
+This can create confusion for new Flagpole users who think they're dealing with the actual data the Value object contains, rather than a wrapper.
+
+If you want to get the literal interal data that it wraps, you will use the `$` property as a shorthand, which you will find useful as you go.
+
+```typescript
+const numberOfImages: Value = (await context.findAll("img")).length;
+context.comment(`There are ${numberOfImages.$} images on the page`);
+```
 
 ## Properties
 
 ### \$: any (readonly)
 
-This is a quick way to get the underlying value within this wrapper object. So that will typically be either an ElementHandle if a browser test or a Cheerio object if an html test.
+This is a quick way to get the underlying input value within this wrapper object.
+
+```javascript
+const firstDataItem = context.response.jsonBody.$.data[0];
+```
+
+### length: iValue (readonly)
+
+Get a new Value object, containing the length of the input value. This could be the number of characters in a string-like value or the number of elements if it's an array.
+
+In this case the input value the iValue resulting from `context.find` will be an array. So `.length` gives us an iValue with the number of items in the array.
+
+```javascript
+const images = await context.findAll("img");
+const numberOfImages = images.length;
+```
+
+In other cases, the input value might be a string. Then the `.length` would be an iValue containing the number of characters.
+
+```javascript
+const title = await context.find("title");
+const text = await title.getInnerText();
+context.assert(text.length).greaterThan(0);
+```
 
 ### name: string (readonly)
 
-Get a friendly name for this `DOMElement`, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
+Get a friendly name for this Value, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
 
-### outerHTML: string (readonly)
+You probably won't use this directly, but if you did it will give you a string representation of a calculated name for this item.
 
-The full HTML of this HTML tag and its descendents.
-
-### path: string (readonly)
-
-The selector requested to query this `DOMElement`.
-
-### tagName: string (readonly)
-
-The HTML tag of this `DOMElement`.
+```javascript
+const title = await context.find("title");
+context.comment('Flagpole calls title: ${title.name}`);
+```
 
 ## Methods
+
+### as(aliasName: string): Value
+
+Save this value to an alias within the Scenario, so that it can be accessed later.
 
 ### clear(): Promise<void>
 
@@ -56,7 +82,7 @@ You can specify a message, which will become the sub-scenario title, and a callb
 
 ```javascript
 const loginLink = await context.find("a.login");
-loginLink.click("Make sure link is valid", subContext => {
+loginLink.click("Make sure link is valid", (subContext) => {
   subContext.assert(subContext.response.statusCode).equals(200);
 });
 ```
@@ -67,7 +93,7 @@ If you leave off the message it still works. This will set the sub-scenario titl
 
 ```javascript
 const loginLink = await context.find("a.login");
-loginLink.click(subContext => {
+loginLink.click((subContext) => {
   subContext.assert(subContext.response.statusCode).equals(200);
 });
 ```
@@ -119,8 +145,8 @@ If you want to pass in opts for the HTTP request. This will use the `request-pro
 ```typescript
 const cssContent = await cssLink.download({
   qs: {
-    cacheBuster: Date.now()
-  }
+    cacheBuster: Date.now(),
+  },
 });
 ```
 
@@ -129,8 +155,8 @@ You can also pass in both `localFilePath` and `opts` arguments.
 ```typescript
 await cssLink.download("./localFile.css", {
   qs: {
-    cacheBuster: Date.now()
-  }
+    cacheBuster: Date.now(),
+  },
 });
 ```
 
@@ -140,12 +166,30 @@ If you want the response to be in text instead of the raw bytes of the Buffer, y
 
 ```typescript
 const download1 = await cssLink.download({
-  encoding: "base64"
+  encoding: "base64",
 });
 const download2 = await cssLink.download("./localFile.css", {
   encoding: "utf8",
-  headers: { foo: "bar" }
+  headers: { foo: "bar" },
 });
+```
+
+### exists(selector?: string): Promise<iValue>;
+
+This method call makes an assertion. Does this item exist or not? If the underlying value is `null` or `undefined` then it is considered to not exist.
+
+If it is called with no argument, it is making this assertion against its underlying value. It will return itself in this use case.
+
+```javascript
+const h1 = await context.find("h1");
+h1.exists();
+```
+
+If you pass in the `selector` argument, it will query the DOM for a child element with that selector. And it will return a new iValue object containing the selected element (if found) or null.
+
+```javascript
+const h1 = await context.find("h1");
+const strong = h1.exists("strong");
 ```
 
 ### fillForm(data: { [key: string]: any }): Promise<Value>
@@ -160,7 +204,7 @@ await form.fillForm({
   firstName: "Charlie",
   lastName: "Ward",
   position: "QB",
-  team: "FSU"
+  team: "FSU",
 });
 ```
 
@@ -180,6 +224,10 @@ Find all of the elements in the descendents of the current element that match th
 const li = await someElement.findAll("li");
 ```
 
+### focus(): Promise<any>;
+
+Give this element focus.
+
 ### getAttribute(key: string): Promise<Value>
 
 Get the attribute of the element with this key and return its value. If it is not present the Value object will contain null.
@@ -187,6 +235,10 @@ Get the attribute of the element with this key and return its value. If it is no
 ```javascript
 const src = await img.getAttribute("src");
 ```
+
+### getBounds(boxType: string): Promise<iBounds | null>;
+
+Get the bounds of this DOM Element.
 
 ### getChildren(selector?: string): Promise<DOMElement[]>
 
@@ -278,10 +330,10 @@ const siblings = await someElement.getPreviousSiblings("li");
 
 ### getProperty(key: string): Promise<Value>
 
-Get property by this key from the current element. Value will contain null if it does not.
+Get the property of this input value with the key. If there is no such property then it will return null. This is an async method.
 
 ```javascript
-context.assert(await input.hasProperty("checked")).equals(true);
+const isChecked = await element.getProperty("checked");
 ```
 
 ### getSiblings(selector?: string): Promise<DOMElement[]>
@@ -342,11 +394,63 @@ context.assert(await element.hasData("athlete-id")).equals(true);
 
 ### hasProperty(key: string): Promise<Value>
 
-Does this element have a property by this name?
+If this element is an object of some sort, does it have the property matching key? Note this is an async function.
 
 ```javascript
-context.assert(await input.hasProperty("readonly")).equals(true);
+context.assert(await element.hasProperty("qa-name")).equals(true);
 ```
+
+### hover(): Promise<void>;
+
+Hover over this element with the virtual mouse.
+
+### isNullOrUndefined(): boolean
+
+Self explanatory.
+
+### isUndefined(): boolean
+
+Self explanatory.
+
+### isNull(): boolean
+
+Is this input value literally null.
+
+### isPromise(): boolean
+
+Self explanatory.
+
+### isArray(): boolean
+
+Self explanatory.
+
+### isCookie(): boolean
+
+Self explanatory.
+
+### isRegularExpression(): boolean
+
+Is the input value a regular expression pattern (RegExp type).
+
+### isNaN(): boolean
+
+Is this input value literally the JavaScript value of NaN.
+
+### isNumber(): boolean
+
+Is this input value of type number? NaN will return false.
+
+### isNumeric(): boolean
+
+Is the input value numeric, even if it is a string or something else for its actual type.
+
+### isObject(): boolean
+
+Self explanatory.
+
+### isString(): boolean
+
+Self explanatory.
 
 ### load(): Promise<Scenario>
 
@@ -358,6 +462,10 @@ The difference between the two is that `click` will only work for clickable thin
 const image = await context.find("img.logo");
 image.load("Make sure logo is a valid image");
 ```
+
+### press(key: string, opts?: any): Promise<void>;
+
+Press these keys on the keyboard.
 
 ### screenshot(): Promise<Buffer>
 
@@ -373,11 +481,35 @@ The difference is that `submit` only works on form elements _and_ it will compil
 const form = await context.find("form.login");
 await form.fillForm({
   user: "bob",
-  password: "abc123"
+  password: "abc123",
 });
 await form.submit();
 await context.waitForNavigation();
 ```
+
+### tap(): Promise<void>;
+
+Tap the element.
+
+### toArray(): any[]
+
+Converts the input value into an array. If it's not already an array then it just wraps it in an array.
+
+### toFloat(): number
+
+Convert this value to a number with parseFloat.
+
+### toInteger(): number
+
+Convert this value to a number with parseInt.
+
+### toString(): string
+
+Casts the input value as a string.
+
+### toType(): string
+
+Grabs the type of the input value. It will be all lowercase and is a deep type look up, beyond a normal typeof.
 
 ### type(textToType: string, opts: any): Promise<void>
 
