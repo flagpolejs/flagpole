@@ -1,4 +1,4 @@
-import { Command } from "../command";
+import { Command, CliCommandOption } from "../command";
 import { FlagpoleExecution } from "../../flagpoleexecution";
 import prompts = require("prompts");
 import {
@@ -12,6 +12,7 @@ import {
   promptList,
 } from "../cli-helper";
 import { Cli, addScenario, addSuite } from "../cli";
+import commander = require("commander");
 
 const typesOfTest: any[] = [
   {
@@ -54,18 +55,30 @@ const choicesOfType = [
 export default class Add extends Command {
   public commandString = "add [type]";
   public description = "add a new suite, scenario, environment or tag";
-  public async action(type: string) {
+  public options = [
+    new CliCommandOption({
+      flags: "-l, --label <name>",
+      description: "label to add",
+    }),
+    new CliCommandOption({
+      flags: "-u, --url <url>",
+      description: "url to add",
+    }),
+  ];
+  public async action(type: string, args: { [key: string]: string }) {
     if (!type || !choicesOfType.map((choice) => choice.value).includes(type)) {
       type = await askForType();
     }
     if (type == "tag") {
-      promptToAddTag();
+      promptToAddTag(args);
     } else if (type == "env") {
-      promptToAddEnv();
+      return args.label && args.url
+        ? addEnv(args.label, args.url)
+        : promptToAddEnv(args);
     } else if (type == "scenario") {
-      promptToAddScenario();
+      promptToAddScenario(args);
     } else {
-      promptToAddSuite();
+      promptToAddSuite(args);
     }
   }
 }
@@ -78,21 +91,29 @@ const askForType = async (): Promise<string> => {
   ).thingToAdd;
 };
 
-async function promptToAddEnv() {
-  const responses = await prompts([
-    promptTextName("name", "What do you want to call the environment?"),
-    promptUrl("defaultDomain", "Default Domain (optional)"),
-  ]);
+function addEnv(name: string, url: string) {
   FlagpoleExecution.global.config.addEnvironment({
-    name: responses.name,
-    defaultDomain: responses.defaultDomain,
+    name: name,
+    defaultDomain: url,
   });
-  await FlagpoleExecution.global.config.save();
+  return FlagpoleExecution.global.config.save();
 }
 
-async function promptToAddTag() {
+async function promptToAddEnv(args: { [key: string]: string }) {
   const responses = await prompts([
-    promptTextName("tag", "Tag to Add"),
+    promptTextName(
+      "name",
+      "What do you want to call the environment?",
+      args.label
+    ),
+    promptUrl("url", "Default Domain (optional)", args.url),
+  ]);
+  return addEnv(responses.name, responses.url);
+}
+
+async function promptToAddTag(args: { [key: string]: string }) {
+  const responses = await prompts([
+    promptTextName("tag", "Tag to Add", args.label),
     promptMultiSelect(
       "suites",
       "Suites to apply it to",
@@ -108,7 +129,7 @@ async function promptToAddTag() {
   await FlagpoleExecution.global.config.save();
 }
 
-async function promptToAddScenario() {
+async function promptToAddScenario(args: { [key: string]: string }) {
   const suites = stringArrayToPromptChoices(
     FlagpoleExecution.global.config.getSuiteNames().sort()
   );
@@ -133,7 +154,11 @@ async function promptToAddScenario() {
       "Description of Scenario",
       "Some Other Page Loads"
     ),
-    promptTextPath("scenarioPath", "Scenario Start Path", "/some-other-page"),
+    promptTextPath(
+      "scenarioPath",
+      "Scenario Start Path",
+      args.url || "/some-other-page"
+    ),
   ]);
 
   const suite = FlagpoleExecution.global.config.getSuite(responses.suite);
@@ -157,10 +182,10 @@ async function promptToAddScenario() {
   );
 }
 
-async function promptToAddSuite(defaultSuiteName: string = "smoke") {
+async function promptToAddSuite(args: { [key: string]: string }) {
   Cli.subheader("Add New Suite");
   const standardQuestions = await prompts([
-    promptTextName("suiteName", "Name of Suite", defaultSuiteName),
+    promptTextName("suiteName", "Name of Suite", args.label || "smoke"),
     promptTextDescription(
       "suiteDescription",
       "Description of Suite",
@@ -172,7 +197,7 @@ async function promptToAddSuite(defaultSuiteName: string = "smoke") {
       "Homepage Loads"
     ),
     promptSelect("type", "What type of test is this scenario?", typesOfTest, 0),
-    promptTextPath("scenarioPath", "Scenario Start Path", "/"),
+    promptTextPath("scenarioPath", "Scenario Start Path", args.url || "/"),
     promptList("tags", "Add Tags (Optional, Space Delimited)"),
   ]);
 
@@ -206,7 +231,7 @@ async function promptToAddSuite(defaultSuiteName: string = "smoke") {
       .log("")
       .exit(0);
   }
-  // Did not answer qll questions
+  // Did not answer all questions
   else {
     Cli.log("", "No suite created.", "").exit(0);
   }
