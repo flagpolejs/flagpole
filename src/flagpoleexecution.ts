@@ -4,9 +4,19 @@ import {
   getDefaultConfig,
   EnvConfig,
 } from "./flagpoleconfig";
-import { readFileSync } from "fs-extra";
-import { fstat, exists, existsSync } from "fs";
+import {
+  readFileSync,
+  ensureDirSync,
+  writeFileSync,
+  existsSync,
+  removeSync,
+  unlinkSync,
+  emptyDirSync,
+} from "fs-extra";
+import * as path from "path";
 import { jsonParse } from "./util";
+import { JsonSchema } from "./interfaces";
+import { generateAjvSchema, writeSchema } from "./assertionschema";
 
 export enum FlagpoleOutput {
   console = "console",
@@ -242,6 +252,42 @@ export class FlagpoleExecution {
   private constructor(opts: iFlagpoleOptions, config: FlagpoleConfig) {
     this._opts = opts;
     this._config = config;
+  }
+
+  private getCachePath(cacheFileName?: string): string {
+    const cacheFolder = FlagpoleExecution.global.config.getCacheFolder();
+    if (!cacheFolder) {
+      throw "Flagpole cache folder path not found.";
+    }
+    ensureDirSync(cacheFolder);
+    return cacheFileName ? path.join(cacheFolder, cacheFileName) : cacheFolder;
+  }
+
+  public setCache(key: string, data: any) {
+    writeFileSync(
+      this.getCachePath(key),
+      typeof data == "string" ? data : JSON.stringify(data, null, 2)
+    );
+    return this;
+  }
+
+  public getCache(key: string): string | null {
+    const path = this.getCachePath(key);
+    return existsSync(path) ? readFileSync(path, "utf8") : null;
+  }
+
+  public removeCache(key: string) {
+    const path = this.getCachePath(key);
+    existsSync(path) && unlinkSync(path);
+    return this;
+  }
+
+  public clearCache() {
+    return emptyDirSync(this.getCachePath());
+  }
+
+  public generateJsonSchema(json: any, schemaName?: string): JsonSchema {
+    return schemaName ? writeSchema(json, schemaName) : generateAjvSchema(json);
   }
 
   public getOptionsArray(): string[] {

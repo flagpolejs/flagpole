@@ -26,8 +26,8 @@ import {
   iValue,
   iScenario,
   iSuite,
-  iAssertionSchema,
-  iAssertionSchemaItem,
+  JsonSchema,
+  JsonSchema_Type,
 } from "./interfaces";
 import { BrowserOptions, HttpRequest, HttpAuth } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
@@ -38,6 +38,7 @@ global.Promise = Promise;
 
 // Aliases
 const fp = Flagpole;
+const execution = FlagpoleExecution.global;
 
 export default Flagpole.suite;
 
@@ -49,8 +50,8 @@ export {
   Assertion,
   AssertionContext,
   AssertionResult,
-  iAssertionSchema,
-  iAssertionSchemaItem,
+  JsonSchema,
+  JsonSchema_Type,
   AssertionSchema,
   BrowserControl,
   BrowserOptions,
@@ -77,4 +78,5 @@ export {
   iScenario,
   iSuite,
   fp,
+  execution,
 };

@@ -67,6 +67,10 @@ export function toType(obj: any): string {
   return match !== null ? String(match[1]).toLocaleLowerCase() : "";
 }
 
+export function arrayUnique(arr: any): any[] {
+  return [...new Set(arr)];
+}
+
 export function uniqueId(): string {
   return "_" + Math.random().toString(36).substr(2, 9);
 }

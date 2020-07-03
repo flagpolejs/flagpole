@@ -1,5 +1,4 @@
 import { Suite } from "./suite";
-import { FlagpoleExecution } from "./flagpoleexecution";
 
 export class Flagpole {
   public static suites: Suite[] = [];

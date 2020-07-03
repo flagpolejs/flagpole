@@ -17,6 +17,7 @@ import {
   BrowserOptions,
 } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
+import * as Ajv from "ajv";
 
 export interface ScreenshotOpts {
   path?: string;
@@ -320,7 +321,7 @@ export interface iAssertion {
   assert(a: any, b?: any): iAssertion;
   comment(input: any): iAssertion;
   schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
-  schema(schema: iAssertionSchema, simple?: boolean): Promise<iAssertion>;
+  schema(schema: JsonSchema | Ajv.Ajv, simple?: boolean): Promise<iAssertion>;
   looksLike(image: Buffer | string): iAssertion;
   looksLike(image: Buffer | string, threshhold: number): iAssertion;
   looksLike(image: Buffer | string, percent: string): iAssertion;
@@ -554,23 +555,21 @@ export type KeyValue = {
   [key: string]: any;
 };
 
-export interface iAssertionSchema {
-  [key: string]: string | any[] | iAssertionSchemaItem;
-}
+export type JsonSchema_Type =
+  | "object"
+  | "array"
+  | "string"
+  | "number"
+  | "integer"
+  | "null";
 
-export interface iAssertionSchemaTestOpts {
-  path: string;
-  parent: any;
-  root: any;
-}
-
-export interface iAssertionSchemaItem {
-  type?: string | string[];
-  items?: iAssertionSchema | string;
+export type JsonSchema = {
+  type: JsonSchema_Type | JsonSchema_Type[];
+  properties?: { [key: string]: JsonSchema };
+  items?: JsonSchema;
   enum?: any[];
-  matches?: RegExp | string;
-  test: (value: any, opts: iAssertionSchemaTestOpts) => boolean;
-}
+  pattern?: RegExp | string;
+};
 
 export interface iAjvLike {
   errors: Error[];

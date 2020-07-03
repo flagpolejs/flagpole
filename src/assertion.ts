@@ -7,6 +7,7 @@ import {
   IteratorCallback,
   iAjvLike,
   iAjvErrorObject,
+  JsonSchema,
 } from "./interfaces";
 import {
   toType,
@@ -17,7 +18,6 @@ import {
   isAsyncCallback,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
-import { iValue, iAssertionSchema } from ".";
 
 export class Assertion implements iAssertion {
   /**
@@ -608,9 +608,9 @@ export class Assertion implements iAssertion {
   }
 
   schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
-  schema(schema: iAssertionSchema, simple?: boolean): Promise<iAssertion>;
+  schema(schema: JsonSchema, simple?: boolean): Promise<iAssertion>;
   public async schema(
-    schema: iAssertionSchema | string,
+    schema: JsonSchema | string,
     simple: boolean = false
   ): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);

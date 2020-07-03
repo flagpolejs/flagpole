@@ -1,10 +1,6 @@
-import { toType } from "./util";
-import {
-  iAjvLike,
-  iAssertionSchema,
-  iAssertionSchemaTestOpts,
-} from "./interfaces";
-import { FlagpoleExecution } from ".";
+import { toType, arrayUnique } from "./util";
+import { iAjvLike, JsonSchema_Type, JsonSchema } from "./interfaces";
+import { FlagpoleExecution } from "./flagpoleexecution";
 import {
   ensureDirSync,
   readFileSync,
@@ -31,7 +27,7 @@ export function getSchemaPath(schemaName: string): string {
   return path;
 }
 
-export function getSchema(schemaName: string): iAssertionSchema {
+export function getSchema(schemaName: string): JsonSchema {
   const schemaPath = getSchemaPath(schemaName);
   if (existsSync(schemaPath)) {
     const content = readFileSync(schemaPath, "utf8");
@@ -40,96 +36,119 @@ export function getSchema(schemaName: string): iAssertionSchema {
   throw `Schema file ${schemaPath} does not exist`;
 }
 
-export function writeSchema(input: any, schemaName: string): iAssertionSchema {
-  const schema = generateAjvSchema(input);
+export function writeSchema(json: any, schemaName: string): JsonSchema {
+  const schema = generateAjvSchema(json);
   writeFileSync(getSchemaPath(schemaName), JSON.stringify(schema, null, 2));
   return schema;
 }
 
-export function generateAjvSchema(json: any): iAssertionSchema {
+export function generateAjvSchema(json: any): JsonSchema {
   const ajvTypes: string[] = [
     "string",
     "number",
+    "integer",
     "boolean",
     "array",
     "object",
     "null",
   ];
 
-  function parseItem(item: any): iAssertionSchema {
-    // Base schema object
-    const schema: any = {};
-    // Add type property
-    const myType: string = toType(item);
-    if (ajvTypes.includes(myType)) {
-      schema.type = myType;
-    }
-    // If this is an object, then it has its own schema inside
-    if (myType === "object") {
-      // Parse properties
-      schema.properties = {};
-      Object.keys(item).forEach((key) => {
-        schema.properties[key] = parseItem(item[key]);
-      });
-    }
-    // If it's an array then we define the sub-schema for its items
-    else if (myType == "array") {
-      const arr = <any[]>item;
-      if (arr.length > 0) {
-        const containsAllObjects = arr.every((row) => {
-          return toType(row) === "object";
+  function parseObject(obj: any): JsonSchema {
+    const schema: JsonSchema = {
+      type: ["object"],
+      properties: {},
+    };
+    Object.keys(obj).forEach((key) => {
+      if (schema.properties) {
+        schema.properties[key] = parseItem(obj[key]);
+      }
+    });
+    return schema;
+  }
+
+  function parseArray(arr: any[]): JsonSchema {
+    const schema: JsonSchema = {
+      type: ["array"],
+    };
+    if (arr.length > 0) {
+      const containsAllObjects = arr.every((row) => toType(row) === "object");
+      if (containsAllObjects) {
+        schema.items = {
+          type: ["object"],
+          properties: {},
+        };
+        arr.forEach((row) => {
+          const rowSchema = parseItem(row);
+          if (rowSchema.properties) {
+            Object.keys(rowSchema.properties).forEach((key) => {
+              // Make TypeScript happy
+              if (
+                !schema.items ||
+                !schema.items.properties ||
+                !rowSchema.properties
+              ) {
+                return;
+              }
+              const prevItem = schema.items.properties[key];
+              const newItem = rowSchema.properties[key];
+              // If property didn't exist previously, add it
+              if (!prevItem) {
+                schema.items.properties[key] = newItem;
+              }
+              // This property already existed in schema, so merge it
+              else {
+                // This only merges the types
+                // it does not take sub-properties from the other objects after the first
+                // we need to think through how this schema creation should work if it varies
+                const newType = Array.isArray(newItem.type)
+                  ? newItem.type
+                  : [newItem.type];
+                const prevType = Array.isArray(prevItem.type)
+                  ? prevItem.type
+                  : [prevItem.type];
+                schema.items.properties[key].type = arrayUnique([
+                  ...prevType,
+                  ...newType,
+                ]);
+              }
+            });
+          }
         });
-        if (containsAllObjects) {
-          schema.items = {
-            type: "object",
-            properties: {},
-          };
-          arr.forEach((row) => {
-            const rowSchema = parseItem(row);
-            if (rowSchema.properties) {
-              Object.keys(rowSchema.properties).forEach((key) => {
-                const prevItem = schema.items.properties[key];
-                const newItem = rowSchema.properties[key];
-                // If property didn't exist previously, add it
-                if (!prevItem) {
-                  schema.items.properties[key] = {
-                    type: newItem.type,
-                  };
-                }
-                // Did exist previously
-                else {
-                  const prevType: string[] =
-                    typeof schema.items.properties[key].type === "string"
-                      ? [schema.items.properties[key].type]
-                      : schema.items.properties[key].type;
-                  // Did it change?
-                  if (!prevType.includes(newItem.type)) {
-                    schema.items.properties[key].type = prevType.concat([
-                      newItem.type,
-                    ]);
-                  }
-                }
-              });
-            }
-          });
-        } else {
-          schema.items = [];
-          item.forEach((value: any) => {
-            schema.items.push(toType(value));
-          });
-          // Unique types
-          schema.items = schema.items.filter((v, i, a) => a.indexOf(v) === i);
-        }
+      }
+      // If not all items are objects, just map the types that it may
+      else {
+        schema.items = {
+          type: arrayUnique(
+            arr.map((value: any) => toType(value))
+          ) as JsonSchema_Type[],
+        };
       }
     }
     return schema;
+  }
+
+  function parseItem(item: any): JsonSchema {
+    // Add type property
+    const myType = toType(item) as JsonSchema_Type;
+    // If this is an object, then it has its own schema inside
+    if (myType === "object") {
+      return parseObject(item);
+    }
+    // If it's an array then we define the sub-schema for its items
+    else if (myType == "array") {
+      return parseArray(item);
+    } else {
+      return {
+        type: [myType],
+      };
+    }
   }
 
   return parseItem(json);
 }
 
 export class AssertionSchema implements iAjvLike {
-  protected _schema: iAssertionSchema | undefined;
+  protected _schema: JsonSchema | undefined;
   protected _errors: Error[] = [];
   protected _root: any = null;
 
@@ -203,23 +222,6 @@ export class AssertionSchema implements iAjvLike {
         `${path} value ${document} did not match ${String(schema)}`
       );
       return false;
-    }
-    return true;
-  }
-
-  protected _matchesTest(schema: any, document: any, path: string): boolean {
-    const schemaType = toType(schema);
-    if (schemaType == "function") {
-      // Function must return true
-      let opts: iAssertionSchemaTestOpts = {
-        path: path,
-        parent: document,
-        root: this._root,
-      };
-      if (!schema(document, opts)) {
-        this._logError(`${path} did not pass the test`);
-        return false;
-      }
     }
     return true;
   }
@@ -303,10 +305,6 @@ export class AssertionSchema implements iAjvLike {
       }
       // pattern
       if (!this._matchesPattern(schema.matches, document, path)) {
-        return false;
-      }
-      // test
-      if (!this._matchesTest(schema.test, document, path)) {
         return false;
       }
       // items
