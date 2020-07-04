@@ -271,9 +271,15 @@ export class FlagpoleExecution {
     return this;
   }
 
-  public getCache(key: string): string | null {
+  public getCache(key: string): any {
     const path = this.getCachePath(key);
-    return existsSync(path) ? readFileSync(path, "utf8") : null;
+    const data = existsSync(path) ? readFileSync(path, "utf8") : null;
+    if (data !== null) {
+      try {
+        return JSON.parse(data);
+      } catch {}
+    }
+    return data;
   }
 
   public removeCache(key: string) {

@@ -8,6 +8,7 @@ import { probeImageResponse } from "./httpresponse";
 import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
 import { ImageProbe } from "@zerodeps/image-probe";
+import { FlagpoleExecution } from ".";
 
 const CONTENT_TYPE_JSON = "application/json";
 const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
@@ -112,6 +113,7 @@ export type HttpRequestOptions = {
    * For https, should we reject unauthorized certs?
    */
   verifyCert?: boolean;
+  cacheKey?: string;
 };
 
 export class HttpRequest {
@@ -311,6 +313,9 @@ export class HttpRequest {
     };
   }
 
+  /**
+   * For the Needle library
+   */
   private get needleOptions(): needle.NeedleOptions {
     return {
       agent: this.proxyAgent,
@@ -333,6 +338,9 @@ export class HttpRequest {
     };
   }
 
+  /**
+   * For the statndard HTTP library
+   */
   private get httpOptions(): http.RequestOptions {
     return {
       agent: this.proxyAgent,
@@ -342,6 +350,9 @@ export class HttpRequest {
     };
   }
 
+  /**
+   * For the Got library
+   */
   private get gotOptions(): any {
     return {
       agent: this.proxyAgent,
@@ -489,6 +500,14 @@ export class HttpRequest {
 
   private _fetchHttp(opts?: KeyValue): Promise<HttpResponse> {
     return new Promise((resolve, reject) => {
+      if (this.options.cacheKey) {
+        const response = FlagpoleExecution.global.getCache(
+          this.options.cacheKey
+        );
+        if (response !== null) {
+          return resolve(response as HttpResponse);
+        }
+      }
       const stream = needle.request(
         // Needle doesn't support "options"
         this.method === "options" ? "head" : this.method,
@@ -497,7 +516,14 @@ export class HttpRequest {
         this.needleOptions,
         (err, resp) => {
           if (!err && resp) {
-            return resolve(HttpResponse.fromNeedle(resp));
+            const response = HttpResponse.fromNeedle(resp);
+            if (this.options.cacheKey) {
+              FlagpoleExecution.global.setCache(
+                this.options.cacheKey,
+                response
+              );
+            }
+            return resolve(response);
           }
           reject(err);
         }

@@ -18,6 +18,14 @@ Allows you to add a new environment. Environments are things like dev, staging, 
 flagpole add env
 ```
 
+If you want to add an environment without being prompted (perhaps in a CI/CD script) you can set the parameters:
+
+```bash
+flagpole add env --label qa --url https://qa-162112.mysite.com
+```
+
+If you set choose an environment label that already exists, it will update it.
+
 ### add scenario
 
 Adds a new scenario to a suite. If you have no suites set up yet, this will fail. If you have multiple suites, it will ask you which on you want to add the new scenario to.
