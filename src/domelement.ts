@@ -33,6 +33,10 @@ export abstract class DOMElement extends Value {
 
   protected abstract async _getTagName(): Promise<string>;
   protected abstract async _getAttribute(key: string): Promise<string | null>;
+  protected abstract async _getClassName(): Promise<string>;
+  protected abstract async _getInnerText(): Promise<string>;
+  protected abstract async _getInnerHtml(): Promise<string>;
+  protected abstract async _getOuterHtml(): Promise<string>;
 
   /**
    * Convert element synchronously to string as best we can
@@ -46,9 +50,7 @@ export abstract class DOMElement extends Value {
    */
   public async getClassName(): Promise<iValue> {
     return this._wrapAsValue(
-      typeof this._input.get(0).attribs["class"] !== "undefined"
-        ? this._input.get(0).attribs["class"]
-        : null,
+      await this._getClassName(),
       `Class Name of ${this.name}`
     );
   }
@@ -60,7 +62,7 @@ export abstract class DOMElement extends Value {
    */
   public async hasClassName(className: string): Promise<iValue> {
     return this._wrapAsValue(
-      this._input.hasClass(className),
+      (await this._getClassName()).split(" ").includes(className),
       `${this.name} has class ${className}`
     );
   }
@@ -69,14 +71,20 @@ export abstract class DOMElement extends Value {
    * Get element's innerText
    */
   public async getInnerText(): Promise<iValue> {
-    return this._wrapAsValue(this._input.text(), `Inner Text of ${this.name}`);
+    return this._wrapAsValue(
+      await this._getInnerText(),
+      `Inner Text of ${this.name}`
+    );
   }
 
   /**
    * Get element's innerHtml which will not include the element itself, only its contents
    */
   public async getInnerHtml(): Promise<iValue> {
-    return this._wrapAsValue(this._input.html(), `Inner Html of ${this.name}`);
+    return this._wrapAsValue(
+      await this._getInnerHtml(),
+      `Inner Html of ${this.name}`
+    );
   }
 
   /**
@@ -84,7 +92,7 @@ export abstract class DOMElement extends Value {
    */
   public async getOuterHtml(): Promise<iValue> {
     return this._wrapAsValue(
-      this._context.response.getRoot().html(this._input),
+      await this._getOuterHtml(),
       `Outer Html of ${this.name}`
     );
   }

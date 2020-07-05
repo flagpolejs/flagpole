@@ -362,6 +362,10 @@ export class Value implements iValue {
     throw `This element does not support hover().`;
   }
 
+  public async blur() {
+    throw `This element does not support blur().`;
+  }
+
   public async tap() {
     throw `This element does not support tap().`;
   }

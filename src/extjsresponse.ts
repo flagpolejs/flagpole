@@ -4,6 +4,8 @@ import { iResponse, iScenario } from "./interfaces";
 import { PuppeteerResponse } from "./puppeteerresponse";
 import { iValue } from ".";
 import { PuppeteerElement } from "./puppeteerelement";
+import { asyncForEach } from "./util";
+import { ElementHandle } from "puppeteer";
 
 export class ExtJSResponse extends PuppeteerResponse implements iResponse {
   public get responseTypeName(): string {
@@ -35,6 +37,10 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
               window[ref] = Ext.ComponentQuery.query(path);
               return window[ref].length;
             };
+            componentGetById = (ref, id) => {
+              window[ref] = Ext.getCmp(id);
+              return !!window[ref];
+            };
           `);
         }
       });
@@ -47,13 +53,51 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
    * @param path
    * @param findIn
    */
-  public async find(path: string): Promise<ExtJsComponent | iValue> {
-    const result = await this._query(path);
-    return result.length > 0 ? result[0] : this._wrapAsValue(null, path);
+  public async find(path: string): Promise<iValue> {
+    const results = await this._query(path);
+    return results.length > 0 ? results[0] : this._find(path);
   }
 
-  public async findAll(path: string): Promise<ExtJsComponent[]> {
-    return this._query(path);
+  public async findAll(path: string): Promise<iValue[]> {
+    const results = await this._query(path);
+    return results.length > 0 ? results : this._findAll(path);
+  }
+
+  public async findXPath(xPath: string): Promise<iValue> {
+    if (!this.page) {
+      throw "Page must be defined.";
+    }
+    const elements = await this.page.$x(xPath);
+    if (elements.length > 0) {
+      return await PuppeteerElement.create(
+        elements[0],
+        this.context,
+        null,
+        xPath
+      );
+    }
+    return this._wrapAsValue(null, xPath);
+  }
+
+  public async findAllXPath(xPath: string): Promise<PuppeteerElement[]> {
+    if (!this.page) {
+      throw "Page must be defined.";
+    }
+    const response: iResponse = this;
+    const puppeteerElements: PuppeteerElement[] = [];
+    if (this.context.page !== null) {
+      const elements = await this.context.page.$x(xPath);
+      await asyncForEach(elements, async (el, i) => {
+        const element = await PuppeteerElement.create(
+          el,
+          response.context,
+          `${xPath} [${i}]`,
+          xPath
+        );
+        puppeteerElements.push(element);
+      });
+    }
+    return puppeteerElements;
   }
 
   public async waitForExists(
@@ -100,6 +144,20 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     throw new Error(`Can not type into this element ${selector}`);
   }
 
+  public async getComponentById(id: string) {
+    if (this.page === null) {
+      throw "Page must exist.";
+    }
+    const ref = this._createReferenceName(id);
+    const path = `#${id}`;
+    const exists = Boolean(
+      await this.page.evaluate(`componentGetById("${ref}", "${id}")`)
+    );
+    return exists
+      ? await ExtJsComponent.create(path, this.context, path)
+      : null;
+  }
+
   private async _injectScript(content: string): Promise<void> {
     if (this.page !== null) {
       await this.page.addScriptTag({
@@ -112,6 +170,67 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     return `flagpole_${Date.now()}_${name.replace(/[^a-z]/gi, "")}`;
   }
 
+  /**
+   * Use Puppeteer to find the first matching element
+   *
+   * @param path
+   */
+  private async _find(path: string): Promise<iValue> {
+    if (this.page === null) {
+      throw "Page must exist.";
+    }
+    const el = await this.page.$(path);
+    if (el !== null) {
+      const component = await this._getComponentFromElementHandle(el);
+      if (component) {
+        return component;
+      }
+    }
+    return this._wrapAsValue(null, path);
+  }
+
+  /**
+   * Use Puppeteer to find all matching elements
+   *
+   * @param path
+   */
+  private async _findAll(path: string): Promise<iValue[]> {
+    if (this.context.page === null) {
+      throw "Page must be defined.";
+    }
+    const components: ExtJsComponent[] = [];
+    const elements = await this.context.page.$$(path);
+    await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
+      const component = await this._getComponentFromElementHandle(el);
+      if (component) {
+        components.push(component);
+      }
+    });
+    return components;
+  }
+
+  private async _getComponentFromElementHandle(el: ElementHandle<Element>) {
+    const componentId = await el.evaluate((node) => {
+      // If this element is a component
+      if (node.classList.contains("x-component")) {
+        return node.id;
+      }
+      // Get closest component
+      const closestComponent = node.closest(".x-component");
+      if (closestComponent) {
+        return closestComponent.id;
+      }
+      // For some reason we did not find the component
+      return null;
+    });
+    return (componentId && (await this.getComponentById(componentId))) || null;
+  }
+
+  /**
+   * Use Ext to find the matching elements
+   *
+   * @param path
+   */
   private async _query(path: string) {
     if (this.page === null) {
       throw "Page must exist.";

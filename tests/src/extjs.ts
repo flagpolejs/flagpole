@@ -32,10 +32,19 @@ suite
     return context.page?.waitForNavigation();
   })
   .next("Check employee listing page", async (context) => {
+    const buttons = await context.findAll("button");
     context
-      .assert(
-        "There are multiple buttons on the page",
-        await context.findAll("button")
-      )
+      .assert("There are multiple buttons on the page", buttons)
       .length.greaterThan(1);
+    context.comment(buttons.length);
+    const recent = await context.findHavingText("button", "Recent");
+    context.assert(recent).exists();
+    context.comment(await recent.getValue());
+    context.comment(await recent.getText());
+    context.comment(recent.constructor.name);
+    return recent.click();
+  })
+  .next("Recent page", async (context) => {
+    //await context.waitForNetworkIdle();
+    await context.pause(3000);
   });

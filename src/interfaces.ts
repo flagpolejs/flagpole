@@ -215,6 +215,7 @@ export interface iValue {
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
   focus(): Promise<any>;
+  blur(): Promise<any>;
   hover(): Promise<void>;
   tap(): Promise<void>;
   press(key: string, opts?: any): Promise<void>;

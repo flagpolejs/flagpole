@@ -1,5 +1,6 @@
 import { iAssertionContext, iValue } from "./interfaces";
 import { PuppeteerElement } from "./puppeteerelement";
+import { ExtJSResponse } from ".";
 
 export const ExtJsComponentTypes = {
   actionsheet: "Ext.ActionSheet",
@@ -61,13 +62,17 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     return `window.${this._input}`;
   }
 
+  private get _response(): ExtJSResponse {
+    return this._context.response as ExtJSResponse;
+  }
+
   public static async create(
     referencePath: string,
     context: iAssertionContext,
     path: string
   ) {
     const element = new ExtJsComponent(referencePath, context, path, path);
-    const componentType: string | null = (await element.getType()).$;
+    const componentType: string | null = (await element.getTagName()).$;
     if (componentType !== null) {
       element._name = `<${componentType}> Component @ ${path}`;
     }
@@ -84,44 +89,21 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     this._path = path || "";
   }
 
-  public async getType(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.xtype`),
-      `Type of ${this.name}`
-    );
+  protected async _getInnerText() {
+    return String(await this._eval(`${this._component}.element.dom.innerText`));
   }
 
-  public async getId(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.getId()`),
-      `Id of ${this.name}`
-    );
+  protected async _getInnerHtml() {
+    return String(await this._eval(`${this._component}.element.dom.innerHTML`));
   }
 
-  public async getWidth(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.getSize().width`),
-      `Width of ${this.name}`
-    );
-  }
-
-  public async getHeight(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.getSize().height`),
-      `Width of ${this.name}`
-    );
-  }
-
-  public async getSize(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.getSize()`),
-      `Size of ${this.name}`
-    );
+  protected async _getOuterHtml() {
+    return String(await this._eval(`${this._component}.element.dom.outerHTML`));
   }
 
   public async getText(): Promise<iValue> {
     return this._wrapAsValue(
-      await this._eval(`${this._component}.getText()`),
+      String(await this._eval(`${this._component}.getText()`)),
       `Text of ${this.name}`
     );
   }
@@ -133,95 +115,15 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     );
   }
 
-  public async setValue(value: string): Promise<iValue> {
+  public async getData(key: string): Promise<iValue> {
     return this._wrapAsValue(
-      await this._eval(`${this._component}.setValue(${JSON.stringify(value)})`),
-      `Set value of ${this.name}`
-    );
-  }
-
-  public async setData(value: string): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.setData(${JSON.stringify(value)})`),
-      `Set data of ${this.name}`
-    );
-  }
-
-  public async getData(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.getData()`),
+      await this._eval(`${this._component}.getData("${key}")`),
       `Data of ${this.name}`
     );
   }
 
-  public async disable(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.disable()`),
-      `Disable ${this.name}`
-    );
-  }
-
-  public async enable(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.enable()`),
-      `Enable ${this.name}`
-    );
-  }
-
-  public async hide(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.Hide()`),
-      `Hide ${this.name}`
-    );
-  }
-
-  public async show(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.show()`),
-      `Show ${this.name}`
-    );
-  }
-
-  public async focus(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.focus()`),
-      `Focus on ${this.name}`
-    );
-  }
-
-  public async isHidden(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.isHidden() || false`),
-      `Is ${this.name} hidden?`
-    );
-  }
-
-  public async isVisible(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.isVisible() || false`),
-      `Is ${this.name} visible?`
-    );
-  }
-
-  public async isEnabled(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.isEnabled() || false`),
-      `Is ${this.name} enabled?`
-    );
-  }
-
-  public async isDisabled(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.isDisabled() || false`),
-      `Is ${this.name} hidden?`
-    );
-  }
-
-  public async getProperty(propertyName: string): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.${propertyName}`),
-      `${this.name}.${propertyName}`
-    );
+  public async focus(): Promise<any> {
+    return this._action("focus");
   }
 
   public async call(method: string, ...args: any[]): Promise<iValue> {
@@ -242,23 +144,81 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     );
   }
 
+  public async hover(): Promise<void> {
+    return this._action("hover", false);
+  }
+
+  public async blur(): Promise<any> {
+    return this._action("blur");
+  }
+
   public async click(): Promise<any> {
-    const val = await this._eval(`${this._component}.element.dom.click()`);
-    this._completedAction("CLICK", this.name);
-    return val;
+    return this._action("click");
+  }
+
+  public async clear(): Promise<void> {
+    this.setValue("");
   }
 
   public async type(textToType: string, opts: any) {
-    this.fireEvent("focus");
-    this.setValue(textToType);
-    this._completedAction("TYPE", textToType);
-    this.fireEvent("blur");
+    await this.focus();
+    await this.setValue(textToType);
+    return this.blur();
   }
 
-  protected async _eval(js: string): Promise<any> {
-    if (this._context.page !== null) {
-      return await this._context.page.evaluate(js);
-    }
-    throw new Error("Page was null.");
+  public setValue(text: string) {
+    return this._eval(`${this._component}.setValue("${text}")`);
+  }
+
+  public async getParent(): Promise<ExtJsComponent | iValue> {
+    const id = String(await this._eval(`${this._component}.parent.id`));
+    const component = await this._response.getComponentById(id);
+    return component || this._wrapAsValue(null, `Parent of ${this.name}`);
+  }
+
+  public async getNextSibling(
+    selector: string
+  ): Promise<ExtJsComponent | iValue> {
+    const id = String(
+      await this._eval(`${this._component}.nextSibling("${selector}")`)
+    );
+    const component = await this._response.getComponentById(id);
+    return component || this._wrapAsValue(null, `Next Sibling of ${this.name}`);
+  }
+
+  public async getPreviousSibling(
+    selector: string
+  ): Promise<ExtJsComponent | iValue> {
+    const id = String(
+      await this._eval(`${this._component}.previousSibling("${selector}")`)
+    );
+    const component = await this._response.getComponentById(id);
+    return (
+      component || this._wrapAsValue(null, `Previous Sibling of ${this.name}`)
+    );
+  }
+
+  protected async _action(
+    name: string,
+    actionOnDom: boolean = true
+  ): Promise<void> {
+    await this._eval(
+      actionOnDom
+        ? `${this._component}.element.dom.${name}()`
+        : `${this._component}.element.${name}()`
+    );
+    this._completedAction(name.toUpperCase());
+  }
+
+  protected async _getClassName(): Promise<string> {
+    return String(await this._eval(`${this._component}.element.dom.className`));
+  }
+
+  protected _getAttribute(key: string): Promise<string> {
+    return this._eval(`${this._component}.element.getAttribute("${key}")`);
+  }
+
+  protected _getTagName(): Promise<string> {
+    return this._eval(`${this._component}.xtype`);
   }
 }

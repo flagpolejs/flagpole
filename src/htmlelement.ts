@@ -323,6 +323,24 @@ export class HTMLElement extends DOMElement implements iValue {
     }
   }
 
+  protected async _getInnerText() {
+    return this.el.text();
+  }
+
+  protected async _getInnerHtml() {
+    return this.el.html() || "";
+  }
+
+  protected async _getOuterHtml() {
+    return this._context.response.getRoot().html(this._input);
+  }
+
+  protected async _getClassName(): Promise<string> {
+    return typeof this.el.get(0).attribs["class"] !== "undefined"
+      ? this.el.get(0).attribs["class"]
+      : null;
+  }
+
   protected async _getTagName(): Promise<string> {
     return this.el.get(0).tagName.toLowerCase();
   }

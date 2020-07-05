@@ -6,7 +6,13 @@ import {
   ScreenshotOpts,
   KeyValue,
 } from "./interfaces";
-import { JSHandle, Page, ElementHandle, BoxModel } from "puppeteer-core";
+import {
+  JSHandle,
+  Page,
+  ElementHandle,
+  BoxModel,
+  EvaluateFn,
+} from "puppeteer-core";
 import { DOMElement } from "./domelement";
 import {
   asyncForEach,
@@ -53,23 +59,6 @@ export class PuppeteerElement extends DOMElement implements iValue {
 
   public toString(): string {
     return String(this.path);
-  }
-
-  public async getClassName(): Promise<iValue> {
-    const classHandle: JSHandle = await this._input.getProperty("className");
-    return this._wrapAsValue(
-      await classHandle.jsonValue(),
-      `Class Name of ${this.name}`
-    );
-  }
-
-  public async hasClassName(className: string): Promise<iValue> {
-    const classHandle: JSHandle = await this._input.getProperty("className");
-    const classString: string = String(await classHandle.jsonValue());
-    return this._wrapAsValue(
-      classString.split(" ").indexOf(className) >= 0,
-      `${this.name} has class ${className}`
-    );
   }
 
   public async find(selector: string): Promise<iValue> {
@@ -214,35 +203,16 @@ export class PuppeteerElement extends DOMElement implements iValue {
     return siblings;
   }
 
-  public async getInnerText(): Promise<iValue> {
-    if (this._context.page == null) {
-      throw new Error("Page is null.");
-    }
-    return this._wrapAsValue(
-      await this._context.page.evaluate((e) => e.innerText, this.$),
-      `Inner Text of ${this.name}`
-    );
+  protected async _getInnerText() {
+    return String(await this._eval((e) => e.innerText, this.$));
   }
 
-  public async getInnerHtml(): Promise<iValue> {
-    if (this._context.page == null) {
-      throw new Error("Page is null.");
-    }
-    return this._wrapAsValue(
-      await this._context.page.evaluate((e) => e.innerHTML, this.$),
-      `Inner Html of ${this.name}`
-    );
+  protected async _getInnerHtml() {
+    return String(await this._eval((e) => e.innerHTML, this.$));
   }
 
-  public async getOuterHtml(): Promise<iValue> {
-    if (this._context.page === null) {
-      throw new Error("Page is null.");
-    }
-    const html: string = await this.$.executionContext().evaluate(
-      (e) => e.outerHTML,
-      this.$
-    );
-    return this._wrapAsValue(html, `Outer Html of ${this.name}`);
+  protected async _getOuterHtml() {
+    return String(await this._eval((e) => e.outerHTML, this.$));
   }
 
   public async getProperty(key: string): Promise<iValue> {
@@ -304,10 +274,17 @@ export class PuppeteerElement extends DOMElement implements iValue {
     this._completedAction("FOCUS");
   }
 
-  public async hover(): Promise<void> {
+  public async blur(): Promise<any> {
     if (this._context.page == null) {
       throw new Error("Page is null.");
     }
+    await (this._input as ElementHandle).evaluate((node) =>
+      node.parentElement?.focus()
+    );
+    this._completedAction("BLUR");
+  }
+
+  public async hover(): Promise<void> {
     await (this._input as ElementHandle).hover();
     this._completedAction("HOVER");
   }
@@ -497,13 +474,16 @@ export class PuppeteerElement extends DOMElement implements iValue {
     });
   }
 
-  protected _getTagName(): Promise<string> {
-    return new Promise(async (resolve) => {
-      const handle: JSHandle = await this._input.getProperty("tagName");
-      const value: string = String(await handle.jsonValue());
-      this._tagName = value.toLowerCase();
-      resolve(value);
-    });
+  protected async _getClassName(): Promise<string> {
+    const handle: JSHandle = await this._input.getProperty("className");
+    return String(handle.jsonValue());
+  }
+
+  protected async _getTagName(): Promise<string> {
+    const handle: JSHandle = await this._input.getProperty("tagName");
+    const value: string = String(await handle.jsonValue());
+    this._tagName = value.toLowerCase();
+    return value;
   }
 
   protected _getSourceCode(): Promise<void> {
@@ -514,8 +494,15 @@ export class PuppeteerElement extends DOMElement implements iValue {
     });
   }
 
-  protected async _getAttribute(key: string): Promise<any> {
+  protected async _getAttribute(key: string): Promise<string> {
     const handle: JSHandle = await this._input.getProperty(key);
-    return await handle.jsonValue();
+    return String(await handle.jsonValue());
+  }
+
+  protected async _eval(js: EvaluateFn<any>, arg?: any): Promise<any> {
+    if (this._context.page !== null) {
+      return await this._context.page.evaluate(js, arg);
+    }
+    throw new Error("Page was null.");
   }
 }
