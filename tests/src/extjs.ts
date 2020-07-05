@@ -36,15 +36,17 @@ suite
     context
       .assert("There are multiple buttons on the page", buttons)
       .length.greaterThan(1);
-    context.comment(buttons.length);
+    await context.pause(1000);
     const recent = await context.findHavingText("button", "Recent");
     context.assert(recent).exists();
-    context.comment(await recent.getValue());
-    context.comment(await recent.getText());
-    context.comment(recent.constructor.name);
     return recent.click();
   })
   .next("Recent page", async (context) => {
-    //await context.waitForNetworkIdle();
+    await context.pause(3000);
+    const contactTile = await context.find(".x-dataview-item .person-name");
+    context.assert(contactTile).exists();
+    return contactTile.click();
+  })
+  .next("Detail page", async (context) => {
     await context.pause(3000);
   });

@@ -72,7 +72,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     path: string
   ) {
     const element = new ExtJsComponent(referencePath, context, path, path);
-    const componentType: string | null = (await element.getTagName()).$;
+    const componentType = await element._getTagName();
     if (componentType !== null) {
       element._name = `<${componentType}> Component @ ${path}`;
     }
@@ -87,39 +87,6 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   ) {
     super(input, context, name || "ExtJs Component");
     this._path = path || "";
-  }
-
-  protected async _getInnerText() {
-    return String(await this._eval(`${this._component}.element.dom.innerText`));
-  }
-
-  protected async _getInnerHtml() {
-    return String(await this._eval(`${this._component}.element.dom.innerHTML`));
-  }
-
-  protected async _getOuterHtml() {
-    return String(await this._eval(`${this._component}.element.dom.outerHTML`));
-  }
-
-  public async getText(): Promise<iValue> {
-    return this._wrapAsValue(
-      String(await this._eval(`${this._component}.getText()`)),
-      `Text of ${this.name}`
-    );
-  }
-
-  public async getValue(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.getValue()`),
-      `Value of ${this.name}`
-    );
-  }
-
-  public async getData(key: string): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._eval(`${this._component}.getData("${key}")`),
-      `Data of ${this.name}`
-    );
   }
 
   public async focus(): Promise<any> {
@@ -220,5 +187,29 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
 
   protected _getTagName(): Promise<string> {
     return this._eval(`${this._component}.xtype`);
+  }
+
+  protected async _getInnerText() {
+    return String(await this._eval(`${this._component}.element.dom.innerText`));
+  }
+
+  protected async _getInnerHtml() {
+    return String(await this._eval(`${this._component}.element.dom.innerHTML`));
+  }
+
+  protected async _getOuterHtml() {
+    return String(await this._eval(`${this._component}.element.dom.outerHTML`));
+  }
+
+  protected async _getText() {
+    return String(await this._eval(`${this._component}.getText()`));
+  }
+
+  protected async _getValue() {
+    return this._eval(`${this._component}.getValue()`);
+  }
+
+  protected async _getData(key: string) {
+    return this._eval(`${this._component}.getData("${key}")`);
   }
 }

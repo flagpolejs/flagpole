@@ -28,15 +28,19 @@ export abstract class DOMElement extends Value {
     this._path = path || "";
   }
 
-  public abstract async find(selector: string): Promise<iValue>;
-  public abstract async findAll(selector: string): Promise<iValue[]>;
+  public abstract find(selector: string): Promise<iValue>;
+  public abstract findAll(selector: string): Promise<iValue[]>;
 
-  protected abstract async _getTagName(): Promise<string>;
-  protected abstract async _getAttribute(key: string): Promise<string | null>;
-  protected abstract async _getClassName(): Promise<string>;
-  protected abstract async _getInnerText(): Promise<string>;
-  protected abstract async _getInnerHtml(): Promise<string>;
-  protected abstract async _getOuterHtml(): Promise<string>;
+  protected abstract _getTagName(): Promise<string>;
+  protected abstract _getAttribute(key: string): Promise<string | null>;
+  protected abstract _getClassName(): Promise<string>;
+  protected abstract _getInnerText(): Promise<string>;
+  protected abstract _getInnerHtml(): Promise<string>;
+  protected abstract _getOuterHtml(): Promise<string>;
+  protected abstract _getProperty(key: string): Promise<any>;
+  protected abstract _getData(key: string): Promise<any>;
+  protected abstract _getValue(): Promise<any>;
+  protected abstract _getText(): Promise<string>;
 
   /**
    * Convert element synchronously to string as best we can
@@ -147,7 +151,7 @@ export abstract class DOMElement extends Value {
    */
   public async hasProperty(key: string): Promise<iValue> {
     return this._wrapAsValue(
-      !(await this.getProperty(key)).isNull(),
+      (await this._getProperty(key)) !== null,
       `Does ${this.name} have property ${key}?`
     );
   }
@@ -157,8 +161,10 @@ export abstract class DOMElement extends Value {
    * @param key
    */
   public async getProperty(key: string): Promise<iValue> {
-    const name: string = `${key} of ${this.name}`;
-    return this._wrapAsValue(this._input.prop(key), name);
+    return this._wrapAsValue(
+      await this._getProperty(key),
+      `${key} of ${this.name}`
+    );
   }
 
   /**
@@ -168,7 +174,7 @@ export abstract class DOMElement extends Value {
    */
   public async hasData(key: string): Promise<iValue> {
     return this._wrapAsValue(
-      !(await this.getData(key)).isNull(),
+      (await this._getData(key)) !== null,
       `${this.name} has data ${key}`
     );
   }
@@ -178,24 +184,21 @@ export abstract class DOMElement extends Value {
    * @param key
    */
   public async getData(key: string): Promise<iValue> {
-    const name: string = `Data of ${this.name}`;
-    return this._wrapAsValue(this._input.data(key), name);
+    return this._wrapAsValue(await this._getData(key), `Data of ${this.name}`);
   }
 
   /**
    * Get the value of this element, such as the value of an input field
    */
   public async getValue(): Promise<iValue> {
-    const name: string = `Value of ${this.name}`;
-    return this._wrapAsValue(this._input.val(), name);
+    return this._wrapAsValue(await this._getValue(), `Value of ${this.name}`);
   }
 
   /**
    * Get the text content within the element
    */
   public async getText(): Promise<iValue> {
-    const name: string = `Text of ${this.name}`;
-    return this._wrapAsValue(this._input.text(), name, this);
+    return this._wrapAsValue(await this._getText(), `Text of ${this.name}`);
   }
 
   /**

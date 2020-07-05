@@ -215,29 +215,20 @@ export class PuppeteerElement extends DOMElement implements iValue {
     return String(await this._eval((e) => e.outerHTML, this.$));
   }
 
-  public async getProperty(key: string): Promise<iValue> {
-    const name: string = `${key} of ${this.name}`;
-    const handle: JSHandle = await this._input.getProperty(key);
-    return this._wrapAsValue(await handle.jsonValue(), name, this);
+  protected async _getProperty(key: string) {
+    return (await this._input.getProperty(key)).jsonValue();
   }
 
-  public async getData(key: string): Promise<iValue> {
-    const name: string = `Data of ${this.name}`;
-    const handle: JSHandle = await this._input.getProperty(key);
-    return this._wrapAsValue(await handle.jsonValue(), name, this);
+  protected async _getData(key: string) {
+    return (await this._input.getProperty(key)).jsonValue();
   }
 
-  public async getValue(): Promise<iValue> {
-    const name: string = `Value of ${this.name}`;
-    const handle: JSHandle = await this._input.getProperty("value");
-    return this._wrapAsValue(await handle.jsonValue(), name, this);
+  protected async _getValue() {
+    return (await this._input.getProperty("value")).jsonValue();
   }
 
-  public async getText(): Promise<iValue> {
-    const name: string = `Text of ${this.name}`;
-    const handle: JSHandle = await this._input.getProperty("textContent");
-    const text: string = String(await handle.jsonValue());
-    return this._wrapAsValue(text, name, this);
+  protected async _getText() {
+    return String((await this._input.getProperty("textContent")).jsonValue());
   }
 
   public async getBounds(boxType: string = "border"): Promise<iBounds | null> {
@@ -475,8 +466,7 @@ export class PuppeteerElement extends DOMElement implements iValue {
   }
 
   protected async _getClassName(): Promise<string> {
-    const handle: JSHandle = await this._input.getProperty("className");
-    return String(handle.jsonValue());
+    return String((await this._input.getProperty("className")).jsonValue());
   }
 
   protected async _getTagName(): Promise<string> {

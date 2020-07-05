@@ -181,7 +181,11 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     }
     const el = await this.page.$(path);
     if (el !== null) {
-      const component = await this._getComponentFromElementHandle(el);
+      const component = await this._getComponentOrElementFromHandle(
+        el,
+        path,
+        path
+      );
       if (component) {
         return component;
       }
@@ -198,15 +202,34 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     if (this.context.page === null) {
       throw "Page must be defined.";
     }
-    const components: ExtJsComponent[] = [];
+    const components: iValue[] = [];
     const elements = await this.context.page.$$(path);
     await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
-      const component = await this._getComponentFromElementHandle(el);
+      const component = await this._getComponentOrElementFromHandle(
+        el,
+        path,
+        `${path} [${i}]`
+      );
       if (component) {
         components.push(component);
       }
     });
     return components;
+  }
+
+  private async _getComponentOrElementFromHandle(
+    el: ElementHandle<Element>,
+    path: string,
+    name: string
+  ) {
+    const classes = String(
+      (await el.getProperty("className")).jsonValue()
+    ).split(" ");
+    if (classes.includes("x-component")) {
+      return this._getComponentFromElementHandle(el);
+    } else {
+      return PuppeteerElement.create(el, this.context, name, path);
+    }
   }
 
   private async _getComponentFromElementHandle(el: ElementHandle<Element>) {

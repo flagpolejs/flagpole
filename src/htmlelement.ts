@@ -323,6 +323,22 @@ export class HTMLElement extends DOMElement implements iValue {
     }
   }
 
+  protected async _getText(): Promise<string> {
+    return this.el.text();
+  }
+
+  protected async _getValue(): Promise<any> {
+    return this.el.val();
+  }
+
+  protected async _getData(key: string): Promise<any> {
+    return this.el.data(key);
+  }
+
+  protected async _getProperty(key: string): Promise<any> {
+    return this.el.prop(key);
+  }
+
   protected async _getInnerText() {
     return this.el.text();
   }
