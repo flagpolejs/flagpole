@@ -43,7 +43,7 @@ export const ExtJsComponentTypes = {
   treelist: "Ext.list.Tree",
   urlfield: "Ext.field.Url",
   fieldset: "Ext.form.FieldSet",
-  formpanel: "Ext.form.Panel"
+  formpanel: "Ext.form.Panel",
 };
 
 export class ExtJsComponent extends PuppeteerElement implements iValue {
@@ -235,6 +235,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   }
 
   public async fireEvent(eventName: string): Promise<iValue> {
+    this._completedAction(eventName.toUpperCase(), this.name);
     return this._wrapAsValue(
       await this._eval(`${this._component}.fireEvent("${eventName}")`),
       `Fired ${eventName} on ${this.name}`
@@ -242,7 +243,16 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   }
 
   public async click(): Promise<any> {
-    return await this._eval(`${this._component}.element.dom.click()`);
+    const val = await this._eval(`${this._component}.element.dom.click()`);
+    this._completedAction("CLICK", this.name);
+    return val;
+  }
+
+  public async type(textToType: string, opts: any) {
+    this.fireEvent("focus");
+    this.setValue(textToType);
+    this._completedAction("TYPE", textToType);
+    this.fireEvent("blur");
   }
 
   protected async _eval(js: string): Promise<any> {

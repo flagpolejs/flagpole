@@ -58,6 +58,10 @@ export default class Run extends Command {
       flags: "--headless",
       description: "override tests to keep browser headless",
     }),
+    new CliCommandOption({
+      flags: "--keepCache",
+      description: "do not clear previous cache",
+    }),
   ];
 
   public async action(args: commander.Command) {
@@ -112,7 +116,7 @@ export default class Run extends Command {
           ""
         );
       }
-      return runSuites(selectedSuites, !!args.async);
+      return runSuites(selectedSuites, !!args.async, !!args.keepCache);
     }
     // None to run
     Cli.log("No tests selected to run.").exit(0);
@@ -204,7 +208,8 @@ const promptForTag = async (): Promise<string> => {
 
 const runSuites = async (
   selectedSuites: SuiteConfig[],
-  asyncExecution: boolean
+  asyncExecution: boolean,
+  keepCache: boolean
 ): Promise<void> => {
   // Add suites to our test runner
   const runner: TestRunner = new TestRunner();
@@ -232,6 +237,10 @@ const runSuites = async (
         Ansi.write(Ansi.eraseLines(2));
       });
     }
+  }
+
+  if (!keepCache) {
+    FlagpoleExecution.global.clearCache();
   }
 
   await runner.runSpawn(asyncExecution);

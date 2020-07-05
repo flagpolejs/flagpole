@@ -129,6 +129,8 @@ export interface iValue {
   parent: any;
   sourceCode: string;
   isFlagpoleValue: true;
+  keys: iValue;
+  values: iValue;
   valueOf(): any;
   toArray(): any[];
   toString(): string;

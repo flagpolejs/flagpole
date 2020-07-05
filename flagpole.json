@@ -86,6 +86,11 @@
       "id": "",
       "name": "xml",
       "tags": []
+    },
+    "extjs": {
+      "id": "",
+      "name": "extjs",
+      "tags": []
     }
   }
 }

@@ -69,7 +69,7 @@ export class SectionHeadingLine extends ConsoleLine implements iConsoleLine {
 
   public toString(): string {
     let text: string = super.toString().trim();
-    return `      ${Ansi.fgWhite(Ansi.bold(text))}`;
+    return `    ${Ansi.fgWhite(Ansi.bold(text))}${Ansi.reset()}`;
   }
 }
 

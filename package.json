@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.4.11",
+  "version": "2.4.12",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -24,7 +24,7 @@
     "@zerodeps/image-probe": "0.0.3",
     "bluebird": "^3.7.2",
     "cheerio": "^1.0.0-rc.3",
-    "cli-ansi": "^1.0.4",
+    "cli-ansi": "^1.0.5",
     "commander": "^5.1.0",
     "common-tags": "^1.8.0",
     "css": "^2.2.4",

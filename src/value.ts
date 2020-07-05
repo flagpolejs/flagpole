@@ -320,6 +320,32 @@ export class Value implements iValue {
     );
   }
 
+  public get values(): iValue {
+    let values: any[] = [];
+    try {
+      values = Object.values(this.$);
+    } catch {}
+    return this._wrapAsValue(
+      values,
+      `Values of ${this.name}`,
+      this,
+      this.highlight
+    );
+  }
+
+  public get keys(): iValue {
+    let keys: string[] = [];
+    try {
+      keys = Object.values(this.$);
+    } catch {}
+    return this._wrapAsValue(
+      keys,
+      `Keys of ${this.name}`,
+      this,
+      this.highlight
+    );
+  }
+
   public async screenshot(): Promise<Buffer> {
     throw new Error(
       `This value type (${this.toType()}) or scenario type (${

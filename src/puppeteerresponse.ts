@@ -36,15 +36,19 @@ export abstract class PuppeteerResponse extends DOMResponse
   /**
    * Run this code in the browser
    */
-  public async evaluate(context: any, callback: Function): Promise<any> {
+  public async evaluate(callback: Function | string): Promise<any> {
     if (this.page !== null) {
-      const functionName: string = `flagpole_${Date.now()}`;
-      const jsToInject: string = `window.${functionName} = ${callback}`;
-      await this.page.addScriptTag({ content: jsToInject });
-      return await this.page.evaluate((functionName) => {
-        // @ts-ignore This is calling into the browser, so don't do an IDE error
-        return window[functionName]();
-      }, functionName);
+      if (typeof callback == "function") {
+        const functionName: string = `flagpole_${Date.now()}`;
+        const jsToInject: string = `window.${functionName} = ${callback}`;
+        await this.page.addScriptTag({ content: jsToInject });
+        return await this.page.evaluate((functionName) => {
+          // @ts-ignore This is calling into the browser, so don't do an IDE error
+          return window[functionName]();
+        }, functionName);
+      } else {
+        return await this.page.evaluate(callback);
+      }
     }
     throw new Error("Cannot evaluate code becuase page is null.");
   }
