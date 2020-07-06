@@ -1,5 +1,6 @@
 import { ProtoResponse } from "./response";
 import { iValue } from "./interfaces";
+import { asyncSome, asyncForEach } from "./util";
 
 export abstract class DOMResponse extends ProtoResponse {
   abstract find(path: string): Promise<iValue>;
@@ -15,19 +16,11 @@ export abstract class DOMResponse extends ProtoResponse {
     let matchingElements: iValue[] = [];
     const elements: iValue[] = await this.findAll(selector);
     // Loop through elements until we get to the end or find a match
-    for (let i = 0; i < elements.length; i++) {
-      const element: iValue = elements[i];
-      const text: iValue = await element.getText();
-      if (typeof searchForText == "string") {
-        if (text.toString() == String(searchForText)) {
-          matchingElements.push(element);
-        }
-      } else {
-        if (searchForText.test(text.toString())) {
-          matchingElements.push(element);
-        }
+    await asyncForEach(elements, async (element: iValue) => {
+      if (await this._elementHasText(element, searchForText)) {
+        matchingElements.push(element);
       }
-    }
+    });
     return matchingElements;
   }
 
@@ -41,21 +34,29 @@ export abstract class DOMResponse extends ProtoResponse {
     let matchingElement: iValue | null = null;
     const elements: iValue[] = await this.findAll(selector);
     // Loop through elements until we get to the end or find a match
-    for (let i = 0; i < elements.length && matchingElement === null; i++) {
-      const element: iValue = elements[i];
-      const text: iValue = await element.getText();
-      if (typeof searchForText == "string") {
-        if (text.toString() == String(searchForText)) {
-          matchingElement = element;
-        }
-      } else {
-        if (searchForText.test(text.toString())) {
-          matchingElement = element;
-        }
+    await asyncSome(elements, async (element: iValue) => {
+      if (await this._elementHasText(element, searchForText)) {
+        matchingElement = element;
+        return true;
       }
-    }
+    });
     return matchingElement === null
       ? this._wrapAsValue(null, `${selector} having text ${searchForText}`)
       : matchingElement;
+  }
+
+  protected async _elementHasText(
+    element: iValue,
+    searchForText: string | RegExp
+  ) {
+    const text: string = (await element.getInnerText()).$;
+    if (typeof searchForText == "string") {
+      if (text.toLowerCase().indexOf(searchForText.toLowerCase()) >= 0) {
+        return true;
+      }
+    } else if (searchForText.test(text.toString())) {
+      return true;
+    }
+    return false;
   }
 }

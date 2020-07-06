@@ -1,4 +1,5 @@
 import flagpole from "../../dist/index";
+import { exists } from "fs-extra";
 
 const browserOpts = {
   headless: false,
@@ -48,5 +49,11 @@ suite
     return contactTile.click();
   })
   .next("Detail page", async (context) => {
+    const btnEdit = await context.findHavingText("button", "edit");
+    context.assert(btnEdit).exists();
+    await context.pause(1000);
+    return btnEdit.click();
+  })
+  .next("Edit page", async (context) => {
     await context.pause(3000);
   });
