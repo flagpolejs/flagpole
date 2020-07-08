@@ -69,12 +69,12 @@ suite
     return btnEdit.click();
   })
   .next("Edit page", async (context) => {
-    await context.pause(1000);
+    await context.pause(2000);
     const firstName = await context.findHavingText("field", "first name");
     context.assert(firstName).exists();
     await firstName.type("foo");
     const cmp = await firstName.getClosest();
     context.assert(cmp).exists();
-    //context.assert(await cmp.eval(".getLabel()")).equals("First Name");
+    context.assert(await cmp.eval((c) => c.getLabel())).equals("First Name");
     await context.pause(3000);
   });

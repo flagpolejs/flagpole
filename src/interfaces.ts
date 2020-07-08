@@ -1,5 +1,5 @@
 import { BrowserControl } from "./browsercontrol";
-import { Page } from "puppeteer-core";
+import { Page, EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import {
   ResponseType,
   SuiteStatusEvent,
@@ -222,7 +222,7 @@ export interface iValue {
   clearThenType(textToType: string, opts?: any): Promise<void>;
   type(textToType: string, opts?: any): Promise<void>;
   clear(): Promise<void>;
-  eval(js: string): Promise<any>;
+  eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
 }
 
 /**
