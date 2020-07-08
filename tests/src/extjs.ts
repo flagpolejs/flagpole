@@ -1,5 +1,4 @@
 import flagpole from "../../dist/index";
-import { exists } from "fs-extra";
 
 const browserOpts = {
   headless: false,
@@ -14,6 +13,21 @@ const inputValues = {
 
 const suite = flagpole("Ext JS").base("https://examples.sencha.com/");
 
+/*
+suite
+  .scenario("Basic", "extjs", browserOpts)
+  .open("GET /coworkee/")
+  .next("Smoke", async (context) => {
+    //await context.waitForExists("#ext-formpanel-1");
+    const textFields = await context.findAll("textfield");
+    const tag = await textFields[0].getTagName();
+    const value = await textFields[0].getValue();
+    context.assert(textFields).length.equals(2);
+    context.assert(tag).equals("textfield");
+    context.comment(value);
+  });
+*/
+
 suite
   .scenario("Test ExtJS", "extjs", browserOpts)
   .open("GET /coworkee/")
@@ -25,7 +39,7 @@ suite
       .assert("There should be two text fields", textFields)
       .length.equals(2);
     context
-      .assert("Text field should say LOG IN", await button.getText())
+      .assert("Button should say LOG IN", await button.getText())
       .like("log in");
     await textFields[0].type(inputValues.userName);
     await textFields[1].type(inputValues.password);
@@ -55,5 +69,12 @@ suite
     return btnEdit.click();
   })
   .next("Edit page", async (context) => {
+    await context.pause(1000);
+    const firstName = await context.findHavingText("field", "first name");
+    context.assert(firstName).exists();
+    await firstName.type("foo");
+    const cmp = await firstName.getClosest();
+    context.assert(cmp).exists();
+    //context.assert(await cmp.eval(".getLabel()")).equals("First Name");
     await context.pause(3000);
   });

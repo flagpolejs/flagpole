@@ -10,7 +10,7 @@ const scenario1 = suite
   .next(async (context) => {
     const a = await context.findHavingText("a", "Videos");
     context.comment(a);
-    context.assert(await a.getInnerText()).equals("Videos");
+    context.assert(await a.getInnerText()).like("Videos");
 
     const image = await context.exists("img");
     image.load(async (context) => {

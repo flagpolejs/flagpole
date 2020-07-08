@@ -2,8 +2,8 @@ import { ResponseType } from "./enums";
 import { iResponse, iValue } from "./interfaces";
 import { Page, ElementHandle } from "puppeteer";
 import { PuppeteerResponse } from "./puppeteerresponse";
-import { PuppeteerElement } from "./puppeteerelement";
 import { asyncForEach } from "./util";
+import { BrowserElement } from "./browserelement";
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
   public get responseTypeName(): string {
@@ -24,7 +24,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     if (page !== null) {
       const el: ElementHandle<Element> | null = await page.$(path);
       if (el !== null) {
-        return await PuppeteerElement.create(el, this.context, null, path);
+        return await BrowserElement.create(el, this.context, path, path);
       }
     }
     return this._wrapAsValue(null, path);
@@ -35,23 +35,23 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
    *
    * @param path
    */
-  public findAll(path: string): Promise<PuppeteerElement[]> {
+  public findAll(path: string): Promise<BrowserElement[]> {
     return new Promise(async (resolve) => {
       const response: iResponse = this;
-      const puppeteerElements: PuppeteerElement[] = [];
+      const out: BrowserElement[] = [];
       if (this.context.page !== null) {
         const elements: ElementHandle[] = await this.context.page.$$(path);
         await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
-          const element = await PuppeteerElement.create(
+          const element = await BrowserElement.create(
             el,
             response.context,
             `${path} [${i}]`,
             path
           );
-          puppeteerElements.push(element);
+          out.push(element);
         });
       }
-      resolve(puppeteerElements);
+      resolve(out);
     });
   }
 
@@ -60,10 +60,10 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     if (page !== null) {
       const elements: ElementHandle<Element>[] = await page.$x(xPath);
       if (elements.length > 0) {
-        return await PuppeteerElement.create(
+        return await BrowserElement.create(
           elements[0],
           this.context,
-          null,
+          xPath,
           xPath
         );
       }
@@ -71,23 +71,98 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     return this._wrapAsValue(null, xPath);
   }
 
-  public findAllXPath(xPath: string): Promise<PuppeteerElement[]> {
+  public findAllXPath(xPath: string): Promise<BrowserElement[]> {
     return new Promise(async (resolve) => {
       const response: iResponse = this;
-      const puppeteerElements: PuppeteerElement[] = [];
+      const out: BrowserElement[] = [];
       if (this.context.page !== null) {
         const elements: ElementHandle[] = await this.context.page.$x(xPath);
         await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
-          const element = await PuppeteerElement.create(
+          const element = await BrowserElement.create(
             el,
             response.context,
             `${xPath} [${i}]`,
             xPath
           );
-          puppeteerElements.push(element);
+          out.push(element);
         });
       }
-      resolve(puppeteerElements);
+      resolve(out);
     });
+  }
+
+  /**
+   * Wait for element at the selected path to be hidden
+   *
+   * @param selector
+   * @param timeout
+   */
+  public async waitForHidden(
+    selector: string,
+    timeout: number = 100
+  ): Promise<BrowserElement> {
+    if (this.page !== null) {
+      const opts = { timeout: timeout || 100, hidden: true };
+      const element = await this.page.waitForSelector(selector, opts);
+      return BrowserElement.create(element, this.context, selector, selector);
+    }
+    throw new Error("waitForHidden is not available in this context");
+  }
+
+  public async waitForVisible(
+    selector: string,
+    timeout: number = 100
+  ): Promise<BrowserElement> {
+    if (this.page !== null) {
+      const opts = { timeout: timeout || 100, visible: true };
+      const element = await this.page.waitForSelector(selector, opts);
+      return BrowserElement.create(element, this.context, selector, selector);
+    }
+    throw new Error("waitForVisible is not available in this context");
+  }
+
+  public async waitForExists(
+    selector: string,
+    timeout?: number
+  ): Promise<BrowserElement> {
+    if (this.page !== null) {
+      const opts = { timeout: timeout || 100 };
+      const element = await this.page.waitForSelector(selector, opts);
+      return BrowserElement.create(element, this.context, selector, selector);
+    }
+    throw new Error("waitForExists is not available in this context");
+  }
+
+  public async waitForXPath(
+    xPath: string,
+    timeout?: number
+  ): Promise<BrowserElement> {
+    if (this.page !== null) {
+      const opts = { timeout: timeout || 100 };
+      const element = await this.page.waitForXPath(xPath, opts);
+      return BrowserElement.create(element, this.context, xPath, xPath);
+    }
+    throw new Error("waitForXPath is not available in this context");
+  }
+
+  public async waitForHavingText(
+    selector: string,
+    text: string,
+    timeout?: number
+  ): Promise<BrowserElement> {
+    if (this.page !== null) {
+      const opts = { timeout: timeout || 100 };
+      const element = (
+        await this.page.waitForFunction(
+          `document.querySelector("${selector}").innerText.includes("${text}")`,
+          opts
+        )
+      ).asElement();
+      if (element === null) {
+        throw `Element ${selector} did not exist after timeout.`;
+      }
+      return BrowserElement.create(element, this.context, selector, selector);
+    }
+    throw new Error("waitForExists is not available in this context");
   }
 }

@@ -222,6 +222,7 @@ export interface iValue {
   clearThenType(textToType: string, opts?: any): Promise<void>;
   type(textToType: string, opts?: any): Promise<void>;
   clear(): Promise<void>;
+  eval(js: string): Promise<any>;
 }
 
 /**

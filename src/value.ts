@@ -354,6 +354,10 @@ export class Value implements iValue {
     );
   }
 
+  public async eval(js: string): Promise<any> {
+    throw `This element does not support eval().`;
+  }
+
   public async focus() {
     throw `This element does not support focus().`;
   }
