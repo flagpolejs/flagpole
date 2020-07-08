@@ -57,24 +57,31 @@ suite
     return recent.click();
   })
   .next("Recent page", async (context) => {
-    await context.pause(3000);
+    await context.pause(1000);
     const contactTile = await context.find(".x-dataview-item .person-name");
     context.assert(contactTile).exists();
     return contactTile.click();
   })
   .next("Detail page", async (context) => {
+    await context.pause(1000);
     const btnEdit = await context.findHavingText("button", "edit");
     context.assert(btnEdit).exists();
-    await context.pause(1000);
     return btnEdit.click();
   })
   .next("Edit page", async (context) => {
-    await context.pause(2000);
+    await context.pause(1000);
     const firstName = await context.findHavingText("field", "first name");
     context.assert(firstName).exists();
     await firstName.type("foo");
     const cmp = await firstName.getClosest();
     context.assert(cmp).exists();
     context.assert(await cmp.eval((c) => c.getLabel())).equals("First Name");
+    await context.pause(1000);
+    const workTab = await context.findHavingText("button", "work");
+    context.assert(workTab).exists();
+    await workTab.click();
+    await context.pause(1000);
+    const officeField = await context.findHavingText("field", "office");
+    officeField.selectOption("Dryden");
     await context.pause(3000);
   });

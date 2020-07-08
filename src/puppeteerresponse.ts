@@ -3,7 +3,8 @@ import { iResponse, iValue, ScreenshotOpts } from "./interfaces";
 import { BrowserControl } from "./browsercontrol";
 import { DOMResponse } from "./domresponse";
 import { PuppeteerElement } from "./puppeteerelement";
-import { toType } from "./util";
+import { toType, arrayify } from "./util";
+import { string } from "yargs";
 
 export abstract class PuppeteerResponse extends DOMResponse
   implements iResponse {
@@ -189,20 +190,5 @@ export abstract class PuppeteerResponse extends DOMResponse
       }
     }
     throw new Error(`Can not type into this element ${selector}`);
-  }
-
-  public selectOption(
-    selector: string,
-    value: string | string[]
-  ): Promise<string[]> {
-    if (this.page !== null) {
-      const values: string[] = typeof value == "string" ? [value] : value;
-      return this.page.select.apply(
-        this.page,
-        // @ts-ignore VS Code is unhappy no matter what I do
-        [selector].concat(values)
-      );
-    }
-    throw new Error("Page was null.");
   }
 }

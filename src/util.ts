@@ -9,6 +9,13 @@ import * as path from "path";
 
 const cheerio = require("cheerio");
 
+export const arrayify = <T>(value: any): T[] => {
+  if (toType(value) !== "array") {
+    value = [value];
+  }
+  return value;
+};
+
 export const jsonParse = (json: string): any => {
   try {
     return JSON.parse(json);

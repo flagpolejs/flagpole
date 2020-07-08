@@ -2,6 +2,7 @@ import { iAssertionContext, iValue } from "./interfaces";
 import { PuppeteerElement } from "./puppeteerelement";
 import { ExtJSResponse } from ".";
 import { JSHandle, EvaluateFn, SerializableOrJSHandle } from "puppeteer";
+import { arrayify } from "./util";
 
 export const ExtJsComponentTypes = {
   actionsheet: "Ext.ActionSheet",
@@ -194,6 +195,40 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
       return this;
     }
     return super.getClosest(selector);
+  }
+
+  public async selectOption(valuesToSelect: string | string[]): Promise<void> {
+    // TODO: Support multi-select. Right now this will only support a singlular selection
+    valuesToSelect = arrayify<string>(valuesToSelect);
+    this._completedAction("SELECT", valuesToSelect.join(", "));
+    const ableToSetValue = await this.eval((c, valuesToSelect) => {
+      let value = "";
+      const displayField = c.getDisplayField();
+      const valueField = c.getValueField();
+      const searchValue = valuesToSelect[0];
+      const store = c.getStore();
+      // Search & set by value
+      const valueResult = store.queryBy(valueField, searchValue);
+      if (valueResult && valueResult.indices) {
+        value = Object.keys(valueResult.indices)[0];
+      }
+      // If we didn't find it by value, search & set by display text
+      if (!value.length) {
+        const displayResult = store.queryBy(displayField, searchValue);
+        if (displayResult && displayResult.indices) {
+          value = Object.keys(displayResult.indices)[0];
+        }
+      }
+      // Set value
+      if (value.length) {
+        c.setValue(value);
+        return true;
+      }
+      return false;
+    }, valuesToSelect);
+    this._context
+      .assert(`Select values on ${this.name}`, ableToSetValue)
+      .equals(true);
   }
 
   protected async _action(

@@ -2,7 +2,7 @@ import { ResponseType } from "./enums";
 import { iResponse, iValue } from "./interfaces";
 import { Page, ElementHandle } from "puppeteer";
 import { PuppeteerResponse } from "./puppeteerresponse";
-import { asyncForEach } from "./util";
+import { asyncForEach, arrayify } from "./util";
 import { BrowserElement } from "./browserelement";
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
@@ -164,5 +164,18 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
       return BrowserElement.create(element, this.context, selector, selector);
     }
     throw new Error("waitForExists is not available in this context");
+  }
+
+  public async selectOption(
+    selector: string,
+    value: string | string[]
+  ): Promise<void> {
+    if (this.page !== null) {
+      await this.page.select.apply(this.page, [
+        selector,
+        ...arrayify<string>(value),
+      ]);
+    }
+    throw new Error("Page was null.");
   }
 }

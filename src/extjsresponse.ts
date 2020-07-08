@@ -268,4 +268,14 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     }
     return components;
   }
+
+  public async selectOption(
+    selector: string,
+    value: string | string[]
+  ): Promise<void> {
+    const component = await this.find(selector);
+    if (!component.isNull()) {
+      component.selectOption(value);
+    }
+  }
 }

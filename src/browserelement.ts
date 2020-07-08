@@ -11,6 +11,7 @@ import {
   asyncForEach,
   toType,
   getMessageAndCallbackFromOverloading,
+  arrayify,
 } from "./util";
 import { iScenario } from ".";
 
@@ -413,6 +414,18 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       encoding: "binary",
       omitBackground: opts.omitBackground || false,
     });
+  }
+
+  public async selectOption(valuesToSelect: string | string[]): Promise<void> {
+    valuesToSelect = arrayify<string>(valuesToSelect);
+    this._completedAction("SELECT", valuesToSelect.join(", "));
+    const valuesSelected = await this.$.select.apply(this.$, valuesToSelect);
+    this._context
+      .assert(
+        `Select values on ${this.name}`,
+        valuesToSelect.length == valuesSelected.length
+      )
+      .equals(true);
   }
 
   protected async _getInnerText() {

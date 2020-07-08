@@ -223,6 +223,7 @@ export interface iValue {
   type(textToType: string, opts?: any): Promise<void>;
   clear(): Promise<void>;
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
+  selectOption(value: string | string[]): Promise<void>;
 }
 
 /**
@@ -284,7 +285,7 @@ export interface iResponse {
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
   clear(selector: string): Promise<any>;
   type(selector: string, textToType: string, opts: any): Promise<any>;
-  selectOption(selector: string, value: string | string[]): Promise<string[]>;
+  selectOption(selector: string, value: string | string[]): Promise<void>;
 }
 
 export interface iAssertion {
@@ -386,7 +387,7 @@ export interface iAssertionContext {
     callback: Function
   ): Promise<iScenario>;
   type(selector: string, textToType: string, opts?: any): Promise<void>;
-  select(selector: string, value: string | string[]): Promise<void>;
+  selectOption(selector: string, value: string | string[]): Promise<void>;
   evaluate(callback: Function): Promise<any>;
   waitForReady(timeout?: number): Promise<void>;
   waitForLoad(timeout?: number): Promise<void>;

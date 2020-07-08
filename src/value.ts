@@ -33,10 +33,13 @@ export class Value implements iValue {
     return this._sourceCode || "";
   }
 
+  public selectOption(value: string | string[]): Promise<void> {
+    throw "This Value does not support select.";
+  }
+
   public get length(): iValue {
-    const thisValue: any = this.$;
     return new Value(
-      thisValue && thisValue.length ? thisValue.length : 0,
+      this.$ && this.$.length ? this.$.length : 0,
       this._context,
       `Length of ${this._name}`
     );

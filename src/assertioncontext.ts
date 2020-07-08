@@ -192,7 +192,7 @@ export class AssertionContext implements iAssertionContext {
    * @param selector
    * @param value
    */
-  public async select(
+  public async selectOption(
     selector: string,
     value: string | string[]
   ): Promise<void> {
