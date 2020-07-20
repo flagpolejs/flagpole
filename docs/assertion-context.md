@@ -186,9 +186,11 @@ const loginText = await context.evaluate((json) => {
 
 In theory, with any of these types, you could also manipulate the response with this method.
 
-### find(path: string): Promise<iValue>
+### find(): Promise<iValue>
 
-Select the element or value at the given path. What this actually does varies by the type of scenario.
+#### find(path: string, opts?: FindOpts): Promise<iValue>
+
+Select the first matching element or value at the given path. What this actually does varies by the type of scenario.
 
 Note it returns only one element. If multiple match the path then it returns the first. If none match then it returns null.
 
@@ -196,25 +198,88 @@ Note it returns only one element. If multiple match the path then it returns the
 const firstArticle = await context.find("section.topStories article");
 ```
 
-### findAll(path: string): Promise<iValue[]>
+The `opts` argument here can be used for not grabbing the first matching element, but a later one. Use the `offset` property for that:
+
+```javascript
+const secondArticle = await context.find("section.topStories article", {
+  offset: 1,
+});
+```
+
+#### find(path: string, contents: string, opts?: FindOpts): Promise<iValue>
+
+Find the first element matching the given selector that have the given text. The second argument is a string of the text we are looking for the element to contain
+
+```javascript
+const buttonContainingYes = await context.find("button", "Yes");
+```
+
+With the optional `opts` argument, you can specify `offset` as previously documented. You can also set where Flagpole should look for the matching text with the `findBy` property. The default is "text", which will use the text node value inside of the element. But you can also use "value" to seach in the value or "alt" to search in the alt attribute.
+
+```javascript
+const buttonWithYesValue = await context.find("button", "Yes", {
+  findBy: "value",
+});
+```
+
+#### find(path: string, matches: RegExp, opts?: FindOpts): Promise<iValue>
+
+Similar to the previous overload of `find`, we can also search the contents of the element for one that matches a regular expression. This gives us greater control over how exactly it should match, such as matching capitalization and spacing.
+
+```javascript
+const buttonContainingYes = await context.find("button", /yes/i);
+```
+
+So if you want it to match EXACTLY "Yes", including a capital "Y" and no spaces on either side, you could do this:
+
+```javascript
+const buttonExactlyYes = await context.find("button", /^Yes$/);
+```
+
+### findAll(): Promise<iValue[]>
 
 Select the elements or values at the given path. What this actually does varies by the type of scenario.
 
-This always returns an array. It will be an empty array if nothing matched. The array elements themselves will be the same object types that you'd have gotten from .find(path).
+This always returns an array. It will be an empty array if nothing matched. The array elements themselves will be the same object types that you'd have gotten from `.find()`.
+
+#### findAll(path: string, opts?: FindAllOpts): Promise<iValue[]>
+
+The first argument is always the selector. It is the only required argument.
 
 ```javascript
 const articles = await context.findAll("section.topStories article");
 ```
 
-### findAllHavingText(selector: string, searchForText: string | RegExp): Promise<DOMElement[]>
+You can pass an optional `opts` argument. In the simple form of `findAll` this allows you to set two things:
 
-Find the elements matching the given selector that have the given text. The second argument can either be a string, which will match on an equality basis, or a regular expression if you want some more leeway.
+- `offset` = Zero-based index of where to start in the return array. Use this if you want to skip the first matching element, for example.
+- `limit` = If you don't want to return all matching elements, this will limit the amount in the returned array.
 
-Returns an array of DOM Elements for any that match. The array will be empty if none match.
+So, for example, this would attempt to get the third through seventh articles:
 
 ```javascript
-const itemsContainingTupac = await context.findAllHavingText("li", /tupac/i);
-const itemsExactlyTupac = await context.findAllHavingText("li", "tupac");
+const articles = await context.findAll("section.headlines article", {
+  offset: 2,
+  limit: 5,
+});
+```
+
+#### findAll(path: string, contains: string, opts?: FindAllOpts): Promise<iValue[]>
+
+This overload will allow you to search for only elements that match the selector AND have the contains string in the text node.
+
+```javascript
+const articles = await context.findAll("section.headlines article", "breaking");
+```
+
+The optional `opts` argument allows you to use `offset`, `limit` and `findBy` (which works just like in the `find()` method).
+
+#### findAll(path: string, matches: RegExp, opts?: FindAllOpts): Promise<iValue[]>
+
+This works like the `contains` string, except you can use a regular expression for more exacting matches.
+
+```javascript
+const itemsContainingTupac = await context.findAll("li", /tupac/i);
 ```
 
 ### findAllXPath(xPath: string): Promise<DOMElement[]>
@@ -223,17 +288,6 @@ Checks for any and all elements at XPath of `xPath`. Usually a CSS selector is p
 
 ```javascript
 const links = await context.findAllXpath("//a");
-```
-
-### findHavingText(selector: string, searchForText: string | RegExp): Promise<iValue>
-
-Find the first element matching the given selector that have the given text. The second argument can either be a string, which will match on an equality basis, or a regular expression if you want some more leeway.
-
-Returns an array of DOM Elements for any that match.
-
-```javascript
-const buttonContainingYes = await context.findAllHavingText("button", /yes/i);
-const buttonExactlyYes = await context.findAllHavingText("button", "Yes");
 ```
 
 ### findXPath(xPath: string): Promise<DOMElement>
@@ -307,7 +361,7 @@ const screenshot = await context.screenshot("/path/to/local/file.png", {
 });
 ```
 
-### select(selector: string, value: string | string[]): Promise<string[]>
+### selectOption(selector: string, value: string | string[]): Promise<string[]>
 
 Select items in a dropdown or multi-select box.
 

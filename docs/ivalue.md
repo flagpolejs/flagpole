@@ -208,7 +208,7 @@ await form.fillForm({
 });
 ```
 
-### find(selector: string): Promise<DOMElement | Value<null>>
+### find(selector: string): Promise<iValue>
 
 Find the first element in the descendents of the current element that matches this selector. If there are no matches, you will be returned a Value object that contains null.
 
@@ -216,13 +216,17 @@ Find the first element in the descendents of the current element that matches th
 const li = await someElement.find("li");
 ```
 
-### findAll(selector: string): Promise<DOMElement[]>
+There are additional overloads for this method. For more details see the documentation in `AssertionContext` because it works the same way.
+
+### findAll(selector: string): Promise<iValue>
 
 Find all of the elements in the descendents of the current element that match this selector. If there are no matches, it will be an empty array.
 
 ```javascript
 const li = await someElement.findAll("li");
 ```
+
+There are additional overloads for this method. For more details see the documentation in `AssertionContext` because it works the same way.
 
 ### focus(): Promise<any>;
 
