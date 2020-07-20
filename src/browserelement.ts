@@ -261,7 +261,12 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       throw new Error("Page is null.");
     }
     await this._input.type(textToType, opts);
-    this._completedAction("TYPE", textToType);
+    this._completedAction(
+      "TYPE",
+      (await this.isPasswordField())
+        ? textToType.replace(/./g, "*")
+        : textToType
+    );
   }
 
   public async clear(): Promise<void> {
@@ -428,6 +433,11 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       .equals(true);
   }
 
+  public async pressEnter(): Promise<void> {
+    await this.$.press("Enter");
+    this._completedAction("ENTER");
+  }
+
   protected async _getInnerText() {
     return String(await this._eval((e) => e.innerText, this.$));
   }
@@ -466,5 +476,9 @@ export class BrowserElement extends PuppeteerElement implements iValue {
   protected async _getAttribute(key: string): Promise<string> {
     const handle: JSHandle = await this._input.getProperty(key);
     return String(await handle.jsonValue());
+  }
+
+  protected async isPasswordField(): Promise<boolean> {
+    return (await this.getAttribute("type")).$ == "password";
   }
 }

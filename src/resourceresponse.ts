@@ -16,15 +16,15 @@ export class ResourceResponse extends ProtoResponse implements iResponse {
     super.init(httpResponse);
   }
 
-  public async evaluate(context: any, callback: Function): Promise<any> {
-    throw new Error("Evaluate does not support generic resources.");
+  public async eval(): Promise<any> {
+    throw "This type of scenario does not suport eval.";
   }
 
-  public async find(path: string): Promise<iValue> {
+  public async find(): Promise<iValue> {
     throw new Error("Generic Response does not yet support select");
   }
 
-  public async findAll(path: string): Promise<iValue[]> {
+  public async findAll(): Promise<iValue[]> {
     throw new Error("Generic Response does not yet support selectAll");
   }
 }

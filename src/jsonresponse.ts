@@ -4,6 +4,7 @@ import { iJPath, jPath } from "./jpath";
 import { HttpResponse } from "./httpresponse";
 import { ResponseType } from ".";
 import { iResponse, iValue } from "./interfaces";
+import { wrapAsValue } from "./util";
 
 export class JsonResponse extends ProtoResponse implements iResponse {
   protected _json: {} = {};
@@ -28,8 +29,8 @@ export class JsonResponse extends ProtoResponse implements iResponse {
     return this._json;
   }
 
-  public async evaluate(context: any, callback: Function): Promise<any> {
-    return callback.apply(context, [this._json]);
+  public async eval(): Promise<any> {
+    throw "This type of scenario does not suport eval.";
   }
 
   /**
@@ -44,7 +45,7 @@ export class JsonResponse extends ProtoResponse implements iResponse {
       throw new Error("Could not load jmespath");
     }
     const selection = await this._jPath.search(this._json, path);
-    return this._wrapAsValue(selection, path, selection);
+    return wrapAsValue(this.context, selection, path, selection);
   }
 
   public async findAll(path: string): Promise<iValue[]> {

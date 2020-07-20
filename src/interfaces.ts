@@ -17,7 +17,11 @@ import {
   BrowserOptions,
 } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
-import * as Ajv from "ajv";
+//import * as Ajv from "ajv";
+
+interface AjvSchema {
+  // TODO: Add this reference
+}
 
 export interface ScreenshotOpts {
   path?: string;
@@ -33,6 +37,15 @@ export interface iNextCallback {
 export interface iCallbackAndMessage {
   message: string;
   callback: Function;
+}
+
+export interface FindOptions {
+  findBy?: "text" | "value" | "alt";
+  offset?: number;
+}
+
+export interface FindAllOptions extends FindOptions {
+  limit?: number;
 }
 
 export type ResponseSyncPipe = (resp: HttpResponse) => void | HttpResponse;
@@ -131,6 +144,7 @@ export interface iValue {
   isFlagpoleValue: true;
   keys: iValue;
   values: iValue;
+  context: iAssertionContext;
   valueOf(): any;
   toArray(): any[];
   toString(): string;
@@ -164,17 +178,29 @@ export interface iValue {
   submit(message: string): Promise<iScenario>;
   submit(callback: Function): Promise<iScenario>;
   submit(message: string, callback: Function): Promise<iScenario>;
-  load(): void;
-  load(message: string): iScenario;
-  load(scenario: iScenario): iScenario;
-  load(callback: Function): iScenario;
-  load(message: string, callback: Function): iScenario;
+  load(): Promise<void>;
+  load(message: string): Promise<iScenario>;
+  load(scenario: iScenario): Promise<iScenario>;
+  load(callback: Function): Promise<iScenario>;
+  load(message: string, callback: Function): Promise<iScenario>;
   fillForm(attribute: string, formData: KeyValue): Promise<iValue>;
   fillForm(formData: KeyValue): Promise<iValue>;
   exists(): Promise<iValue>;
-  exists(selector: string): Promise<iValue>;
-  find(selector: string): Promise<iValue>;
-  findAll(selector: string): Promise<iValue[]>;
+  exists(message: string): Promise<iValue>;
+  find(selector: string, opts?: FindOptions): Promise<iValue>;
+  find(selector: string, contains: string, opts?: FindOptions): Promise<iValue>;
+  find(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
+  findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
+  findAll(
+    selector: string,
+    contains: string,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  findAll(
+    selector: string,
+    matches: RegExp,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
   getClassName(): Promise<iValue>;
   hasClassName(className: string): Promise<iValue>;
   getTagName(): Promise<iValue>;
@@ -224,6 +250,7 @@ export interface iValue {
   clear(): Promise<void>;
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
   selectOption(value: string | string[]): Promise<void>;
+  pressEnter(): Promise<void>;
 }
 
 /**
@@ -247,37 +274,36 @@ export interface iResponse {
   readonly scenario: iScenario;
   init(httpResponse: HttpResponse): void;
   getRoot(): any;
-  find(path: string): Promise<iValue>;
-  findAll(path: string): Promise<iValue[]>;
-  findHavingText(
-    selector: string,
-    searchForText: string | RegExp
-  ): Promise<iValue>;
-  findAllHavingText(
-    selector: string,
-    searchForText: string | RegExp
+  find(path: string, opts?: FindOptions): Promise<iValue>;
+  find(path: string, contains: string, opts?: FindOptions): Promise<iValue>;
+  find(path: string, mathces: RegExp, opts?: FindOptions): Promise<iValue>;
+  findAll(path: string, opts?: FindAllOptions): Promise<iValue[]>;
+  findAll(
+    path: string,
+    contains: string,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  findAll(
+    path: string,
+    matches: RegExp,
+    opts?: FindAllOptions
   ): Promise<iValue[]>;
   findXPath(xPath: string): Promise<iValue>;
   findAllXPath(xPath: string): Promise<iValue[]>;
   header(key?: string): iValue;
   cookie(key?: string): iValue;
   absolutizeUri(uri: string): string;
-  evaluate(context: any, callback: Function): Promise<any>;
+  eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
   waitForNavigation(
-    timeout: number,
+    timeout?: number,
     waitFor?: string | string[]
   ): Promise<void>;
-  waitForLoad(timeout: number): Promise<void>;
-  waitForNetworkIdle(timeout: number): Promise<void>;
-  waitForReady(timeout: number): Promise<void>;
-  waitForHidden(selector: string, timeout: number): Promise<iValue>;
-  waitForVisible(selector: string, timeout: number): Promise<iValue>;
+  waitForLoad(timeout?: number): Promise<void>;
+  waitForNetworkIdle(timeout?: number): Promise<void>;
+  waitForReady(timeout?: number): Promise<void>;
+  waitForHidden(selector: string, timeout?: number): Promise<iValue>;
+  waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
-  waitForHavingText(
-    selector: string,
-    text: string,
-    timeout?: number
-  ): Promise<iValue>;
   waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
@@ -326,7 +352,7 @@ export interface iAssertion {
   assert(a: any, b?: any): iAssertion;
   comment(input: any): iAssertion;
   schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
-  schema(schema: JsonSchema | Ajv.Ajv, simple?: boolean): Promise<iAssertion>;
+  schema(schema: JsonSchema | AjvSchema, simple?: boolean): Promise<iAssertion>;
   looksLike(image: Buffer | string): iAssertion;
   looksLike(image: Buffer | string, threshhold: number): iAssertion;
   looksLike(image: Buffer | string, percent: string): iAssertion;
@@ -346,19 +372,39 @@ export interface iAssertionContext {
   comment(input: any): iAssertionContext;
   assert(a: any, b?: any): iAssertion;
   pause(milliseconds: number): Promise<void>;
-  exists(message: string, selector: string): Promise<iValue>;
-  exists(selector: string): Promise<iValue>;
   set(aliasName: string, value: any): iAssertionContext;
   get(aliasName: string): any;
-  find(selector: string): Promise<iValue>;
-  findAll(selector: string): Promise<iValue[]>;
-  findHavingText(
+  exists(selector: string, opts?: FindOptions): Promise<iValue>;
+  exists(
+    message: string,
     selector: string,
-    searchForText: string | RegExp
+    opts?: FindOptions
   ): Promise<iValue>;
-  findAllHavingText(
+  exists(
+    message: string,
     selector: string,
-    searchForText: string | RegExp
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  exists(
+    message: string,
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  find(selector: string, opts?: FindOptions): Promise<iValue>;
+  find(selector: string, contains: string, opts?: FindOptions): Promise<iValue>;
+  find(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
+  findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
+  findAll(
+    selector: string,
+    contains: string,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  findAll(
+    selector: string,
+    matches: RegExp,
+    opts?: FindAllOptions
   ): Promise<iValue[]>;
   findXPath(xPath: string): Promise<iValue>;
   findAllXPath(xPath: string): Promise<iValue[]>;
@@ -388,7 +434,7 @@ export interface iAssertionContext {
   ): Promise<iScenario>;
   type(selector: string, textToType: string, opts?: any): Promise<void>;
   selectOption(selector: string, value: string | string[]): Promise<void>;
-  evaluate(callback: Function): Promise<any>;
+  eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
   waitForReady(timeout?: number): Promise<void>;
   waitForLoad(timeout?: number): Promise<void>;
   waitForNetworkIdle(timeout?: number): Promise<void>;
@@ -399,11 +445,6 @@ export interface iAssertionContext {
   waitForHidden(selector: string, timeout?: number): Promise<iValue>;
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
-  waitForHavingText(
-    selector: string,
-    text: string,
-    timeout?: number
-  ): Promise<iValue>;
   waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
   openInBrowser(): Promise<string>;
   screenshot(): Promise<Buffer>;

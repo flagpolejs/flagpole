@@ -1,9 +1,17 @@
 import { URL } from "url";
 import { Value } from "./value";
-import { iValue, iResponse, iScenario, iAssertionContext } from "./interfaces";
+import {
+  iValue,
+  iResponse,
+  iScenario,
+  iAssertionContext,
+  FindOptions,
+  FindAllOptions,
+} from "./interfaces";
 import { ResponseType } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import { AssertionContext } from "./assertioncontext";
+import { wrapAsValue } from "./util";
 
 export function isPuppeteer(type: ResponseType): boolean {
   return ["browser", "extjs"].indexOf(type) >= 0;
@@ -16,9 +24,29 @@ export abstract class ProtoResponse implements iResponse {
 
   abstract get responseType(): ResponseType;
   abstract get responseTypeName(): string;
-  abstract find(path: string): Promise<iValue>;
-  abstract findAll(path: string): Promise<iValue[]>;
-  abstract evaluate(context: any, callback: Function): Promise<any>;
+  abstract find(selector: string, opts?: FindOptions): Promise<iValue>;
+  abstract find(
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  abstract find(
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  abstract findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
+  abstract findAll(
+    selector: string,
+    contains: string,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  abstract findAll(
+    selector: string,
+    matches: RegExp,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  abstract eval(callback: any, ...args: any[]): Promise<any>;
 
   /**
    * Is this a browser based test
@@ -35,14 +63,19 @@ export abstract class ProtoResponse implements iResponse {
    * HTTP Status Code
    */
   public get statusCode(): iValue {
-    return this._wrapAsValue(this.httpResponse.statusCode, "HTTP Status Code");
+    return wrapAsValue(
+      this.context,
+      this.httpResponse.statusCode,
+      "HTTP Status Code"
+    );
   }
 
   /**
    * HTTP Status Message
    */
   public get statusMessage(): iValue {
-    return this._wrapAsValue(
+    return wrapAsValue(
+      this.context,
       this.httpResponse.statusMessage,
       "HTTP Status Message"
     );
@@ -52,14 +85,19 @@ export abstract class ProtoResponse implements iResponse {
    * Raw Response Body
    */
   public get body(): iValue {
-    return this._wrapAsValue(this.httpResponse.body, "Raw Response Body");
+    return wrapAsValue(
+      this.context,
+      this.httpResponse.body,
+      "Raw Response Body"
+    );
   }
 
   /**
    * Size of the response body
    */
   public get length(): iValue {
-    return this._wrapAsValue(
+    return wrapAsValue(
+      this.context,
       this.httpResponse.body.length,
       "Length of Response Body"
     );
@@ -69,14 +107,14 @@ export abstract class ProtoResponse implements iResponse {
    * HTTP Headers
    */
   public get headers(): iValue {
-    return this._wrapAsValue(this.httpResponse.headers, "HTTP Headers");
+    return wrapAsValue(this.context, this.httpResponse.headers, "HTTP Headers");
   }
 
   /**
    * HTTP Cookies
    */
   public get cookies(): iValue {
-    return this._wrapAsValue(this.httpResponse.cookies, "HTTP Cookies");
+    return wrapAsValue(this.context, this.httpResponse.cookies, "HTTP Cookies");
   }
 
   /**
@@ -85,9 +123,9 @@ export abstract class ProtoResponse implements iResponse {
   public get jsonBody(): iValue {
     try {
       const json = JSON.parse(this.httpResponse.body);
-      return this._wrapAsValue(json, "JSON Response");
+      return wrapAsValue(this.context, json, "JSON Response");
     } catch (ex) {
-      return this._wrapAsValue(null, `JSON Response: ${ex}`);
+      return wrapAsValue(this.context, null, `JSON Response: ${ex}`);
     }
   }
 
@@ -95,14 +133,15 @@ export abstract class ProtoResponse implements iResponse {
    * URL of the request
    */
   public get url(): iValue {
-    return this._wrapAsValue(this.scenario.url, "Request URL");
+    return wrapAsValue(this.context, this.scenario.url, "Request URL");
   }
 
   /**
    * URL of the response, after all redirects
    */
   public get finalUrl(): iValue {
-    return this._wrapAsValue(
+    return wrapAsValue(
+      this.context,
       this.scenario.finalUrl,
       "Response URL (after redirects)"
     );
@@ -112,7 +151,8 @@ export abstract class ProtoResponse implements iResponse {
    * URL of the response, after all redirects
    */
   public get redirectCount(): iValue {
-    return this._wrapAsValue(
+    return wrapAsValue(
+      this.context,
       this.scenario.redirectCount,
       "Response URL (after redirects)"
     );
@@ -122,7 +162,8 @@ export abstract class ProtoResponse implements iResponse {
    * Time from request start to response complete
    */
   public get loadTime(): iValue {
-    return this._wrapAsValue(
+    return wrapAsValue(
+      this.context,
       this.scenario.requestDuration,
       "Request to Response Load Time"
     );
@@ -166,7 +207,8 @@ export abstract class ProtoResponse implements iResponse {
         ? key
         : key.toLowerCase();
     const headerValue: any = this.httpResponse.headers[key];
-    return this._wrapAsValue(
+    return wrapAsValue(
+      this.context,
       typeof headerValue == "undefined" ? null : headerValue,
       "HTTP Headers[" + key + "]"
     );
@@ -178,7 +220,8 @@ export abstract class ProtoResponse implements iResponse {
    * @param key
    */
   public cookie(key: string): iValue {
-    return this._wrapAsValue(
+    return wrapAsValue(
+      this.context,
       this.httpResponse.cookies[key],
       "HTTP Cookies[" + key + "]"
     );
@@ -208,7 +251,7 @@ export abstract class ProtoResponse implements iResponse {
     timeout: number = 30000
   ): Promise<iValue> {
     await this.context.pause(1);
-    return this._wrapAsValue(null, selector);
+    return wrapAsValue(this.context, null, selector);
   }
 
   public async waitForVisible(
@@ -216,7 +259,7 @@ export abstract class ProtoResponse implements iResponse {
     timeout: number = 30000
   ): Promise<iValue> {
     await this.context.pause(1);
-    return this._wrapAsValue(null, selector);
+    return wrapAsValue(this.context, null, selector);
   }
 
   public async waitForExists(
@@ -224,7 +267,7 @@ export abstract class ProtoResponse implements iResponse {
     timeout: number = 30000
   ): Promise<iValue> {
     await this.context.pause(1);
-    return this._wrapAsValue(null, selector);
+    return wrapAsValue(this.context, null, selector);
   }
 
   public async waitForHavingText(
@@ -233,7 +276,7 @@ export abstract class ProtoResponse implements iResponse {
     timeout: number = 30000
   ): Promise<iValue> {
     await this.context.pause(1);
-    return this._wrapAsValue(null, selector);
+    return wrapAsValue(this.context, null, selector);
   }
 
   public async screenshot(): Promise<Buffer> {
@@ -301,9 +344,5 @@ export abstract class ProtoResponse implements iResponse {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support selectOption.`
     );
-  }
-
-  protected _wrapAsValue(data: any, name: string, source?: any): iValue {
-    return new Value(data, this.context, name, source);
   }
 }

@@ -1,8 +1,20 @@
 import { DOMElement } from "./domelement";
 import { Link } from "./link";
 import { ResponseType } from "./enums";
-import { iAssertionContext, iScenario, iValue, KeyValue } from "./interfaces";
-import { asyncForEach, getMessageAndCallbackFromOverloading } from "./util";
+import {
+  iAssertionContext,
+  iScenario,
+  iValue,
+  KeyValue,
+  FindOptions,
+  FindAllOptions,
+} from "./interfaces";
+import {
+  asyncForEach,
+  getMessageAndCallbackFromOverloading,
+  getFindParams,
+  filterFind,
+} from "./util";
 import { HttpMethodVerb } from "./httprequest";
 
 const cheerio: CheerioAPI = require("cheerio");
@@ -56,19 +68,32 @@ export class HTMLElement extends DOMElement implements iValue {
    *
    * @param selector
    */
-  public async find(selector: string): Promise<iValue> {
-    const element: Cheerio = this.el.find(selector).eq(0);
+  public async find(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<iValue> {
+    const params = getFindParams(a, b);
     const name: string = `${selector} under ${this.name}`;
     const path: string = `${this.path} ${selector}`;
-    if (element !== null) {
-      return HTMLElement.create(element, this._context, name, path);
+    if (params.contains || params.matches) {
+    } else {
+      const element: Cheerio = this.el.find(selector).eq(0);
+      if (element !== null) {
+        return HTMLElement.create(element, this._context, name, path);
+      }
     }
     return this._wrapAsValue(null, name);
   }
 
-  public async findAll(selector: string): Promise<HTMLElement[]> {
+  public async findAll(
+    selector: string,
+    a?: string | RegExp | FindAllOptions,
+    b?: FindAllOptions
+  ): Promise<iValue[]> {
+    const params = getFindParams(a, b);
+    const out: iValue[] = [];
     const elements: CheerioElement[] = this.el.find(selector).toArray();
-    const out: HTMLElement[] = [];
     await asyncForEach(elements, async (element, i) => {
       return out.push(
         await HTMLElement.create(
@@ -79,7 +104,7 @@ export class HTMLElement extends DOMElement implements iValue {
         )
       );
     });
-    return out;
+    return filterFind(out, params.contains || params.matches, params.opts);
   }
 
   public async getClosest(

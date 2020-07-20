@@ -1,5 +1,5 @@
 import { BrowserControl } from "./browsercontrol";
-import { Page } from "puppeteer-core";
+import { Page, EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { Assertion } from "./assertion";
 import {
   iResponse,
@@ -10,6 +10,8 @@ import {
   iAssertionResult,
   ScreenshotOpts,
   iAssertion,
+  FindOptions,
+  FindAllOptions,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -18,7 +20,11 @@ import {
   AssertionPass,
   AssertionFailOptional,
 } from "./logging/assertionresult";
-import { openInBrowser, getMessageAndCallbackFromOverloading } from "./util";
+import {
+  openInBrowser,
+  getMessageAndCallbackFromOverloading,
+  toType,
+} from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
 
 export class AssertionContext implements iAssertionContext {
@@ -126,32 +132,6 @@ export class AssertionContext implements iAssertionContext {
   }
 
   /**
-   * Get first element with the given selector that has text content matching the search
-   *
-   * @param selector
-   * @param searchForText
-   */
-  public async findHavingText(
-    selector: string,
-    searchForText: string | RegExp
-  ): Promise<iValue> {
-    return this.response.findHavingText(selector, searchForText);
-  }
-
-  /**
-   * Get all elements with the given selector that has text content matching the search
-   *
-   * @param selector
-   * @param searchForText
-   */
-  public async findAllHavingText(
-    selector: string,
-    searchForText: string | RegExp
-  ): Promise<iValue[]> {
-    return this.response.findAllHavingText(selector, searchForText);
-  }
-
-  /**
    * Clear any current input and then type this into the input box
    *
    * @param selector
@@ -208,8 +188,11 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param callback
    */
-  public async evaluate(callback: Function): Promise<any> {
-    return await this.response.evaluate(this, callback);
+  public async eval(
+    js: EvaluateFn<any>,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<any> {
+    return await this.response.eval.apply(this, [js, ...args]);
   }
 
   public async waitForReady(timeout: number = 15000): Promise<void> {
@@ -233,23 +216,6 @@ export class AssertionContext implements iAssertionContext {
   ): Promise<void> {
     await this.response.waitForNavigation(timeout, waitFor);
     this._completedAction("WAIT", "Navigation");
-  }
-
-  public async waitForHavingText(
-    selector: string,
-    text: string,
-    timeout?: number
-  ): Promise<iValue> {
-    const el: iValue = await this.response.waitForHavingText(
-      selector,
-      text,
-      timeout
-    );
-    const label = `Having Text: ${text}`;
-    el.isNull()
-      ? this._failedAction(label, selector)
-      : this._completedAction(label, selector);
-    return el;
   }
 
   public async waitForXPath(xPath: string, timeout?: number): Promise<iValue> {
@@ -316,13 +282,42 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public async exists(selector: string): Promise<iValue>;
-  public async exists(message: string, selector: string): Promise<iValue>;
-  public async exists(a: string, b?: string): Promise<iValue> {
+  public exists(selector: string, opts?: FindOptions): Promise<iValue>;
+  public exists(
+    message: string,
+    selector: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public exists(
+    message: string,
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public exists(
+    message: string,
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async exists(
+    a: string,
+    b?: string | FindOptions,
+    c?: string | RegExp | FindOptions,
+    d?: FindOptions
+  ): Promise<iValue> {
     const selector = typeof b === "string" ? b : a;
     const message = typeof b === "string" ? a : null;
-    const el = await this.response.find(selector);
-    if (!!message) {
+    const contains = typeof c === "string" ? c : null;
+    const matches = c instanceof RegExp ? c : null;
+    const opts = ((contains ? d : message ? c : b) || {}) as FindOptions;
+    const el = contains
+      ? await this.response.find(selector, contains, opts)
+      : matches
+      ? await this.response.find(selector, matches, opts)
+      : await this.response.find(selector, opts);
+
+    if (message !== null) {
       el.isNull()
         ? this.scenario.result(new AssertionFail(message, selector))
         : this.scenario.result(new AssertionPass(message));
@@ -339,8 +334,16 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public async find(selector: string): Promise<iValue> {
-    return this.response.find(selector);
+  public async find(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<iValue> {
+    return typeof a == "string"
+      ? this.response.find(selector, a, b)
+      : a instanceof RegExp
+      ? this.response.find(selector, a, b)
+      : this.response.find(selector, b);
   }
 
   /**
@@ -348,8 +351,16 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public async findAll(selector: string): Promise<iValue[]> {
-    return this.response.findAll(selector);
+  public async findAll(
+    selector: string,
+    a?: string | RegExp | FindAllOptions,
+    b?: FindAllOptions
+  ): Promise<iValue[]> {
+    return typeof a == "string"
+      ? this.response.findAll(selector, a, b)
+      : a instanceof RegExp
+      ? this.response.findAll(selector, a, b)
+      : this.response.findAll(selector, b);
   }
 
   public async findXPath(xPath: string): Promise<iValue> {

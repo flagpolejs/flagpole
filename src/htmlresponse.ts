@@ -1,10 +1,11 @@
 import { HTMLElement } from "./htmlelement";
 import { HttpResponse } from "./httpresponse";
 import { DOMResponse } from "./domresponse";
-import { iResponse, iValue } from "./interfaces";
+import { iResponse, iValue, FindAllOptions, FindOptions } from "./interfaces";
 import { ResponseType } from "./enums";
 import { Value } from "./value";
 import * as cheerio from "cheerio";
+import { getFindParams, filterFind, wrapAsValue, findOne } from "./util";
 
 export class HtmlResponse extends DOMResponse implements iResponse {
   private _cheerio: CheerioStatic | null = null;
@@ -37,42 +38,54 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     return this.cheerio;
   }
 
-  public async evaluate(context: any, callback: Function): Promise<any> {
-    return callback.apply(context, [this.cheerio]);
+  public async eval(): Promise<any> {
+    throw "This type of scenario does not suport eval.";
   }
 
-  public async find(path: string): Promise<iValue> {
-    const selection: Cheerio = this.cheerio(path);
-    if (selection.length > 0) {
-      return await HTMLElement.create(
-        selection.eq(0),
-        this.context,
-        null,
-        path
-      );
+  public async find(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<iValue> {
+    const params = getFindParams(a, b);
+    if (params.contains || params.matches || params.opts) {
+      return findOne(this, selector, params);
     }
-    return new Value(null, this.context, path);
+    const selection: Cheerio = this.cheerio(selector);
+    return selection.length > 0
+      ? await HTMLElement.create(selection.eq(0), this.context, null, selector)
+      : wrapAsValue(this.context, null, selector);
   }
 
-  public async findAll(path: string): Promise<iValue[]> {
+  public async findAll(
+    selector: string,
+    a?: string | RegExp | FindAllOptions,
+    b?: FindAllOptions
+  ): Promise<iValue[]> {
     const response: HtmlResponse = this;
-    const elements: Cheerio = this.cheerio(path);
+    const elements: Cheerio = this.cheerio(selector);
+    const params = getFindParams(a, b);
+    let nodeElements: iValue[] = [];
     if (elements.length > 0) {
-      const nodeElements: HTMLElement[] = [];
       for (let i = 0; i < elements.length; i++) {
         nodeElements.push(
           await HTMLElement.create(
             this.cheerio(elements.get(i)),
             response.context,
-            `${path} [${i}]`,
-            path
+            `${selector} [${i}]`,
+            selector
           )
         );
       }
-      return nodeElements;
-    } else {
-      return [];
+      if (params.opts || params.contains || params.matches) {
+        nodeElements = await filterFind(
+          nodeElements,
+          params.contains || params.matches,
+          params.opts
+        );
+      }
     }
+    return nodeElements;
   }
 
   public async waitForHidden(
@@ -109,15 +122,11 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     textToType: string,
     opts: any = {}
   ): Promise<any> {
-    return await this.evaluate(this, function ($) {
-      let currentValue = $(selector).val();
-      $(selector).val(currentValue + textToType);
-    });
+    const currentValue = this.cheerio(selector).val();
+    this.cheerio(selector).val(currentValue + textToType);
   }
 
   public async clear(selector: string): Promise<any> {
-    return await this.evaluate(this, function ($: Cheerio) {
-      $.find(selector).val("");
-    });
+    this.cheerio(selector).val("");
   }
 }

@@ -24,15 +24,15 @@ export class ScriptResponse extends ProtoResponse implements iResponse {
       .matches(/(text|application)\/(javascript|ecmascript)/);
   }
 
-  public async evaluate(context: any, callback: Function): Promise<any> {
-    throw new Error("Evaluate does not support script resources.");
+  public async eval(): Promise<any> {
+    throw "This type of scenario does not suport eval.";
   }
 
-  public async find(path: string): Promise<Value> {
+  public async find(): Promise<Value> {
     throw new Error("Script Response does not yet support select");
   }
 
-  public async findAll(path: string): Promise<Value[]> {
+  public async findAll(): Promise<Value[]> {
     throw new Error("Script Response does not yet support selectAll");
   }
 }

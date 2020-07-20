@@ -21,6 +21,10 @@ export class Value implements iValue {
   protected _path: string | undefined;
   protected _tagName: string | undefined;
 
+  public get context(): iAssertionContext {
+    return this._context;
+  }
+
   public get $(): any {
     return this._input;
   }
@@ -35,6 +39,10 @@ export class Value implements iValue {
 
   public selectOption(value: string | string[]): Promise<void> {
     throw "This Value does not support select.";
+  }
+
+  public async pressEnter(): Promise<void> {
+    throw "This Value does not support pressEnter.";
   }
 
   public get length(): iValue {
@@ -222,11 +230,11 @@ export class Value implements iValue {
   public submit(callback: Function): Promise<iScenario>;
   public async submit(a?: any, b?: any): Promise<void | iScenario> {}
 
-  public load(): iScenario;
-  public load(message: string): iScenario;
-  public load(scenario: iScenario): iScenario;
-  public load(callback: Function): iScenario;
-  public load(a?: any, b?: any): iScenario | void {}
+  public load(): Promise<void>;
+  public load(message: string): Promise<iScenario>;
+  public load(scenario: iScenario): Promise<iScenario>;
+  public load(callback: Function): Promise<iScenario>;
+  public async load(a?: any, b?: any): Promise<void | iScenario> {}
 
   public async fillForm(
     attributeName: string,

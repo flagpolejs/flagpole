@@ -4,6 +4,7 @@ import { iResponse, iValue } from "./interfaces";
 import { URL } from "url";
 import { HttpResponse } from "./httpresponse";
 import { Value } from "./value";
+import { wrapAsValue } from "./util";
 
 export interface ImageProperties {
   width: number;
@@ -25,15 +26,16 @@ export class ImageResponse extends ProtoResponse implements iResponse {
   };
 
   public get length(): iValue {
-    return this._wrapAsValue(this.imageProperties.length, "Image Size");
+    return wrapAsValue(this.context, this.imageProperties.length, "Image Size");
   }
 
   public get url(): iValue {
-    return this._wrapAsValue(this.imageProperties.url, "URL of Image");
+    return wrapAsValue(this.context, this.imageProperties.url, "URL of Image");
   }
 
   public get path(): iValue {
-    return this._wrapAsValue(
+    return wrapAsValue(
+      this.context,
       new URL(this.imageProperties.url).pathname,
       "URL Path of Image"
     );
@@ -58,8 +60,8 @@ export class ImageResponse extends ProtoResponse implements iResponse {
       .startsWith("image/");
   }
 
-  public async evaluate(context: any, callback: Function): Promise<any> {
-    throw new Error("Evaluate does not support images.");
+  public async eval(): Promise<any> {
+    throw "This type of scenario does not suport eval.";
   }
 
   public async find(propertyName: string): Promise<iValue> {

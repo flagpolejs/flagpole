@@ -8,7 +8,7 @@ const scenario1 = suite
   .html("Homepage Loads")
   .open("/")
   .next(async (context) => {
-    const a = await context.findHavingText("a", "Videos");
+    const a = await context.find("a", "Videos");
     context.comment(a);
     context.assert(await a.getInnerText()).like("Videos");
 

@@ -4,6 +4,8 @@ import {
   iAssertionContext,
   iScenario,
   iMessageAndCallback,
+  FindOptions,
+  FindAllOptions,
 } from "./interfaces";
 import { Link } from "./link";
 import { ResponseType } from "./enums";
@@ -28,8 +30,28 @@ export abstract class DOMElement extends Value {
     this._path = path || "";
   }
 
-  public abstract find(selector: string): Promise<iValue>;
-  public abstract findAll(selector: string): Promise<iValue[]>;
+  abstract find(selector: string, opts?: FindOptions): Promise<iValue>;
+  abstract find(
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  abstract find(
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  abstract findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
+  abstract findAll(
+    selector: string,
+    contains: string,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  abstract findAll(
+    selector: string,
+    matches: RegExp,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
 
   protected abstract _getTagName(): Promise<string>;
   protected abstract _getAttribute(key: string): Promise<string | null>;
@@ -248,35 +270,39 @@ export abstract class DOMElement extends Value {
    * Load the URL from this element if it has something to load
    * This is used to create a lambda scenario
    */
-  public load(): iScenario;
-  public load(message: string): iScenario;
-  public load(callback: Function): iScenario;
-  public load(scenario: iScenario): iScenario;
-  public load(message: string, callback: Function): iScenario;
-  public load(a?: string | Function | iScenario, b?: Function): iScenario {
+  public load(): Promise<void>;
+  public load(message: string): Promise<iScenario>;
+  public load(callback: Function): Promise<iScenario>;
+  public load(scenario: iScenario): Promise<iScenario>;
+  public load(message: string, callback: Function): Promise<iScenario>;
+  public async load(
+    a?: string | Function | iScenario,
+    b?: Function
+  ): Promise<void | iScenario> {
     const overloaded = getMessageAndCallbackFromOverloading(a, b, this._path);
     const scenario = this._createSubScenario(overloaded);
     this._completedAction("LOAD");
-    runAsync(async () => {
-      const link: Link = await this._getLink();
-      // If this is a lmabda scenario, define the response type and options
-      if (overloaded.scenario === undefined) {
-        const scenarioType: ResponseType = await this._getLambdaScenarioType();
-        scenario.setResponseType(
-          scenarioType,
-          this._getLambdaScenarioOpts(scenarioType)
-        );
-        scenario.next(overloaded.callback);
-      }
-      // If no message was provided, set a default one
-      if (overloaded.message.length == 0) {
-        scenario.title = `Load ${link.getUri()}`;
-      }
-      // Execute it
-      link.isNavigation()
-        ? scenario.open(link.getUri())
-        : scenario.skip("Not a navigational link");
-    }, 10);
+    const link: Link = await this._getLink();
+    // If this is a lmabda scenario, define the response type and options
+    if (overloaded.scenario === undefined) {
+      const scenarioType: ResponseType = await this._getLambdaScenarioType();
+      scenario.setResponseType(
+        scenarioType,
+        this._getLambdaScenarioOpts(scenarioType)
+      );
+      scenario.next(overloaded.callback);
+    }
+    // If no message was provided, set a default one
+    if (overloaded.message.length == 0) {
+      scenario.title = `Load ${link.getUri()}`;
+    }
+    // Not a a link?
+    if (!link.isNavigation()) {
+      scenario.skip("Not a navigational link");
+    }
+    // Execute it
+    const uri = link.getUri();
+    scenario.open(uri);
     return scenario;
   }
 
@@ -406,7 +432,9 @@ export abstract class DOMElement extends Value {
       : overloaded.scenario;
   }
 
-  protected _loadSubScenario(overloaded: iMessageAndCallback): iScenario {
+  protected _loadSubScenario(
+    overloaded: iMessageAndCallback
+  ): Promise<iScenario> {
     return overloaded.scenario === undefined
       ? this.load(overloaded.message, overloaded.callback)
       : this.load(overloaded.scenario);

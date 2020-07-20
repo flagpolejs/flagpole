@@ -52,7 +52,7 @@ suite
       .assert("There are multiple buttons on the page", buttons)
       .length.greaterThan(1);
     await context.pause(1000);
-    const recent = await context.findHavingText("button", "Recent");
+    const recent = await context.find("button", "Recent");
     context.assert(recent).exists();
     return recent.click();
   })
@@ -60,28 +60,29 @@ suite
     await context.pause(1000);
     const contactTile = await context.find(".x-dataview-item .person-name");
     context.assert(contactTile).exists();
+    const contactComponent = await contactTile.getClosest(".x-component");
     return contactTile.click();
   })
   .next("Detail page", async (context) => {
     await context.pause(1000);
-    const btnEdit = await context.findHavingText("button", "edit");
+    const btnEdit = await context.find("button", "edit");
     context.assert(btnEdit).exists();
     return btnEdit.click();
   })
   .next("Edit page", async (context) => {
     await context.pause(1000);
-    const firstName = await context.findHavingText("field", "first name");
+    const firstName = await context.find("field", "first name");
     context.assert(firstName).exists();
     await firstName.type("foo");
     const cmp = await firstName.getClosest();
     context.assert(cmp).exists();
     context.assert(await cmp.eval((c) => c.getLabel())).equals("First Name");
     await context.pause(1000);
-    const workTab = await context.findHavingText("button", "work");
+    const workTab = await context.find("button", "work");
     context.assert(workTab).exists();
     await workTab.click();
     await context.pause(1000);
-    const officeField = await context.findHavingText("field", "office");
+    const officeField = await context.find("field", "office");
     officeField.selectOption("Dryden");
     await context.pause(3000);
   });

@@ -1,8 +1,16 @@
 import { ResponseType } from "./enums";
-import { iResponse, iValue } from "./interfaces";
-import { Page, ElementHandle } from "puppeteer";
+import { iResponse, iValue, FindOptions, FindAllOptions } from "./interfaces";
+import { ElementHandle } from "puppeteer";
 import { PuppeteerResponse } from "./puppeteerresponse";
-import { asyncForEach, arrayify } from "./util";
+import {
+  asyncForEach,
+  arrayify,
+  asyncMap,
+  getFindParams,
+  filterFind,
+  findOne,
+  wrapAsValue,
+} from "./util";
 import { BrowserElement } from "./browserelement";
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
@@ -19,15 +27,24 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
    *
    * @param path
    */
-  public async find(path: string): Promise<iValue> {
-    const page: Page | null = this.context.page;
-    if (page !== null) {
-      const el: ElementHandle<Element> | null = await page.$(path);
-      if (el !== null) {
-        return await BrowserElement.create(el, this.context, path, path);
-      }
+  public async find(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<iValue> {
+    if (this.page === null) {
+      throw "Page not found.";
     }
-    return this._wrapAsValue(null, path);
+    // Filter with options
+    const params = getFindParams(a, b);
+    if (params.opts || params.matches || params.contains) {
+      return findOne(this, selector, params);
+    }
+    // No options, so just find from selector
+    const el: ElementHandle<Element> | null = await this.page.$(selector);
+    return el === null
+      ? wrapAsValue(this.context, null, selector)
+      : BrowserElement.create(el, this.context, selector, selector);
   }
 
   /**
@@ -35,60 +52,62 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
    *
    * @param path
    */
-  public findAll(path: string): Promise<BrowserElement[]> {
-    return new Promise(async (resolve) => {
-      const response: iResponse = this;
-      const out: BrowserElement[] = [];
-      if (this.context.page !== null) {
-        const elements: ElementHandle[] = await this.context.page.$$(path);
-        await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
-          const element = await BrowserElement.create(
-            el,
-            response.context,
-            `${path} [${i}]`,
-            path
-          );
-          out.push(element);
-        });
+  public async findAll(
+    selector: string,
+    a?: string | RegExp | FindAllOptions,
+    b?: FindAllOptions
+  ): Promise<iValue[]> {
+    if (this.page === null) {
+      throw "Page not found.";
+    }
+    const params = getFindParams(a, b);
+    const elements: BrowserElement[] = await asyncMap(
+      await this.page.$$(selector),
+      async (el: ElementHandle<Element>, i) => {
+        return await BrowserElement.create(
+          el,
+          this.context,
+          `${selector} [${i}]`,
+          selector
+        );
       }
-      resolve(out);
-    });
+    );
+    return filterFind(elements, params.contains || params.matches, params.opts);
   }
 
   public async findXPath(xPath: string): Promise<iValue> {
-    const page: Page | null = this.context.page;
-    if (page !== null) {
-      const elements: ElementHandle<Element>[] = await page.$x(xPath);
-      if (elements.length > 0) {
-        return await BrowserElement.create(
-          elements[0],
-          this.context,
-          xPath,
-          xPath
-        );
-      }
+    if (this.page === null) {
+      throw "Page not found.";
     }
-    return this._wrapAsValue(null, xPath);
+    const elements: ElementHandle<Element>[] = await this.page.$x(xPath);
+    if (elements.length > 0) {
+      return await BrowserElement.create(
+        elements[0],
+        this.context,
+        xPath,
+        xPath
+      );
+    }
+    return wrapAsValue(this.context, null, xPath);
   }
 
-  public findAllXPath(xPath: string): Promise<BrowserElement[]> {
-    return new Promise(async (resolve) => {
-      const response: iResponse = this;
-      const out: BrowserElement[] = [];
-      if (this.context.page !== null) {
-        const elements: ElementHandle[] = await this.context.page.$x(xPath);
-        await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
-          const element = await BrowserElement.create(
-            el,
-            response.context,
-            `${xPath} [${i}]`,
-            xPath
-          );
-          out.push(element);
-        });
-      }
-      resolve(out);
+  public async findAllXPath(xPath: string): Promise<BrowserElement[]> {
+    if (this.page === null) {
+      throw "Page not found.";
+    }
+    const response: iResponse = this;
+    const out: BrowserElement[] = [];
+    const elements: ElementHandle[] = await this.page.$x(xPath);
+    await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
+      const element = await BrowserElement.create(
+        el,
+        response.context,
+        `${xPath} [${i}]`,
+        xPath
+      );
+      out.push(element);
     });
+    return out;
   }
 
   /**
@@ -170,12 +189,12 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     selector: string,
     value: string | string[]
   ): Promise<void> {
-    if (this.page !== null) {
-      await this.page.select.apply(this.page, [
-        selector,
-        ...arrayify<string>(value),
-      ]);
+    if (this.page === null) {
+      throw "Page was null.";
     }
-    throw new Error("Page was null.");
+    await this.page.select.apply(this.page, [
+      selector,
+      ...arrayify<string>(value),
+    ]);
   }
 }

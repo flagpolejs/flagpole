@@ -66,6 +66,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   }
 
   private get _response(): ExtJSResponse {
+    // @ts-ignore
     return this._context.response as ExtJSResponse;
   }
 
@@ -102,30 +103,8 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     return this._action("focus");
   }
 
-  public async call(method: string, ...args: any[]): Promise<iValue> {
-    args.forEach((arg, i) => {
-      args[i] = JSON.stringify(arg);
-    });
-    return this._wrapAsValue(
-      this.eval(
-        (c, method, evalArgs) => c[method].apply(c, evalArgs),
-        method,
-        args
-      ),
-      `${this.name}.${method}(${String(args)})`
-    );
-  }
-
-  public async fireEvent(eventName: string): Promise<iValue> {
-    this._completedAction(eventName.toUpperCase(), this.name);
-    return this._wrapAsValue(
-      this.$.evaluate((c) => c.fireEvent(eventName)),
-      `Fired ${eventName} on ${this.name}`
-    );
-  }
-
   public async hover(): Promise<void> {
-    return this._action("hover", false);
+    return this._action("hover");
   }
 
   public async blur(): Promise<any> {
@@ -136,10 +115,6 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     return this._action("click");
   }
 
-  public async clear(): Promise<void> {
-    this.setValue("");
-  }
-
   public async find(selector: string): Promise<iValue> {
     throw "component.find is not yet implemented in Ext";
   }
@@ -148,11 +123,25 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     throw "component.findAll is not yet implemented in Ext";
   }
 
+  public async clear(): Promise<void> {
+    await this.setValue("");
+    this._completedAction("CLEAR");
+  }
+
   public async type(textToType: string, opts: any) {
     await this.focus();
     await this.setValue(textToType);
-    this._completedAction("TYPE", textToType);
+    this._completedAction(
+      "TYPE",
+      (await this.isPasswordField())
+        ? textToType.replace(/./g, "*")
+        : textToType
+    );
     return this.blur();
+  }
+
+  public async pressEnter(): Promise<void> {
+    return this._action("action");
   }
 
   public setValue(text: string) {
@@ -231,14 +220,15 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
       .equals(true);
   }
 
-  protected async _action(
-    name: string,
-    actionOnDom: boolean = true
-  ): Promise<void> {
-    actionOnDom
-      ? this.eval((c, name) => c.element.dom[name](), name)
-      : this.eval((c, name) => c.element[name](), name);
-    this._completedAction(name.toUpperCase());
+  protected async _action(eventName: string): Promise<void> {
+    eventName = eventName.toLowerCase();
+    await this.eval((c, eventName) => {
+      c[eventName] && c[eventName]();
+      c.element && c.element[eventName] && c.element[eventName]();
+      c.element.dom && c.element.dom[eventName] && c.element.dom[eventName]();
+      c.fireEvent(eventName);
+    }, eventName);
+    this._completedAction(eventName.toUpperCase());
   }
 
   protected async _getClassName(): Promise<string> {
@@ -276,5 +266,11 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
 
   protected async _getData(key: string) {
     return this.eval((c) => c.getData(key));
+  }
+
+  protected async isPasswordField(): Promise<boolean> {
+    return this.eval(
+      (c) => c.inputElement.dom.getAttribute("type") == "password"
+    );
   }
 }

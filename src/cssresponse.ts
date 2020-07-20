@@ -30,8 +30,8 @@ export class CssResponse extends ProtoResponse implements iResponse {
     this.validate();
   }
 
-  public async evaluate(context: any, callback: Function): Promise<any> {
-    throw new Error("Evaluate does not support stylesheets.");
+  public async eval(): Promise<any> {
+    throw "This type of scenario does not suport eval.";
   }
 
   public async find(path: string): Promise<CSSRule> {

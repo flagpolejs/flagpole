@@ -1,12 +1,24 @@
 import { ExtJsComponent } from "./extjscomponent";
 import { ResponseType } from "./enums";
-import { iResponse, iScenario } from "./interfaces";
+import {
+  iResponse,
+  iScenario,
+  FindOptions,
+  FindAllOptions,
+} from "./interfaces";
 import { PuppeteerResponse } from "./puppeteerresponse";
 import { iValue } from ".";
 import { PuppeteerElement } from "./puppeteerelement";
-import { asyncForEach } from "./util";
+import {
+  asyncForEach,
+  filterFind,
+  getFindParams,
+  wrapAsValue,
+  findOne,
+} from "./util";
 import { ElementHandle } from "puppeteer";
 import { BrowserElement } from "./browserelement";
+import { opts } from "commander";
 
 declare type globalThis = {
   Ext: any;
@@ -45,22 +57,6 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     });
   }
 
-  /**
-   * Select the first matching element
-   *
-   * @param path
-   * @param findIn
-   */
-  public async find(path: string): Promise<iValue> {
-    const results = await this._query(path);
-    return results.length > 0 ? results[0] : this._find(path);
-  }
-
-  public async findAll(path: string): Promise<iValue[]> {
-    const results = await this._query(path);
-    return results.length > 0 ? results : this._findAll(path);
-  }
-
   public async findXPath(xPath: string): Promise<iValue> {
     if (!this.page) {
       throw "Page must be defined.";
@@ -69,7 +65,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     if (elements.length > 0) {
       return await ExtJsComponent.create(elements[0], this.context, xPath);
     }
-    return this._wrapAsValue(null, xPath);
+    return wrapAsValue(this.context, null, xPath);
   }
 
   public async findAllXPath(xPath: string): Promise<PuppeteerElement[]> {
@@ -129,9 +125,9 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     if (this.page !== null) {
       const component: ExtJsComponent | iValue = await this.find(selector);
       if (component instanceof ExtJsComponent) {
-        component.fireEvent("focus");
+        component.focus();
         component.setValue("");
-        component.fireEvent("blur");
+        component.blur();
       } else {
         throw new Error(`Could not find component at ${selector}`);
       }
@@ -167,22 +163,30 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
    *
    * @param path
    */
-  private async _find(path: string): Promise<iValue> {
+  public async find(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<iValue> {
     if (this.page === null) {
       throw "Page must exist.";
     }
-    const el = await this.page.$(path);
+    const params = getFindParams(a, b);
+    if (params.opts || params.matches || params.contains) {
+      return findOne(this, selector, params);
+    }
+    const el = await this.page.$(selector);
     if (el !== null) {
       const component = await this._getComponentOrElementFromHandle(
         el,
-        path,
-        path
+        selector,
+        selector
       );
       if (component) {
         return component;
       }
     }
-    return this._wrapAsValue(null, path);
+    return wrapAsValue(this.context, null, selector);
   }
 
   /**
@@ -190,23 +194,32 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
    *
    * @param path
    */
-  private async _findAll(path: string): Promise<iValue[]> {
+  public async findAll(
+    selector: string,
+    a?: string | RegExp | FindAllOptions,
+    b?: FindAllOptions
+  ): Promise<iValue[]> {
     if (this.context.page === null) {
       throw "Page must be defined.";
     }
     const components: iValue[] = [];
-    const elements = await this.context.page.$$(path);
+    const elements = await this.context.page.$$(selector);
+    const params = getFindParams(a, b);
     await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
       const component = await this._getComponentOrElementFromHandle(
         el,
-        path,
-        `${path} [${i}]`
+        selector,
+        `${selector} [${i}]`
       );
       if (component) {
         components.push(component);
       }
     });
-    return components;
+    return filterFind(
+      components,
+      params.contains || params.matches,
+      params.opts
+    );
   }
 
   private async _getComponentOrElementFromHandle(

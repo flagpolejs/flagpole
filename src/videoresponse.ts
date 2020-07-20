@@ -23,15 +23,15 @@ export class VideoResponse extends ProtoResponse implements iResponse {
       .matches(/(video|mpegurl)/i);
   }
 
-  public async evaluate(context: any, callback: Function): Promise<any> {
-    throw new Error("Evaluate does not support video resources.");
+  public async eval(): Promise<any> {
+    throw "This type of scenario does not suport eval.";
   }
 
-  public async find(path: string): Promise<any | null> {
+  public async find(): Promise<any | null> {
     throw new Error("Video Response does not yet support select");
   }
 
-  public async findAll(path: string): Promise<any[]> {
+  public async findAll(): Promise<any[]> {
     throw new Error("Video Response does not yet support selectAll");
   }
 }

@@ -1,10 +1,15 @@
-import { Page, ElementHandle, Browser, Response } from "puppeteer-core";
-import { iResponse, iValue, ScreenshotOpts } from "./interfaces";
+import {
+  Page,
+  ElementHandle,
+  Browser,
+  Response,
+  EvaluateFn,
+  SerializableOrJSHandle,
+} from "puppeteer-core";
+import { iResponse, ScreenshotOpts } from "./interfaces";
 import { BrowserControl } from "./browsercontrol";
 import { DOMResponse } from "./domresponse";
-import { PuppeteerElement } from "./puppeteerelement";
-import { toType, arrayify } from "./util";
-import { string } from "yargs";
+import { toType } from "./util";
 
 export abstract class PuppeteerResponse extends DOMResponse
   implements iResponse {
@@ -31,27 +36,17 @@ export abstract class PuppeteerResponse extends DOMResponse
     return this.scenario.getBrowserControl().response;
   }
 
-  public abstract async find(path: string): Promise<iValue>;
-  public abstract async findAll(path: string): Promise<iValue[]>;
-
   /**
    * Run this code in the browser
    */
-  public async evaluate(callback: Function | string): Promise<any> {
-    if (this.page !== null) {
-      if (typeof callback == "function") {
-        const functionName: string = `flagpole_${Date.now()}`;
-        const jsToInject: string = `window.${functionName} = ${callback}`;
-        await this.page.addScriptTag({ content: jsToInject });
-        return await this.page.evaluate((functionName) => {
-          // @ts-ignore This is calling into the browser, so don't do an IDE error
-          return window[functionName]();
-        }, functionName);
-      } else {
-        return await this.page.evaluate(callback);
-      }
+  public async eval(
+    js: EvaluateFn<any>,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<any> {
+    if (this.page === null) {
+      throw "Page does not exist.";
     }
-    throw new Error("Cannot evaluate code becuase page is null.");
+    return this.page.evaluate.apply(this.page, [js, ...args]);
   }
 
   /**
