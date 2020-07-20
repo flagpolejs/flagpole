@@ -27,6 +27,5 @@ suite
   })
   .next("Individual event rankings and paywall", async (context) => {
     await context.exists("a.join");
-    const joinNow = await context.find("a", "Join Now");
-    context.assert("Join Now button exists", joinNow).exists();
+    await context.exists("Join Now button exists", "a", "Join Now");
   });

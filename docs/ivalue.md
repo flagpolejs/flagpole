@@ -174,23 +174,33 @@ const download2 = await cssLink.download("./localFile.css", {
 });
 ```
 
-### exists(selector?: string): Promise<iValue>;
+### exists(): Promise<iValue>
 
-This method call makes an assertion. Does this item exist or not? If the underlying value is `null` or `undefined` then it is considered to not exist.
+#### exists(): Promise<iValue>;
 
-If it is called with no argument, it is making this assertion against its underlying value. It will return itself in this use case.
-
-```javascript
-const h1 = await context.find("h1");
-h1.exists();
-```
-
-If you pass in the `selector` argument, it will query the DOM for a child element with that selector. And it will return a new iValue object containing the selected element (if found) or null.
+With no arguments, you are making an assertion that this element exists. That is, it is not `null` or `undefined`. An assertion message is automatically generated based on the original selector.
 
 ```javascript
 const h1 = await context.find("h1");
-const strong = h1.exists("strong");
+await h1.exists();
 ```
+
+#### exists(message: string): Promise<iValue>;
+
+You can alternately specify a custom asertion message:
+
+```javascript
+const h1 = await context.find("h1");
+await h1.exists("There should be an H1 tag");
+```
+
+To be clear, this would not be any different than the shorter:
+
+```javascript
+const h1 = await context.exists("There should be an H1 tag", "h1");
+```
+
+But there may be situations where you already have an element from another type of method and want to make sure it exists.
 
 ### fillForm(data: { [key: string]: any }): Promise<Value>
 

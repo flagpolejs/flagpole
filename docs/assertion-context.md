@@ -146,12 +146,81 @@ context.comment(context.response.body);
 context.comment(json.data);
 ```
 
-### exists(path: string): Promise<iValue>
+## exists(): Promise<iValue>
+
+### exists(selector: string): Promise<iValue>
 
 This is just like an `find`, but it also does an assertion that the element actually exists. It is similar to `waitForExists` except that it doesn't wait around.
 
+You can use it standalone to just make an assertion:
+
+```javascript
+await context.exists("section.topStories article");
+```
+
+Or you can grab the element that it returns:
+
 ```javascript
 const firstArticle = await context.exists("section.topStories article");
+```
+
+### exists(message: string, selector: string): Promise<iValue>
+
+By default, Flagpole will create an assertion message for you dynamically based on the selector. However, you can specify one as the first argument:
+
+```javascript
+await context.exists(
+  "There should be a top story",
+  "section.topStories article"
+);
+```
+
+### exists(message: string, selector: string, contains: string): Promise<iValue>
+
+Pass in a third argument as a string to test whether the item exists that contains this text.
+
+```javascript
+await context.exists(
+  "One of the top stories should have 'Breaking' in the headline",
+  "section.topStories article"
+  "breaking"
+);
+```
+
+### exists(message: string, selector: string, mathces: RegExp): Promise<iValue>
+
+This third argument can alternately be a regular expression:
+
+```javascript
+await context.exists(
+  "One of the top stories should have 'Breaking' in the headline",
+  "section.topStories article"
+  /Breaking/
+);
+```
+
+### exists(message: string, selector: string, contains: string | RegExp, opts: FindOps): Promise<iValue>
+
+As a fourth argument, you can include any of the `opts` properties from `find()`, for example:
+
+```javascript
+await context.exists(
+  "Should be a button that says `go` in the value field",
+  "button"
+  "go",
+  { findBy: "value" }
+);
+```
+
+You could also use the `offset` property to test for there being at least n-number of matching items. Remember `offset` is zero-based.
+
+```javascript
+await context.exists(
+  "There should be at least 4 buttons containing `go` in the text node.",
+  "button"
+  "go",
+  { offset: 3 }
+);
 ```
 
 ### evaluate(callback: Function): Promise<any>
