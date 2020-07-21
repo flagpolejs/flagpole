@@ -438,6 +438,10 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     this._completedAction("ENTER");
   }
 
+  public async scrollTo(): Promise<void> {
+    await this.$.evaluate((e) => e.scrollIntoView());
+  }
+
   protected async _getInnerText() {
     return String(await this._eval((e) => e.innerText, this.$));
   }

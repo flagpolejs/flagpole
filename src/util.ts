@@ -308,7 +308,10 @@ export async function filterFind(
         if (opts?.findBy == "alt") {
           return (await element.getAttribute("alt")).$;
         }
-        return (await element.getInnerText()).$;
+        if (opts?.findBy == "html") {
+          return (await element.getOuterHtml()).$;
+        }
+        return (await element.getText()).$;
       })();
       if (containsType == "RegExp") {
         return (contains as RegExp).test(text.toString());

@@ -485,6 +485,15 @@ Press these keys on the keyboard.
 
 This is currently only supported with browser type scenarios. See documentation for `context.screenshot()` because the arguments are the same. The only difference is calling it on an Element will grab the image just of this element.
 
+### scrollTo(): Promise<void>;
+
+For browser-based scenarios, scroll this element into view.
+
+```javascript
+const emailField = await context.exists("input[name='email']");
+await emailField.scrollTo();
+```
+
 ### submit(): Promise<Scenario>
 
 Load works basically the same way as `.click()` and `.load()`, so you can reference the documentation on those.

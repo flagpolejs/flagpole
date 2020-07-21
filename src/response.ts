@@ -7,6 +7,7 @@ import {
   iAssertionContext,
   FindOptions,
   FindAllOptions,
+  OptionalXY,
 } from "./interfaces";
 import { ResponseType } from "./enums";
 import { HttpResponse } from "./httpresponse";
@@ -344,5 +345,9 @@ export abstract class ProtoResponse implements iResponse {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support selectOption.`
     );
+  }
+
+  public async scrollTo(_point: OptionalXY): Promise<iResponse> {
+    return this;
   }
 }

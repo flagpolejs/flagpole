@@ -1,10 +1,17 @@
 import { iValue, iAssertionContext } from "./interfaces";
-import { JSHandle, ElementHandle, EvaluateFn } from "puppeteer-core";
+import { JSHandle, ElementHandle, EvaluateFn, Page } from "puppeteer-core";
 import { DOMElement } from "./domelement";
 
 export abstract class PuppeteerElement extends DOMElement implements iValue {
   protected abstract _input: ElementHandle | JSHandle;
   public abstract get $(): ElementHandle | JSHandle;
+
+  protected get _page(): Page {
+    if (this.context.page === null) {
+      throw "Puppeteer page object was not found.";
+    }
+    return this.context.page;
+  }
 
   protected constructor(
     input: JSHandle | ElementHandle,
@@ -36,11 +43,8 @@ export abstract class PuppeteerElement extends DOMElement implements iValue {
     return this._sourceCode;
   }
 
-  protected async _eval(js: EvaluateFn<any>, arg?: any): Promise<any> {
-    if (this._context.page !== null) {
-      return await this._context.page.evaluate(js, arg);
-    }
-    throw new Error("Page was null.");
+  protected _eval(js: EvaluateFn<any>, arg?: any): Promise<any> {
+    return this._page.evaluate(js, arg);
   }
 
   protected async _getProperty(key: string) {

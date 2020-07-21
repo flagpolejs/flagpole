@@ -223,6 +223,16 @@ await context.exists(
 );
 ```
 
+The `exists` method will return the matched element inside of the iValue or a null iValue if there is no match.
+
+### existsAll(message: string, selector: string, contains: string | RegExp, opts: FindOps): Promise<iValue>
+
+This works just like `exists` except that it returns an array of all matching elements. If there are no matching elements, an empty array will be returned. The assertion passes if there is at least one matching element.
+
+```javascript
+const topStories = await context.existsAll("article.topStory");
+```
+
 ### evaluate(callback: Function): Promise<any>
 
 Passes this function off to the underlying response to run it in the context of that type.
@@ -428,6 +438,14 @@ You can also combine the two arguments. In this case, the first argument of the 
 const screenshot = await context.screenshot("/path/to/local/file.png", {
   fullPage: true,
 });
+```
+
+### scrollTo({ x?: number, y?: number }): Promise<void>
+
+For browser-based tests this will scroll to these coordinates on the page body. Both `x` and `y` properties are optional and will be assumed as `0` if not set.
+
+```javascript
+await context.scrollTo({ y: 500 });
 ```
 
 ### selectOption(selector: string, value: string | string[]): Promise<string[]>

@@ -15,10 +15,10 @@ import {
   getFindParams,
   wrapAsValue,
   findOne,
+  asyncMap,
 } from "./util";
-import { ElementHandle } from "puppeteer";
+import { ElementHandle, JSHandle } from "puppeteer";
 import { BrowserElement } from "./browserelement";
-import { opts } from "commander";
 
 declare type globalThis = {
   Ext: any;
@@ -168,14 +168,17 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     a?: string | RegExp | FindOptions,
     b?: FindOptions
   ): Promise<iValue> {
-    if (this.page === null) {
-      throw "Page must exist.";
-    }
     const params = getFindParams(a, b);
     if (params.opts || params.matches || params.contains) {
       return findOne(this, selector, params);
     }
-    const el = await this.page.$(selector);
+    // First look for ExtJS component query
+    const components = await this._query(selector);
+    if (components.length) {
+      return components[0];
+    }
+    // Do regular query in page
+    const el = await this._page.$(selector);
     if (el !== null) {
       const component = await this._getComponentOrElementFromHandle(
         el,
@@ -199,22 +202,23 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    if (this.context.page === null) {
-      throw "Page must be defined.";
-    }
-    const components: iValue[] = [];
-    const elements = await this.context.page.$$(selector);
-    const params = getFindParams(a, b);
-    await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
-      const component = await this._getComponentOrElementFromHandle(
-        el,
-        selector,
-        `${selector} [${i}]`
-      );
-      if (component) {
-        components.push(component);
+    const components: iValue[] = await (async () => {
+      // First, use ExtJS.ComponentQuery.query
+      const components = await this._query(selector);
+      if (components.length) {
+        return components;
       }
-    });
+      // If we didn't find any, then use the DOM query
+      const elements = await this._page.$$(selector);
+      return asyncMap(elements, async (el: ElementHandle<Element>, i) => {
+        const component = await this._getComponentOrElementFromHandle(
+          el,
+          selector,
+          `${selector} [${i}]`
+        );
+      });
+    })();
+    const params = getFindParams(a, b);
     return filterFind(
       components,
       params.contains || params.matches,
@@ -222,31 +226,40 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     );
   }
 
+  public async selectOption(
+    selector: string,
+    value: string | string[]
+  ): Promise<void> {
+    const component = await this.find(selector);
+    if (!component.isNull()) {
+      component.selectOption(value);
+    }
+  }
+
   private async _getComponentOrElementFromHandle(
     el: ElementHandle<Element>,
     path: string,
     name: string
   ) {
-    const classes = String(
-      (await el.getProperty("className")).jsonValue()
-    ).split(" ");
-    if (classes.includes("x-component")) {
-      return this._getComponentFromElementHandle(el);
-    } else {
-      return BrowserElement.create(el, this.context, name, path);
-    }
+    const isComponent = !!(await (
+      await el.getProperty("data-componentid")
+    ).jsonValue());
+    return isComponent
+      ? this._getComponentFromElementHandle(el)
+      : BrowserElement.create(el, this.context, name, path);
   }
 
   private async _getComponentFromElementHandle(el: ElementHandle<Element>) {
     const componentId = await el.evaluate((node) => {
       // If this element is a component
-      if (node.classList.contains("x-component")) {
-        return node.id;
+      const id = node.getAttribute("data-componentid");
+      if (id) {
+        return id;
       }
       // Get closest component
-      const closestComponent = node.closest(".x-component");
+      const closestComponent = node.closest("[data-componentid]");
       if (closestComponent) {
-        return closestComponent.id;
+        return closestComponent.getAttribute("data-componentid");
       }
       // For some reason we did not find the component
       return null;
@@ -259,36 +272,28 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
    *
    * @param path
    */
-  private async _query(path: string) {
-    if (this.page === null) {
-      throw "Page must exist.";
-    }
-    const results = await this.page.evaluateHandle(
-      // @ts-ignore
-      (path) => Ext.ComponentQuery.query(path),
-      path
-    );
-    const length = await results.evaluate((r) => r.length);
-    const components: ExtJsComponent[] = [];
-    for (let i = 0; i < length; i++) {
-      const item = await results.evaluateHandle((r, i) => r[i], i);
-      const component = await ExtJsComponent.create(
-        item,
+  private async _query(selector: string): Promise<ExtJsComponent[]> {
+    const components = await this._queryGetHandle(selector);
+    return asyncMap(components, async (component: JSHandle<any>, i) => {
+      return await ExtJsComponent.create(
+        component,
         this.context,
-        `${path}[${i}]`
+        `${selector}[${i}]`
       );
-      components.push(component);
-    }
-    return components;
+    });
   }
 
-  public async selectOption(
-    selector: string,
-    value: string | string[]
-  ): Promise<void> {
-    const component = await this.find(selector);
-    if (!component.isNull()) {
-      component.selectOption(value);
+  private async _queryGetHandle(selector: string): Promise<JSHandle[]> {
+    const results = await this._page.evaluateHandle(
+      // @ts-ignore
+      (selector) => Ext.ComponentQuery.query(selector),
+      selector
+    );
+    const length = await results.evaluate((r) => r.length);
+    const components: JSHandle[] = [];
+    for (let i = 0; i < length; i++) {
+      components.push(await results.evaluateHandle((r, i) => r[i], i));
     }
+    return components;
   }
 }

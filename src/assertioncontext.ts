@@ -12,6 +12,7 @@ import {
   iAssertion,
   FindOptions,
   FindAllOptions,
+  OptionalXY,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -330,6 +331,58 @@ export class AssertionContext implements iAssertionContext {
   }
 
   /**
+   * Find for first element at this selector path and assert it exists
+   *
+   * @param selector
+   */
+  public existsAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
+  public existsAll(
+    message: string,
+    selector: string,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  public existsAll(
+    message: string,
+    selector: string,
+    contains: string,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  public existsAll(
+    message: string,
+    selector: string,
+    matches: RegExp,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  public async existsAll(
+    a: string,
+    b?: string | FindOptions,
+    c?: string | RegExp | FindOptions,
+    d?: FindAllOptions
+  ): Promise<iValue[]> {
+    const selector = typeof b === "string" ? b : a;
+    const message = typeof b === "string" ? a : null;
+    const contains = typeof c === "string" ? c : null;
+    const matches = c instanceof RegExp ? c : null;
+    const opts = ((contains ? d : message ? c : b) || {}) as FindOptions;
+    const elements = contains
+      ? await this.response.findAll(selector, contains, opts)
+      : matches
+      ? await this.response.findAll(selector, matches, opts)
+      : await this.response.findAll(selector, opts);
+
+    if (message !== null) {
+      elements.length
+        ? this.scenario.result(new AssertionPass(message))
+        : this.scenario.result(new AssertionFail(message, selector));
+    } else {
+      elements.length
+        ? this._completedAction("EXISTS", `${selector}`)
+        : this._failedAction("EXISTS", `${selector}`);
+    }
+    return elements;
+  }
+
+  /**
    * Find for first element at this selector path
    *
    * @param selector
@@ -485,6 +538,10 @@ export class AssertionContext implements iAssertionContext {
 
   public get(aliasName: string): any {
     return this._scenario.get(aliasName);
+  }
+
+  public async scrollTo(point: OptionalXY): Promise<iAssertionContext> {
+    return (await this.response.scrollTo(point)).context;
   }
 
   protected async _completedAction(verb: string, noun?: string) {

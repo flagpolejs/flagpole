@@ -40,7 +40,7 @@ export interface iCallbackAndMessage {
 }
 
 export interface FindOptions {
-  findBy?: "text" | "value" | "alt";
+  findBy?: "text" | "value" | "alt" | "html";
   offset?: number;
 }
 
@@ -57,6 +57,7 @@ export type ResponsePipeCallbackAndMessage = {
   message: string;
   callback: ResponsePipe;
 };
+export type OptionalXY = { x?: number; y?: number };
 
 export type ScenarioStatusCallback = (
   scenario: iScenario,
@@ -251,6 +252,7 @@ export interface iValue {
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
   selectOption(value: string | string[]): Promise<void>;
   pressEnter(): Promise<void>;
+  scrollTo(): Promise<void>;
 }
 
 /**
@@ -312,6 +314,7 @@ export interface iResponse {
   clear(selector: string): Promise<any>;
   type(selector: string, textToType: string, opts: any): Promise<any>;
   selectOption(selector: string, value: string | string[]): Promise<void>;
+  scrollTo(point: OptionalXY): Promise<iResponse>;
 }
 
 export interface iAssertion {
@@ -392,6 +395,24 @@ export interface iAssertionContext {
     matches: RegExp,
     opts?: FindOptions
   ): Promise<iValue>;
+  existsAll(selector: string, opts?: FindOptions): Promise<iValue[]>;
+  existsAll(
+    message: string,
+    selector: string,
+    opts?: FindOptions
+  ): Promise<iValue[]>;
+  existsAll(
+    message: string,
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue[]>;
+  existsAll(
+    message: string,
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue[]>;
   find(selector: string, opts?: FindOptions): Promise<iValue>;
   find(selector: string, contains: string, opts?: FindOptions): Promise<iValue>;
   find(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
@@ -459,6 +480,7 @@ export interface iAssertionContext {
   ): iAssertionResult;
   logOptionalFailure(message: string, errorDetails?: any): iAssertionResult;
   logPassing(message: string): iAssertionResult;
+  scrollTo(point: OptionalXY): Promise<iAssertionContext>;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;

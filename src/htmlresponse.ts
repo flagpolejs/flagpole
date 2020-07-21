@@ -3,7 +3,6 @@ import { HttpResponse } from "./httpresponse";
 import { DOMResponse } from "./domresponse";
 import { iResponse, iValue, FindAllOptions, FindOptions } from "./interfaces";
 import { ResponseType } from "./enums";
-import { Value } from "./value";
 import * as cheerio from "cheerio";
 import { getFindParams, filterFind, wrapAsValue, findOne } from "./util";
 

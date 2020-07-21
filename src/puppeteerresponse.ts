@@ -36,6 +36,13 @@ export abstract class PuppeteerResponse extends DOMResponse
     return this.scenario.getBrowserControl().response;
   }
 
+  protected get _page(): Page {
+    if (this.page === null) {
+      throw "Puppeteer page object was not found.";
+    }
+    return this.page;
+  }
+
   /**
    * Run this code in the browser
    */
@@ -185,5 +192,16 @@ export abstract class PuppeteerResponse extends DOMResponse
       }
     }
     throw new Error(`Can not type into this element ${selector}`);
+  }
+
+  public async scrollTo(point: { x: number; y: number }): Promise<iResponse> {
+    await this._page.evaluate(
+      (x, y) => {
+        window.scrollTo(x, y);
+      },
+      point.x || 0,
+      point.y || 0
+    );
+    return this;
   }
 }

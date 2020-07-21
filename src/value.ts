@@ -322,6 +322,8 @@ export class Value implements iValue {
     return this;
   }
 
+  public async scrollTo(): Promise<void> {}
+
   public async getText(): Promise<iValue> {
     return this._wrapAsValue(
       this.toString(),

@@ -179,8 +179,10 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     return this.$.evaluate.apply(this.$, [js, ...args]);
   }
 
-  public async getClosest(selector: string = ".x-component"): Promise<iValue> {
-    if (this._isExtComponent && selector == ".x-component") {
+  public async getClosest(
+    selector: string = "[data-componentid]"
+  ): Promise<iValue> {
+    if (this._isExtComponent && selector == "[data-componentid]") {
       return this;
     }
     return super.getClosest(selector);
@@ -220,6 +222,10 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
       .equals(true);
   }
 
+  public async scrollTo(): Promise<void> {
+    this.eval((c) => c.element.dom.scrollIntoView());
+  }
+
   protected async _action(eventName: string): Promise<void> {
     eventName = eventName.toLowerCase();
     await this.eval((c, eventName) => {
@@ -257,7 +263,16 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   }
 
   protected async _getText() {
-    return String(await this.eval((c) => c.getText()));
+    const result = await this.eval((c) => {
+      if (c.getText) {
+        return c.getText();
+      }
+      if (c.getLabel) {
+        return c.getLabel();
+      }
+      return "";
+    });
+    return String(result);
   }
 
   protected async _getValue() {
