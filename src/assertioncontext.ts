@@ -1,4 +1,4 @@
-import { BrowserControl } from "./browsercontrol";
+import { BrowserControl } from "./puppeteer/browsercontrol";
 import { Page, EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { Assertion } from "./assertion";
 import {
@@ -25,8 +25,37 @@ import {
   openInBrowser,
   getMessageAndCallbackFromOverloading,
   toType,
+  getFindParams,
+  getFindName,
 } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
+import { string } from "yargs";
+
+const getParamsFromExists = (
+  a: string,
+  b?: string | FindOptions | FindAllOptions | RegExp,
+  c?: string | RegExp | FindOptions | FindAllOptions,
+  d?: FindOptions | FindAllOptions
+): {
+  selector: string;
+  message: string | null;
+  matches: RegExp | null;
+  contains: string | null;
+  opts: FindOptions | FindAllOptions;
+} => {
+  const selector = typeof b === "string" ? b : a;
+  const message = typeof b === "string" ? a : null;
+  const matches = c instanceof RegExp ? c : b instanceof RegExp ? b : null;
+  const contains = typeof c === "string" ? c : null;
+  const opts = ((contains ? d : message ? c : b) || {}) as FindOptions;
+  return {
+    selector: selector,
+    message: message,
+    matches: matches,
+    contains: contains,
+    opts: opts,
+  };
+};
 
 export class AssertionContext implements iAssertionContext {
   protected _scenario: iScenario;
@@ -283,51 +312,20 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public exists(selector: string, opts?: FindOptions): Promise<iValue>;
-  public exists(
-    message: string,
-    selector: string,
-    opts?: FindOptions
-  ): Promise<iValue>;
-  public exists(
-    message: string,
-    selector: string,
-    contains: string,
-    opts?: FindOptions
-  ): Promise<iValue>;
-  public exists(
-    message: string,
-    selector: string,
-    matches: RegExp,
-    opts?: FindOptions
-  ): Promise<iValue>;
   public async exists(
-    a: string,
-    b?: string | FindOptions,
-    c?: string | RegExp | FindOptions,
-    d?: FindOptions
+    selector: string,
+    a?: string | FindOptions | RegExp,
+    b?: FindOptions
   ): Promise<iValue> {
-    const selector = typeof b === "string" ? b : a;
-    const message = typeof b === "string" ? a : null;
-    const contains = typeof c === "string" ? c : null;
-    const matches = c instanceof RegExp ? c : null;
-    const opts = ((contains ? d : message ? c : b) || {}) as FindOptions;
-    const el = contains
-      ? await this.response.find(selector, contains, opts)
-      : matches
-      ? await this.response.find(selector, matches, opts)
+    const params = getFindParams(a, b);
+    const opts = params.opts || {};
+    const element = params.contains
+      ? await this.response.find(selector, params.contains, opts)
+      : params.matches
+      ? await this.response.find(selector, params.matches, opts)
       : await this.response.find(selector, opts);
-
-    if (message !== null) {
-      el.isNull()
-        ? this.scenario.result(new AssertionFail(message, selector))
-        : this.scenario.result(new AssertionPass(message));
-    } else {
-      el.isNull()
-        ? this._failedAction("EXISTS", `${selector}`)
-        : this._completedAction("EXISTS", `${selector}`);
-    }
-    return el;
+    this._assertExists(null, getFindName(params, selector, 0), element);
+    return element;
   }
 
   /**
@@ -335,50 +333,19 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public existsAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
-  public existsAll(
-    message: string,
-    selector: string,
-    opts?: FindAllOptions
-  ): Promise<iValue[]>;
-  public existsAll(
-    message: string,
-    selector: string,
-    contains: string,
-    opts?: FindAllOptions
-  ): Promise<iValue[]>;
-  public existsAll(
-    message: string,
-    selector: string,
-    matches: RegExp,
-    opts?: FindAllOptions
-  ): Promise<iValue[]>;
   public async existsAll(
-    a: string,
-    b?: string | FindOptions,
-    c?: string | RegExp | FindOptions,
-    d?: FindAllOptions
+    selector: string,
+    a?: string | FindAllOptions | RegExp,
+    b?: FindAllOptions
   ): Promise<iValue[]> {
-    const selector = typeof b === "string" ? b : a;
-    const message = typeof b === "string" ? a : null;
-    const contains = typeof c === "string" ? c : null;
-    const matches = c instanceof RegExp ? c : null;
-    const opts = ((contains ? d : message ? c : b) || {}) as FindOptions;
-    const elements = contains
-      ? await this.response.findAll(selector, contains, opts)
-      : matches
-      ? await this.response.findAll(selector, matches, opts)
+    const params = getFindParams(a, b);
+    const opts = params.opts || {};
+    const elements = params.contains
+      ? await this.response.findAll(selector, params.contains, opts)
+      : params.matches
+      ? await this.response.findAll(selector, params.matches, opts)
       : await this.response.findAll(selector, opts);
-
-    if (message !== null) {
-      elements.length
-        ? this.scenario.result(new AssertionPass(message))
-        : this.scenario.result(new AssertionFail(message, selector));
-    } else {
-      elements.length
-        ? this._completedAction("EXISTS", `${selector}`)
-        : this._failedAction("EXISTS", `${selector}`);
-    }
+    this._assertExists(null, selector, elements[0]);
     return elements;
   }
 
@@ -429,15 +396,11 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public async submit(selector: string): Promise<any> {
-    const el: iValue | iValue | null = await this.exists(selector);
-    if (el === null) {
-      throw new Error(`Element with selector ${selector} not found.`);
+  public async submit(selector: string): Promise<void> {
+    const el: iValue = await this.exists(selector);
+    if (el.isTag()) {
+      el.submit();
     }
-    if ("submit" in el) {
-      return el.submit();
-    }
-    return null;
   }
 
   public logFailure(
@@ -476,27 +439,24 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public click(selector: string): Promise<void>;
-  public click(selector: string, scenario: iScenario): Promise<iScenario>;
-  public click(selector: string, message: string): Promise<iScenario>;
-  public click(selector: string, callback: Function): Promise<iScenario>;
+  click(selector: string, opts?: FindOptions): Promise<void>;
+  click(selector: string, contains: string, opts?: FindOptions): Promise<void>;
+  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<void>;
   public async click(
     selector: string,
-    a?: string | Function | iScenario,
-    b?: Function
-  ): Promise<iScenario | void> {
-    const el: iValue = await this.find(selector);
-    const overloaded = getMessageAndCallbackFromOverloading(a, b, selector);
-    if (!el.isNull() && "click" in el) {
-      if (overloaded.scenario) {
-        return el.click(overloaded.scenario);
-      }
-      if (overloaded.isSubScenario) {
-        return el.click(overloaded.message, overloaded.callback);
-      }
-      return el.click();
-    } else {
-      this.logFailure(`Element could not be clicked on: ${selector}`);
+    a?: FindOptions | string | RegExp,
+    b?: FindOptions
+  ): Promise<void> {
+    const contains = typeof a == "string" ? a : undefined;
+    const matches = toType(a) == "regexp" ? a : undefined;
+    const opts = (b || a || {}) as FindOptions;
+    const element = contains
+      ? await this.find(selector, contains, opts)
+      : matches
+      ? await this.find(selector, matches, opts)
+      : await this.find(selector, opts);
+    if (!(await element.exists()).isNull()) {
+      element.click();
     }
   }
 
@@ -550,5 +510,17 @@ export class AssertionContext implements iAssertionContext {
 
   protected async _failedAction(verb: string, noun?: string) {
     this.scenario.result(new AssertionActionFailed(verb, noun || ""));
+  }
+
+  protected _assertExists(message: string | null, name: string, el: iValue) {
+    if (message) {
+      el.isNull()
+        ? this.scenario.result(new AssertionFail(message, name))
+        : this.scenario.result(new AssertionPass(message));
+    } else {
+      el.isNull()
+        ? this._failedAction("EXISTS", `${name}`)
+        : this._completedAction("EXISTS", `${name}`);
+    }
   }
 }

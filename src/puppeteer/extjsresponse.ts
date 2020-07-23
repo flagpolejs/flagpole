@@ -1,13 +1,13 @@
 import { ExtJsComponent } from "./extjscomponent";
-import { ResponseType } from "./enums";
+import { ResponseType } from "../enums";
 import {
   iResponse,
   iScenario,
   FindOptions,
   FindAllOptions,
-} from "./interfaces";
+  iValue,
+} from "../interfaces";
 import { PuppeteerResponse } from "./puppeteerresponse";
-import { iValue } from ".";
 import { PuppeteerElement } from "./puppeteerelement";
 import {
   asyncForEach,
@@ -16,8 +16,10 @@ import {
   wrapAsValue,
   findOne,
   asyncMap,
-} from "./util";
-import { ElementHandle, JSHandle } from "puppeteer";
+  getFindName,
+  FindParams,
+} from "../util";
+import { ElementHandle, JSHandle } from "puppeteer-core";
 import { BrowserElement } from "./browserelement";
 
 declare type globalThis = {
@@ -63,7 +65,12 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     }
     const elements = await this.page.$x(xPath);
     if (elements.length > 0) {
-      return await ExtJsComponent.create(elements[0], this.context, xPath);
+      return await ExtJsComponent.create(
+        elements[0],
+        this.context,
+        xPath,
+        xPath
+      );
     }
     return wrapAsValue(this.context, null, xPath);
   }
@@ -136,12 +143,9 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
   }
 
   public async getComponentById(id: string) {
-    if (this.page === null) {
-      throw "Page must exist.";
-    }
-    const ref = await this.page.evaluateHandle(`Ext.getCmp(${id}")`);
+    const ref = await this._page.evaluateHandle(`Ext.getCmp(${id}")`);
     return ref
-      ? await ExtJsComponent.create(ref, this.context, `#${id}`)
+      ? await ExtJsComponent.create(ref, this.context, `#${id}`, `#${id}`)
       : null;
   }
 
@@ -152,10 +156,6 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     return this.page.addScriptTag({
       content: content,
     });
-  }
-
-  private _createReferenceName2(name: string): string {
-    return `flagpole_${Date.now()}_${name.replace(/[^a-z]/gi, "")}`;
   }
 
   /**
@@ -173,7 +173,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
       return findOne(this, selector, params);
     }
     // First look for ExtJS component query
-    const components = await this._query(selector);
+    const components = await this._query(selector, params);
     if (components.length) {
       return components[0];
     }
@@ -202,23 +202,23 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
+    const params = getFindParams(a, b);
     const components: iValue[] = await (async () => {
       // First, use ExtJS.ComponentQuery.query
-      const components = await this._query(selector);
+      const components = await this._query(selector, params);
       if (components.length) {
         return components;
       }
       // If we didn't find any, then use the DOM query
       const elements = await this._page.$$(selector);
       return asyncMap(elements, async (el: ElementHandle<Element>, i) => {
-        const component = await this._getComponentOrElementFromHandle(
+        return await this._getComponentOrElementFromHandle(
           el,
-          selector,
+          getFindName(params, selector, i),
           `${selector} [${i}]`
         );
       });
     })();
-    const params = getFindParams(a, b);
     return filterFind(
       components,
       params.contains || params.matches,
@@ -272,13 +272,17 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
    *
    * @param path
    */
-  private async _query(selector: string): Promise<ExtJsComponent[]> {
+  private async _query(
+    selector: string,
+    params: FindParams
+  ): Promise<ExtJsComponent[]> {
     const components = await this._queryGetHandle(selector);
     return asyncMap(components, async (component: JSHandle<any>, i) => {
       return await ExtJsComponent.create(
         component,
         this.context,
-        `${selector}[${i}]`
+        getFindName(params, selector, i),
+        selector
       );
     });
   }

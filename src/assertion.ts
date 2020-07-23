@@ -18,6 +18,7 @@ import {
   isAsyncCallback,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
+import { iValue } from ".";
 
 export class Assertion implements iAssertion {
   /**
@@ -213,6 +214,86 @@ export class Assertion implements iAssertion {
     this._finishedPromise = new Promise((resolve) => {
       this._finishedResolver = resolve;
     });
+  }
+
+  public async hasValue(value: any): Promise<iAssertion> {
+    const thisValue = this._input?.getValue
+      ? (await (this._input as iValue).getValue()).$
+      : this._getCompareValue(this._input);
+    const thatValue = this._getCompareValue(value);
+    this._setDefaultMessages(
+      `${this._getSubject()} does not have value ${thatValue}`,
+      `${this._getSubject()} has value ${thatValue}`
+    );
+    return this._evalulate(thisValue === thatValue, thisValue);
+  }
+
+  public async hasProperty(key: string): Promise<iAssertion> {
+    const hasKey = this._input?.hasProperty
+      ? (await (this._input as iValue).hasProperty(key)).$
+      : this._input[key] !== undefined;
+    this._setDefaultMessages(
+      `${this._getSubject()} does not have property ${key}`,
+      `${this._getSubject()} has property ${key}`
+    );
+    return this._evalulate(hasKey, hasKey);
+  }
+
+  public async hasAttribute(key: string): Promise<iAssertion> {
+    const hasKey = this._input?.hasProperty
+      ? (await (this._input as iValue).hasAttribute(key)).$
+      : this._input[key] !== undefined;
+    this._setDefaultMessages(
+      `${this._getSubject()} does not have attribute ${key}`,
+      `${this._getSubject()} has attribute ${key}`
+    );
+    return this._evalulate(hasKey, hasKey);
+  }
+
+  public async hasClassName(key: string): Promise<iAssertion> {
+    const hasKey = this._input?.hasProperty
+      ? (await (this._input as iValue).hasClassName(key)).$
+      : this._input[key] !== undefined;
+    this._setDefaultMessages(
+      `${this._getSubject()} does not have class named ${key}`,
+      `${this._getSubject()} has class named ${key}`
+    );
+    return this._evalulate(hasKey, hasKey);
+  }
+
+  public async hasData(key: string): Promise<iAssertion> {
+    const hasKey = this._input?.hasProperty
+      ? (await (this._input as iValue).hasData(key)).$
+      : this._input[key] !== undefined;
+    this._setDefaultMessages(
+      `${this._getSubject()} does not have data ${key}`,
+      `${this._getSubject()} has data ${key}`
+    );
+    return this._evalulate(hasKey, hasKey);
+  }
+
+  public async hasText(text: string): Promise<iAssertion> {
+    const thisText = this._input?.getValue
+      ? (await (this._input as iValue).getText()).$
+      : String(this._getCompareValue(this._input));
+    this._setDefaultMessages(
+      `${this._getSubject()} does not have text "${text}"`,
+      `${this._getSubject()} has text "${text}"`
+    );
+    return this._evalulate(thisText === text, thisText);
+  }
+
+  public isTag(...tagNames: string[]): iAssertion {
+    const hasTag = (() => {
+      return this._input.isTag
+        ? (this._input as iValue).isTag.apply(this._input, tagNames)
+        : false;
+    })();
+    this._setDefaultMessages(
+      `${this._getSubject()} is not tag ${tagNames.join(",")}`,
+      `${this._getSubject()} is tag <${tagNames.join(",")}>`
+    );
+    return this._evalulate(hasTag, this._input.tagName || "Not a tag");
   }
 
   public exactly(value: any): iAssertion {

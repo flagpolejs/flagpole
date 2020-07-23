@@ -1,6 +1,6 @@
-import { HttpResponse } from "./httpresponse";
-import { iResponse } from "./interfaces";
-import { ResponseType } from "./enums";
+import { HttpResponse } from "../httpresponse";
+import { iResponse } from "../interfaces";
+import { ResponseType } from "../enums";
 import { XmlResponse } from "./xmlresponse";
 import * as cheerio from "cheerio";
 

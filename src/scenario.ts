@@ -19,7 +19,10 @@ import {
   ResponsePipeCallbackAndMessage,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
-import { BrowserControl, iBrowserControlResponse } from "./browsercontrol";
+import {
+  BrowserControl,
+  iBrowserControlResponse,
+} from "./puppeteer/browsercontrol";
 import { createResponse } from "./responsefactory";
 import {
   AssertionResult,
@@ -43,9 +46,10 @@ import {
   BrowserOptions,
 } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
-import { toType, asyncForEach } from "./util";
+import { toType, asyncForEach, runAsync } from "./util";
 import { AssertionContext } from "./assertioncontext";
 import * as bluebird from "bluebird";
+import { iValue } from ".";
 
 /**
  * A scenario contains tests that run against one request
@@ -529,7 +533,9 @@ export class Scenario implements iScenario {
    *
    * @param {string} url
    */
-  public open(url: string, opts?: HttpRequestOptions): iScenario {
+  public open(url: string, opts?: HttpRequestOptions): iScenario;
+  public open(link: iValue, opts?: HttpRequestOptions): iScenario;
+  public open(a: string | iValue, opts?: HttpRequestOptions): iScenario {
     if (this.hasExecuted) {
       throw `Can call open after scenario has executed`;
     }
@@ -537,9 +543,18 @@ export class Scenario implements iScenario {
     if (opts) {
       this._request.setOptions(opts);
     }
-    // Okay now set the open method
-    this.url = String(url);
+    // Not a mock test
     this._isMock = false;
+    // Handle overloading
+    if (typeof a == "string") {
+      // Passed in a string, so open it as url
+      this.url = String(a);
+    } else {
+      // Passed in an iValue so get URL from that element
+      runAsync(async () => {
+        this.url = (await a.getUrl()).toString();
+      });
+    }
     return this;
   }
 
@@ -1103,9 +1118,10 @@ export class Scenario implements iScenario {
       // Finally
       await this._fireFinally();
       // Close the browser window
-      if (this._browserControl !== null) {
-        await this._browserControl.close();
-      }
+      // Important! Don't close right away, some things may need to finish that were async
+      runAsync(() => {
+        this._browserControl?.close();
+      }, 100);
     }
     return this;
   }

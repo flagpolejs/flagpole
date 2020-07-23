@@ -93,7 +93,6 @@ export async function openInBrowser(content: string): Promise<string> {
   const tmp = require("tmp");
   const tmpObj = tmp.fileSync({ postfix: ".html" });
   const filePath: string = tmpObj.name;
-  console.log(filePath);
   fs.writeFileSync(filePath, content);
   await open(filePath);
   return filePath;
@@ -268,7 +267,7 @@ export function getMessageAndCallbackFromOverloading(
     return undefined;
   })();
   return {
-    isSubScenario: a || b,
+    isSubScenario: !!(a || b),
     message: message,
     callback: callback,
     scenario: scenario,
@@ -280,6 +279,14 @@ export type FindParams = {
   matches: RegExp | null;
   opts: FindOptions | FindAllOptions | null;
 };
+
+export function getFindName(params: FindParams, selector: string, i: number) {
+  return params.contains
+    ? `${selector} containing "${params.contains}"`
+    : params.matches
+    ? `${selector} matching ${String(params.matches)}`
+    : `${selector}[${i}]`;
+}
 
 export function getFindParams(a: any, b: any): FindParams {
   const contains = typeof a === "string" ? a : null;
@@ -304,9 +311,6 @@ export async function filterFind(
       const text: string = await (async () => {
         if (opts?.findBy == "value") {
           return (await element.getValue()).$;
-        }
-        if (opts?.findBy == "alt") {
-          return (await element.getAttribute("alt")).$;
         }
         if (opts?.findBy == "html") {
           return (await element.getOuterHtml()).$;

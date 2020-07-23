@@ -1,6 +1,6 @@
 import { fp, Suite } from "../../dist/index";
 
-fp.suite("Test different wait methods", suite => {
+fp.suite("Test different wait methods", (suite) => {
   suite
     .base("https://orlando.craigslist.org/")
     .success(() => {
@@ -21,14 +21,14 @@ fp.suite("Test different wait methods", suite => {
   const homepage = suite
     .html("Homepage Loads")
     .open("/")
-    .next(async context => {
+    .next(async (context) => {
       const communityLink = await context.exists("div.community h4 a");
-      communityLink.click(community);
+      communityLink.open(community);
     });
   const community = suite
     .html("Community Category Loads")
     .waitFor(homepage)
-    .next(async context => {
+    .next(async (context) => {
       const results = await context.findAll("#sortable-results ul.rows li");
       context.assert(results).length.greaterThan(0);
     });

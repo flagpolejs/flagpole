@@ -27,5 +27,5 @@ suite
   })
   .next("Individual event rankings and paywall", async (context) => {
     await context.exists("a.join");
-    await context.exists("Join Now button exists", "a", "Join Now");
+    await context.exists("a", "Join Now");
   });

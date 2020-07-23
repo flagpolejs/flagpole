@@ -1,17 +1,17 @@
-import { HtmlResponse } from "./htmlresponse";
+import { HtmlResponse } from "./html/htmlresponse";
 import { ResourceResponse } from "./resourceresponse";
-import { BrowserResponse } from "./browserresponse";
+import { BrowserResponse } from "./puppeteer/browserresponse";
 import { CssResponse } from "./cssresponse";
 import { ImageResponse } from "./imageresponse";
-import { JsonResponse } from "./jsonresponse";
+import { JsonResponse } from "./json/jsonresponse";
 import { ScriptResponse } from "./scriptresponse";
 import { VideoResponse } from "./videoresponse";
-import { ExtJSResponse } from "./extjsresponse";
+import { ExtJSResponse } from "./puppeteer/extjsresponse";
 import { ResponseType } from "./enums";
 import { iResponse, iScenario } from "./interfaces";
-import { XmlResponse } from "./xmlresponse";
-import { RssResponse } from "./rssresponse";
-import { AtomResponse } from "./atomresponse";
+import { XmlResponse } from "./xml/xmlresponse";
+import { RssResponse } from "./xml/rssresponse";
+import { AtomResponse } from "./xml/atomresponse";
 
 export function createResponse(scenario: iScenario): iResponse {
   const type: ResponseType = scenario.responseType;

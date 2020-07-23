@@ -1,8 +1,8 @@
-import { iAssertionContext, iValue } from "./interfaces";
+import { iAssertionContext, iValue } from "../interfaces";
 import { PuppeteerElement } from "./puppeteerelement";
-import { ExtJSResponse } from ".";
-import { JSHandle, EvaluateFn, SerializableOrJSHandle } from "puppeteer";
-import { arrayify } from "./util";
+import { JSHandle, EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
+import { arrayify } from "../util";
+import { ExtJSResponse } from "./extjsresponse";
 
 export const ExtJsComponentTypes = {
   actionsheet: "Ext.ActionSheet",
@@ -78,11 +78,11 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     handle: JSHandle,
     context: iAssertionContext,
     name: string,
-    path?: string
+    path: string
   ) {
     const element = new ExtJsComponent(handle, context, name, path);
     const componentType = await element._getTagName();
-    if (componentType !== null) {
+    if (!element._name && componentType !== null) {
       element._name = `<${componentType}> Component @ ${element.path}`;
     }
     return element;
@@ -267,8 +267,17 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
       if (c.getText) {
         return c.getText();
       }
+      if (c.element?.dom?.innerText) {
+        return c.element.dom.innerText;
+      }
       if (c.getLabel) {
         return c.getLabel();
+      }
+      if (c.getTitle) {
+        return c.getTitle();
+      }
+      if (c.getDisplayValue) {
+        return c.getDisplayValue();
       }
       return "";
     });

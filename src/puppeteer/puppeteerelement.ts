@@ -1,6 +1,6 @@
-import { iValue, iAssertionContext } from "./interfaces";
+import { iValue, iAssertionContext } from "../interfaces";
 import { JSHandle, ElementHandle, EvaluateFn, Page } from "puppeteer-core";
-import { DOMElement } from "./domelement";
+import { DOMElement } from "../html/domelement";
 
 export abstract class PuppeteerElement extends DOMElement implements iValue {
   protected abstract _input: ElementHandle | JSHandle;

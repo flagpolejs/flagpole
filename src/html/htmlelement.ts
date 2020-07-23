@@ -1,6 +1,6 @@
 import { DOMElement } from "./domelement";
-import { Link } from "./link";
-import { ResponseType } from "./enums";
+import { Link } from "../link";
+import { ResponseType } from "../enums";
 import {
   iAssertionContext,
   iScenario,
@@ -8,14 +8,15 @@ import {
   KeyValue,
   FindOptions,
   FindAllOptions,
-} from "./interfaces";
+} from "../interfaces";
 import {
   asyncForEach,
   getMessageAndCallbackFromOverloading,
   getFindParams,
   filterFind,
-} from "./util";
-import { HttpMethodVerb } from "./httprequest";
+} from "../util";
+import { HttpMethodVerb } from "../httprequest";
+import { HttpRequest } from "..";
 
 const cheerio: CheerioAPI = require("cheerio");
 let $: CheerioStatic;
@@ -222,28 +223,18 @@ export class HTMLElement extends DOMElement implements iValue {
   /**
    * Click on this element and then load a new page. For HTML/DOM scenarios this creates a new scenario
    */
-  public async click(): Promise<void>;
-  public async click(message: string): Promise<iScenario>;
-  public async click(callback: Function): Promise<iScenario>;
-  public async click(scenario: iScenario): Promise<iScenario>;
-  public async click(message: string, callback: Function): Promise<iScenario>;
-  public async click(
-    a?: string | Function | iScenario,
-    b?: Function
-  ): Promise<iScenario | void> {
-    const overloaded = getMessageAndCallbackFromOverloading(a, b, this._path);
+  public async click(): Promise<void> {
     // If this is a link tag, treat it the same as load
     if (await this._isLinkTag()) {
-      // Load a sub scenario
-      if (a || b) {
+      const link = await this.getLink();
+      if (link.isNavigation()) {
+        const request = new HttpRequest({
+          uri: link.getUri(),
+          method: "get",
+        });
         this._completedAction("CLICK");
-        return this._loadSubScenario(overloaded);
-      }
-      // Click and replace the current response context (like we'd do in Puppeteer)
-      else {
-        throw new Error(
-          "Calling the element.click() method with no arguements is not yet supported for HTML/DOM type request."
-        );
+        this.context.response.init(await request.fetch());
+        return;
       }
     }
     // Is this a button?
@@ -259,12 +250,11 @@ export class HTMLElement extends DOMElement implements iValue {
           this.path
         );
         this._completedAction("CLICK");
-        return overloaded.scenario === undefined
-          ? formEl.submit(overloaded.message, overloaded.callback)
-          : formEl.submit(overloaded.scenario);
+        formEl.submit();
+        return;
       }
     }
-    throw new Error(`${this.name} is not a clickable element.`);
+    this.context.logFailure(`${this.name} is not a clickable element.`);
   }
 
   /**
@@ -295,57 +285,41 @@ export class HTMLElement extends DOMElement implements iValue {
   /**
    * If this is a form element, submit the form
    */
-  public async submit(): Promise<void>;
-  public async submit(message: string): Promise<iScenario>;
-  public async submit(callback: Function): Promise<iScenario>;
-  public async submit(scenario: iScenario): Promise<iScenario>;
-  public async submit(message: string, callback: Function): Promise<iScenario>;
-  public async submit(
-    a?: string | Function | iScenario,
-    b?: Function
-  ): Promise<iScenario | void> {
+  public async submit(): Promise<void> {
     if (!this._isFormTag()) {
       throw new Error("You can only use .submit() with a form element.");
     }
-    if (a || b) {
-      const link: Link = await this._getLink();
-      const overloaded = getMessageAndCallbackFromOverloading(a, b, this._path);
-      const scenarioType: ResponseType = await this._getLambdaScenarioType();
-      const opts: any = await this._getLambdaScenarioOpts(scenarioType);
-      const scenario: iScenario = this._createSubScenario(
-        overloaded,
-        scenarioType,
-        opts
-      );
+    const link: Link = await this.getLink();
+    // If there is a URL we can submit the form to
+    if (link.isNavigation()) {
       const method = ((await this._getAttribute("method")) || "get")
         .toString()
         .toLowerCase();
-      // If there is a URL we can submit the form to
-      if (link.isNavigation()) {
-        if (method == "get") {
-          link.setQueryString(this.el.serializeArray());
-        } else {
-          const formDataArray: {
-            name: string;
-            value: string;
-          }[] = this.el.serializeArray();
-          const formData: any = {};
-          formDataArray.forEach(function (input: any) {
-            formData[input.name] = input.value;
-          });
-          scenario.setFormData(formData);
-        }
-        scenario.setMethod(<HttpMethodVerb>method);
-        scenario.next(overloaded.callback);
-        scenario.open(link.getUri());
-        this._completedAction("SUBMIT");
+      if (method == "get") {
+        link.setQueryString(this.el.serializeArray());
       }
-      // Not a valid URL to submit form to
-      else {
-        scenario.skip("Nothing to submit");
+      const request = new HttpRequest({
+        uri: link.getUri(),
+        method: method as HttpMethodVerb,
+      });
+      if (method != "get") {
+        const formDataArray: {
+          name: string;
+          value: string;
+        }[] = this.el.serializeArray();
+        const formData: any = {};
+        formDataArray.forEach(function (input: any) {
+          formData[input.name] = input.value;
+        });
+        request.setFormData(formData);
       }
-      return scenario;
+      this._completedAction("SUBMIT");
+      this.context.response.init(await request.fetch());
+      return;
     }
+    this.context.logFailure(
+      `This element could not be submitted: ${this.name}`
+    );
   }
 
   protected async _getText(): Promise<string> {

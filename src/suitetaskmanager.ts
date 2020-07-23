@@ -9,6 +9,7 @@ import {
 } from "./interfaces";
 import * as bluebird from "bluebird";
 import { Scenario } from "./scenario";
+import { runAsync } from "./util";
 
 type WhichCallback =
   | "beforeAll"
@@ -314,7 +315,6 @@ export class SuiteTaskManager {
       throw "Execution already started";
     }
     this._dateExecutionBegan = Date.now();
-    let i = 0;
     return new Promise(async (resolve) => {
       const execute = async () => {
         // Execute this batch
@@ -326,14 +326,22 @@ export class SuiteTaskManager {
         }
         // If last time around, we started some scenarios, execute pending ones
         else if (scenariosExecuting.length > 0) {
-          await execute();
+          return execute();
         }
         // If we have some pending + we didn't start any new ones, kill them
         else {
-          this.scenariosNotReadyToExecute.forEach((scenario) => {
-            scenario.cancel("Not able to execute");
-          });
-          resolve(this._markSuiteExecutionAsCompleted());
+          // Important! Don't finish it off right away, there may be something pending in a few milliseconds
+          runAsync(() => {
+            // If there are more scenarios now ready to execute, do those
+            if (this.scenariosWaitingToExecute.length > 0) {
+              return execute();
+            }
+            // Otherwise, mark any still pending as cancelled
+            this.scenariosNotReadyToExecute.forEach((scenario) => {
+              scenario.cancel("Not able to execute");
+            });
+            resolve(this._markSuiteExecutionAsCompleted());
+          }, 50);
         }
       };
       await execute();

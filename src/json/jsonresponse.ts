@@ -1,10 +1,9 @@
-import { ProtoResponse } from "./response";
-import { Value } from "./value";
+import { ProtoResponse } from "../response";
 import { iJPath, jPath } from "./jpath";
-import { HttpResponse } from "./httpresponse";
-import { ResponseType } from ".";
-import { iResponse, iValue } from "./interfaces";
-import { wrapAsValue } from "./util";
+import { HttpResponse } from "../httpresponse";
+import { iResponse, iValue } from "../interfaces";
+import { wrapAsValue } from "../util";
+import { ResponseType } from "../enums";
 
 export class JsonResponse extends ProtoResponse implements iResponse {
   protected _json: {} = {};

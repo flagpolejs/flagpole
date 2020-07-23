@@ -1,29 +1,27 @@
-import { Flagpole } from "../../dist/index";
+import flagpole, { iValue } from "../../dist/index";
 
-const suite = Flagpole.suite("Basic Smoke Test of Site").base(
+const browserOpts = {
+  headless: false,
+  recordConsole: true,
+  outputConsole: false,
+  width: 1024,
+  height: 768,
+};
+
+const suite = flagpole("Basic Smoke Test of Site").base(
   "https://www.milesplit.com/"
 );
 
 const scenario1 = suite
-  .html("Homepage Loads")
+  .scenario("Homepage Loads", "browser")
   .open("/")
   .next(async (context) => {
-    const a = await context.find("a", "Videos");
+    const a = await context.exists("a", "Videos");
     context.comment(a);
     context.assert(await a.getInnerText()).like("Videos");
-
     const image = await context.exists("img");
-    image.load(async (context) => {
-      context.comment(context.response.body);
+    image.open("Test Image Size", "image", async (context) => {
       const width = await context.find("width");
       context.assert(width).equals(620);
     });
-  });
-
-const scenario2 = suite
-  .scenario("Click me", "browser")
-  .open("https://stackoverflow.com/")
-  .next(async (context) => {
-    await context.waitForExists("a.login-link");
-    await context.click("a.login-link");
   });

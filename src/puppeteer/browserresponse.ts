@@ -1,6 +1,6 @@
-import { ResponseType } from "./enums";
-import { iResponse, iValue, FindOptions, FindAllOptions } from "./interfaces";
-import { ElementHandle } from "puppeteer";
+import { ResponseType } from "../enums";
+import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
+import { ElementHandle } from "puppeteer-core";
 import { PuppeteerResponse } from "./puppeteerresponse";
 import {
   asyncForEach,
@@ -10,7 +10,8 @@ import {
   filterFind,
   findOne,
   wrapAsValue,
-} from "./util";
+  getFindName,
+} from "../util";
 import { BrowserElement } from "./browserelement";
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
@@ -32,16 +33,13 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     a?: string | RegExp | FindOptions,
     b?: FindOptions
   ): Promise<iValue> {
-    if (this.page === null) {
-      throw "Page not found.";
-    }
     // Filter with options
     const params = getFindParams(a, b);
     if (params.opts || params.matches || params.contains) {
       return findOne(this, selector, params);
     }
     // No options, so just find from selector
-    const el: ElementHandle<Element> | null = await this.page.$(selector);
+    const el: ElementHandle<Element> | null = await this._page.$(selector);
     return el === null
       ? wrapAsValue(this.context, null, selector)
       : BrowserElement.create(el, this.context, selector, selector);
@@ -57,17 +55,14 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    if (this.page === null) {
-      throw "Page not found.";
-    }
     const params = getFindParams(a, b);
     const elements: BrowserElement[] = await asyncMap(
-      await this.page.$$(selector),
+      await this._page.$$(selector),
       async (el: ElementHandle<Element>, i) => {
         return await BrowserElement.create(
           el,
           this.context,
-          `${selector} [${i}]`,
+          getFindName(params, selector, i),
           selector
         );
       }

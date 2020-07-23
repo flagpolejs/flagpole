@@ -1,4 +1,4 @@
-import { Value } from "./value";
+import { Value } from "../value";
 import {
   iValue,
   iAssertionContext,
@@ -6,14 +6,14 @@ import {
   iMessageAndCallback,
   FindOptions,
   FindAllOptions,
-} from "./interfaces";
-import { Link } from "./link";
-import { ResponseType } from "./enums";
-import { isPuppeteer } from "./response";
-import { runAsync, getMessageAndCallbackFromOverloading } from "./util";
+} from "../interfaces";
+import { Link } from "../link";
+import { ResponseType } from "../enums";
+import { isPuppeteer } from "../response";
+import { runAsync, getMessageAndCallbackFromOverloading } from "../util";
 import * as fs from "fs";
 import needle = require("needle");
-import { HttpRequestOptions } from "./httprequest";
+import { HttpRequestOptions } from "../httprequest";
 
 export abstract class DOMElement extends Value {
   public get name(): string {
@@ -224,49 +224,6 @@ export abstract class DOMElement extends Value {
   }
 
   /**
-   * Download the file that is linked by this element... return the
-   * contents and/or save it to a file
-   *
-   * @param opts
-   */
-  public download(): Promise<Buffer | null>;
-  public download(localFilePath: string): Promise<Buffer | null>;
-  public download(
-    localFilePath: string,
-    opts: HttpRequestOptions
-  ): Promise<Buffer | null>;
-  public download(opts: HttpRequestOptions): Promise<Buffer | null>;
-  public download(
-    localFilePath: string,
-    opts: HttpRequestOptions
-  ): Promise<string | null>;
-  public download(opts: HttpRequestOptions): Promise<string | null>;
-  public async download(
-    a?: string | HttpRequestOptions,
-    b?: HttpRequestOptions
-  ): Promise<any> {
-    const localFilePath: string | null = typeof a == "string" ? a : null;
-    const opts = (() => {
-      if (typeof a == "object" && a !== null) {
-        return a;
-      }
-      if (typeof b == "object" && b !== null) {
-        return b;
-      }
-      return { encoding: null };
-    })();
-    const link = await this._getLink();
-    if (link.isNavigation()) {
-      const resp = await needle("get", link.getUri());
-      if (localFilePath) {
-        fs.writeFileSync(localFilePath, resp.body);
-      }
-      return resp.body;
-    }
-    return null;
-  }
-
-  /**
    * Load the URL from this element if it has something to load
    * This is used to create a lambda scenario
    */
@@ -282,7 +239,7 @@ export abstract class DOMElement extends Value {
     const overloaded = getMessageAndCallbackFromOverloading(a, b, this._path);
     const scenario = this._createSubScenario(overloaded);
     this._completedAction("LOAD");
-    const link: Link = await this._getLink();
+    const link: Link = await this.getLink();
     // If this is a lmabda scenario, define the response type and options
     if (overloaded.scenario === undefined) {
       const scenarioType: ResponseType = await this._getLambdaScenarioType();
@@ -307,32 +264,32 @@ export abstract class DOMElement extends Value {
   }
 
   protected async _isFormTag(): Promise<boolean> {
-    return this.tagName == "form";
+    return this.isTag("form");
   }
 
   protected async _isButtonTag(): Promise<boolean> {
     const type: string | null = await this._getAttribute("type");
     return (
-      this.tagName === "button" ||
-      (this.tagName === "input" &&
+      this.isTag("button") ||
+      (this.isTag("input") &&
         ["button", "submit", "reset"].indexOf(String(type)) >= 0)
     );
   }
 
   protected async _isLinkTag(): Promise<boolean> {
-    return this.tagName === "a" && (await this._getAttribute("href")) !== null;
+    return this.isTag("a") && (await this._getAttribute("href")) !== null;
   }
 
   protected async _isImageTag(): Promise<boolean> {
-    return this.tagName === "img" && (await this._getAttribute("src")) !== null;
+    return this.isTag("img") && (await this._getAttribute("src")) !== null;
   }
 
   protected async _isVideoTag(): Promise<boolean> {
     const src: string | null = await this._getAttribute("src");
     const type: string | null = await this._getAttribute("type");
     return (
-      (this.tagName === "video" && src !== null) ||
-      (this.tagName === "source" && src !== null && /video/i.test(type || ""))
+      (this.isTag("video") && src !== null) ||
+      (this.isTag("source") && src !== null && /video/i.test(type || ""))
     );
   }
 
@@ -340,21 +297,18 @@ export abstract class DOMElement extends Value {
     const src: string | null = await this._getAttribute("src");
     const type: string | null = await this._getAttribute("type");
     return (
-      (this.tagName === "audio" && src !== null) ||
-      (this.tagName === "bgsound" && src !== null) ||
+      (this.isTag("audio", "bgsound") && src !== null) ||
       (this.tagName === "source" && src !== null && /audio/i.test(type || ""))
     );
   }
 
   protected async _isScriptTag(): Promise<boolean> {
-    return (
-      this.tagName === "script" && (await this._getAttribute("src")) !== null
-    );
+    return this.isTag("script") && (await this._getAttribute("src")) !== null;
   }
 
   protected async _isStylesheetTag(): Promise<boolean> {
     return (
-      this.tagName === "link" &&
+      this.isTag("link") &&
       (await this._getAttribute("href")) !== null &&
       String(await this._getAttribute("rel")).toLowerCase() == "stylesheet"
     );
@@ -362,27 +316,6 @@ export abstract class DOMElement extends Value {
 
   protected async _isClickable(): Promise<boolean> {
     return (await this._isLinkTag()) || (await this._isButtonTag());
-  }
-
-  protected async _getUrl(): Promise<string | null> {
-    if (this.tagName !== null) {
-      if (
-        ["img", "script", "video", "audio", "object", "iframe"].indexOf(
-          this.tagName
-        ) >= 0
-      ) {
-        return await this._getAttribute("src");
-      } else if (["a", "link"].indexOf(this.tagName) >= 0) {
-        return await this._getAttribute("href");
-      } else if (["form"].indexOf(this.tagName) >= 0) {
-        return (
-          (await this._getAttribute("action")) || this._context.scenario.url
-        );
-      } else if (["source"].indexOf(this.tagName) >= 0) {
-        return await this._getAttribute("src");
-      }
-    }
-    return null;
   }
 
   protected async _getLambdaScenarioType(): Promise<ResponseType> {
@@ -400,11 +333,6 @@ export abstract class DOMElement extends Value {
     } else {
       return "resource";
     }
-  }
-
-  protected async _getLink(): Promise<Link> {
-    const srcPath: string | null = await this._getUrl();
-    return new Link(srcPath || "", this._context);
   }
 
   protected _getLambdaScenarioOpts(newScenarioType: ResponseType): any {

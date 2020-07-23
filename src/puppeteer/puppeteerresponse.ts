@@ -6,10 +6,10 @@ import {
   EvaluateFn,
   SerializableOrJSHandle,
 } from "puppeteer-core";
-import { iResponse, ScreenshotOpts } from "./interfaces";
+import { iResponse, ScreenshotOpts } from "../interfaces";
 import { BrowserControl } from "./browsercontrol";
-import { DOMResponse } from "./domresponse";
-import { toType } from "./util";
+import { DOMResponse } from "../html/domresponse";
+import { toType } from "../util";
 
 export abstract class PuppeteerResponse extends DOMResponse
   implements iResponse {

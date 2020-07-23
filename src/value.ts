@@ -4,12 +4,18 @@ import {
   iScenario,
   KeyValue,
   iBounds,
+  iNextCallback,
 } from "./interfaces";
-import { toType, isNullOrUndefined } from "./util";
+import { toType, isNullOrUndefined, runAsync } from "./util";
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
 } from "./logging/assertionresult";
+import { ResponseType } from "./enums";
+import { Link } from "./link";
+import { HttpRequest, HttpResponse } from ".";
+import { HttpRequestOptions } from "./httprequest";
+import * as fs from "fs";
 
 export class Value implements iValue {
   protected _input: any;
@@ -30,7 +36,7 @@ export class Value implements iValue {
   }
 
   public get tagName(): string {
-    return this._tagName || "";
+    return (this._tagName || "").toLowerCase();
   }
 
   public get outerHTML(): string {
@@ -126,6 +132,10 @@ export class Value implements iValue {
     return String(this._input);
   }
 
+  public toBoolean(): boolean {
+    return !!this.$;
+  }
+
   public toFloat(): number {
     return parseFloat(this.toString());
   }
@@ -203,6 +213,14 @@ export class Value implements iValue {
     );
   }
 
+  public async hasValue(value: string): Promise<iValue> {
+    const myValue = this.getValue();
+    return this._wrapAsValue(
+      myValue.toString() === value,
+      `${this.name} has value ${value}`
+    );
+  }
+
   public as(aliasName: string): iValue {
     this._context.scenario.set(aliasName, this);
     return this;
@@ -215,26 +233,97 @@ export class Value implements iValue {
     return undefined;
   }
 
-  public click(): Promise<void>;
-  public click(scenario: iScenario): Promise<iScenario>;
-  public click(message: string): Promise<iScenario>;
-  public click(callback: Function): Promise<iScenario>;
-  public click(message: string, callback: Function): Promise<iScenario>;
-  public async click(a?: any, b?: any): Promise<void | iScenario> {
+  public async click(): Promise<void> {
     this._context.logFailure(`Element could not be clicked on: ${this.name}`);
   }
 
-  public submit(): Promise<void>;
-  public submit(scenario: iScenario): Promise<iScenario>;
-  public submit(message: string): Promise<iScenario>;
-  public submit(callback: Function): Promise<iScenario>;
-  public async submit(a?: any, b?: any): Promise<void | iScenario> {}
+  public async submit(): Promise<void> {
+    this._context.logFailure(`Element could not be submitted on: ${this.name}`);
+  }
 
-  public load(): Promise<void>;
-  public load(message: string): Promise<iScenario>;
-  public load(scenario: iScenario): Promise<iScenario>;
-  public load(callback: Function): Promise<iScenario>;
-  public async load(a?: any, b?: any): Promise<void | iScenario> {}
+  public open(message: string): iScenario;
+  public open(message: string, type: ResponseType): iScenario;
+  public open(
+    message: string,
+    type: ResponseType,
+    callback: iNextCallback
+  ): iScenario;
+  public open(message: string, callback: iNextCallback): iScenario;
+  public open(callback: iNextCallback): iScenario;
+  public open(scenario: iScenario): iScenario;
+  public open(
+    a?: string | iScenario | iNextCallback,
+    b?: ResponseType | iNextCallback,
+    c?: iNextCallback
+  ): iScenario {
+    const message = typeof a == "string" ? a : `Open ${this.name}`;
+    const responseType =
+      typeof b == "string" ? b : this.context.response.responseType;
+    const callback: iNextCallback = (() => {
+      return typeof c == "function"
+        ? c
+        : typeof b == "function"
+        ? b
+        : typeof a == "function"
+        ? a
+        : () => {};
+    })();
+    const scenario: iScenario = (() => {
+      return toType(a) == "scenario"
+        ? (a as iScenario)
+        : this.context.suite.scenario(message, responseType);
+    })();
+    scenario.next(callback);
+    runAsync(async () => {
+      const link = await this.getLink();
+      if (link.isNavigation()) {
+        scenario.open(link.getUri());
+      }
+    });
+    this._completedAction("OPEN");
+    return scenario;
+  }
+
+  public isTag(...tagNames: string[]) {
+    if (!this.tagName) {
+      return false;
+    }
+    return tagNames.length ? tagNames.includes(this.tagName) : true;
+  }
+
+  public async getLink(): Promise<Link> {
+    const src = await this.getUrl();
+    return new Link(src.isString() ? src.toString() : "", this._context);
+  }
+
+  public async getUrl(): Promise<iValue> {
+    const url = await (async () => {
+      if (this.isString()) {
+        return this.toString();
+      }
+      if (
+        this.isTag(
+          "img",
+          "script",
+          "video",
+          "audio",
+          "object",
+          "iframe",
+          "source"
+        )
+      ) {
+        return (await this.getAttribute("src")).$;
+      } else if (this.isTag("a", "link")) {
+        return (await this.getAttribute("href")).$;
+      } else if (this.isTag("form")) {
+        return (
+          (await this.getAttribute("action")).$ || this._context.scenario.url
+        );
+      }
+      return null;
+    })();
+    return this._wrapAsValue(url, `URL from ${this.name}`, this);
+  }
 
   public async fillForm(
     attributeName: string,
@@ -312,10 +401,6 @@ export class Value implements iValue {
 
   public async getStyleProperty(key: string): Promise<iValue> {
     return this._wrapAsValue(null, `Style of ${key}`);
-  }
-
-  public async download(): Promise<any> {
-    throw new Error("Download is not supported on this value type.");
   }
 
   public async getValue(): Promise<iValue> {
@@ -445,6 +530,51 @@ export class Value implements iValue {
 
   public async getBounds(boxType: string): Promise<iBounds | null> {
     return null;
+  }
+
+  /**
+   * Download the file that is linked by this element... return the
+   * contents and/or save it to a file
+   *
+   * @param opts
+   */
+  public download(): Promise<HttpResponse | null>;
+  public download(localFilePath: string): Promise<HttpResponse | null>;
+  public download(
+    localFilePath: string,
+    opts: HttpRequestOptions
+  ): Promise<HttpResponse | null>;
+  public download(opts: HttpRequestOptions): Promise<HttpResponse | null>;
+  public async download(
+    a?: string | HttpRequestOptions,
+    b?: HttpRequestOptions
+  ): Promise<any> {
+    const link = await this.getLink();
+    if (!link.isNavigation()) {
+      return null;
+    }
+    const localFilePath: string | null = typeof a == "string" ? a : null;
+    const opts = (() => {
+      if (typeof a == "object" && a !== null) {
+        return a;
+      }
+      if (typeof b == "object" && b !== null) {
+        return b;
+      }
+      return { encoding: null };
+    })();
+    const request = new HttpRequest({
+      ...{
+        uri: link.getUri(),
+        method: "get",
+      },
+      ...opts,
+    });
+    const resp = await request.fetch();
+    if (localFilePath) {
+      fs.writeFileSync(localFilePath, resp.body);
+    }
+    return resp;
   }
 
   protected async _completedAction(verb: string, noun?: string) {

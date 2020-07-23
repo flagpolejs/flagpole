@@ -1,4 +1,4 @@
-import { BrowserControl } from "./browsercontrol";
+import { BrowserControl } from "./puppeteer/browsercontrol";
 import { Page, EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import {
   ResponseType,
@@ -17,6 +17,8 @@ import {
   BrowserOptions,
 } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
+import Bluebird = require("bluebird");
+import { Link } from "./link";
 //import * as Ajv from "ajv";
 
 interface AjvSchema {
@@ -40,7 +42,7 @@ export interface iCallbackAndMessage {
 }
 
 export interface FindOptions {
-  findBy?: "text" | "value" | "alt" | "html";
+  findBy?: "text" | "value" | "html";
   offset?: number;
 }
 
@@ -151,6 +153,7 @@ export interface iValue {
   toString(): string;
   toInteger(): number;
   toFloat(): number;
+  toBoolean(): boolean;
   toType(): string;
   isNullOrUndefined(): boolean;
   isUndefined(): boolean;
@@ -166,24 +169,20 @@ export interface iValue {
   isCookie(): boolean;
   isPuppeteerElement(): boolean;
   isCheerioElement(): boolean;
+  isTag(): boolean;
+  isTag(...tagNames: string[]): boolean;
   hasProperty(key: string): Promise<iValue>;
+  hasValue(key: string): Promise<iValue>;
   as(aliasName: string): iValue;
   // DOM Elements only
   click(): Promise<void>;
-  click(scenario: iScenario): Promise<iScenario>;
-  click(message: string): Promise<iScenario>;
-  click(callback: Function): Promise<iScenario>;
-  click(message: string, callback: Function): Promise<iScenario>;
   submit(): Promise<void>;
-  submit(scenario: iScenario): Promise<iScenario>;
-  submit(message: string): Promise<iScenario>;
-  submit(callback: Function): Promise<iScenario>;
-  submit(message: string, callback: Function): Promise<iScenario>;
-  load(): Promise<void>;
-  load(message: string): Promise<iScenario>;
-  load(scenario: iScenario): Promise<iScenario>;
-  load(callback: Function): Promise<iScenario>;
-  load(message: string, callback: Function): Promise<iScenario>;
+  open(message: string): iScenario;
+  open(message: string, type: ResponseType): iScenario;
+  open(message: string, type: ResponseType, callback: iNextCallback): iScenario;
+  open(message: string, callback: iNextCallback): iScenario;
+  open(callback: iNextCallback): iScenario;
+  open(scenario: iScenario): iScenario;
   fillForm(attribute: string, formData: KeyValue): Promise<iValue>;
   fillForm(formData: KeyValue): Promise<iValue>;
   exists(): Promise<iValue>;
@@ -220,23 +219,20 @@ export interface iValue {
   getNextSibling(selector?: string): Promise<iValue>;
   getNextSiblings(selector?: string): Promise<iValue[]>;
   getBounds(boxType: string): Promise<iBounds | null>;
+  getUrl(): Promise<iValue>;
+  getLink(): Promise<Link>;
   hasData(key: string): Promise<iValue>;
   getData(key: string): Promise<iValue>;
   getValue(): Promise<iValue>;
   getText(): Promise<iValue>;
   getStyleProperty(key: string): Promise<iValue>;
-  download(): Promise<Buffer | null>;
-  download(localFilePath: string): Promise<Buffer | null>;
+  download(): Promise<HttpResponse | null>;
+  download(localFilePath: string): Promise<HttpResponse | null>;
   download(
     localFilePath: string,
     opts: HttpRequestOptions
-  ): Promise<Buffer | null>;
-  download(opts: HttpRequestOptions): Promise<Buffer | null>;
-  download(
-    localFilePath: string,
-    opts: HttpRequestOptions
-  ): Promise<string | null>;
-  download(opts: HttpRequestOptions): Promise<string | null>;
+  ): Promise<HttpResponse | null>;
+  download(opts: HttpRequestOptions): Promise<HttpResponse | null>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
@@ -359,6 +355,13 @@ export interface iAssertion {
   looksLike(image: Buffer | string): iAssertion;
   looksLike(image: Buffer | string, threshhold: number): iAssertion;
   looksLike(image: Buffer | string, percent: string): iAssertion;
+  hasValue(value: any): Promise<iAssertion>;
+  hasProperty(key: string): Promise<iAssertion>;
+  hasAttribute(key: string): Promise<iAssertion>;
+  hasClassName(key: string): Promise<iAssertion>;
+  hasData(key: string): Promise<iAssertion>;
+  hasText(text: string): Promise<iAssertion>;
+  isTag(...tagNames: string[]): iAssertion;
 }
 
 export interface iAssertionContext {
@@ -379,36 +382,22 @@ export interface iAssertionContext {
   get(aliasName: string): any;
   exists(selector: string, opts?: FindOptions): Promise<iValue>;
   exists(
-    message: string,
-    selector: string,
-    opts?: FindOptions
-  ): Promise<iValue>;
-  exists(
-    message: string,
     selector: string,
     contains: string,
     opts?: FindOptions
   ): Promise<iValue>;
   exists(
-    message: string,
     selector: string,
     matches: RegExp,
     opts?: FindOptions
   ): Promise<iValue>;
   existsAll(selector: string, opts?: FindOptions): Promise<iValue[]>;
   existsAll(
-    message: string,
-    selector: string,
-    opts?: FindOptions
-  ): Promise<iValue[]>;
-  existsAll(
-    message: string,
     selector: string,
     contains: string,
     opts?: FindOptions
   ): Promise<iValue[]>;
   existsAll(
-    message: string,
     selector: string,
     matches: RegExp,
     opts?: FindOptions
@@ -434,25 +423,10 @@ export interface iAssertionContext {
     textToType: string,
     opts?: any
   ): Promise<void>;
-  clear(selector: string): Promise<void>;
-  click(selector: string): Promise<void>;
-  click(selector: string, scenario: iScenario): Promise<iScenario>;
-  click(selector: string, message: string): Promise<iScenario>;
-  click(selector: string, callback: Function): Promise<iScenario>;
-  click(
-    selector: string,
-    message: string,
-    callback: Function
-  ): Promise<iScenario>;
+  click(selector: string, opts?: FindOptions): Promise<void>;
+  click(selector: string, contains: string, opts?: FindOptions): Promise<void>;
+  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<void>;
   submit(selector: string): Promise<void>;
-  submit(selector: string, scenario: iScenario): Promise<iScenario>;
-  submit(selector: string, message: string): Promise<iScenario>;
-  submit(selector: string, callback: Function): Promise<iScenario>;
-  submit(
-    selector: string,
-    message: string,
-    callback: Function
-  ): Promise<iScenario>;
   type(selector: string, textToType: string, opts?: any): Promise<void>;
   selectOption(selector: string, value: string | string[]): Promise<void>;
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
@@ -565,6 +539,7 @@ export interface iScenario {
   result(result: iAssertionResult): iScenario;
   ignore(assertions?: boolean | Function): iScenario;
   open(url: string, opts?: HttpRequestOptions): iScenario;
+  open(link: iValue, opts?: HttpRequestOptions): iScenario;
   next(callback: iNextCallback): iScenario;
   next(...callbacks: iNextCallback[]): iScenario;
   next(message: string, callback: iNextCallback): iScenario;

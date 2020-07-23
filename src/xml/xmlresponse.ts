@@ -1,7 +1,7 @@
-import { HttpResponse } from "./httpresponse";
-import { iResponse } from "./interfaces";
-import { ResponseType } from "./enums";
-import { HtmlResponse } from "./htmlresponse";
+import { HttpResponse } from "../httpresponse";
+import { iResponse } from "../interfaces";
+import { ResponseType } from "../enums";
+import { HtmlResponse } from "../html/htmlresponse";
 import * as cheerio from "cheerio";
 
 export class XmlResponse extends HtmlResponse implements iResponse {

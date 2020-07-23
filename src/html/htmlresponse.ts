@@ -1,10 +1,10 @@
 import { HTMLElement } from "./htmlelement";
-import { HttpResponse } from "./httpresponse";
+import { HttpResponse } from "../httpresponse";
 import { DOMResponse } from "./domresponse";
-import { iResponse, iValue, FindAllOptions, FindOptions } from "./interfaces";
-import { ResponseType } from "./enums";
+import { iResponse, iValue, FindAllOptions, FindOptions } from "../interfaces";
+import { ResponseType } from "../enums";
 import * as cheerio from "cheerio";
-import { getFindParams, filterFind, wrapAsValue, findOne } from "./util";
+import { getFindParams, filterFind, wrapAsValue, findOne } from "../util";
 
 export class HtmlResponse extends DOMResponse implements iResponse {
   private _cheerio: CheerioStatic | null = null;

@@ -5,15 +5,15 @@ import {
   iBounds,
   ScreenshotOpts,
   KeyValue,
-} from "./interfaces";
-import { ElementHandle, BoxModel, JSHandle, Page, Browser } from "puppeteer";
+  iScenario,
+} from "../interfaces";
+import { ElementHandle, BoxModel, JSHandle, Page } from "puppeteer-core";
 import {
   asyncForEach,
   toType,
   getMessageAndCallbackFromOverloading,
   arrayify,
-} from "./util";
-import { iScenario } from ".";
+} from "../util";
 
 export class BrowserElement extends PuppeteerElement implements iValue {
   protected _input: ElementHandle;
@@ -361,15 +361,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     return this;
   }
 
-  public async submit(): Promise<void>;
-  public async submit(message: string): Promise<iScenario>;
-  public async submit(callback: Function): Promise<iScenario>;
-  public async submit(scenario: iScenario): Promise<iScenario>;
-  public async submit(message: string, callback: Function): Promise<iScenario>;
-  public async submit(
-    a?: string | Function | iScenario,
-    b?: Function
-  ): Promise<iScenario | void> {
+  public async submit(): Promise<void> {
     if (!this._isFormTag()) {
       throw new Error("You can only use .submit() with a form element.");
     }
@@ -380,25 +372,9 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     this._completedAction("SUBMIT");
   }
 
-  public async click(): Promise<void>;
-  public async click(message: string): Promise<iScenario>;
-  public async click(callback: Function): Promise<iScenario>;
-  public async click(scenario: iScenario): Promise<iScenario>;
-  public async click(message: string, callback: Function): Promise<iScenario>;
-  public async click(
-    a?: string | Function | iScenario,
-    b?: Function
-  ): Promise<void | iScenario> {
+  public async click(): Promise<void> {
     this._completedAction("CLICK");
-    // If they passed in a message or callback, treat this as a new sub-scenario
-    if (a || b) {
-      const overloaded = getMessageAndCallbackFromOverloading(a, b, this._path);
-      return this._loadSubScenario(overloaded);
-    }
-    // Otherwise, just treat this as an inline click within the same scenario
-    else {
-      await (<ElementHandle>this._input).click();
-    }
+    return this.$.click();
   }
 
   public screenshot(): Promise<Buffer>;
@@ -463,11 +439,13 @@ export class BrowserElement extends PuppeteerElement implements iValue {
   }
 
   protected async _getText() {
-    return String((await this._input.getProperty("textContent")).jsonValue());
+    const textNode = await this._input.getProperty("textContent");
+    return String(await textNode.jsonValue());
   }
 
   protected async _getClassName(): Promise<string> {
-    return String((await this._input.getProperty("className")).jsonValue());
+    const classNode = await this._input.getProperty("className");
+    return String(await classNode.jsonValue());
   }
 
   protected async _getTagName(): Promise<string> {
