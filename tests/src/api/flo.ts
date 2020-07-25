@@ -5,7 +5,7 @@
  * - Tests the stripe products
  * - Tests the most watched widget
  */
-const Flagpole = require("../../dist/index.js").Flagpole;
+import flagpole from "../../../dist/index";
 
 const THRESHOLD_LOAD_TIME = 500;
 
@@ -25,7 +25,7 @@ const sites = [
       "http://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flosoccer.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Soccer"
+    sport_name: "Soccer",
   },
   {
     domain: "www.flobowling.com",
@@ -41,7 +41,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flobowling.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Bowling"
+    sport_name: "Bowling",
   },
   {
     domain: "www.flofootball.com",
@@ -57,7 +57,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flofootball.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Football"
+    sport_name: "Football",
   },
   {
     domain: "www.flobikes.com",
@@ -73,7 +73,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flocycling.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Cycling"
+    sport_name: "Cycling",
   },
   {
     domain: "www.flodance.com",
@@ -89,7 +89,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flodance.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Dance"
+    sport_name: "Dance",
   },
   {
     domain: "www.flolive.tv",
@@ -104,7 +104,7 @@ const sites = [
     hero_image: null,
     modified_at: null,
     show_on_mobile: true,
-    sport_name: null
+    sport_name: null,
   },
   {
     domain: "www.florugby.com",
@@ -120,7 +120,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_florugby.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Rugby"
+    sport_name: "Rugby",
   },
   {
     domain: "www.flovoice.com",
@@ -136,7 +136,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flovoice.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Singing"
+    sport_name: "Singing",
   },
   {
     domain: "www.floracing.com",
@@ -152,7 +152,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_floracing.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Racing"
+    sport_name: "Racing",
   },
   {
     domain: "www.florodeo.com",
@@ -168,7 +168,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_florodeo.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Rodeo"
+    sport_name: "Rodeo",
   },
   {
     domain: "www.flohockey.tv",
@@ -184,7 +184,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flohockey.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Hockey"
+    sport_name: "Hockey",
   },
   {
     domain: "www.floswimming.com",
@@ -200,7 +200,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_floswimming.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Swimming"
+    sport_name: "Swimming",
   },
   {
     domain: "www.flomarching.com",
@@ -216,7 +216,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flomarching.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Marching Arts"
+    sport_name: "Marching Arts",
   },
   {
     domain: "www.flocombat.com",
@@ -232,7 +232,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flocombat.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "MMA"
+    sport_name: "MMA",
   },
   {
     domain: "www.flovolleyball.tv",
@@ -248,7 +248,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flovolleyball.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Volleyball"
+    sport_name: "Volleyball",
   },
   {
     domain: "tv.varsity.com",
@@ -264,7 +264,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_varsity.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Varsity TV"
+    sport_name: "Varsity TV",
   },
   {
     domain: "www.flosoftball.com",
@@ -280,7 +280,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flosoftball.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Softball"
+    sport_name: "Softball",
   },
   {
     domain: "www.floelite.com",
@@ -296,7 +296,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_floelite.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Elite Fitness"
+    sport_name: "Elite Fitness",
   },
   {
     domain: "www.flocheer.com",
@@ -312,7 +312,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flocheer.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "All Star Cheer & Dance"
+    sport_name: "All Star Cheer & Dance",
   },
   {
     domain: "www.flograppling.com",
@@ -328,7 +328,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flograppling.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Grappling"
+    sport_name: "Grappling",
   },
   {
     domain: "www.flohoops.com",
@@ -344,7 +344,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flohoops.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Basketball"
+    sport_name: "Basketball",
   },
   {
     domain: "www.flogymnastics.com",
@@ -360,7 +360,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flogymnastics.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Gymnastics"
+    sport_name: "Gymnastics",
   },
   {
     domain: "www.flowrestling.org",
@@ -376,7 +376,7 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flowrestling.jpg",
     modified_at: null,
     show_on_mobile: true,
-    sport_name: "Wrestling"
+    sport_name: "Wrestling",
   },
   {
     domain: "www.flotrack.org",
@@ -392,20 +392,18 @@ const sites = [
       "https://d6fm3yzmawlcs.cloudfront.net/mobileVerticalBackground/mobile_bg_flotrack.jpg",
     modified_at: "2019-04-01T21:19:31+00:00",
     show_on_mobile: true,
-    sport_name: "Track and Field"
-  }
+    sport_name: "Track and Field",
+  },
 ];
 
-const suite = Flagpole.Suite("Smoke - Platform API").base(
-  "https://api.flosports.tv"
-);
+const suite = flagpole("Smoke - Platform API").base("https://api.flosports.tv");
 // .finally(suite => suite.print());
 
-sites.forEach(site => {
+sites.forEach((site) => {
   suite
-    .json(`${site.name} - Stripe Products`)
+    .scenario(`${site.name} - Stripe Products`, "json")
     .open(`/api/products?provider=stripe&site_id=${site.id}`)
-    .next(async context => {
+    .next(async (context) => {
       context.assert(context.response.statusCode).equals(200);
       context
         .assert(context.response.loadTime)
@@ -420,11 +418,11 @@ sites.forEach(site => {
     });
 });
 
-sites.forEach(site => {
+sites.forEach((site) => {
   suite
     .json(`${site.name} - Widget - Most Watched`)
     .open(`/api/widgets/most-watched?site_id=${site.id}`)
-    .next(async context => {
+    .next(async (context) => {
       context.assert(context.response.statusCode).equals(200);
       context
         .assert(context.response.loadTime)

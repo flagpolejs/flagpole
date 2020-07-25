@@ -418,6 +418,25 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     await this.$.evaluate((e) => e.scrollIntoView());
   }
 
+  public async isHidden(): Promise<boolean> {
+    return !(await this.isVisible());
+  }
+
+  public async isVisible(): Promise<boolean> {
+    const isVisibleHandle = await this._page.evaluateHandle((e) => {
+      const style = window.getComputedStyle(e);
+      return (
+        style &&
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        style.opacity !== "0"
+      );
+    }, this.$);
+    const visible = await isVisibleHandle.jsonValue();
+    const box = await this.$.boxModel();
+    return !!visible && !!box;
+  }
+
   protected async _getInnerText() {
     return String(await this._eval((e) => e.innerText, this.$));
   }
@@ -428,10 +447,6 @@ export class BrowserElement extends PuppeteerElement implements iValue {
 
   protected async _getOuterHtml() {
     return String(await this._eval((e) => e.outerHTML, this.$));
-  }
-
-  protected async _getData(key: string) {
-    return (await this._input.getProperty(key)).jsonValue();
   }
 
   protected async _getValue() {

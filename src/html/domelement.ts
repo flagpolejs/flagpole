@@ -60,7 +60,6 @@ export abstract class DOMElement extends Value {
   protected abstract _getInnerHtml(): Promise<string>;
   protected abstract _getOuterHtml(): Promise<string>;
   protected abstract _getProperty(key: string): Promise<any>;
-  protected abstract _getData(key: string): Promise<any>;
   protected abstract _getValue(): Promise<any>;
   protected abstract _getText(): Promise<string>;
 
@@ -78,18 +77,6 @@ export abstract class DOMElement extends Value {
     return this._wrapAsValue(
       await this._getClassName(),
       `Class Name of ${this.name}`
-    );
-  }
-
-  /**
-   * Does this element have the given class?
-   *
-   * @param className
-   */
-  public async hasClassName(className: string): Promise<iValue> {
-    return this._wrapAsValue(
-      (await this._getClassName()).split(" ").includes(className),
-      `${this.name} has class ${className}`
     );
   }
 
@@ -124,19 +111,6 @@ export abstract class DOMElement extends Value {
   }
 
   /**
-   * Does this element have an atribute with this name?
-   *
-   * @param key
-   */
-  public async hasAttribute(key: string): Promise<iValue> {
-    return this._wrapAsValue(
-      (await this._getAttribute(key)) != null,
-      `${this.name} has attribute ${key}`,
-      this
-    );
-  }
-
-  /**
    * Get the attribute with this name or null if it doesn't exist
    *
    * @param key
@@ -167,18 +141,6 @@ export abstract class DOMElement extends Value {
   }
 
   /**
-   * Does this element have a property with this name?
-   *
-   * @param key
-   */
-  public async hasProperty(key: string): Promise<iValue> {
-    return this._wrapAsValue(
-      (await this._getProperty(key)) !== null,
-      `Does ${this.name} have property ${key}?`
-    );
-  }
-
-  /**
    * Get the property with this name in the element, or null if it doesn't exist
    * @param key
    */
@@ -187,26 +149,6 @@ export abstract class DOMElement extends Value {
       await this._getProperty(key),
       `${key} of ${this.name}`
     );
-  }
-
-  /**
-   * Does this element have data with this key?
-   *
-   * @param key
-   */
-  public async hasData(key: string): Promise<iValue> {
-    return this._wrapAsValue(
-      (await this._getData(key)) !== null,
-      `${this.name} has data ${key}`
-    );
-  }
-
-  /**
-   * Get the data with this key in the element, or null
-   * @param key
-   */
-  public async getData(key: string): Promise<iValue> {
-    return this._wrapAsValue(await this._getData(key), `Data of ${this.name}`);
   }
 
   /**

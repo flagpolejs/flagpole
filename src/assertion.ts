@@ -8,6 +8,7 @@ import {
   iAjvLike,
   iAjvErrorObject,
   JsonSchema,
+  iValue,
 } from "./interfaces";
 import {
   toType,
@@ -16,9 +17,9 @@ import {
   asyncNone,
   asyncSome,
   isAsyncCallback,
+  isArray,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
-import { iValue } from ".";
 
 export class Assertion implements iAssertion {
   /**
@@ -175,11 +176,17 @@ export class Assertion implements iAssertion {
   }
 
   public get name(): string {
-    return this._message || String(this._input);
+    return this._message || this.isFlagpoleValue
+      ? (this._input as iValue).name
+      : String(this._input);
   }
 
   public get passed(): boolean | null {
     return this._statement;
+  }
+
+  private get isFlagpoleValue(): boolean {
+    return !!this._input?.isFlagpoleValue;
   }
 
   private _context: iAssertionContext;
@@ -216,22 +223,36 @@ export class Assertion implements iAssertion {
     });
   }
 
+  public async visible(): Promise<iAssertion> {
+    const is = await this._is("isVisible");
+    this._setDefaultMessages(
+      `${this._getSubject()} is not visible`,
+      `${this._getSubject()} is visible`
+    );
+    return this._evalulate(is, is);
+  }
+
+  public async hidden(): Promise<iAssertion> {
+    const is = await this._is("isHidden");
+    this._setDefaultMessages(
+      `${this._getSubject()} is not hidden`,
+      `${this._getSubject()} is hidden`
+    );
+    return this._evalulate(is, is);
+  }
+
   public async hasValue(value: any): Promise<iAssertion> {
-    const thisValue = this._input?.getValue
-      ? (await (this._input as iValue).getValue()).$
-      : this._getCompareValue(this._input);
+    const hasValue = await this._hasValue("hasValue", value);
     const thatValue = this._getCompareValue(value);
     this._setDefaultMessages(
       `${this._getSubject()} does not have value ${thatValue}`,
       `${this._getSubject()} has value ${thatValue}`
     );
-    return this._evalulate(thisValue === thatValue, thisValue);
+    return this._evalulate(hasValue, hasValue);
   }
 
-  public async hasProperty(key: string): Promise<iAssertion> {
-    const hasKey = this._input?.hasProperty
-      ? (await (this._input as iValue).hasProperty(key)).$
-      : this._input[key] !== undefined;
+  public async hasProperty(key: string, value?: string): Promise<iAssertion> {
+    const hasKey = await this._hasKeyValue("hasProperty", key, value);
     this._setDefaultMessages(
       `${this._getSubject()} does not have property ${key}`,
       `${this._getSubject()} has property ${key}`
@@ -239,10 +260,8 @@ export class Assertion implements iAssertion {
     return this._evalulate(hasKey, hasKey);
   }
 
-  public async hasAttribute(key: string): Promise<iAssertion> {
-    const hasKey = this._input?.hasProperty
-      ? (await (this._input as iValue).hasAttribute(key)).$
-      : this._input[key] !== undefined;
+  public async hasAttribute(key: string, value?: string): Promise<iAssertion> {
+    const hasKey = await this._hasKeyValue("hasAttribute", key, value);
     this._setDefaultMessages(
       `${this._getSubject()} does not have attribute ${key}`,
       `${this._getSubject()} has attribute ${key}`
@@ -250,10 +269,8 @@ export class Assertion implements iAssertion {
     return this._evalulate(hasKey, hasKey);
   }
 
-  public async hasClassName(key: string): Promise<iAssertion> {
-    const hasKey = this._input?.hasProperty
-      ? (await (this._input as iValue).hasClassName(key)).$
-      : this._input[key] !== undefined;
+  public async hasClassName(key: string, value?: string): Promise<iAssertion> {
+    const hasKey = await this._hasKeyValue("hasClassName", key, value);
     this._setDefaultMessages(
       `${this._getSubject()} does not have class named ${key}`,
       `${this._getSubject()} has class named ${key}`
@@ -261,10 +278,8 @@ export class Assertion implements iAssertion {
     return this._evalulate(hasKey, hasKey);
   }
 
-  public async hasData(key: string): Promise<iAssertion> {
-    const hasKey = this._input?.hasProperty
-      ? (await (this._input as iValue).hasData(key)).$
-      : this._input[key] !== undefined;
+  public async hasData(key: string, value?: string): Promise<iAssertion> {
+    const hasKey = await this._hasKeyValue("hasData", key, value);
     this._setDefaultMessages(
       `${this._getSubject()} does not have data ${key}`,
       `${this._getSubject()} has data ${key}`
@@ -273,27 +288,26 @@ export class Assertion implements iAssertion {
   }
 
   public async hasText(text: string): Promise<iAssertion> {
-    const thisText = this._input?.getValue
-      ? (await (this._input as iValue).getText()).$
-      : String(this._getCompareValue(this._input));
+    const hasValue = await this._hasValue("hasText", text);
     this._setDefaultMessages(
       `${this._getSubject()} does not have text "${text}"`,
       `${this._getSubject()} has text "${text}"`
     );
-    return this._evalulate(thisText === text, thisText);
+    return this._evalulate(hasValue, hasValue);
   }
 
-  public isTag(...tagNames: string[]): iAssertion {
-    const hasTag = (() => {
-      return this._input.isTag
-        ? (this._input as iValue).isTag.apply(this._input, tagNames)
-        : false;
-    })();
-    this._setDefaultMessages(
-      `${this._getSubject()} is not tag ${tagNames.join(",")}`,
-      `${this._getSubject()} is tag <${tagNames.join(",")}>`
-    );
-    return this._evalulate(hasTag, this._input.tagName || "Not a tag");
+  public async hasTag(tagName?: string): Promise<iAssertion> {
+    const hasValue = await this._hasValue("hasTag", tagName);
+    tagName
+      ? this._setDefaultMessages(
+          `${this._getSubject()} is not <${tagName}>`,
+          `${this._getSubject()} is <${tagName}>`
+        )
+      : this._setDefaultMessages(
+          `${this._getSubject()} is not a tag`,
+          `${this._getSubject()} is a tag`
+        );
+    return this._evalulate(hasValue, this._input.tagName || "Not a tag");
   }
 
   public exactly(value: any): iAssertion {
@@ -842,18 +856,14 @@ export class Assertion implements iAssertion {
     }
     // Log this result
     //this._context.scenario.result(this._result);
+    this._assertionMade = true;
     this._finishedResolver(this._result);
     return this;
   }
 
   private _getCompareValue(value: any): any {
     this._assertionMade = true;
-    const type = toType(value);
-    if (type == "value") {
-      return value.$;
-    } else {
-      return value;
-    }
+    return value?.isFlagpoleValue ? value.$ : value;
   }
 
   private _getName(value: any): any {
@@ -900,5 +910,61 @@ export class Assertion implements iAssertion {
 
   private _setDefaultMessages(standardMessage: string, notMessage?: string) {
     this._defaultMessages = [standardMessage, notMessage || standardMessage];
+  }
+
+  protected async _is(method: string, item?: any): Promise<boolean> {
+    item = item === undefined ? this._input : item;
+    if (isArray(item)) {
+      return asyncEvery(item, async (e: any) => {
+        const is = await this._is(method, e);
+        return is;
+      });
+    }
+    return item?.isFlagpoleValue ? await item[method]() : false;
+  }
+
+  protected async _hasKeyValue(
+    method: string,
+    key: string,
+    value?: any,
+    item?: any
+  ): Promise<boolean> {
+    // If we provided an item, eval that, otherwise use our assertion input
+    item = item === undefined ? this._input : item;
+    // Recursion
+    if (isArray(item)) {
+      return asyncEvery(
+        item,
+        async (e: any) => await this._hasKeyValue(method, key, value, e)
+      );
+    }
+    // Evaluate
+    return item?.isFlagpoleValue
+      ? await item[method](key, value)
+      : value === undefined
+      ? item[key] !== undefined && item[key] !== null
+      : item[key] == value;
+  }
+
+  protected async _hasValue(
+    method: string,
+    value?: any,
+    item?: any
+  ): Promise<boolean> {
+    // If we provided an item, eval that, otherwise use our assertion input
+    item = item === undefined ? this._input : item;
+    // Recursion
+    if (isArray(item)) {
+      return asyncEvery(
+        item,
+        async (e: any) => await this._hasValue(method, value, e)
+      );
+    }
+    // Evaluate
+    return item?.isFlagpoleValue
+      ? await item[method](value)
+      : value === undefined
+      ? item !== undefined && item !== null
+      : item == value;
   }
 }

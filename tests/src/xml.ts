@@ -2,7 +2,7 @@ import flagpole from "../../dist/index";
 
 const suite = flagpole("Test XML");
 
-https: suite
+suite
   .scenario("NASA RSS as XML", "xml")
   .open("https:////www.nasa.gov/rss/dyn/breaking_news.rss")
   .next(async (context) => {

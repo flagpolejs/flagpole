@@ -1,7 +1,7 @@
 import { HtmlResponse } from "./html/htmlresponse";
 import { ResourceResponse } from "./resourceresponse";
 import { BrowserResponse } from "./puppeteer/browserresponse";
-import { CssResponse } from "./cssresponse";
+import { CssResponse } from "./css/cssresponse";
 import { ImageResponse } from "./imageresponse";
 import { JsonResponse } from "./json/jsonresponse";
 import { ScriptResponse } from "./scriptresponse";

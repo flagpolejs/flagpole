@@ -40,15 +40,18 @@ export type ResponseType =
   | "rss"
   | "atom";
 
-export type LineType =
-  | "resultPass"
-  | "resultFailure"
-  | "resultOptionalFailure"
-  | "comment"
-  | "detail"
-  | "h1"
-  | "h2"
-  | "h3"
-  | "decoration"
-  | "debugInfo"
-  | "summaryData";
+export enum LineType {
+  resultPass = "resultPass",
+  resultFailure = "resultFailure",
+  resultFailureDetails = "resultFailureDetails",
+  resultFailureSource = "resultFailureSource",
+  resultOptionalFailure = "resultOptionalFailure",
+  comment = "comment",
+  detail = "detail",
+  h1 = "h1",
+  h2 = "h2",
+  h3 = "h3",
+  decoration = "decoration",
+  debugInfo = "debugInfo",
+  summaryData = "summaryData",
+}

@@ -43,6 +43,10 @@ export function isAsyncCallback(func: Function): boolean {
   return func.toString().indexOf("=> __awaiter(") > 0;
 }
 
+export function isArray(obj: any): boolean {
+  return toType(obj) == "array";
+}
+
 /**
  * Get the real and normalized type of object
  *

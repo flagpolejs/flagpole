@@ -4,7 +4,7 @@ import { LineType } from "../enums";
 import { iConsoleLine } from "../interfaces";
 
 export class LogSuiteHeading extends LogItem {
-  public readonly type: LineType = "h1";
+  public readonly type: LineType = LineType.h1;
   public readonly className = "heading";
 
   public toHtml(): string {
@@ -15,7 +15,7 @@ export class LogSuiteHeading extends LogItem {
 }
 
 export class LogScenarioHeading extends LogSuiteHeading {
-  public readonly type = "h2";
+  public readonly type = LineType.h2;
   public toHtml(): string {
     return `
             <h2>${this.message}</h2>
@@ -28,7 +28,7 @@ export class LogScenarioHeading extends LogSuiteHeading {
 }
 
 export class LogScenarioSubHeading extends LogSuiteHeading {
-  public readonly type = "h3";
+  public readonly type = LineType.h3;
   public toHtml(): string {
     return `
             <li>

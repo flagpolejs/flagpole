@@ -9,7 +9,7 @@ export abstract class ConsoleLine implements iConsoleLine {
   public textSuffix: string = "";
   public message: string = "";
   public fg: [number, number, number] = [255, 255, 255];
-  public type: LineType = "comment";
+  public type: LineType = LineType.comment;
 
   static targetLineLength: number = 72;
 
@@ -31,7 +31,7 @@ export class HeadingLine extends ConsoleLine implements iConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [255, 255, 0];
-    this.type = "h1";
+    this.type = LineType.h1;
   }
 
   public toString(): string {
@@ -51,7 +51,7 @@ export class SubheadingLine extends ConsoleLine implements iConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [255, 255, 0];
-    this.type = "h2";
+    this.type = LineType.h2;
   }
 
   public toString(): string {
@@ -64,7 +64,7 @@ export class SectionHeadingLine extends ConsoleLine implements iConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [255, 255, 255];
-    this.type = "h3";
+    this.type = LineType.h3;
   }
 
   public toString(): string {
@@ -77,14 +77,14 @@ export class CustomLine extends ConsoleLine implements iConsoleLine {
   constructor(message: string, fg: [number, number, number]) {
     super(message);
     this.fg = fg;
-    this.type = "comment";
+    this.type = LineType.comment;
   }
 }
 
 export class LineBreak extends ConsoleLine implements iConsoleLine {
   constructor() {
     super(" ");
-    this.type = "decoration";
+    this.type = LineType.decoration;
   }
 }
 
@@ -94,7 +94,7 @@ export class CommentLine extends ConsoleLine implements iConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [0, 255, 255];
-    this.type = "comment";
+    this.type = LineType.comment;
   }
 
   public toConsoleString(): string {
@@ -116,7 +116,7 @@ export class PassLine extends ConsoleLine implements iConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [0, 255, 0];
-    this.type = "resultPass";
+    this.type = LineType.resultPass;
   }
 
   public toConsoleString(): string {
@@ -135,7 +135,7 @@ export class ActionCompletedLine extends PassLine implements iConsoleLine {
     super(`${verb} ${noun}`);
     this._verb = verb;
     this._noun = noun;
-    this.type = "comment";
+    this.type = LineType.comment;
   }
 
   public toConsoleString(): string {
@@ -153,7 +153,7 @@ export class FailLine extends ConsoleLine implements iConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [255, 0, 0];
-    this.type = "resultFailure";
+    this.type = LineType.resultFailure;
   }
 
   public toConsoleString(): string {
@@ -172,7 +172,7 @@ export class ActionFailedLine extends FailLine implements iConsoleLine {
     super(`${verb} ${noun}`);
     this._verb = verb;
     this._noun = noun;
-    this.type = "resultFailure";
+    this.type = LineType.resultFailure;
   }
 
   public toConsoleString(): string {
@@ -190,7 +190,7 @@ export class OptionalFailLine extends ConsoleLine implements iConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [255, 100, 100];
-    this.type = "resultOptionalFailure";
+    this.type = LineType.resultOptionalFailure;
     this.textSuffix = "[Optional]";
   }
 
@@ -208,7 +208,7 @@ export class WarningLine extends ConsoleLine implements iConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [255, 100, 100];
-    this.type = "comment";
+    this.type = LineType.comment;
   }
 
   public toConsoleString(): string {
@@ -225,7 +225,7 @@ export class DetailLine extends ConsoleLine implements iConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [255, 255, 0];
-    this.type = "detail";
+    this.type = LineType.detail;
   }
 
   public toConsoleString(): string {
@@ -233,6 +233,13 @@ export class DetailLine extends ConsoleLine implements iConsoleLine {
             ${Ansi.bgWhite(Ansi.fgBlack(" " + this.textPrefix + " "))}
             ${this.message}
         `;
+  }
+}
+
+export class ErrorActualValueLine extends DetailLine {
+  constructor(message: string) {
+    super(message);
+    this.type = LineType.resultFailureDetails;
   }
 }
 
@@ -244,7 +251,7 @@ export class SourceCodeBlock extends ConsoleLine implements iConsoleLine {
   constructor(message: string, highlight?: string) {
     super(message);
     this.fg = [255, 255, 255];
-    this.type = "detail";
+    this.type = LineType.detail;
     this.highlight = highlight || null;
   }
 
@@ -290,5 +297,12 @@ export class SourceCodeBlock extends ConsoleLine implements iConsoleLine {
       );
     // Donezo
     return source;
+  }
+}
+
+export class ErrorSourceCodeBlock extends SourceCodeBlock {
+  constructor(message: string, highlight?: string) {
+    super(message, highlight);
+    this.type = LineType.resultFailureSource;
   }
 }

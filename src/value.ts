@@ -204,21 +204,26 @@ export class Value implements iValue {
     return this.toType() == "elementhandle";
   }
 
-  public async hasProperty(key: string): Promise<iValue> {
-    return this._wrapAsValue(
-      this._input &&
-        this._input.hasOwnProperty &&
-        this._input.hasOwnProperty(key),
-      `${this.name} has property ${key}`
-    );
+  public async hasProperty(key: string, value: any): Promise<boolean> {
+    const thisValue = await this.getProperty(key);
+    if (value === undefined) {
+      return !thisValue.isNullOrUndefined();
+    }
+    if (value instanceof RegExp) {
+      return (value as RegExp).test(thisValue.toString());
+    }
+    return value == thisValue.$;
   }
 
-  public async hasValue(value: string): Promise<iValue> {
-    const myValue = this.getValue();
-    return this._wrapAsValue(
-      myValue.toString() === value,
-      `${this.name} has value ${value}`
-    );
+  public async hasValue(value: any): Promise<boolean> {
+    const thisValue = await this.getValue();
+    if (value === undefined) {
+      return !thisValue.isNullOrUndefined();
+    }
+    if (value instanceof RegExp) {
+      return (value as RegExp).test(thisValue.toString());
+    }
+    return value == thisValue.$;
   }
 
   public as(aliasName: string): iValue {
@@ -226,11 +231,11 @@ export class Value implements iValue {
     return this;
   }
 
-  public async getProperty(key: string): Promise<any> {
-    if (!this.isNullOrUndefined() && this.hasProperty(key)) {
-      return this._input[key];
-    }
-    return undefined;
+  public async getProperty(key: string): Promise<iValue> {
+    return this._wrapAsValue(
+      this._input[key],
+      `${this.name} property of ${key}`
+    );
   }
 
   public async click(): Promise<void> {
@@ -284,7 +289,15 @@ export class Value implements iValue {
     return scenario;
   }
 
-  public isTag(...tagNames: string[]) {
+  public async isVisible(): Promise<boolean> {
+    return true;
+  }
+
+  public async isHidden(): Promise<boolean> {
+    return false;
+  }
+
+  public isTag(...tagNames: string[]): boolean {
     if (!this.tagName) {
       return false;
     }
@@ -334,8 +347,6 @@ export class Value implements iValue {
     return this;
   }
 
-  public async exists(): Promise<iValue>;
-  public async exists(selector: string): Promise<iValue>;
   public async exists(selector?: string): Promise<iValue> {
     if (selector === undefined) {
       this.isNullOrUndefined()
@@ -363,12 +374,31 @@ export class Value implements iValue {
     return this._wrapAsValue(null, `${this.name} Class`);
   }
 
-  public async hasClassName(className: string): Promise<iValue> {
-    return this._wrapAsValue(false, `${this.name} has class ${className}`);
+  public async hasClassName(name?: string | RegExp): Promise<boolean> {
+    const myClass = (await this.getClassName()).toString();
+    const classes = myClass.split(" ");
+    return (() => {
+      if (name === undefined) {
+        return !!myClass;
+      }
+      return classes.some((cls) => {
+        return typeof name == "string"
+          ? name == cls
+          : (name as RegExp).test(cls);
+      });
+    })();
   }
 
-  public async getTagName(): Promise<iValue> {
+  public async getTag(): Promise<iValue> {
     return this._wrapAsValue(this.tagName, `Tag Name of ${this.name}`);
+  }
+
+  public async hasTag(tag?: string | RegExp): Promise<boolean> {
+    const myTag = (await this.getTag()).$;
+    if (tag === undefined) {
+      return !!myTag;
+    }
+    return tag instanceof RegExp ? (tag as RegExp).test(myTag) : myTag == tag;
   }
 
   public async getInnerText(): Promise<iValue> {
@@ -383,19 +413,19 @@ export class Value implements iValue {
     return this._wrapAsValue(null, `Outer HTML of ${this.name}`);
   }
 
-  public hasAttribute(key: string): Promise<iValue> {
-    return this.hasProperty(key);
+  public async hasAttribute(
+    key: string,
+    value?: string | RegExp
+  ): Promise<boolean> {
+    const thisValue = (await this.getAttribute(key)).toString();
+    return value === undefined
+      ? !!thisValue
+      : typeof value == "string"
+      ? value == thisValue
+      : (value as RegExp).test(thisValue);
   }
 
   public getAttribute(key: string): Promise<iValue> {
-    return this.getProperty(key);
-  }
-
-  public hasData(key: string): Promise<iValue> {
-    return this.hasProperty(key);
-  }
-
-  public getData(key: string): Promise<iValue> {
     return this.getProperty(key);
   }
 
@@ -408,6 +438,11 @@ export class Value implements iValue {
   }
 
   public async scrollTo(): Promise<void> {}
+
+  public async hasText(text?: string): Promise<boolean> {
+    const myText = (await this.getText()).$;
+    return text ? text == myText : !!myText;
+  }
 
   public async getText(): Promise<iValue> {
     return this._wrapAsValue(

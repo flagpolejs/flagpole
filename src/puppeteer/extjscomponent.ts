@@ -144,6 +144,14 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     return this._action("action");
   }
 
+  public async isVisible(): Promise<boolean> {
+    return !!(await this.eval((c) => c.isVisible(true)));
+  }
+
+  public async isHidden(): Promise<boolean> {
+    return !!(await this.eval((c) => c.isHidden(true)));
+  }
+
   public setValue(text: string) {
     return this.eval((c, text) => c.setValue(text), text);
   }
@@ -286,10 +294,6 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
 
   protected async _getValue() {
     return this.eval((c) => c.getValue());
-  }
-
-  protected async _getData(key: string) {
-    return this.eval((c) => c.getData(key));
   }
 
   protected async isPasswordField(): Promise<boolean> {

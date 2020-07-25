@@ -278,14 +278,6 @@ Going up the chain of ancestors (and including itself), look for the first eleme
 const tbody = await td.getClosest("tbody");
 ```
 
-### getData(key: string): Promise<Value>
-
-Get data property by this key from the current element. Value will contain null if it does not.
-
-```javascript
-context.assert(await element.getData("athlete-id")).equals(123);
-```
-
 ### getInnerHtml(): Promise<Value>
 
 Get the child HTML tags that are between the opening and closing tag of this element.

@@ -4,7 +4,7 @@ import { AssertionResult } from "./logging/assertionresult";
 import { AssertionSchema } from "./assertionschema";
 import { BrowserControl } from "./puppeteer/browsercontrol";
 import { BrowserResponse } from "./puppeteer/browserresponse";
-import { CssResponse } from "./cssresponse";
+import { CssResponse } from "./css/cssresponse";
 import { DOMElement } from "./html/domelement";
 import { ExtJSResponse } from "./puppeteer/extjsresponse";
 import { HtmlResponse } from "./html/htmlresponse";

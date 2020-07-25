@@ -139,15 +139,15 @@ export interface iValue {
   tagName: string;
   outerHTML: string;
   path: string;
-  length: iValue;
-  trim: iValue;
   highlight: string;
   parent: any;
   sourceCode: string;
   isFlagpoleValue: true;
+  context: iAssertionContext;
+  length: iValue;
+  trim: iValue;
   keys: iValue;
   values: iValue;
-  context: iAssertionContext;
   valueOf(): any;
   toArray(): any[];
   toString(): string;
@@ -171,8 +171,6 @@ export interface iValue {
   isCheerioElement(): boolean;
   isTag(): boolean;
   isTag(...tagNames: string[]): boolean;
-  hasProperty(key: string): Promise<iValue>;
-  hasValue(key: string): Promise<iValue>;
   as(aliasName: string): iValue;
   // DOM Elements only
   click(): Promise<void>;
@@ -185,8 +183,7 @@ export interface iValue {
   open(scenario: iScenario): iScenario;
   fillForm(attribute: string, formData: KeyValue): Promise<iValue>;
   fillForm(formData: KeyValue): Promise<iValue>;
-  exists(): Promise<iValue>;
-  exists(message: string): Promise<iValue>;
+  exists(selector?: string): Promise<iValue>;
   find(selector: string, opts?: FindOptions): Promise<iValue>;
   find(selector: string, contains: string, opts?: FindOptions): Promise<iValue>;
   find(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
@@ -201,15 +198,9 @@ export interface iValue {
     matches: RegExp,
     opts?: FindAllOptions
   ): Promise<iValue[]>;
-  getClassName(): Promise<iValue>;
-  hasClassName(className: string): Promise<iValue>;
-  getTagName(): Promise<iValue>;
   getInnerText(): Promise<iValue>;
   getInnerHtml(): Promise<iValue>;
   getOuterHtml(): Promise<iValue>;
-  hasAttribute(key: string): Promise<iValue>;
-  getAttribute(key: string): Promise<iValue>;
-  getProperty(key: string): Promise<iValue>;
   getClosest(selector?: string): Promise<iValue>;
   getChildren(selector?: string): Promise<iValue[]>;
   getParent(): Promise<iValue>;
@@ -221,11 +212,19 @@ export interface iValue {
   getBounds(boxType: string): Promise<iBounds | null>;
   getUrl(): Promise<iValue>;
   getLink(): Promise<Link>;
-  hasData(key: string): Promise<iValue>;
-  getData(key: string): Promise<iValue>;
+  getStyleProperty(key: string): Promise<iValue>;
   getValue(): Promise<iValue>;
   getText(): Promise<iValue>;
-  getStyleProperty(key: string): Promise<iValue>;
+  getClassName(): Promise<iValue>;
+  getAttribute(key: string): Promise<iValue>;
+  getProperty(key: string): Promise<iValue>;
+  getTag(): Promise<iValue>;
+  hasTag(tag?: string | RegExp): Promise<boolean>;
+  hasAttribute(key: string, value?: string | RegExp): Promise<boolean>;
+  hasClassName(className: string | RegExp): Promise<boolean>;
+  hasText(text?: string | RegExp): Promise<boolean>;
+  hasProperty(key: string, value?: any): Promise<boolean>;
+  hasValue(value?: any): Promise<boolean>;
   download(): Promise<HttpResponse | null>;
   download(localFilePath: string): Promise<HttpResponse | null>;
   download(
@@ -249,6 +248,8 @@ export interface iValue {
   selectOption(value: string | string[]): Promise<void>;
   pressEnter(): Promise<void>;
   scrollTo(): Promise<void>;
+  isVisible(): Promise<boolean>;
+  isHidden(): Promise<boolean>;
 }
 
 /**
@@ -343,6 +344,8 @@ export interface iAssertion {
   in(values: any[]): iAssertion;
   includes(value: any): iAssertion;
   exists(): iAssertion;
+  hidden(): Promise<iAssertion>;
+  visible(): Promise<iAssertion>;
   resolves(continueOnReject?: boolean): Promise<iAssertion>;
   rejects(continueOnReject?: boolean): Promise<any>;
   none(callback: IteratorCallback): Promise<iAssertion>;
@@ -355,13 +358,12 @@ export interface iAssertion {
   looksLike(image: Buffer | string): iAssertion;
   looksLike(image: Buffer | string, threshhold: number): iAssertion;
   looksLike(image: Buffer | string, percent: string): iAssertion;
-  hasValue(value: any): Promise<iAssertion>;
-  hasProperty(key: string): Promise<iAssertion>;
-  hasAttribute(key: string): Promise<iAssertion>;
-  hasClassName(key: string): Promise<iAssertion>;
-  hasData(key: string): Promise<iAssertion>;
-  hasText(text: string): Promise<iAssertion>;
-  isTag(...tagNames: string[]): iAssertion;
+  hasValue(value?: any): Promise<iAssertion>;
+  hasProperty(key: string, value?: any): Promise<iAssertion>;
+  hasAttribute(key: string, value?: string | RegExp): Promise<iAssertion>;
+  hasClassName(value?: string | RegExp): Promise<iAssertion>;
+  hasText(text?: string | RegExp): Promise<iAssertion>;
+  hasTag(tagName?: string | RegExp): Promise<iAssertion>;
 }
 
 export interface iAssertionContext {

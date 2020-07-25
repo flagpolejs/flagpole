@@ -1,5 +1,5 @@
-import { Value } from "./value";
-import { iAssertionContext, iValue } from "./interfaces";
+import { Value } from "../value";
+import { iAssertionContext, iValue } from "../interfaces";
 
 interface iCSSPosition {
   line: number;
@@ -42,13 +42,6 @@ export class CSSRule extends Value implements iValue {
   ) {
     super(input, context, name);
     this._path = path || "";
-  }
-
-  public async hasProperty(key: string): Promise<iValue> {
-    return this._wrapAsValue(
-      (await this.getProperty(key)) !== null,
-      `${this.name} has property ${key}`
-    );
   }
 
   public async getProperty(key: string): Promise<iValue> {

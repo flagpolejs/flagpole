@@ -4,7 +4,7 @@ import { iConsoleLine } from "../interfaces";
 import { LineType } from "../enums";
 
 export class LogComment extends LogItem {
-  public readonly type: LineType = "comment";
+  public readonly type: LineType = LineType.comment;
   public readonly className = "comment";
 
   public toHtml(): string {

@@ -1,9 +1,9 @@
-import { ProtoResponse } from "./response";
-import { ResponseType } from "./enums";
-import { iResponse } from "./interfaces";
-import { HttpResponse } from "./httpresponse";
+import { ProtoResponse } from "../response";
+import { ResponseType } from "../enums";
+import { iResponse } from "../interfaces";
+import { HttpResponse } from "../httpresponse";
 import { CSSRule } from "./cssrule";
-import { toType } from "./util";
+import { toType } from "../util";
 
 const css = require("css");
 

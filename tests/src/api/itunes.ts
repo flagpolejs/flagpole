@@ -1,17 +1,17 @@
-let Flagpole = require("../../dist/index.js").Flagpole;
+import flagpole from "../../../dist/index";
 
 const trackSchema = {
   properties: {
     wrapperType: {
       type: "string",
       enum: ["track"],
-      matches: /track/i
+      matches: /track/i,
     },
     kind: {
       type: "string",
-      test: function(value) {
+      test: function (value) {
         return value == "music-video";
-      }
+      },
     },
     artistId: "number",
     trackId: "number",
@@ -33,70 +33,66 @@ const trackSchema = {
     primaryGenreName: "string",
     discCount: {
       type: "number",
-      optional: true
+      optional: true,
     },
     discNumber: {
       type: "number",
-      optional: true
+      optional: true,
     },
     trackCount: {
       type: "number",
-      optional: true
+      optional: true,
     },
     trackNumber: {
       type: "number",
-      optional: true
+      optional: true,
     },
     collectionId: {
       type: "number",
-      optional: true
+      optional: true,
     },
     collectionName: {
       type: "string",
-      optional: true
+      optional: true,
     },
     collectionCensoredName: {
       type: "string",
-      optional: true
+      optional: true,
     },
     collectionArtistId: {
       type: "number",
-      optional: true
+      optional: true,
     },
     collectionViewUrl: {
       type: "string",
-      optional: true
+      optional: true,
     },
     collectionPrice: {
       type: "number",
-      optional: true
+      optional: true,
     },
     collectionExplicitness: {
       type: "string",
-      optional: true
-    }
-  }
+      optional: true,
+    },
+  },
 };
 
 const itunesApiSchema = {
   properties: {
     resultCount: "number",
     results: {
-      items: trackSchema
-    }
-  }
+      items: trackSchema,
+    },
+  },
 };
 
-let suite = Flagpole.Suite("Test iTunes API")
-  .base("https://itunes.apple.com")
-  .finally(() => {
-    suite.print();
-  });
+let suite = flagpole("Test iTunes API").base("https://itunes.apple.com");
 
 suite
-  .json("Search for Tupac")
+  .scenario("Search for Tupac", "json")
   .open("/search?term=2pac&entity=musicVideo")
-  .next("Check response code and headers", context => {
+  .next("Check response code and headers", (context) => {
     context
       .assert("HTTP Status is 200", context.response.statusCode)
       .equals(200)
@@ -107,7 +103,7 @@ suite
       .assert("Schema is valid", context.response.jsonBody)
       .schema(itunesApiSchema, true);
   })
-  .next("Verify the data", async context => {
+  .next("Verify the data", async (context) => {
     const resultCount = await context.find("resultCount");
     const searchResults = await context.find("results");
     context
@@ -115,35 +111,35 @@ suite
       .type.equals("array")
       .assert(searchResults)
       .length.greaterThan(0)
-      .comment(searchResults.length)
-      .comment(searchResults.length > 0)
       .assert(resultCount)
       .type.equals("number")
       .assert(resultCount)
       .greaterThan(0)
       .assert("Results Count field matches results length", resultCount)
-      .equals(searchResults.length)
+      .equals(searchResults.length);
+
+    await context
       .assert("Every result is a music video", searchResults)
-      .every(result => {
+      .every((result) => {
         return result["kind"] == "music-video";
-      })
-      .assert("No items are books", searchResults)
-      .none(result => {
-        return result["wrapperType"] == "book";
-      })
+      });
+
+    await context.assert("No items are books", searchResults).none((result) => {
+      return result["wrapperType"] == "book";
+    });
+
+    await context
       .assert("Some tracks are clean version", searchResults)
-      .some(result => {
+      .some((result) => {
         return result["trackExplicitness"] == "notExplicit";
       });
     return searchResults;
   })
-  .next("Verify first track looks right", async function() {
-    const searchResults = await this.result;
+  .next("Verify first track looks right", async (context) => {
+    const searchResults = await context.result;
     const firstTrack = searchResults.$[0];
-    this.assert(
-      "Track millimeters value is a number",
-      firstTrack.trackTimeMillis
-    )
+    context
+      .assert("Track millimeters value is a number", firstTrack.trackTimeMillis)
       .type.equals("number")
       .assert(
         "Track number is between 1 and number of tracks",

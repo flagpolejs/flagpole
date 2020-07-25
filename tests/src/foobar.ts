@@ -26,7 +26,6 @@ foobar
     const topStories = await context.exists(".topStories");
     const title = await topStories.find("a.title strong");
     context.comment(String(await title.getInnerText()));
-    context.comment(String(await title.getTagName()));
   });
 
 const eventRankings = foobar

@@ -9,6 +9,7 @@ import {
   WarningLine,
   ActionCompletedLine,
   ActionFailedLine,
+  ErrorActualValueLine,
 } from "./consoleline";
 import { LogItem } from "./logitem";
 import { isNullOrUndefined, toType } from "../util";
@@ -26,7 +27,7 @@ export abstract class AssertionResult extends LogItem
 }
 
 export class AssertionPass extends AssertionResult implements iLogItem {
-  public readonly type: LineType = "resultPass";
+  public readonly type: LineType = LineType.resultPass;
   public readonly className: string = "pass";
 
   public get passed(): boolean {
@@ -43,7 +44,7 @@ export class AssertionPass extends AssertionResult implements iLogItem {
 }
 
 export class AssertionActionCompleted extends AssertionPass {
-  public readonly type: LineType = "detail";
+  public readonly type: LineType = LineType.detail;
   protected _verb: string;
   protected _noun: string;
 
@@ -59,7 +60,7 @@ export class AssertionActionCompleted extends AssertionPass {
 }
 
 export class AssertionFail extends AssertionResult implements iLogItem {
-  public readonly type: LineType = "resultFailure";
+  public readonly type: LineType = LineType.resultFailure;
   public readonly className: string = "fail";
 
   public get failed(): boolean {
@@ -113,7 +114,7 @@ export class AssertionFail extends AssertionResult implements iLogItem {
     const lines: iConsoleLine[] = [new FailLine(this.message)];
     const details: string = this.detailsMessage;
     if (details) {
-      lines.push(new DetailLine(this.detailsMessage));
+      lines.push(new ErrorActualValueLine(this.detailsMessage));
     }
     if (this.sourceCode && this.sourceCode != "null") {
       lines.push(new SourceCodeBlock(this.sourceCode, this._highlight));
@@ -123,7 +124,7 @@ export class AssertionFail extends AssertionResult implements iLogItem {
 }
 
 export class AssertionFailOptional extends AssertionFail implements iLogItem {
-  public readonly type: LineType = "resultOptionalFailure";
+  public readonly type: LineType = LineType.resultOptionalFailure;
   public readonly className: string = "failOptional";
 
   public get isOptional(): boolean {
@@ -136,7 +137,7 @@ export class AssertionFailOptional extends AssertionFail implements iLogItem {
 }
 
 export class AssertionFailWarning extends AssertionFail implements iLogItem {
-  public readonly type: LineType = "comment";
+  public readonly type: LineType = LineType.comment;
   public readonly className: string = "failWarning";
 
   public get isOptional(): boolean {
@@ -149,7 +150,7 @@ export class AssertionFailWarning extends AssertionFail implements iLogItem {
 }
 
 export class AssertionActionFailed extends AssertionPass implements iLogItem {
-  public readonly type: LineType = "resultFailure";
+  public readonly type: LineType = LineType.resultFailure;
   protected _verb: string;
   protected _noun: string;
 
