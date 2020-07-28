@@ -16,6 +16,11 @@ import { Link } from "./link";
 import { HttpRequest, HttpResponse } from ".";
 import { HttpRequestOptions } from "./httprequest";
 import * as fs from "fs";
+import {
+  EvaluateFn,
+  PageFnOptions,
+  SerializableOrJSHandle,
+} from "puppeteer-core";
 
 export class Value implements iValue {
   protected _input: any;
@@ -238,12 +243,14 @@ export class Value implements iValue {
     );
   }
 
-  public async click(): Promise<void> {
+  public async click(): Promise<iValue> {
     this._context.logFailure(`Element could not be clicked on: ${this.name}`);
+    return this;
   }
 
-  public async submit(): Promise<void> {
+  public async submit(): Promise<iValue> {
     this._context.logFailure(`Element could not be submitted on: ${this.name}`);
+    return this;
   }
 
   public open(message: string): iScenario;
@@ -523,44 +530,72 @@ export class Value implements iValue {
     throw `This element does not support clear().`;
   }
 
-  public async getClosest(selector?: string): Promise<iValue> {
-    return this;
+  public async getAncestor(selector: string): Promise<iValue> {
+    throw `getAncestor() is not supported by ${this.name}`;
   }
 
   public async getChildren(selector?: string): Promise<iValue[]> {
-    return [];
+    throw `getChildren() is not supported by ${this.name}`;
+  }
+
+  public async getAncestors(selector: string): Promise<iValue[]> {
+    throw `getAncestors() is not supported by ${this.name}`;
+  }
+
+  public async getAncestorOrSelf(selector: string): Promise<iValue> {
+    throw `getAncestorOrSelf() is not supported by ${this.name}`;
+  }
+
+  public async getFirstChild(selector?: string): Promise<iValue> {
+    throw `getFirstChild() is not supported by ${this.name}`;
+  }
+
+  public async getLastChild(selector?: string): Promise<iValue> {
+    throw `getLastChild() is not supported by ${this.name}`;
+  }
+
+  public async getFirstSibling(selector?: string): Promise<iValue> {
+    throw `getFirstSibling() is not supported by ${this.name}`;
+  }
+
+  public async getLastSibling(selector?: string): Promise<iValue> {
+    throw `getLastSibling() is not supported by ${this.name}`;
+  }
+
+  public async getChildOrSelf(selector?: string): Promise<iValue> {
+    throw `getChildOrSelf() is not supported by ${this.name}`;
+  }
+
+  public async getDescendantOrSelf(selector?: string): Promise<iValue> {
+    throw `getDescendantOrSelf() is not supported by ${this.name}`;
+  }
+
+  public async getDescendants(selector?: string): Promise<iValue[]> {
+    throw `getDescendants() is not supported by ${this.name}`;
   }
 
   public async getParent(): Promise<iValue> {
-    return this;
+    throw `getParent() is not supported by ${this.name}`;
   }
 
   public async getSiblings(selector?: string): Promise<iValue[]> {
-    return [];
+    throw `getSiblings() is not supported by ${this.name}`;
   }
 
-  public async getPreviousSibling(selector?: string) {
-    return this._wrapAsValue(
-      null,
-      `Previous Sibling ${selector} of ${this.name}`,
-      this
-    );
+  public async getPreviousSibling(selector?: string): Promise<iValue> {
+    throw `getPreviousSibling() is not supported by ${this.name}`;
   }
 
   public async getPreviousSiblings(selector?: string): Promise<iValue[]> {
-    return [];
+    throw `getPreviousSiblings() is not supported by ${this.name}`;
   }
 
   public async getNextSibling(selector?: string): Promise<iValue> {
-    return this._wrapAsValue(
-      null,
-      `Next Sibling ${selector} of ${this.name}`,
-      this
-    );
+    throw `getNextSibling() is not supported by ${this.name}`;
   }
 
   public async getNextSiblings(selector?: string): Promise<iValue[]> {
-    return [];
+    throw `getNextSiblings() is not supported by ${this.name}`;
   }
 
   public async getBounds(boxType: string): Promise<iBounds | null> {
@@ -610,6 +645,26 @@ export class Value implements iValue {
       fs.writeFileSync(localFilePath, resp.body);
     }
     return resp;
+  }
+
+  public async waitForFunction(
+    js: EvaluateFn<any>,
+    opts?: PageFnOptions | number,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<iValue> {
+    return this;
+  }
+
+  public async waitForHidden(): Promise<iValue> {
+    return this;
+  }
+
+  public async waitForVisible(): Promise<iValue> {
+    return this;
+  }
+
+  public async setValue(text: string) {
+    throw `setValue() is not supported by ${this.name}`;
   }
 
   protected async _completedAction(verb: string, noun?: string) {

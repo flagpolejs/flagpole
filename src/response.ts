@@ -12,7 +12,8 @@ import {
 import { ResponseType } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import { AssertionContext } from "./assertioncontext";
-import { wrapAsValue } from "./util";
+import { wrapAsValue, toType } from "./util";
+import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 
 export function isPuppeteer(type: ResponseType): boolean {
   return ["browser", "extjs"].indexOf(type) >= 0;
@@ -228,6 +229,14 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
+  public async waitForFunction(
+    js: EvaluateFn<any>,
+    opts?: { polling?: string | number; timeout?: number },
+    ...args: SerializableOrJSHandle[]
+  ): Promise<void> {
+    return this.context.pause(1);
+  }
+
   public async waitForNavigation(
     timeout: number = 10000,
     waitFor?: string | string[]
@@ -349,5 +358,36 @@ export abstract class ProtoResponse implements iResponse {
 
   public async scrollTo(_point: OptionalXY): Promise<iResponse> {
     return this;
+  }
+
+  /**
+   * Click on this element
+   *
+   * @param selector
+   */
+  click(selector: string, opts?: FindOptions): Promise<iValue>;
+  click(
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
+  public async click(
+    selector: string,
+    a?: FindOptions | string | RegExp,
+    b?: FindOptions
+  ): Promise<iValue> {
+    const contains = typeof a == "string" ? a : undefined;
+    const matches = a instanceof RegExp ? a : undefined;
+    const opts = (b || a || {}) as FindOptions;
+    const element = contains
+      ? await this.find(selector, contains, opts)
+      : matches
+      ? await this.find(selector, matches, opts)
+      : await this.find(selector, opts);
+    if (!(await element.exists()).isNull()) {
+      return element.click();
+    }
+    return element;
   }
 }

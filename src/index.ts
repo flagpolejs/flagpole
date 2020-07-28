@@ -31,10 +31,6 @@ import {
 } from "./interfaces";
 import { BrowserOptions, HttpRequest, HttpAuth } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
-import * as Promise from "bluebird";
-
-// Have Bluebird replace default promises
-global.Promise = Promise;
 
 // Aliases
 const fp = Flagpole;

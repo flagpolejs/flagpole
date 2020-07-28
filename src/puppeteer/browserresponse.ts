@@ -71,10 +71,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
   }
 
   public async findXPath(xPath: string): Promise<iValue> {
-    if (this.page === null) {
-      throw "Page not found.";
-    }
-    const elements: ElementHandle<Element>[] = await this.page.$x(xPath);
+    const elements: ElementHandle<Element>[] = await this._page.$x(xPath);
     if (elements.length > 0) {
       return await BrowserElement.create(
         elements[0],
@@ -87,12 +84,9 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
   }
 
   public async findAllXPath(xPath: string): Promise<BrowserElement[]> {
-    if (this.page === null) {
-      throw "Page not found.";
-    }
     const response: iResponse = this;
     const out: BrowserElement[] = [];
-    const elements: ElementHandle[] = await this.page.$x(xPath);
+    const elements: ElementHandle[] = await this._page.$x(xPath);
     await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
       const element = await BrowserElement.create(
         el,
@@ -115,48 +109,36 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     selector: string,
     timeout: number = 100
   ): Promise<BrowserElement> {
-    if (this.page !== null) {
-      const opts = { timeout: timeout || 100, hidden: true };
-      const element = await this.page.waitForSelector(selector, opts);
-      return BrowserElement.create(element, this.context, selector, selector);
-    }
-    throw new Error("waitForHidden is not available in this context");
+    const opts = { timeout: timeout || 100, hidden: true };
+    const element = await this._page.waitForSelector(selector, opts);
+    return BrowserElement.create(element, this.context, selector, selector);
   }
 
   public async waitForVisible(
     selector: string,
     timeout: number = 100
   ): Promise<BrowserElement> {
-    if (this.page !== null) {
-      const opts = { timeout: timeout || 100, visible: true };
-      const element = await this.page.waitForSelector(selector, opts);
-      return BrowserElement.create(element, this.context, selector, selector);
-    }
-    throw new Error("waitForVisible is not available in this context");
+    const opts = { timeout: timeout || 100, visible: true };
+    const element = await this._page.waitForSelector(selector, opts);
+    return BrowserElement.create(element, this.context, selector, selector);
   }
 
   public async waitForExists(
     selector: string,
     timeout?: number
   ): Promise<BrowserElement> {
-    if (this.page !== null) {
-      const opts = { timeout: timeout || 100 };
-      const element = await this.page.waitForSelector(selector, opts);
-      return BrowserElement.create(element, this.context, selector, selector);
-    }
-    throw new Error("waitForExists is not available in this context");
+    const opts = { timeout: timeout || 100 };
+    const element = await this._page.waitForSelector(selector, opts);
+    return BrowserElement.create(element, this.context, selector, selector);
   }
 
   public async waitForXPath(
     xPath: string,
     timeout?: number
   ): Promise<BrowserElement> {
-    if (this.page !== null) {
-      const opts = { timeout: timeout || 100 };
-      const element = await this.page.waitForXPath(xPath, opts);
-      return BrowserElement.create(element, this.context, xPath, xPath);
-    }
-    throw new Error("waitForXPath is not available in this context");
+    const opts = { timeout: timeout || 100 };
+    const element = await this._page.waitForXPath(xPath, opts);
+    return BrowserElement.create(element, this.context, xPath, xPath);
   }
 
   public async waitForHavingText(
@@ -164,30 +146,24 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     text: string,
     timeout?: number
   ): Promise<BrowserElement> {
-    if (this.page !== null) {
-      const opts = { timeout: timeout || 100 };
-      const element = (
-        await this.page.waitForFunction(
-          `document.querySelector("${selector}").innerText.includes("${text}")`,
-          opts
-        )
-      ).asElement();
-      if (element === null) {
-        throw `Element ${selector} did not exist after timeout.`;
-      }
-      return BrowserElement.create(element, this.context, selector, selector);
+    const opts = { timeout: timeout || 100 };
+    const element = (
+      await this._page.waitForFunction(
+        `document.querySelector("${selector}").innerText.includes("${text}")`,
+        opts
+      )
+    ).asElement();
+    if (element === null) {
+      throw `Element ${selector} did not exist after timeout.`;
     }
-    throw new Error("waitForExists is not available in this context");
+    return BrowserElement.create(element, this.context, selector, selector);
   }
 
   public async selectOption(
     selector: string,
     value: string | string[]
   ): Promise<void> {
-    if (this.page === null) {
-      throw "Page was null.";
-    }
-    await this.page.select.apply(this.page, [
+    await this._page.select.apply(this.page, [
       selector,
       ...arrayify<string>(value),
     ]);

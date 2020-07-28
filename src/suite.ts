@@ -157,6 +157,11 @@ export class Suite implements iSuite {
     return this;
   }
 
+  public setMaxScenarioDuration(timeout: number): iSuite {
+    this._taskManager.maxScenarioDuration = timeout;
+    return this;
+  }
+
   /**
    * Print all logs to console
    *

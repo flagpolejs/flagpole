@@ -19,8 +19,9 @@ import {
   getFindName,
   FindParams,
 } from "../util";
-import { ElementHandle, JSHandle } from "puppeteer-core";
+import { ElementHandle, JSHandle, EvaluateFn } from "puppeteer-core";
 import { BrowserElement } from "./browserelement";
+import { query, jsHandleArrayToHandles } from "./ext.helper";
 
 declare type globalThis = {
   Ext: any;
@@ -75,7 +76,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     return wrapAsValue(this.context, null, xPath);
   }
 
-  public async findAllXPath(xPath: string): Promise<PuppeteerElement[]> {
+  public async findAllXPath(xPath: string): Promise<iValue[]> {
     if (!this.page) {
       throw "Page must be defined.";
     }
@@ -99,7 +100,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
   public async waitForExists(
     path: string,
     timeout: number = 5000
-  ): Promise<PuppeteerElement> {
+  ): Promise<iValue> {
     if (this.page === null) {
       throw "Could not find browser page object.";
     }
@@ -147,6 +148,17 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     return ref
       ? await ExtJsComponent.create(ref, this.context, `#${id}`, `#${id}`)
       : null;
+  }
+
+  protected async _getComponent(
+    js: EvaluateFn<any>,
+    name: string,
+    path: string
+  ) {
+    const ref = await this._page.evaluateHandle(js);
+    return ref
+      ? await ExtJsComponent.create(ref, this.context, name, path)
+      : wrapAsValue(this.context, null, name, path);
   }
 
   private async _injectScript(content: string): Promise<void> {
@@ -276,7 +288,8 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     selector: string,
     params: FindParams
   ): Promise<ExtJsComponent[]> {
-    const components = await this._queryGetHandle(selector);
+    const results = await query(this._page, selector);
+    const components = await jsHandleArrayToHandles(results);
     return asyncMap(components, async (component: JSHandle<any>, i) => {
       return await ExtJsComponent.create(
         component,
@@ -285,19 +298,5 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
         selector
       );
     });
-  }
-
-  private async _queryGetHandle(selector: string): Promise<JSHandle[]> {
-    const results = await this._page.evaluateHandle(
-      // @ts-ignore
-      (selector) => Ext.ComponentQuery.query(selector),
-      selector
-    );
-    const length = await results.evaluate((r) => r.length);
-    const components: JSHandle[] = [];
-    for (let i = 0; i < length; i++) {
-      components.push(await results.evaluateHandle((r, i) => r[i], i));
-    }
-    return components;
   }
 }

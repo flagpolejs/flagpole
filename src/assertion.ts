@@ -18,6 +18,7 @@ import {
   asyncSome,
   isAsyncCallback,
   isArray,
+  asyncMap,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
 
@@ -684,6 +685,23 @@ export class Assertion implements iAssertion {
       }),
       thisValue
     );
+  }
+
+  public async map(callback: IteratorCallback): Promise<iAssertion> {
+    const thisValue = this._getCompareValue(this._input);
+    // If no assertion statement was made, skip it by marking it resolved
+    this._resolveAssertion();
+    // Generate length Value object
+    const newValue = await asyncMap(thisValue, callback);
+    // Create new assertion
+    const assertion: Assertion = new Assertion(
+      this._context,
+      new Value(newValue, this._context, `Mapped ${this._getSubject()}`),
+      this._message
+    );
+    this._not && assertion.not;
+    this._optional && assertion.optional;
+    return assertion;
   }
 
   public some(callback: IteratorCallback): Promise<iAssertion> {

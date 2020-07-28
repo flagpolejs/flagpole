@@ -17,6 +17,7 @@ import {
   ScenarioStatusCallback,
   ScenarioCallbackAndMessage,
   ResponsePipeCallbackAndMessage,
+  iValue,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
@@ -49,7 +50,7 @@ import { FlagpoleExecution } from "./flagpoleexecution";
 import { toType, asyncForEach, runAsync } from "./util";
 import { AssertionContext } from "./assertioncontext";
 import * as bluebird from "bluebird";
-import { iValue } from ".";
+import { Browser } from "puppeteer-core";
 
 /**
  * A scenario contains tests that run against one request
@@ -140,6 +141,17 @@ export class Scenario implements iScenario {
    */
   public get hasFinished(): boolean {
     return this.hasExecuted && this._timeScenarioFinished !== null;
+  }
+
+  public get browserControl(): BrowserControl | null {
+    if (this._response.isBrowser && this._browserControl === null) {
+      this._browserControl = new BrowserControl();
+    }
+    return this._browserControl;
+  }
+
+  public get browser(): Browser | null {
+    return this._browserControl?.browser || null;
   }
 
   /**
@@ -601,11 +613,28 @@ export class Scenario implements iScenario {
     return this;
   }
 
+  public async cancelOrAbort(message?: string): Promise<iScenario> {
+    return this.hasExecuted ? this.abort(message) : this.cancel(message);
+  }
+
+  public async abort(message?: string): Promise<iScenario> {
+    if (!this.hasExecuted) {
+      throw `Can't abort Scenario since it it hasn't started executing.`;
+    }
+    if (this.hasFinished) {
+      throw `Can't abort Scenario since has already finished.`;
+    }
+    this._markScenarioCompleted(
+      `Aborted ${message ? ": " + message : ""}`,
+      null,
+      "aborted"
+    );
+    return this;
+  }
+
   public async cancel(message?: string): Promise<iScenario> {
     if (this.hasExecuted) {
-      throw new Error(
-        `Can't cancel Scenario since it already started executing.`
-      );
+      throw `Can't cancel Scenario since it already started executing.`;
     }
     await this._fireBefore();
     this._publish(ScenarioStatusEvent.executionProgress);
@@ -615,17 +644,6 @@ export class Scenario implements iScenario {
       "cancelled"
     );
     return this;
-  }
-
-  /**
-   * Get the browser object for a browser request
-   */
-  public getBrowserControl(): BrowserControl {
-    this._browserControl =
-      this._browserControl !== null
-        ? this._browserControl
-        : new BrowserControl();
-    return this._browserControl;
   }
 
   /**
@@ -925,36 +943,42 @@ export class Scenario implements iScenario {
     let lastReturnValue: any = null;
     // Execute all the assertion callbacks one by one
     this._publish(ScenarioStatusEvent.executionProgress);
-    Promise.mapSeries(this._nextCallbacks, (_then, index) => {
-      const context: iAssertionContext = new AssertionContext(
-        this,
-        this._response
-      );
-      const comment: string | null = this._nextMessages[index];
-      if (comment !== null) {
-        this._pushToLog(new LogScenarioSubHeading(comment));
-      }
-      context.result = lastReturnValue;
-      // Run this next
-      lastReturnValue = _then.apply(context, [context]);
-      // Warn about any incomplete assertions
-      context.incompleteAssertions.forEach((assertion: iAssertion) => {
-        this.result(
-          new AssertionFailWarning(
-            `Incomplete assertion: ${assertion.name}`,
-            assertion
-          )
+    bluebird
+      .mapSeries(this._nextCallbacks, (_then, index) => {
+        const context: iAssertionContext = new AssertionContext(
+          this,
+          this._response
         );
-      });
-      // Don't continue until last value and all assertions resolve
-      return Promise.all([
-        lastReturnValue,
-        context.assertionsResolved,
-        context.subScenariosResolved,
-      ]).timeout(30000);
-    })
+        const comment: string | null = this._nextMessages[index];
+        if (comment !== null) {
+          this._pushToLog(new LogScenarioSubHeading(comment));
+        }
+        context.result = lastReturnValue;
+        // Run this next
+        lastReturnValue = _then.apply(context, [context]);
+        // Warn about any incomplete assertions
+        context.incompleteAssertions.forEach((assertion: iAssertion) => {
+          this.result(
+            new AssertionFailWarning(
+              `Incomplete assertion: ${assertion.name}`,
+              assertion
+            )
+          );
+        });
+        // Don't continue until last value and all assertions resolve
+        return bluebird
+          .all([
+            lastReturnValue,
+            context.assertionsResolved,
+            context.subScenariosResolved,
+          ])
+          .timeout(30000);
+      })
       .then(() => {
         this._markScenarioCompleted();
+      })
+      .catch(bluebird.TimeoutError, (e) => {
+        this._markScenarioCompleted("Timed out.", e.message, "aborted");
       })
       .catch((err) => {
         this._markScenarioCompleted(err, null, "aborted");
@@ -966,8 +990,15 @@ export class Scenario implements iScenario {
    * Start a browser scenario
    */
   private _executeBrowserRequest() {
-    const browserControl: BrowserControl = this.getBrowserControl();
-    browserControl
+    if (!this.browserControl) {
+      throw "Not a browser scenario";
+    }
+    const handleError = (message: string, e: any) => {
+      setTimeout(() => {
+        this._markScenarioCompleted(message, e, "aborted");
+      }, 1000);
+    };
+    this.browserControl
       .open(this._request)
       .then((next: iBrowserControlResponse) => {
         const puppeteerResponse: puppeteer.Response = next.response;
@@ -980,6 +1011,19 @@ export class Scenario implements iScenario {
             .forEach((req) => {
               this._redirectChain.push(req.url());
             });
+          // Handle errors
+          this.browser?.on("disconnected", (e) =>
+            handleError("Puppeteer instance unexpectedly closed.", e)
+          );
+          this.browserControl?.page?.on("close", (e) =>
+            handleError("Puppeteer closed unexpectedly.", e)
+          );
+          this.browserControl?.page?.on("error", (e) =>
+            handleError("Puppeteer got an unexpected error.", e)
+          );
+          this.browserControl?.page?.on("pageerror", (e) =>
+            handleError("Puppeteer got an unexpected page error.", e)
+          );
           // Finishing processing the response
           this._processResponse(
             HttpResponse.fromPuppeteer(
@@ -1120,7 +1164,7 @@ export class Scenario implements iScenario {
       // Close the browser window
       // Important! Don't close right away, some things may need to finish that were async
       runAsync(() => {
-        this._browserControl?.close();
+        this.browserControl?.close();
       }, 100);
     }
     return this;

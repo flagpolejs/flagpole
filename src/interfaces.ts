@@ -1,5 +1,10 @@
 import { BrowserControl } from "./puppeteer/browsercontrol";
-import { Page, EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
+import {
+  Page,
+  EvaluateFn,
+  SerializableOrJSHandle,
+  PageFnOptions,
+} from "puppeteer-core";
 import {
   ResponseType,
   SuiteStatusEvent,
@@ -171,10 +176,12 @@ export interface iValue {
   isCheerioElement(): boolean;
   isTag(): boolean;
   isTag(...tagNames: string[]): boolean;
+  isVisible(): Promise<boolean>;
+  isHidden(): Promise<boolean>;
   as(aliasName: string): iValue;
   // DOM Elements only
-  click(): Promise<void>;
-  submit(): Promise<void>;
+  click(): Promise<iValue>;
+  submit(): Promise<iValue>;
   open(message: string): iScenario;
   open(message: string, type: ResponseType): iScenario;
   open(message: string, type: ResponseType, callback: iNextCallback): iScenario;
@@ -183,32 +190,10 @@ export interface iValue {
   open(scenario: iScenario): iScenario;
   fillForm(attribute: string, formData: KeyValue): Promise<iValue>;
   fillForm(formData: KeyValue): Promise<iValue>;
-  exists(selector?: string): Promise<iValue>;
-  find(selector: string, opts?: FindOptions): Promise<iValue>;
-  find(selector: string, contains: string, opts?: FindOptions): Promise<iValue>;
-  find(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
-  findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
-  findAll(
-    selector: string,
-    contains: string,
-    opts?: FindAllOptions
-  ): Promise<iValue[]>;
-  findAll(
-    selector: string,
-    matches: RegExp,
-    opts?: FindAllOptions
-  ): Promise<iValue[]>;
   getInnerText(): Promise<iValue>;
   getInnerHtml(): Promise<iValue>;
   getOuterHtml(): Promise<iValue>;
-  getClosest(selector?: string): Promise<iValue>;
-  getChildren(selector?: string): Promise<iValue[]>;
-  getParent(): Promise<iValue>;
-  getSiblings(selector?: string): Promise<iValue[]>;
-  getPreviousSibling(selector?: string): Promise<iValue>;
-  getPreviousSiblings(selector?: string): Promise<iValue[]>;
-  getNextSibling(selector?: string): Promise<iValue>;
-  getNextSiblings(selector?: string): Promise<iValue[]>;
+  setValue(text: string): Promise<void>;
   getBounds(boxType: string): Promise<iBounds | null>;
   getUrl(): Promise<iValue>;
   getLink(): Promise<Link>;
@@ -248,8 +233,51 @@ export interface iValue {
   selectOption(value: string | string[]): Promise<void>;
   pressEnter(): Promise<void>;
   scrollTo(): Promise<void>;
-  isVisible(): Promise<boolean>;
-  isHidden(): Promise<boolean>;
+  waitForFunction(
+    js: EvaluateFn<any>,
+    timeout: number,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<iValue>;
+  waitForFunction(
+    js: EvaluateFn<any>,
+    opts?: PageFnOptions,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<iValue>;
+  waitForHidden(timeout?: number): Promise<iValue>;
+  waitForVisible(timeout?: number): Promise<iValue>;
+  // Tree traversal
+  exists(selector?: string): Promise<iValue>;
+  find(selector: string, opts?: FindOptions): Promise<iValue>;
+  find(selector: string, contains: string, opts?: FindOptions): Promise<iValue>;
+  find(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
+  findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
+  findAll(
+    selector: string,
+    contains: string,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  findAll(
+    selector: string,
+    matches: RegExp,
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  getChildren(selector?: string): Promise<iValue[]>;
+  getFirstChild(selector?: string): Promise<iValue>;
+  getLastChild(selector?: string): Promise<iValue>;
+  getChildOrSelf(selector: string): Promise<iValue>;
+  getDescendants(selector: string): Promise<iValue[]>;
+  getDescendantOrSelf(selector: string): Promise<iValue>;
+  getParent(): Promise<iValue>;
+  getAncestor(selector: string): Promise<iValue>;
+  getAncestors(selector: string): Promise<iValue[]>;
+  getAncestorOrSelf(selector: string): Promise<iValue>;
+  getSiblings(selector?: string): Promise<iValue[]>;
+  getFirstSibling(selector?: string): Promise<iValue>;
+  getLastSibling(selector?: string): Promise<iValue>;
+  getPreviousSibling(selector?: string): Promise<iValue>;
+  getPreviousSiblings(selector?: string): Promise<iValue[]>;
+  getNextSibling(selector?: string): Promise<iValue>;
+  getNextSiblings(selector?: string): Promise<iValue[]>;
 }
 
 /**
@@ -300,6 +328,11 @@ export interface iResponse {
   waitForLoad(timeout?: number): Promise<void>;
   waitForNetworkIdle(timeout?: number): Promise<void>;
   waitForReady(timeout?: number): Promise<void>;
+  waitForFunction(
+    js: EvaluateFn<any>,
+    opts?: PageFnOptions,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<void>;
   waitForHidden(selector: string, timeout?: number): Promise<iValue>;
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
@@ -312,6 +345,13 @@ export interface iResponse {
   type(selector: string, textToType: string, opts: any): Promise<any>;
   selectOption(selector: string, value: string | string[]): Promise<void>;
   scrollTo(point: OptionalXY): Promise<iResponse>;
+  click(selector: string, opts?: FindOptions): Promise<iValue>;
+  click(
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
 }
 
 export interface iAssertion {
@@ -348,9 +388,11 @@ export interface iAssertion {
   visible(): Promise<iAssertion>;
   resolves(continueOnReject?: boolean): Promise<iAssertion>;
   rejects(continueOnReject?: boolean): Promise<any>;
-  none(callback: IteratorCallback): Promise<iAssertion>;
+  map(callback: IteratorCallback): Promise<iAssertion>;
   every(callback: IteratorCallback): Promise<iAssertion>;
+  everySync(callback: IteratorCallback): iAssertion;
   some(callback: IteratorCallback): Promise<iAssertion>;
+  none(callback: IteratorCallback): Promise<iAssertion>;
   assert(a: any, b?: any): iAssertion;
   comment(input: any): iAssertion;
   schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
@@ -425,13 +467,22 @@ export interface iAssertionContext {
     textToType: string,
     opts?: any
   ): Promise<void>;
-  click(selector: string, opts?: FindOptions): Promise<void>;
-  click(selector: string, contains: string, opts?: FindOptions): Promise<void>;
-  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<void>;
+  click(selector: string, opts?: FindOptions): Promise<iValue>;
+  click(
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
   submit(selector: string): Promise<void>;
   type(selector: string, textToType: string, opts?: any): Promise<void>;
   selectOption(selector: string, value: string | string[]): Promise<void>;
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
+  waitForFunction(
+    js: EvaluateFn<any>,
+    opts?: { polling?: string | number; timeout?: number },
+    ...args: SerializableOrJSHandle[]
+  ): Promise<void>;
   waitForReady(timeout?: number): Promise<void>;
   waitForLoad(timeout?: number): Promise<void>;
   waitForNetworkIdle(timeout?: number): Promise<void>;
@@ -457,6 +508,12 @@ export interface iAssertionContext {
   logOptionalFailure(message: string, errorDetails?: any): iAssertionResult;
   logPassing(message: string): iAssertionResult;
   scrollTo(point: OptionalXY): Promise<iAssertionContext>;
+  some(array: any[], callback: IteratorCallback): Promise<boolean>;
+  none(array: any[], callback: IteratorCallback): Promise<boolean>;
+  every(array: any[], callback: IteratorCallback): Promise<boolean>;
+  each(array: any[], callback: IteratorCallback): Promise<void>;
+  filter(array: any[], callback: IteratorCallback): Promise<any[]>;
+  map(array: any[], callback: IteratorCallback): Promise<any[]>;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
@@ -474,6 +531,7 @@ export interface iSuite {
   verifyCert(verify: boolean): iSuite;
   verifySslCert(verify: boolean): iSuite;
   setConcurrencyLimit(maxExecutions: number): iSuite;
+  setMaxScenarioDuration(timeout: number): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
   scenario(title: string, type: ResponseType, opts?: BrowserOptions): iScenario;
@@ -516,6 +574,7 @@ export interface iScenario {
   redirectCount: number;
   redirectChain: string[];
   request: HttpRequest;
+  browserControl: BrowserControl | null;
   set(aliasName: string, value: any): iScenario;
   get(aliasName: string): any;
   getLog(): Promise<iLogItem[]>;
@@ -548,8 +607,9 @@ export interface iScenario {
   nextPrepend(callback: iNextCallback): iScenario;
   nextPrepend(message: string, callback: iNextCallback): iScenario;
   skip(message?: string): Promise<iScenario>;
+  abort(message?: string): Promise<iScenario>;
   cancel(message?: string): Promise<iScenario>;
-  getBrowserControl(): BrowserControl;
+  cancelOrAbort(message?: string): Promise<iScenario>;
   execute(): Promise<iScenario>;
   execute(params: { [key: string]: string | number }): Promise<iScenario>;
   success(message: string, callback: ScenarioCallback): iScenario;

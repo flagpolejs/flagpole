@@ -270,14 +270,6 @@ Get the class name of this element. If there are multiple classes then they will
 const className = await someElement.getClassName();
 ```
 
-### getClosest(selector: string): Promise<DOMElement | Value<null>>
-
-Going up the chain of ancestors (and including itself), look for the first element matching the selector. If there are no ancestors (or self) that matches, a Value object containing null is returned.
-
-```javascript
-const tbody = await td.getClosest("tbody");
-```
-
 ### getInnerHtml(): Promise<Value>
 
 Get the child HTML tags that are between the opening and closing tag of this element.

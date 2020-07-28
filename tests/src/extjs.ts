@@ -60,7 +60,9 @@ suite
     await context.pause(1000);
     const contactTile = await context.find(".x-dataview-item .person-name");
     context.assert(contactTile).exists();
-    const contactComponent = await contactTile.getClosest(".x-component");
+    const contactComponent = await contactTile.getAncestorOrSelf(
+      ".x-component"
+    );
     return contactTile.click();
   })
   .next("Detail page", async (context) => {
@@ -74,7 +76,7 @@ suite
     const firstName = await context.find("field", "first name");
     context.assert(firstName).exists();
     await firstName.type("foo");
-    const cmp = await firstName.getClosest();
+    const cmp = await firstName.getAncestorOrSelf("*");
     context.assert(cmp).exists();
     context.assert(await cmp.eval((c) => c.getLabel())).equals("First Name");
     await context.pause(1000);

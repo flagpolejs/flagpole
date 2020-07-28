@@ -37,6 +37,7 @@ export class SuiteTaskManager {
   private _afterEachCallbacks: ScenarioCallbackAndMessage[] = [];
   private _statusCallbacks: SuiteStatusCallback[] = [];
   private _concurrencyLimit: number = 99;
+  private _maxScenarioDuration: number = 30000;
   private _maxTimeToWaitForPendingScenariosToBeReady = 30000;
   private _finishedPromise: Promise<void>;
   private _finishedResolve = () => {};
@@ -49,11 +50,19 @@ export class SuiteTaskManager {
     return this._concurrencyLimit;
   }
 
+  public get maxScenarioDuration(): number {
+    return this._concurrencyLimit;
+  }
+
   public set concurrencyLimit(value: number) {
     if (this.hasExecutionBegan) {
       throw "Can not change concurrency limit after execution has started.";
     }
     this._concurrencyLimit = value;
+  }
+
+  public set maxScenarioDuration(value: number) {
+    this._maxScenarioDuration = value;
   }
 
   public get scenarioCount(): number {
@@ -319,46 +328,68 @@ export class SuiteTaskManager {
       const execute = async () => {
         // Execute this batch
         const scenariosExecuting = await this._startExecutingScenarios();
-        await this._waitForScenariosToFinish(scenariosExecuting);
+        const finished = await this._waitForScenariosToFinish(
+          scenariosExecuting
+        );
+        // Catch error completing scenarios (typically a timeout)
+        if (!finished) {
+          return resolve(this._cancelScenariosAnyNotFinished("Timed out"));
+        }
         // If there are no more left to execute, we are done
         if (this.scenariosWaitingToExecute.length === 0) {
-          resolve(this._markSuiteExecutionAsCompleted());
+          return resolve(this._markSuiteExecutionAsCompleted());
         }
         // If last time around, we started some scenarios, execute pending ones
-        else if (scenariosExecuting.length > 0) {
+        if (scenariosExecuting.length > 0) {
           return execute();
         }
         // If we have some pending + we didn't start any new ones, kill them
-        else {
-          // Important! Don't finish it off right away, there may be something pending in a few milliseconds
-          runAsync(() => {
-            // If there are more scenarios now ready to execute, do those
-            if (this.scenariosWaitingToExecute.length > 0) {
-              return execute();
-            }
-            // Otherwise, mark any still pending as cancelled
-            this.scenariosNotReadyToExecute.forEach((scenario) => {
-              scenario.cancel("Not able to execute");
-            });
-            resolve(this._markSuiteExecutionAsCompleted());
-          }, 50);
-        }
+        // Important! Don't finish it off right away, there may be something pending in a few milliseconds
+        runAsync(() => {
+          // If there are more scenarios now ready to execute, do those
+          if (this.scenariosWaitingToExecute.length > 0) {
+            return execute();
+          }
+          // Otherwise, mark any still pending as cancelled
+          resolve(this._cancelPendingScenarios("Not able to execute"));
+        }, 50);
       };
       await execute();
     });
   }
 
+  private _cancelPendingScenarios(reason: string): true {
+    this.scenariosNotReadyToExecute.forEach((scenario) => {
+      scenario.cancel(`Cancelled this scenario. Reason: ${reason}`);
+    });
+    this._markSuiteExecutionAsCompleted();
+    return true;
+  }
+
+  private _cancelScenariosAnyNotFinished(reason: string): true {
+    this.scenarios.forEach((scenario) => {
+      if (!scenario.hasFinished) {
+        scenario.cancelOrAbort(`Aborted this scenario. Reason: ${reason}`);
+      }
+    });
+    this._markSuiteExecutionAsCompleted();
+    return true;
+  }
+
   private async _waitForScenariosToFinish(
-    scenarios: iScenario[],
-    timeout = 30000
-  ): Promise<true> {
-    await bluebird
-      .all(
-        scenarios.map((scenario) => {
-          return scenario.waitForFinished();
-        })
-      )
-      .timeout(timeout);
+    scenarios: iScenario[]
+  ): Promise<boolean> {
+    try {
+      await bluebird
+        .all(
+          scenarios.map((scenario) => {
+            return scenario.waitForFinished();
+          })
+        )
+        .timeout(this._maxScenarioDuration);
+    } catch (e) {
+      return false;
+    }
     return true;
   }
 

@@ -1,5 +1,10 @@
 import { BrowserControl } from "./puppeteer/browsercontrol";
-import { Page, EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
+import {
+  Page,
+  EvaluateFn,
+  SerializableOrJSHandle,
+  PageFnOptions,
+} from "puppeteer-core";
 import { Assertion } from "./assertion";
 import {
   iResponse,
@@ -27,6 +32,12 @@ import {
   toType,
   getFindParams,
   getFindName,
+  asyncMap,
+  asyncSome,
+  asyncEvery,
+  asyncFilter,
+  asyncNone,
+  asyncForEach,
 } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { string } from "yargs";
@@ -81,7 +92,7 @@ export class AssertionContext implements iAssertionContext {
   }
 
   public get browserControl(): BrowserControl | null {
-    return this.response.isBrowser ? this._scenario.getBrowserControl() : null;
+    return this.response.isBrowser ? this._scenario.browserControl : null;
   }
 
   public get executionOptions(): FlagpoleExecution {
@@ -223,6 +234,19 @@ export class AssertionContext implements iAssertionContext {
     ...args: SerializableOrJSHandle[]
   ): Promise<any> {
     return await this.response.eval.apply(this, [js, ...args]);
+  }
+
+  public async waitForFunction(
+    js: EvaluateFn<any>,
+    opts?: PageFnOptions,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<void> {
+    await this.response.waitForFunction.apply(this.response, [
+      js,
+      opts,
+      ...args,
+    ]);
+    this._completedAction("WAIT", "Function to evaluate as true");
   }
 
   public async waitForReady(timeout: number = 15000): Promise<void> {
@@ -439,25 +463,23 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  click(selector: string, opts?: FindOptions): Promise<void>;
-  click(selector: string, contains: string, opts?: FindOptions): Promise<void>;
-  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<void>;
+  click(selector: string, opts?: FindOptions): Promise<iValue>;
+  click(
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
   public async click(
     selector: string,
     a?: FindOptions | string | RegExp,
     b?: FindOptions
-  ): Promise<void> {
-    const contains = typeof a == "string" ? a : undefined;
-    const matches = toType(a) == "regexp" ? a : undefined;
-    const opts = (b || a || {}) as FindOptions;
-    const element = contains
-      ? await this.find(selector, contains, opts)
-      : matches
-      ? await this.find(selector, matches, opts)
-      : await this.find(selector, opts);
-    if (!(await element.exists()).isNull()) {
-      element.click();
-    }
+  ): Promise<iValue> {
+    return typeof a == "string"
+      ? this.response.click(selector, a, b)
+      : a instanceof RegExp
+      ? this.response.click(selector, a, b)
+      : this.response.click(selector, b);
   }
 
   /**
@@ -503,6 +525,13 @@ export class AssertionContext implements iAssertionContext {
   public async scrollTo(point: OptionalXY): Promise<iAssertionContext> {
     return (await this.response.scrollTo(point)).context;
   }
+
+  public map = asyncMap;
+  public some = asyncSome;
+  public every = asyncEvery;
+  public filter = asyncFilter;
+  public none = asyncNone;
+  public each = asyncForEach;
 
   protected async _completedAction(verb: string, noun?: string) {
     this.scenario.result(new AssertionActionCompleted(verb, noun || ""));
