@@ -10,10 +10,7 @@ import {
 import { Link } from "../link";
 import { ResponseType } from "../enums";
 import { isPuppeteer } from "../response";
-import { runAsync, getMessageAndCallbackFromOverloading } from "../util";
-import * as fs from "fs";
-import needle = require("needle");
-import { HttpRequestOptions } from "../httprequest";
+import { getMessageAndCallbackFromOverloading } from "../util";
 
 export abstract class DOMElement extends Value {
   public get name(): string {

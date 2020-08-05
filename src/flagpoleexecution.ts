@@ -9,7 +9,6 @@ import {
   ensureDirSync,
   writeFileSync,
   existsSync,
-  removeSync,
   unlinkSync,
   emptyDirSync,
 } from "fs-extra";

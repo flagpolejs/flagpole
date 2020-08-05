@@ -1,5 +1,4 @@
 import { URL } from "url";
-import { Value } from "./value";
 import {
   iValue,
   iResponse,
@@ -12,7 +11,7 @@ import {
 import { ResponseType } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import { AssertionContext } from "./assertioncontext";
-import { wrapAsValue, toType } from "./util";
+import { wrapAsValue } from "./helpers";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 
 export function isPuppeteer(type: ResponseType): boolean {

@@ -28,10 +28,6 @@ import {
 } from "./logging/assertionresult";
 import {
   openInBrowser,
-  getMessageAndCallbackFromOverloading,
-  toType,
-  getFindParams,
-  getFindName,
   asyncMap,
   asyncSome,
   asyncEvery,
@@ -40,7 +36,7 @@ import {
   asyncForEach,
 } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
-import { string } from "yargs";
+import { getFindParams, getFindName } from "./helpers";
 
 const getParamsFromExists = (
   a: string,

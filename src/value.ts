@@ -13,8 +13,8 @@ import {
 } from "./logging/assertionresult";
 import { ResponseType } from "./enums";
 import { Link } from "./link";
-import { HttpRequest, HttpResponse } from ".";
-import { HttpRequestOptions } from "./httprequest";
+import { HttpResponse } from "./httpresponse";
+import { HttpRequest, HttpRequestOptions } from "./httprequest";
 import * as fs from "fs";
 import {
   EvaluateFn,

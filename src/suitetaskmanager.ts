@@ -143,7 +143,7 @@ export class SuiteTaskManager {
 
   public get scenariosWaitingToExecute(): iScenario[] {
     return this._scenarios.filter((scenario) => {
-      return !scenario.hasExecuted;
+      return scenario.isPending;
     });
   }
 

@@ -2,16 +2,14 @@ import { ResponseType } from "../enums";
 import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
 import { ElementHandle } from "puppeteer-core";
 import { PuppeteerResponse } from "./puppeteerresponse";
+import { asyncForEach, arrayify, asyncMap } from "../util";
 import {
-  asyncForEach,
-  arrayify,
-  asyncMap,
   getFindParams,
   filterFind,
   findOne,
   wrapAsValue,
   getFindName,
-} from "../util";
+} from "../helpers";
 import { BrowserElement } from "./browserelement";
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {

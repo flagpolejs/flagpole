@@ -2,7 +2,7 @@ import { ProtoResponse } from "../response";
 import { iJPath, jPath } from "./jpath";
 import { HttpResponse } from "../httpresponse";
 import { iResponse, iValue } from "../interfaces";
-import { wrapAsValue } from "../util";
+import { wrapAsValue } from "../helpers";
 import { ResponseType } from "../enums";
 
 export class JsonResponse extends ProtoResponse implements iResponse {

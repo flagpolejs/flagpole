@@ -8,7 +8,7 @@ import { probeImageResponse } from "./httpresponse";
 import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
 import { ImageProbe } from "@zerodeps/image-probe";
-import { FlagpoleExecution } from ".";
+import { FlagpoleExecution } from "./flagpoleexecution";
 
 const CONTENT_TYPE_JSON = "application/json";
 const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";

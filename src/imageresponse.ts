@@ -4,7 +4,7 @@ import { iResponse, iValue } from "./interfaces";
 import { URL } from "url";
 import { HttpResponse } from "./httpresponse";
 import { Value } from "./value";
-import { wrapAsValue } from "./util";
+import { wrapAsValue } from "./helpers";
 
 export interface ImageProperties {
   width: number;

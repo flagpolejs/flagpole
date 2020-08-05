@@ -9,16 +9,15 @@ import {
 } from "../interfaces";
 import { PuppeteerResponse } from "./puppeteerresponse";
 import { PuppeteerElement } from "./puppeteerelement";
+import { asyncForEach, asyncMap } from "../util";
 import {
-  asyncForEach,
   filterFind,
   getFindParams,
   wrapAsValue,
   findOne,
-  asyncMap,
   getFindName,
   FindParams,
-} from "../util";
+} from "../helpers";
 import { ElementHandle, JSHandle, EvaluateFn } from "puppeteer-core";
 import { BrowserElement } from "./browserelement";
 import { query, jsHandleArrayToHandles } from "./ext.helper";

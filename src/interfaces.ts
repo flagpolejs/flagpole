@@ -10,6 +10,7 @@ import {
   SuiteStatusEvent,
   ScenarioStatusEvent,
   LineType,
+  ScenarioDisposition,
 } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import {
@@ -575,6 +576,13 @@ export interface iScenario {
   redirectChain: string[];
   request: HttpRequest;
   browserControl: BrowserControl | null;
+  hasAborted: boolean;
+  hasBeenCancelled: boolean;
+  hasBeenSkipped: boolean;
+  isPending: boolean;
+  isExecuting: boolean;
+  isCompleted: boolean;
+  disposition: ScenarioDisposition;
   set(aliasName: string, value: any): iScenario;
   get(aliasName: string): any;
   getLog(): Promise<iLogItem[]>;

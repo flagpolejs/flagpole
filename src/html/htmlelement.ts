@@ -1,23 +1,16 @@
 import { DOMElement } from "./domelement";
 import { Link } from "../link";
-import { ResponseType } from "../enums";
 import {
   iAssertionContext,
-  iScenario,
   iValue,
   KeyValue,
   FindOptions,
   FindAllOptions,
 } from "../interfaces";
-import {
-  asyncForEach,
-  getMessageAndCallbackFromOverloading,
-  getFindParams,
-  filterFind,
-} from "../util";
+import { asyncForEach } from "../util";
+import { getFindParams, filterFind } from "../helpers";
 import { HttpMethodVerb } from "../httprequest";
-import { HttpRequest } from "..";
-import { ToString } from "yargs";
+import { HttpRequest } from "../httprequest";
 
 const cheerio: CheerioAPI = require("cheerio");
 let $: CheerioStatic;

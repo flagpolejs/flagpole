@@ -2,6 +2,7 @@ import {
   ResponseType,
   ScenarioStatusEvent,
   ScenarioDisposition,
+  LineType,
 } from "./enums";
 import {
   iAssertion,
@@ -115,6 +116,34 @@ export class Scenario implements iScenario {
    */
   public get hasPassed(): boolean {
     return this.hasFinished && !this.hasFailed;
+  }
+
+  public get hasAborted(): boolean {
+    return this._disposition == ScenarioDisposition.aborted;
+  }
+
+  public get hasBeenCancelled(): boolean {
+    return this._disposition == ScenarioDisposition.cancelled;
+  }
+
+  public get hasBeenSkipped(): boolean {
+    return this._disposition == ScenarioDisposition.skipped;
+  }
+
+  public get isPending(): boolean {
+    return this._disposition == ScenarioDisposition.pending;
+  }
+
+  public get isExecuting(): boolean {
+    return this._disposition == ScenarioDisposition.excuting;
+  }
+
+  public get isCompleted(): boolean {
+    return this._disposition == ScenarioDisposition.completed;
+  }
+
+  public get disposition(): ScenarioDisposition {
+    return this._disposition;
   }
 
   /**
@@ -270,7 +299,7 @@ export class Scenario implements iScenario {
   protected _requestResolve: Function = () => {};
   protected _finishedPromise: Promise<void>;
   protected _finishedResolve: Function = () => {};
-  protected _disposition: ScenarioDisposition = "pending";
+  protected _disposition: ScenarioDisposition = ScenarioDisposition.pending;
 
   public static create(
     suite: iSuite,
@@ -489,6 +518,11 @@ export class Scenario implements iScenario {
     thatScenario.success(async () => {
       this.wait(false);
     });
+    thatScenario.failure(async () => {
+      this.cancel(
+        `This scenario was pending completion of "${thatScenario.title}", but it failed.`
+      );
+    });
     return this;
   }
 
@@ -609,7 +643,7 @@ export class Scenario implements iScenario {
     await this._fireBefore();
     this._publish(ScenarioStatusEvent.executionProgress);
     this.comment(`Skipped ${message ? ": " + message : ""}`);
-    await this._markScenarioCompleted(null, null, "skipped");
+    await this._markScenarioCompleted(null, null, ScenarioDisposition.skipped);
     return this;
   }
 
@@ -627,7 +661,7 @@ export class Scenario implements iScenario {
     this._markScenarioCompleted(
       `Aborted ${message ? ": " + message : ""}`,
       null,
-      "aborted"
+      ScenarioDisposition.aborted
     );
     return this;
   }
@@ -641,7 +675,7 @@ export class Scenario implements iScenario {
     this._markScenarioCompleted(
       `Cancelled ${message ? ": " + message : ""}`,
       null,
-      "cancelled"
+      ScenarioDisposition.cancelled
     );
     return this;
   }
@@ -978,10 +1012,14 @@ export class Scenario implements iScenario {
         this._markScenarioCompleted();
       })
       .catch(bluebird.TimeoutError, (e) => {
-        this._markScenarioCompleted("Timed out.", e.message, "aborted");
+        this._markScenarioCompleted(
+          "Timed out.",
+          e.message,
+          ScenarioDisposition.aborted
+        );
       })
       .catch((err) => {
-        this._markScenarioCompleted(err, null, "aborted");
+        this._markScenarioCompleted(err, null, ScenarioDisposition.aborted);
       });
     this._publish(ScenarioStatusEvent.executionProgress);
   }
@@ -995,7 +1033,7 @@ export class Scenario implements iScenario {
     }
     const handleError = (message: string, e: any) => {
       setTimeout(() => {
-        this._markScenarioCompleted(message, e, "aborted");
+        this._markScenarioCompleted(message, e, ScenarioDisposition.aborted);
       }, 1000);
     };
     this.browserControl
@@ -1036,7 +1074,7 @@ export class Scenario implements iScenario {
           this._markScenarioCompleted(
             `Failed to load ${this._request.uri}`,
             null,
-            "aborted"
+            ScenarioDisposition.aborted
           );
         }
         return;
@@ -1045,7 +1083,7 @@ export class Scenario implements iScenario {
         this._markScenarioCompleted(
           `Failed to load ${this._request.uri}`,
           err,
-          "aborted"
+          ScenarioDisposition.aborted
         )
       );
   }
@@ -1068,7 +1106,7 @@ export class Scenario implements iScenario {
         this._markScenarioCompleted(
           `Failed to load ${this._request.uri}`,
           err,
-          "aborted"
+          ScenarioDisposition.aborted
         );
       });
   }
@@ -1117,7 +1155,7 @@ export class Scenario implements iScenario {
         scenario._markScenarioCompleted(
           `Failed to load page ${scenario.url}`,
           err,
-          "aborted"
+          ScenarioDisposition.aborted
         );
       });
   }
@@ -1130,27 +1168,33 @@ export class Scenario implements iScenario {
   protected async _markScenarioCompleted(
     message: string | null = null,
     details: string | null = null,
-    disposition: ScenarioDisposition = "completed"
+    disposition: ScenarioDisposition = ScenarioDisposition.completed
   ): Promise<iScenario> {
     // Only run this once
     if (!this.hasFinished) {
       this._disposition = disposition;
-      if (disposition == "cancelled") {
+      if (disposition == ScenarioDisposition.cancelled) {
         this._publish(ScenarioStatusEvent.executionCancelled);
-      } else if (disposition == "skipped") {
+      } else if (disposition == ScenarioDisposition.skipped) {
         this._publish(ScenarioStatusEvent.executionSkipped);
         this.comment(message);
-      } else if (disposition == "aborted") {
+      } else if (disposition == ScenarioDisposition.aborted) {
         this._publish(ScenarioStatusEvent.executionAborted);
       }
       // Save time finished
       this._timeScenarioFinished = Date.now();
       // If execution started, show time took
-      if (disposition == "completed" || disposition == "aborted") {
+      if (
+        disposition == ScenarioDisposition.completed ||
+        disposition == ScenarioDisposition.aborted
+      ) {
         this.comment(`Took ${this.executionDuration}ms`);
       }
       // Scenario completed with an error
-      if (disposition !== "completed" && disposition !== "skipped") {
+      if (
+        disposition !== ScenarioDisposition.completed &&
+        disposition !== ScenarioDisposition.skipped
+      ) {
         this.result(new AssertionFail(message || disposition, details));
       }
       // After
