@@ -202,7 +202,9 @@ const h1 = await context.exists("There should be an H1 tag", "h1");
 
 But there may be situations where you already have an element from another type of method and want to make sure it exists.
 
-### fillForm(data: { [key: string]: any }): Promise<Value>
+### fillForm(): Promise<Value>
+
+#### fillForm(data: { [key: string]: any }): Promise<Value>
 
 Fill out a form element with this data. The data object should match the input/select name attributes of elements within the form. For multi-select inputs pass in an array of values to be checked.
 
@@ -215,6 +217,18 @@ await form.fillForm({
   lastName: "Ward",
   position: "QB",
   team: "FSU",
+});
+```
+
+#### fillForm(attributeName: string, data: { [key: string]: any }): Promise<Value>
+
+This works just like the single-argument overload, except that you can specify the attribute name. The default is to search in the `name` attribute, but in some cases you may want to use a different field such as `id` or `ng-reflect-name` or antyhing else.
+
+```javascript
+const form = await context.find("form");
+await form.fillForm("ng-relect-name", {
+  userName: "foo",
+  password: "bar",
 });
 ```
 

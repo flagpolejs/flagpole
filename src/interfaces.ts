@@ -407,6 +407,14 @@ export interface iAssertion {
   hasClassName(value?: string | RegExp): Promise<iAssertion>;
   hasText(text?: string | RegExp): Promise<iAssertion>;
   hasTag(tagName?: string | RegExp): Promise<iAssertion>;
+  eval(
+    js: EvaluateFn<any>,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<iAssertion>;
+  evalEvery(
+    js: EvaluateFn<any>,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<iAssertion>;
 }
 
 export interface iAssertionContext {

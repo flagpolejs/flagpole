@@ -21,6 +21,7 @@ import {
   asyncMap,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
+import { EvaluateFn, SerializableOrJSHandle } from "puppeteer";
 
 export class Assertion implements iAssertion {
   /**
@@ -188,6 +189,10 @@ export class Assertion implements iAssertion {
 
   private get isFlagpoleValue(): boolean {
     return !!this._input?.isFlagpoleValue;
+  }
+
+  private get context(): iAssertionContext {
+    return this._context;
   }
 
   private _context: iAssertionContext;
@@ -649,6 +654,45 @@ export class Assertion implements iAssertion {
     }
     return new Promise(async (resolve) => {
       resolve(this._evalulate(await asyncNone(thisValue, callback), thisValue));
+    });
+  }
+
+  public async eval(
+    js: EvaluateFn<any>,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<iAssertion> {
+    const thisValue = this._getCompareValue(this._input);
+    const result = await this.context.eval.apply(undefined, [
+      js,
+      thisValue,
+      ...args,
+    ]);
+    this._setDefaultMessages(
+      `Function evaluates false`,
+      `Function evaluates true`
+    );
+    return this._evalulate(!!result, result);
+  }
+
+  public async evalEvery(
+    js: EvaluateFn<any>,
+    ...args: SerializableOrJSHandle[]
+  ): Promise<iAssertion> {
+    const thisValue = this._getCompareValue(this._input);
+    // This must be an array
+    if (toType(thisValue) !== "array") {
+      throw new Error("Input value must be an array.");
+    }
+    this._setDefaultMessages(
+      `Every function evaluates false`,
+      `Every function evaluates true`
+    );
+    return new Promise(async (resolve) => {
+      const result = await asyncEvery(thisValue, (item) => {
+        const val = this._getCompareValue(item);
+        return this.context.eval.apply(undefined, [js, val, ...args]);
+      });
+      resolve(this._evalulate(result, thisValue));
     });
   }
 

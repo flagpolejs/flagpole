@@ -4,6 +4,10 @@ import { iAssertionContext, iValue } from "../interfaces";
 import { Value } from "../value";
 import { asyncMap } from "../util";
 
+export async function jsHandleIsNull(handle: JSHandle<any>) {
+  return await handle.evaluate((r) => r === null);
+}
+
 export async function jsHandleArrayToHandles(results: JSHandle) {
   const length = await results.evaluate((r) => r.length);
   const handles: JSHandle[] = [];
@@ -39,6 +43,27 @@ export async function filter(
   });
 }
 
+export async function queryAllDomElementsWithinComponent(
+  component: JSHandle,
+  selector: string
+) {
+  return component.evaluateHandle(
+    (c, selector) => c.el.dom.querySelectorAll(selector),
+    selector
+  );
+}
+
+export async function queryDomElementWithinComponent(
+  component: JSHandle,
+  selector: string
+) {
+  const result = await component.evaluateHandle(
+    (c, selector) => c.el.dom.querySelector(selector),
+    selector
+  );
+  return (await jsHandleIsNull(result)) ? null : result;
+}
+
 export async function query(page: Page, selector: string) {
   return page.evaluateHandle(
     // @ts-ignore
@@ -58,20 +83,36 @@ export async function id(component: JSHandle) {
   return component.evaluateHandle((c) => c.getId());
 }
 
-export async function down(context: JSHandle, selector: string) {
-  return context.evaluateHandle((c, selector) => c.down(selector), selector);
+export async function down(
+  context: JSHandle,
+  selector: string
+): Promise<JSHandle | null> {
+  const result = await context.evaluateHandle(
+    (c, selector) => c.down(selector),
+    selector
+  );
+  return (await jsHandleIsNull(result)) ? null : result;
 }
 
 export async function child(context: JSHandle, selector: string) {
-  return context.evaluateHandle((c, selector) => c.child(selector), selector);
+  const result = await context.evaluateHandle(
+    (c, selector) => c.child(selector),
+    selector
+  );
+  return (await jsHandleIsNull(result)) ? null : result;
 }
 
 export async function up(context: JSHandle, selector: string) {
-  return context.evaluateHandle((c, selector) => c.up(selector), selector);
+  const result = await context.evaluateHandle(
+    (c, selector) => c.up(selector),
+    selector
+  );
+  return (await jsHandleIsNull(result)) ? null : result;
 }
 
 export async function parent(context: JSHandle) {
-  return context.evaluateHandle((c) => c.parent || c.getParent());
+  const result = await context.evaluateHandle((c) => c.parent || c.getParent());
+  return (await jsHandleIsNull(result)) ? null : result;
 }
 
 export async function ancestors(context: JSHandle, selector: string) {

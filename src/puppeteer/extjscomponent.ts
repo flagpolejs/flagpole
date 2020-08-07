@@ -1,9 +1,16 @@
 import { iAssertionContext, iValue } from "../interfaces";
 import { PuppeteerElement } from "./puppeteerelement";
-import { JSHandle, EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
+import {
+  JSHandle,
+  EvaluateFn,
+  SerializableOrJSHandle,
+  ElementHandle,
+} from "puppeteer-core";
 import { arrayify, asyncMap } from "../util";
 import { ExtJSResponse } from "./extjsresponse";
 import * as ext from "./ext.helper";
+import { wrapAsValue } from "../helpers";
+import { BrowserElement } from "./browserelement";
 
 const visible: EvaluateFn = (c) => c.isVisible(true);
 const hidden: EvaluateFn = (c) => c.isHidden(true);
@@ -158,13 +165,22 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   }
 
   public async find(selector: string): Promise<iValue> {
+    const name = `${selector} under ${this.name}`;
+    const path = `${this.path} ${selector}`;
     const result = await ext.down(this.$, selector);
-    return ext.jsHandleToComponent(
-      result,
-      this.context,
-      `${selector} under ${this.name}`,
-      `${this.path} ${selector}`
-    );
+    if (result !== null) {
+      return ext.jsHandleToComponent(result, this.context, name, path);
+    }
+    const el = await ext.queryDomElementWithinComponent(this.$, selector);
+    if (el !== null) {
+      return BrowserElement.create(
+        el as ElementHandle,
+        this.context,
+        name,
+        path
+      );
+    }
+    return wrapAsValue(this.context, null, name, path);
   }
 
   public async findAll(selector: string): Promise<iValue[]> {
@@ -239,6 +255,9 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   public async getSiblings(selector: string = "*"): Promise<iValue[]> {
     const id = await ext.id(this.$);
     const parent = await ext.parent(this.$);
+    if (parent === null) {
+      return [];
+    }
     const parentId = await ext.id(parent);
     const children = await ext.query(this._page, `#${parentId} > ${selector}`);
     const filtered = await ext.filter(children, (c, id) => c.getId() != id, id);
