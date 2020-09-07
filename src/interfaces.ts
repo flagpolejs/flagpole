@@ -444,14 +444,14 @@ export interface iAssertionContext {
     matches: RegExp,
     opts?: FindOptions
   ): Promise<iValue>;
-  existsAll(selector: string, opts?: FindOptions): Promise<iValue[]>;
+  existsAll(selector: string | string[], opts?: FindOptions): Promise<iValue[]>;
   existsAll(
-    selector: string[],
+    selector: string | string[],
     contains: string,
     opts?: FindOptions
   ): Promise<iValue[]>;
   existsAll(
-    selector: string[],
+    selector: string | string[],
     matches: RegExp,
     opts?: FindOptions
   ): Promise<iValue[]>;
