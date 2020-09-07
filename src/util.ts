@@ -10,10 +10,7 @@ import * as path from "path";
 const cheerio = require("cheerio");
 
 export const arrayify = <T>(value: any): T[] => {
-  if (toType(value) !== "array") {
-    value = [value];
-  }
-  return value;
+  return toType(value) == "array" ? value : [value];
 };
 
 export const jsonParse = (json: string): any => {
@@ -100,6 +97,18 @@ export function runAsync(callback: Function, delay: number = 1) {
   setTimeout(callback, delay);
 }
 
+export function asyncForEachUntilFirst(
+  array: any[],
+  callback: IteratorCallback
+): Promise<any> {
+  let output: any = null;
+  array.some((value, i, arr) => {
+    output = callback(value, i, arr);
+    return !!output;
+  });
+  return output;
+}
+
 export function asyncForEach(
   array: any[],
   callback: IteratorCallback
@@ -146,6 +155,14 @@ export async function asyncFilter(array: any[], callback: IteratorCallback) {
 export async function asyncMap(array: any[], callback: IteratorCallback) {
   return Promise.all(array.map(callback));
 }
+
+export const asyncFlatMap = async <T>(
+  array: any[],
+  callback: IteratorCallback
+): Promise<T[]> => {
+  const values = await asyncMap(array, callback);
+  return ([] as T[]).concat(...values);
+};
 
 export async function asyncMapToObject(
   array: string[],

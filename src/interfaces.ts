@@ -433,14 +433,14 @@ export interface iAssertionContext {
   pause(milliseconds: number): Promise<void>;
   set(aliasName: string, value: any): iAssertionContext;
   get(aliasName: string): any;
-  exists(selector: string, opts?: FindOptions): Promise<iValue>;
+  exists(selector: string | string[], opts?: FindOptions): Promise<iValue>;
   exists(
-    selector: string,
+    selector: string | string[],
     contains: string,
     opts?: FindOptions
   ): Promise<iValue>;
   exists(
-    selector: string,
+    selector: string | string[],
     matches: RegExp,
     opts?: FindOptions
   ): Promise<iValue>;
@@ -455,17 +455,28 @@ export interface iAssertionContext {
     matches: RegExp,
     opts?: FindOptions
   ): Promise<iValue[]>;
-  find(selector: string, opts?: FindOptions): Promise<iValue>;
-  find(selector: string, contains: string, opts?: FindOptions): Promise<iValue>;
-  find(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
-  findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
+  find(selector: string | string[], opts?: FindOptions): Promise<iValue>;
+  find(
+    selector: string | string[],
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  find(
+    selector: string | string[],
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
   findAll(
-    selector: string,
+    selector: string | string[],
+    opts?: FindAllOptions
+  ): Promise<iValue[]>;
+  findAll(
+    selector: string | string[],
     contains: string,
     opts?: FindAllOptions
   ): Promise<iValue[]>;
   findAll(
-    selector: string,
+    selector: string | string[],
     matches: RegExp,
     opts?: FindAllOptions
   ): Promise<iValue[]>;

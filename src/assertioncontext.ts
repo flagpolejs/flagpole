@@ -34,10 +34,13 @@ import {
   asyncFilter,
   asyncNone,
   asyncForEach,
-  asyncMapToObject,
+  asyncForEachUntilFirst,
+  arrayify,
+  asyncFlatMap,
 } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
-import { getFindParams, getFindName } from "./helpers";
+import { getFindParams, getFindName, wrapAsValue } from "./helpers";
+import * as bluebird from "bluebird";
 
 const getParamsFromExists = (
   a: string,
@@ -318,10 +321,14 @@ export class AssertionContext implements iAssertionContext {
    * @param timeout
    */
   public async waitForExists(
-    selector: string,
+    selector: string | string[],
     timeout?: number
   ): Promise<iValue> {
-    const el: iValue = await this.response.waitForExists(selector, timeout);
+    const selectors = arrayify<string>(selector);
+    const promises = selectors.map((selector) =>
+      this.response.waitForExists(selector, timeout)
+    );
+    const el: iValue = await bluebird.any(promises);
     el.isNull()
       ? this._failedAction("EXISTS", `${selector}`)
       : this._completedAction("EXISTS", `${selector}`);
@@ -334,18 +341,24 @@ export class AssertionContext implements iAssertionContext {
    * @param selector
    */
   public async exists(
-    selector: string,
+    selector: string | string[],
     a?: string | FindOptions | RegExp,
     b?: FindOptions
   ): Promise<iValue> {
+    const selectors = arrayify<string>(selector);
     const params = getFindParams(a, b);
     const opts = params.opts || {};
-    const element = params.contains
-      ? await this.response.find(selector, params.contains, opts)
-      : params.matches
-      ? await this.response.find(selector, params.matches, opts)
-      : await this.response.find(selector, opts);
-    this._assertExists(null, getFindName(params, selector, 0), element);
+    const element = await asyncForEachUntilFirst(
+      selectors,
+      async (selector) => {
+        return params.contains
+          ? await this.response.find(selector, params.contains, opts)
+          : params.matches
+          ? await this.response.find(selector, params.matches, opts)
+          : await this.response.find(selector, opts);
+      }
+    );
+    this._assertExists(null, getFindName(params, selectors, 0), element);
     return element;
   }
 
@@ -359,8 +372,8 @@ export class AssertionContext implements iAssertionContext {
     a?: string | FindAllOptions | RegExp,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    const selectors = typeof selector == "string" ? [selector] : selector;
-    const elements: iValue[] = await asyncMap(
+    const selectors = arrayify<string>(selector);
+    const elements: iValue[][] = await asyncMap(
       selectors,
       async (s) => await this.findAll(s, a, b)
     );
@@ -379,15 +392,27 @@ export class AssertionContext implements iAssertionContext {
    * @param selector
    */
   public async find(
-    selector: string,
+    selector: string | string[],
     a?: string | RegExp | FindOptions,
     b?: FindOptions
   ): Promise<iValue> {
-    return typeof a == "string"
-      ? this.response.find(selector, a, b)
-      : a instanceof RegExp
-      ? this.response.find(selector, a, b)
-      : this.response.find(selector, b);
+    const selectors = arrayify<string>(selector);
+    const params = getFindParams(a, b);
+    const element: iValue | null = await asyncForEachUntilFirst(
+      selectors,
+      async (selector) => {
+        const value =
+          typeof a == "string"
+            ? await this.response.find(selector, a, b)
+            : a instanceof RegExp
+            ? await this.response.find(selector, a, b)
+            : await this.response.find(selector, b);
+        return value.isNullOrUndefined() ? false : value;
+      }
+    );
+    return element === null
+      ? wrapAsValue(this, null, getFindName(params, selectors, null))
+      : element;
   }
 
   /**
@@ -395,16 +420,19 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public async findAll(
-    selector: string,
+  public findAll(
+    selector: string | string[],
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    return typeof a == "string"
-      ? this.response.findAll(selector, a, b)
-      : a instanceof RegExp
-      ? this.response.findAll(selector, a, b)
-      : this.response.findAll(selector, b);
+    const selectors = arrayify<string>(selector);
+    return asyncFlatMap<iValue>(selectors, (selector) =>
+      typeof a == "string"
+        ? this.response.findAll(selector, a, b)
+        : a instanceof RegExp
+        ? this.response.findAll(selector, a, b)
+        : this.response.findAll(selector, b)
+    );
   }
 
   public async findXPath(xPath: string): Promise<iValue> {
