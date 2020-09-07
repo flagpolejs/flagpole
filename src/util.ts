@@ -147,6 +147,17 @@ export async function asyncMap(array: any[], callback: IteratorCallback) {
   return Promise.all(array.map(callback));
 }
 
+export async function asyncMapToObject(
+  array: string[],
+  callback: IteratorCallback
+): Promise<{ [key: string]: any }> {
+  const results = await asyncMap(array, callback);
+  return array.reduce((map, key, i) => {
+    map[key] = results[i];
+    return map;
+  }, {});
+}
+
 export async function asyncNone(
   array: any[],
   callback: IteratorCallback

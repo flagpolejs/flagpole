@@ -446,12 +446,12 @@ export interface iAssertionContext {
   ): Promise<iValue>;
   existsAll(selector: string, opts?: FindOptions): Promise<iValue[]>;
   existsAll(
-    selector: string,
+    selector: string[],
     contains: string,
     opts?: FindOptions
   ): Promise<iValue[]>;
   existsAll(
-    selector: string,
+    selector: string[],
     matches: RegExp,
     opts?: FindOptions
   ): Promise<iValue[]>;
@@ -523,6 +523,7 @@ export interface iAssertionContext {
   each(array: any[], callback: IteratorCallback): Promise<void>;
   filter(array: any[], callback: IteratorCallback): Promise<any[]>;
   map(array: any[], callback: IteratorCallback): Promise<any[]>;
+  abort(message?: string): Promise<iScenario>;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;

@@ -34,6 +34,7 @@ import {
   asyncFilter,
   asyncNone,
   asyncForEach,
+  asyncMapToObject,
 } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { getFindParams, getFindName } from "./helpers";
@@ -354,19 +355,22 @@ export class AssertionContext implements iAssertionContext {
    * @param selector
    */
   public async existsAll(
-    selector: string,
+    selector: string | string[],
     a?: string | FindAllOptions | RegExp,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    const params = getFindParams(a, b);
-    const opts = params.opts || {};
-    const elements = params.contains
-      ? await this.response.findAll(selector, params.contains, opts)
-      : params.matches
-      ? await this.response.findAll(selector, params.matches, opts)
-      : await this.response.findAll(selector, opts);
-    this._assertExists(null, selector, elements[0]);
-    return elements;
+    const selectors = typeof selector == "string" ? [selector] : selector;
+    const elements: iValue[] = await asyncMap(
+      selectors,
+      async (s) => await this.findAll(s, a, b)
+    );
+    this.assert(
+      selectors.length > 1
+        ? `${selectors.join(", ")} all exist`
+        : `${selectors[0]} exists`,
+      elements
+    ).every((element: iValue[]) => !element[0].isNullOrUndefined());
+    return ([] as iValue[]).concat(...elements);
   }
 
   /**
@@ -529,6 +533,10 @@ export class AssertionContext implements iAssertionContext {
   public none = asyncNone;
   public each = asyncForEach;
 
+  public abort(message?: string): Promise<iScenario> {
+    return this.scenario.abort(message);
+  }
+
   protected async _completedAction(verb: string, noun?: string) {
     this.scenario.result(new AssertionActionCompleted(verb, noun || ""));
   }
@@ -539,11 +547,11 @@ export class AssertionContext implements iAssertionContext {
 
   protected _assertExists(message: string | null, name: string, el: iValue) {
     if (message) {
-      el.isNull()
+      el.isNullOrUndefined()
         ? this.scenario.result(new AssertionFail(message, name))
         : this.scenario.result(new AssertionPass(message));
     } else {
-      el.isNull()
+      el.isNullOrUndefined()
         ? this._failedAction("EXISTS", `${name}`)
         : this._completedAction("EXISTS", `${name}`);
     }
