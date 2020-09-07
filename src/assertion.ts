@@ -21,7 +21,7 @@ import {
   asyncMap,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
-import { EvaluateFn, SerializableOrJSHandle } from "puppeteer";
+import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 
 export class Assertion implements iAssertion {
   /**
