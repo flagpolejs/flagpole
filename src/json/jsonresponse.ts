@@ -47,10 +47,14 @@ export class JsonResponse extends ProtoResponse implements iResponse {
     return wrapAsValue(this.context, selection, path, selection);
   }
 
+  /**
+   * Same as find for JSON, just returns as array
+   *
+   * @param path
+   */
   public async findAll(path: string): Promise<iValue[]> {
-    throw new Error(
-      "findAll() is not supported by JSON scenarios, please use select()"
-    );
+    const item = await this.find(path);
+    return [item];
   }
 
   private async loadJmesPath(): Promise<any> {
