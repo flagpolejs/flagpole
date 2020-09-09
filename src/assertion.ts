@@ -448,15 +448,6 @@ export class Assertion implements iAssertion {
     return this._evalulate(bool, thisValue);
   }
 
-  public looksLike(imageData: Buffer): iAssertion;
-  public looksLike(imageLocalPath: string): iAssertion;
-  public looksLike(imageData: Buffer, threshold: number): iAssertion;
-  public looksLike(imageLocalPath: string, threshold: number): iAssertion;
-  public looksLike(imageData: Buffer, thresholdPercent: string): iAssertion;
-  public looksLike(
-    imageLocalPath: string,
-    thresholdPercent: string
-  ): iAssertion;
   public looksLike(
     controlImage: string | Buffer,
     allowedDifference: number | string = 0

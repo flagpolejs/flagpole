@@ -398,9 +398,12 @@ export interface iAssertion {
   comment(input: any): iAssertion;
   schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
   schema(schema: JsonSchema | AjvSchema, simple?: boolean): Promise<iAssertion>;
-  looksLike(image: Buffer | string): iAssertion;
-  looksLike(image: Buffer | string, threshhold: number): iAssertion;
-  looksLike(image: Buffer | string, percent: string): iAssertion;
+  looksLike(imageData: Buffer): iAssertion;
+  looksLike(imageLocalPath: string): iAssertion;
+  looksLike(imageData: Buffer, threshold: number): iAssertion;
+  looksLike(imageLocalPath: string, threshold: number): iAssertion;
+  looksLike(imageData: Buffer, thresholdPercent: string): iAssertion;
+  looksLike(imageLocalPath: string, thresholdPercent: string): iAssertion;
   hasValue(value?: any): Promise<iAssertion>;
   hasProperty(key: string, value?: any): Promise<iAssertion>;
   hasAttribute(key: string, value?: string | RegExp): Promise<iAssertion>;
@@ -452,6 +455,17 @@ export interface iAssertionContext {
   ): Promise<iValue[]>;
   existsAll(
     selector: string | string[],
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue[]>;
+  existsAny(selectors: string[], opts?: FindOptions): Promise<iValue[]>;
+  existsAny(
+    selector: string[],
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue[]>;
+  existsAny(
+    selector: string[],
     matches: RegExp,
     opts?: FindOptions
   ): Promise<iValue[]>;
@@ -658,7 +672,11 @@ export interface iScenario {
   finally(message: string, callback: ScenarioCallback): iScenario;
   finally(callback: ScenarioCallback): iScenario;
   finally(...callbacks: ScenarioCallback[]): iScenario;
-  mock(localPath: string): iScenario;
+  mock(content: string): iScenario;
+  mock(response: HttpResponseOptions): iScenario;
+  local(localPath: string): iScenario;
+  webhook(route: string): iScenario;
+  webhook(route: string, portNumber: number): iScenario;
   setResponseType(
     type: ResponseType,
     opts?: BrowserOptions | HttpRequestOptions
@@ -722,4 +740,14 @@ export interface iAjvErrorObject {
   schema?: any;
   parentSchema?: object;
   data?: any;
+}
+
+export interface HttpResponseOptions {
+  body?: any;
+  status?: [number, string];
+  headers?: KeyValue;
+  cookies?: KeyValue;
+  trailers?: KeyValue;
+  method?: string;
+  url?: string;
 }

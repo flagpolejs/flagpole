@@ -152,28 +152,31 @@ export async function asyncFilter(array: any[], callback: IteratorCallback) {
   return array.filter((_v, index) => results[index]);
 }
 
-export async function asyncMap(array: any[], callback: IteratorCallback) {
+export const asyncMap = async <T>(
+  array: any[],
+  callback: IteratorCallback
+): Promise<T[]> => {
   return Promise.all(array.map(callback));
-}
+};
 
 export const asyncFlatMap = async <T>(
   array: any[],
   callback: IteratorCallback
 ): Promise<T[]> => {
-  const values = await asyncMap(array, callback);
+  const values = await asyncMap<T>(array, callback);
   return ([] as T[]).concat(...values);
 };
 
-export async function asyncMapToObject(
+export const asyncMapToObject = async <T>(
   array: string[],
   callback: IteratorCallback
-): Promise<{ [key: string]: any }> {
+): Promise<{ [key: string]: T }> => {
   const results = await asyncMap(array, callback);
   return array.reduce((map, key, i) => {
     map[key] = results[i];
     return map;
   }, {});
-}
+};
 
 export async function asyncNone(
   array: any[],
@@ -222,6 +225,10 @@ export function asyncSome2(array: any[], callback: Function): Promise<boolean> {
     });
   });
 }
+
+export const flatten = <T>(items: any[] | { [key: string]: any }): T[] => {
+  return ([] as T[]).concat(...Object.values(items));
+};
 
 /**
  * Have folder path always end in a /

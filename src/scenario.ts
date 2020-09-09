@@ -2,7 +2,6 @@ import {
   ResponseType,
   ScenarioStatusEvent,
   ScenarioDisposition,
-  LineType,
 } from "./enums";
 import {
   iAssertion,
@@ -19,6 +18,7 @@ import {
   ScenarioCallbackAndMessage,
   ResponsePipeCallbackAndMessage,
   iValue,
+  HttpResponseOptions,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
@@ -52,6 +52,14 @@ import { toType, asyncForEach, runAsync } from "./util";
 import { AssertionContext } from "./assertioncontext";
 import * as bluebird from "bluebird";
 import { Browser } from "puppeteer-core";
+import minikin, { Response } from "minikin";
+
+enum ScenarioRequestType {
+  httpRequest = "httpRequest",
+  localFile = "localFile",
+  manual = "manual",
+  webhook = "webhook",
+}
 
 /**
  * A scenario contains tests that run against one request
@@ -187,7 +195,14 @@ export class Scenario implements iScenario {
    * We will implicitly wait if the URL is not defined or has params in it
    */
   private get isImplicitWait(): boolean {
-    return this.url === null || /{[A-Za-z0-9_ -]+}/.test(this.url);
+    if (this._requestType == ScenarioRequestType.httpRequest) {
+      return this.url === null || /{[A-Za-z0-9_ -]+}/.test(this.url);
+    } else if ((this._requestType = ScenarioRequestType.manual)) {
+      return !this._mockResponseOptions;
+    } else if ((this._requestType = ScenarioRequestType.webhook)) {
+      return !this._mockResponseOptions;
+    }
+    return false;
   }
 
   private get isExplicitWait(): boolean {
@@ -275,6 +290,7 @@ export class Scenario implements iScenario {
   protected _timeRequestStarted: number | null = null;
   protected _timeRequestLoaded: number | null = null;
   protected _timeScenarioFinished: number | null = null;
+  protected _requestType: ScenarioRequestType = ScenarioRequestType.httpRequest;
   protected _responseType: ResponseType = "html";
   protected _redirectChain: string[] = [];
   protected _finalUrl: string | null = null;
@@ -283,8 +299,8 @@ export class Scenario implements iScenario {
   protected _flipAssertion: boolean = false;
   protected _ignoreAssertion: boolean = false;
   protected _request: HttpRequest;
+  protected _mockResponseOptions: HttpResponseOptions | null = null;
   protected _browserControl: BrowserControl | null = null;
-  protected _isMock: boolean = false;
   protected _response: iResponse;
   protected _defaultBrowserOptions: BrowserOptions = {
     headless: true,
@@ -589,8 +605,7 @@ export class Scenario implements iScenario {
     if (opts) {
       this._request.setOptions(opts);
     }
-    // Not a mock test
-    this._isMock = false;
+    this._requestType = ScenarioRequestType.httpRequest;
     // Handle overloading
     if (typeof a == "string") {
       // Passed in a string, so open it as url
@@ -718,7 +733,11 @@ export class Scenario implements iScenario {
     }
     // Do before callbacks
     await this._fireBefore();
-    this._isMock ? this._executeMock() : this._executeRequest();
+    this._requestType == ScenarioRequestType.httpRequest
+      ? this._executeHttpRequest()
+      : this._requestType == ScenarioRequestType.localFile
+      ? this._executeLocalRequest()
+      : this._executeMock();
     this._publish(ScenarioStatusEvent.executionProgress);
     return this;
   }
@@ -811,12 +830,37 @@ export class Scenario implements iScenario {
     return this._pushCallbacks("finally", "_finallyCallbacks", a, b);
   }
 
-  /**
-   * Fake response from local file for testing
-   */
-  public mock(localPath: string): iScenario {
+  public mock(opts: HttpResponseOptions | string): iScenario {
+    this._requestType = ScenarioRequestType.manual;
+    this._mockResponseOptions = typeof opts == "string" ? { body: opts } : opts;
+    return this;
+  }
+
+  public local(localPath: string): iScenario {
+    this._requestType = ScenarioRequestType.localFile;
     this.url = localPath;
-    this._isMock = true;
+    return this;
+  }
+
+  public webhook(route: string, port?: number): iScenario {
+    this._requestType = ScenarioRequestType.webhook;
+    runAsync(async () => {
+      const server = await minikin.server(port || 8001);
+      server.route(route, (req) => {
+        this._mockResponseOptions = {
+          body: req.body,
+          headers: req.headers,
+          cookies: req.cookies,
+          trailers: req.trailers,
+          url: req.url,
+          method: req.method,
+        };
+        runAsync(() => {
+          server.close();
+        }, 100);
+        return Response.fromString("OK");
+      });
+    });
     return this;
   }
 
@@ -971,7 +1015,9 @@ export class Scenario implements iScenario {
     this._requestResolve();
     this.result(
       new AssertionPass(
-        "Loaded " + this._response.responseTypeName + " " + this.url
+        `Loaded ${this._response.responseTypeName} ${
+          this.url ? this.url : "[manual input]"
+        }`
       )
     );
     let lastReturnValue: any = null;
@@ -1118,7 +1164,7 @@ export class Scenario implements iScenario {
   /**
    * Used by all request types to kick off the request
    */
-  protected _executeRequest() {
+  protected _executeHttpRequest() {
     if (this.url === null) {
       throw "Can not execute request with null URL.";
     }
@@ -1136,9 +1182,9 @@ export class Scenario implements iScenario {
   }
 
   /**
-   * Start a mock scenario, which will load a local file
+   * Start a local file scenario
    */
-  protected _executeMock() {
+  protected _executeLocalRequest() {
     if (this.url === null) {
       throw "Can not execute request with null URL.";
     }
@@ -1146,18 +1192,40 @@ export class Scenario implements iScenario {
       throw "Request has already started.";
     }
     this._markRequestAsStarted();
-    const scenario: Scenario = this;
     HttpResponse.fromLocalFile(this.url)
-      .then((mock: HttpResponse) => {
-        scenario._processResponse(mock);
+      .then((res: HttpResponse) => {
+        this._processResponse(res);
       })
       .catch((err) => {
-        scenario._markScenarioCompleted(
-          `Failed to load page ${scenario.url}`,
+        this._markScenarioCompleted(
+          `Failed to load local file ${this.url}`,
           err,
           ScenarioDisposition.aborted
         );
       });
+  }
+
+  /**
+   * Start a mock scenario, which will load a local file
+   */
+  protected _executeMock() {
+    if (this._mockResponseOptions === null) {
+      throw "Can not execute a mock request with no mocked response.";
+    }
+    if (this.hasRequestStarted) {
+      throw "Request has already started.";
+    }
+    this._markRequestAsStarted();
+    try {
+      const response = HttpResponse.fromOpts(this._mockResponseOptions);
+      this._processResponse(response);
+    } catch (err) {
+      this._markScenarioCompleted(
+        `Failed to load page ${this.url}`,
+        err,
+        ScenarioDisposition.aborted
+      );
+    }
   }
 
   /**

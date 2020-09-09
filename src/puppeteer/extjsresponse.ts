@@ -222,13 +222,16 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
       }
       // If we didn't find any, then use the DOM query
       const elements = await this._page.$$(selector);
-      return asyncMap(elements, async (el: ElementHandle<Element>, i) => {
-        return await this._getComponentOrElementFromHandle(
-          el,
-          getFindName(params, selector, i),
-          `${selector} [${i}]`
-        );
-      });
+      return asyncMap<iValue>(
+        elements,
+        async (el: ElementHandle<Element>, i) => {
+          return await this._getComponentOrElementFromHandle(
+            el,
+            getFindName(params, selector, i),
+            `${selector} [${i}]`
+          );
+        }
+      );
     })();
     return filterFind(
       components,

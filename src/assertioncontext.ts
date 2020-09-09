@@ -37,6 +37,8 @@ import {
   asyncForEachUntilFirst,
   arrayify,
   asyncFlatMap,
+  asyncMapToObject,
+  flatten,
 } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { getFindParams, getFindName, wrapAsValue } from "./helpers";
@@ -373,17 +375,29 @@ export class AssertionContext implements iAssertionContext {
     b?: FindAllOptions
   ): Promise<iValue[]> {
     const selectors = arrayify<string>(selector);
-    const elements: iValue[][] = await asyncMap(
-      selectors,
-      async (s) => await this.findAll(s, a, b)
-    );
+    const elements = await this._findAllForSelectors(selectors, a, b);
     this.assert(
       selectors.length > 1
         ? `${selectors.join(", ")} all exist`
         : `${selectors[0]} exists`,
-      elements
+      Object.values(elements)
     ).every((element: iValue[]) => !element[0].isNullOrUndefined());
-    return ([] as iValue[]).concat(...elements);
+    return flatten<iValue>(elements);
+  }
+
+  public async existsAny(
+    selectors: string[],
+    a?: string | FindAllOptions | RegExp,
+    b?: FindAllOptions
+  ): Promise<iValue[]> {
+    const elements = await this._findAllForSelectors(selectors, a, b);
+    this.assert(
+      selectors.length > 1
+        ? `${selectors.join(", ")} some exist`
+        : `${selectors[0]} exists`,
+      Object.values(elements)
+    ).some((element: iValue[]) => !element[0].isNullOrUndefined());
+    return flatten<iValue>(elements);
   }
 
   /**
@@ -420,19 +434,14 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public findAll(
+  public async findAll(
     selector: string | string[],
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
     const selectors = arrayify<string>(selector);
-    return asyncFlatMap<iValue>(selectors, (selector) =>
-      typeof a == "string"
-        ? this.response.findAll(selector, a, b)
-        : a instanceof RegExp
-        ? this.response.findAll(selector, a, b)
-        : this.response.findAll(selector, b)
-    );
+    const elements = await this._findAllForSelectors(selectors, a, b);
+    return flatten<iValue>(elements);
   }
 
   public async findXPath(xPath: string): Promise<iValue> {
@@ -563,6 +572,20 @@ export class AssertionContext implements iAssertionContext {
 
   public abort(message?: string): Promise<iScenario> {
     return this.scenario.abort(message);
+  }
+
+  protected async _findAllForSelectors(
+    selectors: string[],
+    a?: string | FindAllOptions | RegExp,
+    b?: FindAllOptions
+  ): Promise<{ [selector: string]: iValue[] }> {
+    return asyncMapToObject<iValue[]>(selectors, async (selector) =>
+      typeof a == "string"
+        ? this.response.findAll(selector, a, b)
+        : a instanceof RegExp
+        ? this.response.findAll(selector, a, b)
+        : this.response.findAll(selector, b)
+    );
   }
 
   protected async _completedAction(verb: string, noun?: string) {
