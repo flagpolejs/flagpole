@@ -119,6 +119,17 @@ export abstract class ProtoResponse implements iResponse {
   }
 
   /**
+   * HTTP Trailers
+   */
+  public get trailers(): iValue {
+    return wrapAsValue(
+      this.context,
+      this.httpResponse.trailers,
+      "HTTP Trailers"
+    );
+  }
+
+  /**
    * JSON parsed response body
    */
   public get jsonBody(): iValue {
@@ -168,6 +179,10 @@ export abstract class ProtoResponse implements iResponse {
       this.scenario.requestDuration,
       "Request to Response Load Time"
     );
+  }
+
+  public get method(): iValue {
+    return wrapAsValue(this.context, this._httpResponse.method, "Method");
   }
 
   public get context(): iAssertionContext {

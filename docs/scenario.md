@@ -105,6 +105,19 @@ console.log(scenario.get("foo"));
 
 Return the logs from each line of the test, including passes, fails, and comments.
 
+### local(filePath: string): Scenario
+
+This allows you to run the tests against a local file, rather than an HTTP request. Pass in the full path to the file. The scenario will attempted to read that file and run the scenario's tests against it.
+
+```javascript
+suite
+  .scenario("Test local file", "json")
+  .local("/usr/jason/example.json")
+  .next(async (context) => {
+    await context.exists("message");
+  });
+```
+
 ### logResult(result: AssertionResult)
 
 Write a result line to the output log.
@@ -112,6 +125,50 @@ Write a result line to the output log.
 ### logWarning(message: string): Scenario
 
 Write a non-fatal warning line to the output log.
+
+### mock(body: string): Scenario
+
+This allows you to run a scenario of tests against a manually input response body, rather than an HTTP request.
+
+```typescript
+suite
+  .scenario("Test manual input", "resource")
+  .mock("OK")
+  .next((context) => {
+    context.assert(context.response.body).equals("OK");
+  });
+```
+
+With this method of passing in a string, it will just be treated like a 200 response. However, you can pass in a full mocked up request if you prefer...
+
+### mock(response: ResponseOptions): Scenario
+
+Use this to mock up the entire reponse:
+
+```typescript
+suite
+  .scenario("Test against this mocked up response", "json")
+  .mock({
+    body: {
+      foo: "bar",
+    },
+    status: [200, "OK"],
+  })
+  .next(async (context) => {
+    const foo = await context.exists("foo");
+    context.assert(foo).equals("bar");
+  });
+```
+
+Here are the properties you can optionally pass in as options:
+
+- body: any;
+- status: [number, string];
+- headers: KeyValue;
+- cookies: KeyValue;
+- trailers: KeyValue;
+- method: string;
+- url: string;
 
 ### next(): Scenario
 
@@ -208,6 +265,30 @@ try {
 } catch (ex) {
   console.log("uh oh! scenario failed!");
 }
+```
+
+### server(): Promise<WebhookServer>
+
+If you read the `webhook()` documentation here, there is a bit of gap. You can use that method to set up a local HTTP server to wait for an incoming request before kicking off a test scenario. However, you can have that `webhook` method pick your port for you, and that happens asynchronously. So how will you know the resulting port?
+
+```javascript
+const server = await suite
+  .scenario("Test Webhook", "json")
+  .webhook()
+  .next(async (context) => {})
+  .server();
+```
+
+By using the `server()` method (and waiting the result of the promise), you will get those details. The result will give you the following properties:
+
+- port: number
+- opts: ServerOptions
+- server: Minikin.server [https://github.com/jasonbyrne/minikin]
+
+So then you will be able to proceed with setting up your ngrok URL or whatever you need to set the callback.
+
+```javascript
+const webhookUrl = await ngrok.connect(server.port);
 ```
 
 ### set(aliasName: string, value: any): Scenario
@@ -423,6 +504,42 @@ Wait for the response to come back from the scenario's HTTP request.
 ```javascript
 await scenario.waitForResponse();
 ```
+
+### webhook(): Scenario
+
+Instead of making an HTTP request and testing the resposne, this allows you instead to wait for an incoming request. It will dynamically create a local web server that will receive the incoming request and pass it into the scenario to run tests against that resquest, as if it were a response.
+
+It can accept from zero to three arguments. Those arguments, in order, are:
+
+- route: string
+- port: number
+- opts: https.ServerOptions
+
+Any or all of these arguments can be skipped. If you do not pass in the route argument, it will be set to wildcard. If you do not pass in a port number, it will try to find a port for you. And if you do not pass in ServerOptions, it will just use the default.
+
+Here is an example usage:
+
+```javascript
+await suite
+  .scenario("Test Webhook", "json")
+  .webhook("POST /myCallback", 8001)
+  .next(async (context) => {
+    const message = await context.exists("message");
+    context.assert(message).equals("OK");
+  });
+```
+
+The above will start an HTTP server on `localhost:8001`. The tests in `next` will not run until that incoming POST request is received. If you then make a POST to `http://localhost:8001/myCallback` with `{ "message": "OK" }` you will see the test run and report success.
+
+The main idea with this is that you can use this to wait for a response from an API that will hit a webhook callback, to make sure the whole thing completes end-to-end. If you're running this test locally against a public API, however, the API can clearly not reach your localhost. That's where a service like ngrok would come in, so you could do something like this:
+
+```javascript
+const webhookUrl = await ngrok.connect(8001);
+```
+
+This would give you a public-facing URL for your `locahost:8001`. Then you could pass the resulting URL into your API as the callback URL.
+
+Okay, great, but if you do not set the port number, how will you know how to address it? Great question! See the `server()` method documentation.
 
 ## Properties
 

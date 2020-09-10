@@ -25,6 +25,8 @@ import {
 import { FlagpoleExecution } from "./flagpoleexecution";
 import Bluebird = require("bluebird");
 import { Link } from "./link";
+import { ServerOptions } from "https";
+import { Server } from "minikin";
 //import * as Ajv from "ajv";
 
 interface AjvSchema {
@@ -298,6 +300,8 @@ export interface iResponse {
   context: iAssertionContext;
   headers: iValue;
   cookies: iValue;
+  trailers: iValue;
+  method: iValue;
   isBrowser: boolean;
   readonly scenario: iScenario;
   init(httpResponse: HttpResponse): void;
@@ -675,8 +679,15 @@ export interface iScenario {
   mock(content: string): iScenario;
   mock(response: HttpResponseOptions): iScenario;
   local(localPath: string): iScenario;
+  webhook(): iScenario;
   webhook(route: string): iScenario;
-  webhook(route: string, portNumber: number): iScenario;
+  webhook(route: string, port: number): iScenario;
+  webhook(route: string, port: number, opts: ServerOptions): iScenario;
+  webhook(route: string, opts: ServerOptions): iScenario;
+  webhook(port: number): iScenario;
+  webhook(port: number, opts: ServerOptions): iScenario;
+  webhook(opts: ServerOptions): iScenario;
+  server(): Promise<WebhookServer>;
   setResponseType(
     type: ResponseType,
     opts?: BrowserOptions | HttpRequestOptions
@@ -750,4 +761,10 @@ export interface HttpResponseOptions {
   trailers?: KeyValue;
   method?: string;
   url?: string;
+}
+
+export interface WebhookServer {
+  port: number;
+  opts: ServerOptions;
+  server: Server;
 }

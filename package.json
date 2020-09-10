@@ -32,7 +32,7 @@
     "form-data": "^2.5.1",
     "form-urlencoded": "^4.1.3",
     "fs-extra": "^9.0.1",
-    "minikin": "^1.0.24",
+    "minikin": "^1.0.26",
     "needle": "^2.4.1",
     "open": "^6.4.0",
     "pixelmatch": "^5.1.0",

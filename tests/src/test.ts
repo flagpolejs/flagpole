@@ -14,10 +14,9 @@ flagpole("Test Manual Response Object", async (suite) => {
       context.assert(foo).equals("bar");
     });
 
-  suite
-    .scenario("Test Webhook", "resource")
-    .webhook("GET /foo", 8005)
-    .next(async (context) => {
-      context.comment("loaded webhook");
-    });
+  const server = await suite
+    .scenario("Test Webhook", "json")
+    .webhook()
+    .next(async (context) => {})
+    .server();
 });

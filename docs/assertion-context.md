@@ -146,9 +146,9 @@ context.comment(context.response.body);
 context.comment(json.data);
 ```
 
-## exists(): Promise<iValue>
+### exists(): Promise<iValue>
 
-### exists(selector: string): Promise<iValue>
+#### exists(selector: string): Promise<iValue>
 
 This is just like an `find`, but it also does an assertion that the element actually exists. It is similar to `waitForExists` except that it doesn't wait around.
 
@@ -164,18 +164,7 @@ Or you can grab the element that it returns:
 const firstArticle = await context.exists("section.topStories article");
 ```
 
-### exists(message: string, selector: string): Promise<iValue>
-
-By default, Flagpole will create an assertion message for you dynamically based on the selector. However, you can specify one as the first argument:
-
-```javascript
-await context.exists(
-  "There should be a top story",
-  "section.topStories article"
-);
-```
-
-### exists(message: string, selector: string, contains: string): Promise<iValue>
+#### exists(selector: string, contains: string): Promise<iValue>
 
 Pass in a third argument as a string to test whether the item exists that contains this text.
 
@@ -187,7 +176,7 @@ await context.exists(
 );
 ```
 
-### exists(message: string, selector: string, mathces: RegExp): Promise<iValue>
+#### exists(selector: string, mathces: RegExp): Promise<iValue>
 
 This third argument can alternately be a regular expression:
 
@@ -199,7 +188,7 @@ await context.exists(
 );
 ```
 
-### exists(message: string, selector: string, contains: string | RegExp, opts: FindOps): Promise<iValue>
+#### exists(selector: string, contains: string | RegExp, opts: FindOps): Promise<iValue>
 
 As a fourth argument, you can include any of the `opts` properties from `find()`, for example:
 
@@ -225,12 +214,41 @@ await context.exists(
 
 The `exists` method will return the matched element inside of the iValue or a null iValue if there is no match.
 
-### existsAll(message: string, selector: string, contains: string | RegExp, opts: FindOps): Promise<iValue>
+#### exists(selectors: string[]): Promise<iValue>
 
-This works just like `exists` except that it returns an array of all matching elements. If there are no matching elements, an empty array will be returned. The assertion passes if there is at least one matching element.
+With any variation of `exists`, your first agument can also be an array of selectors. Passing in more than one element for the array will make sure that at least one of them exists, and it will return the first one that does.
 
 ```javascript
-const topStories = await context.existsAll("article.topStory");
+const firstButtonLikeThing = await context.exists(["button", ".button"]);
+```
+
+### existsAll(selector: string | string[], ....)
+
+This method works essentially just like `exists` so see that documentation for details. The difference is that instead of returning the first matching element, it will return an array of all matching elements.
+
+```javascript
+const tableBodyRows = await context.existsAll("table tbody tr");
+```
+
+You can use any of the arguments that you can use in `exists`. One important distinction, however, is the behavior of passing in more than one selector (as an array) as the first argument. This will assert that at least one element in ALL of those selectors (and any other find criteria) exist. If any of them do not, the assertion will fail.
+
+```javascript
+const allTableRows = await context.existsAll([
+  "table tbody tr",
+  "table thead tr",
+]);
+```
+
+It will return an array of matching elements from any of those selecetors.
+
+If you do not want it to assert that elements exist for ALL selector paths, instead use `existsAny`. It works the same way, but just asserts that at least one exists.
+
+### existsAny(selector: string[], ....)
+
+This works just like `existsAll`, except that it only asserts that at least one of the selectors existed. Please see the documentation of `exists` and `existsAll` for more details.
+
+```javascript
+const buttons = await context.existsAny(["button", "div.button"]);
 ```
 
 ### evaluate(callback: Function): Promise<any>
@@ -267,7 +285,7 @@ In theory, with any of these types, you could also manipulate the response with 
 
 ### find(): Promise<iValue>
 
-#### find(path: string, opts?: FindOpts): Promise<iValue>
+#### find(selector: string, opts?: FindOpts): Promise<iValue>
 
 Select the first matching element or value at the given path. What this actually does varies by the type of scenario.
 
@@ -285,7 +303,7 @@ const secondArticle = await context.find("section.topStories article", {
 });
 ```
 
-#### find(path: string, contents: string, opts?: FindOpts): Promise<iValue>
+#### find(selector: string, contents: string, opts?: FindOpts): Promise<iValue>
 
 Find the first element matching the given selector that have the given text. The second argument is a string of the text we are looking for the element to contain
 
@@ -301,7 +319,7 @@ const buttonWithYesValue = await context.find("button", "Yes", {
 });
 ```
 
-#### find(path: string, matches: RegExp, opts?: FindOpts): Promise<iValue>
+#### find(selector: string, matches: RegExp, opts?: FindOpts): Promise<iValue>
 
 Similar to the previous overload of `find`, we can also search the contents of the element for one that matches a regular expression. This gives us greater control over how exactly it should match, such as matching capitalization and spacing.
 
@@ -315,13 +333,21 @@ So if you want it to match EXACTLY "Yes", including a capital "Y" and no spaces 
 const buttonExactlyYes = await context.find("button", /^Yes$/);
 ```
 
+#### find(selectors: string[]): Promise<iValue>
+
+With any of the above variations, selector can also be an array of strings. This will cause `find` to look for the first instance of ANY of those selector paths.
+
+```javascript
+const firstButtonLikeThing = await context.find(["button", ".button"]);
+```
+
 ### findAll(): Promise<iValue[]>
 
 Select the elements or values at the given path. What this actually does varies by the type of scenario.
 
 This always returns an array. It will be an empty array if nothing matched. The array elements themselves will be the same object types that you'd have gotten from `.find()`.
 
-#### findAll(path: string, opts?: FindAllOpts): Promise<iValue[]>
+#### findAll(selector: string, opts?: FindAllOpts): Promise<iValue[]>
 
 The first argument is always the selector. It is the only required argument.
 
@@ -343,7 +369,7 @@ const articles = await context.findAll("section.headlines article", {
 });
 ```
 
-#### findAll(path: string, contains: string, opts?: FindAllOpts): Promise<iValue[]>
+#### findAll(selector: string, contains: string, opts?: FindAllOpts): Promise<iValue[]>
 
 This overload will allow you to search for only elements that match the selector AND have the contains string in the text node.
 
@@ -353,12 +379,20 @@ const articles = await context.findAll("section.headlines article", "breaking");
 
 The optional `opts` argument allows you to use `offset`, `limit` and `findBy` (which works just like in the `find()` method).
 
-#### findAll(path: string, matches: RegExp, opts?: FindAllOpts): Promise<iValue[]>
+#### findAll(selector: string, matches: RegExp, opts?: FindAllOpts): Promise<iValue[]>
 
 This works like the `contains` string, except you can use a regular expression for more exacting matches.
 
 ```javascript
 const itemsContainingTupac = await context.findAll("li", /tupac/i);
+```
+
+#### findAll(selectors: string[]): Promise<iValue[]>
+
+With any of the above variations of `findAll`, the first argument can also be an array of strings. If you pass in more than one, the resulting response will include any items that match any of those selectors.
+
+```javascript
+const allButtonLikeThings = await context.findAll(["button", ".button"]);
 ```
 
 ### findAllXPath(xPath: string): Promise<DOMElement[]>

@@ -19,6 +19,7 @@ import {
   ResponsePipeCallbackAndMessage,
   iValue,
   HttpResponseOptions,
+  WebhookServer,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
@@ -52,7 +53,8 @@ import { toType, asyncForEach, runAsync } from "./util";
 import { AssertionContext } from "./assertioncontext";
 import * as bluebird from "bluebird";
 import { Browser } from "puppeteer-core";
-import minikin, { Response } from "minikin";
+import minikin, { Response, Server } from "minikin";
+import { ServerOptions } from "https";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -316,6 +318,8 @@ export class Scenario implements iScenario {
   protected _finishedPromise: Promise<void>;
   protected _finishedResolve: Function = () => {};
   protected _disposition: ScenarioDisposition = ScenarioDisposition.pending;
+  protected _webhookPromise: Promise<WebhookServer>;
+  protected _webhookResolver: Function = () => {};
 
   public static create(
     suite: iSuite,
@@ -336,6 +340,9 @@ export class Scenario implements iScenario {
     });
     this._finishedPromise = new Promise((resolve) => {
       this._finishedResolve = resolve;
+    });
+    this._webhookPromise = new Promise((resolve) => {
+      this._webhookResolver = resolve;
     });
   }
 
@@ -842,11 +849,26 @@ export class Scenario implements iScenario {
     return this;
   }
 
-  public webhook(route: string, port?: number): iScenario {
+  public webhook(
+    a?: string | number | ServerOptions,
+    b?: number | ServerOptions,
+    c?: ServerOptions
+  ): iScenario {
+    const route = typeof a == "string" ? a : "*";
+    const port =
+      typeof a == "number" ? a : typeof b == "number" ? b : undefined;
+    const opts = ((c ? c : typeof b == "number" ? a : b) ||
+      {}) as ServerOptions;
     this._requestType = ScenarioRequestType.webhook;
     runAsync(async () => {
-      const server = await minikin.server(port || 8001);
+      const server = await minikin.server(port, opts);
+      this._webhookResolver({
+        port: server.port,
+        opts: opts,
+        server: server,
+      });
       server.route(route, (req) => {
+        this.url = req.url;
         this._mockResponseOptions = {
           body: req.body,
           headers: req.headers,
@@ -862,6 +884,13 @@ export class Scenario implements iScenario {
       });
     });
     return this;
+  }
+
+  /**
+   * Get reference to server
+   */
+  public server(): Promise<WebhookServer> {
+    return this._webhookPromise;
   }
 
   /**
