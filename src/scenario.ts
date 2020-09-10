@@ -857,8 +857,18 @@ export class Scenario implements iScenario {
     const route = typeof a == "string" ? a : "*";
     const port =
       typeof a == "number" ? a : typeof b == "number" ? b : undefined;
-    const opts = ((c ? c : typeof b == "number" ? a : b) ||
-      {}) as ServerOptions;
+    const opts = (() => {
+      if (c) {
+        return c;
+      }
+      if (typeof b !== "number") {
+        return b;
+      }
+      if (typeof a !== "number" && typeof a !== "string") {
+        return a;
+      }
+      return undefined;
+    })();
     this._requestType = ScenarioRequestType.webhook;
     runAsync(async () => {
       const server = await minikin.server(port, opts);
