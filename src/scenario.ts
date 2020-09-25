@@ -32,7 +32,7 @@ import {
   AssertionPass,
   AssertionFail,
   AssertionFailWarning,
-  AssertionFailOptional
+  AssertionFailOptional,
 } from "./logging/assertionresult";
 import { HttpResponse } from "./httpresponse";
 import { ResourceResponse } from "./resourceresponse";
