@@ -32,6 +32,7 @@ import {
   AssertionPass,
   AssertionFail,
   AssertionFailWarning,
+  AssertionFailOptional
 } from "./logging/assertionresult";
 import { HttpResponse } from "./httpresponse";
 import { ResourceResponse } from "./resourceresponse";
@@ -1145,7 +1146,12 @@ export class Scenario implements iScenario {
             handleError("Puppeteer got an unexpected error.", e)
           );
           this.browserControl?.page?.on("pageerror", (e) =>
-            handleError("Puppeteer got an unexpected page error.", e)
+            this._pushToLog(
+              new AssertionFailOptional(
+                "Puppeteer got an unexpected page error.",
+                e
+              )
+            )
           );
           // Finishing processing the response
           this._processResponse(
