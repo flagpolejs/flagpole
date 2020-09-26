@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.5.13",
+  "version": "2.5.14",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -20,7 +20,7 @@
   "author": "Jason Byrne <jason.byrne@flosports.tv>",
   "license": "MIT",
   "dependencies": {
-    "@types/cheerio": "^0.22.15",
+    "@types/cheerio": "^0.22.22",
     "@zerodeps/image-probe": "0.0.3",
     "bluebird": "^3.7.2",
     "cheerio": "^1.0.0-rc.3",
