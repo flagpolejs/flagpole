@@ -925,7 +925,10 @@ export class Assertion implements iAssertion {
         ? `<${value["tagName"]}> @ ${value.path}`
         : value.path;
     }
-    return this._input.toString().substr(0, 255);
+    return (this._input?.toString
+      ? this._input.toString()
+      : String(this._input)
+    ).substr(0, 255);
   }
 
   private _getSubject(): string {
