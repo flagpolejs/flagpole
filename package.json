@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.5.16",
+  "version": "2.5.17",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -40,7 +40,8 @@
     "puppeteer-core": "^2.1.1",
     "tmp": "^0.1.0",
     "tunnel": "0.0.6",
-    "valid-data-url": "^1.0.0"
+    "valid-data-url": "^1.0.0",
+    "validator": "^13.1.17"
   },
   "keywords": [
     "qa",
@@ -70,6 +71,7 @@
     "@types/puppeteer": "^2.0.0",
     "@types/puppeteer-core": "^2.0.0",
     "@types/tunnel": "0.0.1",
+    "@types/validator": "^13.1.0",
     "@types/yargs": "^15.0.4",
     "ajv": "^6.12.2",
     "jmespath": "^0.15.0",

@@ -5,6 +5,7 @@ import {
   KeyValue,
   iBounds,
   iNextCallback,
+  iAssertionIs,
 } from "./interfaces";
 import { toType, isNullOrUndefined, runAsync } from "./util";
 import {
@@ -46,6 +47,10 @@ export class Value implements iValue {
 
   public get outerHTML(): string {
     return this._sourceCode || "";
+  }
+
+  public get is(): iAssertionIs {
+    return this.assert().is;
   }
 
   public selectOption(value: string | string[]): Promise<void> {
@@ -665,6 +670,12 @@ export class Value implements iValue {
 
   public async setValue(text: string) {
     throw `setValue() is not supported by ${this.name}`;
+  }
+
+  public assert(message?: string) {
+    return typeof message == "string"
+      ? this.context.assert(message, this)
+      : this.context.assert(this);
   }
 
   protected async _completedAction(verb: string, noun?: string) {

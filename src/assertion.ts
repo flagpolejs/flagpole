@@ -9,6 +9,7 @@ import {
   iAjvErrorObject,
   JsonSchema,
   iValue,
+  iAssertionIs,
 } from "./interfaces";
 import {
   toType,
@@ -22,8 +23,47 @@ import {
 } from "./util";
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
+import { AssertionIs } from "./assertion-is";
 
 export class Assertion implements iAssertion {
+  public get value(): any {
+    return this._getCompareValue(this._input);
+  }
+
+  public get text(): string {
+    return String(this._getCompareValue(this._input));
+  }
+
+  public get subject(): string {
+    const type: string = toType(this._input);
+    let name: string;
+    if (this._input && this._input.name) {
+      name = this._input.name;
+    } else if (type == "array") {
+      name = "Array";
+    } else if (type == "object") {
+      name = "Object";
+    } else if (type == "domelement") {
+      name = "DOM Element";
+    } else if (type == "cssrule") {
+      name = "CSS Rule";
+    } else {
+      name = String(this._input);
+    }
+    // If the name is too long, truncate it
+    if (String(name).length > 64) {
+      name = name.substr(0, 61) + "...";
+    }
+    // Return it
+    return isNullOrUndefined(name) || String(name).length == 0
+      ? "It"
+      : String(name);
+  }
+
+  public get is(): iAssertionIs {
+    return new AssertionIs(this);
+  }
+
   /**
    * Creates a new assertion with the same value and settings, just no result
    */
@@ -51,7 +91,7 @@ export class Assertion implements iAssertion {
     const type: Value = new Value(
       toType(this._getCompareValue(this._input)),
       this._context,
-      `Type of ${this._getSubject()}`
+      `Type of ${this.subject}`
     );
     // Generate new assertion
     const assertion: iAssertion = new Assertion(
@@ -78,7 +118,7 @@ export class Assertion implements iAssertion {
     // Create new assertion
     const assertion: Assertion = new Assertion(
       this._context,
-      new Value(length, this._context, `Length of ${this._getSubject()}`),
+      new Value(length, this._context, `Length of ${this.subject}`),
       this._message
     );
     this._not && assertion.not;
@@ -97,7 +137,7 @@ export class Assertion implements iAssertion {
     // Create new assertion
     const assertion: Assertion = new Assertion(
       this._context,
-      new Value(trimmedValue, this._context, `Trim of ${this._getSubject()}`),
+      new Value(trimmedValue, this._context, `Trim of ${this.subject}`),
       this._message
     );
     this._not && assertion.not;
@@ -119,7 +159,7 @@ export class Assertion implements iAssertion {
     // Create new assertion
     const assertion: Assertion = new Assertion(
       this._context,
-      new Value(keys, this._context, `Keys of ${this._getSubject()}`),
+      new Value(keys, this._context, `Keys of ${this.subject}`),
       this._message
     );
     this._not && assertion.not;
@@ -141,7 +181,7 @@ export class Assertion implements iAssertion {
     // Create new assertion
     const assertion: Assertion = new Assertion(
       this._context,
-      new Value(values, this._context, `Values of ${this._getSubject()}`),
+      new Value(values, this._context, `Values of ${this.subject}`),
       this._message
     );
     this._not && assertion.not;
@@ -231,109 +271,107 @@ export class Assertion implements iAssertion {
 
   public async visible(): Promise<iAssertion> {
     const is = await this._is("isVisible");
-    this._setDefaultMessages(
-      `${this._getSubject()} is not visible`,
-      `${this._getSubject()} is visible`
-    );
-    return this._evalulate(is, is);
+    this.setDefaultNotMessage(`${this.subject} is not visible`);
+    this.setDefaultMessage(`${this.subject} is visible`);
+    return this.execute(is, is);
   }
 
   public async hidden(): Promise<iAssertion> {
     const is = await this._is("isHidden");
-    this._setDefaultMessages(
-      `${this._getSubject()} is not hidden`,
-      `${this._getSubject()} is hidden`
+    this.setDefaultMessages(
+      `${this.subject} is not hidden`,
+      `${this.subject} is hidden`
     );
-    return this._evalulate(is, is);
+    return this.execute(is, is);
   }
 
   public async hasValue(value: any): Promise<iAssertion> {
     const hasValue = await this._hasValue("hasValue", value);
     const thatValue = this._getCompareValue(value);
-    this._setDefaultMessages(
-      `${this._getSubject()} does not have value ${thatValue}`,
-      `${this._getSubject()} has value ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} does not have value ${thatValue}`,
+      `${this.subject} has value ${thatValue}`
     );
-    return this._evalulate(hasValue, hasValue);
+    return this.execute(hasValue, hasValue);
   }
 
   public async hasProperty(key: string, value?: string): Promise<iAssertion> {
     const hasKey = await this._hasKeyValue("hasProperty", key, value);
-    this._setDefaultMessages(
-      `${this._getSubject()} does not have property ${key}`,
-      `${this._getSubject()} has property ${key}`
+    this.setDefaultMessages(
+      `${this.subject} does not have property ${key}`,
+      `${this.subject} has property ${key}`
     );
-    return this._evalulate(hasKey, hasKey);
+    return this.execute(hasKey, hasKey);
   }
 
   public async hasAttribute(key: string, value?: string): Promise<iAssertion> {
     const hasKey = await this._hasKeyValue("hasAttribute", key, value);
-    this._setDefaultMessages(
-      `${this._getSubject()} does not have attribute ${key}`,
-      `${this._getSubject()} has attribute ${key}`
+    this.setDefaultMessages(
+      `${this.subject} does not have attribute ${key}`,
+      `${this.subject} has attribute ${key}`
     );
-    return this._evalulate(hasKey, hasKey);
+    return this.execute(hasKey, hasKey);
   }
 
   public async hasClassName(key: string, value?: string): Promise<iAssertion> {
     const hasKey = await this._hasKeyValue("hasClassName", key, value);
-    this._setDefaultMessages(
-      `${this._getSubject()} does not have class named ${key}`,
-      `${this._getSubject()} has class named ${key}`
+    this.setDefaultMessages(
+      `${this.subject} does not have class named ${key}`,
+      `${this.subject} has class named ${key}`
     );
-    return this._evalulate(hasKey, hasKey);
+    return this.execute(hasKey, hasKey);
   }
 
   public async hasData(key: string, value?: string): Promise<iAssertion> {
     const hasKey = await this._hasKeyValue("hasData", key, value);
-    this._setDefaultMessages(
-      `${this._getSubject()} does not have data ${key}`,
-      `${this._getSubject()} has data ${key}`
+    this.setDefaultMessages(
+      `${this.subject} does not have data ${key}`,
+      `${this.subject} has data ${key}`
     );
-    return this._evalulate(hasKey, hasKey);
+    return this.execute(hasKey, hasKey);
   }
 
   public async hasText(text: string): Promise<iAssertion> {
     const hasValue = await this._hasValue("hasText", text);
-    this._setDefaultMessages(
-      `${this._getSubject()} does not have text "${text}"`,
-      `${this._getSubject()} has text "${text}"`
+    this.setDefaultMessages(
+      `${this.subject} does not have text "${text}"`,
+      `${this.subject} has text "${text}"`
     );
-    return this._evalulate(hasValue, hasValue);
+    return this.execute(hasValue, hasValue);
   }
 
   public async hasTag(tagName?: string): Promise<iAssertion> {
     const hasValue = await this._hasValue("hasTag", tagName);
     tagName
-      ? this._setDefaultMessages(
-          `${this._getSubject()} is not <${tagName}>`,
-          `${this._getSubject()} is <${tagName}>`
+      ? this.setDefaultMessages(
+          `${this.subject} is not <${tagName}>`,
+          `${this.subject} is <${tagName}>`
         )
-      : this._setDefaultMessages(
-          `${this._getSubject()} is not a tag`,
-          `${this._getSubject()} is a tag`
+      : this.setDefaultMessages(
+          `${this.subject} is not a tag`,
+          `${this.subject} is a tag`
         );
-    return this._evalulate(hasValue, this._input.tagName || "Not a tag");
+    return this.execute(hasValue, this._input.tagName || "Not a tag");
   }
 
   public exactly(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    this._setDefaultMessages(
-      `${this._getSubject()} is not exactly ${thatValue}`,
-      `${this._getSubject()} is exactly ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} is not exactly ${thatValue}`,
+      `${this.subject} is exactly ${thatValue}`
     );
-    return this._evalulate(thisValue === thatValue, thisValue);
+    return this.execute(thisValue === thatValue, thisValue);
   }
 
   public equals(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    this._setDefaultMessages(
-      `${this._getSubject()} does not equal ${thatValue}`,
-      `${this._getSubject()} equals ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} does not equal ${thatValue}`,
+      `${this.subject} equals ${thatValue}`
     );
-    return this._evalulate(thisValue == thatValue, thisValue);
+    return this.execute(thisValue == thatValue, thisValue);
   }
 
   public like(value: any): iAssertion {
@@ -343,21 +381,21 @@ export class Assertion implements iAssertion {
     const thatValue: any = String(this._getCompareValue(value))
       .toLowerCase()
       .trim();
-    this._setDefaultMessages(
-      `${this._getSubject()} is not like ${thatValue}`,
-      `${this._getSubject()} is like ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} is not like ${thatValue}`,
+      `${this.subject} is like ${thatValue}`
     );
-    return this._evalulate(thisValue == thatValue, thisValue);
+    return this.execute(thisValue == thatValue, thisValue);
   }
 
   public greaterThan(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    this._setDefaultMessages(
-      `${this._getSubject()} is not greater than ${thatValue}`,
-      `${this._getSubject()} is greater than ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} is not greater than ${thatValue}`,
+      `${this.subject} is greater than ${thatValue}`
     );
-    return this._evalulate(
+    return this.execute(
       parseFloat(thisValue) > parseFloat(thatValue),
       thisValue
     );
@@ -366,11 +404,11 @@ export class Assertion implements iAssertion {
   public greaterThanOrEquals(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    this._setDefaultMessages(
-      `${this._getSubject()} is not greater than or equal to ${thatValue}`,
-      `${this._getSubject()} is greater than or equal to ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} is not greater than or equal to ${thatValue}`,
+      `${this.subject} is greater than or equal to ${thatValue}`
     );
-    return this._evalulate(
+    return this.execute(
       parseFloat(thisValue) >= parseFloat(thatValue),
       thisValue
     );
@@ -379,11 +417,11 @@ export class Assertion implements iAssertion {
   public lessThan(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    this._setDefaultMessages(
-      `${this._getSubject()} is not less than ${thatValue}`,
-      `${this._getSubject()} is less than ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} is not less than ${thatValue}`,
+      `${this.subject} is less than ${thatValue}`
     );
-    return this._evalulate(
+    return this.execute(
       parseFloat(thisValue) < parseFloat(thatValue),
       thisValue
     );
@@ -392,11 +430,11 @@ export class Assertion implements iAssertion {
   public lessThanOrEquals(value: any): iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
-    this._setDefaultMessages(
-      `${this._getSubject()} is not less than or equal to ${thatValue}`,
-      `${this._getSubject()} is less than or equal to ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} is not less than or equal to ${thatValue}`,
+      `${this.subject} is less than or equal to ${thatValue}`
     );
-    return this._evalulate(
+    return this.execute(
       parseFloat(thisValue) <= parseFloat(thatValue),
       thisValue
     );
@@ -406,11 +444,11 @@ export class Assertion implements iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatMin: number = parseFloat(this._getCompareValue(min));
     const thatMax: number = parseFloat(this._getCompareValue(max));
-    this._setDefaultMessages(
-      `${this._getSubject()} is not between ${min} and ${max}`,
-      `${this._getSubject()} is between ${min} and ${max}`
+    this.setDefaultMessages(
+      `${this.subject} is not between ${min} and ${max}`,
+      `${this.subject} is between ${min} and ${max}`
     );
-    return this._evalulate(
+    return this.execute(
       parseFloat(thisValue) >= thatMin && parseFloat(thisValue) <= thatMax,
       thisValue
     );
@@ -420,11 +458,11 @@ export class Assertion implements iAssertion {
     const thisValue = this._getCompareValue(this._input);
     const thatValue = this._getCompareValue(value);
     const pattern = toType(value) == "regexp" ? thatValue : new RegExp(value);
-    this._setDefaultMessages(
-      `${this._getSubject()} does not match ${String(pattern)}`,
-      `${this._getSubject()} matches ${String(pattern)}`
+    this.setDefaultMessages(
+      `${this.subject} does not match ${String(pattern)}`,
+      `${this.subject} matches ${String(pattern)}`
     );
-    return this._evalulate(pattern.test(thisValue), thisValue);
+    return this.execute(pattern.test(thisValue), thisValue);
   }
 
   public contains(value: any): iAssertion {
@@ -441,18 +479,18 @@ export class Assertion implements iAssertion {
         return String(this._input).indexOf(thatValue) >= 0;
       }
     })();
-    this._setDefaultMessages(
-      `${this._getSubject()} does not contain ${thatValue}`,
-      `${this._getSubject()} contains ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} does not contain ${thatValue}`,
+      `${this.subject} contains ${thatValue}`
     );
-    return this._evalulate(bool, thisValue);
+    return this.execute(bool, thisValue);
   }
 
   public looksLike(
     controlImage: string | Buffer,
     allowedDifference: number | string = 0
   ): iAssertion {
-    this._setDefaultMessages(`Images do not match.`, `Images match.`);
+    this.setDefaultMessages(`Images do not match.`, `Images match.`);
     let assertionPassed: boolean = false;
     let details: string = "";
     const imageCompare = new ImageCompare(
@@ -486,7 +524,7 @@ export class Assertion implements iAssertion {
     } catch (err) {
       details = err;
     }
-    return this._evalulate(assertionPassed, details);
+    return this.execute(assertionPassed, details);
   }
 
   public startsWith(value: any): iAssertion {
@@ -501,11 +539,11 @@ export class Assertion implements iAssertion {
       }
       return false;
     })();
-    this._setDefaultMessages(
-      `${this._getSubject()} does not start with ${thatValue}`,
-      `${this._getSubject()} starts with ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} does not start with ${thatValue}`,
+      `${this.subject} starts with ${thatValue}`
     );
-    return this._evalulate(bool, String(thisValue));
+    return this.execute(bool, String(thisValue));
   }
 
   public endsWith(value: any): iAssertion {
@@ -525,20 +563,20 @@ export class Assertion implements iAssertion {
       }
       return false;
     })();
-    this._setDefaultMessages(
-      `${this._getSubject()} does not end with ${thatValue}`,
-      `${this._getSubject()} ends with ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} does not end with ${thatValue}`,
+      `${this.subject} ends with ${thatValue}`
     );
-    return this._evalulate(bool, String(this._input));
+    return this.execute(bool, String(this._input));
   }
 
   public in(values: any[]): iAssertion {
     const thisValue = this._getCompareValue(this._input);
-    this._setDefaultMessages(
-      `${this._getSubject()} is not in list: ${values.join(", ")}`,
-      `${this._getSubject()} is in list: ${values.join(", ")}`
+    this.setDefaultMessages(
+      `${this.subject} is not in list: ${values.join(", ")}`,
+      `${this.subject} is in list: ${values.join(", ")}`
     );
-    return this._evalulate(values.indexOf(thisValue) >= 0, thisValue);
+    return this.execute(values.indexOf(thisValue) >= 0, thisValue);
   }
 
   public includes(value: any): iAssertion {
@@ -550,20 +588,20 @@ export class Assertion implements iAssertion {
       }
       return false;
     })();
-    this._setDefaultMessages(
-      `${this._getSubject()} does not include ${thatValue}`,
-      `${this._getSubject()} includes ${thatValue}`
+    this.setDefaultMessages(
+      `${this.subject} does not include ${thatValue}`,
+      `${this.subject} includes ${thatValue}`
     );
-    return this._evalulate(bool, thisValue);
+    return this.execute(bool, thisValue);
   }
 
   public exists(): iAssertion {
     const thisValue = this._getCompareValue(this._input);
-    this._setDefaultMessages(
-      `${this._getSubject()} does not exist`,
-      `${this._getSubject()} exists`
+    this.setDefaultMessages(
+      `${this.subject} does not exist`,
+      `${this.subject} exists`
     );
-    return this._evalulate(
+    return this.execute(
       !isNullOrUndefined(thisValue),
       this._getName(this._input),
       thisValue && thisValue.path
@@ -577,13 +615,13 @@ export class Assertion implements iAssertion {
 
   public resolves(continueOnReject: boolean = false): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
-    this._setDefaultMessages(
-      `${this._getSubject()} was not resolved`,
-      `${this._getSubject()} was resolved`
+    this.setDefaultMessages(
+      `${this.subject} was not resolved`,
+      `${this.subject} was resolved`
     );
     return new Promise((resolve, reject) => {
       const result = (bool: boolean) => {
-        const assertion = this._evalulate(bool, bool);
+        const assertion = this.execute(bool, bool);
         if (bool) {
           resolve(assertion);
         } else {
@@ -606,13 +644,13 @@ export class Assertion implements iAssertion {
 
   public rejects(continueOnReject: boolean = false): Promise<any> {
     const thisValue = this._getCompareValue(this._input);
-    this._setDefaultMessages(
-      `${this._getSubject()} was not rejected`,
-      `${this._getSubject()} was rejected`
+    this.setDefaultMessages(
+      `${this.subject} was not rejected`,
+      `${this.subject} was rejected`
     );
     return new Promise((resolve, reject) => {
       const result = (bool: boolean) => {
-        const assertion = this._evalulate(bool, bool);
+        const assertion = this.execute(bool, bool);
         if (bool) {
           resolve(assertion);
         } else {
@@ -635,16 +673,16 @@ export class Assertion implements iAssertion {
 
   public none(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
-    this._setDefaultMessages(
-      `Some were true in ${this._getSubject()}`,
-      `None were true in ${this._getSubject()}`
+    this.setDefaultMessages(
+      `Some were true in ${this.subject}`,
+      `None were true in ${this.subject}`
     );
     // This must be an array
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
     return new Promise(async (resolve) => {
-      resolve(this._evalulate(await asyncNone(thisValue, callback), thisValue));
+      resolve(this.execute(await asyncNone(thisValue, callback), thisValue));
     });
   }
 
@@ -658,11 +696,11 @@ export class Assertion implements iAssertion {
       thisValue,
       ...args,
     ]);
-    this._setDefaultMessages(
+    this.setDefaultMessages(
       `Function evaluates false`,
       `Function evaluates true`
     );
-    return this._evalulate(!!result, result);
+    return this.execute(!!result, result);
   }
 
   public async evalEvery(
@@ -674,7 +712,7 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    this._setDefaultMessages(
+    this.setDefaultMessages(
       `Every function evaluates false`,
       `Every function evaluates true`
     );
@@ -683,38 +721,36 @@ export class Assertion implements iAssertion {
         const val = this._getCompareValue(item);
         return this.context.eval.apply(undefined, [js, val, ...args]);
       });
-      resolve(this._evalulate(result, thisValue));
+      resolve(this.execute(result, thisValue));
     });
   }
 
   public every(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
-    this._setDefaultMessages(
-      `Some or none were true in ${this._getSubject()}`,
-      `All were true in ${this._getSubject()}`
+    this.setDefaultMessages(
+      `Some or none were true in ${this.subject}`,
+      `All were true in ${this.subject}`
     );
     // This must be an array
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
     return new Promise(async (resolve) => {
-      resolve(
-        this._evalulate(await asyncEvery(thisValue, callback), thisValue)
-      );
+      resolve(this.execute(await asyncEvery(thisValue, callback), thisValue));
     });
   }
 
   public everySync(callback: IteratorCallback): iAssertion {
     const thisValue = this._getCompareValue(this._input);
-    this._setDefaultMessages(
-      `Some or none were true in ${this._getSubject()}`,
-      `All were true in ${this._getSubject()}`
+    this.setDefaultMessages(
+      `Some or none were true in ${this.subject}`,
+      `All were true in ${this.subject}`
     );
     // This must be an array
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    return this._evalulate(
+    return this.execute(
       thisValue.every((value: any, index: number, array: any[]) => {
         return callback(value, index, array);
       }),
@@ -731,7 +767,7 @@ export class Assertion implements iAssertion {
     // Create new assertion
     const assertion: Assertion = new Assertion(
       this._context,
-      new Value(newValue, this._context, `Mapped ${this._getSubject()}`),
+      new Value(newValue, this._context, `Mapped ${this.subject}`),
       this._message
     );
     this._not && assertion.not;
@@ -741,9 +777,9 @@ export class Assertion implements iAssertion {
 
   public some(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this._getCompareValue(this._input);
-    this._setDefaultMessages(
-      `None were true in ${this._getSubject()}`,
-      `Some were true in ${this._getSubject()}`
+    this.setDefaultMessages(
+      `None were true in ${this.subject}`,
+      `Some were true in ${this.subject}`
     );
 
     // This must be an array
@@ -751,7 +787,7 @@ export class Assertion implements iAssertion {
       throw new Error("Input value must be an array.");
     }
     return new Promise(async (resolve) => {
-      resolve(this._evalulate(await asyncSome(thisValue, callback), thisValue));
+      resolve(this.execute(await asyncSome(thisValue, callback), thisValue));
     });
   }
 
@@ -785,11 +821,11 @@ export class Assertion implements iAssertion {
         error += err.message + " ";
       });
     }
-    this._setDefaultMessages(
-      `${this._getSubject()} does not match schema`,
-      `${this._getSubject()} matches schema`
+    this.setDefaultMessages(
+      `${this.subject} does not match schema`,
+      `${this.subject} matches schema`
     );
-    return this._evalulate(isValid, error);
+    return this.execute(isValid, error);
   }
 
   /**
@@ -878,7 +914,7 @@ export class Assertion implements iAssertion {
     return `Actual value: ${String(actualValue)}`;
   }
 
-  private _evalulate(
+  public execute(
     bool: boolean,
     actualValue: any,
     highlightText: string | null = null
@@ -914,6 +950,25 @@ export class Assertion implements iAssertion {
     return this;
   }
 
+  public setDefaultMessage(message: string): iAssertion {
+    this._defaultMessages[1] = message;
+    return this;
+  }
+
+  public setDefaultNotMessage(message: string): iAssertion {
+    this._defaultMessages[0] = message;
+    return this;
+  }
+
+  public setDefaultMessages(
+    notMessage: string,
+    standardMessage: string
+  ): iAssertion {
+    this._defaultMessages[0] = notMessage;
+    this._defaultMessages[1] = standardMessage;
+    return this;
+  }
+
   private _getCompareValue(value: any): any {
     this._assertionMade = true;
     return value?.isFlagpoleValue ? value.$ : value;
@@ -931,41 +986,11 @@ export class Assertion implements iAssertion {
     ).substr(0, 255);
   }
 
-  private _getSubject(): string {
-    const type: string = toType(this._input);
-    let name: string;
-    if (this._input && this._input.name) {
-      name = this._input.name;
-    } else if (type == "array") {
-      name = "Array";
-    } else if (type == "object") {
-      name = "Object";
-    } else if (type == "domelement") {
-      name = "DOM Element";
-    } else if (type == "cssrule") {
-      name = "CSS Rule";
-    } else {
-      name = String(this._input);
-    }
-    // If the name is too long, truncate it
-    if (String(name).length > 64) {
-      name = name.substr(0, 61) + "...";
-    }
-    // Return it
-    return isNullOrUndefined(name) || String(name).length == 0
-      ? "It"
-      : String(name);
-  }
-
   private _resolveAssertion() {
     if (this._statement === null) {
       this._statement = false;
       this._finishedResolver(null);
     }
-  }
-
-  private _setDefaultMessages(standardMessage: string, notMessage?: string) {
-    this._defaultMessages = [standardMessage, notMessage || standardMessage];
   }
 
   protected async _is(method: string, item?: any): Promise<boolean> {

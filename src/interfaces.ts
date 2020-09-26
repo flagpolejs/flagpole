@@ -27,6 +27,7 @@ import Bluebird = require("bluebird");
 import { Link } from "./link";
 import { ServerOptions } from "https";
 import { Server } from "minikin";
+import validator from "validator";
 //import * as Ajv from "ajv";
 
 interface AjvSchema {
@@ -156,6 +157,8 @@ export interface iValue {
   trim: iValue;
   keys: iValue;
   values: iValue;
+  is: iAssertionIs;
+  assert(message?: string): iAssertion;
   valueOf(): any;
   toArray(): any[];
   toString(): string;
@@ -359,7 +362,60 @@ export interface iResponse {
   click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
 }
 
+export interface iAssertionIs {
+  not: iAssertionIs;
+  optional: iAssertionIs;
+  email(): iAssertion;
+  alpha(): iAssertion;
+  alphaNumeric(): iAssertion;
+  ascii(): iAssertion;
+  creditCard(): iAssertion;
+  currency(): iAssertion;
+  decimal(): iAssertion;
+  float(): iAssertion;
+  ip(): iAssertion;
+  integer(): iAssertion;
+  json(): iAssertion;
+  jwt(): iAssertion;
+  numeric(): iAssertion;
+  postalCode(locale?: validator.PostalCodeLocale): iAssertion;
+  url(): iAssertion;
+  mobilePhone(locale?: validator.MobilePhoneLocale): iAssertion;
+  boolean(): iAssertion;
+  base32(): iAssertion;
+  base64(): iAssertion;
+  beforeDate(date?: string): iAssertion;
+  afterDate(date?: string): iAssertion;
+  dataUri(): iAssertion;
+  empty(): iAssertion;
+  fqdn(): iAssertion;
+  hash(): iAssertion;
+  hexColor(): iAssertion;
+  hexadecimal(): iAssertion;
+  in(values: any[]): iAssertion;
+  latLong(): iAssertion;
+  lowercase(): iAssertion;
+  md5(): iAssertion;
+  mimeType(): iAssertion;
+  octal(): iAssertion;
+  port(): iAssertion;
+  rgbColor(): iAssertion;
+  slug(): iAssertion;
+  uuid(): iAssertion;
+  uppercase(): iAssertion;
+  date(): iAssertion;
+  null(): iAssertion;
+  undefined(): iAssertion;
+  string(): iAssertion;
+  array(): iAssertion;
+  object(): iAssertion;
+  number(): iAssertion;
+}
+
 export interface iAssertion {
+  value: any;
+  text: string;
+  subject: string;
   and: iAssertion;
   type: iAssertion;
   length: iAssertion;
@@ -373,6 +429,10 @@ export interface iAssertion {
   name: string;
   passed: boolean | null;
   isFinalized: boolean;
+  is: iAssertionIs;
+  setDefaultMessages(notMessage: string, standardMessage: string): iAssertion;
+  setDefaultMessage(message: string): iAssertion;
+  setDefaultNotMessage(message: string): iAssertion;
   as(aliasName: string): iAssertion;
   exactly(value: any): iAssertion;
   equals(value: any): iAssertion;
@@ -422,6 +482,11 @@ export interface iAssertion {
     js: EvaluateFn<any>,
     ...args: SerializableOrJSHandle[]
   ): Promise<iAssertion>;
+  execute(
+    bool: boolean,
+    actualValue: any,
+    highlightText?: string | null
+  ): iAssertion;
 }
 
 export interface iAssertionContext {
