@@ -7,13 +7,13 @@ import * as cheerio from "cheerio";
 import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
 
 export class HtmlResponse extends DOMResponse implements iResponse {
-  private _cheerio: CheerioStatic | null = null;
+  private _cheerio: cheerio.Root | null = null;
 
-  protected set cheerio(value: CheerioStatic) {
+  protected set cheerio(value: cheerio.Root) {
     this._cheerio = value;
   }
 
-  protected get cheerio(): CheerioStatic {
+  protected get cheerio(): cheerio.Root {
     if (this._cheerio === null) {
       throw "Cheerio root element is null";
     }
@@ -33,7 +33,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     this._cheerio = cheerio.load(httpResponse.body);
   }
 
-  public getRoot(): CheerioStatic {
+  public getRoot(): cheerio.Root {
     return this.cheerio;
   }
 
@@ -50,7 +50,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     if (params.contains || params.matches || params.opts) {
       return findOne(this, selector, params);
     }
-    const selection: Cheerio = this.cheerio(selector);
+    const selection: cheerio.Cheerio = this.cheerio(selector);
     return selection.length > 0
       ? await HTMLElement.create(selection.eq(0), this.context, null, selector)
       : wrapAsValue(this.context, null, selector);
@@ -62,7 +62,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     b?: FindAllOptions
   ): Promise<iValue[]> {
     const response: HtmlResponse = this;
-    const elements: Cheerio = this.cheerio(selector);
+    const elements: cheerio.Cheerio = this.cheerio(selector);
     const params = getFindParams(a, b);
     let nodeElements: iValue[] = [];
     if (elements.length > 0) {

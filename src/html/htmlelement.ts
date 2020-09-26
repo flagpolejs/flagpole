@@ -11,19 +11,19 @@ import { asyncForEach } from "../util";
 import { getFindParams, filterFind } from "../helpers";
 import { HttpMethodVerb } from "../httprequest";
 import { HttpRequest } from "../httprequest";
+import * as cheerio from "cheerio";
 
-const cheerio: CheerioAPI = require("cheerio");
-let $: CheerioStatic;
+let $: cheerio.Root;
 
 export class HTMLElement extends DOMElement implements iValue {
   protected _path: string;
-  protected _input: Cheerio | CheerioElement;
+  protected _input: cheerio.Cheerio | cheerio.Element;
 
-  public get $(): Cheerio | CheerioElement {
+  public get $(): cheerio.Cheerio | cheerio.Element {
     return this._input;
   }
 
-  protected get el(): Cheerio {
+  protected get el(): cheerio.Cheerio {
     return $(this._input);
   }
 
@@ -73,7 +73,7 @@ export class HTMLElement extends DOMElement implements iValue {
     const path: string = `${this.path} ${selector}`;
     if (params.contains || params.matches) {
     } else {
-      const element: Cheerio = this.el.find(selector).eq(0);
+      const element = this.el.find(selector).eq(0);
       if (element !== null) {
         return HTMLElement.create(element, this._context, name, path);
       }
@@ -88,7 +88,7 @@ export class HTMLElement extends DOMElement implements iValue {
   ): Promise<iValue[]> {
     const params = getFindParams(a, b);
     const out: iValue[] = [];
-    const elements: CheerioElement[] = this.el.find(selector).toArray();
+    const elements = this.el.find(selector).toArray();
     await asyncForEach(elements, async (element, i) => {
       return out.push(
         await HTMLElement.create(
@@ -103,7 +103,7 @@ export class HTMLElement extends DOMElement implements iValue {
   }
 
   public async getAncestorOrSelf(selector: string): Promise<iValue> {
-    const closest: Cheerio = this.el.closest(selector);
+    const closest = this.el.closest(selector);
     const name: string = `Closest ${selector} of ${this.name}`;
     const path: string = `${this.path}[ancestor-or-self::${selector}]`;
     if (closest.length > 0) {
@@ -113,7 +113,7 @@ export class HTMLElement extends DOMElement implements iValue {
   }
 
   public async getFirstChild(selector: string): Promise<iValue> {
-    const child: Cheerio = this.el.children(selector).first();
+    const child = this.el.children(selector).first();
     return HTMLElement.create(
       child,
       this._context,
@@ -123,7 +123,7 @@ export class HTMLElement extends DOMElement implements iValue {
   }
 
   public async getLastChild(selector: string): Promise<iValue> {
-    const child: Cheerio = this.el.children(selector).last();
+    const child = this.el.children(selector).last();
     return HTMLElement.create(
       child,
       this._context,
@@ -133,7 +133,7 @@ export class HTMLElement extends DOMElement implements iValue {
   }
 
   public async getChildren(selector: string = "*"): Promise<HTMLElement[]> {
-    const children: Cheerio = this.el.children(selector);
+    const children = this.el.children(selector);
     const out: HTMLElement[] = [];
     for (let i = 0; i < children.length; i++) {
       out.push(
@@ -149,7 +149,7 @@ export class HTMLElement extends DOMElement implements iValue {
   }
 
   public async getSiblings(selector: string): Promise<iValue[]> {
-    const children: Cheerio = this.el.siblings(selector);
+    const children = this.el.siblings(selector);
     const out: HTMLElement[] = [];
     for (let i = 0; i < children.length; i++) {
       out.push(
@@ -165,7 +165,7 @@ export class HTMLElement extends DOMElement implements iValue {
   }
 
   public async getFirstSibling(selector: string): Promise<iValue> {
-    const child: Cheerio = this.el.siblings(selector).first();
+    const child = this.el.siblings(selector).first();
     return HTMLElement.create(
       child,
       this._context,
@@ -175,7 +175,7 @@ export class HTMLElement extends DOMElement implements iValue {
   }
 
   public async getLastSibling(selector: string): Promise<iValue> {
-    const child: Cheerio = this.el.siblings(selector).last();
+    const child = this.el.siblings(selector).last();
     return HTMLElement.create(
       child,
       this._context,
@@ -187,7 +187,7 @@ export class HTMLElement extends DOMElement implements iValue {
   public async getAncestor(
     selector: string = "*"
   ): Promise<HTMLElement | iValue> {
-    const ancestors: Cheerio = this.el.parentsUntil(selector);
+    const ancestors = this.el.parentsUntil(selector);
     const name: string = `Ancestor of ${this.name}`;
     const path: string = `${this.path}[ancestor::${selector}][0]`;
     return ancestors.length > 0
@@ -196,7 +196,7 @@ export class HTMLElement extends DOMElement implements iValue {
   }
 
   public async getParent(): Promise<HTMLElement | iValue> {
-    const parent: Cheerio = this.el.parent();
+    const parent = this.el.parent();
     const name: string = `Parent of ${this.name}`;
     const path: string = `${this.path}[..]`;
     if (parent !== null) {
@@ -208,7 +208,7 @@ export class HTMLElement extends DOMElement implements iValue {
   public async getPreviousSibling(
     selector: string = "*"
   ): Promise<HTMLElement | iValue> {
-    const siblings: Cheerio = this.el.prev(selector);
+    const siblings = this.el.prev(selector);
     const name: string = `Previous Sibling of ${this.name}`;
     const path: string = `${this.path}[preceding-sibling::${selector}][0]`;
     if (siblings.length > 0) {
@@ -220,7 +220,7 @@ export class HTMLElement extends DOMElement implements iValue {
   public async getPreviousSiblings(
     selector: string = "*"
   ): Promise<HTMLElement[]> {
-    const siblingElements: Cheerio = await this.el.prevAll(selector);
+    const siblingElements = this.el.prevAll(selector);
     const siblings: HTMLElement[] = [];
     for (let i = 0; i < siblingElements.length; i++) {
       siblings.push(
@@ -238,7 +238,7 @@ export class HTMLElement extends DOMElement implements iValue {
   public async getNextSibling(
     selector: string = "*"
   ): Promise<HTMLElement | iValue> {
-    const siblings: Cheerio = await this.el.next(selector);
+    const siblings = this.el.next(selector);
     const name: string = `Next Sibling of ${this.name}`;
     const path: string = `${this.path}[following-sibling::${selector}][0]`;
     if (siblings.length > 0) {
@@ -248,7 +248,7 @@ export class HTMLElement extends DOMElement implements iValue {
   }
 
   public async getNextSiblings(selector: string = "*"): Promise<HTMLElement[]> {
-    const siblingElements: Cheerio = await this.el.nextAll(selector);
+    const siblingElements = this.el.nextAll(selector);
     const siblings: HTMLElement[] = [];
     for (let i = 0; i < siblingElements.length; i++) {
       siblings.push(
@@ -285,7 +285,7 @@ export class HTMLElement extends DOMElement implements iValue {
       const type: iValue = await this.getAttribute("type");
       if (type.isNull() || type.toString().toLowerCase() == "submit") {
         // Grab the form and submit it
-        const form = (<Cheerio>this._input).closest("form");
+        const form = (this._input as cheerio.Cheerio).closest("form");
         const formEl = await HTMLElement.create(
           form,
           this._context,
@@ -317,7 +317,7 @@ export class HTMLElement extends DOMElement implements iValue {
     }
     const attributeName: string = typeof a === "string" ? a : "name";
     const formData: KeyValue = (typeof a === "string" ? b : a) || {};
-    const form: Cheerio = this.el;
+    const form = this.el;
     for (let name in formData) {
       const value = formData[name];
       form.find(`[${attributeName}="${name}"]`).val(value);
