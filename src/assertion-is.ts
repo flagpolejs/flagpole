@@ -1,5 +1,6 @@
 import { iAssertion, iAssertionIs } from "./interfaces";
 import validator from "validator";
+import { toType } from "./util";
 
 export class AssertionIs implements iAssertionIs {
   public get not(): AssertionIs {
@@ -13,6 +14,10 @@ export class AssertionIs implements iAssertionIs {
   }
 
   constructor(private _assertion: iAssertion) {}
+
+  public type(type: string) {
+    return this._assertion.type.equals(type);
+  }
 
   public array() {
     return this._assertion.type.equals("array");
@@ -36,6 +41,22 @@ export class AssertionIs implements iAssertionIs {
 
   public string() {
     return this._assertion.type.equals("string");
+  }
+
+  public greaterThan(value: any) {
+    return this._assertion.greaterThan(value);
+  }
+
+  public lessThan(value: any) {
+    return this._assertion.lessThan(value);
+  }
+
+  public lessThanOrEquals(value: any) {
+    return this._assertion.lessThanOrEquals(value);
+  }
+
+  public greaterThanOrEquals(value: any) {
+    return this._assertion.greaterThanOrEquals(value);
   }
 
   public boolean() {

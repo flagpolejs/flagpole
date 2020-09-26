@@ -6,8 +6,7 @@ import {
 } from "./interfaces";
 import * as fs from "fs";
 import * as path from "path";
-
-const cheerio = require("cheerio");
+import * as cheerio from "cheerio";
 
 export const arrayify = <T>(value: any): T[] => {
   return toType(value) == "array" ? value : [value];
