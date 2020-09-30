@@ -4,6 +4,7 @@ import { HttpResponse } from "../httpresponse";
 import { iResponse, iValue } from "../interfaces";
 import { wrapAsValue } from "../helpers";
 import { ResponseType } from "../enums";
+import { ValuePromise } from "../value-promise";
 
 export class JsonResponse extends ProtoResponse implements iResponse {
   protected _json: {} = {};
@@ -38,13 +39,15 @@ export class JsonResponse extends ProtoResponse implements iResponse {
    * @param path
    * @param findIn
    */
-  public async find(path: string): Promise<iValue> {
-    await this.loadJmesPath();
-    if (typeof this._jPath == "undefined") {
-      throw new Error("Could not load jmespath");
-    }
-    const selection = await this._jPath.search(this._json, path);
-    return wrapAsValue(this.context, selection, path, selection);
+  public find(path: string): ValuePromise {
+    return ValuePromise.execute(async () => {
+      await this.loadJmesPath();
+      if (typeof this._jPath == "undefined") {
+        throw new Error("Could not load jmespath");
+      }
+      const selection = await this._jPath.search(this._json, path);
+      return wrapAsValue(this.context, selection, path, selection);
+    });
   }
 
   /**

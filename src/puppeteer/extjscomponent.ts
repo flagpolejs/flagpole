@@ -11,6 +11,7 @@ import { ExtJSResponse } from "./extjsresponse";
 import * as ext from "./ext.helper";
 import { wrapAsValue } from "../helpers";
 import { BrowserElement } from "./browserelement";
+import { ValuePromise } from "../value-promise";
 
 const visible: EvaluateFn = (c) => c.isVisible(true);
 const hidden: EvaluateFn = (c) => c.isHidden(true);
@@ -164,23 +165,25 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     );
   }
 
-  public async find(selector: string): Promise<iValue> {
-    const name = `${selector} under ${this.name}`;
-    const path = `${this.path} ${selector}`;
-    const result = await ext.down(this.$, selector);
-    if (result !== null) {
-      return ext.jsHandleToComponent(result, this.context, name, path);
-    }
-    const el = await ext.queryDomElementWithinComponent(this.$, selector);
-    if (el !== null) {
-      return BrowserElement.create(
-        el as ElementHandle,
-        this.context,
-        name,
-        path
-      );
-    }
-    return wrapAsValue(this.context, null, name, path);
+  public find(selector: string): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const name = `${selector} under ${this.name}`;
+      const path = `${this.path} ${selector}`;
+      const result = await ext.down(this.$, selector);
+      if (result !== null) {
+        return ext.jsHandleToComponent(result, this.context, name, path);
+      }
+      const el = await ext.queryDomElementWithinComponent(this.$, selector);
+      if (el !== null) {
+        return BrowserElement.create(
+          el as ElementHandle,
+          this.context,
+          name,
+          path
+        );
+      }
+      return wrapAsValue(this.context, null, name, path);
+    });
   }
 
   public async findAll(selector: string): Promise<iValue[]> {

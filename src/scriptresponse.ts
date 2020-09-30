@@ -3,6 +3,7 @@ import { iResponse } from "./interfaces";
 import { Value } from "./value";
 import { ProtoResponse } from "./response";
 import { HttpResponse } from "./httpresponse";
+import { ValuePromise } from "./value-promise";
 
 export class ScriptResponse extends ProtoResponse implements iResponse {
   public get responseTypeName(): string {
@@ -28,7 +29,7 @@ export class ScriptResponse extends ProtoResponse implements iResponse {
     throw "This type of scenario does not suport eval.";
   }
 
-  public async find(): Promise<Value> {
+  public find(): ValuePromise {
     throw new Error("Script Response does not yet support select");
   }
 

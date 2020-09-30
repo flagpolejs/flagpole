@@ -5,6 +5,7 @@ import { URL } from "url";
 import { HttpResponse } from "./httpresponse";
 import { Value } from "./value";
 import { wrapAsValue } from "./helpers";
+import { ValuePromise } from "./value-promise";
 
 export interface ImageProperties {
   width: number;
@@ -64,13 +65,15 @@ export class ImageResponse extends ProtoResponse implements iResponse {
     throw "This type of scenario does not suport eval.";
   }
 
-  public async find(propertyName: string): Promise<iValue> {
-    return new Value(
-      typeof this.imageProperties[propertyName] !== "undefined"
-        ? this.imageProperties[propertyName]
-        : null,
-      this.context,
-      `${propertyName} of Image`
+  public find(propertyName: string): ValuePromise {
+    return ValuePromise.create(
+      new Value(
+        typeof this.imageProperties[propertyName] !== "undefined"
+          ? this.imageProperties[propertyName]
+          : null,
+        this.context,
+        `${propertyName} of Image`
+      )
     );
   }
 

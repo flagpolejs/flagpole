@@ -11,6 +11,7 @@ import { Link } from "../link";
 import { ResponseType } from "../enums";
 import { isPuppeteer } from "../response";
 import { getMessageAndCallbackFromOverloading } from "../util";
+import { ValuePromise } from "../value-promise";
 
 export abstract class DOMElement extends Value {
   public get name(): string {
@@ -27,17 +28,17 @@ export abstract class DOMElement extends Value {
     this._path = path || "";
   }
 
-  abstract find(selector: string, opts?: FindOptions): Promise<iValue>;
+  abstract find(selector: string, opts?: FindOptions): ValuePromise;
   abstract find(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   abstract find(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   abstract findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
   abstract findAll(
     selector: string,

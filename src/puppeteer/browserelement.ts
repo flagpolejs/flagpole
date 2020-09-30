@@ -9,6 +9,7 @@ import {
 import { ElementHandle, BoxModel, JSHandle, Page } from "puppeteer-core";
 import { asyncForEach, toType, arrayify, asyncMap } from "../util";
 import * as cssXPath from "css-xpath";
+import { ValuePromise } from "../value-promise";
 
 export class BrowserElement extends PuppeteerElement implements iValue {
   protected _input: ElementHandle;
@@ -47,14 +48,16 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     this._path = path || "";
   }
 
-  public async find(selector: string): Promise<iValue> {
-    const element: ElementHandle | null = await this.$.$(selector);
-    const name: string = `${selector} under ${this.name}`;
-    const path: string = `${this.path} ${selector}`;
-    if (element !== null) {
-      return BrowserElement.create(element, this._context, name, path);
-    }
-    return this._wrapAsValue(null, name);
+  public find(selector: string): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const element: ElementHandle | null = await this.$.$(selector);
+      const name: string = `${selector} under ${this.name}`;
+      const path: string = `${this.path} ${selector}`;
+      if (element !== null) {
+        return BrowserElement.create(element, this._context, name, path);
+      }
+      return this._wrapAsValue(null, name);
+    });
   }
 
   public async findAll(selector: string): Promise<BrowserElement[]> {

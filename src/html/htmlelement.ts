@@ -12,6 +12,7 @@ import { getFindParams, filterFind } from "../helpers";
 import { HttpMethodVerb } from "../httprequest";
 import { HttpRequest } from "../httprequest";
 import * as cheerio from "cheerio";
+import { ValuePromise } from "../value-promise";
 
 let $: cheerio.Root;
 
@@ -63,22 +64,24 @@ export class HTMLElement extends DOMElement implements iValue {
    *
    * @param selector
    */
-  public async find(
+  public find(
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): Promise<iValue> {
-    const params = getFindParams(a, b);
-    const name: string = `${selector} under ${this.name}`;
-    const path: string = `${this.path} ${selector}`;
-    if (params.contains || params.matches) {
-    } else {
-      const element = this.el.find(selector).eq(0);
-      if (element !== null) {
-        return HTMLElement.create(element, this._context, name, path);
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const params = getFindParams(a, b);
+      const name: string = `${selector} under ${this.name}`;
+      const path: string = `${this.path} ${selector}`;
+      if (params.contains || params.matches) {
+      } else {
+        const element = this.el.find(selector).eq(0);
+        if (element !== null) {
+          return HTMLElement.create(element, this._context, name, path);
+        }
       }
-    }
-    return this._wrapAsValue(null, name);
+      return this._wrapAsValue(null, name);
+    });
   }
 
   public async findAll(

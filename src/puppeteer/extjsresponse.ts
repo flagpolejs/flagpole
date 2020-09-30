@@ -21,6 +21,7 @@ import {
 import { ElementHandle, JSHandle, EvaluateFn } from "puppeteer-core";
 import { BrowserElement } from "./browserelement";
 import { query, jsHandleArrayToHandles } from "./ext.helper";
+import { ValuePromise } from "../value-promise";
 
 declare type globalThis = {
   Ext: any;
@@ -174,33 +175,35 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
    *
    * @param path
    */
-  public async find(
+  public find(
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): Promise<iValue> {
-    const params = getFindParams(a, b);
-    if (params.opts || params.matches || params.contains) {
-      return findOne(this, selector, params);
-    }
-    // First look for ExtJS component query
-    const components = await this._query(selector, params);
-    if (components.length) {
-      return components[0];
-    }
-    // Do regular query in page
-    const el = await this._page.$(selector);
-    if (el !== null) {
-      const component = await this._getComponentOrElementFromHandle(
-        el,
-        selector,
-        selector
-      );
-      if (component) {
-        return component;
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const params = getFindParams(a, b);
+      if (params.opts || params.matches || params.contains) {
+        return findOne(this, selector, params);
       }
-    }
-    return wrapAsValue(this.context, null, selector);
+      // First look for ExtJS component query
+      const components = await this._query(selector, params);
+      if (components.length) {
+        return components[0];
+      }
+      // Do regular query in page
+      const el = await this._page.$(selector);
+      if (el !== null) {
+        const component = await this._getComponentOrElementFromHandle(
+          el,
+          selector,
+          selector
+        );
+        if (component) {
+          return component;
+        }
+      }
+      return wrapAsValue(this.context, null, selector);
+    });
   }
 
   /**

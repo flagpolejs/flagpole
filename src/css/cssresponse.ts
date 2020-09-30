@@ -4,6 +4,7 @@ import { iResponse } from "../interfaces";
 import { HttpResponse } from "../httpresponse";
 import { CSSRule } from "./cssrule";
 import { toType } from "../util";
+import { ValuePromise } from "../value-promise";
 
 const css = require("css");
 
@@ -34,29 +35,31 @@ export class CssResponse extends ProtoResponse implements iResponse {
     throw "This type of scenario does not suport eval.";
   }
 
-  public async find(path: string): Promise<CSSRule> {
-    if (this.css.stylesheet && toType(this.css.stylesheet.rules) == "array") {
-      const rules: any[] = this.css.stylesheet.rules;
-      let matchingRule: any | null = null;
-      rules.some((rule: any) => {
-        if (rule.type == "rule" && rule.selectors) {
-          rule.selectors.some((selector: any) => {
-            if (selector == path) {
-              matchingRule = rule;
-            }
-            return matchingRule !== null;
-          });
-        }
-        return matchingRule !== null;
-      });
-      return CSSRule.create(
-        matchingRule,
-        this.context,
-        `CSS Rule for ${path}`,
-        path
-      );
-    }
-    throw new Error("CSS is invalid");
+  public find(path: string): ValuePromise {
+    return ValuePromise.execute(async () => {
+      if (this.css.stylesheet && toType(this.css.stylesheet.rules) == "array") {
+        const rules: any[] = this.css.stylesheet.rules;
+        let matchingRule: any | null = null;
+        rules.some((rule: any) => {
+          if (rule.type == "rule" && rule.selectors) {
+            rule.selectors.some((selector: any) => {
+              if (selector == path) {
+                matchingRule = rule;
+              }
+              return matchingRule !== null;
+            });
+          }
+          return matchingRule !== null;
+        });
+        return CSSRule.create(
+          matchingRule,
+          this.context,
+          `CSS Rule for ${path}`,
+          path
+        );
+      }
+      throw new Error("CSS is invalid");
+    });
   }
 
   public async findAll(path: string): Promise<CSSRule[]> {

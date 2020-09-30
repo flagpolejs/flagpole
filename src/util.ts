@@ -229,6 +229,24 @@ export const flatten = <T>(items: any[] | { [key: string]: any }): T[] => {
   return ([] as T[]).concat(...Object.values(items));
 };
 
+export const arrayEquals = (a: any, b: any): boolean => {
+  return (
+    Array.isArray(a) &&
+    Array.isArray(b) &&
+    a.length === b.length &&
+    a.every((val, index) => val == b[index])
+  );
+};
+
+export const arrayExactly = (a: any, b: any): boolean => {
+  return (
+    Array.isArray(a) &&
+    Array.isArray(b) &&
+    a.length === b.length &&
+    a.every((val, index) => val === b[index])
+  );
+};
+
 /**
  * Have folder path always end in a /
  *

@@ -5,6 +5,7 @@ import { iResponse, iValue, FindAllOptions, FindOptions } from "../interfaces";
 import { ResponseType } from "../enums";
 import * as cheerio from "cheerio";
 import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
+import { ValuePromise } from "../value-promise";
 
 export class HtmlResponse extends DOMResponse implements iResponse {
   private _cheerio: cheerio.Root | null = null;
@@ -41,19 +42,26 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     throw "This type of scenario does not suport eval.";
   }
 
-  public async find(
+  public find(
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): Promise<iValue> {
-    const params = getFindParams(a, b);
-    if (params.contains || params.matches || params.opts) {
-      return findOne(this, selector, params);
-    }
-    const selection: cheerio.Cheerio = this.cheerio(selector);
-    return selection.length > 0
-      ? await HTMLElement.create(selection.eq(0), this.context, null, selector)
-      : wrapAsValue(this.context, null, selector);
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const params = getFindParams(a, b);
+      if (params.contains || params.matches || params.opts) {
+        return findOne(this, selector, params);
+      }
+      const selection: cheerio.Cheerio = this.cheerio(selector);
+      return selection.length > 0
+        ? await HTMLElement.create(
+            selection.eq(0),
+            this.context,
+            null,
+            selector
+          )
+        : wrapAsValue(this.context, null, selector);
+    });
   }
 
   public async findAll(

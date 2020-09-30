@@ -10,6 +10,7 @@ import {
   JsonSchema,
   iValue,
   iAssertionIs,
+  CompareCallback,
 } from "./interfaces";
 import {
   toType,
@@ -20,6 +21,8 @@ import {
   isAsyncCallback,
   isArray,
   asyncMap,
+  arrayEquals,
+  arrayExactly,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
@@ -357,6 +360,9 @@ export class Assertion implements iAssertion {
       `${this.subject} is not exactly ${thatValue}`,
       `${this.subject} is exactly ${thatValue}`
     );
+    if (Array.isArray(thisValue) && Array.isArray(thatValue)) {
+      return this.execute(arrayExactly(thisValue, thatValue), thisValue);
+    }
     return this.execute(thisValue === thatValue, thisValue);
   }
 
@@ -366,6 +372,9 @@ export class Assertion implements iAssertion {
       `${this.subject} does not equal ${thatValue}`,
       `${this.subject} equals ${thatValue}`
     );
+    if (Array.isArray(thisValue) && Array.isArray(thatValue)) {
+      return this.execute(arrayEquals(thisValue, thatValue), thisValue);
+    }
     return this.execute(thisValue == thatValue, thisValue);
   }
 
@@ -378,6 +387,15 @@ export class Assertion implements iAssertion {
       `${this.subject} is not like ${thatValue}`,
       `${this.subject} is like ${thatValue}`
     );
+    if (Array.isArray(thisValue) && Array.isArray(thatValue)) {
+      return this.execute(
+        arrayEquals(
+          thisValue.map((value) => String(value).toLowerCase().trim()),
+          thatValue.map((value) => String(value).toLowerCase().trim())
+        ),
+        thisValue
+      );
+    }
     return this.execute(thisValue == thatValue, thisValue);
   }
 
@@ -957,6 +975,26 @@ export class Assertion implements iAssertion {
     this._defaultMessages[0] = notMessage;
     this._defaultMessages[1] = standardMessage;
     return this;
+  }
+
+  public sort(compareFunc?: CompareCallback): iAssertion {
+    // If no assertion statement was made, skip it by marking it resolved
+    this._resolveAssertion();
+    // Get values
+    const values: any[] = Array.isArray(this.value)
+      ? this.value.sort(compareFunc)
+      : isNullOrUndefined(this.value)
+      ? []
+      : Object.values(this.value).sort(compareFunc);
+    // Create new assertion
+    const assertion: Assertion = new Assertion(
+      this._context,
+      new Value(values, this._context, `Sorted values of ${this.subject}`),
+      this._message
+    );
+    this._not && assertion.not;
+    this._optional && assertion.optional;
+    return assertion;
   }
 
   private _getCompareValue(value: any): any {

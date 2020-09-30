@@ -11,6 +11,7 @@ import {
   getFindName,
 } from "../helpers";
 import { BrowserElement } from "./browserelement";
+import { ValuePromise } from "../value-promise";
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
   public get responseTypeName(): string {
@@ -26,21 +27,23 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
    *
    * @param path
    */
-  public async find(
+  public find(
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): Promise<iValue> {
-    // Filter with options
-    const params = getFindParams(a, b);
-    if (params.opts || params.matches || params.contains) {
-      return findOne(this, selector, params);
-    }
-    // No options, so just find from selector
-    const el: ElementHandle<Element> | null = await this._page.$(selector);
-    return el === null
-      ? wrapAsValue(this.context, null, selector)
-      : BrowserElement.create(el, this.context, selector, selector);
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      // Filter with options
+      const params = getFindParams(a, b);
+      if (params.opts || params.matches || params.contains) {
+        return findOne(this, selector, params);
+      }
+      // No options, so just find from selector
+      const el: ElementHandle<Element> | null = await this._page.$(selector);
+      return el === null
+        ? wrapAsValue(this.context, null, selector)
+        : BrowserElement.create(el, this.context, selector, selector);
+    });
   }
 
   /**

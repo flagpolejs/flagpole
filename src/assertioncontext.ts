@@ -43,6 +43,7 @@ import {
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { getFindParams, getFindName, wrapAsValue } from "./helpers";
 import * as bluebird from "bluebird";
+import { ValuePromise } from "./value-promise";
 
 const getParamsFromExists = (
   a: string,
@@ -405,28 +406,30 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public async find(
+  public find(
     selector: string | string[],
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): Promise<iValue> {
-    const selectors = arrayify<string>(selector);
-    const params = getFindParams(a, b);
-    const element: iValue | null = await asyncForEachUntilFirst(
-      selectors,
-      async (selector) => {
-        const value =
-          typeof a == "string"
-            ? await this.response.find(selector, a, b)
-            : a instanceof RegExp
-            ? await this.response.find(selector, a, b)
-            : await this.response.find(selector, b);
-        return value.isNullOrUndefined() ? false : value;
-      }
-    );
-    return element === null
-      ? wrapAsValue(this, null, getFindName(params, selectors, null))
-      : element;
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const selectors = arrayify<string>(selector);
+      const params = getFindParams(a, b);
+      const element: iValue | false = await asyncForEachUntilFirst(
+        selectors,
+        async (selector) => {
+          const value =
+            typeof a == "string"
+              ? await this.response.find(selector, a, b)
+              : a instanceof RegExp
+              ? await this.response.find(selector, a, b)
+              : await this.response.find(selector, b);
+          return value.isNullOrUndefined() ? false : value;
+        }
+      );
+      return element === false
+        ? wrapAsValue(this, null, getFindName(params, selectors, null))
+        : element;
+    });
   }
 
   /**

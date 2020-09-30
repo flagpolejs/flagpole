@@ -13,6 +13,7 @@ import { HttpResponse } from "./httpresponse";
 import { AssertionContext } from "./assertioncontext";
 import { wrapAsValue } from "./helpers";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
+import { ValuePromise } from "./value-promise";
 
 export function isPuppeteer(type: ResponseType): boolean {
   return ["browser", "extjs"].indexOf(type) >= 0;
@@ -25,17 +26,17 @@ export abstract class ProtoResponse implements iResponse {
 
   abstract get responseType(): ResponseType;
   abstract get responseTypeName(): string;
-  abstract find(selector: string, opts?: FindOptions): Promise<iValue>;
+  abstract find(selector: string, opts?: FindOptions): ValuePromise;
   abstract find(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   abstract find(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   abstract findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
   abstract findAll(
     selector: string,

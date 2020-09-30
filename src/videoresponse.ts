@@ -2,6 +2,7 @@ import { ResponseType } from "./enums";
 import { iResponse } from "./interfaces";
 import { ProtoResponse } from "./response";
 import { HttpResponse } from "./httpresponse";
+import { ValuePromise } from "./value-promise";
 
 export class VideoResponse extends ProtoResponse implements iResponse {
   public get responseTypeName(): string {
@@ -27,7 +28,7 @@ export class VideoResponse extends ProtoResponse implements iResponse {
     throw "This type of scenario does not suport eval.";
   }
 
-  public async find(): Promise<any | null> {
+  public find(): ValuePromise {
     throw new Error("Video Response does not yet support select");
   }
 

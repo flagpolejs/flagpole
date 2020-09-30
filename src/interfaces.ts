@@ -28,11 +28,14 @@ import { Link } from "./link";
 import { ServerOptions } from "https";
 import { Server } from "minikin";
 import validator from "validator";
+import { ValuePromise } from "./value-promise";
 //import * as Ajv from "ajv";
 
 interface AjvSchema {
   // TODO: Add this reference
 }
+
+export type CompareCallback = (a: any, b: any) => number;
 
 export interface ScreenshotOpts {
   path?: string;
@@ -253,9 +256,9 @@ export interface iValue {
   waitForVisible(timeout?: number): Promise<iValue>;
   // Tree traversal
   exists(selector?: string): Promise<iValue>;
-  find(selector: string, opts?: FindOptions): Promise<iValue>;
-  find(selector: string, contains: string, opts?: FindOptions): Promise<iValue>;
-  find(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
+  find(selector: string, opts?: FindOptions): ValuePromise;
+  find(selector: string, contains: string, opts?: FindOptions): ValuePromise;
+  find(selector: string, matches: RegExp, opts?: FindOptions): ValuePromise;
   findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
   findAll(
     selector: string,
@@ -309,9 +312,9 @@ export interface iResponse {
   readonly scenario: iScenario;
   init(httpResponse: HttpResponse): void;
   getRoot(): any;
-  find(path: string, opts?: FindOptions): Promise<iValue>;
-  find(path: string, contains: string, opts?: FindOptions): Promise<iValue>;
-  find(path: string, mathces: RegExp, opts?: FindOptions): Promise<iValue>;
+  find(path: string, opts?: FindOptions): ValuePromise;
+  find(path: string, contains: string, opts?: FindOptions): ValuePromise;
+  find(path: string, mathces: RegExp, opts?: FindOptions): ValuePromise;
   findAll(path: string, opts?: FindAllOptions): Promise<iValue[]>;
   findAll(
     path: string,
@@ -430,6 +433,7 @@ export interface iAssertion {
   passed: boolean | null;
   isFinalized: boolean;
   is: iAssertionIs;
+  sort(compareFunc?: CompareCallback): iAssertion;
   setDefaultMessages(notMessage: string, standardMessage: string): iAssertion;
   setDefaultMessage(message: string): iAssertion;
   setDefaultNotMessage(message: string): iAssertion;
@@ -538,17 +542,17 @@ export interface iAssertionContext {
     matches: RegExp,
     opts?: FindOptions
   ): Promise<iValue[]>;
-  find(selector: string | string[], opts?: FindOptions): Promise<iValue>;
+  find(selector: string | string[], opts?: FindOptions): ValuePromise;
   find(
     selector: string | string[],
     contains: string,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   find(
     selector: string | string[],
     matches: RegExp,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   findAll(
     selector: string | string[],
     opts?: FindAllOptions

@@ -22,6 +22,7 @@ import {
   PageFnOptions,
   SerializableOrJSHandle,
 } from "puppeteer-core";
+import { ValuePromise } from "./value-promise";
 
 export class Value implements iValue {
   protected _input: any;
@@ -374,8 +375,8 @@ export class Value implements iValue {
     }
   }
 
-  public async find(selector: string): Promise<iValue> {
-    return this._wrapAsValue(null, selector);
+  public find(selector: string): ValuePromise {
+    return ValuePromise.create(this._wrapAsValue(null, selector));
   }
 
   public async findAll(selector: string): Promise<iValue[]> {
