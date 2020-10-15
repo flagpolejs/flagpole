@@ -558,6 +558,6 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     selector: string = "*",
     suffix: string = ""
   ) {
-    return this.$.$x(`${prefix}${cssXPath(selector)}${suffix}`);
+    return this.$.$x(`//${prefix}${cssXPath(selector).slice(2)}${suffix}`);
   }
 }
