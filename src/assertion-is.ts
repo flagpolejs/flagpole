@@ -1,6 +1,12 @@
 import { iAssertion, iAssertionIs } from "./interfaces";
 import validator from "validator";
 import { toType } from "./util";
+import {
+  canadaProvinceCodes,
+  countryCodes2,
+  countryCodes3,
+  usStateCodes,
+} from "./constants";
 
 export class AssertionIs implements iAssertionIs {
   public get not(): AssertionIs {
@@ -234,6 +240,37 @@ export class AssertionIs implements iAssertionIs {
   public date() {
     // @ts-ignore
     return this._validate(validator.isDate, "a date");
+  }
+
+  public regionCode(countries?: ["US" | "CA"]) {
+    let codes: string[] = [];
+    if (countries?.includes("US")) {
+      codes = [...codes, ...usStateCodes];
+    }
+    if (countries?.includes("CA")) {
+      codes = [...codes, ...canadaProvinceCodes];
+    }
+    return this._validate(
+      (state: string) =>
+        codes.length > 0 ? codes.includes(state) : state.length == 2,
+      "a region code"
+    );
+  }
+
+  public countryCode(format?: "iso-alpha-2" | "iso-alpha-3") {
+    const codes: string[] =
+      format == "iso-alpha-2"
+        ? countryCodes2
+        : format == "iso-alpha-3"
+        ? countryCodes3
+        : [];
+    return this._validate(
+      (code: string) =>
+        codes.length > 0
+          ? codes.includes(code)
+          : code.length == 3 || code.length == 2,
+      "a country code"
+    );
   }
 
   private _setValidationMessage(thisThing: string) {

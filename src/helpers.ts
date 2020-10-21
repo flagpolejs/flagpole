@@ -59,7 +59,7 @@ export function getFindName(
 
 export function getFindParams(a: any, b: any): FindParams {
   const contains = typeof a === "string" ? a : null;
-  const matches = toType(a) === "RegExp" ? a : null;
+  const matches = toType(a) === "regexp" ? a : null;
   const opts = (contains || matches ? b : a || b) || null;
   return { contains: contains, matches: matches, opts: opts };
 }
@@ -86,7 +86,7 @@ export async function filterFind(
         }
         return (await element.getText()).$;
       })();
-      if (containsType == "RegExp") {
+      if (containsType == "regexp") {
         return (contains as RegExp).test(text.toString());
       }
       return text.toLowerCase().indexOf(String(contains).toLowerCase()) >= 0;

@@ -28,22 +28,46 @@ export class ValuePromise
   }
 
   public get is(): Promise<iAssertionIs> {
-    return new Promise((r) => this.then((v) => r(v.is)));
+    //return new Promise((r) => this.then((v) => r(v.is)));
+    return this._promisifyProperty("is");
   }
 
   public get not(): Promise<iAssertion> {
-    return new Promise((r) => this.then((v) => r(v.assert().not)));
+    //return new Promise((r) => this.then((v) => r(v.assert().not)));
+    return this._promisifyAssertProperty("is");
   }
 
   public equals(eqValue: any): Promise<iAssertion> {
-    return new Promise((r) => this.then((v) => r(v.assert().equals(eqValue))));
+    //return new Promise((r) => this.then((v) => r(v.assert().equals(eqValue))));
+    return this._promisifyAssertMethod("equals", [eqValue]);
   }
 
   public assert(message: string): Promise<iAssertion> {
-    return new Promise((r) => this.then((v) => r(v.assert(message))));
+    return this._promisifyMethod("assert", [message]);
   }
 
   public exists(): Promise<iValue> {
-    return new Promise((r) => this.then((v) => r(v.exists())));
+    return this._promisifyMethod("exists");
+  }
+
+  private _promisifyAssertMethod<T>(
+    method: string,
+    args: any[] = []
+  ): Promise<T> {
+    return new Promise((r) =>
+      this.then((v) => r(v.assert()[method].apply(v, args)))
+    );
+  }
+
+  private _promisifyAssertProperty<T>(property: string): Promise<T> {
+    return new Promise((r) => this.then((v) => r(v.assert()[property])));
+  }
+
+  private _promisifyMethod<T>(method: string, args: any[] = []): Promise<T> {
+    return new Promise((r) => this.then((v) => r(v[method].apply(v, args))));
+  }
+
+  private _promisifyProperty<T>(property: string): Promise<T> {
+    return new Promise((r) => this.then((v) => r(v[property])));
   }
 }

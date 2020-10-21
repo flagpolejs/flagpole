@@ -256,7 +256,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       siblingElements,
       async (sibling: ElementHandle, i: number) => {
         const name: string = `Next Sibling ${i} of ${this.name}`;
-        const path: string = `${this.path}[following-sibling::${selector}][${i}]`;
+        const path: string = `${this.path}/following-sibling::${selector}[${i}]`;
         siblings.push(
           await BrowserElement.create(sibling, this._context, name, path)
         );
@@ -515,9 +515,15 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     return value;
   }
 
-  protected async _getAttribute(key: string): Promise<string> {
-    const handle: JSHandle = await this._input.getProperty(key);
-    return String(await handle.jsonValue());
+  protected async _getAttribute(key: string): Promise<string | null> {
+    const value = await this._page.evaluate(
+      (el, key) => el.getAttribute(key),
+      this._input,
+      key
+    );
+    //const handle: JSHandle = await this._input.getProperty(key);
+    //const value = await attr.jsonValue();
+    return value === null ? null : String(value);
   }
 
   protected async _isPasswordField(): Promise<boolean> {
@@ -558,6 +564,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     selector: string = "*",
     suffix: string = ""
   ) {
-    return this.$.$x(`${prefix}${cssXPath(selector)}${suffix}`);
+    const path = `${prefix}${cssXPath(selector)}${suffix}`;
+    return this.$.$x(path);
   }
 }

@@ -243,7 +243,7 @@ export class HTMLElement extends DOMElement implements iValue {
   ): Promise<HTMLElement | iValue> {
     const siblings = this.el.next(selector);
     const name: string = `Next Sibling of ${this.name}`;
-    const path: string = `${this.path}[following-sibling::${selector}][0]`;
+    const path: string = `${this.path}/following-sibling::${selector}[0]`;
     if (siblings.length > 0) {
       return HTMLElement.create(siblings[0], this._context, name, path);
     }

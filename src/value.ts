@@ -79,6 +79,24 @@ export class Value implements iValue {
     );
   }
 
+  public get uppercase(): iValue {
+    const thisValue: any = this.$;
+    return new Value(
+      typeof thisValue === "string" ? thisValue.toUpperCase() : thisValue,
+      this._context,
+      `Uppercase of ${this._name}`
+    );
+  }
+
+  public get lowercase(): iValue {
+    const thisValue: any = this.$;
+    return new Value(
+      typeof thisValue === "string" ? thisValue.toLowerCase() : thisValue,
+      this._context,
+      `Lowercase of ${this._name}`
+    );
+  }
+
   public get path(): string {
     return this._path || "";
   }
@@ -430,12 +448,16 @@ export class Value implements iValue {
     key: string,
     value?: string | RegExp
   ): Promise<boolean> {
-    const thisValue = (await this.getAttribute(key)).toString();
+    const thisValue = await this.getAttribute(key);
+    if (thisValue.isNullOrUndefined()) {
+      return false;
+    }
+    const strThisValue = thisValue.toString();
     return value === undefined
       ? !!thisValue
       : typeof value == "string"
-      ? value == thisValue
-      : (value as RegExp).test(thisValue);
+      ? value == strThisValue
+      : (value as RegExp).test(strThisValue);
   }
 
   public getAttribute(key: string): Promise<iValue> {

@@ -158,6 +158,8 @@ export interface iValue {
   context: iAssertionContext;
   length: iValue;
   trim: iValue;
+  uppercase: iValue;
+  lowercase: iValue;
   keys: iValue;
   values: iValue;
   is: iAssertionIs;
@@ -413,6 +415,8 @@ export interface iAssertionIs {
   array(): iAssertion;
   object(): iAssertion;
   number(): iAssertion;
+  regionCode(countries?: ("US" | "CA")[]): iAssertion;
+  countryCode(format: "iso-alpha-2" | "iso-alpha-3"): iAssertion;
 }
 
 export interface iAssertion {
