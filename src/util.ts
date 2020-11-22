@@ -303,3 +303,60 @@ export const deepStrictEqual = (thisValue: any, thatValue: any): boolean => {
     return false;
   }
 };
+
+export const firstIn = (obj: any) => {
+  const type = toType(obj);
+  try {
+    if (type == "array") {
+      return obj[0];
+    } else if (type == "object") {
+      return obj[Object.keys(obj)[0]];
+    }
+    return String(obj).substr(0, 1);
+  } catch (ex) {
+    return null;
+  }
+};
+
+export const lastIn = (obj: any) => {
+  const type = toType(obj);
+  try {
+    if (type == "array") {
+      return obj[obj.length - 1];
+    } else if (type == "object") {
+      const keys = Object.keys(obj);
+      return obj[keys[keys.length - 1]];
+    }
+    return String(obj).substr(-1, 1);
+  } catch (ex) {
+    return null;
+  }
+};
+
+export const random = (min: number, max: number): number => {
+  return Math.random() * (max - min) + min;
+};
+
+export const randomInt = (min: number, max: number): number => {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1) + min);
+};
+
+export const randomIn = (obj: any) => {
+  const type = toType(obj);
+  try {
+    if (type == "array") {
+      const i = randomInt(0, obj.length - 1);
+      return obj[i];
+    } else if (type == "object") {
+      const keys = Object.keys(obj);
+      const i = randomInt(0, keys.length - 1);
+      return obj[keys[i]];
+    }
+    const i = randomInt(0, String(obj).length - 1);
+    return String(obj).substr(i, 1);
+  } catch (ex) {
+    return null;
+  }
+};

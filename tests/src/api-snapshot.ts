@@ -46,4 +46,13 @@ suite
   .open("/api/v1/meets/5322")
   .next(async (context) => {
     await context.assert(context.response.jsonBody).schema("@meet");
+    const data = await context.find("data");
+    data.is.object();
+    data.keys.assert().contains(["name", "id"]);
+    data.assert().contains(["name", "id"]);
+    data.item("name").is.string();
+    data.item("dateStart").is.date();
+    await data.exists("name");
+    context.comment(data.$);
+    console.log(await data.find("name"));
   });

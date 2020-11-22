@@ -7,7 +7,14 @@ import {
   iNextCallback,
   iAssertionIs,
 } from "./interfaces";
-import { toType, isNullOrUndefined, runAsync } from "./util";
+import {
+  toType,
+  isNullOrUndefined,
+  runAsync,
+  firstIn,
+  lastIn,
+  randomIn,
+} from "./util";
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
@@ -97,6 +104,49 @@ export class Value implements iValue {
     );
   }
 
+  public get first(): iValue {
+    const thisValue: any = this.$;
+    return new Value(
+      firstIn(thisValue),
+      this._context,
+      `First in ${this._name}`
+    );
+  }
+
+  public get last(): iValue {
+    const thisValue: any = this.$;
+    return new Value(lastIn(thisValue), this._context, `Last in ${this._name}`);
+  }
+
+  public get random(): iValue {
+    const thisValue: any = this.$;
+    return new Value(
+      randomIn(thisValue),
+      this._context,
+      `Random in ${this._name}`
+    );
+  }
+
+  public get string(): iValue {
+    return new Value(this.toString(), this._context, this.name);
+  }
+
+  public get array(): iValue {
+    return new Value(this.toArray(), this._context, this.name);
+  }
+
+  public get float(): iValue {
+    return new Value(this.toFloat(), this._context, this.name);
+  }
+
+  public get int(): iValue {
+    return new Value(this.toInteger(), this._context, this.name);
+  }
+
+  public get bool(): iValue {
+    return new Value(this.toBoolean(), this._context, this.name);
+  }
+
   public get path(): string {
     return this._path || "";
   }
@@ -171,6 +221,10 @@ export class Value implements iValue {
 
   public toInteger(): number {
     return parseInt(this.toString());
+  }
+
+  public toURL(baseUrl?: string | URL): URL {
+    return new URL(this.toString(), baseUrl);
   }
 
   public toType(): string {
@@ -394,11 +448,11 @@ export class Value implements iValue {
   }
 
   public find(selector: string): ValuePromise {
-    return ValuePromise.create(this._wrapAsValue(null, selector));
+    return ValuePromise.create(this.item(selector));
   }
 
   public async findAll(selector: string): Promise<iValue[]> {
-    return [];
+    return [await this.find(selector)];
   }
 
   public async getClassName(): Promise<iValue> {
@@ -504,7 +558,7 @@ export class Value implements iValue {
   public get keys(): iValue {
     let keys: string[] = [];
     try {
-      keys = Object.values(this.$);
+      keys = Object.keys(this.$);
     } catch {}
     return this._wrapAsValue(
       keys,
@@ -699,6 +753,36 @@ export class Value implements iValue {
     return typeof message == "string"
       ? this.context.assert(message, this)
       : this.context.assert(this);
+  }
+
+  public split(by: string | RegExp, limit?: number): iValue {
+    return new Value(
+      this.toString().split(by, limit),
+      this._context,
+      this.name
+    );
+  }
+
+  public join(by: string): iValue {
+    return new Value(this.toArray().join(by), this._context, this.name);
+  }
+
+  public map(func: (value: any, i?: number, arr?: any[]) => any): iValue {
+    return new Value(this.toArray().map(func), this._context, this.name);
+  }
+
+  public filter(
+    func: (value: any, i?: number, arr?: any[]) => boolean
+  ): iValue {
+    return new Value(this.toArray().filter(func), this._context, this.name);
+  }
+
+  public item(key: string | number): iValue {
+    const name = `${key} in ${this.name}`;
+    if (this._input.hasOwnProperty(key)) {
+      return new Value(this._input[key], this._context, name);
+    }
+    return new Value(null, this._context, name);
   }
 
   protected async _completedAction(verb: string, noun?: string) {

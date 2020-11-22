@@ -162,14 +162,24 @@ export interface iValue {
   lowercase: iValue;
   keys: iValue;
   values: iValue;
+  first: iValue;
+  last: iValue;
+  random: iValue;
+  array: iValue;
+  string: iValue;
+  int: iValue;
+  float: iValue;
+  bool: iValue;
   is: iAssertionIs;
   assert(message?: string): iAssertion;
+  item(key: string | number): iValue;
   valueOf(): any;
   toArray(): any[];
   toString(): string;
   toInteger(): number;
   toFloat(): number;
   toBoolean(): boolean;
+  toURL(baseUrl?: string | URL): URL;
   toType(): string;
   isNullOrUndefined(): boolean;
   isUndefined(): boolean;
@@ -189,6 +199,10 @@ export interface iValue {
   isTag(...tagNames: string[]): boolean;
   isVisible(): Promise<boolean>;
   isHidden(): Promise<boolean>;
+  split(splitter: string | RegExp, limit?: number): iValue;
+  join(splitter: string): iValue;
+  map(func: (value: any, i?: number, arr?: any[]) => any): iValue;
+  filter(func: (value: any, i?: number, arr?: any[]) => boolean): iValue;
   as(aliasName: string): iValue;
   // DOM Elements only
   click(): Promise<iValue>;

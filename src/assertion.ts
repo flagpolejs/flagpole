@@ -30,6 +30,7 @@ import {
   arrayExactly,
   deepEqual,
   deepStrictEqual,
+  arrayify,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
@@ -506,13 +507,17 @@ export class Assertion implements iAssertion {
 
   public contains(value: any): iAssertion {
     const { thisValue, thatValue } = this._getValues(value);
+    const thisType = toType(thisValue);
+    const thatValues = arrayify(thatValue);
     const bool: boolean = (() => {
       if (isNullOrUndefined(this._input)) {
         return thisValue === thatValue;
-      } else if (toType(this._input) == "array") {
-        return thisValue.indexOf(thatValue) >= 0;
-      } else if (toType(this._input) == "object") {
-        return typeof this._input[thatValue] !== "undefined";
+      } else if (thisType == "array") {
+        return thatValues.every((val) => thisValue.includes(val));
+      } else if (thisType == "object") {
+        return thatValues
+          .map((val) => String(val))
+          .every((val) => typeof thisValue[val] !== "undefined");
       } else {
         return String(this._input).indexOf(thatValue) >= 0;
       }
