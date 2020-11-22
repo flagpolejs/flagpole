@@ -1,5 +1,10 @@
 import { Value } from "./value";
-import { AssertionSchema, getSchema, writeSchema } from "./assertionschema";
+import {
+  AssertionSchema,
+  generateAjvSchema,
+  getSchema,
+  writeSchema,
+} from "./assertionschema";
 import {
   iAssertionContext,
   iAssertion,
@@ -23,6 +28,8 @@ import {
   asyncMap,
   arrayEquals,
   arrayExactly,
+  deepEqual,
+  deepStrictEqual,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
@@ -356,24 +363,34 @@ export class Assertion implements iAssertion {
 
   public exactly(value: any): iAssertion {
     const { thisValue, thatValue } = this._getValues(value);
+    const thisType = toType(thisValue);
+    const thatType = toType(thatValue);
     this.setDefaultMessages(
       `${this.subject} is not exactly ${thatValue}`,
       `${this.subject} is exactly ${thatValue}`
     );
-    if (Array.isArray(thisValue) && Array.isArray(thatValue)) {
+    if (thisType == "array" && thatType == "array") {
       return this.execute(arrayExactly(thisValue, thatValue), thisValue);
+    }
+    if (thisType == "object" && thatType == "object") {
+      return this.execute(deepStrictEqual(thisValue, thatValue), thisValue);
     }
     return this.execute(thisValue === thatValue, thisValue);
   }
 
   public equals(value: any): iAssertion {
     const { thisValue, thatValue } = this._getValues(value);
+    const thisType = toType(thisValue);
+    const thatType = toType(thatValue);
     this.setDefaultMessages(
       `${this.subject} does not equal ${thatValue}`,
       `${this.subject} equals ${thatValue}`
     );
-    if (Array.isArray(thisValue) && Array.isArray(thatValue)) {
+    if (thisType == "array" && thatType == "array") {
       return this.execute(arrayEquals(thisValue, thatValue), thisValue);
+    }
+    if (thisType == "object" && thatType == "object") {
+      return this.execute(deepEqual(thisValue, thatValue), thisValue);
     }
     return this.execute(thisValue == thatValue, thisValue);
   }
@@ -463,12 +480,28 @@ export class Assertion implements iAssertion {
 
   public matches(value: any): iAssertion {
     const { thisValue, thatValue } = this._getValues(value);
-    const pattern = toType(value) == "regexp" ? thatValue : new RegExp(value);
-    this.setDefaultMessages(
-      `${this.subject} does not match ${String(pattern)}`,
-      `${this.subject} matches ${String(pattern)}`
-    );
-    return this.execute(pattern.test(thisValue), thisValue);
+    const thisType = toType(thisValue);
+    const thatType = toType(thatValue);
+    // Test it as regular expression
+    if (["string", "regexp"].includes(thatType)) {
+      const pattern = thatType == "regexp" ? thatValue : new RegExp(value);
+      this.setDefaultMessages(
+        `${this.subject} does not match ${String(pattern)}`,
+        `${this.subject} matches ${String(pattern)}`
+      );
+      return this.execute(pattern.test(thisValue), String(thisValue));
+    }
+    // Test it as a schema template
+    else {
+      const schema = generateAjvSchema(thatValue);
+      const assertion = new AssertionSchema();
+      const valid = assertion.isValid(schema, thisValue);
+      this.setDefaultMessages(
+        `${this.subject} does not match the schema template`,
+        `${this.subject} matches the schema template`
+      );
+      return this.execute(valid, thisValue);
+    }
   }
 
   public contains(value: any): iAssertion {

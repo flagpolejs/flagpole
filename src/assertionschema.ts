@@ -148,21 +148,25 @@ export function generateAjvSchema(json: any): JsonSchema {
 }
 
 export class AssertionSchema implements iAjvLike {
-  protected _schema: JsonSchema | undefined;
   protected _errors: Error[] = [];
-  protected _root: any = null;
 
   public get errors(): Error[] {
     return this._errors;
   }
 
-  public validate(schema: any, root: any): Promise<boolean> {
+  /**
+   * Test schema
+   */
+  public isValid(schema: any, root: any): boolean {
     this._errors = [];
-    this._schema = schema;
-    this._root = root;
-    return new Promise((resolve) => {
-      resolve(this._isValid(this._schema, this._root, "$"));
-    });
+    return this._isValid(schema, root, "$");
+  }
+
+  /**
+   * Test schema but return as a promise, this mimics the AJV library
+   */
+  public async validate(schema: any, root: any): Promise<boolean> {
+    return this.isValid(schema, root);
   }
 
   protected _logError(message: string) {

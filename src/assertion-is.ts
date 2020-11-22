@@ -157,6 +157,22 @@ export class AssertionIs implements iAssertionIs {
     );
   }
 
+  public sameOrAfterDate(date?: string) {
+    return this._validateWithOpts(
+      (str: string) => str == date || validator.isAfter(str, date),
+      date,
+      date ? `same or after ${date}` : `same or after ${Date.toString}`
+    );
+  }
+
+  public sameOrBeforeDate(date?: string) {
+    return this._validateWithOpts(
+      (str: string) => str == date || validator.isBefore(str, date),
+      date,
+      date ? `same or before ${date}` : `same or before ${Date.toString}`
+    );
+  }
+
   public afterDate(date?: string) {
     return this._validateWithOpts(
       validator.isAfter,

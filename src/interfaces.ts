@@ -391,6 +391,8 @@ export interface iAssertionIs {
   base64(): iAssertion;
   beforeDate(date?: string): iAssertion;
   afterDate(date?: string): iAssertion;
+  sameOrAfterDate(date?: string): iAssertion;
+  sameOrBeforeDate(date?: string): iAssertion;
   dataUri(): iAssertion;
   empty(): iAssertion;
   fqdn(): iAssertion;

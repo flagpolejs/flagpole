@@ -7,6 +7,7 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 import * as cheerio from "cheerio";
+import * as nodeAssert from "assert";
 
 export const arrayify = <T>(value: any): T[] => {
   return toType(value) == "array" ? value : [value];
@@ -128,24 +129,6 @@ export async function asyncEvery(
   );
 }
 
-export function asyncEvery2(
-  array: any[],
-  callback: Function
-): Promise<boolean> {
-  return new Promise((resolve) => {
-    const promises: Promise<any>[] = [];
-    for (let i = 0; i < array.length; i++) {
-      promises.push(callback(array[i], i, array));
-    }
-    Promise.all(promises).then((values: boolean[]) => {
-      const boo = values.every((value) => {
-        return value;
-      });
-      resolve(boo);
-    });
-  });
-}
-
 export async function asyncFilter(array: any[], callback: IteratorCallback) {
   const results = await Promise.all(array.map(callback));
   return array.filter((_v, index) => results[index]);
@@ -186,21 +169,6 @@ export async function asyncNone(
   );
 }
 
-export function asyncNone2(array: any[], callback: Function): Promise<boolean> {
-  return new Promise((resolve) => {
-    const promises: Promise<any>[] = [];
-    for (let i = 0; i < array.length; i++) {
-      promises.push(callback(array[i], i, array));
-    }
-    Promise.all(promises).then((values: boolean[]) => {
-      const boo = !values.some((value) => {
-        return value;
-      });
-      resolve(boo);
-    });
-  });
-}
-
 export async function asyncSome(
   array: any[],
   callback: IteratorCallback
@@ -210,25 +178,16 @@ export async function asyncSome(
   );
 }
 
-export function asyncSome2(array: any[], callback: Function): Promise<boolean> {
-  return new Promise((resolve) => {
-    const promises: Promise<any>[] = [];
-    for (let i = 0; i < array.length; i++) {
-      promises.push(callback(array[i], i, array));
-    }
-    Promise.all(promises).then((values: boolean[]) => {
-      const boo = values.some((value) => {
-        return value;
-      });
-      resolve(boo);
-    });
-  });
-}
-
+/**
+ * Flatten arrays and objects
+ */
 export const flatten = <T>(items: any[] | { [key: string]: any }): T[] => {
   return ([] as T[]).concat(...Object.values(items));
 };
 
+/**
+ * Array items match at every position with a double-equality
+ */
 export const arrayEquals = (a: any, b: any): boolean => {
   return (
     Array.isArray(a) &&
@@ -238,6 +197,9 @@ export const arrayEquals = (a: any, b: any): boolean => {
   );
 };
 
+/**
+ * Array items match at every position with a triple-equality
+ */
 export const arrayExactly = (a: any, b: any): boolean => {
   return (
     Array.isArray(a) &&
@@ -323,3 +285,21 @@ export function getMessageAndCallbackFromOverloading(
     scenario: scenario,
   };
 }
+
+export const deepEqual = (thisValue: any, thatValue: any): boolean => {
+  try {
+    nodeAssert.deepEqual(thisValue, thatValue);
+    return true;
+  } catch (ex) {
+    return false;
+  }
+};
+
+export const deepStrictEqual = (thisValue: any, thatValue: any): boolean => {
+  try {
+    nodeAssert.deepStrictEqual(thisValue, thatValue);
+    return true;
+  } catch (ex) {
+    return false;
+  }
+};
