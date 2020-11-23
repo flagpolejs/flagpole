@@ -147,6 +147,22 @@ export function generateAjvSchema(json: any): JsonSchema {
   return parseItem(json);
 }
 
+export class SchemaValidator {
+  private _schema: JsonSchema;
+
+  constructor(schema: any) {
+    this._schema =
+      typeof schema === "string"
+        ? getSchema(schema)
+        : generateAjvSchema(schema);
+  }
+
+  public isValid(item: any): boolean {
+    const assertion = new AssertionSchema();
+    return assertion.isValid(this._schema, item);
+  }
+}
+
 export class AssertionSchema implements iAjvLike {
   protected _errors: Error[] = [];
 

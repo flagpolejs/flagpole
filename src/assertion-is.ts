@@ -1,6 +1,5 @@
 import { iAssertion, iAssertionIs } from "./interfaces";
 import validator from "validator";
-import { toType } from "./util";
 import {
   canadaProvinceCodes,
   countryCodes2,
@@ -254,7 +253,7 @@ export class AssertionIs implements iAssertionIs {
   }
 
   public date() {
-    // @ts-ignore
+    // @ts-ignore Validator's type definition left this off
     return this._validate(validator.isDate, "a date");
   }
 

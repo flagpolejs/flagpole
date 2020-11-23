@@ -711,7 +711,7 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public none(callback: IteratorCallback): Promise<iAssertion> {
+  public async none(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this.value;
     this.setDefaultMessages(
       `Some were true in ${this.subject}`,
@@ -721,9 +721,7 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    return new Promise(async (resolve) => {
-      resolve(this.execute(await asyncNone(thisValue, callback), thisValue));
-    });
+    return this.execute(await asyncNone(thisValue, callback), thisValue);
   }
 
   public async eval(
@@ -755,16 +753,14 @@ export class Assertion implements iAssertion {
       `Every function evaluates false`,
       `Every function evaluates true`
     );
-    return new Promise(async (resolve) => {
-      const result = await asyncEvery(thisValue, (item) => {
-        const val = this._getCompareValue(item);
-        return this.context.eval.apply(undefined, [js, val, ...args]);
-      });
-      resolve(this.execute(result, thisValue));
+    const result = await asyncEvery(thisValue, (item) => {
+      const val = this._getCompareValue(item);
+      return this.context.eval.apply(undefined, [js, val, ...args]);
     });
+    return this.execute(result, thisValue);
   }
 
-  public every(callback: IteratorCallback): Promise<iAssertion> {
+  public async every(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this.value;
     this.setDefaultMessages(
       `Some or none were true in ${this.subject}`,
@@ -774,9 +770,7 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    return new Promise(async (resolve) => {
-      resolve(this.execute(await asyncEvery(thisValue, callback), thisValue));
-    });
+    return this.execute(await asyncEvery(thisValue, callback), thisValue);
   }
 
   public everySync(callback: IteratorCallback): iAssertion {
@@ -790,9 +784,9 @@ export class Assertion implements iAssertion {
       throw new Error("Input value must be an array.");
     }
     return this.execute(
-      thisValue.every((value: any, index: number, array: any[]) => {
-        return callback(value, index, array);
-      }),
+      thisValue.every((value: any, index: number, array: any[]) =>
+        callback(value, index, array)
+      ),
       thisValue
     );
   }
@@ -801,12 +795,14 @@ export class Assertion implements iAssertion {
     const thisValue = this.value;
     // If no assertion statement was made, skip it by marking it resolved
     this._resolveAssertion();
-    // Generate length Value object
-    const newValue = await asyncMap(thisValue, callback);
     // Create new assertion
     const assertion: Assertion = new Assertion(
       this._context,
-      new Value(newValue, this._context, `Mapped ${this.subject}`),
+      new Value(
+        await asyncMap(thisValue, callback),
+        this._context,
+        `Mapped ${this.subject}`
+      ),
       this._message
     );
     this._not && assertion.not;
@@ -814,7 +810,7 @@ export class Assertion implements iAssertion {
     return assertion;
   }
 
-  public some(callback: IteratorCallback): Promise<iAssertion> {
+  public async some(callback: IteratorCallback): Promise<iAssertion> {
     const thisValue = this.value;
     this.setDefaultMessages(
       `None were true in ${this.subject}`,
@@ -825,9 +821,7 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    return new Promise(async (resolve) => {
-      resolve(this.execute(await asyncSome(thisValue, callback), thisValue));
-    });
+    return this.execute(await asyncSome(thisValue, callback), thisValue);
   }
 
   schema(schemaName: string, simple?: boolean): Promise<iAssertion>;

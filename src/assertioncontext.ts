@@ -44,6 +44,13 @@ import { FlagpoleExecution } from "./flagpoleexecution";
 import { getFindParams, getFindName, wrapAsValue } from "./helpers";
 import * as bluebird from "bluebird";
 import { ValuePromise } from "./value-promise";
+import { iRequestOpts } from "minikin/dist/interfaces";
+import { AssertionSchema, HttpRequest, JsonSchema } from ".";
+import {
+  generateAjvSchema,
+  getSchema,
+  SchemaValidator,
+} from "./assertionschema";
 
 const getParamsFromExists = (
   a: string,
@@ -81,6 +88,10 @@ export class AssertionContext implements iAssertionContext {
    * Get returned value from previous next block
    */
   public result: any;
+
+  public get request(): HttpRequest {
+    return this._scenario.request;
+  }
 
   public get response(): iResponse {
     return this._response;
@@ -575,6 +586,10 @@ export class AssertionContext implements iAssertionContext {
 
   public abort(message?: string): Promise<iScenario> {
     return this.scenario.abort(message);
+  }
+
+  public schema(schema: any): SchemaValidator {
+    return new SchemaValidator(schema);
   }
 
   protected async _findAllForSelectors(

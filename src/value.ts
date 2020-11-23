@@ -6,6 +6,10 @@ import {
   iBounds,
   iNextCallback,
   iAssertionIs,
+  IteratorCallback,
+  IteratorBoolCallback,
+  ReducerCallback,
+  MapperCallback,
 } from "./interfaces";
 import {
   toType,
@@ -14,6 +18,7 @@ import {
   firstIn,
   lastIn,
   randomIn,
+  middleIn,
 } from "./util";
 import {
   AssertionActionCompleted,
@@ -30,6 +35,8 @@ import {
   SerializableOrJSHandle,
 } from "puppeteer-core";
 import { ValuePromise } from "./value-promise";
+import { updateLocale } from "yargs";
+import { jPath } from ".";
 
 export class Value implements iValue {
   protected _input: any;
@@ -113,6 +120,15 @@ export class Value implements iValue {
     );
   }
 
+  public get mid(): iValue {
+    const thisValue: any = this.$;
+    return new Value(
+      middleIn(thisValue),
+      this._context,
+      `Middle in ${this._name}`
+    );
+  }
+
   public get last(): iValue {
     const thisValue: any = this.$;
     return new Value(lastIn(thisValue), this._context, `Last in ${this._name}`);
@@ -145,6 +161,10 @@ export class Value implements iValue {
 
   public get bool(): iValue {
     return new Value(this.toBoolean(), this._context, this.name);
+  }
+
+  public get json(): iValue {
+    return new Value(this.toJSON(), this._context, this.name);
   }
 
   public get path(): string {
@@ -221,6 +241,14 @@ export class Value implements iValue {
 
   public toInteger(): number {
     return parseInt(this.toString());
+  }
+
+  public toJSON(): any {
+    try {
+      return JSON.parse(this.toString());
+    } catch (ex) {
+      return null;
+    }
   }
 
   public toURL(baseUrl?: string | URL): URL {
@@ -767,8 +795,12 @@ export class Value implements iValue {
     return new Value(this.toArray().join(by), this._context, this.name);
   }
 
-  public map(func: (value: any, i?: number, arr?: any[]) => any): iValue {
-    return new Value(this.toArray().map(func), this._context, this.name);
+  public map(callback: MapperCallback): iValue {
+    return new Value(
+      this.isArray() ? this.toArray().map(callback) : callback(this._input),
+      this._context,
+      this.name
+    );
   }
 
   public filter(
@@ -777,12 +809,178 @@ export class Value implements iValue {
     return new Value(this.toArray().filter(func), this._context, this.name);
   }
 
+  public each(callback: IteratorCallback): iValue {
+    this.toArray().forEach(callback);
+    return this;
+  }
+
+  public min(key?: string): iValue {
+    return new Value(
+      this.toArray().reduce((min, row) => {
+        const val = key ? row[key] : row;
+        return min === null || val < min ? val : min;
+      }, null),
+      this._context,
+      this.name
+    );
+  }
+
+  public max(key?: string): iValue {
+    return new Value(
+      this.toArray().reduce((max, row) => {
+        const val = key ? row[key] : row;
+        return max === null || val > max ? val : max;
+      }, null),
+      this._context,
+      this.name
+    );
+  }
+
+  public sum(key?: string): iValue {
+    return new Value(
+      this.toArray().reduce(
+        (sum, row) => (sum += Number(key ? row[key] : row)),
+        0
+      ),
+      this._context,
+      this.name
+    );
+  }
+
+  public count(key?: string): iValue {
+    return new Value(
+      this.toArray().reduce((count, row) => {
+        if (key) {
+          return count + !!row[key] ? 1 : 0;
+        }
+        return count + 1;
+      }, 0),
+      this._context,
+      this.name
+    );
+  }
+
+  public unique(): iValue {
+    return new Value([...new Set(this.toArray())], this._context, this.name);
+  }
+
+  public groupBy(key: string): iValue {
+    return new Value(
+      this.toArray().reduce((grouper, row) => {
+        const val = row[key];
+        if (!grouper[val]) {
+          grouper[val] = [];
+        }
+        grouper[val].push(row);
+        return grouper;
+      }, {}),
+      this._context,
+      this.name
+    );
+  }
+
+  public asc(key?: string): iValue {
+    const collator = new Intl.Collator("en", {
+      numeric: true,
+      sensitivity: "base",
+    });
+    const arr = this.toArray().sort((a, b) =>
+      key ? collator.compare(a[key], b[key]) : collator.compare(a, b)
+    );
+    return new Value(arr, this._context, this.name);
+  }
+
+  public desc(key?: string): iValue {
+    const collator = new Intl.Collator("en", {
+      numeric: true,
+      sensitivity: "base",
+    });
+    const arr = this.toArray().sort(
+      (a, b) =>
+        (key ? collator.compare(a[key], b[key]) : collator.compare(a, b)) * -1
+    );
+    return new Value(arr, this._context, this.name);
+  }
+
+  public median(key?: string): iValue {
+    const arr = this.toArray().sort((a, b) =>
+      key ? parseFloat(a[key]) - parseFloat(b[key]) : a - b
+    );
+    const med = arr[Math.floor(arr.length / 2)];
+    return new Value(key ? med[key] : med, this._context, this.name);
+  }
+
+  public avg(key?: string): iValue {
+    const arr = this.toArray();
+    return new Value(
+      arr.reduce((sum, row) => (sum += Number(key ? row[key] : row)), 0) /
+        arr.length,
+      this._context,
+      this.name
+    );
+  }
+
+  public reduce(callback: ReducerCallback, initial?: any): iValue {
+    return new Value(
+      this.toArray().reduce(callback, initial),
+      this._context,
+      this.name
+    );
+  }
+
+  public every(callback: IteratorBoolCallback): iValue {
+    return new Value(this.toArray().every(callback), this._context, this.name);
+  }
+
+  public some(callback: IteratorBoolCallback): iValue {
+    return new Value(this.toArray().some(callback), this._context, this.name);
+  }
+
+  public none(callback: IteratorBoolCallback): iValue {
+    return new Value(!this.toArray().some(callback), this._context, this.name);
+  }
+
   public item(key: string | number): iValue {
     const name = `${key} in ${this.name}`;
+    if (typeof key === "string") {
+      return new Value(jPath.search(this._input, key), this._context, name);
+    }
     if (this._input.hasOwnProperty(key)) {
       return new Value(this._input[key], this._context, name);
     }
     return new Value(null, this._context, name);
+  }
+
+  public echo(callback?: (str: string) => void): iValue {
+    this._context.comment(
+      callback ? callback(this.toString()) : this.toString()
+    );
+    return this;
+  }
+
+  public col(key: string | string[]): iValue {
+    // Array of strings
+    if (Array.isArray(key)) {
+      const name = `${key.join(", ")} in ${this.name}`;
+      return new Value(
+        this.toArray().map((row) => {
+          let out: any[] = [];
+          key.forEach((k) => {
+            out.push(row[k]);
+          });
+          return out;
+        }),
+        this._context,
+        name
+      );
+    }
+    // String
+    const name = `${key} in ${this.name}`;
+    return new Value(
+      this.toArray().map((row) => row[key]),
+      this._context,
+      name
+    );
   }
 
   protected async _completedAction(verb: string, noun?: string) {

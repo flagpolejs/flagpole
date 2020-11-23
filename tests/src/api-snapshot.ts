@@ -1,8 +1,25 @@
+import { assert } from "console";
+import validator from "validator";
 import flagpole, { FlagpoleExecution } from "../../dist/index";
 
 const suite = flagpole("Test creating an api snapshot").base(
   "https://www.milesplit.com"
 );
+
+const exampleItemData = {
+  id: "388250",
+  name: "Ron Helmer Invitational",
+  dateStart: "2020-09-23",
+  dateEnd: "2020-09-23",
+  season: "CC",
+  seasonYear: "2020",
+  venueCity: "Bristol",
+  venueState: "VA",
+  venueCountry: "USA",
+};
+const exampleListData = {
+  data: [exampleItemData],
+};
 
 suite
   .scenario("Meet List API", "json")
@@ -11,34 +28,28 @@ suite
     context.assert(context.response.statusCode).equals(200);
     await context.assert(context.response.jsonBody).schema("@meetsList", true);
     context.comment(context.response.jsonBody.$.data[0]);
-    context.assert(context.response.jsonBody.$.data).matches([
-      {
-        id: "388250",
-        name: "Ron Helmer Invitational",
-        dateStart: "2020-09-23",
-        dateEnd: "2020-09-23",
-        season: "CC",
-        seasonYear: "2020",
-        venueCity: "Bristol",
-        venueState: "VA",
-        venueCountry: "USA",
-      },
-    ]);
-    context
-      .assert({
-        foo: {
-          bar: {
-            isTrue: true,
-          },
-        },
-      })
-      .equals({
-        foo: {
-          bar: {
-            isTrue: true,
-          },
-        },
-      });
+    context.assert(context.response.jsonBody).matches(exampleListData);
+    await context.response.body.json
+      .item("data")
+      .assert("All rows are valid")
+      .every((row) => context.schema(exampleItemData).isValid(row));
+    context.response.body.json
+      .item("data")
+      .count("registrationActive")
+      .echo((str) => `${str} meets with registration`)
+      .assert("At least one meet has registration")
+      .greaterThan(0);
+    context.response.body.json
+      .item("data")
+      .col("venueState")
+      .unique()
+      .desc()
+      .echo();
+    context.response.body.json.item("data").groupBy("venueState").keys.echo();
+    context.response.body.json
+      .item("data[0].name")
+      .map((name: string) => name.toUpperCase())
+      .echo();
   });
 
 suite
@@ -54,5 +65,8 @@ suite
     data.item("dateStart").is.date();
     await data.exists("name");
     context.comment(data.$);
-    console.log(await data.find("name"));
+    data
+      .item("name")
+      .map((name: string) => name.toUpperCase())
+      .echo();
   });

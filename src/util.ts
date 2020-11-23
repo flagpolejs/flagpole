@@ -318,6 +318,24 @@ export const firstIn = (obj: any) => {
   }
 };
 
+export const middleIn = (obj: any) => {
+  const type = toType(obj);
+  try {
+    if (type == "array") {
+      const i = Math.floor(obj.length / 2);
+      return obj[i];
+    } else if (type == "object") {
+      const keys = Object.keys(obj);
+      const i = Math.floor(keys.length / 2);
+      return obj[keys[i]];
+    }
+    const i = Math.floor(String(obj).length / 2);
+    return String(obj).substr(i, 1);
+  } catch (ex) {
+    return null;
+  }
+};
+
 export const lastIn = (obj: any) => {
   const type = toType(obj);
   try {

@@ -29,6 +29,7 @@ import { ServerOptions } from "https";
 import { Server } from "minikin";
 import validator from "validator";
 import { ValuePromise } from "./value-promise";
+import { SchemaValidator } from "./assertionschema";
 //import * as Ajv from "ajv";
 
 interface AjvSchema {
@@ -101,7 +102,19 @@ export type ScenarioCallbackAndMessage = {
   callback: ScenarioCallback;
 };
 
+export type MapperCallback = (value: any, index?: number, arr?: any[]) => any;
 export type IteratorCallback = (value: any, index: number, arr: any[]) => any;
+export type IteratorBoolCallback = (
+  value: any,
+  i?: number,
+  arr?: any[]
+) => boolean;
+export type ReducerCallback = (
+  prev: any,
+  cur: any,
+  i: number,
+  arr: any[]
+) => any;
 
 export interface iConsoleLine {
   timestamp: Date;
@@ -163,6 +176,7 @@ export interface iValue {
   keys: iValue;
   values: iValue;
   first: iValue;
+  mid: iValue;
   last: iValue;
   random: iValue;
   array: iValue;
@@ -170,6 +184,7 @@ export interface iValue {
   int: iValue;
   float: iValue;
   bool: iValue;
+  json: iValue;
   is: iAssertionIs;
   assert(message?: string): iAssertion;
   item(key: string | number): iValue;
@@ -180,6 +195,7 @@ export interface iValue {
   toFloat(): number;
   toBoolean(): boolean;
   toURL(baseUrl?: string | URL): URL;
+  toJSON(): any;
   toType(): string;
   isNullOrUndefined(): boolean;
   isUndefined(): boolean;
@@ -201,9 +217,28 @@ export interface iValue {
   isHidden(): Promise<boolean>;
   split(splitter: string | RegExp, limit?: number): iValue;
   join(splitter: string): iValue;
-  map(func: (value: any, i?: number, arr?: any[]) => any): iValue;
-  filter(func: (value: any, i?: number, arr?: any[]) => boolean): iValue;
+  map(mapper: MapperCallback): iValue;
+  filter(callback: (value: any, i?: number, arr?: any[]) => boolean): iValue;
+  each(callback: IteratorCallback): iValue;
+  every(callback: IteratorBoolCallback): iValue;
+  some(callback: IteratorBoolCallback): iValue;
+  none(callback: IteratorBoolCallback): iValue;
+  reduce(callback: ReducerCallback, initial?: any): iValue;
+  sum(key?: string): iValue;
+  median(key?: string): iValue;
+  count(key?: string): iValue;
+  avg(key?: string): iValue;
+  min(key?: string): iValue;
+  max(key?: string): iValue;
+  asc(key?: string): iValue;
+  desc(key?: string): iValue;
+  col(keys: string[]): iValue;
+  col(key: string): iValue;
+  groupBy(key: string): iValue;
+  unique(): iValue;
   as(aliasName: string): iValue;
+  echo(callback: (str: string) => void): iValue;
+  echo(): iValue;
   // DOM Elements only
   click(): Promise<iValue>;
   submit(): Promise<iValue>;
@@ -479,7 +514,7 @@ export interface iAssertion {
   rejects(continueOnReject?: boolean): Promise<any>;
   map(callback: IteratorCallback): Promise<iAssertion>;
   every(callback: IteratorCallback): Promise<iAssertion>;
-  everySync(callback: IteratorCallback): iAssertion;
+  everySync(callback: IteratorBoolCallback): iAssertion;
   some(callback: IteratorCallback): Promise<iAssertion>;
   none(callback: IteratorCallback): Promise<iAssertion>;
   assert(a: any, b?: any): iAssertion;
@@ -515,6 +550,7 @@ export interface iAssertion {
 
 export interface iAssertionContext {
   result: any;
+  request: HttpRequest;
   response: iResponse;
   scenario: iScenario;
   suite: iSuite;
@@ -635,13 +671,16 @@ export interface iAssertionContext {
   logOptionalFailure(message: string, errorDetails?: any): iAssertionResult;
   logPassing(message: string): iAssertionResult;
   scrollTo(point: OptionalXY): Promise<iAssertionContext>;
-  some(array: any[], callback: IteratorCallback): Promise<boolean>;
-  none(array: any[], callback: IteratorCallback): Promise<boolean>;
-  every(array: any[], callback: IteratorCallback): Promise<boolean>;
+  some(array: any[], callback: IteratorBoolCallback): Promise<boolean>;
+  none(array: any[], callback: IteratorBoolCallback): Promise<boolean>;
+  every(array: any[], callback: IteratorBoolCallback): Promise<boolean>;
   each(array: any[], callback: IteratorCallback): Promise<void>;
-  filter(array: any[], callback: IteratorCallback): Promise<any[]>;
+  filter(array: any[], callback: IteratorBoolCallback): Promise<any[]>;
   map(array: any[], callback: IteratorCallback): Promise<any[]>;
   abort(message?: string): Promise<iScenario>;
+  schema(schemaName: string): SchemaValidator;
+  schema(schemaPath: string): SchemaValidator;
+  schema(schema: object | any[]): SchemaValidator;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
