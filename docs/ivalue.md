@@ -23,6 +23,50 @@ This is a quick way to get the underlying input value within this wrapper object
 const firstDataItem = context.response.jsonBody.$.data[0];
 ```
 
+### array: iValue (readonly)
+
+Returns a new iValue, identical to this one but whose input value is an array.
+
+### bool: iValue (readonly)
+
+Returns a new iValue, identical to this one but whose input value is an boolean. It will take the current iValue's input and evaluate if it is truthy.
+
+### first: iValue (readonly)
+
+Gets the first item from this array or object and returns it as a new iValue.
+
+### float: iValue (readonly)
+
+Returns a new iValue, identical to this one but whose input value is a float.
+
+### keys: iValue (readonly)
+
+Maps the value to an array of its keys if an object or an array.
+
+### int: iValue (readonly)
+
+Returns a new iValue, identical to this one but whose input value is an integer.
+
+### is: iAssertionIs (readonly)
+
+Returns an "Is-Assertion" that can be a great way to make powerful and readable assertions. Many is-assertions use the validator library internally.
+
+```javascript
+data.item("dateStart").is.date().and.is.sameOrBeforeDate(data.item("dateEnd"));
+```
+
+### json: iValue (readonly)
+
+Returns a new iValue, identical to this one but whose input value is an object by parsing the string contents of this current element with `JSON.parse()`.
+
+```javascript
+context.response.body.json.echo();
+```
+
+### last: iValue (readonly)
+
+Gets the last item from this array or object and returns it as a new iValue.
+
 ### length: iValue (readonly)
 
 Get a new Value object, containing the length of the input value. This could be the number of characters in a string-like value or the number of elements if it's an array.
@@ -42,6 +86,14 @@ const text = await title.getInnerText();
 context.assert(text.length).greaterThan(0);
 ```
 
+### lowercase: iValue (readonly)
+
+Makes the value an lowercase string.
+
+### mid: iValue (readonly)
+
+Gets the middle item from this array or object and returns it as a new iValue.
+
 ### name: string (readonly)
 
 Get a friendly name for this Value, which may be something like the selector if it's an element or something similar that is hopefully human readable. This is mainly used when you do not provide specific assertion messages so that Flagpole can create meaningful default messages.
@@ -53,11 +105,67 @@ const title = await context.find("title");
 context.comment('Flagpole calls title: ${title.name}`);
 ```
 
+### random: iValue (readonly)
+
+Gets a random item from this array or object and returns it as a new iValue.
+
+### string: iValue (readonly)
+
+Returns a new iValue, identical to this one but whose input value is a string.
+
+### uppercase: iValue (readonly)
+
+Makes the value an uppercase string.
+
+### values: iValue (readonly)
+
+Maps the iValue to an array of its values if an object.
+
 ## Methods
 
 ### as(aliasName: string): Value
 
 Save this value to an alias within the Scenario, so that it can be accessed later.
+
+### asc(key?: string): Value
+
+Sorts the input array or object values in ascending order. This can apply for numeric or string input.
+
+With no argument, it will sort the items themselves.
+
+```javascript
+const sortedPrices = prices.asc();
+```
+
+With an argument for key, it will sort as an array of objects by that field.
+
+```javascript
+const sortedUsStates = usStates.asc("name");
+```
+
+### assert(message?: string): Assertion
+
+Make an assertion against this iValue with an optional assertion message.
+
+```javascript
+context.response.statusCode.assert("HTTP Status is 200").equals(200);
+```
+
+### avg(key?: string): iValue;
+
+Loop through the array or object items and take the average value.
+
+With no argument passed in, it is attempting to average the items in the array.
+
+```javascript
+const averagePrice = prices.avg();
+```
+
+If the input is an array of objects, the argument then should be the key of the field you want to sum up.
+
+```javascript
+const averagePrice = rows.sum("price");
+```
 
 ### clear(): Promise<void>
 
@@ -124,6 +232,52 @@ await loginLink.click();
 await context.waitForNavigation();
 ```
 
+### col(key: string | string[]): iValue;
+
+Loops through the input array of objects and returns an iValue containing the array of just that column.
+
+```javascript
+const prices = lineItems.col("price");
+```
+
+If you pass in an array of strings, the resulting array will be an array of arrays with those columns.
+
+```javascript
+const quantitiesAndPrices = lineItems.col(["quantity", "price"]);
+```
+
+### count(key?: string): iValue;
+
+Loop through the array or object items and count the number of items.
+
+With no argument passed in, it just counts the number of items. It's not really different than using the `length` property.
+
+```javascript
+const itemCount = lineItems.count();
+```
+
+If the input is an array of objects, it is counting the number of items where that property is truthy.
+
+```javascript
+const inStockItemCount = inventory.count("inStock");
+```
+
+### desc(key?: string): Value
+
+Sorts the input array or object values in descending order. This can apply for numeric or string input.
+
+With no argument, it will sort the items themselves.
+
+```javascript
+const pricesHighToLow = prices.desc();
+```
+
+With an argument for key, it will sort as an array of objects by that field.
+
+```javascript
+const reverseAlphaUsStates = usStates.desc("name");
+```
+
 ### download(): Promise<string | Buffer | null>
 
 This will download the URL that is referenced by this element. It will automatically pull the `src` attribute from an `img` tag, for example. Or extract the `href` from a link.
@@ -172,6 +326,40 @@ const download2 = await cssLink.download("./localFile.css", {
   encoding: "utf8",
   headers: { foo: "bar" },
 });
+```
+
+### each(callback: (val) => void): iValue;
+
+Loop through the array or object items.
+
+```javascript
+rows.each((row, i) => {
+  context.assert(`Row #${i} is active`, row.isActive).equals(true);
+});
+```
+
+### echo(): iValue
+
+This will convert the input to a string and write it out as a scenario comment. It is a shorthand for using the `context.comment` method to do the same thing.
+
+With no arguments, it is just echos out the string value:
+
+```javascript
+lineItems.length.echo();
+```
+
+It can also take a function as an argument so that you can formulate it into a human-readable string.
+
+```javascript
+lineItems.length.echo((n) => `There are ${n} line items`);
+```
+
+### every(callback: (val) => boolean): iValue;
+
+Loop through the array or object items and make sure all return true.
+
+```javascript
+const allAreActive = rows.every((row) => row.isActive);
 ```
 
 ### exists(): Promise<iValue>
@@ -230,6 +418,14 @@ await form.fillForm("ng-relect-name", {
   userName: "foo",
   password: "bar",
 });
+```
+
+### filter(callback: (val) => boolean): iValue;
+
+Loop through the array or object items and filter the input;
+
+```javascript
+const activeRows = rows.filter((row) => row.isActive);
 ```
 
 ### find(selector: string): Promise<iValue>
@@ -380,6 +576,14 @@ Get the value of this element. This is normally used with form elements.
 const searchTerm = await input.getValue();
 ```
 
+### groupBy(key: string): Value
+
+Loops through the input array of objects and returns a new iValue with an object with a property for each distinct value in that field, each with a value that is an array of the items that had that value.
+
+```javascript
+const eventsByCountry = events.groupBy("venueCountry");
+```
+
 ### hasAttribute(key: string): Promise<Value>
 
 Does this element have an attribute by this name?
@@ -464,6 +668,18 @@ Self explanatory.
 
 Self explanatory.
 
+### item(selector: string): iValue
+
+This is very similar to find on a JSON scenario, except that it is sychrononous. This allows you to chain it.
+
+```javascript
+jsonData.item("meta.count").assert().greaterThan(0);
+```
+
+### join(joiner: string): iValue;
+
+Convert the input to a array and join it into a string, return the resulting iValue;
+
 ### load(): Promise<Scenario>
 
 Load works basically the same way as `.click()`, so you should see the documentation on that.
@@ -475,9 +691,89 @@ const image = await context.find("img.logo");
 image.load("Make sure logo is a valid image");
 ```
 
+### map(mapper: Function): iValue;
+
+If input is an array, map over each element in the array to transform it. Otherwise, use mapper to transform the input itself. This method returns a new iValue with the transformed input.
+
+With an array:
+
+```javascript
+const names = rows.map((row) => row.name);
+```
+
+With a string input:
+
+```javascript
+const lcName = name.map((str) => str.toLowerCase());
+```
+
+### max(key?: string): iValue;
+
+Loop through the array or object items and find the maximum value.
+
+With no argument passed in, it finds the maximum item.
+
+```javascript
+const maxPrice = prices.max();
+```
+
+If the input is an array of objects, it will look for the max value in that field.
+
+```javascript
+const maxPrice = lineItems.max("price");
+```
+
+### median(key?: string): iValue;
+
+Loop through the array or object items and take the median value.
+
+With no argument passed in, it is attempting to grab the median of the items in the array.
+
+```javascript
+const medianPrice = prices.median();
+```
+
+If the input is an array of objects, the argument then should be the key of the field you want to get the median from.
+
+```javascript
+const medianPrice = rows.median("price");
+```
+
+### min(key?: string): iValue;
+
+Loop through the array or object items and find the minimum value.
+
+With no argument passed in, it finds the minimum item.
+
+```javascript
+const minPrice = prices.min();
+```
+
+If the input is an array of objects, it will look for the min value in that field.
+
+```javascript
+const minPrice = lineItems.min("price");
+```
+
+### none(callback: (val) => boolean): iValue;
+
+Loop through the array or object items and make sure none return true.
+
+```javascript
+const noneAreActive = rows.none((row) => row.isActive);
+```
+
 ### press(key: string, opts?: any): Promise<void>;
 
 Press these keys on the keyboard.
+
+### reduce(callback: (val) => any, initial: any): iValue;
+
+Loop through the array or object items with reduce. Returns the final result.
+
+```javascript
+const totalPrice = rows.every((t, row) => t + row.quantity * row.unitPrice, 0);
+```
 
 ### screenshot(): Promise<Buffer>
 
@@ -491,6 +787,18 @@ For browser-based scenarios, scroll this element into view.
 const emailField = await context.exists("input[name='email']");
 await emailField.scrollTo();
 ```
+
+### some(callback: (val) => boolean): iValue;
+
+Loop through the array or object items and see if any return true.
+
+```javascript
+const anyAreActive = rows.some((row) => row.isActive);
+```
+
+### split(splitter: string | RegExp): iValue;
+
+Convert the input to a string and split it into an array, return the resulting iValue;
 
 ### submit(): Promise<Scenario>
 
@@ -506,6 +814,22 @@ await form.fillForm({
 });
 await form.submit();
 await context.waitForNavigation();
+```
+
+### sum(key?: string): iValue;
+
+Loop through the array or object items and sum up the total value.
+
+With no argument passed in, it is attempting to sum each item in the array.
+
+```javascript
+const totalCount = quantities.sum();
+```
+
+If the input is an array of objects, the argument then should be the key of the field you want to sum up.
+
+```javascript
+const totalCount = rows.sum("quantity");
 ```
 
 ### tap(): Promise<void>;
@@ -548,4 +872,12 @@ The opts is only relevant to browser types, like Puppeteer, it will pass the val
 ```javascript
 const textBox = await context.find('input[name="title"]');
 await textBox.type("College Football is Back", { delay: 100 });
+```
+
+### unique(): Value
+
+Takes the input array of items or object values, removes duplicates, and returns a new iValue with an array of that result of distinct values.
+
+```javascript
+const countries = rows.col("venueCountry").unique();
 ```

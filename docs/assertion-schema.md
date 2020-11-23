@@ -6,14 +6,14 @@ In its simplest form you can just define an object with properties of the JSON p
 
 ```javascript
 const schema = {
-    properties: {
-        id: "number",
-        firstName: "string",
-        lastName: "string",
-        isActive: "boolean",
-        teams: "array"
-    }
-}
+  properties: {
+    id: "number",
+    firstName: "string",
+    lastName: "string",
+    isActive: "boolean",
+    teams: "array",
+  },
+};
 ```
 
 This would match a JSON body like this:
@@ -34,32 +34,33 @@ Whenever we define a value in our schema as a string, we are defining its type. 
 
 ```javascript
 const schema = {
-    properties: {
-        id: { type: "number" },
-        firstName: { type: "string" },
-        lastName: { type: "string" },
-        isActive: { type: "boolean" },
-        teams: { type: "array" }
-    }
-}
+  properties: {
+    id: { type: "number" },
+    firstName: { type: "string" },
+    lastName: { type: "string" },
+    isActive: { type: "boolean" },
+    teams: { type: "array" },
+  },
+};
 ```
+
 But there really is no point in doing that if we simply want to verify the type.
 
 The above works well for a flat structure, but when we start to get nested with arrays or objects then what? Well the next step is we want to make sure every team listed inside the `teams` array of our JSON body above is a string. Here's how we can do that.
 
 ```javascript
 const schema = {
-    properties: {
-        id: "number",
-        firstName: "string",
-        lastName: "string",
-        isActive: "boolean",
-        teams: {
-            type: "array",
-            items: "string"
-        }
-    }
-}
+  properties: {
+    id: "number",
+    firstName: "string",
+    lastName: "string",
+    isActive: "boolean",
+    teams: {
+      type: "array",
+      items: "string",
+    },
+  },
+};
 ```
 
 For our teams property, we used that object notation check that it was an array with the `type` property. But we also see the `items` property. Setting this to a string value will verify that each item in the array is a string. Obviously you could put "number" or "boolean" or whatever other type there in that `items` property to test that every element in the array is that type.
@@ -86,24 +87,24 @@ We would define this schema like this:
 
 ```javascript
 const schema = {
-    properties: {
-        id: "number",
-        firstName: "string",
-        lastName: "string",
-        isActive: "boolean",
-        teams: {
-            type: "array",
-            items: {
-                type: "object",
-                properties: {
-                    name: "string",
-                    firstSeason: "number",
-                    lastSeason: "number"
-                }
-            }
-        }
-    }
-}
+  properties: {
+    id: "number",
+    firstName: "string",
+    lastName: "string",
+    isActive: "boolean",
+    teams: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: "string",
+          firstSeason: "number",
+          lastSeason: "number",
+        },
+      },
+    },
+  },
+};
 ```
 
 So, rather than setting `items` to a string, this time we set it to another object. This effectively is a nested sub-schema. We could keep going with this as deep as we needed to go.
@@ -114,51 +115,51 @@ This is where the `optional` property comes in.
 
 ```javascript
 const schema = {
-    properties: {
-        id: "number",
-        firstName: "string",
-        lastName: "string",
-        isActive: "boolean",
-        teams: {
-            type: "array",
-            items: {
-                type: "object",
-                properties: {
-                    name: "string",
-                    firstSeason: "number",
-                    lastSeason: {
-                        type: "number",
-                        optional: true
-                    }
-                }
-            }
-        }
-    }
-}
+  properties: {
+    id: "number",
+    firstName: "string",
+    lastName: "string",
+    isActive: "boolean",
+    teams: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: "string",
+          firstSeason: "number",
+          lastSeason: {
+            type: "number",
+            optional: true,
+          },
+        },
+      },
+    },
+  },
+};
 ```
 
 Well that was easy! Okay, that works when the field is absent for active players. What if lastSeason is always there, but instead it is `null` when they are still active? No problemo!
 
 ```javascript
 const schema = {
-    properties: {
-        id: "number",
-        firstName: "string",
-        lastName: "string",
-        isActive: "boolean",
-        teams: {
-            type: "array",
-            items: {
-                type: "object",
-                properties: {
-                    name: "string",
-                    firstSeason: "number",
-                    lastSeason: [ "number", "null" ]
-                }
-            }
-        }
-    }
-}
+  properties: {
+    id: "number",
+    firstName: "string",
+    lastName: "string",
+    isActive: "boolean",
+    teams: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: "string",
+          firstSeason: "number",
+          lastSeason: ["number", "null"],
+        },
+      },
+    },
+  },
+};
 ```
 
 If we set any of our properties to an array of strings, instead of a string, the schema will verify that it is one of those types.
@@ -178,19 +179,19 @@ We could validate that all of the values in the `positionsPlayed` array are a va
 
 ```javascript
 const schema = {
-    properties: {
-        id: "number",
-        firstName: "string",
-        lastName: "string",
-        positionsPlayed: {
-            type: "array",
-            properties: {
-                type: "string",
-                enum: [ "1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh" ]
-            }
-        }
-    }
-}
+  properties: {
+    id: "number",
+    firstName: "string",
+    lastName: "string",
+    positionsPlayed: {
+      type: "array",
+      properties: {
+        type: "string",
+        enum: ["1b", "2b", "ss", "3b", "of", "sp", "rp", "c", "dh"],
+      },
+    },
+  },
+};
 ```
 
 And that works fine, but baseball players also have numbers on their jersey. But no baseball player is going to have a number over 99, so we want to make sure that it seems valid. Here's our new JSON body:
@@ -208,41 +209,41 @@ So let's use a regular expression to verify the `jerseyNumber`.
 
 ```javascript
 const schema = {
-    properties: {
-        id: "number",
-        firstName: "string",
-        lastName: "string",
-        jerseyNumber: {
-            type: "number",
-            pattern: /^[0-9]{1,2}$/
-        }
-    }
-}
+  properties: {
+    id: "number",
+    firstName: "string",
+    lastName: "string",
+    jerseyNumber: {
+      type: "number",
+      pattern: /^[0-9]{1,2}$/,
+    },
+  },
+};
 ```
 
 We could have also done this with another property which is `test`. This property is a function that allows you to run whatever kind of logic you want. So let's change our last one to use a test callback instead.
 
 ```javascript
 const schema = {
-    properties: {
-        id: "number",
-        firstName: "string",
-        lastName: "string",
-        jerseyNumber: {
-            type: "number",
-            test: function(value) {
-                return (value >= 0 && value < 100);
-            }
-        }
-    }
-}
+  properties: {
+    id: "number",
+    firstName: "string",
+    lastName: "string",
+    jerseyNumber: {
+      type: "number",
+      test: function (value) {
+        return value >= 0 && value < 100;
+      },
+    },
+  },
+};
 ```
 
 Obviously using the `test` function you could get more complicated with your logic. Besides the first `value` argument called above, the `test` method also receives a second `opts` argument. This contains the following properties:
 
-* path = The path of the current item
-* parent = The last parent item, which would be the array or object this propert is a part of
-* root = The root document that we are evaluating
+- path = The path of the current item
+- parent = The last parent item, which would be the array or object this propert is a part of
+- root = The root document that we are evaluating
 
 This allows us to potentially look back at previous values to make sure the current one makes sense relative to the others. For example, it would not make sense for `firstSeason` to be after `lastSeason`. So let's test that.
 
@@ -288,16 +289,16 @@ The constructor accepts the schema and JSON document to be evaluated.
 
 ```typescript
 const personSchema: iAssertionSchema = {
-    properties: {
-        id: "number",
-        firstName: "string",
-        lastName: "string"
-    }
+  properties: {
+    id: "number",
+    firstName: "string",
+    lastName: "string",
+  },
 };
 const jsonBody = {
-    id: 234,
-    firstName: 'Karl',
-    lastName: 'Snyder'
+  id: 234,
+  firstName: "Karl",
+  lastName: "Snyder",
 };
 
 const assertionSchema: AssertionSchema = new AssertionSchema();
@@ -312,6 +313,10 @@ Gives you the last error encountered during the validation process. This will be
 
 ## Methods
 
+### isValid(schema: any, root: any): boolean
+
+This will sychronously return either true or false.
+
 ### validate(schema: any, root: any): Promise<boolean>
 
-This will always resolve either true or false.
+This will resolve either true or false. This returns a promise in order to match the `validate` method in the `Ajv` library.

@@ -2,17 +2,17 @@
 
 This is the rough order that they will fire in:
 
-* Suite.beforeAll
-* Suite.beforeEach
-* Scenario.before
-* Scenario.next
-* Suite.afterEach
-* Scenario.after
-* Scenario.success | Scenario.failure | Scenario.error
-* Suite.afterAll
-* Scenario.finally
-* Suite.success | Suite.failure | Suite.error
-* Suite.finally
+- Suite.beforeAll
+- Suite.beforeEach
+- Scenario.before
+- Scenario.next
+- Suite.afterEach
+- Scenario.after
+- Scenario.success | Scenario.failure | Scenario.error
+- Suite.afterAll
+- Scenario.finally
+- Suite.success | Suite.failure | Suite.error
+- Suite.finally
 
 ## Scenario.after()
 
@@ -44,32 +44,40 @@ This will run after the last Scenario.after, so at this point all Scenarios are 
 
 ## Suite.afterEach()
 
-This will run as soon as each scenario is marked completed.
+This will run as soon as each scenario is marked completed. The scenario is passed in as the callback argument.
 
 ## Suite.beforeAll()
 
 This will always run before anything else executes. Therefore, it's a great place to do some setup. If you return a promise then the execution of the next steps will wait until that promise is resolved. You can chain multiple beforeAlls if you like.
 
 ```javascript
-const suite = Flagpole.suite('Test order of callbacks')
-    .beforeAll(() => {
-        return new Promise((resolve) => {
-            // Wait one second before executing the first scenario
-            setTimeout(resolve, 1000);
-        });
-    })
-    // Chain another one
-    .beforeAll(() => {
-        return new Promise((resolve) => {
-            // Actually wait another second
-            setTimeout(resolve, 1000);
-        });
-    })
-  ```
+flagpole('Test order of callbacks', (suite) => {}
+    suite
+        .beforeAll(() => {
+            return new Promise((resolve) => {
+                // Wait one second before executing the first scenario
+                setTimeout(resolve, 1000);
+            });
+        })
+        // Chain another one
+        .beforeAll(() => {
+            return new Promise((resolve) => {
+                // Actually wait another second
+                setTimeout(resolve, 1000);
+            });
+        })
+});
+```
 
 ## Suite.beforeEach()
 
-This will run after each scenario has been marked as started, but before the request actually gets called.
+This will run after each scenario has been marked as started, but before the request actually gets called. The scenario is passed in as the callback argument.
+
+```javascript
+flagpole("Test order of callbacks", (suite) => {
+  suite.beforeEach((scenario) => scenario.setBearerToken(token));
+});
+```
 
 ## Suite.error()
 

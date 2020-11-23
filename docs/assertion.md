@@ -98,6 +98,8 @@ This can be used with any type of value. It uses a rough (double equals) equalit
 context.assert(myValue).equals(5);
 ```
 
+If the values are objects it will test for a deep-equals with standard quality checks. If the values are arrays, it will check each array item.
+
 ### every(callback: Function): Promise<Assertion>
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that every one is true.
@@ -132,6 +134,8 @@ This asserts an exact match with precise (triple equals) equality.
 ```javascript
 context.assert(myValue).exactly(5);
 ```
+
+If the values are objects it will test for a deep-equals with strict quality checks. If the values are arrays, it will check each array item.
 
 ### exists(): Assertion
 
@@ -235,13 +239,36 @@ If you prefer, you can pass in the buffer of the image file that you've read fro
 context.assert(screenshot).looksLike(imageBuffer, 0.05);
 ```
 
-### matches(pattern: RegExp | string): Assertion
+### matches(): Assertion
+
+#### matches(pattern: RegExp | string): Assertion
 
 Regular express compare of strings.
 
 ```javascript
 context.assert(myValue).matches(/^[a-z0-9]{3,32}$/i);
 ```
+
+#### matches(pattern: object | any[]): Assertion
+
+If you pass in an object or an array, it will be evaluated as an example pattern for the JSON object. To do this, it will dynamically generate a schema for the pattern you passed in. The value will be checked against that schema.
+
+```javascript
+context.assert(jsonData).matches({
+  meta: {
+    count: 1,
+  },
+  data: [
+    {
+      id: 123,
+      name: "Foobar",
+      active: true,
+    },
+  ],
+});
+```
+
+The above example schema evaluates for matching types, not values.
 
 ### none(callback: Function): Promise<Assertion>
 

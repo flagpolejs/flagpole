@@ -16,23 +16,37 @@ The execution options specified from the command line arguments or defaults. Thi
 
 The Page object from the Puppeteer browser instance. This will be null if not a browser scenario or for some reason Puppeteer fails to load it. You can use this to interact directly with Puppeteer (see the Puppeteer API for that) it is very useful for things that Flagpole does not directly implement through sugar syntax wrappers.
 
+### request: HttpRequest
+
+Get the request object.
+
+```javascript
+console.log(context.request.method);
+```
+
 ### response: iResponse
 
 The response from the request. This will vary based on the type of Scenario, but some underlying properties are constant in the interface.
 
 This is often used to pull something like the load time, HTTP Status, headers, mime type, raw response body, etc.
 
+```javascript
+context.request.loadTime
+  .assert("Load time was less than a second")
+  .lessThan(1000);
+```
+
 ### result: any
 
 If you chain multiple next callbacks together in a Scenario, you can return a value from one and then pull it into the following. To do this you will use this result to grab that previously returned value. You may find that it is wrapped in a promise and then do await this result to handle that.
 
-```
-.next(await (context) => {
+```javascript
+.next(async (context) => {
   const articles = context.selectAll('article');
   context.assert(articles).length.greaterThan(0);
   return articles;
 })
-.next(await (context) => {
+.next(async (context) => {
   const articles = await context.result;
   context.comment(await articles[0].getAttribute('id'));
 })
@@ -48,7 +62,9 @@ The parent Suite of this Scenario.
 
 ## Methods
 
-### assert(value: any): Assertion
+### assert(): Assertion
+
+#### assert(value: any): Assertion
 
 Creates an assertion with the input value.
 
@@ -61,6 +77,10 @@ The above example alone would not do anything. It would return an assertion obje
 ```javascript
 context.assert(await context.find("article.topStory h1")).exists();
 ```
+
+#### assert(message: string, value: any): Assertion
+
+You can also pass a message as the first argument, which will override the default assertion message.
 
 ### clear(selector: string): Promise<void>
 
@@ -127,7 +147,7 @@ context.click("a.login", "Load login page", (loginContext) => {
 Finally if you have a scenario already and you want to execute it with the link from the element, pass in the reference to that scenario.
 
 ```javascript
-context.click("a.login", scenario2);
+await context.click("a.login", scenario2);
 ```
 
 ### comment(message: any): AssertionContext
