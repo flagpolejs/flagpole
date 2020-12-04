@@ -1217,6 +1217,9 @@ export class Scenario implements iScenario {
       throw "Request has already started.";
     }
     this.url = this.buildUrl().href;
+    if (this._responseType == "headers") {
+      this.setMethod("head");
+    }
     this._markRequestAsStarted();
     this._finalUrl = this._request.uri;
     if (["extjs", "browser"].includes(this._responseType)) {

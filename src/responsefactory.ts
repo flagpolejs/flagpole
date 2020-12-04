@@ -12,10 +12,11 @@ import { iResponse, iScenario } from "./interfaces";
 import { XmlResponse } from "./xml/xmlresponse";
 import { RssResponse } from "./xml/rssresponse";
 import { AtomResponse } from "./xml/atomresponse";
+import { HeadersResponse } from "./headersresponse";
 
 export function createResponse(scenario: iScenario): iResponse {
   const type: ResponseType = scenario.responseType;
-  let className;
+  let className: any;
   if (type == "html") {
     className = HtmlResponse;
   } else if (type == "browser") {
@@ -38,6 +39,8 @@ export function createResponse(scenario: iScenario): iResponse {
     className = RssResponse;
   } else if (type == "atom") {
     className = AtomResponse;
+  } else if (type == "headers") {
+    className = HeadersResponse;
   } else {
     className = ResourceResponse;
   }

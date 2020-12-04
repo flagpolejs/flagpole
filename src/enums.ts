@@ -39,7 +39,8 @@ export type ResponseType =
   | "extjs"
   | "xml"
   | "rss"
-  | "atom";
+  | "atom"
+  | "headers";
 
 export enum LineType {
   resultPass = "resultPass",

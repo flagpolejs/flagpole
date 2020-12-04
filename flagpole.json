@@ -131,6 +131,11 @@
       "id": "",
       "name": "internal/hls",
       "tags": []
+    },
+    "internal/headers": {
+      "id": "",
+      "name": "internal/headers",
+      "tags": []
     }
   }
 }
