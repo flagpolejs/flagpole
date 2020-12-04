@@ -195,6 +195,19 @@ suite.extjs("User Sign Up Work Flow", {
 });
 ```
 
+#### headers
+
+This will make a request only for the headers of a given URI. This is useful when you want to test that a file exists (or doesn't exist) but not need to download it. Think about a video file whose content you don't need to parse and the file size may be large.
+
+```javascript
+suite
+  .scenario("Check if video file exists", "headers")
+  .open("https://SOME/FILE/PATH.mp4")
+  .next("Get headers", async (context) => {
+    context.assert("File exists", context.response.statusCode).equals(200);
+  });
+```
+
 #### html
 
 Creates a new Scenario of the HTML/DOM Only request type. This will use Cheerio to grab the HTML and load it into a jQuery-like DOM that we can test against. We can fake a browser here, allowing form completion, clicks, etc. However, it just is not a full browser so does not have JavaScript and won't work on SPAs, unless they have server side rendering as well.
@@ -225,7 +238,7 @@ Loads a stylesheet and asserts that it is valid CSS. You can do assertions again
 
 #### video
 
-Creates a new Scenario of the Video request type.
+Creates a new Scenario of the Video request type. This is most useful to test HLS manifests.
 
 ```javascript
 suite.scenario("Make sure video loads", "video");
