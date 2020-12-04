@@ -36,21 +36,14 @@ import {
   asyncForEach,
   asyncForEachUntilFirst,
   arrayify,
-  asyncFlatMap,
   asyncMapToObject,
   flatten,
 } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { getFindParams, getFindName, wrapAsValue } from "./helpers";
-import * as bluebird from "bluebird";
 import { ValuePromise } from "./value-promise";
-import { iRequestOpts } from "minikin/dist/interfaces";
-import { AssertionSchema, HttpRequest, JsonSchema } from ".";
-import {
-  generateAjvSchema,
-  getSchema,
-  SchemaValidator,
-} from "./assertionschema";
+import { HttpRequest } from "./httprequest";
+import { SchemaValidator } from "./assertionschema";
 
 const getParamsFromExists = (
   a: string,
@@ -342,7 +335,7 @@ export class AssertionContext implements iAssertionContext {
     const promises = selectors.map((selector) =>
       this.response.waitForExists(selector, timeout)
     );
-    const el: iValue = await bluebird.any(promises);
+    const el: iValue = await Promise.any(promises);
     el.isNull()
       ? this._failedAction("EXISTS", `${selector}`)
       : this._completedAction("EXISTS", `${selector}`);

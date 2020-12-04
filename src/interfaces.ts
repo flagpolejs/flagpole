@@ -23,7 +23,6 @@ import {
   BrowserOptions,
 } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
-import Bluebird = require("bluebird");
 import { Link } from "./link";
 import { ServerOptions } from "https";
 import { Server } from "minikin";

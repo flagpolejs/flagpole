@@ -126,6 +126,11 @@
       "id": "",
       "name": "test",
       "tags": []
+    },
+    "internal/hls": {
+      "id": "",
+      "name": "internal/hls",
+      "tags": []
     }
   }
 }
