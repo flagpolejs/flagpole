@@ -1,46 +1,26 @@
-import { ResponseType } from "./enums";
-import { iResponse, iValue } from "./interfaces";
-import { ProtoResponse } from "./response";
-import { HttpResponse } from "./httpresponse";
-import { ValuePromise } from "./value-promise";
+import { ResponseType } from "../enums";
+import { iResponse, iValue } from "../interfaces";
+import { ProtoResponse } from "../response";
+import { HttpResponse } from "../httpresponse";
+import { ValuePromise } from "../value-promise";
 import HLS from "parse-hls";
-import { iJPath, jPath } from "./json/jpath";
-import { wrapAsValue } from "./helpers";
+import { iJPath, jPath } from "../json/jpath";
+import { wrapAsValue } from "../helpers";
 
-enum FILE_TYPE {
-  "m3u8" = "m3u8",
-  "ts" = "ts",
-}
-
-const FILE_EXT_TO_TYPE = {
-  m3u8: FILE_TYPE.m3u8,
-  m3u: FILE_TYPE.m3u8,
-};
-
-export class VideoResponse extends ProtoResponse implements iResponse {
+export class HLSResponse extends ProtoResponse implements iResponse {
   protected _json: {} = {};
   protected _jPath: iJPath | undefined;
 
   public get responseTypeName(): string {
-    return "Video";
+    return "HLS Video";
   }
 
   public get responseType(): ResponseType {
-    return "video";
+    return "hls";
   }
 
   public get jsonBody(): iValue {
-    return wrapAsValue(this.context, this._json, "Parsed Response Body");
-  }
-
-  protected get extension(): string {
-    return (
-      this.finalUrl.toURL().pathname.split(".").pop() || ""
-    ).toLowerCase();
-  }
-
-  protected get extensionType(): FILE_TYPE {
-    return FILE_EXT_TO_TYPE[this.extension];
+    return wrapAsValue(this.context, this._json, "Parsed Manifest");
   }
 
   protected get isM3U8(): boolean {
@@ -52,21 +32,18 @@ export class VideoResponse extends ProtoResponse implements iResponse {
     this.context.assert("HTTP Status OK", this.statusCode).between(200, 299);
     this.context
       .assert(
-        "MIME Type matches expected value for video",
+        "MIME Type matches expected value for HLS Manifest",
         this.header("Content-Type")
       )
-      .matches(/(video|mpegurl)/i);
-    // HLS
-    if (this.extensionType == FILE_TYPE.m3u8) {
-      this.context
-        .assert("File extension is m3u8 and content matches that", this.isM3U8)
-        .equals(true);
-      try {
-        const manifest = HLS.parse(this.body.toString());
-        this._json = manifest.serialize();
-      } catch (ex) {
-        this.context.logFailure("Error parsing HLS manifest.", ex);
-      }
+      .matches(/mpegurl/i);
+    this.context
+      .assert("File extension is m3u8 and content matches that", this.isM3U8)
+      .equals(true);
+    try {
+      const manifest = HLS.parse(this.body.toString());
+      this._json = manifest.serialize();
+    } catch (ex) {
+      this.context.logFailure("Error parsing HLS manifest.", ex);
     }
   }
 

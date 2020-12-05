@@ -557,13 +557,18 @@ export class AssertionContext implements iAssertionContext {
     return output;
   }
 
+  public push(aliasName: string, value: any): iAssertionContext {
+    this._scenario.push(aliasName, value);
+    return this;
+  }
+
   public set(aliasName: string, value: any): iAssertionContext {
     this._scenario.set(aliasName, value);
     return this;
   }
 
-  public get(aliasName: string): any {
-    return this._scenario.get(aliasName);
+  public get<T = any>(aliasName: string): T {
+    return this._scenario.get<T>(aliasName);
   }
 
   public async scrollTo(point: OptionalXY): Promise<iAssertionContext> {

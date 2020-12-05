@@ -18,7 +18,9 @@ import { Scenario } from "./scenario";
 import { ScriptResponse } from "./scriptresponse";
 import { Suite } from "./suite";
 import { Value } from "./value";
-import { VideoResponse } from "./videoresponse";
+import { VideoResponse } from "./media/videoresponse";
+import { HLSResponse } from "./media/hlsresponse";
+import { HeadersResponse } from "./headersresponse";
 import { Flagpole } from "./flagpole";
 import { ResponseType } from "./enums";
 import {
@@ -69,6 +71,8 @@ export {
   iValue,
   Value,
   VideoResponse,
+  HLSResponse,
+  HeadersResponse,
   jPath,
   iJPath,
   iScenario,

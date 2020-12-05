@@ -314,9 +314,9 @@ export class Scenario implements iScenario {
     method: "get",
   };
   protected _aliasedData: any = {};
-  protected _requestPromise: Promise<void>;
+  protected _requestPromise: Promise<iScenario>;
   protected _requestResolve: Function = () => {};
-  protected _finishedPromise: Promise<void>;
+  protected _finishedPromise: Promise<iScenario>;
   protected _finishedResolve: Function = () => {};
   protected _disposition: ScenarioDisposition = ScenarioDisposition.pending;
   protected _webhookPromise: Promise<WebhookServer>;
@@ -347,12 +347,25 @@ export class Scenario implements iScenario {
     });
   }
 
+  public push(aliasName: string, value: any): iScenario {
+    const type = toType(this._aliasedData[aliasName]);
+    if (type == "undefined") {
+      this._aliasedData[aliasName] = [];
+    } else if (type !== "array") {
+      throw Error(
+        `${aliasName} was of type ${type} and not an array. Can only push into an array.`
+      );
+    }
+    this._aliasedData[aliasName].push(value);
+    return this;
+  }
+
   public set(aliasName: string, value: any): iScenario {
     this._aliasedData[aliasName] = value;
     return this;
   }
 
-  public get(aliasName: string): any {
+  public get<T = any>(aliasName: string): T {
     return this._aliasedData[aliasName];
   }
 
@@ -630,12 +643,13 @@ export class Scenario implements iScenario {
   /**
    * Set the callback for the assertions to run after the request has a response
    */
+  public next(responseValues: { [key: string]: any }): iScenario;
   public next(message: string, callback: iNextCallback): iScenario;
   public next(callback: iNextCallback): iScenario;
   public next(...callbacks: iNextCallback[]): iScenario;
   public next(
-    a: iNextCallback | iNextCallback[] | string,
-    b?: iNextCallback
+    a: iNextCallback | iNextCallback[] | string | { [key: string]: any },
+    b?: iNextCallback | { [key: string]: any }
   ): iScenario {
     if (Array.isArray(a)) {
       a.forEach((callback) => {
@@ -838,7 +852,7 @@ export class Scenario implements iScenario {
     return this._pushCallbacks("finally", "_finallyCallbacks", a, b);
   }
 
-  public mock(opts: HttpResponseOptions | string): iScenario {
+  public mock(opts: HttpResponseOptions | string = ""): iScenario {
     this._requestType = ScenarioRequestType.manual;
     this._mockResponseOptions = typeof opts == "string" ? { body: opts } : opts;
     return this;
@@ -949,11 +963,11 @@ export class Scenario implements iScenario {
     return this;
   }
 
-  public waitForFinished(): Promise<void> {
+  public waitForFinished(): Promise<iScenario> {
     return this._finishedPromise;
   }
 
-  public waitForResponse(): Promise<void> {
+  public waitForResponse(): Promise<iScenario> {
     return this._requestPromise;
   }
 
@@ -1052,7 +1066,7 @@ export class Scenario implements iScenario {
     httpResponse = await this._pipeResponses(httpResponse);
     this._response.init(httpResponse);
     this._timeRequestLoaded = Date.now();
-    this._requestResolve();
+    this._requestResolve(this);
     this.result(
       new AssertionPass(
         `Loaded ${this._response.responseTypeName} ${
@@ -1383,7 +1397,7 @@ export class Scenario implements iScenario {
   protected async _fireFinally(): Promise<void> {
     await this._fireCallbacks(this._finallyCallbacks);
     this._publish(ScenarioStatusEvent.finished);
-    this._finishedResolve();
+    this._finishedResolve(this);
   }
 
   protected _getOverloads(
@@ -1396,16 +1410,38 @@ export class Scenario implements iScenario {
     };
   }
 
+  protected _expect(responseValues: { [key: string]: any }): iNextCallback {
+    return async (context) => {
+      Object.keys(responseValues).forEach((key) => {
+        const thatValue = responseValues[key];
+        const thisValue: iValue = context.response[key];
+        const type = toType(thatValue);
+        if (thisValue === undefined) {
+          context.logFailure(`There is no response property called "${key}"`);
+        } else if (type === "function") {
+          const result = thatValue(thisValue.$);
+          context.assert(thisValue.name, result).equals(true);
+        } else {
+          context.assert(thisValue).equals(thatValue);
+        }
+      });
+    };
+  }
+
   protected _getCallbackOverload(a: any, b?: any): Function {
-    return (() => {
-      if (typeof b == "function") {
-        return b;
-      } else if (typeof a == "function") {
-        return a;
-      } else {
-        throw new Error("No callback provided.");
-      }
-    })();
+    const aType = toType(a);
+    const bType = toType(b);
+    if (bType == "function") {
+      return b;
+    } else if (aType == "function") {
+      return a;
+    } else if (bType == "object") {
+      return this._expect(b);
+    } else if (aType == "object") {
+      return this._expect(a);
+    } else {
+      throw new Error("No callback provided.");
+    }
   }
 
   protected _getMessageOverload(a: any): string | null {
@@ -1418,8 +1454,8 @@ export class Scenario implements iScenario {
   }
 
   protected _next(
-    a: iNextCallback | string,
-    b?: iNextCallback | null,
+    a: iNextCallback | string | { [key: string]: any },
+    b?: iNextCallback | { [key: string]: any } | null,
     append: boolean = true
   ): iScenario {
     const callback: iNextCallback = <iNextCallback>(

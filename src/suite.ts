@@ -10,7 +10,7 @@ import {
   ScenarioCallback,
   KeyValue,
 } from "./interfaces";
-import { exitProcess } from "./util";
+import { exitProcess, toType } from "./util";
 import { BrowserOptions } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { SuiteTaskManager } from "./suitetaskmanager";
@@ -100,6 +100,7 @@ export class Suite implements iSuite {
   protected _waitToExecute: boolean = false;
   protected _verifySslCert: boolean = true;
   protected _taskManager: SuiteTaskManager;
+  protected _aliasedData: any = {};
 
   constructor(title: string) {
     this._title = title;
@@ -405,5 +406,36 @@ export class Suite implements iSuite {
       this.success(resolve);
       this.failure(reject);
     });
+  }
+
+  public map(
+    arr: any[],
+    mapper: (item: any, index: number, arr: any[], suite: iSuite) => iScenario
+  ): Promise<iScenario[]> {
+    return Promise.all(
+      arr.map((item, i) => mapper(item, i, arr, this).waitForFinished())
+    );
+  }
+
+  public push(aliasName: string, value: any): iSuite {
+    const type = toType(this._aliasedData[aliasName]);
+    if (type == "undefined") {
+      this._aliasedData[aliasName] = [];
+    } else if (type !== "array") {
+      throw Error(
+        `${aliasName} was of type ${type} and not an array. Can only push into an array.`
+      );
+    }
+    this._aliasedData[aliasName].push(value);
+    return this;
+  }
+
+  public set(aliasName: string, value: any): iSuite {
+    this._aliasedData[aliasName] = value;
+    return this;
+  }
+
+  public get<T = any>(aliasName: string): T {
+    return this._aliasedData[aliasName];
   }
 }

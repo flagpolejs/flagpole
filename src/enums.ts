@@ -33,6 +33,7 @@ export type ResponseType =
   | "stylesheet"
   | "script"
   | "video"
+  | "hls"
   | "audio"
   | "resource"
   | "browser"

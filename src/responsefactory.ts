@@ -5,7 +5,7 @@ import { CssResponse } from "./css/cssresponse";
 import { ImageResponse } from "./imageresponse";
 import { JsonResponse } from "./json/jsonresponse";
 import { ScriptResponse } from "./scriptresponse";
-import { VideoResponse } from "./videoresponse";
+import { VideoResponse } from "./media/videoresponse";
 import { ExtJSResponse } from "./puppeteer/extjsresponse";
 import { ResponseType } from "./enums";
 import { iResponse, iScenario } from "./interfaces";
@@ -13,6 +13,7 @@ import { XmlResponse } from "./xml/xmlresponse";
 import { RssResponse } from "./xml/rssresponse";
 import { AtomResponse } from "./xml/atomresponse";
 import { HeadersResponse } from "./headersresponse";
+import { HLSResponse } from "./media/hlsresponse";
 
 export function createResponse(scenario: iScenario): iResponse {
   const type: ResponseType = scenario.responseType;
@@ -31,8 +32,6 @@ export function createResponse(scenario: iScenario): iResponse {
     className = JsonResponse;
   } else if (type == "script") {
     className = ScriptResponse;
-  } else if (type == "video") {
-    className = VideoResponse;
   } else if (type == "xml") {
     className = XmlResponse;
   } else if (type == "rss") {
@@ -41,6 +40,10 @@ export function createResponse(scenario: iScenario): iResponse {
     className = AtomResponse;
   } else if (type == "headers") {
     className = HeadersResponse;
+  } else if (type == "video") {
+    className = VideoResponse;
+  } else if (type == "hls") {
+    className = HLSResponse;
   } else {
     className = ResourceResponse;
   }

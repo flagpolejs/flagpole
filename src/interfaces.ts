@@ -562,8 +562,9 @@ export interface iAssertionContext {
   comment(input: any): iAssertionContext;
   assert(a: any, b?: any): iAssertion;
   pause(milliseconds: number): Promise<void>;
+  push(aliasName: string, value: any): iAssertionContext;
   set(aliasName: string, value: any): iAssertionContext;
-  get(aliasName: string): any;
+  get<T = any>(aliasName: string): T;
   exists(selector: string | string[], opts?: FindOptions): Promise<iValue>;
   exists(
     selector: string | string[],
@@ -720,6 +721,13 @@ export interface iSuite {
   failure(callback: SuiteCallback): iSuite;
   finally(callback: SuiteCallback): iSuite;
   promise(): Promise<iSuite>;
+  map(
+    arr: any,
+    mapper: (item: any, index: number, arr: any[], suite: iSuite) => iScenario
+  ): Promise<iScenario[]>;
+  push(aliasName: string, value: any): iSuite;
+  set(aliasName: string, value: any): iSuite;
+  get<T = any>(aliasName: string): T;
 }
 
 export interface iScenario {
@@ -748,8 +756,9 @@ export interface iScenario {
   isExecuting: boolean;
   isCompleted: boolean;
   disposition: ScenarioDisposition;
+  push(aliasName: string, value: any): iScenario;
   set(aliasName: string, value: any): iScenario;
-  get(aliasName: string): any;
+  get<T = any>(aliasName: string): T;
   getLog(): Promise<iLogItem[]>;
   subscribe(callback: ScenarioStatusCallback): iScenario;
   setJsonBody(jsonObject: any): iScenario;
@@ -777,6 +786,8 @@ export interface iScenario {
   next(callback: iNextCallback): iScenario;
   next(...callbacks: iNextCallback[]): iScenario;
   next(message: string, callback: iNextCallback): iScenario;
+  next(responseValues: { [key: string]: any }): iScenario;
+  next(message: string, responseValues: { [key: string]: any }): iScenario;
   nextPrepend(callback: iNextCallback): iScenario;
   nextPrepend(message: string, callback: iNextCallback): iScenario;
   skip(message?: string): Promise<iScenario>;
@@ -803,6 +814,7 @@ export interface iScenario {
   finally(message: string, callback: ScenarioCallback): iScenario;
   finally(callback: ScenarioCallback): iScenario;
   finally(...callbacks: ScenarioCallback[]): iScenario;
+  mock(): iScenario;
   mock(content: string): iScenario;
   mock(response: HttpResponseOptions): iScenario;
   local(localPath: string): iScenario;
@@ -820,8 +832,8 @@ export interface iScenario {
     opts?: BrowserOptions | HttpRequestOptions
   ): iScenario;
   promise(): Promise<iScenario>;
-  waitForFinished(): Promise<void>;
-  waitForResponse(): Promise<void>;
+  waitForFinished(): Promise<iScenario>;
+  waitForResponse(): Promise<iScenario>;
   waitFor(thatScenario: iScenario): iScenario;
 }
 

@@ -34,7 +34,7 @@ export class ValuePromise
 
   public get not(): Promise<iAssertion> {
     //return new Promise((r) => this.then((v) => r(v.assert().not)));
-    return this._promisifyAssertProperty("is");
+    return this._promisifyAssertProperty("not");
   }
 
   public equals(eqValue: any): Promise<iAssertion> {
