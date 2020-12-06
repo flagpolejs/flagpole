@@ -3,19 +3,6 @@ import { iResponse, iValue } from "../interfaces";
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../httpresponse";
 import { ValuePromise } from "../value-promise";
-import HLS from "parse-hls";
-import { iJPath, jPath } from "../json/jpath";
-import { wrapAsValue } from "../helpers";
-
-enum FILE_TYPE {
-  "m3u8" = "m3u8",
-  "ts" = "ts",
-}
-
-const FILE_EXT_TO_TYPE = {
-  m3u8: FILE_TYPE.m3u8,
-  m3u: FILE_TYPE.m3u8,
-};
 
 export class VideoResponse extends ProtoResponse implements iResponse {
   public get responseTypeName(): string {
@@ -26,31 +13,18 @@ export class VideoResponse extends ProtoResponse implements iResponse {
     return "video";
   }
 
+  protected _mimePattern = /(video)/i;
+
   protected get extension(): string {
     return (
       this.finalUrl.toURL().pathname.split(".").pop() || ""
     ).toLowerCase();
   }
 
-  protected get extensionType(): FILE_TYPE {
-    return FILE_EXT_TO_TYPE[this.extension];
-  }
-
-  protected get isM3U8(): boolean {
-    return this.body.toString().trim().startsWith("#EXTM3U");
-  }
-
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
-    if (this.extensionType == FILE_TYPE.m3u8) {
-    }
-    this.context.assert("HTTP Status OK", this.statusCode).between(200, 299);
-    this.context
-      .assert(
-        "MIME Type matches expected value for video",
-        this.header("Content-Type")
-      )
-      .matches(/(video|mpegurl)/i);
+    this._assertStatusCode();
+    this._assertMimeType();
   }
 
   public async eval(): Promise<any> {
@@ -63,5 +37,18 @@ export class VideoResponse extends ProtoResponse implements iResponse {
 
   public async findAll(path: string): Promise<iValue[]> {
     throw "This type of scenario does not suport findAll.";
+  }
+
+  protected _assertStatusCode() {
+    this.context.assert("HTTP Status OK", this.statusCode).between(200, 299);
+  }
+
+  protected _assertMimeType() {
+    this.context
+      .assert(
+        `MIME Type matches expected value for ${this.responseType}`,
+        this.header("Content-Type")
+      )
+      .matches(this._mimePattern);
   }
 }

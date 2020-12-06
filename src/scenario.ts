@@ -20,6 +20,8 @@ import {
   iValue,
   HttpResponseOptions,
   WebhookServer,
+  IteratorCallback,
+  MapperCallback,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
@@ -200,9 +202,10 @@ export class Scenario implements iScenario {
   private get isImplicitWait(): boolean {
     if (this._requestType == ScenarioRequestType.httpRequest) {
       return this.url === null || /{[A-Za-z0-9_ -]+}/.test(this.url);
-    } else if ((this._requestType = ScenarioRequestType.manual)) {
-      return !this._mockResponseOptions;
-    } else if ((this._requestType = ScenarioRequestType.webhook)) {
+    } else if (
+      this._requestType == ScenarioRequestType.manual ||
+      this._requestType == ScenarioRequestType.webhook
+    ) {
       return !this._mockResponseOptions;
     }
     return false;
@@ -347,16 +350,20 @@ export class Scenario implements iScenario {
     });
   }
 
-  public push(aliasName: string, value: any): iScenario {
-    const type = toType(this._aliasedData[aliasName]);
+  protected _getArray(key: string): any[] {
+    const type = toType(this._aliasedData[key]);
     if (type == "undefined") {
-      this._aliasedData[aliasName] = [];
+      this._aliasedData[key] = [];
     } else if (type !== "array") {
       throw Error(
-        `${aliasName} was of type ${type} and not an array. Can only push into an array.`
+        `${key} was of type ${type} and not an array. Can only push into an array.`
       );
     }
-    this._aliasedData[aliasName].push(value);
+    return this._aliasedData[key];
+  }
+
+  public push(key: string, value: any): iScenario {
+    this._getArray(key).push(value);
     return this;
   }
 

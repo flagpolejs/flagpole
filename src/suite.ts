@@ -9,6 +9,7 @@ import {
   SuiteCallback,
   ScenarioCallback,
   KeyValue,
+  ScenarioMapper,
 } from "./interfaces";
 import { exitProcess, toType } from "./util";
 import { BrowserOptions } from "./httprequest";
@@ -408,34 +409,41 @@ export class Suite implements iSuite {
     });
   }
 
-  public map(
-    arr: any[],
-    mapper: (item: any, index: number, arr: any[], suite: iSuite) => iScenario
+  protected _getArray(key: string): any[] {
+    const type = toType(this._aliasedData[key]);
+    if (type == "undefined") {
+      this._aliasedData[key] = [];
+    } else if (type !== "array") {
+      throw Error(
+        `${key} was of type ${type} and not an array. Can only push into an array.`
+      );
+    }
+    return this._aliasedData[key];
+  }
+
+  public mapScenarios(key: string, map: ScenarioMapper): Promise<iScenario[]>;
+  public mapScenarios(arr: any[], map: ScenarioMapper): Promise<iScenario[]>;
+  public mapScenarios(
+    a: string | any[],
+    map: ScenarioMapper
   ): Promise<iScenario[]> {
+    const arr = typeof a === "string" ? this._getArray(a) : a;
     return Promise.all(
-      arr.map((item, i) => mapper(item, i, arr, this).waitForFinished())
+      arr.map((item, i, arr) => map(item, i, arr, this).waitForFinished())
     );
   }
 
-  public push(aliasName: string, value: any): iSuite {
-    const type = toType(this._aliasedData[aliasName]);
-    if (type == "undefined") {
-      this._aliasedData[aliasName] = [];
-    } else if (type !== "array") {
-      throw Error(
-        `${aliasName} was of type ${type} and not an array. Can only push into an array.`
-      );
-    }
-    this._aliasedData[aliasName].push(value);
+  public push(key: string, value: any): iSuite {
+    this._getArray(key).push(value);
     return this;
   }
 
-  public set(aliasName: string, value: any): iSuite {
-    this._aliasedData[aliasName] = value;
+  public set(key: string, value: any): iSuite {
+    this._aliasedData[key] = value;
     return this;
   }
 
-  public get<T = any>(aliasName: string): T {
-    return this._aliasedData[aliasName];
+  public get<T = any>(key: string): T {
+    return this._aliasedData[key];
   }
 }

@@ -114,6 +114,12 @@ export type ReducerCallback = (
   i: number,
   arr: any[]
 ) => any;
+export type ScenarioMapper = (
+  value: any,
+  index: number,
+  arr: any[],
+  suite: iSuite
+) => iScenario;
 
 export interface iConsoleLine {
   timestamp: Date;
@@ -565,6 +571,7 @@ export interface iAssertionContext {
   push(aliasName: string, value: any): iAssertionContext;
   set(aliasName: string, value: any): iAssertionContext;
   get<T = any>(aliasName: string): T;
+
   exists(selector: string | string[], opts?: FindOptions): Promise<iValue>;
   exists(
     selector: string | string[],
@@ -721,13 +728,11 @@ export interface iSuite {
   failure(callback: SuiteCallback): iSuite;
   finally(callback: SuiteCallback): iSuite;
   promise(): Promise<iSuite>;
-  map(
-    arr: any,
-    mapper: (item: any, index: number, arr: any[], suite: iSuite) => iScenario
-  ): Promise<iScenario[]>;
-  push(aliasName: string, value: any): iSuite;
-  set(aliasName: string, value: any): iSuite;
-  get<T = any>(aliasName: string): T;
+  mapScenarios(key: string, mapper: ScenarioMapper): Promise<iScenario[]>;
+  mapScenarios(arr: any[], mapper: ScenarioMapper): Promise<iScenario[]>;
+  push(key: string, value: any): iSuite;
+  set(key: string, value: any): iSuite;
+  get<T = any>(key: string): T;
 }
 
 export interface iScenario {

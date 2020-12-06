@@ -1,15 +1,16 @@
 import { ResponseType } from "../enums";
 import { iResponse, iValue } from "../interfaces";
-import { ProtoResponse } from "../response";
 import { HttpResponse } from "../httpresponse";
 import { ValuePromise } from "../value-promise";
 import HLS from "parse-hls";
 import { iJPath, jPath } from "../json/jpath";
 import { wrapAsValue } from "../helpers";
+import { VideoResponse } from "./videoresponse";
 
-export class HLSResponse extends ProtoResponse implements iResponse {
+export class HLSResponse extends VideoResponse implements iResponse {
   protected _json: {} = {};
   protected _jPath: iJPath | undefined;
+  protected _mimePattern = /mpegurl/i;
 
   public get responseTypeName(): string {
     return "HLS Video";
@@ -29,15 +30,8 @@ export class HLSResponse extends ProtoResponse implements iResponse {
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
-    this.context.assert("HTTP Status OK", this.statusCode).between(200, 299);
     this.context
-      .assert(
-        "MIME Type matches expected value for HLS Manifest",
-        this.header("Content-Type")
-      )
-      .matches(/mpegurl/i);
-    this.context
-      .assert("File extension is m3u8 and content matches that", this.isM3U8)
+      .assert("Content looks like M3U format", this.isM3U8)
       .equals(true);
     try {
       const manifest = HLS.parse(this.body.toString());
@@ -45,10 +39,6 @@ export class HLSResponse extends ProtoResponse implements iResponse {
     } catch (ex) {
       this.context.logFailure("Error parsing HLS manifest.", ex);
     }
-  }
-
-  public async eval(): Promise<any> {
-    throw "This type of scenario does not suport eval.";
   }
 
   /**

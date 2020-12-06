@@ -18,6 +18,8 @@ import {
   FindOptions,
   FindAllOptions,
   OptionalXY,
+  IteratorCallback,
+  MapperCallback,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -557,8 +559,8 @@ export class AssertionContext implements iAssertionContext {
     return output;
   }
 
-  public push(aliasName: string, value: any): iAssertionContext {
-    this._scenario.push(aliasName, value);
+  public push(key: string, value: any): iAssertionContext {
+    this._scenario.push(key, value);
     return this;
   }
 
