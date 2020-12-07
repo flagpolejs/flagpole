@@ -419,6 +419,7 @@ export interface iResponse {
     opts?: FindOptions
   ): Promise<iValue>;
   click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
+  serialize(): object;
 }
 
 export interface iAssertionIs {

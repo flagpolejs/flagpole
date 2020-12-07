@@ -380,13 +380,17 @@ export abstract class ProtoResponse implements iResponse {
    *
    * @param selector
    */
-  click(selector: string, opts?: FindOptions): Promise<iValue>;
-  click(
+  public click(selector: string, opts?: FindOptions): Promise<iValue>;
+  public click(
     selector: string,
     contains: string,
     opts?: FindOptions
   ): Promise<iValue>;
-  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
+  public click(
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
   public async click(
     selector: string,
     a?: FindOptions | string | RegExp,
@@ -404,5 +408,22 @@ export abstract class ProtoResponse implements iResponse {
       return element.click();
     }
     return element;
+  }
+
+  public serialize(): object {
+    return {
+      statusCode: this.statusCode.$,
+      statusMessage: this.statusMessage.$,
+      url: this.url.toString(),
+      finalURl: this.finalUrl.toString(),
+      body: this.body.toString(),
+      jsonBody: this.jsonBody.$,
+      loadTime: this.loadTime.$,
+      length: this.length.$,
+      method: this.context.request.method.toString(),
+      headers: this.headers.$,
+      cookies: this.cookies.$,
+      trailers: this.trailers.$,
+    };
   }
 }

@@ -58,6 +58,8 @@ import * as bluebird from "bluebird";
 import { Browser } from "puppeteer-core";
 import minikin, { Response, Server } from "minikin";
 import { ServerOptions } from "https";
+import { JsonDoc } from "./json/jpath";
+import { wrapAsValue } from "./helpers";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -1419,15 +1421,21 @@ export class Scenario implements iScenario {
 
   protected _expect(responseValues: { [key: string]: any }): iNextCallback {
     return async (context) => {
-      Object.keys(responseValues).forEach((key) => {
-        const thatValue = responseValues[key];
-        const thisValue: iValue = context.response[key];
+      const json = new JsonDoc(context.response.serialize(), true);
+      const paths = Object.keys(responseValues);
+      //console.log(json.root);
+      await context.each(paths, async (path) => {
+        const data = await json.search(path);
+        const thisValue: iValue = wrapAsValue(context, data, path, data);
+        const thatValue = responseValues[path];
         const type = toType(thatValue);
-        if (thisValue === undefined) {
-          context.logFailure(`There is no response property called "${key}"`);
-        } else if (type === "function") {
+        if (type === "function") {
           const result = thatValue(thisValue.$);
           context.assert(thisValue.name, result).equals(true);
+        } else if (type === "array") {
+          context.assert(thisValue).in(thatValue);
+        } else if (type === "regexp") {
+          context.assert(thisValue).matches(thatValue);
         } else {
           context.assert(thisValue).equals(thatValue);
         }
