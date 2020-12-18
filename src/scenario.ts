@@ -1450,6 +1450,10 @@ export class Scenario implements iScenario {
       return b;
     } else if (aType == "function") {
       return a;
+    } else if (bType == "asyncfunction") {
+      return b;
+    } else if (aType == "asyncfunction") {
+      return a;
     } else if (bType == "object") {
       return this._expect(b);
     } else if (aType == "object") {
