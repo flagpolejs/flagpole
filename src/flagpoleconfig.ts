@@ -44,6 +44,7 @@ export interface iProjectOpts {
   images?: string;
   cache?: string;
   schemas?: string;
+  pattern?: string;
 }
 
 export interface iConfigOpts {
@@ -139,6 +140,7 @@ export class ProjectConfig {
   public images: string;
   public cache: string;
   public schemas: string;
+  public pattern: string;
 
   public get isSourceAndOutput(): boolean {
     return this.source !== undefined && this.output !== undefined;
@@ -152,6 +154,15 @@ export class ProjectConfig {
     return this.id.length > 0;
   }
 
+  public get patternRegEx(): RegExp {
+    let pattern = this.pattern.trim();
+    if (pattern) {
+      pattern = pattern.replace(".", ".").replace("*", ".*");
+      return new RegExp(pattern);
+    }
+    return /.*/;
+  }
+
   constructor(config: FlagpoleConfig, opts: iProjectOpts) {
     this.config = config;
     this.id = opts.id || "";
@@ -162,6 +173,7 @@ export class ProjectConfig {
     this.schemas = opts.schemas || "schemas";
     this.source = opts.source;
     this.output = opts.output;
+    this.pattern = opts.pattern || "";
   }
 
   public setTypeScriptFolders(

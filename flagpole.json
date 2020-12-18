@@ -7,7 +7,8 @@
     "output": "out",
     "images": "images",
     "cache": "cache",
-    "schemas": "schemas"
+    "schemas": "schemas",
+    "pattern": "*.*"
   },
   "environments": {
     "local": {

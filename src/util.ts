@@ -378,3 +378,7 @@ export const randomIn = (obj: any) => {
     return null;
   }
 };
+
+export const cast = <T>(val: any): T => {
+  return val;
+};

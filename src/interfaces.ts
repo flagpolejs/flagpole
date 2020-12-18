@@ -748,6 +748,7 @@ export interface iScenario {
   isReadyToExecute: boolean;
   hasExecuted: boolean;
   hasFinished: boolean;
+  hasRequestStarted: boolean;
   buildUrl(): URL;
   url: string | null;
   finalUrl: string | null;

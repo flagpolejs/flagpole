@@ -397,7 +397,7 @@ export class Assertion implements iAssertion {
   }
 
   public like(value: any): iAssertion {
-    const thisValue: any = this.value.toLowerCase().trim();
+    const thisValue: any = this.text.toLowerCase().trim();
     const thatValue: any = String(this._getCompareValue(value))
       .toLowerCase()
       .trim();

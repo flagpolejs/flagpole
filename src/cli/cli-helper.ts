@@ -92,19 +92,23 @@ export function findJsFilesInTestFolder(): string[] {
     if (fs.pathExistsSync(dir)) {
       // Read contents
       let files = fs.readdirSync(dir);
-      files.forEach(function (file) {
-        // Drill into sub-folders, but only once!
-        if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
-          findSuites(`${dir}${file}${sep}`, true);
-        }
-        // Push in any JS files
-        else if (file.endsWith(".js")) {
-          let name: string = (dir + file)
-            .replace(startFolder, "")
-            .replace(/\.js$/i, "");
-          suitesInFolder.push(name);
-        }
-      });
+      files
+        .filter((file) =>
+          FlagpoleExecution.global.config.project.patternRegEx.test(file)
+        )
+        .forEach((file) => {
+          // Drill into sub-folders, but only once!
+          if (!isSubFolder && fs.statSync(dir + file).isDirectory()) {
+            findSuites(`${dir}${file}${sep}`, true);
+          }
+          // Push in any JS files
+          else if (file.endsWith(".js")) {
+            let name: string = (dir + file)
+              .replace(startFolder, "")
+              .replace(/\.js$/i, "");
+            suitesInFolder.push(name);
+          }
+        });
     }
   }
 

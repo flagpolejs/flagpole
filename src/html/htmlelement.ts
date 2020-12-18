@@ -333,7 +333,7 @@ export class HTMLElement extends DOMElement implements iValue {
    * If this is a form element, submit the form
    */
   public async submit(): Promise<iValue> {
-    if (!this._isFormTag()) {
+    if (!(await this._isFormTag())) {
       throw new Error("You can only use .submit() with a form element.");
     }
     const link: Link = await this.getLink();

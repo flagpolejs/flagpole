@@ -20,8 +20,6 @@ import {
   iValue,
   HttpResponseOptions,
   WebhookServer,
-  IteratorCallback,
-  MapperCallback,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
@@ -60,6 +58,13 @@ import minikin, { Response, Server } from "minikin";
 import { ServerOptions } from "https";
 import { JsonDoc } from "./json/jpath";
 import { wrapAsValue } from "./helpers";
+import {
+  beforeScenarioExecuted,
+  afterScenarioReady,
+  beforeScenarioFinished,
+  afterScenarioExecuted,
+  beforeScenarioRequestStarted,
+} from "./decorators";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -221,7 +226,7 @@ export class Scenario implements iScenario {
     return this._nextCallbacks.length > 0;
   }
 
-  private get hasRequestStarted(): boolean {
+  public get hasRequestStarted(): boolean {
     return this._timeRequestStarted !== null;
   }
 
@@ -682,10 +687,8 @@ export class Scenario implements iScenario {
   /**
    * Skip this scenario completely and mark it done
    */
+  @beforeScenarioExecuted
   public async skip(message?: string): Promise<iScenario> {
-    if (this.hasExecuted) {
-      throw `Can't skip Scenario since it already started executing.`;
-    }
     await this._fireBefore();
     this._publish(ScenarioStatusEvent.executionProgress);
     this.comment(`Skipped ${message ? ": " + message : ""}`);
@@ -697,13 +700,9 @@ export class Scenario implements iScenario {
     return this.hasExecuted ? this.abort(message) : this.cancel(message);
   }
 
+  @afterScenarioExecuted
+  @beforeScenarioFinished
   public async abort(message?: string): Promise<iScenario> {
-    if (!this.hasExecuted) {
-      throw `Can't abort Scenario since it it hasn't started executing.`;
-    }
-    if (this.hasFinished) {
-      throw `Can't abort Scenario since has already finished.`;
-    }
     this._markScenarioCompleted(
       `Aborted ${message ? ": " + message : ""}`,
       null,
@@ -712,10 +711,8 @@ export class Scenario implements iScenario {
     return this;
   }
 
+  @beforeScenarioExecuted
   public async cancel(message?: string): Promise<iScenario> {
-    if (this.hasExecuted) {
-      throw `Can't cancel Scenario since it already started executing.`;
-    }
     await this._fireBefore();
     this._publish(ScenarioStatusEvent.executionProgress);
     this._markScenarioCompleted(
@@ -733,12 +730,11 @@ export class Scenario implements iScenario {
   public async execute(params: {
     [key: string]: string | number;
   }): Promise<iScenario>;
+
+  @beforeScenarioExecuted
   public async execute(pathParams?: {
     [key: string]: string | number;
   }): Promise<iScenario> {
-    if (this.hasExecuted) {
-      throw "Scenario has already started executing. Can not call execute again.";
-    }
     // Apply path parameters when the url was like /articles/{id}
     if (pathParams) {
       // Change the URL
@@ -755,13 +751,9 @@ export class Scenario implements iScenario {
   /**
    * Do not call this directly. Only Suite Task Manager should call it.
    */
+  @beforeScenarioExecuted
+  @afterScenarioReady
   public async go() {
-    if (this.hasExecuted) {
-      throw "Scenario has already started executing. Can not call execute again.";
-    }
-    if (!this.isReadyToExecute) {
-      throw "This scenario is not ready to execute.";
-    }
     // Do before callbacks
     await this._fireBefore();
     this._requestType == ScenarioRequestType.httpRequest
@@ -933,10 +925,8 @@ export class Scenario implements iScenario {
    * @param type
    * @param opts
    */
+  @beforeScenarioExecuted
   public setResponseType(type: ResponseType, opts: any = {}): iScenario {
-    if (this.hasExecuted) {
-      throw "Scenario was already executed. Can not change type.";
-    }
     // Merge passed in opts with default opts
     this._responseType = type;
     if (["browser", "extjs"].includes(type)) {
@@ -1232,12 +1222,10 @@ export class Scenario implements iScenario {
   /**
    * Used by all request types to kick off the request
    */
+  @beforeScenarioRequestStarted
   protected _executeHttpRequest() {
     if (this.url === null) {
       throw "Can not execute request with null URL.";
-    }
-    if (this.hasRequestStarted) {
-      throw "Request has already started.";
     }
     this.url = this.buildUrl().href;
     if (this._responseType == "headers") {
@@ -1255,12 +1243,10 @@ export class Scenario implements iScenario {
   /**
    * Start a local file scenario
    */
+  @beforeScenarioRequestStarted
   protected _executeLocalRequest() {
     if (this.url === null) {
       throw "Can not execute request with null URL.";
-    }
-    if (this.hasRequestStarted) {
-      throw "Request has already started.";
     }
     this._markRequestAsStarted();
     HttpResponse.fromLocalFile(this.url)
@@ -1279,12 +1265,10 @@ export class Scenario implements iScenario {
   /**
    * Start a mock scenario, which will load a local file
    */
+  @beforeScenarioRequestStarted
   protected _executeMock() {
     if (this._mockResponseOptions === null) {
       throw "Can not execute a mock request with no mocked response.";
-    }
-    if (this.hasRequestStarted) {
-      throw "Request has already started.";
     }
     this._markRequestAsStarted();
     try {
@@ -1472,6 +1456,7 @@ export class Scenario implements iScenario {
     })();
   }
 
+  @beforeScenarioFinished
   protected _next(
     a: iNextCallback | string | { [key: string]: any },
     b?: iNextCallback | { [key: string]: any } | null,
@@ -1481,17 +1466,12 @@ export class Scenario implements iScenario {
       this._getCallbackOverload(a, b)
     );
     const message: string | null = this._getMessageOverload(a);
-    // If it hasn't already finished
-    if (!this.hasFinished) {
-      if (append) {
-        this._nextCallbacks.push(callback);
-        this._nextMessages.push(message);
-      } else {
-        this._nextCallbacks.unshift(callback);
-        this._nextMessages.unshift(message);
-      }
+    if (append) {
+      this._nextCallbacks.push(callback);
+      this._nextMessages.push(message);
     } else {
-      throw "Scenario already finished.";
+      this._nextCallbacks.unshift(callback);
+      this._nextMessages.unshift(message);
     }
     return this;
   }
