@@ -140,7 +140,7 @@ export function promptTextName(
     initial: initial || "",
     format: trimInput,
     validate: (input: string) => {
-      return /^[a-z0-9][a-z0-9/\/_-]{1,62}[a-z0-9]$/i.test(input);
+      return /^[a-z0-9][a-z0-9\/_.-]{1,62}[a-z0-9]$/i.test(input);
     },
   };
 }
