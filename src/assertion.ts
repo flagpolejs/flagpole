@@ -300,7 +300,7 @@ export class Assertion implements iAssertion {
       `${this.subject} does not have value ${thatValue}`,
       `${this.subject} has value ${thatValue}`
     );
-    return this.execute(hasValue, hasValue);
+    return this.execute(hasValue, thatValue);
   }
 
   public async hasProperty(key: string, value?: string): Promise<iAssertion> {
@@ -376,7 +376,7 @@ export class Assertion implements iAssertion {
     if (thisType == "object" && thatType == "object") {
       return this.execute(deepStrictEqual(thisValue, thatValue), thisValue);
     }
-    return this.execute(thisValue === thatValue, thisValue);
+    return this.execute(thisValue === thatValue, thisValue, null);
   }
 
   public equals(value: any): iAssertion {
@@ -425,7 +425,9 @@ export class Assertion implements iAssertion {
     );
     return this.execute(
       parseFloat(thisValue) > parseFloat(thatValue),
-      thisValue
+      thisValue,
+      null,
+      `> ${thatValue}`
     );
   }
 
@@ -437,7 +439,9 @@ export class Assertion implements iAssertion {
     );
     return this.execute(
       parseFloat(thisValue) >= parseFloat(thatValue),
-      thisValue
+      thisValue,
+      null,
+      `>= ${thatValue}`
     );
   }
 
@@ -449,7 +453,9 @@ export class Assertion implements iAssertion {
     );
     return this.execute(
       parseFloat(thisValue) < parseFloat(thatValue),
-      thisValue
+      thisValue,
+      null,
+      `< ${thatValue}`
     );
   }
 
@@ -461,7 +467,9 @@ export class Assertion implements iAssertion {
     );
     return this.execute(
       parseFloat(thisValue) <= parseFloat(thatValue),
-      thisValue
+      thisValue,
+      null,
+      `<= ${thatValue}`
     );
   }
 
@@ -475,7 +483,9 @@ export class Assertion implements iAssertion {
     );
     return this.execute(
       parseFloat(thisValue) >= thatMin && parseFloat(thisValue) <= thatMax,
-      thisValue
+      thisValue,
+      null,
+      `Between ${min} and ${max}`
     );
   }
 
@@ -943,8 +953,11 @@ export class Assertion implements iAssertion {
       : String(actualValue);
   }
 
-  private _getActualValueText(actualValue: any): string {
-    return `Actual value: ${String(actualValue)}`;
+  private _getErrorDetails(actualValue: any, expectedValue?: string): string[] {
+    return [
+      `Actual: ${String(actualValue)}`,
+      expectedValue ? `Expected: ${expectedValue}` : "",
+    ].filter((str) => str.length > 0);
   }
 
   private _getValues(thatValue: any) {
@@ -957,7 +970,8 @@ export class Assertion implements iAssertion {
   public execute(
     bool: boolean,
     actualValue: any,
-    highlightText: string | null = null
+    highlightText: string | null = null,
+    expectedValue?: string
   ): iAssertion {
     // Result is immutable, so only let them assert once
     if (this.isFinalized) {
@@ -974,11 +988,11 @@ export class Assertion implements iAssertion {
       this._result = this._optional
         ? this._context.logOptionalFailure(
             this._getMessage(),
-            this._getActualValueText(actualValue)
+            this._getErrorDetails(actualValue, expectedValue)
           )
         : this._context.logFailure(
             this._getMessage(),
-            this._getActualValueText(actualValue),
+            this._getErrorDetails(actualValue, expectedValue),
             this._getSourceCode(),
             this._getHighlightText(actualValue, highlightText)
           );

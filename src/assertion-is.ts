@@ -257,6 +257,21 @@ export class AssertionIs implements iAssertionIs {
     return this._validate(validator.isDate, "a date");
   }
 
+  public timezone() {
+    return this._validate((text) => {
+      if (!Intl || !Intl.DateTimeFormat().resolvedOptions().timeZone) {
+        throw "Time zones are not available in this environment";
+      }
+
+      try {
+        Intl.DateTimeFormat(undefined, { timeZone: text });
+        return true;
+      } catch (ex) {
+        return false;
+      }
+    }, "a timezone");
+  }
+
   public regionCode(countries?: ["US" | "CA"]) {
     let codes: string[] = [];
     if (countries?.includes("US")) {

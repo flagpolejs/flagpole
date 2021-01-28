@@ -14,7 +14,8 @@ import {
 import { LogItem } from "./logitem";
 import { isNullOrUndefined, toType } from "../util";
 
-export abstract class AssertionResult extends LogItem
+export abstract class AssertionResult
+  extends LogItem
   implements iLogItem, iAssertionResult {
   public abstract readonly type: LineType;
   public abstract className: string;
@@ -87,10 +88,10 @@ export class AssertionFail extends AssertionResult implements iLogItem {
     return String(this._sourceCode);
   }
 
-  public get detailsMessage(): string {
+  public get detailsMessage(): string[] {
     // Get rid of blanks
     if (isNullOrUndefined(this._rawDetails)) {
-      return "";
+      return [""];
     }
     // Okay give me something
     const type: string = toType(this._rawDetails);
@@ -107,15 +108,16 @@ export class AssertionFail extends AssertionResult implements iLogItem {
     } else if (details && details.message) {
       return details.message;
     }
-    return String(details);
+    return [String(details)];
   }
 
   public toConsole(): iConsoleLine[] {
     const lines: iConsoleLine[] = [new FailLine(this.message)];
-    const details: string = this.detailsMessage;
-    if (details) {
-      lines.push(new ErrorActualValueLine(this.detailsMessage));
-    }
+    this.detailsMessage
+      .filter((str) => str.length > 0)
+      .forEach((details) => {
+        lines.push(new ErrorActualValueLine(details));
+      });
     if (this.sourceCode && this.sourceCode != "null") {
       lines.push(new SourceCodeBlock(this.sourceCode, this._highlight));
     }

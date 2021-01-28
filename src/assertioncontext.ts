@@ -160,8 +160,10 @@ export class AssertionContext implements iAssertionContext {
   public assert(message: string, value: any): iAssertion;
   public assert(value: any): iAssertion;
   public assert(a: any, b?: any): iAssertion {
-    const value = typeof b !== "undefined" ? b : a;
-    const message = typeof b !== "undefined" ? a : undefined;
+    const { value, message } =
+      arguments.length === 2
+        ? { value: b, message: a }
+        : { value: a, message: undefined };
     const assertion = new Assertion(this, value, message);
     this._assertions.push(assertion);
     return assertion;

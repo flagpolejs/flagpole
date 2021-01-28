@@ -474,6 +474,7 @@ export interface iAssertionIs {
   number(): iAssertion;
   regionCode(countries?: ("US" | "CA")[]): iAssertion;
   countryCode(format: "iso-alpha-2" | "iso-alpha-3"): iAssertion;
+  timezone(): iAssertion;
 }
 
 export interface iAssertion {

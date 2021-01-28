@@ -178,7 +178,7 @@ export class TestRunner {
       const tmpObj = tmp.fileSync({ postfix: ".html" });
       const filePath: string = tmpObj.name;
       let template: string = fs.readFileSync(
-        `${__dirname}/report.html`,
+        `${__dirname}/web/report.html`,
         "utf8"
       );
       template = template.replace("${output}", output).replace("${nav}", "");

@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.5.26",
+  "version": "2.5.28",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -11,7 +11,9 @@
     "flagpole": "./dist/cli/main.js"
   },
   "scripts": {
-    "build": "tsc && cp src/cli/*.html dist/cli/",
+    "clean": "rimraf dist/",
+    "copy-files": "copyfiles -u 1 src/**/**/*.html src/**/*.css dist/",
+    "build": "npm run clean && tsc && npm run copy-files",
     "build-tests": "cd tests && tsc && cd ..",
     "test": "npm run build-tests && flagpole run -t basic -h"
   },
@@ -32,7 +34,8 @@
     "form-data": "^2.5.1",
     "form-urlencoded": "^4.1.3",
     "fs-extra": "^9.0.1",
-    "minikin": "^1.0.26",
+    "minikin": "^1.0.27",
+    "mustache": "^4.1.0",
     "needle": "^2.4.1",
     "open": "^6.4.0",
     "parse-hls": "^1.0.6",
@@ -64,6 +67,7 @@
     "@types/bluebird-global": "^3.5.12",
     "@types/fs-extra": "^8.1.0",
     "@types/jmespath": "^0.15.0",
+    "@types/mustache": "^4.1.0",
     "@types/needle": "^2.0.4",
     "@types/node": "^12.12.8",
     "@types/pixelmatch": "^5.0.0",
@@ -75,9 +79,11 @@
     "@types/validator": "^13.1.0",
     "@types/yargs": "^15.0.4",
     "ajv": "^6.12.2",
+    "copyfiles": "^2.4.1",
     "jmespath": "^0.15.0",
     "prettier": "^2.1.1",
     "puppeteer": "^1.20.0",
+    "rimraf": "^3.0.2",
     "typescript": "^4.0.2"
   }
 }
