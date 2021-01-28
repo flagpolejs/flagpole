@@ -104,6 +104,57 @@ export class AssertionIs implements iAssertionIs {
     return this._validate(validator.isIP, "an IP address");
   }
 
+  public ipRange() {
+    return this._validate(validator.isIPRange, "an IP range");
+  }
+
+  public isin() {
+    return this._validate(
+      validator.isISIN,
+      "an ISIN (stock/security identifier)"
+    );
+  }
+
+  public isbn() {
+    return this._validate(validator.isISBN, "an ISBN");
+  }
+
+  public isrc() {
+    return this._validate(
+      validator.isISRC,
+      "an ISRC (international standard recording code)"
+    );
+  }
+
+  public issn() {
+    return this._validate(
+      validator.isISSN,
+      "an ISSN (international standard serial number)"
+    );
+  }
+
+  public bic() {
+    return this._validate(
+      validator.isBIC,
+      "an BIC (bank identification code) or SWIFT code"
+    );
+  }
+
+  public btcAddress() {
+    return this._validate(validator.isBtcAddress, "a Bitcoin address");
+  }
+
+  public ean() {
+    return this._validate(validator.isEAN, "a European Article Number");
+  }
+
+  public iban() {
+    return this._validate(
+      validator.isIBAN,
+      "an International Bank Account Number"
+    );
+  }
+
   public integer() {
     return this._validate(validator.isInt, "an integer");
   }
@@ -204,6 +255,13 @@ export class AssertionIs implements iAssertionIs {
     return this._validate(validator.isHexadecimal, "a hexadecimal number");
   }
 
+  public hsl() {
+    return this._validate(
+      validator.isHSL,
+      "an HSL(A) (hue, saturation, lightness, optional alpha)"
+    );
+  }
+
   public in(values: any[]) {
     return this._validateWithOpts(
       validator.isIn,
@@ -242,6 +300,10 @@ export class AssertionIs implements iAssertionIs {
 
   public slug() {
     return this._validate(validator.isSlug, "a slug string");
+  }
+
+  public strongPassword() {
+    return this._validate(validator.isStrongPassword, "a strong password");
   }
 
   public uuid() {
