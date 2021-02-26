@@ -190,11 +190,6 @@ export class Suite implements iSuite {
     type: "browser" | "extjs",
     opts?: BrowserOptions
   ): iScenario;
-  public scenario(
-    title: string,
-    type: "ffprobe",
-    opts?: FfprobeOptions
-  ): iScenario;
   public scenario(title: string, type?: ResponseType): iScenario;
   public scenario(
     title: string,

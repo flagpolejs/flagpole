@@ -88,9 +88,6 @@ export class ValuePromise
   @assertionMethod endsWith(value: any) {
     return cast<AssertionPromise>(null);
   }
-  @assertionMethod continains(values: any[]) {
-    return cast<AssertionPromise>(null);
-  }
   @assertionMethod includes(value: any) {
     return cast<AssertionPromise>(null);
   }

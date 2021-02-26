@@ -10,14 +10,30 @@ import formurlencoded from "form-urlencoded";
 import { ImageProbe } from "@zerodeps/image-probe";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { ffprobe, FfprobeOptions } from "media-probe";
+import {
+  mediaStreamValidator,
+  MediaStreamValidatorOpts,
+} from "media-stream-validator";
 
 const CONTENT_TYPE_JSON = "application/json";
 const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
 const CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
 const ENCODING_GZIP = "gzip,deflate";
 
-type HttpRequestType = "generic" | "json" | "image" | "ffprobe";
-export const HttpRequestTypes = ["generic", "json", "image", "ffprobe"];
+type HttpRequestType =
+  | "generic"
+  | "json"
+  | "image"
+  | "ffprobe"
+  | "mediastreamvalidator";
+
+export const HttpRequestTypes = [
+  "generic",
+  "json",
+  "image",
+  "ffprobe",
+  "mediastreamvalidator",
+];
 
 export const HttpMethodVerbAllowedValues = [
   "get",
@@ -475,6 +491,8 @@ export class HttpRequest {
       return this._fetchImage(opts);
     } else if (this.type === "ffprobe") {
       return this._fetchFfprobe(opts);
+    } else if (this.type === "mediastreamvalidator") {
+      return this._fetchMediaStreamValidator(opts);
     } else {
       return this._fetchHttp(opts);
     }
@@ -571,6 +589,23 @@ export class HttpRequest {
       try {
         ffprobe(this.uri, opts).then((data) => {
           resolve(HttpResponse.fromFfprobe(this, data));
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  protected _fetchMediaStreamValidator(
+    opts?: MediaStreamValidatorOpts
+  ): Promise<HttpResponse> {
+    return new Promise((resolve, reject) => {
+      if (!this.uri) {
+        return reject("No uri");
+      }
+      try {
+        mediaStreamValidator(this.uri, opts).then((data) => {
+          resolve(HttpResponse.fromMediaStreamValidator(this, data));
         });
       } catch (err) {
         reject(err);

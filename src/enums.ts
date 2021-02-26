@@ -33,6 +33,7 @@ export type ResponseType =
   | "stylesheet"
   | "script"
   | "ffprobe"
+  | "mediastreamvalidator"
   | "video"
   | "hls"
   | "audio"

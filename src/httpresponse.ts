@@ -4,6 +4,7 @@ import { KeyValue, HttpResponseOptions } from "./interfaces";
 import { readFile } from "fs-extra";
 import { FfprobeData } from "media-probe";
 import { HttpRequest } from "./httprequest";
+import { MediaStreamValidatorData } from "media-stream-validator";
 
 export interface ffprobeResponse {
   headers: KeyValue;
@@ -89,15 +90,25 @@ export class HttpResponse {
     return r;
   }
 
-  static fromFfprobe(
+  static fromMediaStreamValidator(
     request: HttpRequest,
-    probeData: FfprobeData
+    data: MediaStreamValidatorData
   ): HttpResponse {
     const r = new HttpResponse();
     r.headers = {};
     r.statusCode = 200;
     r.body = "";
-    r.json = probeData;
+    r.json = data;
+    r.url = request.uri || "";
+    return r;
+  }
+
+  static fromFfprobe(request: HttpRequest, data: FfprobeData): HttpResponse {
+    const r = new HttpResponse();
+    r.headers = {};
+    r.statusCode = 200;
+    r.body = "";
+    r.json = data;
     r.url = request.uri || "";
     return r;
   }
