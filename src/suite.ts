@@ -1,4 +1,3 @@
-import { ResponseType } from "./enums";
 import { Scenario } from "./scenario";
 import { URL } from "url";
 import { FlagpoleReport } from "./logging/flagpolereport";
@@ -10,12 +9,12 @@ import {
   ScenarioCallback,
   KeyValue,
   ScenarioMapper,
+  BrowserOptions,
 } from "./interfaces";
 import { exitProcess, toType } from "./util";
-import { BrowserOptions } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { SuiteTaskManager } from "./suitetaskmanager";
-import { FfprobeOptions } from "media-probe";
+import { ScenarioType } from "./scenario-types";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 
@@ -190,10 +189,10 @@ export class Suite implements iSuite {
     type: "browser" | "extjs",
     opts?: BrowserOptions
   ): iScenario;
-  public scenario(title: string, type?: ResponseType): iScenario;
+  public scenario(title: string, type?: ScenarioType): iScenario;
   public scenario(
     title: string,
-    type: ResponseType = "html",
+    type: ScenarioType = "html",
     opts?: any
   ): iScenario {
     const scenario: iScenario = Scenario.create(this, title, type, opts);

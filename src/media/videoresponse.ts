@@ -1,5 +1,5 @@
-import { ResponseType } from "../enums";
 import { iResponse } from "../interfaces";
+import { ScenarioType } from "../scenario-types";
 import { MediaResponse } from "./mediaresponse";
 
 export class VideoResponse extends MediaResponse implements iResponse {
@@ -7,7 +7,7 @@ export class VideoResponse extends MediaResponse implements iResponse {
     return "Video";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "video";
   }
 

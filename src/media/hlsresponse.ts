@@ -1,4 +1,3 @@
-import { ResponseType } from "../enums";
 import { iResponse, iValue } from "../interfaces";
 import { HttpResponse } from "../httpresponse";
 import HLS from "parse-hls";
@@ -6,6 +5,7 @@ import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
 import { wrapAsValue } from "../helpers";
 import { VideoResponse } from "./videoresponse";
 import { ValuePromise } from "../value-promise";
+import { ScenarioType } from "../scenario-types";
 
 export class HLSResponse
   extends VideoResponse
@@ -17,7 +17,7 @@ export class HLSResponse
     return "HLS Video";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "hls";
   }
 

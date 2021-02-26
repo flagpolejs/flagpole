@@ -10,6 +10,7 @@ import {
   IteratorBoolCallback,
   ReducerCallback,
   MapperCallback,
+  HttpRequestOptions,
 } from "./interfaces";
 import {
   toType,
@@ -24,10 +25,7 @@ import {
   AssertionActionCompleted,
   AssertionActionFailed,
 } from "./logging/assertionresult";
-import { ResponseType } from "./enums";
 import { Link } from "./link";
-import { HttpResponse } from "./httpresponse";
-import { HttpRequest, HttpRequestOptions } from "./httprequest";
 import * as fs from "fs";
 import {
   EvaluateFn,
@@ -35,8 +33,10 @@ import {
   SerializableOrJSHandle,
 } from "puppeteer-core";
 import { ValuePromise } from "./value-promise";
-import { updateLocale } from "yargs";
-import { jPath } from ".";
+import { ScenarioType } from "./scenario-types";
+import { jPath } from "./json/jpath";
+import { HttpResponse } from ".";
+import { HttpRequest } from "./httprequest";
 
 export class Value implements iValue {
   protected _input: any;
@@ -360,10 +360,10 @@ export class Value implements iValue {
   }
 
   public open(message: string): iScenario;
-  public open(message: string, type: ResponseType): iScenario;
+  public open(message: string, type: ScenarioType): iScenario;
   public open(
     message: string,
-    type: ResponseType,
+    type: ScenarioType,
     callback: iNextCallback
   ): iScenario;
   public open(message: string, callback: iNextCallback): iScenario;
@@ -371,7 +371,7 @@ export class Value implements iValue {
   public open(scenario: iScenario): iScenario;
   public open(
     a?: string | iScenario | iNextCallback,
-    b?: ResponseType | iNextCallback,
+    b?: ScenarioType | iNextCallback,
     c?: iNextCallback
   ): iScenario {
     const message = typeof a == "string" ? a : `Open ${this.name}`;

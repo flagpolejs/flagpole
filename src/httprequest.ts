@@ -1,39 +1,26 @@
-import { KeyValue } from "./interfaces";
-import { ffprobeResponse, HttpResponse } from "./httpresponse";
-import needle = require("needle");
+import {
+  KeyValue,
+  BrowserOptions,
+  iHttpRequest,
+  HttpData,
+  HttpAuthType,
+  HttpAuth,
+  HttpTimeout,
+  HttpProxy,
+  HttpMethodVerb,
+  HttpRequestOptions,
+  CONTENT_TYPE_JSON,
+  CONTENT_TYPE_FORM_MULTIPART,
+  CONTENT_TYPE_FORM,
+  HttpRequestFetch,
+} from "./interfaces";
+import { HttpResponse } from "./httpresponse";
 import tunnel = require("tunnel");
 import * as http from "http";
-import { LaunchOptions } from "puppeteer-core";
-import { probeImageResponse } from "./httpresponse";
 import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
-import { ImageProbe } from "@zerodeps/image-probe";
-import { FlagpoleExecution } from "./flagpoleexecution";
-import { ffprobe, FfprobeOptions } from "media-probe";
-import {
-  mediaStreamValidator,
-  MediaStreamValidatorOpts,
-} from "media-stream-validator";
-
-const CONTENT_TYPE_JSON = "application/json";
-const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
-const CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
-const ENCODING_GZIP = "gzip,deflate";
-
-type HttpRequestType =
-  | "generic"
-  | "json"
-  | "image"
-  | "ffprobe"
-  | "mediastreamvalidator";
-
-export const HttpRequestTypes = [
-  "generic",
-  "json",
-  "image",
-  "ffprobe",
-  "mediastreamvalidator",
-];
+import { ScenarioType } from "./scenario-types";
+import { fetchWithNeedle } from "./adapters/needle";
 
 export const HttpMethodVerbAllowedValues = [
   "get",
@@ -45,96 +32,7 @@ export const HttpMethodVerbAllowedValues = [
   "options",
 ];
 
-export type HttpMethodVerb =
-  | "get"
-  | "head"
-  | "delete"
-  | "patch"
-  | "post"
-  | "put"
-  | "options";
-
-export type HttpAuthType = "basic" | "digest" | "auto";
-
-export interface BrowserOptions extends LaunchOptions {
-  width?: number;
-  height?: number;
-  recordConsole?: boolean;
-  outputConsole?: boolean;
-  product?: "chrome" | "firefox";
-  ignoreHTTPSErrors?: boolean;
-  headless?: boolean;
-  executablePath?: string;
-  slowMo?: number;
-  args?: string[];
-  ignoreDefaultArgs?: boolean | string[];
-  timeout?: number;
-  devtools?: boolean;
-  defaultViewport?: {
-    width?: number;
-    height?: number;
-    deviceScaleFactor?: number;
-    isMobile?: boolean;
-    hasTouch?: boolean;
-    isLandscape?: boolean;
-  };
-  handleSIGINT?: boolean;
-  handleSIGTERM?: boolean;
-  handleSIGHUP?: boolean;
-  dumpio?: boolean;
-  userDataDir?: string;
-  env?: { [key: string]: any };
-  pipe?: boolean;
-  extraPrefsFirefox?: any;
-}
-
-export type HttpAuth = {
-  username: string;
-  password: string;
-};
-
-export type HttpTimeout = {
-  read?: number;
-  open?: number;
-  response?: number;
-};
-
-export type HttpProxy = {
-  host: string;
-  port: number;
-  auth: HttpAuth;
-};
-
-export type HttpData =
-  | Buffer
-  | KeyValue
-  | NodeJS.ReadableStream
-  | string
-  | null
-  | undefined;
-
-export type HttpRequestOptions = {
-  browserOptions?: BrowserOptions;
-  auth?: HttpAuth;
-  authType?: HttpAuthType;
-  data?: HttpData;
-  cookies?: KeyValue;
-  headers?: KeyValue;
-  maxRedirects?: number;
-  method?: HttpMethodVerb;
-  outputFile?: string;
-  proxy?: HttpProxy;
-  timeout?: HttpTimeout | number;
-  type?: HttpRequestType;
-  uri?: string | null;
-  /**
-   * For https, should we reject unauthorized certs?
-   */
-  verifyCert?: boolean;
-  cacheKey?: string;
-};
-
-export class HttpRequest {
+export class HttpRequest implements iHttpRequest {
   private _uri: string | null = null;
   private _method: HttpMethodVerb = "get";
   private _headers: KeyValue = {};
@@ -148,7 +46,7 @@ export class HttpRequest {
   private _data: HttpData;
   private _fetched: boolean = false;
   private _browser: BrowserOptions = {};
-  private _type: HttpRequestType = "generic";
+  private _type: ScenarioType = "resource";
   private _outputFile?: string;
 
   public get uri(): string | null {
@@ -171,11 +69,11 @@ export class HttpRequest {
     }
   }
 
-  public get type(): HttpRequestType {
+  public get type(): ScenarioType {
     return this._type;
   }
 
-  public set type(value: HttpRequestType) {
+  public set type(value: ScenarioType) {
     if (!this.isImmutable) {
       this._type = value;
       if (value === "json") {
@@ -214,11 +112,11 @@ export class HttpRequest {
     }
   }
 
-  public get authType(): HttpAuthType | undefined {
-    return this._authType;
+  public get authType(): HttpAuthType {
+    return this._authType || "auto";
   }
 
-  public set authType(value: HttpAuthType | undefined) {
+  public set authType(value: HttpAuthType) {
     if (!this.isImmutable) {
       this._authType = value;
     }
@@ -284,7 +182,7 @@ export class HttpRequest {
     }
   }
 
-  private get proxyAgent(): http.Agent | undefined {
+  public get proxyAgent(): http.Agent | undefined {
     if (this._proxy) {
       return tunnel.httpOverHttp({
         proxy: {
@@ -331,49 +229,12 @@ export class HttpRequest {
     };
   }
 
-  /**
-   * For the Needle library
-   */
-  private get needleOptions(): needle.NeedleOptions {
-    return {
-      agent: this.proxyAgent,
-      auth: this._authType || "auto",
-      compressed: this.headers["Accept-Encoding"] === ENCODING_GZIP,
-      cookies: this.cookies,
-      follow_max: this.maxRedirects,
-      headers: this.headers,
-      json: this.headers["Content-Type"] === CONTENT_TYPE_JSON,
-      multipart: this.headers["Content-Type"] === CONTENT_TYPE_FORM_MULTIPART,
-      open_timeout: this.timeout.open,
-      output: this.outputFile,
-      parse_cookies: true,
-      parse_response: false,
-      password: this.auth?.password,
-      read_timeout: this.timeout.read,
-      rejectUnauthorized: this.verifyCert,
-      username: this.auth?.username,
-      user_agent: "Flagpole",
-    };
-  }
-
   constructor(opts: HttpRequestOptions) {
     this.setOptions(opts);
   }
 
-  private urlEncodeForm(data: KeyValue): string {
-    const encoded: string[] = [];
-    Object.keys(data).forEach((key) => {
-      encoded.push(
-        `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`
-      );
-    });
-    return encoded.join("&");
-  }
-
-  public setType(type: string) {
-    this._type = HttpRequestTypes.includes(type)
-      ? (type as HttpRequestType)
-      : "generic";
+  public setType(type: ScenarioType) {
+    this._type = type;
   }
 
   /**
@@ -479,7 +340,10 @@ export class HttpRequest {
    *
    * @param opts
    */
-  public fetch(opts?: KeyValue): Promise<HttpResponse> {
+  public fetch(
+    opts: KeyValue = {},
+    fetchMethod?: HttpRequestFetch
+  ): Promise<HttpResponse> {
     if (this._fetched) {
       throw new Error("This request was already fetched.");
     }
@@ -487,129 +351,7 @@ export class HttpRequest {
     if (this._uri === null) {
       throw new Error("Invalid URI");
     }
-    if (this.type === "image") {
-      return this._fetchImage(opts);
-    } else if (this.type === "ffprobe") {
-      return this._fetchFfprobe(opts);
-    } else if (this.type === "mediastreamvalidator") {
-      return this._fetchMediaStreamValidator(opts);
-    } else {
-      return this._fetchHttp(opts);
-    }
-  }
-
-  private _fetchHttp(opts?: KeyValue): Promise<HttpResponse> {
-    return new Promise((resolve, reject) => {
-      if (this.options.cacheKey) {
-        const response = FlagpoleExecution.global.getCache(
-          this.options.cacheKey
-        );
-        if (response !== null) {
-          return resolve(response as HttpResponse);
-        }
-      }
-      const stream = needle.request(
-        // Needle doesn't support "options"
-        this.method === "options" ? "head" : this.method,
-        this.uri || "/",
-        this.data || null,
-        this.needleOptions,
-        (err, resp) => {
-          if (!err && resp) {
-            const response = HttpResponse.fromNeedle(resp);
-            if (this.options.cacheKey) {
-              FlagpoleExecution.global.setCache(
-                this.options.cacheKey,
-                response
-              );
-            }
-            return resolve(response);
-          }
-          reject(err);
-        }
-      );
-      if (opts?.redirect) {
-        stream.on("redirect", opts.redirect);
-      }
-    });
-  }
-
-  protected _fetchImage(opts?: KeyValue): Promise<HttpResponse> {
-    return new Promise((resolve, reject) => {
-      const stream = needle.request(
-        "get",
-        this.uri || "/",
-        null,
-        this.needleOptions
-      );
-      if (opts?.redirect) {
-        stream.on("redirect", opts.redirect);
-      }
-      // Process response
-      const response: probeImageResponse = {
-        statusCode: 0,
-        length: 0,
-        url: this.uri || "",
-        headers: {},
-        imageData: {
-          width: 0,
-          height: 0,
-          type: "",
-          mimeType: "",
-        },
-      };
-      stream
-        .on("header", (statusCode: number, headers: KeyValue) => {
-          response.statusCode = statusCode;
-          response.headers = headers;
-          response.length = Number(headers["content-length"]);
-        })
-        .on("readable", () => {
-          // Read the first 512 bytes and process image
-          const chunk = <Buffer>stream.read(512);
-          response.imageData =
-            ImageProbe.fromBuffer(chunk) || response.imageData;
-          // We have enough! Stop processing any more data!
-          stream.pause();
-          try {
-            // @ts-ignore
-            stream.destroy();
-          } catch {}
-          // Set the response
-          resolve(HttpResponse.fromProbeImage(response));
-        });
-    });
-  }
-
-  protected _fetchFfprobe(opts?: FfprobeOptions): Promise<HttpResponse> {
-    return new Promise((resolve, reject) => {
-      if (!this.uri) {
-        return reject("No uri");
-      }
-      try {
-        ffprobe(this.uri, opts).then((data) => {
-          resolve(HttpResponse.fromFfprobe(this, data));
-        });
-      } catch (err) {
-        reject(err);
-      }
-    });
-  }
-
-  protected _fetchMediaStreamValidator(
-    opts?: MediaStreamValidatorOpts
-  ): Promise<HttpResponse> {
-    return new Promise((resolve, reject) => {
-      if (!this.uri) {
-        return reject("No uri");
-      }
-      try {
-        mediaStreamValidator(this.uri, opts).then((data) => {
-          resolve(HttpResponse.fromMediaStreamValidator(this, data));
-        });
-      } catch (err) {
-        reject(err);
-      }
-    });
+    fetchMethod = fetchMethod || fetchWithNeedle;
+    return fetchMethod(this, opts);
   }
 }

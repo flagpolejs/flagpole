@@ -1,4 +1,3 @@
-import { ResponseType } from "../enums";
 import { iResponse, iValue } from "../interfaces";
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../httpresponse";

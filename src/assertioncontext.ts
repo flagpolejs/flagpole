@@ -18,8 +18,7 @@ import {
   FindOptions,
   FindAllOptions,
   OptionalXY,
-  IteratorCallback,
-  MapperCallback,
+  iHttpRequest,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -84,7 +83,7 @@ export class AssertionContext implements iAssertionContext {
    */
   public result: any;
 
-  public get request(): HttpRequest {
+  public get request(): iHttpRequest {
     return this._scenario.request;
   }
 

@@ -1,8 +1,4 @@
-import {
-  ResponseType,
-  ScenarioStatusEvent,
-  ScenarioDisposition,
-} from "./enums";
+import { ScenarioStatusEvent, ScenarioDisposition } from "./enums";
 import {
   iAssertion,
   iAssertionContext,
@@ -20,13 +16,19 @@ import {
   iValue,
   HttpResponseOptions,
   WebhookServer,
+  BrowserOptions,
+  HttpRequestOptions,
+  HttpProxy,
+  HttpAuth,
+  HttpTimeout,
+  HttpMethodVerb,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
   BrowserControl,
   iBrowserControlResponse,
 } from "./puppeteer/browsercontrol";
-import { createResponse } from "./responsefactory";
+import { getRequestAdapter, createResponse } from "./scenario-type-map";
 import {
   AssertionResult,
   AssertionPass,
@@ -39,17 +41,7 @@ import { ResourceResponse } from "./resourceresponse";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/logcollection";
-import {
-  HttpRequestOptions,
-  HttpProxy,
-  HttpAuth,
-  HttpRequest,
-  HttpTimeout,
-  HttpMethodVerb,
-  HttpMethodVerbAllowedValues,
-  BrowserOptions,
-  HttpRequestTypes,
-} from "./httprequest";
+import { HttpRequest, HttpMethodVerbAllowedValues } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { toType, asyncForEach, runAsync } from "./util";
 import { AssertionContext } from "./assertioncontext";
@@ -66,6 +58,7 @@ import {
   afterScenarioExecuted,
   beforeScenarioRequestStarted,
 } from "./decorators";
+import { ScenarioType } from "./scenario-types";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -80,7 +73,7 @@ enum ScenarioRequestType {
 export class Scenario implements iScenario {
   public readonly suite: iSuite;
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return this._responseType;
   }
 
@@ -305,7 +298,7 @@ export class Scenario implements iScenario {
   protected _timeRequestLoaded: number | null = null;
   protected _timeScenarioFinished: number | null = null;
   protected _requestType: ScenarioRequestType = ScenarioRequestType.httpRequest;
-  protected _responseType: ResponseType = "html";
+  protected _responseType: ScenarioType = "html";
   protected _redirectChain: string[] = [];
   protected _finalUrl: string | null = null;
   protected _waitToExecute: boolean = false;
@@ -336,7 +329,7 @@ export class Scenario implements iScenario {
   public static create(
     suite: iSuite,
     title: string,
-    type: ResponseType,
+    type: ScenarioType,
     opts: any
   ): iScenario {
     return new Scenario(suite, title).setResponseType(type, opts);
@@ -927,7 +920,7 @@ export class Scenario implements iScenario {
    * @param opts
    */
   @beforeScenarioExecuted
-  public setResponseType(type: ResponseType, opts: any = {}): iScenario {
+  public setResponseType(type: ScenarioType, opts: any = {}): iScenario {
     // Merge passed in opts with default opts
     this._responseType = type;
     if (["browser", "extjs"].includes(type)) {
@@ -1190,12 +1183,15 @@ export class Scenario implements iScenario {
    */
   private _executeDefaultRequest() {
     this._request
-      .fetch({
-        redirect: (url: string) => {
-          this._finalUrl = url;
-          this._redirectChain.push(url);
+      .fetch(
+        {
+          redirect: (url: string) => {
+            this._finalUrl = url;
+            this._redirectChain.push(url);
+          },
         },
-      })
+        getRequestAdapter(this)
+      )
       .then((response) => {
         this._processResponse(response);
       })

@@ -6,13 +6,13 @@ import {
   KeyValue,
   FindOptions,
   FindAllOptions,
+  HttpMethodVerb,
 } from "../interfaces";
 import { asyncForEach } from "../util";
 import { getFindParams, filterFind } from "../helpers";
-import { HttpMethodVerb } from "../httprequest";
-import { HttpRequest } from "../httprequest";
 import * as cheerio from "cheerio";
 import { ValuePromise } from "../value-promise";
+import { HttpRequest } from "../httprequest";
 
 let $: cheerio.Root;
 

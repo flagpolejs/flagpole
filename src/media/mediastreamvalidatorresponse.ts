@@ -1,10 +1,10 @@
-import { ResponseType } from "../enums";
 import { iResponse, iValue } from "../interfaces";
 import { HttpResponse } from "../httpresponse";
 import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { JsonResponse } from "../json/jsonresponse";
+import { ScenarioType } from "../scenario-types";
 
 export class MediaStreamValidatorResponse
   extends JsonResponse
@@ -15,7 +15,7 @@ export class MediaStreamValidatorResponse
     return "MediaStreamValidator Data";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "mediastreamvalidator";
   }
 
@@ -32,7 +32,7 @@ export class MediaStreamValidatorResponse
     try {
       this.jsonDoc = new JsonDoc(httpResponse.json);
     } catch (ex) {
-      this.context.logFailure("Error parsing ffprobe output.", ex);
+      this.context.logFailure("Error parsing mediastreamvalidator output.", ex);
     }
   }
 

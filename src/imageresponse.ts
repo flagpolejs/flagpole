@@ -1,11 +1,11 @@
 import { ProtoResponse } from "./response";
-import { ResponseType } from "./enums";
 import { iResponse, iValue } from "./interfaces";
 import { URL } from "url";
 import { HttpResponse } from "./httpresponse";
 import { Value } from "./value";
 import { wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
+import { ScenarioType } from "./scenario-types";
 
 export interface ImageProperties {
   width: number;
@@ -42,7 +42,7 @@ export class ImageResponse extends ProtoResponse implements iResponse {
     );
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "image";
   }
 

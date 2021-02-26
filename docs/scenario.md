@@ -583,7 +583,7 @@ Get the options that we have set for the request. This will include cookies, hea
 
 The total time between when the Scenario's request went out and when the response back back. Null if it the request has not yet returned a response.
 
-### responseType: ResponseType
+### responseType: ScenarioType
 
 The type of Scenario this is, the type of request we'll make and the response we'll expect back.
 

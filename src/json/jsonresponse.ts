@@ -2,8 +2,8 @@ import { ProtoResponse } from "../response";
 import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "./jpath";
 import { HttpResponse } from "../httpresponse";
 import { iResponse, iValue } from "../interfaces";
-import { ResponseType } from "../enums";
 import { ValuePromise } from "../value-promise";
+import { ScenarioType } from "../scenario-types";
 
 export class JsonResponse
   extends ProtoResponse
@@ -14,7 +14,7 @@ export class JsonResponse
     return "JSON";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "json";
   }
 

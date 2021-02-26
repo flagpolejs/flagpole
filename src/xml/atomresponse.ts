@@ -1,8 +1,8 @@
 import { HttpResponse } from "../httpresponse";
 import { iResponse } from "../interfaces";
-import { ResponseType } from "../enums";
 import { XmlResponse } from "./xmlresponse";
 import * as cheerio from "cheerio";
+import { ScenarioType } from "../scenario-types";
 
 const validMimeTypes = ["application/atom+xml", "text/xml", "text/atom+xml"];
 
@@ -11,7 +11,7 @@ export class AtomResponse extends XmlResponse implements iResponse {
     return "Atom";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "atom";
   }
 

@@ -1,5 +1,4 @@
 import { ExtJsComponent } from "./extjscomponent";
-import { ResponseType } from "../enums";
 import {
   iResponse,
   iScenario,
@@ -22,6 +21,7 @@ import { ElementHandle, JSHandle, EvaluateFn } from "puppeteer-core";
 import { BrowserElement } from "./browserelement";
 import { query, jsHandleArrayToHandles } from "./ext.helper";
 import { ValuePromise } from "../value-promise";
+import { ScenarioType } from "../scenario-types";
 
 declare type globalThis = {
   Ext: any;
@@ -32,7 +32,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     return "ExtJS";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "extjs";
   }
 

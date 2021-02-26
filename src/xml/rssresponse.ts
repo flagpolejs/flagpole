@@ -1,8 +1,8 @@
 import { HttpResponse } from "../httpresponse";
 import { iResponse } from "../interfaces";
-import { ResponseType } from "../enums";
 import { XmlResponse } from "./xmlresponse";
 import * as cheerio from "cheerio";
+import { ScenarioType } from "../scenario-types";
 
 const validMimeTypes = ["application/rss+xml", "text/xml", "text/rss+xml"];
 
@@ -11,7 +11,7 @@ export class RssResponse extends XmlResponse implements iResponse {
     return "RSS";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "rss";
   }
 

@@ -1,10 +1,9 @@
 import * as puppeteer from "puppeteer-core";
 import { NeedleResponse } from "needle";
-import { KeyValue, HttpResponseOptions } from "./interfaces";
+import { KeyValue, HttpResponseOptions, iHttpRequest } from "./interfaces";
 import { readFile } from "fs-extra";
 import { FfprobeData } from "media-probe";
-import { HttpRequest } from "./httprequest";
-import { MediaStreamValidatorData } from "media-stream-validator";
+import { probeImageResponse } from "./adapters/image";
 
 export interface ffprobeResponse {
   headers: KeyValue;
@@ -13,22 +12,6 @@ export interface ffprobeResponse {
   length: number;
   probeData: FfprobeData;
 }
-
-export interface probeImageResponse {
-  headers: KeyValue;
-  statusCode: number;
-  url: string;
-  length: number;
-  imageData: probeImageData;
-}
-
-export type probeImageData = {
-  width: number;
-  height: number;
-  type: string;
-  mimeType: string;
-};
-
 export class HttpResponse {
   public body: string = "";
   public json: any = null;
@@ -90,20 +73,7 @@ export class HttpResponse {
     return r;
   }
 
-  static fromMediaStreamValidator(
-    request: HttpRequest,
-    data: MediaStreamValidatorData
-  ): HttpResponse {
-    const r = new HttpResponse();
-    r.headers = {};
-    r.statusCode = 200;
-    r.body = "";
-    r.json = data;
-    r.url = request.uri || "";
-    return r;
-  }
-
-  static fromFfprobe(request: HttpRequest, data: FfprobeData): HttpResponse {
+  static fromJsonData(request: iHttpRequest, data: any): HttpResponse {
     const r = new HttpResponse();
     r.headers = {};
     r.statusCode = 200;

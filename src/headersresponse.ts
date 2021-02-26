@@ -1,11 +1,11 @@
 import { ProtoResponse } from "./response";
 import { iResponse, iValue } from "./interfaces";
-import { ResponseType } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import { ValuePromise } from "./value-promise";
+import { ScenarioType } from "./scenario-types";
 
 export class HeadersResponse extends ProtoResponse implements iResponse {
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "headers";
   }
 

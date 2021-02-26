@@ -1,16 +1,16 @@
-import { ResponseType } from "./enums";
 import { iResponse } from "./interfaces";
 import { Value } from "./value";
 import { ProtoResponse } from "./response";
 import { HttpResponse } from "./httpresponse";
 import { ValuePromise } from "./value-promise";
+import { ScenarioType } from "./scenario-types";
 
 export class ScriptResponse extends ProtoResponse implements iResponse {
   public get responseTypeName(): string {
     return "Script";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "script";
   }
 

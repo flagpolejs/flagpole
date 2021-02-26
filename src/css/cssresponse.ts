@@ -1,10 +1,10 @@
 import { ProtoResponse } from "../response";
-import { ResponseType } from "../enums";
 import { iResponse } from "../interfaces";
 import { HttpResponse } from "../httpresponse";
 import { CSSRule } from "./cssrule";
 import { toType } from "../util";
 import { ValuePromise } from "../value-promise";
+import { ScenarioType } from "../scenario-types";
 
 const css = require("css");
 
@@ -15,7 +15,7 @@ export class CssResponse extends ProtoResponse implements iResponse {
     return "Stylesheet";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "stylesheet";
   }
 

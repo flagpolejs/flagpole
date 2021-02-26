@@ -6,22 +6,12 @@ import {
   PageFnOptions,
 } from "puppeteer-core";
 import {
-  ResponseType,
   SuiteStatusEvent,
   ScenarioStatusEvent,
   LineType,
   ScenarioDisposition,
 } from "./enums";
 import { HttpResponse } from "./httpresponse";
-import {
-  HttpRequest,
-  HttpRequestOptions,
-  HttpProxy,
-  HttpTimeout,
-  HttpAuth,
-  HttpMethodVerb,
-  BrowserOptions,
-} from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { Link } from "./link";
 import { ServerOptions } from "https";
@@ -29,8 +19,9 @@ import { Server } from "minikin";
 import validator from "validator";
 import { ValuePromise } from "./value-promise";
 import { SchemaValidator } from "./assertionschema";
-import { FfprobeOptions } from "media-probe";
-//import * as Ajv from "ajv";
+import { ScenarioType } from "./scenario-types";
+import { LaunchOptions } from "puppeteer-core";
+import * as http from "http";
 
 interface AjvSchema {
   // TODO: Add this reference
@@ -249,8 +240,8 @@ export interface iValue {
   click(): Promise<iValue>;
   submit(): Promise<iValue>;
   open(message: string): iScenario;
-  open(message: string, type: ResponseType): iScenario;
-  open(message: string, type: ResponseType, callback: iNextCallback): iScenario;
+  open(message: string, type: ScenarioType): iScenario;
+  open(message: string, type: ScenarioType, callback: iNextCallback): iScenario;
   open(message: string, callback: iNextCallback): iScenario;
   open(callback: iNextCallback): iScenario;
   open(scenario: iScenario): iScenario;
@@ -350,7 +341,7 @@ export interface iValue {
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
  */
 export interface iResponse {
-  responseType: ResponseType;
+  responseType: ScenarioType;
   responseTypeName: string;
   statusCode: iValue;
   statusMessage: iValue;
@@ -558,7 +549,7 @@ export interface iAssertion {
 
 export interface iAssertionContext {
   result: any;
-  request: HttpRequest;
+  request: iHttpRequest;
   response: iResponse;
   scenario: iScenario;
   suite: iSuite;
@@ -716,7 +707,7 @@ export interface iSuite {
     type: "browser" | "extjs",
     opts?: BrowserOptions
   ): iScenario;
-  scenario(title: string, type?: ResponseType, opts?: any): iScenario;
+  scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
   json(title: string): iScenario;
   image(title: string): iScenario;
   video(title: string): iScenario;
@@ -745,7 +736,7 @@ export interface iSuite {
 
 export interface iScenario {
   suite: iSuite;
-  responseType: ResponseType;
+  responseType: ScenarioType;
   title: string;
   totalDuration: number | null;
   executionDuration: number | null;
@@ -761,7 +752,7 @@ export interface iScenario {
   finalUrl: string | null;
   redirectCount: number;
   redirectChain: string[];
-  request: HttpRequest;
+  request: iHttpRequest;
   browserControl: BrowserControl | null;
   hasAborted: boolean;
   hasBeenCancelled: boolean;
@@ -841,10 +832,7 @@ export interface iScenario {
   webhook(port: number, opts: ServerOptions): iScenario;
   webhook(opts: ServerOptions): iScenario;
   server(): Promise<WebhookServer>;
-  setResponseType(
-    type: ResponseType,
-    opts?: BrowserOptions | HttpRequestOptions
-  ): iScenario;
+  setResponseType(type: ScenarioType, opts?: KeyValue): iScenario;
   promise(): Promise<iScenario>;
   waitForFinished(): Promise<iScenario>;
   waitForResponse(): Promise<iScenario>;
@@ -921,3 +909,121 @@ export interface WebhookServer {
   opts: ServerOptions;
   server: Server;
 }
+
+export interface BrowserOptions extends LaunchOptions {
+  width?: number;
+  height?: number;
+  recordConsole?: boolean;
+  outputConsole?: boolean;
+  product?: "chrome" | "firefox";
+  ignoreHTTPSErrors?: boolean;
+  headless?: boolean;
+  executablePath?: string;
+  slowMo?: number;
+  args?: string[];
+  ignoreDefaultArgs?: boolean | string[];
+  timeout?: number;
+  devtools?: boolean;
+  defaultViewport?: {
+    width?: number;
+    height?: number;
+    deviceScaleFactor?: number;
+    isMobile?: boolean;
+    hasTouch?: boolean;
+    isLandscape?: boolean;
+  };
+  handleSIGINT?: boolean;
+  handleSIGTERM?: boolean;
+  handleSIGHUP?: boolean;
+  dumpio?: boolean;
+  userDataDir?: string;
+  env?: { [key: string]: any };
+  pipe?: boolean;
+  extraPrefsFirefox?: any;
+}
+
+export type HttpRequestFetch = (
+  request: iHttpRequest,
+  opts?: KeyValue
+) => Promise<HttpResponse>;
+
+export type HttpMethodVerb =
+  | "get"
+  | "head"
+  | "delete"
+  | "patch"
+  | "post"
+  | "put"
+  | "options";
+
+export type HttpAuthType = "basic" | "digest" | "auto";
+
+export type HttpAuth = {
+  username: string;
+  password: string;
+};
+
+export type HttpTimeout = {
+  read?: number;
+  open?: number;
+  response?: number;
+};
+
+export type HttpProxy = {
+  host: string;
+  port: number;
+  auth: HttpAuth;
+};
+
+export type HttpData =
+  | Buffer
+  | KeyValue
+  | NodeJS.ReadableStream
+  | string
+  | null
+  | undefined;
+
+export type HttpRequestOptions = {
+  browserOptions?: BrowserOptions;
+  auth?: HttpAuth;
+  authType?: HttpAuthType;
+  data?: HttpData;
+  cookies?: KeyValue;
+  headers?: KeyValue;
+  maxRedirects?: number;
+  method?: HttpMethodVerb;
+  outputFile?: string;
+  proxy?: HttpProxy;
+  timeout?: HttpTimeout | number;
+  type?: ScenarioType;
+  uri?: string | null;
+  /**
+   * For https, should we reject unauthorized certs?
+   */
+  verifyCert?: boolean;
+  cacheKey?: string;
+};
+
+export interface iHttpRequest {
+  uri: string | null;
+  method: HttpMethodVerb;
+  headers: KeyValue;
+  cookies: KeyValue;
+  verifyCert: boolean;
+  proxy: HttpProxy | undefined;
+  timeout: HttpTimeout;
+  maxRedirects: number;
+  auth: HttpAuth | undefined;
+  authType?: HttpAuthType;
+  data: HttpData;
+  browser: BrowserOptions;
+  type: ScenarioType;
+  outputFile?: string;
+  options: HttpRequestOptions;
+  proxyAgent?: http.Agent;
+}
+
+export const CONTENT_TYPE_JSON = "application/json";
+export const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
+export const CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
+export const ENCODING_GZIP = "gzip,deflate";

@@ -8,10 +8,10 @@ import {
   FindAllOptions,
 } from "../interfaces";
 import { Link } from "../link";
-import { ResponseType } from "../enums";
 import { isPuppeteer } from "../response";
 import { getMessageAndCallbackFromOverloading } from "../util";
 import { ValuePromise } from "../value-promise";
+import { ScenarioType } from "../scenario-types";
 
 export abstract class DOMElement extends Value {
   public get name(): string {
@@ -182,7 +182,7 @@ export abstract class DOMElement extends Value {
     const link: Link = await this.getLink();
     // If this is a lmabda scenario, define the response type and options
     if (overloaded.scenario === undefined) {
-      const scenarioType: ResponseType = await this._getLambdaScenarioType();
+      const scenarioType: ScenarioType = await this._getLambdaScenarioType();
       scenario.setResponseType(
         scenarioType,
         this._getLambdaScenarioOpts(scenarioType)
@@ -258,7 +258,7 @@ export abstract class DOMElement extends Value {
     return (await this._isLinkTag()) || (await this._isButtonTag());
   }
 
-  protected async _getLambdaScenarioType(): Promise<ResponseType> {
+  protected async _getLambdaScenarioType(): Promise<ScenarioType> {
     if ((await this._isFormTag()) || (await this._isClickable())) {
       // If we are loading an html page, stay in our current mode
       return this._context.scenario.responseType;
@@ -275,7 +275,7 @@ export abstract class DOMElement extends Value {
     }
   }
 
-  protected _getLambdaScenarioOpts(newScenarioType: ResponseType): any {
+  protected _getLambdaScenarioOpts(newScenarioType: ScenarioType): any {
     const newScenarioIsBrowser: boolean = isPuppeteer(newScenarioType);
     const curScenarioIsBrowser: boolean = isPuppeteer(
       this._context.response.responseType
@@ -288,7 +288,7 @@ export abstract class DOMElement extends Value {
 
   protected _createSubScenario(
     overloaded: iMessageAndCallback,
-    defaultResponseType: ResponseType = "resource",
+    defaultResponseType: ScenarioType = "resource",
     defaultOpts: any = {}
   ): iScenario {
     return overloaded.scenario === undefined

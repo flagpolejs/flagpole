@@ -2,10 +2,10 @@ import { HTMLElement } from "./htmlelement";
 import { HttpResponse } from "../httpresponse";
 import { DOMResponse } from "./domresponse";
 import { iResponse, iValue, FindAllOptions, FindOptions } from "../interfaces";
-import { ResponseType } from "../enums";
 import * as cheerio from "cheerio";
 import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
 import { ValuePromise } from "../value-promise";
+import { ScenarioType } from "../scenario-types";
 
 export class HtmlResponse extends DOMResponse implements iResponse {
   private _cheerio: cheerio.Root | null = null;
@@ -25,7 +25,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     return "HTML";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "html";
   }
 

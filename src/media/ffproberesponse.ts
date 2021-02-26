@@ -1,10 +1,10 @@
-import { ResponseType } from "../enums";
 import { iResponse, iValue } from "../interfaces";
 import { HttpResponse } from "../httpresponse";
 import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { JsonResponse } from "../json/jsonresponse";
+import { ScenarioType } from "../scenario-types";
 
 export class FfprobeResponse
   extends JsonResponse
@@ -15,7 +15,7 @@ export class FfprobeResponse
     return "FFprobe Data";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "ffprobe";
   }
 

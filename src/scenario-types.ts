@@ -1,0 +1,18 @@
+export type ScenarioType =
+  | "html"
+  | "json"
+  | "image"
+  | "stylesheet"
+  | "script"
+  | "ffprobe"
+  | "mediastreamvalidator"
+  | "video"
+  | "hls"
+  | "audio"
+  | "resource"
+  | "browser"
+  | "extjs"
+  | "xml"
+  | "rss"
+  | "atom"
+  | "headers";

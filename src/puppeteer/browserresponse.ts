@@ -1,4 +1,3 @@
-import { ResponseType } from "../enums";
 import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
 import { ElementHandle } from "puppeteer-core";
 import { PuppeteerResponse } from "./puppeteerresponse";
@@ -12,13 +11,14 @@ import {
 } from "../helpers";
 import { BrowserElement } from "./browserelement";
 import { ValuePromise } from "../value-promise";
+import { ScenarioType } from "../scenario-types";
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
   public get responseTypeName(): string {
     return "Browser";
   }
 
-  public get responseType(): ResponseType {
+  public get responseType(): ScenarioType {
     return "browser";
   }
 

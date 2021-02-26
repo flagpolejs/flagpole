@@ -8,14 +8,14 @@ import {
   FindAllOptions,
   OptionalXY,
 } from "./interfaces";
-import { ResponseType } from "./enums";
 import { HttpResponse } from "./httpresponse";
 import { AssertionContext } from "./assertioncontext";
 import { wrapAsValue } from "./helpers";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { ValuePromise } from "./value-promise";
+import { ScenarioType } from "./scenario-types";
 
-export function isPuppeteer(type: ResponseType): boolean {
+export function isPuppeteer(type: ScenarioType): boolean {
   return ["browser", "extjs"].indexOf(type) >= 0;
 }
 
@@ -24,7 +24,7 @@ export abstract class ProtoResponse implements iResponse {
 
   private _httpResponse: HttpResponse = HttpResponse.createEmpty();
 
-  abstract get responseType(): ResponseType;
+  abstract get responseType(): ScenarioType;
   abstract get responseTypeName(): string;
   abstract find(selector: string, opts?: FindOptions): ValuePromise;
   abstract find(

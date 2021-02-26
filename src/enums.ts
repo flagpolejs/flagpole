@@ -26,25 +26,6 @@ export enum SuiteStatusEvent {
   finished = "finished",
 }
 
-export type ResponseType =
-  | "html"
-  | "json"
-  | "image"
-  | "stylesheet"
-  | "script"
-  | "ffprobe"
-  | "mediastreamvalidator"
-  | "video"
-  | "hls"
-  | "audio"
-  | "resource"
-  | "browser"
-  | "extjs"
-  | "xml"
-  | "rss"
-  | "atom"
-  | "headers";
-
 export enum LineType {
   resultPass = "resultPass",
   resultFailure = "resultFailure",

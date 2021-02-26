@@ -22,7 +22,6 @@ import { VideoResponse } from "./media/videoresponse";
 import { HLSResponse } from "./media/hlsresponse";
 import { HeadersResponse } from "./headersresponse";
 import { Flagpole } from "./flagpole";
-import { ResponseType } from "./enums";
 import {
   iResponse,
   iValue,
@@ -30,9 +29,12 @@ import {
   iSuite,
   JsonSchema,
   JsonSchema_Type,
+  BrowserOptions,
+  HttpAuth,
 } from "./interfaces";
-import { BrowserOptions, HttpRequest, HttpAuth } from "./httprequest";
+import { HttpRequest } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
+import { ScenarioType } from "./scenario-types";
 
 // Aliases
 const fp = Flagpole;
@@ -61,7 +63,7 @@ export {
   ImageResponse,
   JsonResponse,
   ResourceResponse,
-  ResponseType,
+  ScenarioType,
   ProtoResponse,
   iResponse,
   HttpRequest,
