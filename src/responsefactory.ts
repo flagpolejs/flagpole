@@ -14,38 +14,27 @@ import { RssResponse } from "./xml/rssresponse";
 import { AtomResponse } from "./xml/atomresponse";
 import { HeadersResponse } from "./headersresponse";
 import { HLSResponse } from "./media/hlsresponse";
+import { FfprobeResponse } from "./media/ffproberesponse";
+
+const typeToClassMap: { [type: string]: any } = {
+  html: HtmlResponse,
+  browser: BrowserResponse,
+  extjs: ExtJSResponse,
+  stylesheet: CssResponse,
+  image: ImageResponse,
+  json: JsonResponse,
+  script: ScriptResponse,
+  xml: XmlResponse,
+  rss: RssResponse,
+  atom: AtomResponse,
+  headers: HeadersResponse,
+  video: VideoResponse,
+  hls: HLSResponse,
+  ffprobe: FfprobeResponse,
+};
 
 export function createResponse(scenario: iScenario): iResponse {
-  const type: ResponseType = scenario.responseType;
-  let className: any;
-  if (type == "html") {
-    className = HtmlResponse;
-  } else if (type == "browser") {
-    className = BrowserResponse;
-  } else if (type == "extjs") {
-    className = ExtJSResponse;
-  } else if (type == "stylesheet") {
-    className = CssResponse;
-  } else if (type == "image") {
-    className = ImageResponse;
-  } else if (type == "json") {
-    className = JsonResponse;
-  } else if (type == "script") {
-    className = ScriptResponse;
-  } else if (type == "xml") {
-    className = XmlResponse;
-  } else if (type == "rss") {
-    className = RssResponse;
-  } else if (type == "atom") {
-    className = AtomResponse;
-  } else if (type == "headers") {
-    className = HeadersResponse;
-  } else if (type == "video") {
-    className = VideoResponse;
-  } else if (type == "hls") {
-    className = HLSResponse;
-  } else {
-    className = ResourceResponse;
-  }
+  const className: any =
+    typeToClassMap[scenario.responseType] || ResourceResponse;
   return new className(scenario);
 }

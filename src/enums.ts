@@ -32,6 +32,7 @@ export type ResponseType =
   | "image"
   | "stylesheet"
   | "script"
+  | "ffprobe"
   | "video"
   | "hls"
   | "audio"

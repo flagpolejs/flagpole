@@ -7,8 +7,7 @@
     "output": "out",
     "images": "images",
     "cache": "cache",
-    "schemas": "schemas",
-    "pattern": "*.*"
+    "schemas": "schemas"
   },
   "environments": {
     "local": {
@@ -146,6 +145,11 @@
     "internal/expect": {
       "id": "",
       "name": "internal/expect",
+      "tags": []
+    },
+    "internal/ffprobe": {
+      "id": "",
+      "name": "internal/ffprobe",
       "tags": []
     }
   }

@@ -48,6 +48,7 @@ import {
   HttpMethodVerb,
   HttpMethodVerbAllowedValues,
   BrowserOptions,
+  HttpRequestTypes,
 } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { toType, asyncForEach, runAsync } from "./util";
@@ -949,14 +950,7 @@ export class Scenario implements iScenario {
           ...this._defaultRequestOptions,
           ...opts,
         })
-        .setOptions({
-          type:
-            this._responseType === "json"
-              ? "json"
-              : this._responseType === "image"
-              ? "image"
-              : "generic",
-        });
+        .setType(this._responseType);
     }
     this._response = createResponse(this);
     return this;
@@ -1191,7 +1185,6 @@ export class Scenario implements iScenario {
         )
       );
   }
-
   /**
    * Start a regular request scenario
    */

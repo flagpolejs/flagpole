@@ -29,6 +29,7 @@ import { Server } from "minikin";
 import validator from "validator";
 import { ValuePromise } from "./value-promise";
 import { SchemaValidator } from "./assertionschema";
+import { FfprobeOptions } from "media-probe";
 //import * as Ajv from "ajv";
 
 interface AjvSchema {
@@ -710,7 +711,12 @@ export interface iSuite {
   setMaxScenarioDuration(timeout: number): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
-  scenario(title: string, type: ResponseType, opts?: BrowserOptions): iScenario;
+  scenario(
+    title: string,
+    type: "browser" | "extjs",
+    opts?: BrowserOptions
+  ): iScenario;
+  scenario(title: string, type?: ResponseType, opts?: any): iScenario;
   json(title: string): iScenario;
   image(title: string): iScenario;
   video(title: string): iScenario;

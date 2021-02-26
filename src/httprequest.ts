@@ -1,5 +1,5 @@
 import { KeyValue } from "./interfaces";
-import { HttpResponse } from "./httpresponse";
+import { ffprobeResponse, HttpResponse } from "./httpresponse";
 import needle = require("needle");
 import tunnel = require("tunnel");
 import * as http from "http";
@@ -9,13 +9,15 @@ import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
 import { ImageProbe } from "@zerodeps/image-probe";
 import { FlagpoleExecution } from "./flagpoleexecution";
+import { ffprobe, FfprobeOptions } from "media-probe";
 
 const CONTENT_TYPE_JSON = "application/json";
 const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
 const CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
 const ENCODING_GZIP = "gzip,deflate";
 
-export type HttpRequestType = "generic" | "json" | "image";
+type HttpRequestType = "generic" | "json" | "image" | "ffprobe";
+export const HttpRequestTypes = ["generic", "json", "image", "ffprobe"];
 
 export const HttpMethodVerbAllowedValues = [
   "get",
@@ -338,34 +340,6 @@ export class HttpRequest {
     };
   }
 
-  /**
-   * For the statndard HTTP library
-   */
-  private get httpOptions(): http.RequestOptions {
-    return {
-      agent: this.proxyAgent,
-      headers: this.headers,
-      method: this.method,
-      timeout: this.timeout.open,
-    };
-  }
-
-  /**
-   * For the Got library
-   */
-  private get gotOptions(): any {
-    return {
-      agent: this.proxyAgent,
-      allowGetBody: true,
-      body: this.data,
-      followRedirect: this.maxRedirects > 0,
-      headers: this.headers,
-      maxRedirects: this.maxRedirects,
-      method: this.method,
-      timeout: this.timeout.open,
-    };
-  }
-
   constructor(opts: HttpRequestOptions) {
     this.setOptions(opts);
   }
@@ -378,6 +352,12 @@ export class HttpRequest {
       );
     });
     return encoded.join("&");
+  }
+
+  public setType(type: string) {
+    this._type = HttpRequestTypes.includes(type)
+      ? (type as HttpRequestType)
+      : "generic";
   }
 
   /**
@@ -493,6 +473,8 @@ export class HttpRequest {
     }
     if (this.type === "image") {
       return this._fetchImage(opts);
+    } else if (this.type === "ffprobe") {
+      return this._fetchFfprobe(opts);
     } else {
       return this._fetchHttp(opts);
     }
@@ -578,6 +560,21 @@ export class HttpRequest {
           // Set the response
           resolve(HttpResponse.fromProbeImage(response));
         });
+    });
+  }
+
+  protected _fetchFfprobe(opts?: FfprobeOptions): Promise<HttpResponse> {
+    return new Promise((resolve, reject) => {
+      if (!this.uri) {
+        return reject("No uri");
+      }
+      try {
+        ffprobe(this.uri, opts).then((data) => {
+          resolve(HttpResponse.fromFfprobe(this, data));
+        });
+      } catch (err) {
+        reject(err);
+      }
     });
   }
 }

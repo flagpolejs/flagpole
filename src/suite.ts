@@ -15,6 +15,7 @@ import { exitProcess, toType } from "./util";
 import { BrowserOptions } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { SuiteTaskManager } from "./suitetaskmanager";
+import { FfprobeOptions } from "media-probe";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 
@@ -186,8 +187,19 @@ export class Suite implements iSuite {
    */
   public scenario(
     title: string,
-    type: ResponseType = "html",
+    type: "browser" | "extjs",
     opts?: BrowserOptions
+  ): iScenario;
+  public scenario(
+    title: string,
+    type: "ffprobe",
+    opts?: FfprobeOptions
+  ): iScenario;
+  public scenario(title: string, type?: ResponseType): iScenario;
+  public scenario(
+    title: string,
+    type: ResponseType = "html",
+    opts?: any
   ): iScenario {
     const scenario: iScenario = Scenario.create(this, title, type, opts);
     // Some local tests fail with SSL verify on, so may have been disabled on this suite
