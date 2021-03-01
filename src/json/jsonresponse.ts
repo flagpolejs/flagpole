@@ -1,9 +1,9 @@
 import { ProtoResponse } from "../response";
-import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "./jpath";
 import { HttpResponse } from "../httpresponse";
 import { iResponse, iValue } from "../interfaces";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "./jpath";
 
 export class JsonResponse
   extends ProtoResponse
@@ -20,13 +20,13 @@ export class JsonResponse
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
-    const json = this.jsonBody.$;
-    this.context.assert("JSON is valid", json).type.not.equals("null");
-    this.jsonDoc = new JsonDoc(json || {});
+    this.context
+      .assert("JSON is valid", this.jsonBody.$)
+      .type.not.equals("null");
   }
 
   public getRoot(): any {
-    return this.jsonDoc?.root;
+    return this.jsonBody.$;
   }
 
   public async eval(): Promise<any> {

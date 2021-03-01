@@ -34,9 +34,9 @@ import {
 } from "puppeteer-core";
 import { ValuePromise } from "./value-promise";
 import { ScenarioType } from "./scenario-types";
-import { jPath } from "./json/jpath";
-import { HttpResponse } from ".";
+import { HttpResponse } from "./httpresponse";
 import { HttpRequest } from "./httprequest";
+import { jpathSearch } from "./json/jpath";
 
 export class Value implements iValue {
   protected _input: any;
@@ -943,7 +943,7 @@ export class Value implements iValue {
   public item(key: string | number): iValue {
     const name = `${key} in ${this.name}`;
     if (typeof key === "string") {
-      return new Value(jPath.search(this._input, key), this._context, name);
+      return new Value(jpathSearch(this._input, key), this._context, name);
     }
     if (this._input.hasOwnProperty(key)) {
       return new Value(this._input[key], this._context, name);

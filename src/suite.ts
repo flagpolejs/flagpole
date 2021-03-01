@@ -15,6 +15,8 @@ import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { SuiteTaskManager } from "./suitetaskmanager";
 import { ScenarioType } from "./scenario-types";
+import { FfprobeOptions } from "media-probe";
+import { MediaStreamValidatorOpts } from "media-stream-validator";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 
@@ -188,6 +190,16 @@ export class Suite implements iSuite {
     title: string,
     type: "browser" | "extjs",
     opts?: BrowserOptions
+  ): iScenario;
+  public scenario(
+    title: string,
+    type: "ffprobe",
+    opts?: FfprobeOptions
+  ): iScenario;
+  public scenario(
+    title: string,
+    type: "mediastreamvalidator",
+    opts?: MediaStreamValidatorOpts
   ): iScenario;
   public scenario(title: string, type?: ScenarioType): iScenario;
   public scenario(

@@ -1,11 +1,11 @@
 import { iResponse, iValue } from "../interfaces";
 import { HttpResponse } from "../httpresponse";
 import HLS from "parse-hls";
-import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
 import { wrapAsValue } from "../helpers";
 import { VideoResponse } from "./videoresponse";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "../json/jpath";
 
 export class HLSResponse
   extends VideoResponse

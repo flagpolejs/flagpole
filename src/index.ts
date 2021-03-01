@@ -10,7 +10,6 @@ import { ExtJSResponse } from "./puppeteer/extjsresponse";
 import { HtmlResponse } from "./html/htmlresponse";
 import { HttpResponse } from "./httpresponse";
 import { ImageResponse } from "./imageresponse";
-import { jPath, iJPath } from "./json/jpath";
 import { JsonResponse } from "./json/jsonresponse";
 import { ResourceResponse } from "./resourceresponse";
 import { ProtoResponse } from "./response";
@@ -75,8 +74,6 @@ export {
   VideoResponse,
   HLSResponse,
   HeadersResponse,
-  jPath,
-  iJPath,
   iScenario,
   iSuite,
   fp,

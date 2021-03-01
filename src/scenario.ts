@@ -49,7 +49,6 @@ import * as bluebird from "bluebird";
 import { Browser } from "puppeteer-core";
 import minikin, { Response, Server } from "minikin";
 import { ServerOptions } from "https";
-import { JsonDoc } from "./json/jpath";
 import { wrapAsValue } from "./helpers";
 import {
   beforeScenarioExecuted,
@@ -59,6 +58,7 @@ import {
   beforeScenarioRequestStarted,
 } from "./decorators";
 import { ScenarioType } from "./scenario-types";
+import { JsonDoc } from "./json/jpath";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -1394,7 +1394,7 @@ export class Scenario implements iScenario {
 
   protected _expect(responseValues: { [key: string]: any }): iNextCallback {
     return async (context) => {
-      const json = new JsonDoc(context.response.serialize(), true);
+      const json = new JsonDoc(context.response.serialize());
       const paths = Object.keys(responseValues);
       //console.log(json.root);
       await context.each(paths, async (path) => {
