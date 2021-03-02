@@ -179,7 +179,7 @@ export class FlagpoleReport {
       out += JSON.stringify(json, null, 2);
     }
     // Console
-    else if (FlagpoleExecution.global.isConsoleOutput) {
+    else if (FlagpoleExecution.global.shouldOutputToConsole) {
       (await this.toConsole()).forEach((line: iConsoleLine) => {
         if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
           out += line.toConsoleString() + "\n";

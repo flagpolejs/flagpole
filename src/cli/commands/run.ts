@@ -224,7 +224,10 @@ const runSuites = async (
       Cli.log("Did not find any test suites to run.\n");
       Cli.exit(2);
     }
-    if (FlagpoleExecution.global.volume >= lineToVerbosity["decoration"]) {
+    if (
+      FlagpoleExecution.global.volume >= lineToVerbosity["decoration"] &&
+      FlagpoleExecution.global.isConsoleOutput
+    ) {
       Ansi.writeLine();
       const spinner = Cli.instance.spinner(
         `Loading ${runner.suites.length} test suites...`

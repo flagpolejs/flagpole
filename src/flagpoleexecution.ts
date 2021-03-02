@@ -19,6 +19,7 @@ import { generateAjvSchema, writeSchema } from "./assertionschema";
 
 export enum FlagpoleOutput {
   console = "console",
+  ci = "ci",
   text = "text",
   json = "json",
   html = "html",
@@ -205,7 +206,7 @@ export class FlagpoleExecution {
   }
 
   public get shouldOutputToConsole(): boolean {
-    return this.isConsoleOutput && this.volume > 0;
+    return (this.isConsoleOutput || this.isCiOutput) && this.volume > 0;
   }
 
   public get shouldWriteHtml(): boolean {
@@ -214,6 +215,10 @@ export class FlagpoleExecution {
 
   public get isConsoleOutput(): boolean {
     return this.outputFormat === FlagpoleOutput.console;
+  }
+
+  public get isCiOutput(): boolean {
+    return this.outputFormat === FlagpoleOutput.ci;
   }
 
   public get isTextOutput(): boolean {
