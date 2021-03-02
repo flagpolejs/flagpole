@@ -398,7 +398,7 @@ export class SuiteTaskManager {
       // Execute all scenarios that are ready to go
       const batch = this.scenariosReadyToExecute;
       if (batch.length > 0) {
-        await bluebird.map(
+        const result = await bluebird.map(
           batch,
           async (scenario) => {
             await this._executeScenario(scenario);

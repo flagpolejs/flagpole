@@ -106,7 +106,7 @@ export class AssertionFail extends AssertionResult implements iLogItem {
         return this._rawDetails;
       }
     } else if (details && details.message) {
-      return details.message;
+      return [details.message];
     }
     return [String(details)];
   }

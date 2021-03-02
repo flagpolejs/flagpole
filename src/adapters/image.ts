@@ -55,7 +55,10 @@ export const fetchImageWithNeedle: HttpRequestFetch = (
       .on("readable", () => {
         // Read the first 512 bytes and process image
         const chunk = <Buffer>stream.read(512);
-        response.imageData = ImageProbe.fromBuffer(chunk) || response.imageData;
+        if (chunk) {
+          response.imageData =
+            ImageProbe.fromBuffer(chunk) || response.imageData;
+        }
         // We have enough! Stop processing any more data!
         stream.pause();
         try {

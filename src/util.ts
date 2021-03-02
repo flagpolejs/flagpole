@@ -120,6 +120,37 @@ export function asyncForEach(
   });
 }
 
+export async function asyncWhich(array: any[], callback: IteratorCallback) {
+  let first: any = undefined;
+  return new Promise((resolve, reject) => {
+    array.some((item, i) => {
+      if (callback(item, i, array)) {
+        first = item;
+        return true;
+      }
+      return false;
+    });
+    resolve(first);
+  });
+}
+
+export async function asyncWhichFails(
+  array: any[],
+  callback: IteratorCallback
+) {
+  let first: any = undefined;
+  return new Promise((resolve, reject) => {
+    array.some((item, i) => {
+      if (!callback(item, i, array)) {
+        first = item;
+        return true;
+      }
+      return false;
+    });
+    resolve(first);
+  });
+}
+
 export async function asyncEvery(
   array: any[],
   callback: IteratorCallback

@@ -1291,6 +1291,7 @@ export class Scenario implements iScenario {
         this._publish(ScenarioStatusEvent.executionSkipped);
         this.comment(message);
       } else if (disposition == ScenarioDisposition.aborted) {
+        this._requestResolve(this);
         this._publish(ScenarioStatusEvent.executionAborted);
       }
       // Save time finished

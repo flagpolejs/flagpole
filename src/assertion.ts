@@ -31,6 +31,8 @@ import {
   deepEqual,
   deepStrictEqual,
   arrayify,
+  asyncWhichFails,
+  asyncWhich,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
@@ -731,7 +733,11 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    return this.execute(await asyncNone(thisValue, callback), thisValue);
+    const result = await asyncNone(thisValue, callback);
+    const which = result
+      ? undefined
+      : `${await asyncWhich(thisValue, callback)}`;
+    return this.execute(result, which);
   }
 
   public async eval(
@@ -780,7 +786,11 @@ export class Assertion implements iAssertion {
     if (toType(thisValue) !== "array") {
       throw new Error("Input value must be an array.");
     }
-    return this.execute(await asyncEvery(thisValue, callback), thisValue);
+    const result = await asyncEvery(thisValue, callback);
+    const which = result
+      ? undefined
+      : `${await asyncWhichFails(thisValue, callback)}`;
+    return this.execute(result, which);
   }
 
   public everySync(callback: IteratorCallback): iAssertion {
