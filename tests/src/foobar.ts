@@ -20,7 +20,7 @@ foobar
     const title = await context.get("articles")[1].find("a.title strong");
     context.assert(await title.getInnerText()).length.greaterThan(0);
     context.comment(await title.getInnerText());
-    context.assert(context.get("articles")).keys.includes(2);
+    context.assert(context.get("articles")).keys.includes("2");
   })
   .next("Last test", async (context) => {
     const topStories = await context.exists(".topStories");
