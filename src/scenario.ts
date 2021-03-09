@@ -160,6 +160,10 @@ export class Scenario implements iScenario {
     return this._disposition;
   }
 
+  public get opts(): any {
+    return this._request.options;
+  }
+
   /**
    * We ready to pull the trigger on this one?
    */
@@ -279,6 +283,18 @@ export class Scenario implements iScenario {
    */
   public get request(): HttpRequest {
     return this._request;
+  }
+
+  public get nextCallbacks(): Array<{
+    message: string;
+    callback: iNextCallback;
+  }> {
+    return this._nextCallbacks.map((callback, i) => {
+      return {
+        message: this._nextMessages[i] || "",
+        callback: callback,
+      };
+    });
   }
 
   protected _title: string;
@@ -962,6 +978,10 @@ export class Scenario implements iScenario {
       this.success(resolve);
       this.failure(reject);
     });
+  }
+
+  public repeat() {
+    return this.suite.import(this);
   }
 
   public buildUrl(): URL {

@@ -20,6 +20,7 @@ export class JsonResponse
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
+    this.jsonDoc = new JsonDoc(this.jsonBody.$);
     this.context
       .assert("JSON is valid", this.jsonBody.$)
       .type.not.equals("null");

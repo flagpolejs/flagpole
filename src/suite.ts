@@ -201,7 +201,7 @@ export class Suite implements iSuite {
     type: "mediastreamvalidator",
     opts?: MediaStreamValidatorOpts
   ): iScenario;
-  public scenario(title: string, type?: ScenarioType): iScenario;
+  public scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
   public scenario(
     title: string,
     type: ScenarioType = "html",
@@ -214,6 +214,18 @@ export class Suite implements iSuite {
     this._waitToExecute && scenario.wait();
     // Add this to our collection of scenarios
     this._taskManager.registerScenario(scenario);
+    return scenario;
+  }
+
+  public import(originalScenario: iScenario) {
+    const scenario: iScenario = this.scenario(
+      originalScenario.title,
+      originalScenario.responseType,
+      originalScenario.opts
+    ).open(originalScenario.buildUrl().href);
+    originalScenario.nextCallbacks.forEach((next) => {
+      scenario.next(next.message, next.callback);
+    });
     return scenario;
   }
 

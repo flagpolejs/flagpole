@@ -695,6 +695,7 @@ export interface iSuite {
   executionDuration: number | null;
   title: string;
   finished: Promise<void>;
+  import(scenario: iScenario): iScenario;
   subscribe(callback: SuiteStatusCallback): iSuite;
   verifyCert(verify: boolean): iSuite;
   verifySslCert(verify: boolean): iSuite;
@@ -735,6 +736,7 @@ export interface iSuite {
 }
 
 export interface iScenario {
+  opts: any;
   suite: iSuite;
   responseType: ScenarioType;
   title: string;
@@ -761,6 +763,10 @@ export interface iScenario {
   isExecuting: boolean;
   isCompleted: boolean;
   disposition: ScenarioDisposition;
+  nextCallbacks: Array<{
+    message: string;
+    callback: iNextCallback;
+  }>;
   push(aliasName: string, value: any): iScenario;
   set(aliasName: string, value: any): iScenario;
   get<T = any>(aliasName: string): T;
@@ -837,6 +843,7 @@ export interface iScenario {
   waitForFinished(): Promise<iScenario>;
   waitForResponse(): Promise<iScenario>;
   waitFor(thatScenario: iScenario): iScenario;
+  repeat(): iScenario;
 }
 
 export interface iMessageAndCallback {
