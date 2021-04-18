@@ -844,6 +844,7 @@ export interface iScenario {
   waitForResponse(): Promise<iScenario>;
   waitFor(thatScenario: iScenario): iScenario;
   repeat(): iScenario;
+  repeat(count: number): iScenario[];
 }
 
 export interface iMessageAndCallback {

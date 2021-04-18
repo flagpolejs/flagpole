@@ -980,7 +980,19 @@ export class Scenario implements iScenario {
     });
   }
 
-  public repeat() {
+  public repeat(): iScenario;
+  public repeat(count: number): iScenario[];
+  public repeat(count?: number): iScenario | iScenario[] {
+    if (typeof count == "number") {
+      if (count < 1) {
+        throw "Count must be an integer greater than or equal to one.";
+      }
+      const scenarios: iScenario[] = [];
+      for (let i = 1; i <= count; i++) {
+        scenarios.push(this.suite.import(this));
+      }
+      return scenarios;
+    }
     return this.suite.import(this);
   }
 

@@ -161,6 +161,12 @@ export class Suite implements iSuite {
     return this;
   }
 
+  /**
+   * If a scenario hasn't completed in this period of time, cut it off
+   *
+   * @param timeout
+   * @returns
+   */
   public setMaxScenarioDuration(timeout: number): iSuite {
     this._taskManager.maxScenarioDuration = timeout;
     return this;
@@ -217,6 +223,12 @@ export class Suite implements iSuite {
     return scenario;
   }
 
+  /**
+   * Effectively clones another scenario
+   *
+   * @param originalScenario
+   * @returns
+   */
   public import(originalScenario: iScenario) {
     const scenario: iScenario = this.scenario(
       originalScenario.title,
@@ -463,16 +475,36 @@ export class Suite implements iSuite {
     );
   }
 
+  /**
+   * Similar to set, except that it pushes this value into an array named key, creating the array if it doesn't yet exist
+   *
+   * @param key
+   * @param value
+   * @returns
+   */
   public push(key: string, value: any): iSuite {
     this._getArray(key).push(value);
     return this;
   }
 
+  /**
+   * Saves a value into cache in the suite context
+   *
+   * @param key
+   * @param value
+   * @returns
+   */
   public set(key: string, value: any): iSuite {
     this._aliasedData[key] = value;
     return this;
   }
 
+  /**
+   * Retrieves a value saved to cache in the suite context
+   *
+   * @param key
+   * @returns
+   */
   public get<T = any>(key: string): T {
     return this._aliasedData[key];
   }
