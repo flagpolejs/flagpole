@@ -890,7 +890,9 @@ export class Assertion implements iAssertion {
   public assert(message: string, value: any): iAssertion;
   public assert(value: any): iAssertion;
   public assert(a: any, b?: any): iAssertion {
-    return this._context.assert(a, b);
+    return arguments.length === 2
+      ? this._context.assert(a, b)
+      : this._context.assert(a);
   }
 
   /**
