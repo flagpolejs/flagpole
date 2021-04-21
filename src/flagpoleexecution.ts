@@ -190,7 +190,7 @@ export class FlagpoleExecution {
   }
 
   public get baseDomain(): string | undefined {
-    return this.environment?.defaultDomain;
+    return this._opts.baseDomain
   }
 
   public get headless(): boolean | undefined {
