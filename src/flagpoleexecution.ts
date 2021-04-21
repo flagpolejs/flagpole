@@ -138,7 +138,6 @@ export class FlagpoleExecution {
       ? Object.values(configOptions?.environments)[0]
       : undefined;
     opts.environmentName = opts.environmentName || defaultEnv?.name;
-    opts.baseDomain = opts.baseDomain || defaultEnv?.defaultDomain;
     return new FlagpoleExecution(
       opts,
       new FlagpoleConfig(configOptions, opts.configFilePath)
@@ -190,7 +189,7 @@ export class FlagpoleExecution {
   }
 
   public get baseDomain(): string | undefined {
-    return this.environment?.defaultDomain;
+    return this._opts.baseDomain || this.environment?.defaultDomain
   }
 
   public get headless(): boolean | undefined {
