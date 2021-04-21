@@ -4,7 +4,7 @@ const suite = flagpole("Chaining Assertions");
 
 suite
   .json("With undefined and assertion titles")
-  .open("https://www.milesplit.com/api/v1/meets")
+  .open("https://reqres.in/api/users?page=1")
   .next(async (context) => {
     context
       .assert(context.response.statusCode)
