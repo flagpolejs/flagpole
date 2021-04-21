@@ -151,6 +151,11 @@
       "id": "",
       "name": "internal/ffprobe",
       "tags": []
+    },
+    "chaining-assertions": {
+      "id": "",
+      "name": "chaining-assertions",
+      "tags": []
     }
   }
 }
