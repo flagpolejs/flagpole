@@ -75,7 +75,7 @@ export function findDetachedSuites(): string[] {
   let suitesAvailableToImport: string[] = [];
   let suitesInConfig: string[] =
     FlagpoleExecution.global.config.getSuiteNames() || [];
-  suitesInFolder.forEach(function (suiteName: string) {
+  suitesInFolder.forEach((suiteName: string) => {
     if (!suitesInConfig.includes(suiteName)) {
       suitesAvailableToImport.push(suiteName);
     }

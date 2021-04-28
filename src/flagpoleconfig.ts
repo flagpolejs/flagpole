@@ -2,7 +2,7 @@ import { normalizePath } from "./util";
 import { exec } from "child_process";
 import * as fs from "fs-extra";
 import * as path from "path";
-import * as rimraf  from 'rimraf'
+import * as rimraf from "rimraf";
 
 export const getDefaultConfig = (configFilePath: string): iConfigOpts => {
   const projectPath = path.dirname(configFilePath);
@@ -158,7 +158,7 @@ export class ProjectConfig {
   public get patternRegEx(): RegExp {
     let pattern = this.pattern.trim();
     if (pattern) {
-      pattern = pattern.replace(".", ".").replace("*", ".*");
+      pattern = pattern.replace(".", "\\.").replace("*", ".*");
       return new RegExp(pattern);
     }
     return /.*/;
@@ -472,11 +472,10 @@ export class FlagpoleConfig {
       const rootFolder = this.getRootFolder();
       const outFolder = this.getTestsFolder();
       const cwd = process.cwd();
-      const rimRafPath = path.resolve(rootFolder, outFolder)
+      const rimRafPath = path.resolve(rootFolder, outFolder);
       rimraf(rimRafPath, (err) => {
-
         if (err) {
-          reject(err)
+          reject(err);
         }
 
         const command = `cd ${rootFolder} && tsc && cd ${cwd}`;
@@ -487,7 +486,7 @@ export class FlagpoleConfig {
           }
           resolve(stdout);
         });
-      })
+      });
     });
   }
 }
