@@ -25,4 +25,5 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: npm run build --if-present
-      - run: cd ci/tests/${{ matrix.flagpoleCommand.name}} && node ../../../dist/cli/main.js ${{ matrix.flagpoleCommand.command }}
+      - run: pwd
+      - run: cd ci/tests/${{ matrix.flagpoleCommand.name}} && pwd && node ../../../dist/cli/main.js ${{ matrix.flagpoleCommand.command }}
