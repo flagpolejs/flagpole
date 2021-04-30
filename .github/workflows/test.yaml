@@ -1,4 +1,4 @@
-name: Test Flagpole
+name: Test
 
 on:
   push:
@@ -25,13 +25,10 @@ jobs:
             command: -s main --build
           - directory: test-multi
             name: test-multi-suite
-            command: -s main -s other -s smoke --build
+            command: -s main,other,smoke --build
           - directory: test-multi
             name: test-single-tag
             command: -t foo --build
-          - directory: test-multi
-            name: test-multi-tag
-            command: -t foo -t bar --build
 
 
     steps:
