@@ -16,6 +16,8 @@ jobs:
         flagpoleCommand:
           - name: test-base
             command: --build --base=https://jsonplaceholder.typicode.com --all
+          - name: test-javascript
+            command: --all
 
     steps:
       - uses: actions/checkout@v2
