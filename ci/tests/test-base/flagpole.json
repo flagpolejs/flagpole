@@ -1,0 +1,25 @@
+{
+  "project": {
+    "id": "",
+    "name": "flagpole",
+    "path": "tests",
+    "source": "src",
+    "output": "out",
+    "images": "images",
+    "cache": "cache",
+    "schemas": "schemas"
+  },
+  "environments": {
+    "dev": {
+      "name": "dev",
+      "defaultDomain": ""
+    }
+  },
+  "suites": {
+    "main": {
+      "id": "",
+      "name": "main",
+      "tags": []
+    }
+  }
+}
