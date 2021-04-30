@@ -37,6 +37,16 @@
         "foo",
         "bar"
       ]
+    },
+    "browser/google": {
+      "id": "",
+      "name": "browser/google",
+      "tags": []
+    },
+    "browser/milesplit": {
+      "id": "",
+      "name": "browser/milesplit",
+      "tags": []
     }
   }
 }
