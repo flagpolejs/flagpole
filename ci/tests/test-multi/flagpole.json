@@ -4,7 +4,7 @@
     "name": "flagpole",
     "path": "tests",
     "source": "src",
-    "output": "src",
+    "output": "out",
     "images": "images",
     "cache": "cache",
     "schemas": "schemas"
