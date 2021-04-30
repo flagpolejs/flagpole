@@ -5,6 +5,7 @@ tests/src/internal*
 tests/cache
 tests/schemas
 tests/images
+**/out
 
 # Logs
 logs

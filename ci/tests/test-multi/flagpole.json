@@ -1,0 +1,42 @@
+{
+  "project": {
+    "id": "",
+    "name": "flagpole",
+    "path": "tests",
+    "source": "src",
+    "output": "src",
+    "images": "images",
+    "cache": "cache",
+    "schemas": "schemas"
+  },
+  "environments": {
+    "dev": {
+      "name": "dev",
+      "defaultDomain": "https://jsonplaceholder.typicode.com"
+    }
+  },
+  "suites": {
+    "main": {
+      "id": "",
+      "name": "main",
+      "tags": [
+        "bar"
+      ]
+    },
+    "other": {
+      "id": "",
+      "name": "other",
+      "tags": [
+        "foo"
+      ]
+    },
+    "smoke": {
+      "id": "",
+      "name": "smoke",
+      "tags": [
+        "foo",
+        "bar"
+      ]
+    }
+  }
+}
