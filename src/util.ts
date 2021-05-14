@@ -6,8 +6,8 @@ import {
 } from "./interfaces";
 import * as fs from "fs";
 import * as path from "path";
-import * as cheerio from "cheerio";
 import * as nodeAssert from "assert";
+const cheerio = require("cheerio");
 
 export const arrayify = <T>(value: any): T[] => {
   return toType(value) == "array" ? value : [value];
@@ -51,7 +51,10 @@ export function toType(obj: any): string {
     return "null";
   } else if (obj === NaN) {
     return "nan";
-  } else if (obj instanceof cheerio) {
+  } else if (
+    (typeof cheerio === "object" && obj instanceof cheerio.default) ||
+    (typeof cheerio === "function" && obj instanceof cheerio)
+  ) {
     return "cheerio";
   } else if (
     !!obj &&
