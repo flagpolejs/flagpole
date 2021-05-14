@@ -6,7 +6,6 @@ import {
 } from "./interfaces";
 import * as fs from "fs";
 import * as path from "path";
-import * as cheerio from "cheerio";
 import * as nodeAssert from "assert";
 
 export const arrayify = <T>(value: any): T[] => {
@@ -51,7 +50,7 @@ export function toType(obj: any): string {
     return "null";
   } else if (obj === NaN) {
     return "nan";
-  } else if (obj instanceof cheerio) {
+  } else if (!!obj && obj.cheerio) {
     return "cheerio";
   } else if (
     !!obj &&
