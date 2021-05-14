@@ -45,6 +45,7 @@ import { getFindParams, getFindName, wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
 import { HttpRequest } from "./httprequest";
 import { SchemaValidator } from "./assertionschema";
+import * as bluebird from "bluebird";
 
 const getParamsFromExists = (
   a: string,
@@ -338,7 +339,7 @@ export class AssertionContext implements iAssertionContext {
     const promises = selectors.map((selector) =>
       this.response.waitForExists(selector, timeout)
     );
-    const el: iValue = await Promise.any(promises);
+    const el: iValue = await bluebird.any(promises);
     el.isNull()
       ? this._failedAction("EXISTS", `${selector}`)
       : this._completedAction("EXISTS", `${selector}`);
