@@ -339,8 +339,8 @@ export class AssertionContext implements iAssertionContext {
     ): Promise<iValue> {
       const el: iValue = await this.response.waitForHavingText(selector, text, timeout);
       el.isNull()
-        ? this._failedAction("HAS TEXT", selector)
-        : this._completedAction("HAS TEXT", selector);
+        ? this._failedAction("EXISTS", `selector "${selector}" with text "${text}"`)
+        : this._completedAction("EXISTS", `selector "${selector}" with text "${text}"`);
       return el;
     }
 

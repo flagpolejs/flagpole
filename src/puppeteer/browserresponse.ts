@@ -150,7 +150,9 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     const opts = { timeout: timeout || 100 };
     const element = (
       await this._page.waitForFunction(
-        `document.querySelector("${selector}").innerText.includes("${text}")`,
+        `Array.from(document.querySelectorAll("${selector}")).find(function(element) {
+          return element.innerText.includes("${text}")
+        })`,
         opts
       )
     ).asElement();
