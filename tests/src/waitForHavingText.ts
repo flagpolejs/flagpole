@@ -23,9 +23,9 @@ suite
     context
       .assert(await searchAlgorithms.getInnerText())
       .equals("Search algorithms");
-      
+
     try {
-       // this element does not exist
+      // this element does not exist
       await context.waitForHavingText("span", "Search algorithmsssss", 2000);
     } catch (error) {
       context.assert(error).exists();
