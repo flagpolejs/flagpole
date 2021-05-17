@@ -152,7 +152,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
 
     const element = (
       await this._page.waitForFunction(
-        `Array.from(document.querySelectorAll("${selector}")).filter(function(element) {
+        `Array.from(document.querySelectorAll("${selector}")).find(function(element) {
           return (${pattern}).test(element.innerText)
         })`,
         opts
