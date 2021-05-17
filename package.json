@@ -70,7 +70,6 @@
   "devDependencies": {
     "@types/bluebird": "^3.5.33",
     "@types/bluebird-global": "^3.5.12",
-    "@types/form-urlencoded": "^2.0.1",
     "@types/fs-extra": "^8.1.0",
     "@types/jmespath": "^0.15.0",
     "@types/mustache": "^4.1.0",
