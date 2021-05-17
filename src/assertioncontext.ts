@@ -326,6 +326,25 @@ export class AssertionContext implements iAssertionContext {
   }
 
   /**
+   * Wait for element at the selected path with the given text to exist
+   *
+   * @param selector
+   * @param text
+   * @param timeout
+   */
+     public async waitForHavingText(
+      selector: string,
+      text: string,
+      timeout: number = 100
+    ): Promise<iValue> {
+      const el: iValue = await this.response.waitForHavingText(selector, text, timeout);
+      el.isNull()
+        ? this._failedAction("HAS TEXT", selector)
+        : this._completedAction("HAS TEXT", selector);
+      return el;
+    }
+
+  /**
    * Wait for element at the selected path to exist in the DOM
    *
    * @param selector

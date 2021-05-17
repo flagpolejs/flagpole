@@ -21,6 +21,7 @@ suite
   .scenario("Google Search for Flagpole", "browser", browserOpts)
   .open("/")
   .next(async (context) => {
+    await context.waitForHavingText("a", "How Search works", 2000)
     context.assert(context.response.statusCode).equals(200);
   })
   .next("Check Logo", async (context) => {
