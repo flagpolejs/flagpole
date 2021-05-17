@@ -144,14 +144,16 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
 
   public async waitForHavingText(
     selector: string,
-    text: string,
+    text: string | RegExp,
     timeout?: number
   ): Promise<BrowserElement> {
     const opts = { timeout: timeout || 100 };
+    const pattern = text instanceof RegExp ? text : new RegExp(text);
+
     const element = (
       await this._page.waitForFunction(
-        `Array.from(document.querySelectorAll("${selector}")).find(function(element) {
-          return element.innerText.includes("${text}")
+        `Array.from(document.querySelectorAll("${selector}")).filter(function(element) {
+          return (${pattern}).test(element.innerText)
         })`,
         opts
       )

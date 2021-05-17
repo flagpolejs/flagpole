@@ -17,7 +17,7 @@ suite
   .next(async (context) => {
     const searchAlgorithms = await context.waitForHavingText(
       "span",
-      "Search algorithms",
+      /Search algorithms/g,
       2000
     );
     context
