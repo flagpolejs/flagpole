@@ -156,6 +156,11 @@
       "id": "",
       "name": "chaining-assertions",
       "tags": []
+    },
+    "waitForHavingText": {
+      "id": "",
+      "name": "waitForHavingText",
+      "tags": []
     }
   }
 }
