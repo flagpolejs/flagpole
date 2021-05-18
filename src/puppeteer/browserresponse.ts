@@ -146,22 +146,23 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     selector: string,
     text: string | RegExp,
     timeout?: number
-  ): Promise<BrowserElement> {
+  ): Promise<BrowserElement | iValue> {
     const opts = { timeout: timeout || 100 };
     const pattern = text instanceof RegExp ? text : new RegExp(text);
 
-    const element = (
-      await this._page.waitForFunction(
-        `Array.from(document.querySelectorAll("${selector}")).find(function(element) {
-          return (${pattern}).test(element.innerText)
-        })`,
-        opts
-      )
-    ).asElement();
-    if (element === null) {
-      throw `Element ${selector} did not exist after timeout.`;
+    try {
+      const element = (
+        await this._page.waitForFunction(
+          `Array.from(document.querySelectorAll("${selector}")).find(function(element) {
+            return (${pattern}).test(element.innerText)
+          })`,
+          opts
+        )
+      ).asElement();
+      return BrowserElement.create(element!, this.context, selector, selector);
+    } catch (error) {
+      return wrapAsValue(this.context, null, selector);
     }
-    return BrowserElement.create(element, this.context, selector, selector);
   }
 
   public async selectOption(
