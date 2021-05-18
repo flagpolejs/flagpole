@@ -396,6 +396,7 @@ export interface iResponse {
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
   waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
+  waitForHavingText(selector: string, text: string | RegExp, timeout?: number): Promise<iValue>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
@@ -658,6 +659,7 @@ export interface iAssertionContext {
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
   waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
+  waitForHavingText(selector: string, text: string | RegExp, timeout?: number): Promise<iValue>;
   openInBrowser(): Promise<string>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
