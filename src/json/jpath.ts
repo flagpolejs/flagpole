@@ -24,12 +24,7 @@ export interface JPathProvider {
 }
 
 export const jpathSearch = (input: any, path: string) => {
-  const result = jmespath.search(input, path);
-  return result === null ||
-    result === undefined ||
-    (isArray(result) && result.length === 0)
-    ? null
-    : result;
+  return jmespath.search(input, path);
 };
 
 export const jpathFindAll = async (
