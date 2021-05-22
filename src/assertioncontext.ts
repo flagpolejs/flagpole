@@ -344,26 +344,23 @@ export class AssertionContext implements iAssertionContext {
    * Wait for element at the selected path to exist in the DOM
    */
   public async waitForExists(
-    selector: string | string[],
+    selector: string,
     timeout?: number
   ): Promise<iValue>;
   public async waitForExists(
-    selector: string | string[],
+    selector: string,
     contains: string | RegExp,
     timeout?: number
   ): Promise<iValue>;
   public async waitForExists(
-    selector: string | string[],
+    selector: string,
     a?: number | string | RegExp,
     b?: number
   ): Promise<iValue> {
     const selectors = arrayify<string>(selector);
     try {
-      const promises = selectors.map((selector) =>
-        // @ts-ignore TypeScript is being stupid
-        this.response.waitForExists(selector, a, b)
-      );
-      const el: iValue = await bluebird.any(promises);
+      // @ts-ignore TypeScript is being stupid
+      const el: iValue = await this.response.waitForExists(selector, a, b);
       this._completedAction("EXISTS", `${selector}`);
       return el;
     } catch (ex) {

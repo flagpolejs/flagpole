@@ -671,9 +671,9 @@ export interface iAssertionContext {
   ): Promise<void>;
   waitForHidden(selector: string, timeout?: number): Promise<iValue>;
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
-  waitForExists(selector: string | string[], timeout?: number): Promise<iValue>;
+  waitForExists(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(
-    selector: string | string[],
+    selector: string,
     contains: string | RegExp,
     timeout?: number
   ): Promise<iValue>;
