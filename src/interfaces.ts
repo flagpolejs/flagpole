@@ -395,8 +395,23 @@ export interface iResponse {
   waitForHidden(selector: string, timeout?: number): Promise<iValue>;
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  waitForNotExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForNotExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
   waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
-  waitForHavingText(selector: string, text: string | RegExp, timeout?: number): Promise<iValue>;
+  waitForHavingText(
+    selector: string,
+    text: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
@@ -566,7 +581,6 @@ export interface iAssertionContext {
   push(aliasName: string, value: any): iAssertionContext;
   set(aliasName: string, value: any): iAssertionContext;
   get<T = any>(aliasName: string): T;
-
   exists(selector: string | string[], opts?: FindOptions): Promise<iValue>;
   exists(
     selector: string | string[],
@@ -657,9 +671,24 @@ export interface iAssertionContext {
   ): Promise<void>;
   waitForHidden(selector: string, timeout?: number): Promise<iValue>;
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
-  waitForExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForExists(selector: string | string[], timeout?: number): Promise<iValue>;
+  waitForExists(
+    selector: string | string[],
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  waitForNotExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForNotExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
   waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
-  waitForHavingText(selector: string, text: string | RegExp, timeout?: number): Promise<iValue>;
+  waitForHavingText(
+    selector: string,
+    text: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
   openInBrowser(): Promise<string>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;

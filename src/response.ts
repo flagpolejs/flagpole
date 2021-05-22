@@ -244,64 +244,54 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public async waitForFunction(
-    js: EvaluateFn<any>,
-    opts?: { polling?: string | number; timeout?: number },
-    ...args: SerializableOrJSHandle[]
-  ): Promise<void> {
+  public async waitForFunction(..._args: any[]): Promise<void> {
     return this.context.pause(1);
   }
 
-  public async waitForNavigation(
-    timeout: number = 10000,
-    waitFor?: string | string[]
-  ): Promise<void> {
+  public async waitForNavigation(..._args: any[]): Promise<void> {
     return this.context.pause(1);
   }
 
-  public async waitForLoad(timeout: number = 30000): Promise<void> {
+  public async waitForLoad(..._args: any[]): Promise<void> {
     return this.context.pause(1);
   }
 
-  public async waitForReady(timeout: number = 30000): Promise<void> {
+  public async waitForReady(..._args: any[]): Promise<void> {
     return this.context.pause(1);
   }
 
-  public async waitForNetworkIdle(timeout: number = 30000): Promise<void> {
+  public async waitForNetworkIdle(..._args: any[]): Promise<void> {
     return this.context.pause(1);
   }
 
-  public async waitForHidden(
-    selector: string,
-    timeout: number = 30000
-  ): Promise<iValue> {
-    await this.context.pause(1);
-    return wrapAsValue(this.context, null, selector);
+  public async waitForHidden(..._args: any[]): Promise<iValue> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support waitForHidden.`
+    );
   }
 
-  public async waitForVisible(
-    selector: string,
-    timeout: number = 30000
-  ): Promise<iValue> {
-    await this.context.pause(1);
-    return wrapAsValue(this.context, null, selector);
+  public async waitForVisible(..._args: any[]): Promise<iValue> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support waitForVisible.`
+    );
   }
 
-  public async waitForExists(
-    selector: string,
-    timeout: number = 30000
-  ): Promise<iValue> {
-    await this.context.pause(1);
-    return wrapAsValue(this.context, null, selector);
+  public async waitForExists(..._args: any[]): Promise<iValue> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support waitForExists.`
+    );
   }
 
-  public async waitForHavingText(
-    selector: string,
-    text: string,
-    timeout: number = 30000
-  ): Promise<iValue> {
-    await this.context.pause(1);
-    return wrapAsValue(this.context, null, selector);
+  public async waitForNotExists(..._args: any[]): Promise<iValue> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support waitForNotExists.`
+    );
+  }
+
+  public async waitForHavingText(..._args: any[]): Promise<iValue> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support waitForHavingText.`
+    );
   }
 
   public async screenshot(): Promise<Buffer> {

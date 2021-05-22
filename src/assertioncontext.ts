@@ -332,37 +332,71 @@ export class AssertionContext implements iAssertionContext {
    * @param text
    * @param timeout
    */
-     public async waitForHavingText(
-      selector: string,
-      text: string | RegExp,
-      timeout: number = 100
-    ): Promise<iValue> {
-      const el: iValue = await this.response.waitForHavingText(selector, text, timeout);
-      el.isNull()
-        ? this._failedAction("WAIT", `selector "${selector}" with text "${text}"`)
-        : this._completedAction("WAIT", `selector "${selector}" with text "${text}"`);
-      return el;
-    }
+  public async waitForHavingText(
+    selector: string,
+    text: string | RegExp,
+    timeout: number = 100
+  ): Promise<iValue> {
+    const el: iValue = await this.response.waitForHavingText(
+      selector,
+      text,
+      timeout
+    );
+    el.isNull()
+      ? this._failedAction("WAIT", `selector "${selector}" with text "${text}"`)
+      : this._completedAction(
+          "WAIT",
+          `selector "${selector}" with text "${text}"`
+        );
+    return el;
+  }
 
   /**
    * Wait for element at the selected path to exist in the DOM
-   *
-   * @param selector
-   * @param timeout
    */
   public async waitForExists(
     selector: string | string[],
     timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string | string[],
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string | string[],
+    a?: number | string | RegExp,
+    b?: number
   ): Promise<iValue> {
     const selectors = arrayify<string>(selector);
-    const promises = selectors.map((selector) =>
-      this.response.waitForExists(selector, timeout)
-    );
-    const el: iValue = await bluebird.any(promises);
-    el.isNull()
-      ? this._failedAction("EXISTS", `${selector}`)
-      : this._completedAction("EXISTS", `${selector}`);
-    return el;
+    try {
+      const promises = selectors.map((selector) =>
+        // @ts-ignore TypeScript is being stupid
+        this.response.waitForExists(selector, a, b)
+      );
+      const el: iValue = await bluebird.any(promises);
+      this._completedAction("EXISTS", `${selector}`);
+      return el;
+    } catch (ex) {
+      this._failedAction("EXISTS", `${selector}`);
+      throw `${selector} did not exist before timeout`;
+    }
+  }
+
+  public async waitForNotExists(
+    selector: string,
+    a?: number | string | RegExp,
+    b?: number
+  ): Promise<iValue> {
+    try {
+      // @ts-ignore This is fine, TypeScript is being stupid
+      const val = await this.response.waitForNotExists(selector, a, b);
+      this._completedAction("NOT EXISTS", `${selector}`);
+      return val;
+    } catch (ex) {
+      this._failedAction("NOT EXISTS", `${selector}`);
+      throw `${selector} still exists after timeout`;
+    }
   }
 
   /**
