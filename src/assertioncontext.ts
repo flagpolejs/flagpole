@@ -335,20 +335,9 @@ export class AssertionContext implements iAssertionContext {
   public async waitForHavingText(
     selector: string,
     text: string | RegExp,
-    timeout: number = 100
+    timeout?: number
   ): Promise<iValue> {
-    const el: iValue = await this.response.waitForHavingText(
-      selector,
-      text,
-      timeout
-    );
-    el.isNull()
-      ? this._failedAction("WAIT", `selector "${selector}" with text "${text}"`)
-      : this._completedAction(
-          "WAIT",
-          `selector "${selector}" with text "${text}"`
-        );
-    return el;
+    return this.waitForExists(selector, text, timeout);
   }
 
   /**
