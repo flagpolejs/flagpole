@@ -110,7 +110,10 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     selector: string,
     timeout: number = 100
   ): Promise<BrowserElement> {
-    const opts = { timeout: timeout || 100, hidden: true };
+    const opts = {
+      timeout: this.getTimeoutFromOverload(timeout),
+      hidden: true,
+    };
     const element = await this._page.waitForSelector(selector, opts);
     return BrowserElement.create(element, this.context, selector, selector);
   }
@@ -119,7 +122,10 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     selector: string,
     timeout: number = 100
   ): Promise<BrowserElement> {
-    const opts = { timeout: timeout || 100, visible: true };
+    const opts = {
+      timeout: this.getTimeoutFromOverload(timeout),
+      visible: true,
+    };
     const element = await this._page.waitForSelector(selector, opts);
     return BrowserElement.create(element, this.context, selector, selector);
   }
@@ -127,17 +133,39 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
   public async waitForExists(
     selector: string,
     timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string,
+    a?: number | string | RegExp,
+    b?: number
   ): Promise<BrowserElement> {
-    const opts = { timeout: timeout || 100 };
-    const element = await this._page.waitForSelector(selector, opts);
-    return BrowserElement.create(element, this.context, selector, selector);
+    const opts = { timeout: this.getTimeoutFromOverload(a, b) };
+    const pattern = this.getContainsPatternFromOverload(a);
+    if (pattern === null) {
+      const element = await this._page.waitForSelector(selector, opts);
+      return BrowserElement.create(element, this.context, selector, selector);
+    }
+    const element = (
+      await this._page.waitForFunction(
+        `Array.from(document.querySelectorAll("${selector}")).find(function(element) {
+            return (${pattern}).test(element.innerText)
+          })`,
+        opts
+      )
+    ).asElement();
+    return BrowserElement.create(element!, this.context, selector, selector);
   }
 
   public async waitForXPath(
     xPath: string,
     timeout?: number
   ): Promise<BrowserElement> {
-    const opts = { timeout: timeout || 100 };
+    const opts = { timeout: this.getTimeoutFromOverload(timeout) };
     const element = await this._page.waitForXPath(xPath, opts);
     return BrowserElement.create(element, this.context, xPath, xPath);
   }
@@ -146,23 +174,41 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     selector: string,
     text: string | RegExp,
     timeout?: number
-  ): Promise<BrowserElement | iValue> {
-    const opts = { timeout: timeout || 100 };
-    const pattern = text instanceof RegExp ? text : new RegExp(text);
+  ): Promise<iValue> {
+    return this.waitForExists(selector, text, timeout);
+  }
 
-    try {
-      const element = (
-        await this._page.waitForFunction(
-          `Array.from(document.querySelectorAll("${selector}")).find(function(element) {
+  public async waitForNotExists(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForNotExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForNotExists(
+    selector: string,
+    a?: number | string | RegExp,
+    b?: number
+  ): Promise<iValue> {
+    const opts = { timeout: this.getTimeoutFromOverload(a, b) };
+    const pattern = this.getContainsPatternFromOverload(a);
+    if (pattern === null) {
+      await this._page.waitForFunction(
+        (selector) => !document.querySelector(selector),
+        opts,
+        selector
+      );
+    } else {
+      await this._page.waitForFunction(
+        `Array.from(document.querySelectorAll("${selector}")).filter(function(element) {
             return (${pattern}).test(element.innerText)
-          })`,
-          opts
-        )
-      ).asElement();
-      return BrowserElement.create(element!, this.context, selector, selector);
-    } catch (error) {
-      return wrapAsValue(this.context, null, selector);
+          }).length == 0`,
+        opts
+      );
     }
+    return wrapAsValue(this.context, true, selector);
   }
 
   public async selectOption(

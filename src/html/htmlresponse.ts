@@ -95,35 +95,6 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     return nodeElements;
   }
 
-  public async waitForHidden(
-    selector: string,
-    timeout: number = 100
-  ): Promise<iValue> {
-    return this.find(selector);
-  }
-
-  public async waitForVisible(
-    selector: string,
-    timeout: number = 100
-  ): Promise<iValue> {
-    return this.find(selector);
-  }
-
-  public async waitForExists(
-    selector: string,
-    timeout: number = 100
-  ): Promise<iValue> {
-    return this.find(selector);
-  }
-
-  public async waitForHavingText(
-    selector: string,
-    text: string,
-    timeout: number = 100
-  ): Promise<iValue> {
-    return this.findHavingText(selector, text);
-  }
-
   public async type(
     selector: string,
     textToType: string,

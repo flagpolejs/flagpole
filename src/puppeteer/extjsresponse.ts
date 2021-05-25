@@ -99,7 +99,8 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
 
   public async waitForExists(
     path: string,
-    timeout: number = 5000
+    a?: number | string | RegExp,
+    b?: number
   ): Promise<iValue> {
     if (this.page === null) {
       throw "Could not find browser page object.";
@@ -107,7 +108,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     const ref = await this.page.waitForFunction(
       `Ext.ComponentQuery.query("${path}")`,
       {
-        timeout: timeout,
+        timeout: this.getTimeoutFromOverload(a, b),
       }
     );
     return await ExtJsComponent.create(ref, this.context, `${path}[0]`, path);
