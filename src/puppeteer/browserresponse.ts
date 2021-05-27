@@ -108,7 +108,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
    */
   public async waitForHidden(
     selector: string,
-    timeout: number = 100
+    timeout?: number
   ): Promise<BrowserElement> {
     const opts = {
       timeout: this.getTimeoutFromOverload(timeout),
@@ -120,7 +120,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
 
   public async waitForVisible(
     selector: string,
-    timeout: number = 100
+    timeout?: number
   ): Promise<BrowserElement> {
     const opts = {
       timeout: this.getTimeoutFromOverload(timeout),
