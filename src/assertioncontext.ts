@@ -299,7 +299,7 @@ export class AssertionContext implements iAssertionContext {
    */
   public async waitForHidden(
     selector: string,
-    timeout: number = 100
+    timeout?: number
   ): Promise<iValue> {
     const el: iValue = await this.response.waitForHidden(selector, timeout);
     el.isNull()
@@ -316,7 +316,7 @@ export class AssertionContext implements iAssertionContext {
    */
   public async waitForVisible(
     selector: string,
-    timeout: number = 100
+    timeout?: number
   ): Promise<iValue> {
     const el: iValue = await this.response.waitForVisible(selector, timeout);
     el.isNull()
