@@ -166,6 +166,11 @@
       "id": "",
       "name": "waitForVisible",
       "tags": []
+    },
+    "webdriverio": {
+      "id": "",
+      "name": "webdriverio",
+      "tags": []
     }
   }
 }
