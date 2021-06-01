@@ -1,7 +1,11 @@
 import * as puppeteer from "puppeteer-core";
 import { Page, Browser, Response, SetCookie } from "puppeteer-core";
 import { HttpRequest } from "../httprequest";
-import { BrowserOptions, KeyValue } from "../interfaces";
+import {
+  BrowserOptions,
+  iBrowserControlResponse,
+  KeyValue,
+} from "../interfaces";
 
 export type BrowserConsoleMessage = {
   type: string;
@@ -9,10 +13,8 @@ export type BrowserConsoleMessage = {
   source: puppeteer.ConsoleMessage;
 };
 
-export interface iBrowserControlResponse {
+export interface iPuppeteerControlResponse extends iBrowserControlResponse {
   response: Response;
-  body: string;
-  cookies: KeyValue;
 }
 
 export class BrowserControl {
@@ -22,10 +24,6 @@ export class BrowserControl {
   private _response: Response | null = null;
   private _consoleMessages: BrowserConsoleMessage[] = [];
   private _puppeteer: typeof puppeteer | null = null;
-
-  public get consoleMessages(): BrowserConsoleMessage[] {
-    return this._consoleMessages;
-  }
 
   public get response(): Response | null {
     return this._response;
@@ -39,15 +37,11 @@ export class BrowserControl {
     return this._browser;
   }
 
-  public get puppeteer(): typeof puppeteer | null {
-    return this._puppeteer;
-  }
-
   public get request(): HttpRequest {
     return this._request;
   }
 
-  public get browserOpts(): BrowserOptions {
+  private get browserOpts(): BrowserOptions {
     return this._request.browser;
   }
 
@@ -90,11 +84,7 @@ export class BrowserControl {
     }
   }
 
-  public has404(): boolean {
-    return this._find404Errors().length > 0;
-  }
-
-  public open(request: HttpRequest): Promise<iBrowserControlResponse> {
+  public open(request: HttpRequest): Promise<iPuppeteerControlResponse> {
     this._request = request;
     // Must have a uri
     if (typeof this.request.uri == "undefined") {
@@ -123,8 +113,9 @@ export class BrowserControl {
         this._recordConsoleOutput();
         Promise.all([this._applyCookies(), this._setBasicAuth()])
           .then(async () => {
+            const r = await this._openUri();
             resolve({
-              response: await this._openUri(),
+              response: r,
               body: this._page ? await this._page.content() : "",
               cookies: await this._getCookies(),
             });
@@ -200,14 +191,5 @@ export class BrowserControl {
     }
     this._response = response;
     return response;
-  }
-
-  // TODO: We might be better detecting 404s with .on('response')
-  // See- https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#event-response
-  private _find404Errors(): BrowserConsoleMessage[] {
-    return this._consoleMessages.filter((consoleMessage) => {
-      const text: string = consoleMessage.text;
-      return text.indexOf("404 (Not Found)") > -1;
-    });
   }
 }

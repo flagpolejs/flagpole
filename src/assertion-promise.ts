@@ -21,7 +21,7 @@ export class AssertionPromise
   implements PromiseLike<iAssertion> {
   public constructor(
     executor: (
-      resolve: (value?: iAssertion | PromiseLike<iAssertion>) => void,
+      resolve: (value: iAssertion | PromiseLike<iAssertion>) => void,
       reject: (reason?: any) => void
     ) => void
   ) {

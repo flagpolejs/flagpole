@@ -1,12 +1,9 @@
-import { PuppeteerElement } from "./puppeteerelement";
 import {
-  iValue,
-  iAssertionContext,
-  iBounds,
-  ScreenshotOpts,
-  KeyValue,
-} from "../interfaces";
-import { ElementHandle, BoxModel, JSHandle, Page } from "puppeteer-core";
+  iPuppeteerAssertionContext,
+  PuppeteerElement,
+} from "./puppeteerelement";
+import { iValue, iBounds, ScreenshotOpts, KeyValue } from "../interfaces";
+import { ElementHandle, BoxModel, JSHandle } from "puppeteer-core";
 import { asyncForEach, toType, arrayify, asyncMap } from "../util";
 import * as cssXPath from "css-xpath";
 import { ValuePromise } from "../value-promise";
@@ -20,7 +17,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
 
   public static create(
     input: ElementHandle,
-    context: iAssertionContext,
+    context: iPuppeteerAssertionContext,
     name: string,
     path?: string
   ): Promise<BrowserElement> {
@@ -39,7 +36,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
 
   protected constructor(
     input: ElementHandle,
-    context: iAssertionContext,
+    context: iPuppeteerAssertionContext,
     name: string,
     path?: string
   ) {

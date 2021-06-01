@@ -39,6 +39,7 @@ import {
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { AssertionIs } from "./assertion-is";
+import * as bluebird from "bluebird";
 
 export class Assertion implements iAssertion {
   public get value(): any {
@@ -254,7 +255,7 @@ export class Assertion implements iAssertion {
   private _not: boolean = false;
   private _optional: boolean = false;
   private _result: iAssertionResult | null = null;
-  private _finishedPromise: Promise<iAssertionResult | null>;
+  private _finishedPromise: bluebird<iAssertionResult | null>;
   private _finishedResolver: Function = () => {};
   private _statement: boolean | null = null;
   private _assertionMade: boolean = false;
@@ -276,7 +277,7 @@ export class Assertion implements iAssertion {
     this._context = context;
     this._input = thisValue;
     this._message = typeof message == "undefined" ? null : message;
-    this._finishedPromise = new Promise((resolve) => {
+    this._finishedPromise = new bluebird((resolve) => {
       this._finishedResolver = resolve;
     });
   }

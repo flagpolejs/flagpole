@@ -22,12 +22,10 @@ import {
   HttpAuth,
   HttpTimeout,
   HttpMethodVerb,
+  iBrowserControlResponse,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
-import {
-  BrowserControl,
-  iBrowserControlResponse,
-} from "./puppeteer/browsercontrol";
+import { BrowserControl } from "./puppeteer/browsercontrol";
 import { getRequestAdapter, createResponse } from "./scenario-type-map";
 import {
   AssertionResult,
@@ -47,7 +45,7 @@ import { toType, asyncForEach, runAsync } from "./util";
 import { AssertionContext } from "./assertioncontext";
 import * as bluebird from "bluebird";
 import { Browser } from "puppeteer-core";
-import minikin, { Response, Server } from "minikin";
+import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
 import { wrapAsValue } from "./helpers";
 import {

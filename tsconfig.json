@@ -12,7 +12,8 @@
     "moduleResolution": "node",
     "removeComments": true,
     "preserveConstEnums": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "types": ["node", "webdriverio/async"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts"]

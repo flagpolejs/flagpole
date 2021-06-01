@@ -37,7 +37,7 @@ export class ValuePromise
 
   private constructor(
     executor: (
-      resolve: (value?: iValue | PromiseLike<iValue>) => void,
+      resolve: (value: iValue | PromiseLike<iValue>) => void,
       reject: (reason?: any) => void
     ) => void
   ) {

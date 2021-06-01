@@ -178,7 +178,7 @@ export class AssertionContext implements iAssertionContext {
     return new Promise((resolve) => {
       setTimeout(() => {
         this._completedAction("PAUSE", `${milliseconds}ms`);
-        resolve();
+        resolve(null);
       }, milliseconds);
     });
   }

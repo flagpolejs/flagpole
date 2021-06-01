@@ -1,11 +1,5 @@
 import { BrowserControl } from "./puppeteer/browsercontrol";
 import {
-  Page,
-  EvaluateFn,
-  SerializableOrJSHandle,
-  PageFnOptions,
-} from "puppeteer-core";
-import {
   SuiteStatusEvent,
   ScenarioStatusEvent,
   LineType,
@@ -286,20 +280,12 @@ export interface iValue {
   clearThenType(textToType: string, opts?: any): Promise<void>;
   type(textToType: string, opts?: any): Promise<void>;
   clear(): Promise<void>;
-  eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
+  eval(js: any, ...args: any[]): Promise<any>;
   selectOption(value: string | string[]): Promise<void>;
   pressEnter(): Promise<void>;
   scrollTo(): Promise<void>;
-  waitForFunction(
-    js: EvaluateFn<any>,
-    timeout: number,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<iValue>;
-  waitForFunction(
-    js: EvaluateFn<any>,
-    opts?: PageFnOptions,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<iValue>;
+  waitForFunction(js: any, timeout: number, ...args: any[]): Promise<iValue>;
+  waitForFunction(js: any, opts?: any, ...args: any[]): Promise<iValue>;
   waitForHidden(timeout?: number): Promise<iValue>;
   waitForVisible(timeout?: number): Promise<iValue>;
   // Tree traversal
@@ -379,7 +365,7 @@ export interface iResponse {
   header(key?: string): iValue;
   cookie(key?: string): iValue;
   absolutizeUri(uri: string): string;
-  eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
+  eval(js: any, ...args: any[]): Promise<any>;
   waitForNavigation(
     timeout?: number,
     waitFor?: string | string[]
@@ -387,11 +373,7 @@ export interface iResponse {
   waitForLoad(timeout?: number): Promise<void>;
   waitForNetworkIdle(timeout?: number): Promise<void>;
   waitForReady(timeout?: number): Promise<void>;
-  waitForFunction(
-    js: EvaluateFn<any>,
-    opts?: PageFnOptions,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<void>;
+  waitForFunction(js: any, opts?: any, ...args: any[]): Promise<void>;
   waitForHidden(selector: string, timeout?: number): Promise<iValue>;
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
@@ -548,14 +530,8 @@ export interface iAssertion {
   hasClassName(value?: string | RegExp): Promise<iAssertion>;
   hasText(text?: string | RegExp): Promise<iAssertion>;
   hasTag(tagName?: string | RegExp): Promise<iAssertion>;
-  eval(
-    js: EvaluateFn<any>,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<iAssertion>;
-  evalEvery(
-    js: EvaluateFn<any>,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<iAssertion>;
+  eval(js: any, ...args: any[]): Promise<iAssertion>;
+  evalEvery(js: any, ...args: any[]): Promise<iAssertion>;
   execute(
     bool: boolean,
     actualValue: any,
@@ -563,7 +539,18 @@ export interface iAssertion {
   ): iAssertion;
 }
 
+export interface iBrowserControlResponse {
+  response: any;
+  body: string;
+  cookies: KeyValue;
+}
+
+export interface iBrowserControl {
+  open(request: iHttpRequest): Promise<iBrowserControlResponse>;
+}
+
 export interface iAssertionContext {
+  page: any;
   result: any;
   request: iHttpRequest;
   response: iResponse;
@@ -571,7 +558,6 @@ export interface iAssertionContext {
   suite: iSuite;
   browserControl: BrowserControl | null;
   executionOptions: FlagpoleExecution;
-  page: Page | null;
   incompleteAssertions: iAssertion[];
   assertionsResolved: Promise<(iAssertionResult | null)[]>;
   subScenariosResolved: Promise<any[]>;
@@ -656,11 +642,11 @@ export interface iAssertionContext {
   submit(selector: string): Promise<void>;
   type(selector: string, textToType: string, opts?: any): Promise<void>;
   selectOption(selector: string, value: string | string[]): Promise<void>;
-  eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
+  eval(js: any, ...args: any[]): Promise<any>;
   waitForFunction(
-    js: EvaluateFn<any>,
+    js: any,
     opts?: { polling?: string | number; timeout?: number },
-    ...args: SerializableOrJSHandle[]
+    ...args: any[]
   ): Promise<void>;
   waitForReady(timeout?: number): Promise<void>;
   waitForLoad(timeout?: number): Promise<void>;

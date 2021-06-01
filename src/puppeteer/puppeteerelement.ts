@@ -9,9 +9,19 @@ import {
 } from "puppeteer-core";
 import { DOMElement } from "../html/domelement";
 
+export interface iPuppeteerAssertionContext extends iAssertionContext {
+  page: Page;
+}
+
 export abstract class PuppeteerElement extends DOMElement implements iValue {
   protected abstract _input: ElementHandle | JSHandle;
   public abstract get $(): ElementHandle | JSHandle;
+
+  protected _context: iPuppeteerAssertionContext;
+
+  public get context(): iPuppeteerAssertionContext {
+    return this._context;
+  }
 
   protected get _page(): Page {
     if (this.context.page === null) {
@@ -22,11 +32,12 @@ export abstract class PuppeteerElement extends DOMElement implements iValue {
 
   protected constructor(
     input: JSHandle | ElementHandle,
-    context: iAssertionContext,
+    context: iPuppeteerAssertionContext,
     name: string,
     path?: string
   ) {
     super(input, context, name, path);
+    this._context = context;
   }
 
   public toString(): string {
