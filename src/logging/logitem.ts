@@ -39,7 +39,7 @@ export abstract class LogItem implements iLogItem {
     html += '<li class="${this.className}">';
     html += `<span class="message">${this.message}</span>`;
     if (this.failed) {
-      html += `<div>${this['detailsMessage']}</div>`
+      html += `<ul><li>${this['detailsMessage']}</li></ul>`
     }
     html += '</li>';
     return html;
