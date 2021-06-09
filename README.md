@@ -7,7 +7,7 @@ Flagpole is a QA testing framework that is easy to learn, flexible, portable, an
 
 ## Want to contribute?
 
-Sure! Please contirbute your pull request.
+Sure! Please contribute your pull request.
 
 ### Developer Style Guide
 
@@ -22,7 +22,7 @@ Sure! Please contirbute your pull request.
 - Don't try to do everything, but do the common QA functions really well
 - As much as possible, create a common experience across different classes of scenarios
 - Keep the framework as light as possible, which might mean auto-discovery and dynamically loading optional libraries
-- It should be obvious, it should mislead of confuse or cause additional cognitive load
+- It should be obvious. It should not mislead, confuse, or cause additional cognitive load
 - Do what you say, say what you do. No side effects.
 - Try to start methods with verbs unless it's just really short, sweet, and obvious not to
 - Start properties or methods that return booleans with "is" or "has" or "can" or something similar that reads what it is
