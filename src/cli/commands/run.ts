@@ -225,7 +225,7 @@ const runSuites = async (
       Cli.exit(2);
     }
     if (
-      FlagpoleExecution.global.volume >= lineToVerbosity["decoration"] &&
+      FlagpoleExecution.global.volume >= lineToVerbosity.decoration &&
       FlagpoleExecution.global.isConsoleOutput
     ) {
       Ansi.writeLine();
