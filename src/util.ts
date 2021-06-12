@@ -334,6 +334,18 @@ export const deepStrictEqual = (thisValue: any, thatValue: any): boolean => {
   }
 };
 
+export const objectContains = (thisValue: any, thatValue: any): boolean => {
+  return Object.keys(thatValue).every(
+    (key) => thatValue[key] == thisValue[key]
+  );
+};
+
+export const objectContainsKeys = (thisValue: any, keys: any): boolean => {
+  return arrayify(keys)
+    .map((val) => String(val))
+    .every((val) => typeof thisValue[val] !== "undefined");
+};
+
 export const firstIn = (obj: any) => {
   const type = toType(obj);
   try {

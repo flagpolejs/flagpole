@@ -33,6 +33,8 @@ import {
   arrayify,
   asyncWhichFails,
   asyncWhich,
+  objectContains,
+  objectContainsKeys,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
@@ -517,21 +519,36 @@ export class Assertion implements iAssertion {
     }
   }
 
+  public in(values: any[]): iAssertion {
+    const thisValue = this.value;
+    this.setDefaultMessages(
+      `${this.subject} is not in list: ${values.join(", ")}`,
+      `${this.subject} is in list: ${values.join(", ")}`
+    );
+    return this.execute(values.indexOf(thisValue) >= 0, thisValue);
+  }
+
+  public includes(value: any): iAssertion {
+    return this.contains(value);
+  }
+
   public contains(value: any): iAssertion {
-    const { thisValue, thatValue } = this._getValues(value);
-    const thisType = toType(thisValue);
-    const thatValues = arrayify(thatValue);
+    const { thisValue, thatValue } = this._getValues(value),
+      thisType = toType(thisValue),
+      thatType = toType(thisValue);
     const bool: boolean = (() => {
       if (isNullOrUndefined(this._input)) {
         return thisValue === thatValue;
       } else if (thisType == "array") {
-        return thatValues.every((val) => thisValue.includes(val));
+        return arrayify(thatValue).every((val) => thisValue.includes(val));
       } else if (thisType == "object") {
-        return thatValues
-          .map((val) => String(val))
-          .every((val) => typeof thisValue[val] !== "undefined");
+        if (thatType == "object") {
+          return objectContains(thisValue, thatValue);
+        } else {
+          return objectContainsKeys(thisValue, thatValue);
+        }
       } else {
-        return String(this._input).indexOf(thatValue) >= 0;
+        return String(thisValue).includes(thatValue);
       }
     })();
     this.setDefaultMessages(
@@ -589,7 +606,7 @@ export class Assertion implements iAssertion {
         return thisValue[0] == value;
       }
       if (!isNullOrUndefined(thisValue)) {
-        return String(thisValue).indexOf(thatValue) === 0;
+        return String(thisValue).startsWith(thatValue);
       }
       return false;
     })();
@@ -607,12 +624,7 @@ export class Assertion implements iAssertion {
         return thisValue[thisValue.length - 1] == thatValue;
       }
       if (!isNullOrUndefined(thisValue)) {
-        return (
-          String(thisValue).substr(
-            0,
-            String(thisValue).length - String(thatValue).length
-          ) == thatValue
-        );
+        return String(thisValue).endsWith(thatValue);
       }
       return false;
     })();
@@ -621,30 +633,6 @@ export class Assertion implements iAssertion {
       `${this.subject} ends with ${thatValue}`
     );
     return this.execute(bool, String(this._input));
-  }
-
-  public in(values: any[]): iAssertion {
-    const thisValue = this.value;
-    this.setDefaultMessages(
-      `${this.subject} is not in list: ${values.join(", ")}`,
-      `${this.subject} is in list: ${values.join(", ")}`
-    );
-    return this.execute(values.indexOf(thisValue) >= 0, thisValue);
-  }
-
-  public includes(value: any): iAssertion {
-    const { thisValue, thatValue } = this._getValues(value);
-    const bool: boolean = (() => {
-      if (thisValue && thisValue.indexOf) {
-        return thisValue.indexOf(thatValue) >= 0;
-      }
-      return false;
-    })();
-    this.setDefaultMessages(
-      `${this.subject} does not include ${thatValue}`,
-      `${this.subject} includes ${thatValue}`
-    );
-    return this.execute(bool, thisValue);
   }
 
   public exists(): iAssertion {
