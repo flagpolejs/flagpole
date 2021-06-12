@@ -5,6 +5,13 @@ Flagpole is a QA testing framework that is easy to learn, flexible, portable, an
 - [Flagpole Developer Documentation](https://flagpolejs.github.io/flagpole)
 - [Examples](https://github.com/flocasts/flagpole/tree/master/tests)
 
+## Flagpole Users
+
+![FloSports](https://image.roku.com/developer_channels/prod/aa6d6ce57121b577c4115fe93d54778cebda85e793bf306bcecf1d638a470514.png)
+
+![Echelon Fitness](https://www.northcastlepartners.com/wp-content/uploads/2019/08/Echelon_MainLogo_Registered@3x-100.jpg)
+
+
 ## Want to contribute?
 
 Sure! Please contribute your pull request.
