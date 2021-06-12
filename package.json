@@ -18,9 +18,9 @@
     "test": "npm run build-tests && flagpole run -t basic -h",
     "cdeps": "node_modules/madge/bin/cli.js --warning --circular --extensions js ./"
   },
-  "homepage": "https://github.com/flocasts/flagpole",
-  "repository": "git@github.com:flocasts/flagpole.git",
-  "author": "Jason Byrne <jason.byrne@flosports.tv>",
+  "homepage": "https://github.com/flagpolejs/flagpole",
+  "repository": "git@github.com:flagpolejs/flagpole.git",
+  "author": "Jason Byrne <jasonbyrne662@gmail.com",
   "license": "MIT",
   "dependencies": {
     "@types/cheerio": "^0.22.22",
