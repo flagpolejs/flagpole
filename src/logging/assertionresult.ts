@@ -123,6 +123,15 @@ export class AssertionFail extends AssertionResult implements iLogItem {
     }
     return lines;
   }
+
+  public toHtml(): string {
+    return `
+        <li class="${this.className}">
+          <span class="message">${this.message}</span>
+          <ul><li>${this.detailsMessage}</li></ul>
+        </li>
+      `;
+  }
 }
 
 export class AssertionFailOptional extends AssertionFail implements iLogItem {
