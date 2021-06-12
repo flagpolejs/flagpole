@@ -34,12 +34,15 @@ export abstract class LogItem implements iLogItem {
     return [new CustomLine(this.message, [255, 255, 255])];
   }
 
-  public toHtml(): string {
-    return `
-            <li class="${this.className}">
-                <span class="message">${this.message}</span>
-            </li>
-        `;
+  public toHtml(): string {    
+    let html: string = "";
+    html += '<li class="${this.className}">';
+    html += `<span class="message">${this.message}</span>`;
+    if (this.failed) {
+      html += `<ul><li>${this['detailsMessage']}</li></ul>`
+    }
+    html += '</li>';
+    return html;
   }
 
   public toJson(): any {
