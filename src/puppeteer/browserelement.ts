@@ -344,7 +344,12 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       const value: any = formData[name];
       const selector: string = `${this._path} [${attributeName}="${name}"]`;
       const inputs: ElementHandle[] = await this._page.$$(selector);
-      if (inputs.length > 0) {
+      if (inputs.length == 0) {
+        this.context.logOptionalFailure(
+          `Could not set form field ${name} to ${value}, because the field did not exist.`,
+          selector
+        );
+      } else {
         const input: ElementHandle = inputs[0];
         const tagName: string = String(
           await (await input.getProperty("tagName")).jsonValue()
