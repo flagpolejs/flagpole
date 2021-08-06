@@ -85,8 +85,9 @@ export class BrowserControl {
   }
 
   public async close(): Promise<void> {
-    if (this._page !== null) {
+    if (this._page !== null && this._browser !== null) {
       await this._page.close();
+      await this._browser.close();
     }
   }
 
