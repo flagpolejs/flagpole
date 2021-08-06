@@ -402,7 +402,7 @@ export class SuiteTaskManager {
           batch,
           async (scenario) => {
             await this._executeScenario(scenario);
-            await scenario.waitForResponse();
+            await scenario.waitForFinished();
           },
           {
             concurrency: this._concurrencyLimit,
