@@ -20,7 +20,7 @@ const sites = [
 ];
 
 const suite = flagpole('View five GitHub repos at a time')
-   .setConcurrencyLimit(5) // run up to five browsers in parallel
+   .setConcurrencyLimit(10) // run up to ten browsers in parallel
 
 sites.forEach((site) => {
    suite
