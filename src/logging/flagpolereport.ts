@@ -149,30 +149,32 @@ export class FlagpoleReport {
     const scenarios: iScenario[] = this.suite.scenarios;
 
     const testCases: string[] = []
-    
+
     for (let i = 0; i < scenarios.length; i++) {
       const scenario: iScenario = scenarios[i];
       const log = await scenario.getLog();
-      
+
       log.forEach((item: iLogItem) => {
+        
         if (item.type.startsWith("result")) {
 
-          let testCase = `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}">`
-          
+          let testCase = '';
+
           if (item.type === "resultFailure") {
+            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}">`
             testCase += `<failure message="${item.message}" type="WARNING">`
-            testCase += item.message
-            testCase += `</failure>`
+            testCase += `{item.message} - ${item['_rawDetails'][0]}`
+            testCase += `</failure></testcase>`
+          } else {
+            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}"></testcase>`
           }
-          
-          testCase += `</testcase>`
 
           testCases.push(testCase)
         }
       })
-      
+
     }
-    
+
     let xml = `<testsuite id="${this.suite.title}" name="${this.suite.title}" tests="${testCases.length}" failures="${this.suite.failCount}" time="${this.suite.executionDuration}ms}">`
     xml += testCases.join('')
     xml += `</testsuite>`
