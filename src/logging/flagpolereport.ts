@@ -142,6 +142,44 @@ export class FlagpoleReport {
     return html;
   }
 
+  /**
+   * Create XML output for results
+   */
+  public async toXML(): Promise<string> {
+    const scenarios: iScenario[] = this.suite.scenarios;
+
+    const testCases: string[] = []
+    
+    for (let i = 0; i < scenarios.length; i++) {
+      const scenario: iScenario = scenarios[i];
+      const log = await scenario.getLog();
+      
+      log.forEach((item: iLogItem) => {
+        if (item.type.startsWith("result")) {
+
+          let testCase = `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}">`
+          
+          if (item.type === "resultFailure") {
+            testCase += `<failure message="${item.message}" type="WARNING">`
+            testCase += item.message
+            testCase += `</failure>`
+          }
+          
+          testCase += `</testcase>`
+
+          testCases.push(testCase)
+        }
+      })
+      
+    }
+    
+    let xml = `<testsuite id="${this.suite.title}" name="${this.suite.title}" tests="${testCases.length}" failures="${this.suite.failCount}" time="${this.suite.executionDuration}ms}">`
+    xml += testCases.join('')
+    xml += `</testsuite>`
+
+    return xml;
+  }
+
   public async toDelimited(format: string): Promise<string[]> {
     const funcName: string = `to${format.charAt(0).toUpperCase()}${format.slice(
       1
@@ -172,6 +210,10 @@ export class FlagpoleReport {
     // HTML
     if (FlagpoleExecution.global.shouldWriteHtml) {
       out += await this.toHTML();
+    }
+    // XML
+    if (FlagpoleExecution.global.shouldWriteXml) {
+      out += await this.toXML();
     }
     // JSON
     else if (FlagpoleExecution.global.isJsonOutput) {
