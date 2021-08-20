@@ -163,7 +163,7 @@ export class FlagpoleReport {
           if (item.type === "resultFailure") {
             testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}">`
             testCase += `<failure message="${item.message}" type="WARNING">`
-            testCase += `{item.message} - ${item['_rawDetails'][0]}`
+            testCase += `${item.message} - ${item['_rawDetails'][0]}`
             testCase += `</failure></testcase>`
           } else {
             testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}"></testcase>`
