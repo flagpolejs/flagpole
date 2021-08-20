@@ -217,10 +217,6 @@ export class FlagpoleExecution {
     return this.isHtmlOutput || this.isBrowserOutput;
   }
 
-  public get shouldWriteXml(): boolean {
-    return this.isXmlOutput;
-  }
-
   public get isConsoleOutput(): boolean {
     return this.outputFormat === FlagpoleOutput.console;
   }

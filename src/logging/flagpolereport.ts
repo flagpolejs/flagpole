@@ -155,7 +155,7 @@ export class FlagpoleReport {
       const log = await scenario.getLog();
 
       log.forEach((item: iLogItem) => {
-        
+
         if (item.type.startsWith("result")) {
 
           let testCase = '';
@@ -163,7 +163,10 @@ export class FlagpoleReport {
           if (item.type === "resultFailure") {
             testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}">`
             testCase += `<failure message="${item.message}" type="WARNING">`
-            testCase += `${item.message} - ${item['_rawDetails'][0]}`
+            testCase += item.message
+            if (item['_rawDetails']) {
+              testCase += ` - ${item['_rawDetails'].join(' - ').replace(/\s+/g, ' ').trim()}`
+            }
             testCase += `</failure></testcase>`
           } else {
             testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}"></testcase>`
@@ -214,7 +217,7 @@ export class FlagpoleReport {
       out += await this.toHTML();
     }
     // XML
-    if (FlagpoleExecution.global.shouldWriteXml) {
+    if (FlagpoleExecution.global.isXmlOutput) {
       out += await this.toXML();
     }
     // JSON
