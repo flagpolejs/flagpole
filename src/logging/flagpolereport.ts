@@ -203,11 +203,27 @@ export class FlagpoleReport {
   }
 
   public async print(): Promise<any> {
-    const output = await this.toString();
-    const lines = output.split("\n");
-    lines.forEach((line) => {
-      process.send ? process.send(line) : console.log(line);
-    });
+    return new Promise(async (resolve, reject) => {
+      try {
+        const output = await this.toString();
+        const lines = output.split("\n");
+
+        lines.forEach((line) => {
+          // node child process has a 8192 character limit
+          const chunks = line.match(/.{1,8192}/g) || []
+          chunks.forEach((chunk) => {
+            // send the chunks
+            process.send ? process.send(chunk) : console.log(chunk);
+          })
+        });
+        // wait for the chunks to send before resolving and exiting the process
+        setTimeout(() => {
+          resolve()
+        }, 0);
+      } catch (error) {
+        reject(error)
+      }
+    })
   }
 
   public async toString(): Promise<string> {
