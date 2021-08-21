@@ -142,6 +142,49 @@ export class FlagpoleReport {
     return html;
   }
 
+  /**
+   * Create XML output for results
+   */
+  public async toXML(): Promise<string> {
+    const scenarios: iScenario[] = this.suite.scenarios;
+
+    const testCases: string[] = []
+
+    for (let i = 0; i < scenarios.length; i++) {
+      const scenario: iScenario = scenarios[i];
+      const log = await scenario.getLog();
+
+      log.forEach((item: iLogItem) => {
+
+        if (item.type.startsWith("result")) {
+
+          let testCase = '';
+
+          if (item.type === "resultFailure") {
+            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}">`
+            testCase += `<failure message="${item.message}" type="WARNING">`
+            testCase += item.message
+            if (item['_rawDetails']) {
+              testCase += ` - ${item['_rawDetails'].join(' - ').replace(/\s+/g, ' ').trim()}`
+            }
+            testCase += `</failure></testcase>`
+          } else {
+            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}"></testcase>`
+          }
+
+          testCases.push(testCase)
+        }
+      })
+
+    }
+
+    let xml = `<testsuite id="${this.suite.title}" name="${this.suite.title}" tests="${testCases.length}" failures="${this.suite.failCount}" time="${this.suite.executionDuration}ms}">`
+    xml += testCases.join('')
+    xml += `</testsuite>`
+
+    return xml;
+  }
+
   public async toDelimited(format: string): Promise<string[]> {
     const funcName: string = `to${format.charAt(0).toUpperCase()}${format.slice(
       1
@@ -160,11 +203,27 @@ export class FlagpoleReport {
   }
 
   public async print(): Promise<any> {
-    const output = await this.toString();
-    const lines = output.split("\n");
-    lines.forEach((line) => {
-      process.send ? process.send(line) : console.log(line);
-    });
+    return new Promise(async (resolve, reject) => {
+      try {
+        const output = await this.toString();
+        const lines = output.split("\n");
+
+        lines.forEach((line) => {
+          // node child process has a 8192 character limit
+          const chunks = line.match(/.{1,8192}/g) || []
+          chunks.forEach((chunk) => {
+            // send the chunks
+            process.send ? process.send(chunk) : console.log(chunk);
+          })
+        });
+        // wait for the chunks to send before resolving and exiting the process
+        setTimeout(() => {
+          resolve()
+        }, 0);
+      } catch (error) {
+        reject(error)
+      }
+    })
   }
 
   public async toString(): Promise<string> {
@@ -172,6 +231,10 @@ export class FlagpoleReport {
     // HTML
     if (FlagpoleExecution.global.shouldWriteHtml) {
       out += await this.toHTML();
+    }
+    // XML
+    if (FlagpoleExecution.global.isXmlOutput) {
+      out += await this.toXML();
     }
     // JSON
     else if (FlagpoleExecution.global.isJsonOutput) {

@@ -27,6 +27,7 @@ export enum FlagpoleOutput {
   tsv = "tsv",
   psv = "psv",
   browser = "browser",
+  xml = "xml"
 }
 
 export interface iFlagpoleOptions {
@@ -254,6 +255,10 @@ export class FlagpoleExecution {
 
   public get isHtmlOutput(): boolean {
     return this.outputFormat === FlagpoleOutput.html;
+  }
+
+  public get isXmlOutput(): boolean {
+    return this.outputFormat === FlagpoleOutput.xml;
   }
 
   private constructor(opts: iFlagpoleOptions, config: FlagpoleConfig) {
