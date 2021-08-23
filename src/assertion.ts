@@ -35,6 +35,7 @@ import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { AssertionIs } from "./assertion-is";
 import AjvJsonSchema, { Schema, ValidateFunction } from "ajv";
 import AjvJtd from "ajv/dist/jtd";
+import generateJsonSchema from "@flagpolejs/json-to-jsonschema";
 
 export class Assertion implements iAssertion {
   public get value(): any {
@@ -488,18 +489,23 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public matches(pattern: string | RegExp): iAssertion {
-    const { thisValue, thatValue } = this._getValues(pattern);
-    const thisType = toType(thisValue);
+  public matches(value: string | RegExp): iAssertion {
+    const { thisValue, thatValue } = this._getValues(value);
     const thatType = toType(thatValue);
     // Test it as regular expression
-    const regEx =
-      thatType == "regexp" ? thatValue : new RegExp(String(pattern));
-    this.setDefaultMessages(
-      `${this.subject} does not match ${String(pattern)}`,
-      `${this.subject} matches ${String(pattern)}`
-    );
-    return this.execute(regEx.test(thisValue), String(thisValue));
+    if (["string", "regexp"].includes(thatType)) {
+      const pattern = thatType == "regexp" ? thatValue : new RegExp(value);
+      this.setDefaultMessages(
+        `${this.subject} does not match ${String(pattern)}`,
+        `${this.subject} matches ${String(pattern)}`
+      );
+      return this.execute(pattern.test(thisValue), String(thisValue));
+    }
+    // Test it as a schema template
+    else {
+      const schema = generateJsonSchema(thatValue);
+      return this._executeSchema(thisValue, schema, "JsonSchema");
+    }
   }
 
   public in(values: any[]): iAssertion {
@@ -839,6 +845,14 @@ export class Assertion implements iAssertion {
         schema = writeSchema(thisValue, schemaName, schemaType);
       }
     }
+    return this._executeSchema(thisValue, schema, schemaType);
+  }
+
+  private _executeSchema(
+    thisValue: any,
+    schema: Schema,
+    schemaType: AssertSchemaType
+  ) {
     const validator = this._loadSchemaValidator(schemaType, schema);
     const isValid: boolean = validator(thisValue);
     const errors: AjvErrors = validator.errors;
