@@ -54,3 +54,11 @@ context
     .assert(context.response.jsonBody)
     .schema(jsonSchema, true);
 ```
+
+If you are using schema to automatically write the schema files, this will still work fine and will generate JTD format if that's what you prefer.
+
+```
+context
+    .assert(context.response.jsonBody)
+    .schema("@foobar", "JTD");
+```

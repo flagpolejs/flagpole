@@ -266,6 +266,23 @@ Hit this callback after all Scenarios finish executing if all Scenarios passed. 
 suite.success(() => {});
 ```
 
+### template(template(templateOptions: ScenarioInitOptions): Function
+
+Often times we are generating scenarios that are almost duplicates of each other, with just one or two things different. This creates a lot of redundant code.
+
+This method creates a generator function for you. You set the default options that all of the scenarios will inherit. Then use this generator function to create each scenario, changing whatever needs to be changed in the second argument.
+
+```javascript
+const get = suite.template({
+  type: "html",
+  method: "get",
+  statusCode: 200,
+});
+
+get("Landing page", { url: "https://www.google.com/" });
+get("Search results page", { url: "https://www.google.com/search?q=test" });
+```
+
 ### verifySslCert(verify: boolean): Suite
 
 Tells the request not to worry about verifying any SSL certs for HTTPS requests. This is helpful for local environments that may not have a valid cert. This value is passed on to any Scenarios created in this Suite, so you don't have to set it each time.
