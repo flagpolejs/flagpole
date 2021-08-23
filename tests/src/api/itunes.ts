@@ -101,7 +101,7 @@ suite
       .assert("Response body is greater than 0", context.response.length)
       .greaterThan(0)
       .assert("Schema is valid", context.response.jsonBody)
-      .schema(itunesApiSchema, true);
+      .schema(itunesApiSchema);
   })
   .next("Verify the data", async (context) => {
     const resultCount = await context.find("resultCount");

@@ -587,7 +587,7 @@ The total time between when the Scenario's request went out and when the respons
 
 The type of Scenario this is, the type of request we'll make and the response we'll expect back.
 
-_Possible Values: html, json, image, stylesheet, script, video, audio, resource, browser, extjs_
+_Possible Values: html, json, image, script, video, audio, resource, browser, extjs_
 
 ### title: string
 

@@ -8,7 +8,7 @@ import {
 } from "../interfaces";
 import { ElementHandle, BoxModel, JSHandle, Page } from "puppeteer-core";
 import { asyncForEach, toType, arrayify, asyncMap } from "../util";
-import * as cssXPath from "css-xpath";
+import csstoxpath from "csstoxpath";
 import { ValuePromise } from "../value-promise";
 
 export class BrowserElement extends PuppeteerElement implements iValue {
@@ -569,7 +569,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     selector: string = "*",
     suffix: string = ""
   ) {
-    const path = `${prefix}${cssXPath(selector)}${suffix}`;
+    const path = `${prefix}${csstoxpath(selector)}${suffix}`;
     return this.$.$x(path);
   }
 }

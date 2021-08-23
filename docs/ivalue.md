@@ -684,7 +684,7 @@ Convert the input to a array and join it into a string, return the resulting iVa
 
 Load works basically the same way as `.click()`, so you should see the documentation on that.
 
-The difference between the two is that `click` will only work for clickable things like links or buttons. However, you can use `load` on other things like images, scripts, audio, video, stylesheets, iframes, and forms.
+The difference between the two is that `click` will only work for clickable things like links or buttons. However, you can use `load` on other things like images, audio, video, stylesheets, iframes, and forms.
 
 ```javascript
 const image = await context.find("img.logo");

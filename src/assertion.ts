@@ -1,21 +1,15 @@
 import { Value } from "./value";
-import {
-  AssertionSchema,
-  generateAjvSchema,
-  getSchema,
-  writeSchema,
-} from "./assertionschema";
+import { getSchema, writeSchema } from "./assertionschema";
 import {
   iAssertionContext,
   iAssertion,
   iAssertionResult,
   IteratorCallback,
-  iAjvLike,
-  iAjvErrorObject,
-  JsonSchema,
   iValue,
   iAssertionIs,
   CompareCallback,
+  AssertSchemaType,
+  AjvErrors,
 } from "./interfaces";
 import {
   toType,
@@ -39,6 +33,8 @@ import {
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { AssertionIs } from "./assertion-is";
+import AjvJsonSchema, { Schema, ValidateFunction } from "ajv";
+import AjvJtd from "ajv/dist/jtd";
 
 export class Assertion implements iAssertion {
   public get value(): any {
@@ -248,7 +244,6 @@ export class Assertion implements iAssertion {
   }
 
   private _context: iAssertionContext;
-  private _ajv: any;
   private _input: any;
   private _message: string | null;
   private _not: boolean = false;
@@ -493,30 +488,18 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public matches(value: any): iAssertion {
-    const { thisValue, thatValue } = this._getValues(value);
+  public matches(pattern: string | RegExp): iAssertion {
+    const { thisValue, thatValue } = this._getValues(pattern);
     const thisType = toType(thisValue);
     const thatType = toType(thatValue);
     // Test it as regular expression
-    if (["string", "regexp"].includes(thatType)) {
-      const pattern = thatType == "regexp" ? thatValue : new RegExp(value);
-      this.setDefaultMessages(
-        `${this.subject} does not match ${String(pattern)}`,
-        `${this.subject} matches ${String(pattern)}`
-      );
-      return this.execute(pattern.test(thisValue), String(thisValue));
-    }
-    // Test it as a schema template
-    else {
-      const schema = generateAjvSchema(thatValue);
-      const assertion = new AssertionSchema();
-      const valid = assertion.isValid(schema, thisValue);
-      this.setDefaultMessages(
-        `${this.subject} does not match the schema template`,
-        `${this.subject} matches the schema template`
-      );
-      return this.execute(valid, thisValue);
-    }
+    const regEx =
+      thatType == "regexp" ? thatValue : new RegExp(String(pattern));
+    this.setDefaultMessages(
+      `${this.subject} does not match ${String(pattern)}`,
+      `${this.subject} matches ${String(pattern)}`
+    );
+    return this.execute(regEx.test(thisValue), String(thisValue));
   }
 
   public in(values: any[]): iAssertion {
@@ -832,13 +815,19 @@ export class Assertion implements iAssertion {
     return this.execute(await asyncSome(thisValue, callback), thisValue);
   }
 
-  schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
-  schema(schema: JsonSchema, simple?: boolean): Promise<iAssertion>;
+  schema(schemaName: string, useJsonSchema: boolean): Promise<iAssertion>;
+  schema(schema: string, schemaType?: AssertSchemaType): Promise<iAssertion>;
+  schema(schema: Schema, schemaType?: AssertSchemaType): Promise<iAssertion>;
   public async schema(
-    schema: JsonSchema | string,
-    simple: boolean = false
+    schema: Schema | string,
+    schemaType: AssertSchemaType | boolean = "JsonSchema"
   ): Promise<iAssertion> {
     const thisValue = this.value;
+    // Handle overload of schema type
+    if (typeof schemaType === "boolean") {
+      schemaType = schemaType ? "JsonSchema" : "JTD";
+    }
+    // If schema was a string, then it is a file path so load the file
     if (typeof schema === "string") {
       const schemaName: string = schema;
       try {
@@ -847,26 +836,23 @@ export class Assertion implements iAssertion {
         this._context.comment(
           `Created new schema snapshot called ${schemaName}`
         );
-        schema = writeSchema(thisValue, schemaName);
+        schema = writeSchema(thisValue, schemaName, schemaType);
       }
     }
-    const validator = simple
-      ? new AssertionSchema()
-      : await this._loadSchemaValidator();
-    const isValid: boolean = await validator.validate(schema, thisValue);
-    const errors: Error[] | iAjvErrorObject[] | null | undefined =
-      validator.errors;
-    let error: string = "";
-    if (typeof errors != "undefined" && errors !== null) {
-      errors.forEach((err: Error | iAjvErrorObject) => {
-        error += err.message + " ";
+    const validator = this._loadSchemaValidator(schemaType, schema);
+    const isValid: boolean = validator(thisValue);
+    const errors: AjvErrors = validator.errors;
+    const errorMessages: string[] = [];
+    if (!!errors) {
+      errors.forEach((err) => {
+        errorMessages.push(`${err.instancePath} ${err.message}`);
       });
     }
     this.setDefaultMessages(
       `${this.subject} does not match schema`,
       `${this.subject} matches schema`
     );
-    return this.execute(isValid, error);
+    return this.execute(isValid, errorMessages.join(". "));
   }
 
   /**
@@ -898,22 +884,18 @@ export class Assertion implements iAssertion {
     return this;
   }
 
-  private async _loadSchemaValidator(): Promise<iAjvLike> {
-    // We haven't tried to load query engines yet
-    if (typeof this._ajv == "undefined") {
-      // Try importing ajv
-      return import("ajv")
-        .then((Ajv: any) => {
-          this._ajv = new Ajv();
-          return this._ajv;
-        })
-        .catch(() => {
-          this._ajv = new AssertionSchema();
-          return this._ajv;
-        });
-    } else {
-      return this._ajv;
+  private _loadSchemaValidator(
+    schemaType: AssertSchemaType,
+    schema: Schema
+  ): ValidateFunction {
+    // AJV JsonSchema
+    if (schemaType === "JsonSchema") {
+      const ajv = new AjvJsonSchema();
+      return ajv.compile(schema);
     }
+    // JTD
+    const ajv = new AjvJtd();
+    return ajv.compile(schema);
   }
 
   private _returnsPromise(callback: Function, values: any[]): boolean {
@@ -1054,9 +1036,8 @@ export class Assertion implements iAssertion {
         ? `<${value["tagName"]}> @ ${value.path}`
         : value.path;
     }
-    return (this._input?.toString
-      ? this._input.toString()
-      : String(this._input)
+    return (
+      this._input?.toString ? this._input.toString() : String(this._input)
     ).substr(0, 255);
   }
 

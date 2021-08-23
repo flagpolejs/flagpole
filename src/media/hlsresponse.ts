@@ -2,14 +2,15 @@ import { iResponse, iValue } from "../interfaces";
 import { HttpResponse } from "../httpresponse";
 import HLS from "parse-hls";
 import { wrapAsValue } from "../helpers";
-import { VideoResponse } from "./videoresponse";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "../json/jpath";
+import { MediaResponse } from "./mediaresponse";
 
 export class HLSResponse
-  extends VideoResponse
-  implements iResponse, JPathProvider {
+  extends MediaResponse
+  implements iResponse, JPathProvider
+{
   public jsonDoc: JsonDoc | undefined;
   protected _mimePattern = /mpegurl/i;
 

@@ -264,12 +264,6 @@ export abstract class DOMElement extends Value {
       return this._context.scenario.responseType;
     } else if (await this._isImageTag()) {
       return "image";
-    } else if (await this._isStylesheetTag()) {
-      return "stylesheet";
-    } else if (await this._isScriptTag()) {
-      return "script";
-    } else if (await this._isVideoTag()) {
-      return "video";
     } else {
       return "resource";
     }

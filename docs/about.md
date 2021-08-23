@@ -10,8 +10,7 @@ Flagpole is a flexible framework that can support a number of different types of
 - Super-fast HTML DOM testing with Cheerio (jQuery for Node)
 - REST API/JSON End Points with Schema Snapshots
 - Lightweight image tester that can verify the dimensions, mime and file size without downloading the whole thing
-- Stylesheets including basic CSS validation
-- Basic validation for other resources like JavaScript
+- Basic validation for other resources like Stylesheets, JavaScript
 - Visual comparisons of a screenshot against a control image
 - Generic XML
 - RSS or Atom feeds

@@ -526,6 +526,19 @@ export class Scenario implements iScenario {
   }
 
   /**
+   * Set multiple cookies at once
+   *
+   * @param cookies
+   * @returns
+   */
+  public setCookies(cookies: KeyValue): iScenario {
+    Object.keys((key: string) => {
+      this.setCookie(key, cookies[key]);
+    });
+    return this;
+  }
+
+  /**
    * Set the full list of headers to submit with this request
    *
    * @param headers
@@ -628,7 +641,7 @@ export class Scenario implements iScenario {
    * @param milliseconds
    */
   public pause(milliseconds: number): iScenario {
-    this.next((context) => {
+    this.next((context: iAssertionContext) => {
       context.comment(`Pause for ${milliseconds}ms`);
       return context.pause(milliseconds);
     });

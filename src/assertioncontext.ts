@@ -43,9 +43,6 @@ import {
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { getFindParams, getFindName, wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
-import { HttpRequest } from "./httprequest";
-import { SchemaValidator } from "./assertionschema";
-import * as bluebird from "bluebird";
 
 const getParamsFromExists = (
   a: string,
@@ -627,10 +624,6 @@ export class AssertionContext implements iAssertionContext {
 
   public abort(message?: string): Promise<iScenario> {
     return this.scenario.abort(message);
-  }
-
-  public schema(schema: any): SchemaValidator {
-    return new SchemaValidator(schema);
   }
 
   protected async _findAllForSelectors(

@@ -14,8 +14,6 @@ import {
 } from "fs-extra";
 import * as path from "path";
 import { jsonParse } from "./util";
-import { JsonSchema } from "./interfaces";
-import { generateAjvSchema, writeSchema } from "./assertionschema";
 
 export enum FlagpoleOutput {
   console = "console",
@@ -27,7 +25,7 @@ export enum FlagpoleOutput {
   tsv = "tsv",
   psv = "psv",
   browser = "browser",
-  xml = "xml"
+  xml = "xml",
 }
 
 export interface iFlagpoleOptions {
@@ -191,10 +189,10 @@ export class FlagpoleExecution {
 
   public get baseDomain(): string | undefined {
     if (this._opts.baseDomain !== "undefined" && this._opts.baseDomain) {
-      return this._opts.baseDomain
+      return this._opts.baseDomain;
     }
 
-    return this.environment?.defaultDomain
+    return this.environment?.defaultDomain;
   }
 
   public get headless(): boolean | undefined {
@@ -302,10 +300,6 @@ export class FlagpoleExecution {
 
   public clearCache() {
     return emptyDirSync(this.getCachePath());
-  }
-
-  public generateJsonSchema(json: any, schemaName?: string): JsonSchema {
-    return schemaName ? writeSchema(json, schemaName) : generateAjvSchema(json);
   }
 
   public getOptionsArray(): string[] {

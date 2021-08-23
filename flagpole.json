@@ -181,6 +181,16 @@
       "id": "",
       "name": "simple",
       "tags": []
+    },
+    "template": {
+      "id": "",
+      "name": "template",
+      "tags": []
+    },
+    "schema": {
+      "id": "",
+      "name": "schema",
+      "tags": []
     }
   }
 }

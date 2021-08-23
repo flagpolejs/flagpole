@@ -26,13 +26,13 @@ suite
   .open("/api/v1/meets")
   .next(async (context) => {
     context.assert(context.response.statusCode).equals(200);
-    await context.assert(context.response.jsonBody).schema("@meetsList", true);
+    await context.assert(context.response.jsonBody).schema("@meetsList");
     context.comment(context.response.jsonBody.$.data[0]);
-    context.assert(context.response.jsonBody).matches(exampleListData);
+    context.assert(context.response.jsonBody).schema(exampleListData);
     await context.response.body.json
       .item("data")
       .assert("All rows are valid")
-      .every((row) => context.schema(exampleItemData).isValid(row));
+      .every((row) => context.assert(exampleItemData).schema(row));
     context.response.body.json
       .item("data")
       .count("registrationActive")

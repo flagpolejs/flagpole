@@ -1,10 +1,8 @@
 import { Assertion } from "./assertion";
 import { AssertionContext } from "./assertioncontext";
 import { AssertionResult } from "./logging/assertionresult";
-import { AssertionSchema } from "./assertionschema";
 import { BrowserControl } from "./puppeteer/browsercontrol";
 import { BrowserResponse } from "./puppeteer/browserresponse";
-import { CssResponse } from "./css/cssresponse";
 import { DOMElement } from "./html/domelement";
 import { ExtJSResponse } from "./puppeteer/extjsresponse";
 import { HtmlResponse } from "./html/htmlresponse";
@@ -14,10 +12,8 @@ import { JsonResponse } from "./json/jsonresponse";
 import { ResourceResponse } from "./resourceresponse";
 import { ProtoResponse } from "./response";
 import { Scenario } from "./scenario";
-import { ScriptResponse } from "./scriptresponse";
 import { Suite } from "./suite";
 import { Value } from "./value";
-import { VideoResponse } from "./media/videoresponse";
 import { HLSResponse } from "./media/hlsresponse";
 import { HeadersResponse } from "./headersresponse";
 import { Flagpole } from "./flagpole";
@@ -26,8 +22,6 @@ import {
   iValue,
   iScenario,
   iSuite,
-  JsonSchema,
-  JsonSchema_Type,
   BrowserOptions,
   HttpAuth,
 } from "./interfaces";
@@ -49,13 +43,9 @@ export {
   Assertion,
   AssertionContext,
   AssertionResult,
-  JsonSchema,
-  JsonSchema_Type,
-  AssertionSchema,
   BrowserControl,
   BrowserOptions,
   BrowserResponse,
-  CssResponse,
   DOMElement,
   ExtJSResponse,
   HtmlResponse,
@@ -68,10 +58,8 @@ export {
   HttpRequest,
   HttpResponse,
   HttpAuth,
-  ScriptResponse,
   iValue,
   Value,
-  VideoResponse,
   HLSResponse,
   HeadersResponse,
   iScenario,

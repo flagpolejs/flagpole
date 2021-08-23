@@ -18,14 +18,10 @@ import { ServerOptions } from "https";
 import { Server } from "minikin";
 import validator from "validator";
 import { ValuePromise } from "./value-promise";
-import { SchemaValidator } from "./assertionschema";
 import { ScenarioType } from "./scenario-types";
 import { LaunchOptions } from "puppeteer-core";
 import * as http from "http";
-
-interface AjvSchema {
-  // TODO: Add this reference
-}
+import { ErrorObject, Schema } from "ajv";
 
 export type CompareCallback = (a: any, b: any) => number;
 
@@ -516,7 +512,7 @@ export interface iAssertion {
   lessThan(value: any): iAssertion;
   lessThanOrEquals(value: any): iAssertion;
   between(min: any, max: any): iAssertion;
-  matches(value: any): iAssertion;
+  matches(pattern: string | RegExp): iAssertion;
   contains(value: any): iAssertion;
   startsWith(value: any): iAssertion;
   endsWith(value: any): iAssertion;
@@ -534,8 +530,12 @@ export interface iAssertion {
   none(callback: IteratorCallback): Promise<iAssertion>;
   assert(a: any, b?: any): iAssertion;
   comment(input: any): iAssertion;
-  schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
-  schema(schema: JsonSchema | AjvSchema, simple?: boolean): Promise<iAssertion>;
+  schema(schemaName: string, useJsonSchema: boolean): Promise<iAssertion>;
+  schema(
+    schemaName: string,
+    schemaType?: AssertSchemaType
+  ): Promise<iAssertion>;
+  schema(schema: Schema, schemaType?: AssertSchemaType): Promise<iAssertion>;
   looksLike(imageData: Buffer): iAssertion;
   looksLike(imageLocalPath: string): iAssertion;
   looksLike(imageData: Buffer, threshold: number): iAssertion;
@@ -710,9 +710,6 @@ export interface iAssertionContext {
   filter(array: any[], callback: IteratorBoolCallback): Promise<any[]>;
   map(array: any[], callback: IteratorCallback): Promise<any[]>;
   abort(message?: string): Promise<iScenario>;
-  schema(schemaName: string): SchemaValidator;
-  schema(schemaPath: string): SchemaValidator;
-  schema(schema: object | any[]): SchemaValidator;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
@@ -742,10 +739,7 @@ export interface iSuite {
   scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
   json(title: string): iScenario;
   image(title: string): iScenario;
-  video(title: string): iScenario;
   html(title: string): iScenario;
-  stylesheet(title: string): iScenario;
-  script(title: string): iScenario;
   resource(title: string): iScenario;
   browser(title: string, opts?: BrowserOptions): iScenario;
   extjs(title: string, opts?: BrowserOptions): iScenario;
@@ -762,8 +756,11 @@ export interface iSuite {
   mapScenarios(key: string, mapper: ScenarioMapper): Promise<iScenario[]>;
   mapScenarios(arr: any[], mapper: ScenarioMapper): Promise<iScenario[]>;
   push(key: string, value: any): iSuite;
-  set(key: string, value: any): iSuite;
+  set<T = any>(key: string, value: any): iSuite;
   get<T = any>(key: string): T;
+  template(
+    templateOptions: ScenarioInitOptions
+  ): (title: string, scenarioOptions: ScenarioInitOptions) => iScenario;
 }
 
 export interface iScenario {
@@ -815,6 +812,7 @@ export interface iScenario {
   setBasicAuth(authorization: HttpAuth): iScenario;
   setDigestAuth(authorization: HttpAuth): iScenario;
   setBearerToken(token: string): iScenario;
+  setCookies(cookies: KeyValue): iScenario;
   setCookie(key: string, value: string): iScenario;
   setHeaders(headers: KeyValue): iScenario;
   setHeader(key: string, value: any): iScenario;
@@ -897,41 +895,12 @@ export type KeyValue = {
   [key: string]: any;
 };
 
-export type JsonSchema_Type =
-  | "object"
-  | "array"
-  | "string"
-  | "number"
-  | "integer"
-  | "null";
+export type AssertSchemaType = "JsonSchema" | "JTD";
 
-export type JsonSchema = {
-  type: JsonSchema_Type | JsonSchema_Type[];
-  properties?: { [key: string]: JsonSchema };
-  items?: JsonSchema;
-  enum?: any[];
-  pattern?: RegExp | string;
-};
-
-export interface iAjvLike {
-  errors: Error[];
-  validate(schema: any, root: any): Promise<boolean>;
-}
-
-export interface iAjvErrorObject {
-  keyword: string;
-  dataPath: string;
-  schemaPath: string;
-  params: any;
-  // Added to validation errors of propertyNames keyword schema
-  propertyName?: string;
-  // Excluded if messages set to false.
-  message?: string;
-  // These are added with the `verbose` option.
-  schema?: any;
-  parentSchema?: object;
-  data?: any;
-}
+export type AjvErrors =
+  | ErrorObject<string, Record<string, any>, unknown>[]
+  | null
+  | undefined;
 
 export interface HttpResponseOptions {
   body?: any;
@@ -1066,3 +1035,23 @@ export const CONTENT_TYPE_JSON = "application/json";
 export const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
 export const CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
 export const ENCODING_GZIP = "gzip,deflate";
+
+export interface ScenarioInitOptions {
+  type?: ScenarioType;
+  bearerToken?: string;
+  url?: string;
+  httpRequestOpts?: HttpRequestOptions;
+  jsonBody?: any;
+  method?: HttpMethodVerb;
+  headers?: KeyValue;
+  cookies?: KeyValue;
+  rawBody?: string;
+  proxy?: HttpProxy;
+  timeout?: number;
+  formData?: KeyValue;
+  basicAuth?: HttpAuth;
+  digestAuth?: HttpAuth;
+  maxRedirects?: number;
+  next?: iNextCallback;
+  statusCode?: number;
+}
