@@ -16,7 +16,7 @@ A scenario should represent a specific action you want to take. And often you mi
 
 An assertion is a particular statement that you are saying is true. For example "I assert that the ocean is wet" or "I assert a dropped ball will fall to the ground." Now if those assertions fail we have to rethink our whole laws of physics!
 
-But that's the idea. We often assume that our site will behave in a certain way... until it doesn't. So our assertions should test each of our very basic understandings of what should happen--those are positive tests. Further, when you get to next level QA you will couple that will negative tests like "I assert I can not walk through this wall." 
+But that's the idea. We often assume that our site will behave in a certain way... until it doesn't. So our assertions should test each of our very basic understandings of what should happen--those are positive tests. Further, when you get to next level QA you will couple that will negative tests like "I assert I can not walk through this wall."
 
 The final level of QA greatness is when you add in what I call (and QA insiders tell me isn't a real term) jerk tests. This is something like typing in a string or a negative number into a quantity field and making sure the site doesn't break or (more ideally) throws up a pertinent error message.
 
@@ -30,15 +30,19 @@ When you are doing a full browser test, you can run it in either "headful" mode,
 
 [Puppeteer](https://pptr.dev/) is an open source tool where you can automate actions in Chromium (almost identical to Chrome) released by. It is similar to how many QA framweorks might use Selenium, other similar packages such as NightmareJS or (the now suspended) PhantomJS.
 
+# AJV
+
+[AJV](https://ajv.js.org/) is a popular library that supports an emerging standard of JSON schema definitions. Flagpole includes AJV as a dependency and supports its two formats of JSON validaton: [JSON Schema](https://json-schema.org/) and [JSON Type Definition](https://jsontypedef.com/).
+
 # DOM
 
-DOM stands of document object model. This is a hierarchical structure of a document, usually this refers to an HTML or XML document.  You can refer to any given element within the document by a selector path, which gives its location relative to the other elements in the document--essentially giving you a map to find it.
+DOM stands of document object model. This is a hierarchical structure of a document, usually this refers to an HTML or XML document. You can refer to any given element within the document by a selector path, which gives its location relative to the other elements in the document--essentially giving you a map to find it.
 
-Two schemes for addresses within the document are CSS Selectors and XPath. Flagpole uses CSS Selectors for HTML. 
+Two schemes for addresses within the document are CSS Selectors and XPath. Flagpole uses CSS Selectors for HTML.
 
 # CLI
 
-Command line interface is a collection of commands, starting with a given keyword (`flagpole` in our case) that can be typed at the terminal to make certain actions happen. 
+Command line interface is a collection of commands, starting with a given keyword (`flagpole` in our case) that can be typed at the terminal to make certain actions happen.
 
 # async...await
 
@@ -56,24 +60,24 @@ An arrow function is a modern JavaScript construct that looks like this with no 
 
 ```javascript
 () => {
-    console.log('Do some things');
-}
+  console.log("Do some things");
+};
 ```
 
 Or
 
 ```javascript
 (something, somethingElse) => {
-    console.log(`Let's echo ${something} and ${somethingElse}`);
-}
+  console.log(`Let's echo ${something} and ${somethingElse}`);
+};
 ```
 
 Or, with a single argument it can be written as:
 
 ```javascript
-result => {
-    console.log(`Let's echo ${result}`);
-}
+(result) => {
+  console.log(`Let's echo ${result}`);
+};
 ```
 
 It is almost the same as a normal function like `function (result) { }` with one important exception. When you use a normal function the `this` inside of it can be confusing if you don't know exactly the context that it is executed in. But with an arrow function the `this` is always preserved as the same thing it was outside of that function. In other words, it preserves the current scope.

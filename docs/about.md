@@ -4,18 +4,20 @@ _"Let me run it up the flagpole first"_
 
 Running something up the flagpole means you check on it first to see if it's good before going forward. And that's exactly what this framework is about, so we like the analogy.
 
+_"Swiss army knife of end-to-end QA testing"_
+
 Flagpole is a flexible framework that can support a number of different types of testing:
 
 - Full browser testing with Puppeteer
 - Super-fast HTML DOM testing with Cheerio (jQuery for Node)
-- REST API/JSON End Points with Schema Snapshots
+- REST API/JSON End Points with Schema Snapshots and validation of JSON Schema and JSON Type Definition (JTD) schemas
 - Lightweight image tester that can verify the dimensions, mime and file size without downloading the whole thing
 - Basic validation for other resources like Stylesheets, JavaScript
 - Visual comparisons of a screenshot against a control image
 - Generic XML
 - RSS or Atom feeds
 
-Flagpole is designed to be simple so that the most junior engineer or QA analyst can pick it up within hours.
+Flagpole is designed to be simple so that the most junior engineer or QA analyst can pick it up within hours. But it is so powerful it can take years to master and satisfy the most senior engineer.
 
 Flagpole is designed for portability, so that you can run it locally within your repository from a githook, in the cloud when something is deployed, as a scheduled job, or manually any time you want.
 

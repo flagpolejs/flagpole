@@ -9,7 +9,6 @@
 - Classes
   - [iAssertion](assertion.md)
   - [iAssertionContext](assertion-context.md)
-  - [iAssertionSchema](assertion-schema.md)
   - [iResponse](iresponse.md)
   - [iScenario](scenario.md)
   - [iSuite](suite.md)

@@ -11,13 +11,3 @@ If you are going to do full browser testing, you will probably want to install [
 ```cli
 npm i puppeteer --save-dev
 ```
-
-### AJV
-
-AJV is a popular library that supports an emerging standard of JSON schema definitions. Flagpole comes with a simple JSON Schema validator, which is mostly compatible with AJV (but not as feature rich). The Flagpole library is probably good enough most of the time and has some nice features built in that makes schemas a little simpler to define.
-
-However, if you want the full power of AJV then just install it. Flagpole will automatically recognize that it's there and use it.
-
-```cli
-npm i ajv --save-dev
-```
