@@ -302,7 +302,6 @@ export class FlagpoleReport {
           // append the output and close the tag again
           report = `${noClosingTag}\n${report}\n</testsuites>`
           writeFileSync(reportPath, report)
-          process.send ? process.send(`Writing report to ${reportPath}`) : console.log(`Writing report to ${reportPath}`);
           resolve()
         } else if (err.code === 'ENOENT') {
           // if the file doesn't exist
