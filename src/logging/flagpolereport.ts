@@ -207,7 +207,7 @@ export class FlagpoleReport {
   public async print(): Promise<any> {
     return new Promise(async (resolve, reject) => {
       try {
-        let output = await this.toString();
+        const output = await this.toString();
 
         if (FlagpoleExecution.global.isXmlOutput) {
           // write the output to a file in the reports/ directory
