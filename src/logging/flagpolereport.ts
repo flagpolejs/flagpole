@@ -292,8 +292,8 @@ export class FlagpoleReport {
 
       readFile(reportPath, 'utf8', async (err, data) => {
 
-        // if the file exists
         if (err == null) {
+          // if the file exists
           // remove the </testsuites> tag 
           const fileLines = data.split('\n');
           fileLines.splice(fileLines.length - 1, 1);

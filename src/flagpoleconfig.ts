@@ -298,7 +298,7 @@ export class FlagpoleConfig {
     );
   }
 
-    /**
+  /**
    * Default; _project_/tests/reports
    */
      public getReportsFolder(): string {
