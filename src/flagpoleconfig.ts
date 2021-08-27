@@ -46,6 +46,7 @@ export interface iProjectOpts {
   cache?: string;
   schemas?: string;
   pattern?: string;
+  reports?: string;
 }
 
 export interface iConfigOpts {
@@ -142,6 +143,7 @@ export class ProjectConfig {
   public cache: string;
   public schemas: string;
   public pattern: string;
+  public reports: string;
 
   public get isSourceAndOutput(): boolean {
     return this.source !== undefined && this.output !== undefined;
@@ -172,6 +174,7 @@ export class ProjectConfig {
     this.images = opts.images || "images";
     this.cache = opts.cache || "cache";
     this.schemas = opts.schemas || "schemas";
+    this.reports = opts.reports || "reports";
     this.source = opts.source;
     this.output = opts.output;
     this.pattern = opts.pattern || "";
@@ -198,6 +201,7 @@ export class ProjectConfig {
       images: this.images,
       cache: this.cache,
       schemas: this.schemas,
+      reports: this.reports
     };
   }
 }
@@ -293,6 +297,15 @@ export class FlagpoleConfig {
       path.join(this.getRootFolder(), this.project.cache || "cache")
     );
   }
+
+    /**
+   * Default; _project_/tests/reports
+   */
+     public getReportsFolder(): string {
+      return normalizePath(
+        path.join(this.getRootFolder(), this.project.reports || "reports")
+      );
+    }
 
   public getSuite(suiteName: string): SuiteConfig {
     return this.suites[suiteName];

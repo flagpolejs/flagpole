@@ -10,6 +10,8 @@ import { iConsoleLine, iLogItem, iScenario, iSuite } from "../interfaces";
 import { asyncForEach } from "../util";
 import { FlagpoleExecution } from "../flagpoleexecution";
 import { lineToVerbosity } from "./verbosity";
+import { ensureDirSync, readFile, writeFileSync } from "fs-extra";
+import * as path from "path";
 
 export class FlagpoleReport {
   public readonly suite: iSuite;
@@ -205,7 +207,13 @@ export class FlagpoleReport {
   public async print(): Promise<any> {
     return new Promise(async (resolve, reject) => {
       try {
-        const output = await this.toString();
+        let output = await this.toString();
+
+        if (FlagpoleExecution.global.isXmlOutput) {
+          // write the output to a file in the reports/ directory
+          await this.printXMLReport(output)
+        }
+
         const lines = output.split("\n");
 
         lines.forEach((line) => {
@@ -265,5 +273,47 @@ export class FlagpoleReport {
       });
     }
     return out;
+  }
+
+  public async printXMLReport(report: string): Promise<null> {
+    return new Promise(async (resolve, reject) => {
+      const reportsFolder = FlagpoleExecution.global.config.getReportsFolder();
+
+      if (!reportsFolder) {
+        throw "Flagpole reports folder path not found.";
+      }
+
+      ensureDirSync(reportsFolder);
+
+      const d = new Date()
+      const date = d.getMonth() + 1 + '-' + d.getDate() + '-' + d.getFullYear()
+      const reportFileName = `${date}-report.xml`
+      const reportPath = path.join(reportsFolder, reportFileName)
+
+      readFile(reportPath, 'utf8', async (err, data) => {
+
+        // if the file exists
+        if (err == null) {
+          // remove the </testsuites> tag 
+          const fileLines = data.split('\n');
+          fileLines.splice(fileLines.length - 1, 1);
+          const noClosingTag = fileLines.join('\n');
+
+          // append the output and close the tag again
+          report = `${noClosingTag}\n${report}\n</testsuites>`
+          writeFileSync(reportPath, report)
+          process.send ? process.send(`Writing report to ${reportPath}`) : console.log(`Writing report to ${reportPath}`);
+          resolve()
+        } else if (err.code === 'ENOENT') {
+          // if the file doesn't exist
+          // start a fresh xml file
+          report = `<?xml version="1.0" encoding="UTF-8" ?>\n<testsuites>\n${report}\n</testsuites>`
+          writeFileSync(reportPath, report);
+          resolve()
+        } else {
+          reject(err)
+        }
+      })
+    })
   }
 }
