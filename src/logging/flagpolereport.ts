@@ -160,14 +160,16 @@ export class FlagpoleReport {
 
         if (item.type.startsWith("result")) {
 
+          const message = this.cleanXMLCharacters(item.message)
           let testCase = '';
 
           if (item.type === "resultFailure") {
             testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}">`
-            testCase += `<failure message="${item.message}" type="WARNING">`
-            testCase += item.message
+            testCase += `<failure message="${message}" type="WARNING">`
+            testCase += message
             if (item['_rawDetails']) {
-              testCase += ` - ${item['_rawDetails'].join(' - ').replace(/\s+/g, ' ').trim()}`
+              const rawDetails = this.cleanXMLCharacters(` - ${item['_rawDetails'].join(' - ').replace(/\s+/g, ' ').trim()}`)
+              testCase += rawDetails
             }
             testCase += `</failure></testcase>`
           } else {
@@ -177,7 +179,6 @@ export class FlagpoleReport {
           testCases.push(testCase)
         }
       })
-
     }
 
     let xml = `<testsuite id="${this.suite.title}" name="${this.suite.title}" tests="${testCases.length}" failures="${this.suite.failCount}" time="${this.suite.executionDuration}ms}">`
@@ -314,5 +315,19 @@ export class FlagpoleReport {
         }
       })
     })
+  }
+
+  /**
+   * There are 5 pre-defined entity references in XML:
+   * @param unsafe message possibly containing forbidden XML characters
+   * @returns safe message for XML
+   */
+  private cleanXMLCharacters(unsafe: string): string {
+
+    return unsafe.replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
   }
 }
