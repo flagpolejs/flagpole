@@ -1,7 +1,7 @@
 import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
 import { ElementHandle } from "puppeteer-core";
 import { PuppeteerResponse } from "./puppeteerresponse";
-import { asyncForEach, arrayify, asyncMap } from "../util";
+import { asyncForEach, toArray, asyncMap } from "../util";
 import {
   getFindParams,
   filterFind,
@@ -217,7 +217,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
   ): Promise<void> {
     await this._page.select.apply(this.page, [
       selector,
-      ...arrayify<string>(value),
+      ...toArray<string>(value),
     ]);
   }
 }

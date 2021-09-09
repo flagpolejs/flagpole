@@ -2,21 +2,28 @@ import {
   iMessageAndCallback,
   iScenario,
   iNextCallback,
-  IteratorCallback,
+  AssertSchemaType,
+  AjvErrors,
 } from "./interfaces";
 import * as fs from "fs";
 import * as path from "path";
 import * as nodeAssert from "assert";
+import {
+  IteratorBoolCallback,
+  IteratorCallback,
+} from "./interfaces/iterator-callbacks";
+import { types } from "util";
+import AjvJsonSchema, { Schema, ValidateFunction } from "ajv";
+import AjvJtd from "ajv/dist/jtd";
 
-export const arrayify = <T>(value: any): T[] => {
-  return toType(value) == "array" ? value : [value];
-};
+export const toArray = <T>(value: any): T[] =>
+  Array.isArray(value) ? value : [value];
 
-export const jsonParse = (json: string): any => {
+export const toJson = <T>(json: string): T => {
   try {
     return JSON.parse(json);
   } catch (ex) {}
-  return {};
+  return {} as T;
 };
 
 /**
@@ -25,17 +32,22 @@ export const jsonParse = (json: string): any => {
  * @param obj
  * @returns {boolean}
  */
-export function isNullOrUndefined(obj: any): boolean {
-  return typeof obj === "undefined" || obj === null;
-}
+export const isNullOrUndefined = (obj: unknown): boolean =>
+  typeof obj === "undefined" || obj === null;
 
-export function isAsyncCallback(func: Function): boolean {
-  return func.toString().indexOf("=> __awaiter(") > 0;
-}
+export const isAsyncCallback = (func: Function): boolean => {
+  return (
+    func.constructor.name == "AsyncFunction" ||
+    types.isAsyncFunction(func) ||
+    func.toString().indexOf("__awaiter(") > 0
+  );
+};
 
-export function isArray(obj: any): boolean {
-  return toType(obj) == "array";
-}
+export const toOrdinal = (n: number): string => {
+  const suffix = ["th", "st", "nd", "rd"];
+  const value = n % 100;
+  return n + (suffix[(value - 20) % 10] || suffix[value] || suffix[0]);
+};
 
 /**
  * Get the real and normalized type of object
@@ -43,7 +55,7 @@ export function isArray(obj: any): boolean {
  * @param obj
  * @returns {string}
  */
-export function toType(obj: any): string {
+export const toType = (obj: any): string => {
   if (typeof obj === "undefined") {
     return "undefined";
   } else if (obj === null) {
@@ -72,17 +84,16 @@ export function toType(obj: any): string {
     .call(obj)
     .match(/\s([a-zA-Z]+)/);
   return match !== null ? String(match[1]).toLocaleLowerCase() : "";
-}
+};
 
-export function arrayUnique(arr: any): any[] {
+export const arrayUnique = <T>(arr: T[]): T[] => {
   return [...new Set(arr)];
-}
+};
 
-export function uniqueId(): string {
-  return "_" + Math.random().toString(36).substr(2, 9);
-}
+export const uniqueId = (): string =>
+  "_" + Math.random().toString(36).substr(2, 9);
 
-export async function openInBrowser(content: string): Promise<string> {
+export const openInBrowser = async (content: string): Promise<string> => {
   const open = require("open");
   const tmp = require("tmp");
   const tmpObj = tmp.fileSync({ postfix: ".html" });
@@ -90,92 +101,101 @@ export async function openInBrowser(content: string): Promise<string> {
   fs.writeFileSync(filePath, content);
   await open(filePath);
   return filePath;
-}
-
-export function runAsync(callback: Function, delay: number = 1) {
-  setTimeout(callback, delay);
-}
-
-export function asyncForEachUntilFirst(
-  array: any[],
-  callback: IteratorCallback
-): Promise<any> {
-  let output: any = null;
-  array.some((value, i, arr) => {
-    output = callback(value, i, arr);
-    return !!output;
-  });
-  return output;
-}
-
-export function asyncForEach(
-  array: any[],
-  callback: IteratorCallback
-): Promise<void> {
-  return new Promise((resolve) => {
-    Promise.all(array.map(callback)).then(() => {
-      resolve();
-    });
-  });
-}
-
-export async function asyncWhich(array: any[], callback: IteratorCallback) {
-  let first: any = undefined;
-  return new Promise((resolve, reject) => {
-    array.some((item, i) => {
-      if (callback(item, i, array)) {
-        first = item;
-        return true;
-      }
-      return false;
-    });
-    resolve(first);
-  });
-}
-
-export async function asyncWhichFails(
-  array: any[],
-  callback: IteratorCallback
-) {
-  let first: any = undefined;
-  return new Promise((resolve, reject) => {
-    array.some((item, i) => {
-      if (!callback(item, i, array)) {
-        first = item;
-        return true;
-      }
-      return false;
-    });
-    resolve(first);
-  });
-}
-
-export async function asyncEvery(
-  array: any[],
-  callback: IteratorCallback
-): Promise<boolean> {
-  return Promise.all(array.map(callback)).then((values) =>
-    values.every((v) => v)
-  );
-}
-
-export async function asyncFilter(array: any[], callback: IteratorCallback) {
-  const results = await Promise.all(array.map(callback));
-  return array.filter((_v, index) => results[index]);
-}
-
-export const asyncMap = async <T>(
-  array: any[],
-  callback: IteratorCallback
-): Promise<T[]> => {
-  return Promise.all(array.map(callback));
 };
 
-export const asyncFlatMap = async <T>(
+export const runAsync = (callback: Function, delay: number = 1) => {
+  setTimeout(callback, delay);
+};
+
+export const asyncFindIndex = async (
+  array: any[],
+  callback: IteratorBoolCallback
+): Promise<number> => {
+  for (let i = 0; i < array.length; i++) {
+    if (await callback(array[i], i, array)) {
+      return i;
+    }
+  }
+  return -1;
+};
+
+export const asyncFind = async <T>(
+  array: T[],
+  callback: IteratorBoolCallback
+): Promise<T | null> => {
+  for (let i = 0; i < array.length; i++) {
+    if (await callback(array[i], i, array)) {
+      return array[i];
+    }
+  }
+  return null;
+};
+
+export const asyncFindNot = async <T>(
+  array: T[],
+  callback: IteratorBoolCallback
+): Promise<T | null> => {
+  for (let i = 0; i < array.length; i++) {
+    if (!(await callback(array[i], i, array))) {
+      return array[i];
+    }
+  }
+  return null;
+};
+
+export const asyncUntil = async <T>(
   array: any[],
   callback: IteratorCallback
+): Promise<T | null> => {
+  for (let i = 0; i < array.length; i++) {
+    let output = await callback(array[i], i, array);
+    if (!!output) {
+      return output;
+    }
+  }
+  return null;
+};
+
+export const asyncForEach = async <T>(
+  array: T[],
+  callback: IteratorCallback
+): Promise<void> => {
+  await asyncMap(array, callback);
+};
+
+export const asyncEvery = async <T>(
+  array: T[],
+  callback: IteratorBoolCallback
+): Promise<boolean> => {
+  for (let item of array) {
+    if (!(await callback(item))) return false;
+  }
+  return true;
+};
+
+export const asyncFilter = async <T>(
+  array: T[],
+  callback: IteratorBoolCallback
 ): Promise<T[]> => {
-  const values = await asyncMap<T>(array, callback);
+  const results = await asyncMap<boolean, T>(array, callback);
+  return array.filter((_v, index) => !!results[index]);
+};
+
+export const asyncMap = async <T, F = unknown>(
+  array: F[],
+  callback: IteratorCallback
+): Promise<T[]> => {
+  return Promise.all(
+    //array.map(async (item, i, arr) => await callback(item, i, arr))
+    array.map(callback)
+  );
+};
+
+export const asyncFlatMap = async <T, F = unknown>(
+  array: F[],
+  callback: IteratorCallback
+): Promise<T[]> => {
+  const values = await asyncMap<T, F>(array, callback);
   return ([] as T[]).concat(...values);
 };
 
@@ -183,29 +203,28 @@ export const asyncMapToObject = async <T>(
   array: string[],
   callback: IteratorCallback
 ): Promise<{ [key: string]: T }> => {
-  const results = await asyncMap(array, callback);
+  const results = await asyncMap<T, string>(array, callback);
   return array.reduce((map, key, i) => {
     map[key] = results[i];
     return map;
   }, {});
 };
 
-export async function asyncNone(
-  array: any[],
-  callback: IteratorCallback
+export async function asyncNone<T>(
+  array: T[],
+  callback: IteratorBoolCallback
 ): Promise<boolean> {
-  return Promise.all(array.map(callback)).then(
-    (values) => !values.some((v) => v)
-  );
+  return !(await asyncSome(array, callback));
 }
 
-export async function asyncSome(
-  array: any[],
-  callback: IteratorCallback
+export async function asyncSome<T>(
+  array: T[],
+  callback: IteratorBoolCallback
 ): Promise<boolean> {
-  return Promise.all(array.map(callback)).then((values) =>
-    values.some((v) => v)
-  );
+  for (let item of array) {
+    if (await callback(item)) return true;
+  }
+  return false;
 }
 
 /**
@@ -341,56 +360,42 @@ export const objectContains = (thisValue: any, thatValue: any): boolean => {
 };
 
 export const objectContainsKeys = (thisValue: any, keys: any): boolean => {
-  return arrayify(keys)
+  return toArray(keys)
     .map((val) => String(val))
     .every((val) => typeof thisValue[val] !== "undefined");
 };
 
-export const firstIn = (obj: any) => {
-  const type = toType(obj);
+export const nthIn = <T>(obj: unknown, index: number): T | null => {
   try {
-    if (type == "array") {
-      return obj[0];
-    } else if (type == "object") {
-      return obj[Object.keys(obj)[0]];
+    if (Array.isArray(obj)) {
+      return obj[index];
+    } else if (typeof obj === "object" && obj !== null) {
+      return obj[Object.keys(obj)[index]];
     }
-    return String(obj).substr(0, 1);
-  } catch (ex) {
-    return null;
-  }
+  } catch (ex) {}
+  return null;
 };
 
-export const middleIn = (obj: any) => {
-  const type = toType(obj);
-  try {
-    if (type == "array") {
-      const i = Math.floor(obj.length / 2);
-      return obj[i];
-    } else if (type == "object") {
-      const keys = Object.keys(obj);
-      const i = Math.floor(keys.length / 2);
-      return obj[keys[i]];
-    }
-    const i = Math.floor(String(obj).length / 2);
-    return String(obj).substr(i, 1);
-  } catch (ex) {
-    return null;
-  }
+export const firstIn = <T>(obj: any): T | null => {
+  return nthIn<T>(obj, 0);
 };
 
-export const lastIn = (obj: any) => {
-  const type = toType(obj);
-  try {
-    if (type == "array") {
-      return obj[obj.length - 1];
-    } else if (type == "object") {
-      const keys = Object.keys(obj);
-      return obj[keys[keys.length - 1]];
-    }
-    return String(obj).substr(-1, 1);
-  } catch (ex) {
-    return null;
-  }
+export const middleIn = <T>(obj: any): T | null => {
+  const index = Array.isArray(obj)
+    ? Math.floor(obj.length / 2)
+    : typeof obj == "object" && obj !== null
+    ? Math.floor(Object.keys(obj).length / 2)
+    : 0;
+  return nthIn<T>(obj, index);
+};
+
+export const lastIn = <T>(obj: any) => {
+  const index = Array.isArray(obj)
+    ? obj.length - 1
+    : typeof obj == "object" && obj !== null
+    ? Object.keys(obj).length - 1
+    : 0;
+  return nthIn<T>(obj, index);
 };
 
 export const random = (min: number, max: number): number => {
@@ -403,24 +408,46 @@ export const randomInt = (min: number, max: number): number => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
 
-export const randomIn = (obj: any) => {
-  const type = toType(obj);
-  try {
-    if (type == "array") {
-      const i = randomInt(0, obj.length - 1);
-      return obj[i];
-    } else if (type == "object") {
-      const keys = Object.keys(obj);
-      const i = randomInt(0, keys.length - 1);
-      return obj[keys[i]];
-    }
-    const i = randomInt(0, String(obj).length - 1);
-    return String(obj).substr(i, 1);
-  } catch (ex) {
-    return null;
-  }
+export const randomIn = <T>(obj: any) => {
+  const index = Array.isArray(obj)
+    ? randomInt(0, obj.length - 1)
+    : typeof obj == "object" && obj !== null
+    ? randomInt(0, Object.keys(obj).length - 1)
+    : 0;
+  return nthIn<T>(obj, index);
 };
 
 export const cast = <T>(val: any): T => {
   return val;
+};
+
+export const loadSchemaValidator = (
+  schemaType: AssertSchemaType,
+  schema: Schema
+): ValidateFunction => {
+  // AJV JsonSchema
+  if (schemaType === "JsonSchema") {
+    const ajv = new AjvJsonSchema();
+    return ajv.compile(schema);
+  }
+  // JTD
+  const ajv = new AjvJtd();
+  return ajv.compile(schema);
+};
+
+export const validateSchema = (
+  thisValue: any,
+  schema: Schema,
+  schemaType: AssertSchemaType
+): string[] => {
+  const validator = loadSchemaValidator(schemaType, schema);
+  const isValid: boolean = validator(thisValue);
+  const errors: AjvErrors = validator.errors;
+  const errorMessages: string[] = [];
+  if (!isValid && !!errors) {
+    errors.forEach((err) => {
+      errorMessages.push(`${err.instancePath} ${err.message}`);
+    });
+  }
+  return errorMessages;
 };

@@ -7,7 +7,7 @@ import {
   KeyValue,
 } from "../interfaces";
 import { ElementHandle, BoxModel, JSHandle, Page } from "puppeteer-core";
-import { asyncForEach, toType, arrayify, asyncMap } from "../util";
+import { asyncForEach, toType, toArray, asyncMap } from "../util";
 import csstoxpath from "csstoxpath";
 import { ValuePromise } from "../value-promise";
 
@@ -448,7 +448,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
   }
 
   public async selectOption(valuesToSelect: string | string[]): Promise<void> {
-    valuesToSelect = arrayify<string>(valuesToSelect);
+    valuesToSelect = toArray<string>(valuesToSelect);
     this._completedAction("SELECT", valuesToSelect.join(", "));
     const valuesSelected = await this.$.select.apply(this.$, valuesToSelect);
     this._context

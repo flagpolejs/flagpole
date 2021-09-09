@@ -31,8 +31,7 @@ suite
     context.assert(context.response.jsonBody).schema(exampleListData);
     await context.response.body.json
       .item("data")
-      .assert("All rows are valid")
-      .every((row) => context.assert(exampleItemData).schema(row));
+      .each((row) => context.assert(exampleItemData).schema(row));
     context.response.body.json
       .item("data")
       .count("registrationActive")

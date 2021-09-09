@@ -6,10 +6,6 @@ import {
   iBounds,
   iNextCallback,
   iAssertionIs,
-  IteratorCallback,
-  IteratorBoolCallback,
-  ReducerCallback,
-  MapperCallback,
   HttpRequestOptions,
 } from "./interfaces";
 import {
@@ -20,6 +16,8 @@ import {
   lastIn,
   randomIn,
   middleIn,
+  toOrdinal,
+  nthIn,
 } from "./util";
 import {
   AssertionActionCompleted,
@@ -37,6 +35,12 @@ import { ScenarioType } from "./scenario-types";
 import { HttpResponse } from "./httpresponse";
 import { HttpRequest } from "./httprequest";
 import { jpathSearch } from "./json/jpath";
+import {
+  SyncIteratorBoolCallback,
+  SyncIteratorCallback,
+  SyncMapperCallback,
+  SyncReducerCallback,
+} from "./interfaces/iterator-callbacks";
 
 export class Value implements iValue {
   protected _input: any;
@@ -795,7 +799,22 @@ export class Value implements iValue {
     return new Value(this.toArray().join(by), this._context, this.name);
   }
 
-  public map(callback: MapperCallback): iValue {
+  public pluck(property: string): iValue {
+    const arr = this.toArray().map((item) => item[property]);
+    return new Value(
+      arr,
+      this._context,
+      `Values of ${property} in ${this.name}`
+    );
+  }
+
+  public nth(index: number): iValue {
+    const value = nthIn(this.$, index);
+    const nth = toOrdinal(index + 1);
+    return new Value(value, this._context, `${nth} value in ${this.name}`);
+  }
+
+  public map(callback: SyncMapperCallback): iValue {
     return new Value(
       this.isArray() ? this.toArray().map(callback) : callback(this._input),
       this._context,
@@ -809,7 +828,7 @@ export class Value implements iValue {
     return new Value(this.toArray().filter(func), this._context, this.name);
   }
 
-  public each(callback: IteratorCallback): iValue {
+  public each(callback: SyncIteratorCallback): iValue {
     this.toArray().forEach(callback);
     return this;
   }
@@ -920,7 +939,7 @@ export class Value implements iValue {
     );
   }
 
-  public reduce(callback: ReducerCallback, initial?: any): iValue {
+  public reduce(callback: SyncReducerCallback, initial?: any): iValue {
     return new Value(
       this.toArray().reduce(callback, initial),
       this._context,
@@ -928,15 +947,15 @@ export class Value implements iValue {
     );
   }
 
-  public every(callback: IteratorBoolCallback): iValue {
+  public every(callback: SyncIteratorBoolCallback): iValue {
     return new Value(this.toArray().every(callback), this._context, this.name);
   }
 
-  public some(callback: IteratorBoolCallback): iValue {
+  public some(callback: SyncIteratorBoolCallback): iValue {
     return new Value(this.toArray().some(callback), this._context, this.name);
   }
 
-  public none(callback: IteratorBoolCallback): iValue {
+  public none(callback: SyncIteratorBoolCallback): iValue {
     return new Value(!this.toArray().some(callback), this._context, this.name);
   }
 

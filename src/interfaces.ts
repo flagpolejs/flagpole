@@ -22,6 +22,15 @@ import { ScenarioType } from "./scenario-types";
 import { LaunchOptions } from "puppeteer-core";
 import * as http from "http";
 import { ErrorObject, Schema } from "ajv";
+import {
+  AsyncIteratorBoolCallback,
+  IteratorBoolCallback,
+  IteratorCallback,
+  SyncIteratorBoolCallback,
+  SyncIteratorCallback,
+  SyncMapperCallback,
+  SyncReducerCallback,
+} from "./interfaces/iterator-callbacks";
 
 export type CompareCallback = (a: any, b: any) => number;
 
@@ -89,19 +98,6 @@ export type ScenarioCallbackAndMessage = {
   callback: ScenarioCallback;
 };
 
-export type MapperCallback = (value: any, index?: number, arr?: any[]) => any;
-export type IteratorCallback = (value: any, index: number, arr: any[]) => any;
-export type IteratorBoolCallback = (
-  value: any,
-  i?: number,
-  arr?: any[]
-) => boolean;
-export type ReducerCallback = (
-  prev: any,
-  cur: any,
-  i: number,
-  arr: any[]
-) => any;
 export type ScenarioMapper = (
   value: any,
   index: number,
@@ -210,13 +206,15 @@ export interface iValue {
   isHidden(): Promise<boolean>;
   split(splitter: string | RegExp, limit?: number): iValue;
   join(splitter: string): iValue;
-  map(mapper: MapperCallback): iValue;
-  filter(callback: (value: any, i?: number, arr?: any[]) => boolean): iValue;
-  each(callback: IteratorCallback): iValue;
-  every(callback: IteratorBoolCallback): iValue;
-  some(callback: IteratorBoolCallback): iValue;
-  none(callback: IteratorBoolCallback): iValue;
-  reduce(callback: ReducerCallback, initial?: any): iValue;
+  pluck(property: string): iValue;
+  nth(index: number): iValue;
+  map(mapper: SyncMapperCallback): iValue;
+  filter(callback: SyncIteratorBoolCallback): iValue;
+  each(callback: SyncIteratorCallback): iValue;
+  every(callback: SyncIteratorBoolCallback): iValue;
+  some(callback: SyncIteratorBoolCallback): iValue;
+  none(callback: SyncIteratorBoolCallback): iValue;
+  reduce(callback: SyncReducerCallback, initial?: any): iValue;
   sum(key?: string): iValue;
   median(key?: string): iValue;
   count(key?: string): iValue;
@@ -523,11 +521,13 @@ export interface iAssertion {
   visible(): Promise<iAssertion>;
   resolves(continueOnReject?: boolean): Promise<iAssertion>;
   rejects(continueOnReject?: boolean): Promise<any>;
+  pluck(property: string): iAssertion;
+  nth(index: number): iAssertion;
   map(callback: IteratorCallback): Promise<iAssertion>;
-  every(callback: IteratorCallback): Promise<iAssertion>;
+  every(callback: IteratorBoolCallback): Promise<iAssertion>;
   everySync(callback: IteratorBoolCallback): iAssertion;
-  some(callback: IteratorCallback): Promise<iAssertion>;
-  none(callback: IteratorCallback): Promise<iAssertion>;
+  some(callback: IteratorBoolCallback): Promise<iAssertion>;
+  none(callback: IteratorBoolCallback): Promise<iAssertion>;
   assert(a: any, b?: any): iAssertion;
   comment(input: any): iAssertion;
   schema(schemaName: string, useJsonSchema: boolean): Promise<iAssertion>;

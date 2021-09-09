@@ -13,7 +13,7 @@ import {
   emptyDirSync,
 } from "fs-extra";
 import * as path from "path";
-import { jsonParse } from "./util";
+import { toJson } from "./util";
 
 export enum FlagpoleOutput {
   console = "console",
@@ -49,7 +49,7 @@ function loadOptsFromConfigFile(configFilePath: string): iConfigOpts {
   // Read file
   const configContent: string = readFileSync(configFilePath, "utf8");
   // Parse JSON from the file, or catch it to return default
-  const configData: iConfigOpts = jsonParse(configContent);
+  const configData = toJson<iConfigOpts>(configContent);
   // Assemble our output
   return {
     project: {

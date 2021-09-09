@@ -35,8 +35,8 @@ import {
   asyncFilter,
   asyncNone,
   asyncForEach,
-  asyncForEachUntilFirst,
-  arrayify,
+  asyncUntil,
+  toArray,
   asyncMapToObject,
   flatten,
 } from "./util";
@@ -354,7 +354,7 @@ export class AssertionContext implements iAssertionContext {
     a?: number | string | RegExp,
     b?: number
   ): Promise<iValue> {
-    const selectors = arrayify<string>(selector);
+    const selectors = toArray<string>(selector);
     try {
       // @ts-ignore TypeScript is being stupid
       const el: iValue = await this.response.waitForExists(selector, a, b);
@@ -392,21 +392,20 @@ export class AssertionContext implements iAssertionContext {
     a?: string | FindOptions | RegExp,
     b?: FindOptions
   ): Promise<iValue> {
-    const selectors = arrayify<string>(selector);
+    const selectors = toArray<string>(selector);
     const params = getFindParams(a, b);
     const opts = params.opts || {};
-    const element = await asyncForEachUntilFirst(
-      selectors,
-      async (selector) => {
-        return params.contains
-          ? await this.response.find(selector, params.contains, opts)
-          : params.matches
-          ? await this.response.find(selector, params.matches, opts)
-          : await this.response.find(selector, opts);
-      }
+    const element = await asyncUntil<iValue>(selectors, async (selector) =>
+      params.contains
+        ? await this.response.find(selector, params.contains, opts)
+        : params.matches
+        ? await this.response.find(selector, params.matches, opts)
+        : await this.response.find(selector, opts)
     );
-    this._assertExists(null, getFindName(params, selectors, 0), element);
-    return element;
+    const name = getFindName(params, selectors, 0);
+    const value = element === null ? wrapAsValue(this, null, name) : element;
+    this._assertExists(null, name, value);
+    return value;
   }
 
   /**
@@ -419,7 +418,7 @@ export class AssertionContext implements iAssertionContext {
     a?: string | FindAllOptions | RegExp,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    const selectors = arrayify<string>(selector);
+    const selectors = toArray<string>(selector);
     const elements = await this._findAllForSelectors(selectors, a, b);
     this.assert(
       selectors.length > 1
@@ -456,21 +455,18 @@ export class AssertionContext implements iAssertionContext {
     b?: FindOptions
   ): ValuePromise {
     return ValuePromise.execute(async () => {
-      const selectors = arrayify<string>(selector);
+      const selectors = toArray<string>(selector);
       const params = getFindParams(a, b);
-      const element: iValue | false = await asyncForEachUntilFirst(
-        selectors,
-        async (selector) => {
-          const value =
-            typeof a == "string"
-              ? await this.response.find(selector, a, b)
-              : a instanceof RegExp
-              ? await this.response.find(selector, a, b)
-              : await this.response.find(selector, b);
-          return value.isNullOrUndefined() ? false : value;
-        }
-      );
-      return element === false
+      const element = await asyncUntil<iValue>(selectors, async (selector) => {
+        const value =
+          typeof a == "string"
+            ? await this.response.find(selector, a, b)
+            : a instanceof RegExp
+            ? await this.response.find(selector, a, b)
+            : await this.response.find(selector, b);
+        return value.isNullOrUndefined() ? false : value;
+      });
+      return element === null
         ? wrapAsValue(this, null, getFindName(params, selectors, null))
         : element;
     });
@@ -486,7 +482,7 @@ export class AssertionContext implements iAssertionContext {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    const selectors = arrayify<string>(selector);
+    const selectors = toArray<string>(selector);
     const elements = await this._findAllForSelectors(selectors, a, b);
     return flatten<iValue>(elements);
   }

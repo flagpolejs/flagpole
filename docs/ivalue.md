@@ -763,6 +763,31 @@ Loop through the array or object items and make sure none return true.
 const noneAreActive = rows.none((row) => row.isActive);
 ```
 
+### nth(index: number): iValue;
+
+Get the `n`th value in the array or object.
+
+```javascript
+const fourthItem = array.nth(3);
+```
+
+### pluck(property: string): iValue;
+
+When the Value contains an array of objects, this method will "pluck" the value of that property from each item in the array. It returns an iValue containing that array of values.
+
+```javascript
+const ids = array.pluck("id");
+```
+
+Pracical example:
+
+```javascript
+array
+  .pluck("name")
+  .assert("Every name is a string")
+  .every((name) => typeof name === "string");
+```
+
 ### press(key: string, opts?: any): Promise<void>;
 
 Press these keys on the keyboard.

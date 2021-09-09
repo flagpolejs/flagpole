@@ -4,12 +4,10 @@ import {
   iAssertionContext,
   iAssertion,
   iAssertionResult,
-  IteratorCallback,
   iValue,
   iAssertionIs,
   CompareCallback,
   AssertSchemaType,
-  AjvErrors,
 } from "./interfaces";
 import {
   toType,
@@ -17,25 +15,28 @@ import {
   asyncEvery,
   asyncNone,
   asyncSome,
-  isAsyncCallback,
-  isArray,
   asyncMap,
   arrayEquals,
   arrayExactly,
   deepEqual,
   deepStrictEqual,
-  arrayify,
-  asyncWhichFails,
-  asyncWhich,
+  toArray,
   objectContains,
   objectContainsKeys,
+  toOrdinal,
+  asyncFind,
+  asyncFindNot,
+  validateSchema,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { AssertionIs } from "./assertion-is";
-import AjvJsonSchema, { Schema, ValidateFunction } from "ajv";
-import AjvJtd from "ajv/dist/jtd";
+import { Schema } from "ajv";
 import generateJsonSchema from "@flagpolejs/json-to-jsonschema";
+import {
+  IteratorBoolCallback,
+  IteratorCallback,
+} from "./interfaces/iterator-callbacks";
 
 export class Assertion implements iAssertion {
   public get value(): any {
@@ -80,122 +81,51 @@ export class Assertion implements iAssertion {
    * Creates a new assertion with the same value and settings, just no result
    */
   public get and(): iAssertion {
-    // If no assertion statement was made, skip it by marking it resolved
-    this._resolveAssertion();
-    // Create new assertion
-    const assertion: iAssertion = new Assertion(
-      this._context,
-      this._input,
-      this._message ? `&& ${this._message}` : null
-    );
-    this._not && assertion.not;
-    this._optional && assertion.optional;
-    return assertion;
+    return this._clone(this._input, `&& ${this._getMessage()}`);
   }
 
   /**
    * Creates a new assertion with the type of this one
    */
   public get type(): iAssertion {
-    // If no assertion statement was made, skip it by marking it resolved
-    this._resolveAssertion();
-    // Generate type value object
-    const type: Value = new Value(
-      toType(this.value),
-      this._context,
-      `Type of ${this.subject}`
-    );
-    // Generate new assertion
-    const assertion: iAssertion = new Assertion(
-      this._context,
-      type,
-      this._message
-    );
-    this._not && assertion.not;
-    this._optional && assertion.optional;
-    return assertion;
+    return this._clone(toType(this.value), `Type of ${this.subject}`);
   }
 
   /**
    * Creates a new assertion with the lengh of this one
    */
   public get length(): iAssertion {
-    // If no assertion statement was made, skip it by marking it resolved
-    this._resolveAssertion();
-    // Generate length Value object
     const length: number = (() => {
       const thisValue = this.value;
       return thisValue && thisValue.length ? thisValue.length : 0;
     })();
-    // Create new assertion
-    const assertion: Assertion = new Assertion(
-      this._context,
-      new Value(length, this._context, `Length of ${this.subject}`),
-      this._message
-    );
-    this._not && assertion.not;
-    this._optional && assertion.optional;
-    return assertion;
+    return this._clone(length, `Length of ${this.subject}`);
   }
 
   public get trim(): iAssertion {
-    // If no assertion statement was made, skip it by marking it resolved
-    this._resolveAssertion();
-    // Generate length Value object
-    const trimmedValue: string = this.text.trim();
-    // Create new assertion
-    const assertion: Assertion = new Assertion(
-      this._context,
-      new Value(trimmedValue, this._context, `Trim of ${this.subject}`),
-      this._message
-    );
-    this._not && assertion.not;
-    this._optional && assertion.optional;
-    return assertion;
+    return this._clone(this.text.trim(), `Trim of ${this.subject}`);
   }
 
   /**
    * Creates a new assertion with the keys of the object as the value
    */
   public get keys(): iAssertion {
-    // If no assertion statement was made, skip it by marking it resolved
-    this._resolveAssertion();
-    // Get keys
     const keys: string[] = (() => {
       const thisValue: any = this.value;
       return isNullOrUndefined(thisValue) ? [] : Object.keys(thisValue);
     })();
-    // Create new assertion
-    const assertion: Assertion = new Assertion(
-      this._context,
-      new Value(keys, this._context, `Keys of ${this.subject}`),
-      this._message
-    );
-    this._not && assertion.not;
-    this._optional && assertion.optional;
-    return assertion;
+    return this._clone(keys, `Keys of ${this.subject}`);
   }
 
   /**
    * Creates a new assertion with the values of the object as the value
    */
   public get values(): iAssertion {
-    // If no assertion statement was made, skip it by marking it resolved
-    this._resolveAssertion();
-    // Get values
     const values: any[] = (() => {
       const thisValue = this.value;
       return isNullOrUndefined(thisValue) ? [] : Object.values(thisValue);
     })();
-    // Create new assertion
-    const assertion: Assertion = new Assertion(
-      this._context,
-      new Value(values, this._context, `Values of ${this.subject}`),
-      this._message
-    );
-    this._not && assertion.not;
-    this._optional && assertion.optional;
-    return assertion;
+    return this._clone(values, `Values of ${this.subject}`);
   }
 
   /**
@@ -502,10 +432,11 @@ export class Assertion implements iAssertion {
       return this.execute(pattern.test(thisValue), String(thisValue));
     }
     // Test it as a schema template
-    else {
-      const schema = generateJsonSchema(thatValue);
-      return this._executeSchema(thisValue, schema, "JsonSchema");
-    }
+    return this._executeSchema(
+      thisValue,
+      generateJsonSchema(thatValue),
+      "JsonSchema"
+    );
   }
 
   public in(values: any[]): iAssertion {
@@ -529,7 +460,7 @@ export class Assertion implements iAssertion {
       if (isNullOrUndefined(this._input)) {
         return thisValue === thatValue;
       } else if (thisType == "array") {
-        return arrayify(thatValue).every((val) => thisValue.includes(val));
+        return toArray(thatValue).every((val) => thisValue.includes(val));
       } else if (thisType == "object") {
         if (thatType == "object") {
           return objectContains(thisValue, thatValue);
@@ -583,7 +514,7 @@ export class Assertion implements iAssertion {
           `  Diff image: ${result.diffPath}`;
       }
     } catch (err) {
-      details = err;
+      details = String(err);
     }
     return this.execute(assertionPassed, details);
   }
@@ -700,20 +631,16 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public async none(callback: IteratorCallback): Promise<iAssertion> {
-    const thisValue = this.value;
+  public async none(callback: IteratorBoolCallback): Promise<iAssertion> {
+    this._mustBeArray(this.value);
     this.setDefaultMessages(
       `Some were true in ${this.subject}`,
       `None were true in ${this.subject}`
     );
-    // This must be an array
-    if (toType(thisValue) !== "array") {
-      throw new Error("Input value must be an array.");
-    }
-    const result = await asyncNone(thisValue, callback);
+    const result = await asyncNone(this.value, callback);
     const which = result
       ? undefined
-      : `${await asyncWhich(thisValue, callback)}`;
+      : `${await asyncFind(this.value, callback)}`;
     return this.execute(result, which);
   }
 
@@ -737,88 +664,71 @@ export class Assertion implements iAssertion {
     js: EvaluateFn<any>,
     ...args: SerializableOrJSHandle[]
   ): Promise<iAssertion> {
-    const thisValue = this.value;
-    // This must be an array
-    if (toType(thisValue) !== "array") {
-      throw new Error("Input value must be an array.");
-    }
+    this._mustBeArray(this.value);
     this.setDefaultMessages(
       `Every function evaluates false`,
       `Every function evaluates true`
     );
-    const result = await asyncEvery(thisValue, (item) => {
+    const result = await asyncEvery(this.value, (item) => {
       const val = this._getCompareValue(item);
-      return this.context.eval.apply(undefined, [js, val, ...args]);
+      return !!this.context.eval.apply(undefined, [js, val, ...args]);
     });
-    return this.execute(result, thisValue);
+    return this.execute(result, this.value);
   }
 
-  public async every(callback: IteratorCallback): Promise<iAssertion> {
-    const thisValue = this.value;
+  public async every(callback: IteratorBoolCallback): Promise<iAssertion> {
+    this._mustBeArray(this.value);
     this.setDefaultMessages(
       `Some or none were true in ${this.subject}`,
       `All were true in ${this.subject}`
     );
-    // This must be an array
-    if (toType(thisValue) !== "array") {
-      throw new Error("Input value must be an array.");
-    }
-    const result = await asyncEvery(thisValue, callback);
+    const result = await asyncEvery(this.value, callback);
     const which = result
       ? undefined
-      : `${await asyncWhichFails(thisValue, callback)}`;
+      : `${await asyncFindNot(this.value, callback)}`;
     return this.execute(result, which);
   }
 
   public everySync(callback: IteratorCallback): iAssertion {
-    const thisValue = this.value;
+    this._mustBeArray(this.value);
     this.setDefaultMessages(
       `Some or none were true in ${this.subject}`,
       `All were true in ${this.subject}`
     );
-    // This must be an array
-    if (toType(thisValue) !== "array") {
-      throw new Error("Input value must be an array.");
-    }
     return this.execute(
-      thisValue.every((value: any, index: number, array: any[]) =>
+      this.value.every((value: any, index: number, array: any[]) =>
         callback(value, index, array)
       ),
-      thisValue
+      this.value
     );
   }
 
   public async map(callback: IteratorCallback): Promise<iAssertion> {
-    const thisValue = this.value;
-    // If no assertion statement was made, skip it by marking it resolved
-    this._resolveAssertion();
-    // Create new assertion
-    const assertion: Assertion = new Assertion(
-      this._context,
-      new Value(
-        await asyncMap(thisValue, callback),
-        this._context,
-        `Mapped ${this.subject}`
-      ),
-      this._message
-    );
-    this._not && assertion.not;
-    this._optional && assertion.optional;
-    return assertion;
+    const mapped = await asyncMap(this.value, callback);
+    return this._clone(mapped, `Mapped ${this.subject}`);
   }
 
-  public async some(callback: IteratorCallback): Promise<iAssertion> {
-    const thisValue = this.value;
+  public async some(callback: IteratorBoolCallback): Promise<iAssertion> {
+    this._mustBeArray(this.value);
     this.setDefaultMessages(
       `None were true in ${this.subject}`,
       `Some were true in ${this.subject}`
     );
+    return this.execute(await asyncSome(this.value, callback), this.value);
+  }
 
-    // This must be an array
-    if (toType(thisValue) !== "array") {
-      throw new Error("Input value must be an array.");
-    }
-    return this.execute(await asyncSome(thisValue, callback), thisValue);
+  public pluck<T>(property: string): Assertion {
+    return this._clone(
+      toArray<T>(this.value).map((item) => item[property]),
+      `Values of ${property} in ${this.subject}`
+    );
+  }
+
+  public nth<T>(n: number): Assertion {
+    return this._clone(
+      toArray<T>(this.value)[n],
+      `${toOrdinal(n + 1)} value in ${this.subject}`
+    );
   }
 
   schema(schemaName: string, useJsonSchema: boolean): Promise<iAssertion>;
@@ -848,27 +758,6 @@ export class Assertion implements iAssertion {
     return this._executeSchema(thisValue, schema, schemaType);
   }
 
-  private _executeSchema(
-    thisValue: any,
-    schema: Schema,
-    schemaType: AssertSchemaType
-  ) {
-    const validator = this._loadSchemaValidator(schemaType, schema);
-    const isValid: boolean = validator(thisValue);
-    const errors: AjvErrors = validator.errors;
-    const errorMessages: string[] = [];
-    if (!!errors) {
-      errors.forEach((err) => {
-        errorMessages.push(`${err.instancePath} ${err.message}`);
-      });
-    }
-    this.setDefaultMessages(
-      `${this.subject} does not match schema`,
-      `${this.subject} matches schema`
-    );
-    return this.execute(isValid, errorMessages.join(". "));
-  }
-
   /**
    * Create a new assertion on the AssertionContext, allows chaining
    *
@@ -893,74 +782,15 @@ export class Assertion implements iAssertion {
     return this;
   }
 
+  /**
+   * Save this assertion's value to the scenario context
+   *
+   * @param aliasName
+   * @returns
+   */
   public as(aliasName: string): iAssertion {
     this._context.set(aliasName, this._input);
     return this;
-  }
-
-  private _loadSchemaValidator(
-    schemaType: AssertSchemaType,
-    schema: Schema
-  ): ValidateFunction {
-    // AJV JsonSchema
-    if (schemaType === "JsonSchema") {
-      const ajv = new AjvJsonSchema();
-      return ajv.compile(schema);
-    }
-    // JTD
-    const ajv = new AjvJtd();
-    return ajv.compile(schema);
-  }
-
-  private _returnsPromise(callback: Function, values: any[]): boolean {
-    return (
-      isAsyncCallback(callback) ||
-      (values.length > 0 &&
-        toType(callback(values[0], 0, values)) === "promise")
-    );
-  }
-
-  private _getMessage(): string {
-    return this._message
-      ? this._message
-      : this._not
-      ? this._defaultMessages[0]
-      : this._defaultMessages[1];
-  }
-
-  private _getSourceCode(): string {
-    let source: string =
-      this._input && this._input.sourceCode ? this._input.sourceCode : "";
-    // Limit long source code output
-    if (source.length > 500) {
-      source = source.substring(0, 500);
-    }
-    return source;
-  }
-
-  private _getHighlightText(
-    actualValue: any,
-    highlightText: string | null
-  ): string {
-    return highlightText
-      ? highlightText
-      : this._input && this._input.highlight
-      ? this._input.highlight
-      : String(actualValue);
-  }
-
-  private _getErrorDetails(actualValue: any, expectedValue?: string): string[] {
-    return [
-      `Actual: ${String(actualValue)}`,
-      expectedValue ? `Expected: ${expectedValue}` : "",
-    ].filter((str) => str.length > 0);
-  }
-
-  private _getValues(thatValue: any) {
-    return {
-      thisValue: this.value,
-      thatValue: this._getCompareValue(thatValue),
-    };
   }
 
   public execute(
@@ -1020,23 +850,75 @@ export class Assertion implements iAssertion {
   }
 
   public sort(compareFunc?: CompareCallback): iAssertion {
-    // If no assertion statement was made, skip it by marking it resolved
-    this._resolveAssertion();
-    // Get values
     const values: any[] = Array.isArray(this.value)
       ? this.value.sort(compareFunc)
       : isNullOrUndefined(this.value)
       ? []
       : Object.values(this.value).sort(compareFunc);
-    // Create new assertion
-    const assertion: Assertion = new Assertion(
-      this._context,
-      new Value(values, this._context, `Sorted values of ${this.subject}`),
-      this._message
+    return this._clone(values, `Sorted values of ${this.subject}`);
+  }
+
+  private _mustBeArray(value: unknown): boolean {
+    if (!Array.isArray(value)) {
+      throw new Error("Input value must be an array.");
+    }
+    return true;
+  }
+
+  private _executeSchema(
+    thisValue: any,
+    schema: Schema,
+    schemaType: AssertSchemaType
+  ) {
+    const errors = validateSchema(thisValue, schema, schemaType);
+    this.setDefaultMessages(
+      `${this.subject} does not match schema`,
+      `${this.subject} matches schema`
     );
-    this._not && assertion.not;
-    this._optional && assertion.optional;
-    return assertion;
+    return this.execute(errors.length == 0, errors.join(". "));
+  }
+
+  private _getMessage(): string {
+    return this._message
+      ? this._message
+      : this._not
+      ? this._defaultMessages[0]
+      : this._defaultMessages[1];
+  }
+
+  private _getSourceCode(): string {
+    let source: string =
+      this._input && this._input.sourceCode ? this._input.sourceCode : "";
+    // Limit long source code output
+    if (source.length > 500) {
+      source = source.substring(0, 500);
+    }
+    return source;
+  }
+
+  private _getHighlightText(
+    actualValue: any,
+    highlightText: string | null
+  ): string {
+    return highlightText
+      ? highlightText
+      : this._input && this._input.highlight
+      ? this._input.highlight
+      : String(actualValue);
+  }
+
+  private _getErrorDetails(actualValue: any, expectedValue?: string): string[] {
+    return [
+      `Actual: ${String(actualValue)}`,
+      expectedValue ? `Expected: ${expectedValue}` : "",
+    ].filter((str) => str.length > 0);
+  }
+
+  private _getValues(thatValue: any) {
+    return {
+      thisValue: this.value,
+      thatValue: this._getCompareValue(thatValue),
+    };
   }
 
   private _getCompareValue(value: any): any {
@@ -1055,16 +937,9 @@ export class Assertion implements iAssertion {
     ).substr(0, 255);
   }
 
-  private _resolveAssertion() {
-    if (this._statement === null) {
-      this._statement = false;
-      this._finishedResolver(null);
-    }
-  }
-
   protected async _is(method: string, item?: any): Promise<boolean> {
-    item = item === undefined ? this._input : item;
-    if (isArray(item)) {
+    item = this._thisOrThat(item);
+    if (Array.isArray(item)) {
       return asyncEvery(item, async (e: any) => {
         const is = await this._is(method, e);
         return is;
@@ -1079,10 +954,9 @@ export class Assertion implements iAssertion {
     value?: any,
     item?: any
   ): Promise<boolean> {
-    // If we provided an item, eval that, otherwise use our assertion input
-    item = item === undefined ? this._input : item;
+    item = this._thisOrThat(item);
     // Recursion
-    if (isArray(item)) {
+    if (Array.isArray(item)) {
       return asyncEvery(
         item,
         async (e: any) => await this._hasKeyValue(method, key, value, e)
@@ -1096,15 +970,24 @@ export class Assertion implements iAssertion {
       : item[key] == value;
   }
 
+  /**
+   *  If we provided an item, eval that, otherwise use our assertion input
+   *
+   * @param item
+   * @returns
+   */
+  private _thisOrThat(item: any) {
+    return item === undefined ? this._input : item;
+  }
+
   protected async _hasValue(
     method: string,
     value?: any,
     item?: any
   ): Promise<boolean> {
-    // If we provided an item, eval that, otherwise use our assertion input
-    item = item === undefined ? this._input : item;
+    item = this._thisOrThat(item);
     // Recursion
-    if (isArray(item)) {
+    if (Array.isArray(item)) {
       return asyncEvery(
         item,
         async (e: any) => await this._hasValue(method, value, e)
@@ -1116,5 +999,29 @@ export class Assertion implements iAssertion {
       : value === undefined
       ? item !== undefined && item !== null
       : item == value;
+  }
+
+  /**
+   * Resolve this assertion and make a new copy of it
+   *
+   * @param value
+   * @param name
+   * @returns
+   */
+  protected _clone(value: any, name: string): Assertion {
+    // If no assertion statement was made, skip it by marking it resolved
+    if (this._statement === null) {
+      this._statement = false;
+      this._finishedResolver(null);
+    }
+    // Create new assertion
+    const assertion: Assertion = new Assertion(
+      this._context,
+      new Value(value, this._context, name),
+      this._message
+    );
+    this._not && assertion.not;
+    this._optional && assertion.optional;
+    return assertion;
   }
 }

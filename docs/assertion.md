@@ -280,6 +280,25 @@ context.assert(["2pac", "biggie", "daz"]).none((rapper) => {
 });
 ```
 
+### nth(index: number): Assertion
+
+Change the assertion to be against the `n`th value from the array or object.
+
+```javascript
+context.assert("2nd item is a string", array).nth(1).type.equals("string");
+```
+
+### pluck(property: string): Assertion
+
+When the assertion contains an array of objects, this will change the assertion to be against an array of values in the specified property.
+
+```javascript
+context
+  .assert("Every name is a string", array)
+  .pluck("name")
+  .every((name) => typeof name == "string");
+```
+
 ### rejects(): Assertion
 
 Tests whether the input promise rejects.
