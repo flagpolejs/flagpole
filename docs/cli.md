@@ -181,7 +181,6 @@ Specifies that type of output you want Flagpole to create. The defualt is this p
 - text - Same as default but without the ASCII colors
 - tsv - Tab separated
 - xml - Write XML report to default `reports` directory defined in `flagpole.json`
-  - Regular output still goes to the console 
 
 ```bash
 flagpole run -o browser
