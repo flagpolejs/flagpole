@@ -256,6 +256,14 @@ export class FlagpoleReport {
         // write XML to the file system, but still print console output
         const XMLOutput = await this.toXML();
         await this.printXMLReport(XMLOutput);
+      // Text
+      case FlagpoleExecution.global.isTextOutput:
+        (await this.toConsole()).forEach((line: iConsoleLine) => {
+          if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
+            out += line.toString() + "\n";
+          }
+        });
+        return out;
       // Console
       default:
         (await this.toConsole()).forEach((line: iConsoleLine) => {
