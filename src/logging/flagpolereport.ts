@@ -160,14 +160,16 @@ export class FlagpoleReport {
 
         if (item.type.startsWith("result")) {
 
+          const message = this.cleanXMLCharacters(item.message)
           let testCase = '';
 
           if (item.type === "resultFailure") {
             testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}">`
-            testCase += `<failure message="${item.message}" type="WARNING">`
-            testCase += item.message
+            testCase += `<failure message="${message}" type="WARNING">`
+            testCase += message
             if (item['_rawDetails']) {
-              testCase += ` - ${item['_rawDetails'].join(' - ').replace(/\s+/g, ' ').trim()}`
+              const rawDetails = this.cleanXMLCharacters(` - ${item['_rawDetails'].join(' - ').replace(/\s+/g, ' ').trim()}`)
+              testCase += rawDetails
             }
             testCase += `</failure></testcase>`
           } else {
@@ -251,7 +253,7 @@ export class FlagpoleReport {
       case FlagpoleExecution.global.isXmlOutput:
         // write XML to the file system, but still print console output
         const XMLOutput = await this.toXML();
-        await this.printXMLReport(XMLOutput);
+        return XMLOutput
       // Text
       case FlagpoleExecution.global.isTextOutput:
         (await this.toConsole()).forEach((line: iConsoleLine) => {
@@ -271,44 +273,17 @@ export class FlagpoleReport {
     }
   }
 
-  public async printXMLReport(report: string): Promise<null> {
-    return new Promise(async (resolve, reject) => {
-      const reportsFolder = FlagpoleExecution.global.config.getReportsFolder();
+  /**
+   * There are 5 pre-defined entity references in XML:
+   * @param unsafe message possibly containing forbidden XML characters
+   * @returns safe message for XML
+   */
+  private cleanXMLCharacters(unsafe: string): string {
 
-      if (!reportsFolder) {
-        throw "Flagpole reports folder path not found.";
-      }
-
-      ensureDirSync(reportsFolder);
-
-      const d = new Date()
-      const date = d.getMonth() + 1 + '-' + d.getDate() + '-' + d.getFullYear()
-      const reportFileName = `${date}-report.xml`
-      const reportPath = path.join(reportsFolder, reportFileName)
-
-      readFile(reportPath, 'utf8', async (err, data) => {
-
-        if (err == null) {
-          // if the file exists
-          // remove the </testsuites> tag 
-          const fileLines = data.split('\n');
-          fileLines.splice(fileLines.length - 1, 1);
-          const noClosingTag = fileLines.join('\n');
-
-          // append the output and close the tag again
-          report = `${noClosingTag}\n${report}\n</testsuites>`
-          writeFileSync(reportPath, report)
-          resolve()
-        } else if (err.code === 'ENOENT') {
-          // if the file doesn't exist
-          // start a fresh xml file
-          report = `<?xml version="1.0" encoding="UTF-8" ?>\n<testsuites>\n${report}\n</testsuites>`
-          writeFileSync(reportPath, report);
-          resolve()
-        } else {
-          reject(err)
-        }
-      })
-    })
+    return unsafe.replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
   }
 }

@@ -12,7 +12,7 @@ export class TestRunner {
   private _finishedPromise: Promise<SuiteExecutionResult[]>;
   private _finishedResolver: (
     results: SuiteExecutionResult[]
-  ) => void = () => {};
+  ) => void = () => { };
 
   public get suites(): SuiteConfig[] {
     let arr: SuiteConfig[] = [];
@@ -188,6 +188,33 @@ export class TestRunner {
         await open(filePath);
         Cli.exit(this.allPassing ? 0 : 1);
       })();
+    } else if (FlagpoleExecution.global.isXmlOutput) {
+      const path = require("path");
+      const { ensureDirSync, readFileSync, writeFileSync } = require("fs-extra");
+
+      const reportsFolder = FlagpoleExecution.global.config.getReportsFolder();
+
+      ensureDirSync(reportsFolder);
+
+      const reportFileName = `${this._timeStart}-report.xml`
+      const filePath = path.join(reportsFolder, reportFileName)
+
+      let template: string = readFileSync(
+        `${__dirname}/web/report.xml`,
+        "utf8"
+      );
+
+      template = template.replace("${output}", output);
+      writeFileSync(filePath, template);
+
+      if (this.allPassing) {
+        Cli.log("All suites passed.");
+      } else {
+        Cli.log("Some suites failed.");
+      }
+      
+      Cli.log(`Writing output to: ${filePath}.`);
+      Cli.exit(this.allPassing ? 0 : 1);
     } else {
       Cli.log(output);
       if (!this.allPassing && FlagpoleExecution.global.shouldOutputToConsole) {
