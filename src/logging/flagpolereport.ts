@@ -36,18 +36,18 @@ export class FlagpoleReport {
     const failCount: number = this.suite.failCount;
     const totalCount: number = this.suite.scenarios.length;
     failCount == 0
-    ? lines.push(
-        new PassLine(
-          `Passed (${totalCount} scenario${totalCount == 1 ? "" : "s"})`
+      ? lines.push(
+          new PassLine(
+            `Passed (${totalCount} scenario${totalCount == 1 ? "" : "s"})`
+          )
         )
-      )
-    : lines.push(
-        new FailLine(
-          `Failed (${failCount} of ${totalCount} scenario${
-            totalCount == 1 ? "" : "s"
-          })`
-        )
-      );
+      : lines.push(
+          new FailLine(
+            `Failed (${failCount} of ${totalCount} scenario${
+              totalCount == 1 ? "" : "s"
+            })`
+          )
+        );
     lines.push(new LineBreak());
     await asyncForEach(this.suite.scenarios, async (scenario: iScenario) => {
       const log = await scenario.getLog();
