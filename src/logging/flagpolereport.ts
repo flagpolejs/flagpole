@@ -37,17 +37,16 @@ export class FlagpoleReport {
     const totalCount: number = this.suite.scenarios.length;
     failCount == 0
       ? lines.push(
-          new PassLine(
-            `Passed (${totalCount} scenario${totalCount == 1 ? "" : "s"})`
-          )
+        new PassLine(
+          `Passed (${totalCount} scenario${totalCount == 1 ? "" : "s"})`
         )
+      )
       : lines.push(
-          new FailLine(
-            `Failed (${failCount} of ${totalCount} scenario${
-              totalCount == 1 ? "" : "s"
-            })`
-          )
-        );
+        new FailLine(
+          `Failed (${failCount} of ${totalCount} scenario${totalCount == 1 ? "" : "s"
+          })`
+        )
+      );
     lines.push(new LineBreak());
     await asyncForEach(this.suite.scenarios, async (scenario: iScenario) => {
       const log = await scenario.getLog();
@@ -160,11 +159,11 @@ export class FlagpoleReport {
 
         if (item.type.startsWith("result")) {
 
-          const message = this.cleanXMLCharacters(item.message)
           let testCase = '';
+          const message = this.cleanXMLCharacters(item.message)
 
           if (item.type === "resultFailure") {
-            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}">`
+            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}">`
             testCase += `<failure message="${message}" type="WARNING">`
             testCase += message
             if (item['_rawDetails']) {
@@ -173,7 +172,7 @@ export class FlagpoleReport {
             }
             testCase += `</failure></testcase>`
           } else {
-            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}"></testcase>`
+            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}"></testcase>`
           }
 
           testCases.push(testCase)
@@ -182,7 +181,9 @@ export class FlagpoleReport {
 
     }
 
-    let xml = `<testsuite id="${this.suite.title}" name="${this.suite.title}" tests="${testCases.length}" failures="${this.suite.failCount}" time="${this.suite.executionDuration}ms}">`
+    const suiteDurantionInSeconds = this.suite.executionDuration! / 1000
+    
+    let xml = `<testsuite id="${this.suite.title}" name="${this.suite.title}" tests="${testCases.length}" failures="${this.suite.failCount}" time="${suiteDurantionInSeconds}">`
     xml += testCases.join('')
     xml += `</testsuite>`
 
