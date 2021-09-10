@@ -37,16 +37,17 @@ export class FlagpoleReport {
     const totalCount: number = this.suite.scenarios.length;
     failCount == 0
       ? lines.push(
-        new PassLine(
-          `Passed (${totalCount} scenario${totalCount == 1 ? "" : "s"})`
+          new PassLine(
+            `Passed (${totalCount} scenario${totalCount == 1 ? "" : "s"})`
+          )
         )
-      )
       : lines.push(
-        new FailLine(
-          `Failed (${failCount} of ${totalCount} scenario${totalCount == 1 ? "" : "s"
-          })`
-        )
-      );
+          new FailLine(
+            `Failed (${failCount} of ${totalCount} scenario${
+              totalCount == 1 ? "" : "s"
+            })`
+          )
+        );
     lines.push(new LineBreak());
     await asyncForEach(this.suite.scenarios, async (scenario: iScenario) => {
       const log = await scenario.getLog();
@@ -182,7 +183,7 @@ export class FlagpoleReport {
     }
 
     const suiteDurantionInSeconds = this.suite.executionDuration! / 1000
-    
+
     let xml = `<testsuite id="${this.suite.title}" name="${this.suite.title}" tests="${testCases.length}" failures="${this.suite.failCount}" time="${suiteDurantionInSeconds}">`
     xml += testCases.join('')
     xml += `</testsuite>`
