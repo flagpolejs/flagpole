@@ -12,7 +12,7 @@ export class TestRunner {
   private _finishedPromise: Promise<SuiteExecutionResult[]>;
   private _finishedResolver: (
     results: SuiteExecutionResult[]
-  ) => void = () => { };
+  ) => void = () => {};
 
   public get suites(): SuiteConfig[] {
     let arr: SuiteConfig[] = [];
@@ -212,7 +212,7 @@ export class TestRunner {
       } else {
         Cli.log("Some suites failed.");
       }
-      
+
       Cli.log(`Writing output to: ${filePath}.`);
       Cli.exit(this.allPassing ? 0 : 1);
     } else {
