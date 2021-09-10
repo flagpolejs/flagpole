@@ -209,11 +209,6 @@ export class FlagpoleReport {
       try {
         const output = await this.toString();
 
-        // if (FlagpoleExecution.global.isXmlOutput) {
-        //   // write the output to a file in the reports/ directory
-        //   await this.printXMLReport(output)
-        // }
-
         const lines = output.split("\n");
 
         lines.forEach((line) => {
@@ -274,44 +269,6 @@ export class FlagpoleReport {
         });
         return out;
     }
-    // let out: string = "";
-    // // HTML
-    // if (FlagpoleExecution.global.shouldWriteHtml) {
-    //   out += await this.toHTML();
-    // }
-    // // XML
-    // if (FlagpoleExecution.global.isXmlOutput) {
-    //   out += await this.toXML();
-    // }
-    // // JSON
-    // else if (FlagpoleExecution.global.isJsonOutput) {
-    //   const json: any = await this.toJson();
-    //   out += JSON.stringify(json, null, 2);
-    // }
-    // // Console
-    // else if (FlagpoleExecution.global.shouldOutputToConsole) {
-    //   (await this.toConsole()).forEach((line: iConsoleLine) => {
-    //     if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
-    //       out += line.toConsoleString() + "\n";
-    //     }
-    //   });
-    // }
-    // // Text
-    // else if (FlagpoleExecution.global.isTextOutput) {
-    //   (await this.toConsole()).forEach((line: iConsoleLine) => {
-    //     if (lineToVerbosity[line.type] >= FlagpoleExecution.global.volume) {
-    //       out += line.toString() + "\n";
-    //     }
-    //   });
-    // }
-    // // CSV
-    // else if (FlagpoleExecution.global.isDelimitedOutput) {
-    //   const format = FlagpoleExecution.global.outputFormat;
-    //   (await this.toDelimited(format)).forEach((line: string) => {
-    //     out += line + "\n";
-    //   });
-    // }
-    // return out;
   }
 
   public async printXMLReport(report: string): Promise<null> {
