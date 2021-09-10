@@ -253,9 +253,7 @@ export class FlagpoleReport {
         return out;
       // XML
       case FlagpoleExecution.global.isXmlOutput:
-        // write XML to the file system, but still print console output
-        const XMLOutput = await this.toXML();
-        return XMLOutput
+        return this.toXML();
       // Text
       case FlagpoleExecution.global.isTextOutput:
         (await this.toConsole()).forEach((line: iConsoleLine) => {
