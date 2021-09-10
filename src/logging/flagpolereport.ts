@@ -167,8 +167,8 @@ export class FlagpoleReport {
             testCase += `<testcase id="${item.timestamp}" name="${scenario.title}">`
             testCase += `<failure message="${message}" type="WARNING">`
             testCase += message
-            if (item['_rawDetails']) {
-              const rawDetails = this.cleanXMLCharacters(` - ${item['_rawDetails'].join(' - ').replace(/\s+/g, ' ').trim()}`)
+            if (item['detailsMessage']) {
+              const rawDetails = this.cleanXMLCharacters(` - ${item['detailsMessage'].join(' - ').replace(/\s+/g, ' ').trim()}`)
               testCase += rawDetails
             }
             testCase += `</failure></testcase>`
