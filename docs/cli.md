@@ -180,6 +180,7 @@ Specifies that type of output you want Flagpole to create. The defualt is this p
 - psv - Pipe separated
 - text - Same as default but without the ASCII colors
 - tsv - Tab separated
+- xml - Write XML report to default `reports` directory defined in `flagpole.json`
 
 ```bash
 flagpole run -o browser

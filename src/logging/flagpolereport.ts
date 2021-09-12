@@ -161,17 +161,19 @@ export class FlagpoleReport {
         if (item.type.startsWith("result")) {
 
           let testCase = '';
+          const message = this.cleanXMLCharacters(item.message)
 
           if (item.type === "resultFailure") {
-            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}">`
-            testCase += `<failure message="${item.message}" type="WARNING">`
-            testCase += item.message
-            if (item['_rawDetails']) {
-              testCase += ` - ${item['_rawDetails'].join(' - ').replace(/\s+/g, ' ').trim()}`
+            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}">`
+            testCase += `<failure message="${message}" type="WARNING">`
+            testCase += message
+            if (item['detailsMessage']) {
+              const rawDetails = this.cleanXMLCharacters(` - ${item['detailsMessage'].join(' - ').replace(/\s+/g, ' ').trim()}`)
+              testCase += rawDetails
             }
             testCase += `</failure></testcase>`
           } else {
-            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}" time="${scenario.executionDuration}"></testcase>`
+            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}"></testcase>`
           }
 
           testCases.push(testCase)
@@ -180,7 +182,9 @@ export class FlagpoleReport {
 
     }
 
-    let xml = `<testsuite id="${this.suite.title}" name="${this.suite.title}" tests="${testCases.length}" failures="${this.suite.failCount}" time="${this.suite.executionDuration}ms}">`
+    const suiteDurantionInSeconds = this.suite.executionDuration! / 1000
+
+    let xml = `<testsuite id="${this.suite.title}" name="${this.suite.title}" tests="${testCases.length}" failures="${this.suite.failCount}" time="${suiteDurantionInSeconds}">`
     xml += testCases.join('')
     xml += `</testsuite>`
 
@@ -209,11 +213,6 @@ export class FlagpoleReport {
       try {
         const output = await this.toString();
 
-        if (FlagpoleExecution.global.isXmlOutput) {
-          // write the output to a file in the reports/ directory
-          await this.printXMLReport(output)
-        }
-
         const lines = output.split("\n");
 
         lines.forEach((line) => {
@@ -235,84 +234,56 @@ export class FlagpoleReport {
   }
 
   public async toString(): Promise<string> {
-    let out: string = "";
-    // HTML
-    if (FlagpoleExecution.global.shouldWriteHtml) {
-      out += await this.toHTML();
+    let out = "";
+
+    switch (true) {
+      // HTML
+      case FlagpoleExecution.global.shouldWriteHtml:
+        return this.toHTML();
+      // JSON
+      case FlagpoleExecution.global.isJsonOutput:
+        const json: any = await this.toJson();
+        return JSON.stringify(json, null, 2);
+      // CSV
+      case FlagpoleExecution.global.isDelimitedOutput:
+        const format = FlagpoleExecution.global.outputFormat;
+        (await this.toDelimited(format)).forEach((line: string) => {
+          out += line + "\n";
+        });
+        return out;
+      // XML
+      case FlagpoleExecution.global.isXmlOutput:
+        return this.toXML();
+      // Text
+      case FlagpoleExecution.global.isTextOutput:
+        (await this.toConsole()).forEach((line: iConsoleLine) => {
+          if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
+            out += line.toString() + "\n";
+          }
+        });
+        return out;
+      // Console
+      default:
+        (await this.toConsole()).forEach((line: iConsoleLine) => {
+          if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
+            out += line.toConsoleString() + "\n";
+          }
+        });
+        return out;
     }
-    // XML
-    if (FlagpoleExecution.global.isXmlOutput) {
-      out += await this.toXML();
-    }
-    // JSON
-    else if (FlagpoleExecution.global.isJsonOutput) {
-      const json: any = await this.toJson();
-      out += JSON.stringify(json, null, 2);
-    }
-    // Console
-    else if (FlagpoleExecution.global.shouldOutputToConsole) {
-      (await this.toConsole()).forEach((line: iConsoleLine) => {
-        if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
-          out += line.toConsoleString() + "\n";
-        }
-      });
-    }
-    // Text
-    else if (FlagpoleExecution.global.isTextOutput) {
-      (await this.toConsole()).forEach((line: iConsoleLine) => {
-        if (lineToVerbosity[line.type] >= FlagpoleExecution.global.volume) {
-          out += line.toString() + "\n";
-        }
-      });
-    }
-    // CSV
-    else if (FlagpoleExecution.global.isDelimitedOutput) {
-      const format = FlagpoleExecution.global.outputFormat;
-      (await this.toDelimited(format)).forEach((line: string) => {
-        out += line + "\n";
-      });
-    }
-    return out;
   }
 
-  public async printXMLReport(report: string): Promise<null> {
-    return new Promise(async (resolve, reject) => {
-      const reportsFolder = FlagpoleExecution.global.config.getReportsFolder();
+  /**
+   * There are 5 pre-defined entity references in XML:
+   * @param unsafe message possibly containing forbidden XML characters
+   * @returns safe message for XML
+   */
+  private cleanXMLCharacters(unsafe: string): string {
 
-      if (!reportsFolder) {
-        throw "Flagpole reports folder path not found.";
-      }
-
-      ensureDirSync(reportsFolder);
-
-      const d = new Date()
-      const date = d.getMonth() + 1 + '-' + d.getDate() + '-' + d.getFullYear()
-      const reportFileName = `${date}-report.xml`
-      const reportPath = path.join(reportsFolder, reportFileName)
-
-      readFile(reportPath, 'utf8', async (err, data) => {
-
-        if (err == null) {
-          // if the file exists
-          // remove the </testsuites> tag 
-          const fileLines = data.split('\n');
-          fileLines.splice(fileLines.length - 1, 1);
-          const noClosingTag = fileLines.join('\n');
-
-          // append the output and close the tag again
-          report = `${noClosingTag}\n${report}\n</testsuites>`
-          writeFileSync(reportPath, report)
-          resolve()
-        } else if (err.code === 'ENOENT') {
-          // if the file doesn't exist
-          // start a fresh xml file
-          report = `<?xml version="1.0" encoding="UTF-8" ?>\n<testsuites>\n${report}\n</testsuites>`
-          writeFileSync(reportPath, report);
-          resolve()
-        } else {
-          reject(err)
-        }
-      })
-    })
+    return unsafe.replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
   }
 }
