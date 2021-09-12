@@ -72,4 +72,14 @@ flagpole("Test Assertion Schema", async (suite) => {
     .next((context) => {
       context.assert(context.response.jsonBody).schema(jtdSchema, "JTD");
     });
+
+  suite
+    .scenario("Homepage Loads", "json")
+    .open("https://pokeapi.co/api/v2/pokemon/ditto")
+    .next(async (context) => {
+      context.assert(context.response.statusCode).equals(200);
+      const json = context.response.jsonBody;
+      context.comment(json);
+      await context.assert(json).schema("@ditto");
+    });
 });
