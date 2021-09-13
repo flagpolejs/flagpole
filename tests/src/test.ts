@@ -1,8 +1,8 @@
-import flagpole from "../../dist/index";
+import flagpole from "flagpole";
 
-flagpole("Test Manual Response Object", async (suite) => {
+flagpole("Basic Smoke Test of Site", async (suite) => {
   suite
-    .scenario("Test Webhook", "resource")
-    .webhook(8001)
+    .scenario("Homepage Loads", "json")
+    .open("/")
     .next(async (context) => {});
 });

@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.6.5",
+  "version": "2.6.6",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -17,7 +17,7 @@
     "build-tests": "cd tests && tsc && cd ..",
     "test": "npm run build-tests && flagpole run -t basic -h",
     "cdeps": "node_modules/madge/bin/cli.js --warning --circular --extensions js ./",
-    "publish": "tsc && npm publish"
+    "publish": "npm run build && npm publish"
   },
   "homepage": "https://github.com/flagpolejs/flagpole",
   "repository": "git@github.com:flagpolejs/flagpole.git",

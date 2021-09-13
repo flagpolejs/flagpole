@@ -83,7 +83,11 @@ function promptForDomains(
 async function promptIfWantToUseTypeScript(): Promise<boolean> {
   return (
     await prompts(
-      promptToggle("useTypeScript", "Do you want Flagpole to use TypeScript?")
+      promptToggle(
+        "useTypeScript",
+        "Do you want Flagpole to use TypeScript?",
+        true
+      )
     )
   ).useTypeScript;
 }
@@ -94,7 +98,7 @@ async function promptForRootFolder(useTypeScript: boolean): Promise<string> {
       promptTextPath(
         "path",
         useTypeScript
-          ? "What is the root subfolder you want to put your tests in? (tsconfig.json will go here)"
+          ? "What subfolder do you want to put your tests in? (tsconfig.json will go here)"
           : "What subfolder do you want to put your tests in?",
         "tests"
       )
