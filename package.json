@@ -17,7 +17,7 @@
     "build-tests": "cd tests && tsc && cd ..",
     "test": "npm run build-tests && flagpole run -t basic -h",
     "cdeps": "node_modules/madge/bin/cli.js --warning --circular --extensions js ./",
-    "publish": "npm run build && npm publish"
+    "pub": "npm run build && npm publish"
   },
   "homepage": "https://github.com/flagpolejs/flagpole",
   "repository": "git@github.com:flagpolejs/flagpole.git",
