@@ -175,6 +175,10 @@ export class TestRunner {
                     ]
                 }
             `;
+    } else if (FlagpoleExecution.global.isCiOutput) {
+      this._executionResults.forEach((result) => {
+        output += result.toString() + "\n\n";
+      });
     } else {
       this._executionResults.forEach((result) => {
         output += result.toString() + "\n";
