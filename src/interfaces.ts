@@ -723,6 +723,7 @@ export interface iSuite {
   executionDuration: number | null;
   title: string;
   finished: Promise<void>;
+  executionOptions: FlagpoleExecution 
   import(scenario: iScenario): iScenario;
   subscribe(callback: SuiteStatusCallback): iSuite;
   verifyCert(verify: boolean): iSuite;
