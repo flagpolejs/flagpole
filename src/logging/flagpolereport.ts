@@ -194,7 +194,7 @@ export class FlagpoleReport {
    * Details on failures only
    */
   public async toCI(): Promise<string> {
-    // console.log(this)
+
     const scenarios: iScenario[] = this.suite.scenarios;
 
     let ciOutput: string[] = []
@@ -217,7 +217,7 @@ export class FlagpoleReport {
           const message = item.message
 
           if (item.type === "resultFailure") {
-            ciOutput.push('FAILURE')
+            ciOutput.push('---FAILURE---')
             ciOutput.push(`Suite: ${this.suite.title}`)
             ciOutput.push(`Scenario: ${scenario.title} - ${subScenarioTitle}`)
             ciOutput.push(`Assertion: ${message}`)
