@@ -1,4 +1,4 @@
-import flagpole from "flagpole";
+import flagpole from "../../dist/index";
 
 flagpole("Basic Smoke Test of Site", async (suite) => {
   suite
