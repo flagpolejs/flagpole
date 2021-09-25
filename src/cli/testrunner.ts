@@ -135,37 +135,50 @@ export class TestRunner {
     });
   }
 
+  private _getSummary(): { duration: number, pass: number, fail: number } {
+
+    const duration = Date.now() - this._timeStart;
+    let pass = 0;
+    let fail = 0;
+
+    this._executionResults.forEach((result) => {
+      if (result.exitCode == 0) {
+        pass += 1;
+      } else {
+        fail += 1;
+      }
+    });
+
+    return { duration, pass, fail }
+  }
+
   private _onDone() {
-    const duration: number = Date.now() - this._timeStart;
+
     let output: string = "";
     this._finishedResolver(this._executionResults);
     if (FlagpoleExecution.global.isJsonOutput) {
-      let suiteOutput: string[] = [];
-      let overall = {
-        pass: 0,
-        fail: 0,
-      };
+      const suiteOutput: string[] = []
       this._executionResults.forEach((result) => {
         suiteOutput.push(result.toString());
-        if (result.exitCode == 0) {
-          overall.pass += 1;
-        } else {
-          overall.fail += 1;
-        }
-      });
+      })
+      const overall = this._getSummary();
       output =
         `
                 { 
                     "summary": {
                         "passCount": ${overall.pass}, 
                         "failCount": ${overall.fail}, 
-                        "duration": ${duration} 
+                        "duration": ${overall.duration} 
                     }, ` +
         `"suites": [
                         ${suiteOutput.join(",")}
                     ]
                 }
             `;
+    } else if (FlagpoleExecution.global.isCiOutput) {
+      this._executionResults.forEach((result) => {
+        output += result.toString() + "\n\n";
+      });
     } else {
       this._executionResults.forEach((result) => {
         output += result.toString() + "\n";
@@ -215,6 +228,14 @@ export class TestRunner {
 
       Cli.log(`Writing output to: ${filePath}.`);
       Cli.exit(this.allPassing ? 0 : 1);
+    } else if (FlagpoleExecution.global.isCiOutput) {
+      const overall = this._getSummary();
+      Cli.log(`---SUMMARY---`)
+      Cli.log(`Passed: ${overall.pass}`)
+      Cli.log(`Failed: ${overall.fail}`)
+      Cli.log(`Duration: ${overall.duration}ms`)
+      Cli.log("\n")
+      Cli.log(output);
     } else {
       Cli.log(output);
       if (!this.allPassing && FlagpoleExecution.global.shouldOutputToConsole) {

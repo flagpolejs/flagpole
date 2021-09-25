@@ -10,8 +10,6 @@ import { iConsoleLine, iLogItem, iScenario, iSuite } from "../interfaces";
 import { asyncForEach } from "../util";
 import { FlagpoleExecution } from "../flagpoleexecution";
 import { lineToVerbosity } from "./verbosity";
-import { ensureDirSync, readFile, writeFileSync } from "fs-extra";
-import * as path from "path";
 
 export class FlagpoleReport {
   public readonly suite: iSuite;
@@ -191,6 +189,46 @@ export class FlagpoleReport {
     return xml;
   }
 
+  /**
+   * Create CI output for results
+   * Details on failures only
+   */
+  public async toCI(): Promise<string> {
+
+    const scenarios: iScenario[] = this.suite.scenarios;
+
+    let ciOutput: string[] = []
+
+    for (let i = 0; i < scenarios.length; i++) {
+      const scenario: iScenario = scenarios[i];
+      const log = await scenario.getLog();
+
+      // .next("I am a subscenario title", async context => { })
+      let subScenarioTitle: string
+
+      log.forEach((item: iLogItem) => {
+
+        if (item.className === "heading") {
+          subScenarioTitle = item.message
+        }
+
+        if (item.type.startsWith("result")) {
+
+          const message = item.message
+
+          if (item.type === "resultFailure") {
+            ciOutput.push('---FAILURE---')
+            ciOutput.push(`Suite: ${this.suite.title}`)
+            ciOutput.push(`Scenario: ${scenario.title} - ${subScenarioTitle}`)
+            ciOutput.push(`Assertion: ${message}`)
+            ciOutput.push(item['detailsMessage'].join(' - ').replace(/\s+/g, ' ').trim())
+          }
+        }
+      })
+    }
+    return ciOutput.join("\n")
+  }
+
   public async toDelimited(format: string): Promise<string[]> {
     const funcName: string = `to${format.charAt(0).toUpperCase()}${format.slice(
       1
@@ -262,6 +300,8 @@ export class FlagpoleReport {
           }
         });
         return out;
+      case FlagpoleExecution.global.isCiOutput:
+        return this.toCI();
       // Console
       default:
         (await this.toConsole()).forEach((line: iConsoleLine) => {
