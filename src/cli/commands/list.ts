@@ -6,7 +6,7 @@ export default class List extends Command {
   public commandString = "list [type]";
   public description =
     "list out the suites, environments or tags in this project";
-  public async action(type = "suites") {
+  public async action(type: string = "suites") {
     if (["env", "envs", "environment", "environments"].includes(type)) {
       return listEnvironments();
     }

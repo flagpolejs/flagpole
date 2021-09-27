@@ -304,7 +304,7 @@ export function exitProcess(passed: boolean) {
 export function getMessageAndCallbackFromOverloading(
   a: any,
   b: any,
-  defaultMessage = "Untitled"
+  defaultMessage: string = "Untitled"
 ): iMessageAndCallback {
   const message: string = typeof a == "string" ? a : defaultMessage;
   const callback: iNextCallback = (() => {
