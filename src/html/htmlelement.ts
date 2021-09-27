@@ -321,7 +321,7 @@ export class HTMLElement extends DOMElement implements iValue {
     const attributeName: string = typeof a === "string" ? a : "name";
     const formData: KeyValue = (typeof a === "string" ? b : a) || {};
     const form = this.el;
-    for (let name in formData) {
+    for (const name in formData) {
       const value = formData[name];
       const selector = `[${attributeName}="${name}"]`;
       const field = form.find(selector);

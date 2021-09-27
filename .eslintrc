@@ -25,6 +25,7 @@
     "prefer-spread": "off",
     "no-async-promise-executor": "off",
     "no-case-declarations": "off",
-    "no-useless-escape": "off"
+    "no-useless-escape": "off",
+    "no-undef": "off"
   }
 }

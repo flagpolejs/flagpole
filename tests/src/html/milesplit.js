@@ -1,4 +1,4 @@
-import { Flagpole } from "../../dist/index.js";
+let Flagpole = require("../../dist/index.js").Flagpole;
 
 let suite = Flagpole.Suite("Test MileSplit").base("https://www.milesplit.com");
 

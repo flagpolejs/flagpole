@@ -72,8 +72,8 @@ export function printLine(...messages: string[]) {
 
 export function findDetachedSuites(): string[] {
   const suitesInFolder: string[] = findJsFilesInTestFolder();
-  let suitesAvailableToImport: string[] = [];
-  let suitesInConfig: string[] =
+  const suitesAvailableToImport: string[] = [];
+  const suitesInConfig: string[] =
     FlagpoleExecution.global.config.getSuiteNames() || [];
   suitesInFolder.forEach((suiteName: string) => {
     if (!suitesInConfig.includes(suiteName)) {
@@ -91,7 +91,7 @@ export function findJsFilesInTestFolder(): string[] {
     // Does this folder exist?
     if (fs.pathExistsSync(dir)) {
       // Read contents
-      let files = fs.readdirSync(dir);
+      const files = fs.readdirSync(dir);
       files
         .filter((file) =>
           FlagpoleExecution.global.config.project.patternRegEx.test(file)
@@ -103,7 +103,7 @@ export function findJsFilesInTestFolder(): string[] {
           }
           // Push in any JS files
           else if (file.endsWith(".js")) {
-            let name: string = (dir + file)
+            const name: string = (dir + file)
               .replace(startFolder, "")
               .replace(/\.js$/i, "");
             suitesInFolder.push(name);

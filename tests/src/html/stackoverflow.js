@@ -1,4 +1,4 @@
-import { Flagpole } from "../../dist/index.js";
+let Flagpole = require("../../dist/index.js").Flagpole;
 
 Flagpole.Suite("Stack Overflow")
   .base("http://www.stackoverflow.com")
