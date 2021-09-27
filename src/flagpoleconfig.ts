@@ -134,7 +134,7 @@ export class SuiteConfig {
 export class ProjectConfig {
   protected config: FlagpoleConfig;
 
-  public id = "";
+  public id: string = "";
   public name: string;
   public path: string;
   public source: string | undefined;

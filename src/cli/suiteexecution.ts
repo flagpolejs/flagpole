@@ -136,7 +136,7 @@ export class SuiteExecution {
     opts: FlagpoleExecution,
     resolve: Function
   ) {
-    const command = `node ${filePath} ${opts.toString()}`;
+    const command: string = `node ${filePath} ${opts.toString()}`;
     exec(command, (err, stdout, stderr) => {
       const exitCode = err && err.code ? err.code : 0;
       if (err) {

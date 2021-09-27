@@ -806,7 +806,7 @@ export class Assertion implements iAssertion {
     // Evalulate assertion
     this._statement = this._not ? !bool : bool;
     // Passed
-    if (!!this._statement) {
+    if (this._statement) {
       this._result = this._context.logPassing(this._getMessage());
     }
     // Failed

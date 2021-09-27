@@ -36,8 +36,8 @@ export class SuiteTaskManager {
   private _beforeEachCallbacks: ScenarioCallbackAndMessage[] = [];
   private _afterEachCallbacks: ScenarioCallbackAndMessage[] = [];
   private _statusCallbacks: SuiteStatusCallback[] = [];
-  private _concurrencyLimit = 99;
-  private _maxScenarioDuration = 30000;
+  private _concurrencyLimit: number = 99;
+  private _maxScenarioDuration: number = 30000;
   private _maxTimeToWaitForPendingScenariosToBeReady = 30000;
   private _finishedPromise: Promise<void>;
   private _finishedResolve = () => {};
@@ -170,7 +170,7 @@ export class SuiteTaskManager {
   public beforeAll(
     a: SuiteCallback | string,
     b: SuiteCallback | boolean = false,
-    c = false
+    c: boolean = false
   ): void {
     if (this.hasStarted) {
       throw "Can not add new beforeAll callback after suite has started running.";
@@ -187,7 +187,7 @@ export class SuiteTaskManager {
   public beforeEach(
     a: ScenarioCallback | string,
     b: ScenarioCallback | boolean = false,
-    c = false
+    c: boolean = false
   ): void {
     if (this.hasFinished) {
       throw "Can not add new beforeEach callback after suite has finished running.";
@@ -204,7 +204,7 @@ export class SuiteTaskManager {
   public afterAll(
     a: SuiteCallback | string,
     b: SuiteCallback | boolean = false,
-    c = false
+    c: boolean = false
   ): void {
     if (this.hasFinished) {
       throw "Can not add new afterAll callback after suite has finished running.";
@@ -221,7 +221,7 @@ export class SuiteTaskManager {
   public afterEach(
     a: ScenarioCallback | string,
     b: ScenarioCallback | boolean = false,
-    c = false
+    c: boolean = false
   ): void {
     if (this.hasFinished) {
       throw "Can not add new afterEach callback after suite has finished running.";
@@ -238,7 +238,7 @@ export class SuiteTaskManager {
   public failure(
     a: SuiteCallback | string,
     b: SuiteCallback | boolean = false,
-    c = false
+    c: boolean = false
   ): void {
     if (this.hasFinished) {
       throw "Can not add new failure callback after suite has finished running.";
@@ -255,7 +255,7 @@ export class SuiteTaskManager {
   public success(
     a: SuiteCallback | string,
     b: SuiteCallback | boolean = false,
-    c = false
+    c: boolean = false
   ): void {
     if (this.hasFinished) {
       throw "Can not add new success callback after suite has finished running.";
@@ -272,7 +272,7 @@ export class SuiteTaskManager {
   public finally(
     a: SuiteCallback | string,
     b: SuiteCallback | boolean = false,
-    c = false
+    c: boolean = false
   ): void {
     if (this.hasFinished) {
       throw "Can not add new finally callback after suite has finished running.";
@@ -452,7 +452,7 @@ export class SuiteTaskManager {
     whichCallback: WhichCallback,
     a: string | SuiteCallback | ScenarioCallback,
     b: SuiteCallback | ScenarioCallback | boolean = false,
-    c = false
+    c: boolean = false
   ) {
     const message = typeof a === "string" ? a : "";
     const callback = ((): SuiteCallback | ScenarioCallback => {

@@ -25,7 +25,7 @@ export abstract class AssertionResult
 
   protected _rawDetails: any;
   protected _sourceCode: any = null;
-  protected _highlight = "";
+  protected _highlight: string = "";
 }
 
 export class AssertionPass extends AssertionResult implements iLogItem {
@@ -73,7 +73,7 @@ export class AssertionFail extends AssertionResult implements iLogItem {
     message: string,
     errorDetails: any,
     sourceCode: any = null,
-    highlight = ""
+    highlight: string = ""
   ) {
     super(message);
     this._rawDetails = errorDetails;

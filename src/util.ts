@@ -74,7 +74,7 @@ export const toType = (obj: any): string => {
   } else if (obj && obj.constructor && obj.constructor.name) {
     return String(obj.constructor.name).toLocaleLowerCase();
   } else if (obj && obj.constructor && obj.constructor.toString) {
-    let arr = obj.constructor.toString().match(/function\s*(\w+)/);
+    const arr = obj.constructor.toString().match(/function\s*(\w+)/);
     if (arr && arr.length == 2) {
       return String(arr[1]).toLocaleLowerCase();
     }
@@ -103,7 +103,7 @@ export const openInBrowser = async (content: string): Promise<string> => {
   return filePath;
 };
 
-export const runAsync = (callback: Function, delay: number = 1) => {
+export const runAsync = (callback: Function, delay = 1) => {
   setTimeout(callback, delay);
 };
 
@@ -148,8 +148,8 @@ export const asyncUntil = async <T>(
   callback: IteratorCallback
 ): Promise<T | null> => {
   for (let i = 0; i < array.length; i++) {
-    let output = await callback(array[i], i, array);
-    if (!!output) {
+    const output = await callback(array[i], i, array);
+    if (output) {
       return output;
     }
   }
@@ -167,7 +167,7 @@ export const asyncEvery = async <T>(
   array: T[],
   callback: IteratorBoolCallback
 ): Promise<boolean> => {
-  for (let item of array) {
+  for (const item of array) {
     if (!(await callback(item))) return false;
   }
   return true;
@@ -221,7 +221,7 @@ export async function asyncSome<T>(
   array: T[],
   callback: IteratorBoolCallback
 ): Promise<boolean> {
-  for (let item of array) {
+  for (const item of array) {
     if (await callback(item)) return true;
   }
   return false;
@@ -304,7 +304,7 @@ export function exitProcess(passed: boolean) {
 export function getMessageAndCallbackFromOverloading(
   a: any,
   b: any,
-  defaultMessage: string = "Untitled"
+  defaultMessage = "Untitled"
 ): iMessageAndCallback {
   const message: string = typeof a == "string" ? a : defaultMessage;
   const callback: iNextCallback = (() => {

@@ -26,7 +26,7 @@ export class TestRunner {
   }
 
   public get exitCode(): number {
-    let exitCode = 0;
+    let exitCode: number = 0;
     this._executionResults.forEach((result) => {
       exitCode = result.exitCode > exitCode ? result.exitCode : exitCode;
     });
@@ -68,7 +68,7 @@ export class TestRunner {
     this._executionResults = [];
     // Loop through each suite and run it
     const totalSuites = Object.keys(this._suiteConfigs).length;
-    let count = 1;
+    let count: number = 1;
     for (const suiteName in this._suiteConfigs) {
       this._publish(
         `Running suite ${suiteName} (${count} of ${totalSuites})...`
@@ -93,7 +93,7 @@ export class TestRunner {
     this._executionResults = [];
     // Loop through each suite and run it
     const totalSuites = Object.keys(this._suiteConfigs).length;
-    let count = 1;
+    let count: number = 1;
     for (const suiteName in this._suiteConfigs) {
       this._publish(
         `Running suite ${suiteName} (${count} of ${totalSuites})...`
@@ -113,7 +113,7 @@ export class TestRunner {
       // Loop through each suite and run it
       const totalSuites = Object.keys(this._suiteConfigs).length;
       const suitePromises: Promise<SuiteExecutionResult>[] = [];
-      let count = 1;
+      let count: number = 1;
       for (const suiteName in this._suiteConfigs) {
         this._publish(
           `Running suite ${suiteName} (${count} of ${totalSuites})...`
@@ -151,7 +151,7 @@ export class TestRunner {
   }
 
   private _onDone() {
-    let output = "";
+    let output: string = "";
     this._finishedResolver(this._executionResults);
     if (FlagpoleExecution.global.isJsonOutput) {
       const suiteOutput: string[] = [];
@@ -246,7 +246,7 @@ export class TestRunner {
   }
 
   public toString(): string {
-    let output = "";
+    let output: string = "";
     this._executionResults.forEach((result) => {
       output += result.toString() + "\n";
     });

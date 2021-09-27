@@ -71,8 +71,8 @@ export class FlagpoleReport {
       summary: {},
       scenarios: [],
     };
-    let failCount = 0;
-    let passCount = 0;
+    let failCount: number = 0;
+    let passCount: number = 0;
     for (let i = 0; i < scenarios.length; i++) {
       const scenario: iScenario = scenarios[i];
       const log: iLogItem[] = await scenario.getLog();
@@ -110,7 +110,7 @@ export class FlagpoleReport {
    */
   public async toHTML(): Promise<string> {
     const scenarios: iScenario[] = this.suite.scenarios;
-    let html = "";
+    let html: string = "";
     html += '<article class="suite">' + "\n";
     html += `<h2>${this.suite.title}</h2>\n`;
     html += "<aside>\n";
@@ -231,7 +231,7 @@ export class FlagpoleReport {
   }
 
   public async toDelimited(format: string): Promise<string[]> {
-    const funcName = `to${format.charAt(0).toUpperCase()}${format.slice(
+    const funcName: string = `to${format.charAt(0).toUpperCase()}${format.slice(
       1
     )}`;
     if (!Reflect.has(new LogComment(""), funcName)) {
