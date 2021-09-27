@@ -103,7 +103,7 @@ export const openInBrowser = async (content: string): Promise<string> => {
   return filePath;
 };
 
-export const runAsync = (callback: Function, delay = 1) => {
+export const runAsync = (callback: Function, delay: number = 1) => {
   setTimeout(callback, delay);
 };
 
