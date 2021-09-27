@@ -45,7 +45,7 @@ export class SuiteExecutionInline extends SuiteExecution {
       // Get the added suites
       const createdSuites = Flagpole.suites.slice(preSuiteCount);
       // Loop through each added suite and grab the "finished" promise, which will be resolved once it is done
-      let promises: Promise<void>[] = [];
+      const promises: Promise<void>[] = [];
       createdSuites.forEach((suite: iSuite) => {
         promises.push(suite.finished);
       });

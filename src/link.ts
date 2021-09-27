@@ -25,7 +25,7 @@ export class Link {
     if (typeof this._qs != "undefined") {
       const type: string = toType(this._qs);
       if (type == "object") {
-        for (let key in this._qs) {
+        for (const key in this._qs) {
           thisUrl.searchParams.append(key, this._qs[key]);
         }
       } else if (type == "array") {
@@ -94,8 +94,8 @@ export class Link {
       this._uri.length > 0 &&
       !this.isAnchor() &&
       (/^\?/.test(this._uri) || // Starts with a question mark
-      /^https?:\/\//i.test(this._uri) || // Starts with http:// or https://
-      /^\//i.test(this._uri) || // Starts with as slash
+        /^https?:\/\//i.test(this._uri) || // Starts with http:// or https://
+        /^\//i.test(this._uri) || // Starts with as slash
         !/^[a-z]+:\/\//i.test(this._uri)) // Not any other weird protocol
     );
   }

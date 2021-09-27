@@ -25,8 +25,12 @@ suite
       .equals("Search algorithms");
 
     // this fails
-    const nullValue = await context.waitForHavingText("span", "Search algorithmsssss", 2000);
-    context.assert(nullValue).equals(null)
+    const nullValue = await context.waitForHavingText(
+      "span",
+      "Search algorithmsssss",
+      2000
+    );
+    context.assert(nullValue).equals(null);
     // but does not error
 
     context.assert(true).equals(true);

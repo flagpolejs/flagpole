@@ -5,7 +5,7 @@ const suite = Flagpole.Suite("Test NPM").base("https://www.npmjs.com");
 suite
   .html("Load front page of NPM")
   .open("/")
-  .next(async context => {
+  .next(async (context) => {
     const nothing = await context.find("a.bg-red-hot");
     context.assert(nothing).exists();
     const link = await context.find("a.bg-red-hot");

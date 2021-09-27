@@ -1,7 +1,7 @@
 {
-    "headless": false,
-    "recordConsole": true,
-    "outputConsole": false,
-    "width": 1024,
-    "height": 768
+  "headless": false,
+  "recordConsole": true,
+  "outputConsole": false,
+  "width": 1024,
+  "height": 768
 }

@@ -6,7 +6,7 @@ export default class List extends Command {
   public commandString = "list [type]";
   public description =
     "list out the suites, environments or tags in this project";
-  public async action(type: string = "suites") {
+  public async action(type = "suites") {
     if (["env", "envs", "environment", "environments"].includes(type)) {
       return listEnvironments();
     }
@@ -19,7 +19,8 @@ export default class List extends Command {
 
 function listEnvironments() {
   Cli.subheader("List Environments").log("");
-  const envNames: string[] = FlagpoleExecution.global.config.getEnvironmentNames();
+  const envNames: string[] =
+    FlagpoleExecution.global.config.getEnvironmentNames();
   if (envNames.length > 0) {
     return Cli.log("Found these environments:").list(envNames).log("").exit(0);
   }
@@ -41,7 +42,7 @@ function listSuites() {
     `Looking in folder: ${FlagpoleExecution.global.config.getTestsFolder()}`,
     ""
   );
-  let suiteNames: string[] = FlagpoleExecution.global.config.getSuiteNames();
+  const suiteNames: string[] = FlagpoleExecution.global.config.getSuiteNames();
   if (suiteNames.length > 0) {
     Cli.log("Found these test suites:").list(suiteNames).log("").exit(0);
   } else {

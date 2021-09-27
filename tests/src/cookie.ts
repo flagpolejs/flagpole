@@ -9,7 +9,7 @@ const suite = Flagpole.Suite("Basic Cookie Test of Site")
 const test = suite
   .html("Not logged in test")
   .open("/")
-  .next("Boo", context => {
+  .next("Boo", (context) => {
     context
       .comment(context.response.finalUrl.$)
       .comment(context.response.cookies.$[0].key)

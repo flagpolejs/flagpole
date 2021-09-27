@@ -72,7 +72,7 @@ export default class Run extends Command {
       FlagpoleExecution.global.outputFormat = args.output;
     }
     // Build first
-    if (!!args.build) {
+    if (args.build) {
       await tsc(false);
     }
     Cli.subheader("Run Test Suites");

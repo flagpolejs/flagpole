@@ -136,7 +136,7 @@ export class SuiteExecution {
     opts: FlagpoleExecution,
     resolve: Function
   ) {
-    const command: string = `node ${filePath} ${opts.toString()}`;
+    const command = `node ${filePath} ${opts.toString()}`;
     exec(command, (err, stdout, stderr) => {
       const exitCode = err && err.code ? err.code : 0;
       if (err) {
@@ -170,7 +170,11 @@ export class SuiteExecution {
       this._logLine(err.message);
     });
     proc.on("close", (exitCode) => {
-      if (exitCode > 0 && opts.shouldOutputToConsole && !FlagpoleExecution.global.isCiOutput) {
+      if (
+        exitCode > 0 &&
+        opts.shouldOutputToConsole &&
+        !FlagpoleExecution.global.isCiOutput
+      ) {
         this._logLine("FAILED TEST SUITE:");
         this._logLine(filePath + " exited with error code " + exitCode);
         this._logLine("\n");

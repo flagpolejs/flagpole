@@ -119,7 +119,8 @@ export class ImageCompare {
       image.startsWith("@") &&
       image.length > 1
     ) {
-      const imagesFolder = this._context.executionOptions.config.getImagesFolder();
+      const imagesFolder =
+        this._context.executionOptions.config.getImagesFolder();
       fs.ensureDirSync(imagesFolder);
       // Build the image file path
       const imageFilePath = resolve(imagesFolder, `${image.substring(1)}.png`);
