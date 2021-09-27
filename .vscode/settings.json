@@ -6,5 +6,7 @@
     "dist": true
 
     // Files
-  }
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
 }

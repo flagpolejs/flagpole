@@ -1,3 +1,10 @@
 {
-  "streams": [{ "width": 720 }, { "width": 480 }]
+  "streams": [
+    {
+      "width": 720
+    },
+    {
+      "width": 480
+    }
+  ]
 }
