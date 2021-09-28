@@ -154,18 +154,25 @@ export class FlagpoleReport {
       const scenario: iScenario = scenarios[i];
       const log = await scenario.getLog();
 
+      // .next("I am a subscenario title", async context => { })
+      let subScenarioTitle: string;
+
       log.forEach((item: iLogItem) => {
+        if (item.className === "heading") {
+          subScenarioTitle = item.message;
+        }
+
         if (item.type.startsWith("result")) {
           let testCase = "";
           const message = this.cleanXMLCharacters(item.message);
 
           if (item.type === "resultFailure") {
-            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}">`;
+            testCase += `<testcase id="${subScenarioTitle}" name="${scenario.title}">`;
             testCase += `<failure message="${message}" type="WARNING">`;
             testCase += message;
             if (item["detailsMessage"]) {
               const rawDetails = this.cleanXMLCharacters(
-                ` - ${item["detailsMessage"]
+                `\n${item["detailsMessage"]
                   .join(" - ")
                   .replace(/\s+/g, " ")
                   .trim()}`
@@ -174,7 +181,7 @@ export class FlagpoleReport {
             }
             testCase += `</failure></testcase>`;
           } else {
-            testCase += `<testcase id="${item.timestamp}" name="${scenario.title}"></testcase>`;
+            testCase += `<testcase id="${subScenarioTitle}" name="${scenario.title}"></testcase>`;
           }
 
           testCases.push(testCase);
