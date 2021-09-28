@@ -3,6 +3,7 @@ import { Cli } from "./cli";
 import { SuiteExecution, SuiteExecutionResult } from "./suiteexecution";
 import { FlagpoleExecution } from "..";
 import { SuiteExecutionInline } from "./suiteexecutioninline";
+import Ansi from "cli-ansi";
 
 export class TestRunner {
   private _suiteConfigs: { [s: string]: SuiteConfig } = {};
@@ -174,7 +175,10 @@ export class TestRunner {
             `;
     } else if (FlagpoleExecution.global.isCiOutput) {
       this._executionResults.forEach((result) => {
-        output += result.toString() + "\n\n";
+        const stringifiedResult = result.toString();
+        if (stringifiedResult) {
+          output += stringifiedResult + "\n\n";
+        }
       });
     } else {
       this._executionResults.forEach((result) => {
@@ -231,12 +235,17 @@ export class TestRunner {
       Cli.exit(this.allPassing ? 0 : 1);
     } else if (FlagpoleExecution.global.isCiOutput) {
       const overall = this._getSummary();
-      Cli.log(`---SUMMARY---`);
+
+      // erase the last "Running suite a ( x of y )"
+      Ansi.writeLine(Ansi.cursorUp(), Ansi.eraseLine());
+
+      Cli.subheader("SUMMARY");
       Cli.log(`Passed: ${overall.pass}`);
       Cli.log(`Failed: ${overall.fail}`);
       Cli.log(`Duration: ${overall.duration}ms`);
       Cli.log("\n");
       Cli.log(output);
+      Cli.exit(this.allPassing ? 0 : 1);
     } else {
       Cli.log(output);
       if (!this.allPassing && FlagpoleExecution.global.shouldOutputToConsole) {
