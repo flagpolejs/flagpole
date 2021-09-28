@@ -220,9 +220,11 @@ export class FlagpoleReport {
             ciOutput.push(`Suite: ${this.suite.title}`);
             ciOutput.push(`Scenario: ${scenario.title} - ${subScenarioTitle}`);
             ciOutput.push(`Assertion: ${message}`);
-            ciOutput.push(
-              item["detailsMessage"].join(" - ").replace(/\s+/g, " ").trim()
-            );
+            if (item["detailsMessage"] && item["detailsMessage"].length) {
+              ciOutput.push(
+                item["detailsMessage"].join(" - ").replace(/\s+/g, " ").trim()
+              );
+            }
           }
         }
       });
