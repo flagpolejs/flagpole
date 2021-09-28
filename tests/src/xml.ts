@@ -36,5 +36,4 @@ suite
 
 suite
   .scenario("The Register's Atom Headlines", "atom")
-  .open("https://www.theregister.co.uk/headlines.atom")
-  .next(async (context) => {});
+  .open("https://www.theregister.co.uk/headlines.atom");

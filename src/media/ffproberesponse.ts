@@ -8,7 +8,8 @@ import { ScenarioType } from "../scenario-types";
 
 export class FfprobeResponse
   extends JsonResponse
-  implements iResponse, JPathProvider {
+  implements iResponse, JPathProvider
+{
   public jsonDoc: JsonDoc | undefined;
 
   public get responseTypeName(): string {

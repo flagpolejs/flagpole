@@ -1,10 +1,12 @@
 {
-    "files.exclude": {
-        // Folders
-        ".vscode": true,
-        "node_modules": true,
-        "dist": true
+  "files.exclude": {
+    // Folders
+    ".vscode": true,
+    "node_modules": true,
+    "dist": true
 
-        // Files
-    },
+    // Files
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
 }

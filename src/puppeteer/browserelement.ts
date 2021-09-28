@@ -340,7 +340,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     }
     const attributeName: string = typeof a === "string" ? a : "name";
     const formData: KeyValue = (typeof a === "string" ? b : a) || {};
-    for (let name in formData) {
+    for (const name in formData) {
       const value: any = formData[name];
       const selector: string = `${this._path} [${attributeName}="${name}"]`;
       const inputs: ElementHandle[] = await this._page.$$(selector);
@@ -372,11 +372,11 @@ export class BrowserElement extends PuppeteerElement implements iValue {
               toType(value) == "array" ? value : [value];
             // Loop through each checkbox/radio element with this name
             for (let i = 0; i < inputs.length; i++) {
-              let checkbox: ElementHandle = inputs[i];
-              let isChecked: boolean = !!(await (
+              const checkbox: ElementHandle = inputs[i];
+              const isChecked: boolean = !!(await (
                 await checkbox.getProperty("checked")
               ).jsonValue());
-              let checkboxValue: string = String(
+              const checkboxValue: string = String(
                 await (await checkbox.getProperty("value")).jsonValue()
               );
               // Toggle it by clicking

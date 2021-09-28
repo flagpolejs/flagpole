@@ -404,7 +404,7 @@ export class SuiteTaskManager {
             await this._executeScenario(scenario);
             await scenario.waitForFinished();
             // wait for browser to close to avoid overlap and thrown MaxListenersExceededWarning error
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 200));
           },
           {
             concurrency: this._concurrencyLimit,

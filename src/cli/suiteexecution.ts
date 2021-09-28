@@ -170,7 +170,11 @@ export class SuiteExecution {
       this._logLine(err.message);
     });
     proc.on("close", (exitCode) => {
-      if (exitCode > 0 && opts.shouldOutputToConsole && !FlagpoleExecution.global.isCiOutput) {
+      if (
+        exitCode > 0 &&
+        opts.shouldOutputToConsole &&
+        !FlagpoleExecution.global.isCiOutput
+      ) {
         this._logLine("FAILED TEST SUITE:");
         this._logLine(filePath + " exited with error code " + exitCode);
         this._logLine("\n");

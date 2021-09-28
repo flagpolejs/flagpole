@@ -87,7 +87,7 @@ const itunesApiSchema = {
   },
 };
 
-let suite = flagpole("Test iTunes API").base("https://itunes.apple.com");
+const suite = flagpole("Test iTunes API").base("https://itunes.apple.com");
 
 suite
   .scenario("Search for Tupac", "json")

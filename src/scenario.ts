@@ -608,7 +608,7 @@ export class Scenario implements iScenario {
     const message: string =
       type === "string"
         ? input
-        : !!input?.isFlagpoleValue
+        : input?.isFlagpoleValue
         ? input.toString()
         : JSON.stringify(input, null, 2);
     return this._pushToLog(new LogComment(message));

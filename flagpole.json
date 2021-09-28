@@ -24,17 +24,12 @@
     "debug": {
       "id": "",
       "name": "debug",
-      "tags": [
-        "basic",
-        "hello"
-      ]
+      "tags": ["basic", "hello"]
     },
     "smoke": {
       "id": "",
       "name": "smoke",
-      "tags": [
-        "smoke"
-      ]
+      "tags": ["smoke"]
     },
     "api-snapshot": {
       "id": "",
@@ -54,9 +49,7 @@
     "foobar": {
       "id": "",
       "name": "foobar",
-      "tags": [
-        "hello"
-      ]
+      "tags": ["hello"]
     },
     "helpme": {
       "id": "",

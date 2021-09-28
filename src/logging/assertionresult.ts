@@ -16,7 +16,8 @@ import { isNullOrUndefined, toType } from "../util";
 
 export abstract class AssertionResult
   extends LogItem
-  implements iLogItem, iAssertionResult {
+  implements iLogItem, iAssertionResult
+{
   public abstract readonly type: LineType;
   public abstract className: string;
 

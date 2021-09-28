@@ -1,6 +1,7 @@
 aside.sidebar {
-    background: rgb(150, 220, 255);
+  background: rgb(150, 220, 255);
 }
-.sidebar-toggle, body.close .sidebar-toggle {
-    background: none;
+.sidebar-toggle,
+body.close .sidebar-toggle {
+  background: none;
 }

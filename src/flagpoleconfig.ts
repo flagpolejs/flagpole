@@ -201,7 +201,7 @@ export class ProjectConfig {
       images: this.images,
       cache: this.cache,
       schemas: this.schemas,
-      reports: this.reports
+      reports: this.reports,
     };
   }
 }
@@ -301,11 +301,11 @@ export class FlagpoleConfig {
   /**
    * Default; _project_/tests/reports
    */
-     public getReportsFolder(): string {
-      return normalizePath(
-        path.join(this.getRootFolder(), this.project.reports || "reports")
-      );
-    }
+  public getReportsFolder(): string {
+    return normalizePath(
+      path.join(this.getRootFolder(), this.project.reports || "reports")
+    );
+  }
 
   public getSuite(suiteName: string): SuiteConfig {
     return this.suites[suiteName];
@@ -342,16 +342,16 @@ export class FlagpoleConfig {
   }
 
   public getEnvironments(): EnvConfig[] {
-    let envConfigs: EnvConfig[] = [];
-    for (let key in this.environments) {
+    const envConfigs: EnvConfig[] = [];
+    for (const key in this.environments) {
       envConfigs.push(this.environments[key]);
     }
     return envConfigs;
   }
 
   public getEnvironmentNames(): string[] {
-    let envs: string[] = [];
-    for (let key in this.environments) {
+    const envs: string[] = [];
+    for (const key in this.environments) {
       envs.push(this.environments[key].name);
     }
     return envs;
@@ -360,7 +360,7 @@ export class FlagpoleConfig {
   public getTags(): string[] {
     let tags: string[] = [];
     // Get all tags from config
-    for (let key in this.suites) {
+    for (const key in this.suites) {
       tags = tags.concat(this.suites[key].tags);
     }
     // Uniqueify it
@@ -371,16 +371,16 @@ export class FlagpoleConfig {
   }
 
   public getSuites(): SuiteConfig[] {
-    let suiteConfigs: SuiteConfig[] = [];
-    for (let key in this.suites) {
+    const suiteConfigs: SuiteConfig[] = [];
+    for (const key in this.suites) {
       suiteConfigs.push(this.suites[key]);
     }
     return suiteConfigs;
   }
 
   public getSuiteNames(): string[] {
-    let suiteNames: string[] = [];
-    for (let key in this.suites) {
+    const suiteNames: string[] = [];
+    for (const key in this.suites) {
       suiteNames.push(this.suites[key].name);
     }
     return suiteNames;
@@ -410,14 +410,14 @@ export class FlagpoleConfig {
     return {
       project: this.project.toJson(),
       environments: (() => {
-        let envs: any = {};
+        const envs: any = {};
         Object.values(this.environments).forEach((env) => {
           envs[env.name] = env.toJson();
         });
         return envs;
       })(),
       suites: (() => {
-        let suites: any = {};
+        const suites: any = {};
         Object.values(this.suites).forEach((suite) => {
           suites[suite.name] = suite.toJson();
         });

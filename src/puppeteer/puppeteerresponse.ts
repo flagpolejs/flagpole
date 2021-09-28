@@ -16,7 +16,8 @@ const DEFAULT_WAITFOR_TIMEOUT = 30000;
 
 export abstract class PuppeteerResponse
   extends DOMResponse
-  implements iResponse {
+  implements iResponse
+{
   /**
    * Is this a browser based test
    */

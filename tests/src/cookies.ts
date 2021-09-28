@@ -6,10 +6,10 @@ const suite = Flagpole.suite("setCookie method").base(
 
 suite
   .browser("Homepage Loads")
-  .before(async context => {
+  .before(async (context) => {
     await context.setCookie("foo", "bar");
   })
   .open("/")
-  .next(async context => {
+  .next(async (context) => {
     context.assert(context.response.cookie("foo").toString()).equals("bar");
   });

@@ -7,7 +7,8 @@ import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "./jpath";
 
 export class JsonResponse
   extends ProtoResponse
-  implements iResponse, JPathProvider {
+  implements iResponse, JPathProvider
+{
   public jsonDoc: JsonDoc | undefined;
 
   public get responseTypeName(): string {

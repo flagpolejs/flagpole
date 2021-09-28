@@ -983,7 +983,7 @@ export class Value implements iValue {
       const name = `${key.join(", ")} in ${this.name}`;
       return new Value(
         this.toArray().map((row) => {
-          let out: any[] = [];
+          const out: any[] = [];
           key.forEach((k) => {
             out.push(row[k]);
           });

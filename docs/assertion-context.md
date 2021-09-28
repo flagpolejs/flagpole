@@ -437,11 +437,14 @@ If a value was previously saved on this Scenario `set` or within an Assertion, V
 
 ```javascript
 scenario
-  .next(context => {
-    context.assert(await context.find('title')).as('t').length.greaterThan(0);
+  .next((context) => {
+    context
+      .assert(await context.find("title"))
+      .as("t")
+      .length.greaterThan(0);
   })
-  .next(context => {
-    context.assert(await context.get('t').getInnerText()).equals('Google');
+  .next((context) => {
+    context.assert(await context.get("t").getInnerText()).equals("Google");
   });
 ```
 
