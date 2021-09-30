@@ -6,14 +6,12 @@ suite
   .html("Load front page of NPM")
   .open("/")
   .next(async (context) => {
-    const nothing = await context.find("a.bg-red-hot");
-    context.assert(nothing).exists();
-    const link = await context.find("a.bg-red-hot");
+    const link = await context.find("a#nav-docs-link");
     context.assert(link).exists();
-    context.assert(await link.getText()).equals("foo");
-    context.assert(await link.getText()).like("see plans");
+    context.assert(await link.getText()).equals("Documentation");
+    context.assert(await link.getText()).like("Documentation");
     const search = await context.find("#search");
     context.assert(search).exists();
-    context.assert(await search.getAttribute("method")).equals("post");
+    context.assert(await search.getAttribute("method")).equals("GET");
     context.assert(await search.getAttribute("action")).equals("/search");
   });

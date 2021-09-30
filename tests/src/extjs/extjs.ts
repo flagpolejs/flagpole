@@ -1,4 +1,4 @@
-import flagpole from "../../dist/index";
+import flagpole from "../../../dist/index";
 
 const browserOpts = {
   headless: false,
@@ -60,9 +60,9 @@ suite
     await context.pause(1000);
     const contactTile = await context.find(".x-dataview-item .person-name");
     context.assert(contactTile).exists();
-    const contactComponent = await contactTile.getAncestorOrSelf(
-      ".x-component"
-    );
+    // const contactComponent = await contactTile.getAncestorOrSelf(
+    //   ".x-component"
+    // );
     return contactTile.click();
   })
   .next("Detail page", async (context) => {
@@ -76,9 +76,9 @@ suite
     const firstName = await context.find("field", "first name");
     context.assert(firstName).exists();
     await firstName.type("foo");
-    const cmp = await firstName.getAncestorOrSelf("*");
-    context.assert(cmp).exists();
-    context.assert(await cmp.eval((c) => c.getLabel())).equals("First Name");
+    // const cmp = await firstName.getAncestorOrSelf("*");
+    // context.assert(cmp).exists();
+    // context.assert(await cmp.eval((c) => c.getLabel())).equals("First Name");
     await context.pause(1000);
     const workTab = await context.find("button", "work");
     context.assert(workTab).exists();
@@ -86,5 +86,4 @@ suite
     await context.pause(1000);
     const officeField = await context.find("field", "office");
     officeField.selectOption("Dryden");
-    await context.pause(3000);
   });

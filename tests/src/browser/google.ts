@@ -24,9 +24,8 @@ suite
     context.assert(context.response.statusCode).equals(200);
   })
   .next("Check Logo", async (context) => {
-    const logo = await context.exists("#hplogo");
-    //context.assert(await logo.getAttribute('alt')).equals('foo');
-    //context.assert(await logo.getAttribute("alt")).equals("Google");
+    const logo = await context.exists("img[alt='Google']");
+    context.assert(await logo.getAttribute("alt")).equals("Google");
   })
   .next("Look for I'm feeling lucky button", async (context) => {
     const btn = await context.find("input", "lucky", {
@@ -53,7 +52,7 @@ suite
     context.assert("Search results found", results).exists();
   })
   .next("See if evalulate works", async (context) => {
-    const divCount = await context.eval(() => {
+    const divCount = await context.page?.evaluate(() => {
       return document.querySelectorAll("div").length;
     });
     context.comment(`There are ${divCount} divs in this page`);

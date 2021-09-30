@@ -1,87 +1,115 @@
 import flagpole from "../../../dist/index";
 
 const trackSchema = {
+  type: ["object"],
   properties: {
     wrapperType: {
-      type: "string",
-      enum: ["track"],
-      matches: /track/i,
+      type: ["string"],
     },
     kind: {
-      type: "string",
-      test: function (value) {
-        return value == "music-video";
-      },
+      type: ["string"],
     },
-    artistId: "number",
-    trackId: "number",
-    artistName: "string",
-    trackName: "string",
-    trackCensoredName: "string",
-    artistViewUrl: "string",
-    trackViewUrl: "string",
-    previewUrl: "string",
-    artworkUrl30: "string",
-    artworkUrl60: "string",
-    artworkUrl100: "string",
-    trackPrice: "number",
-    releaseDate: "string",
-    trackExplicitness: "string",
-    trackTimeMillis: "number",
-    country: "string",
-    currency: "string",
-    primaryGenreName: "string",
-    discCount: {
-      type: "number",
-      optional: true,
-    },
-    discNumber: {
-      type: "number",
-      optional: true,
-    },
-    trackCount: {
-      type: "number",
-      optional: true,
-    },
-    trackNumber: {
-      type: "number",
-      optional: true,
+    artistId: {
+      type: ["number"],
     },
     collectionId: {
-      type: "number",
-      optional: true,
+      type: ["number"],
+    },
+    trackId: {
+      type: ["number"],
+    },
+    artistName: {
+      type: ["string"],
     },
     collectionName: {
-      type: "string",
-      optional: true,
+      type: ["string"],
+    },
+    trackName: {
+      type: ["string"],
     },
     collectionCensoredName: {
-      type: "string",
-      optional: true,
+      type: ["string"],
+    },
+    trackCensoredName: {
+      type: ["string"],
     },
     collectionArtistId: {
-      type: "number",
-      optional: true,
+      type: ["number"],
+    },
+    artistViewUrl: {
+      type: ["string"],
     },
     collectionViewUrl: {
-      type: "string",
-      optional: true,
+      type: ["string"],
+    },
+    trackViewUrl: {
+      type: ["string"],
+    },
+    previewUrl: {
+      type: ["string"],
+    },
+    artworkUrl30: {
+      type: ["string"],
+    },
+    artworkUrl60: {
+      type: ["string"],
+    },
+    artworkUrl100: {
+      type: ["string"],
     },
     collectionPrice: {
-      type: "number",
-      optional: true,
+      type: ["number"],
+    },
+    trackPrice: {
+      type: ["number"],
+    },
+    releaseDate: {
+      type: ["string"],
     },
     collectionExplicitness: {
-      type: "string",
-      optional: true,
+      type: ["string"],
+    },
+    trackExplicitness: {
+      type: ["string"],
+    },
+    discCount: {
+      type: ["number"],
+    },
+    discNumber: {
+      type: ["number"],
+    },
+    trackCount: {
+      type: ["number"],
+    },
+    trackNumber: {
+      type: ["number"],
+    },
+    trackTimeMillis: {
+      type: ["number"],
+    },
+    country: {
+      type: ["string"],
+    },
+    currency: {
+      type: ["string"],
+    },
+    primaryGenreName: {
+      type: ["string"],
+    },
+    contentAdvisoryRating: {
+      type: ["string"],
     },
   },
 };
 
 const itunesApiSchema = {
+  type: ["object"],
   properties: {
-    resultCount: "number",
+    resultCount: {
+      type: ["number"],
+    },
     results: {
+      type: ["array"],
       items: trackSchema,
     },
   },

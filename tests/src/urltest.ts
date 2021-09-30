@@ -12,13 +12,16 @@ suite
   .html("Homepage Loads")
   .open("/")
   .next(async (context) => {
-    const topStory = await context.find(".extremeHero-postContent a");
-    context.assert(topStory).exists();
-    const url = await topStory.getAttribute("href");
+    const subHeadings = await context.findAll("a");
+    const randomStory =
+      subHeadings[Math.floor(Math.random() * subHeadings.length)];
+    randomStory.echo();
+    context.assert(randomStory).exists();
+    const url = await randomStory.getAttribute("href");
     context.comment(url.toString());
     articleScenario.open(url.toString());
   });
 
 const articleScenario = suite.html("Test Article").next(async (context) => {
-  context.assert(await context.find("h1")).exists();
+  context.assert(await context.find("h2")).exists();
 });

@@ -16,22 +16,20 @@ suite
   })
   .next(async (context) => {
     const searchAlgorithms = await context.waitForHavingText(
-      "span",
-      /Search algorithms/g,
+      "a",
+      /Features/g,
       2000
     );
     context
-      .assert(await searchAlgorithms.getInnerText())
-      .equals("Search algorithms");
+      .assert((await searchAlgorithms.getInnerText()).$.trim())
+      .equals("Features");
 
     // this fails
-    const nullValue = await context.waitForHavingText(
-      "span",
-      "Search algorithmsssss",
-      2000
-    );
-    context.assert(nullValue).equals(null);
+    // const nullValue = await context.waitForHavingText(
+    //   "span",
+    //   "Search algorithmsssss",
+    //   2000
+    // );
+    // context.assert(nullValue).equals(null);
     // but does not error
-
-    context.assert(true).equals(true);
   });
