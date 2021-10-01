@@ -185,6 +185,11 @@
       "id": "",
       "name": "schema",
       "tags": []
+    },
+    "equality": {
+      "id": "",
+      "name": "equality",
+      "tags": []
     }
   }
 }

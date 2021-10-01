@@ -313,17 +313,30 @@ export class Assertion implements iAssertion {
     const { thisValue, thatValue } = this._getValues(value);
     const thisType = toType(thisValue);
     const thatType = toType(thatValue);
+    const thisStringified = JSON.stringify(thisValue, null, 2);
+    const thatStringified = JSON.stringify(thatValue, null, 2);
+
     this.setDefaultMessages(
-      `${this.subject} does not equal ${thatValue}`,
-      `${this.subject} equals ${thatValue}`
+      `${this.subject} does not equal ${thatStringified}`,
+      `${this.subject} equals ${thatStringified}`
     );
     if (thisType == "array" && thatType == "array") {
-      return this.execute(arrayEquals(thisValue, thatValue), thisValue);
+      return this.execute(
+        arrayEquals(thisValue, thatValue),
+        thisStringified,
+        null,
+        thatStringified
+      );
     }
     if (thisType == "object" && thatType == "object") {
-      return this.execute(deepEqual(thisValue, thatValue), thisValue);
+      return this.execute(
+        deepEqual(thisValue, thatValue),
+        thisStringified,
+        null,
+        thatStringified
+      );
     }
-    return this.execute(thisValue == thatValue, thisValue);
+    return this.execute(thisValue == thatValue, thisValue, null, thatValue);
   }
 
   public like(value: any): iAssertion {
