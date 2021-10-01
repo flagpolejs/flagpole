@@ -55,9 +55,9 @@ export class AtomResponse extends XmlResponse implements iResponse {
     if (entries.length > 0) {
       let allItemsAreValid: boolean = true;
       entries.each((i, entry) => {
-        const id = cheerio(entry).children("id");
-        const title = cheerio(entry).children("title");
-        const updated = cheerio(entry).children("updated");
+        const id = this.cheerio(entry).children("id");
+        const title = this.cheerio(entry).children("title");
+        const updated = this.cheerio(entry).children("updated");
         if (id.length !== 1 || title.length !== 1 || updated.length !== 1) {
           allItemsAreValid = false;
           return false;
