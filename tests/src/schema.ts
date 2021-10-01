@@ -56,7 +56,9 @@ flagpole("Test Assertion Schema", async (suite) => {
     .scenario("Not matching schema, JsonSchema", "json")
     .mock(invalidResponse)
     .next((context) => {
-      context.assert(context.response.jsonBody).schema("@foobar", "JsonSchema");
+      context
+        .assert(context.response.jsonBody)
+        .optional.schema("@foobar", "JsonSchema");
     });
 
   suite
@@ -70,7 +72,9 @@ flagpole("Test Assertion Schema", async (suite) => {
     .scenario("Not matching schema, JTD", "json")
     .mock(invalidResponse)
     .next((context) => {
-      context.assert(context.response.jsonBody).schema(jtdSchema, "JTD");
+      context
+        .assert(context.response.jsonBody)
+        .optional.schema(jtdSchema, "JTD");
     });
 
   suite

@@ -1,6 +1,6 @@
-const Flagpole = require("../../dist/index.js").Flagpole;
+import flagpole from "../../../dist/index";
 
-const suite = Flagpole.suite("Test Employee Directory Example")
+const suite = flagpole("Test Employee Directory Example")
   .base("https://examples.sencha.com")
   .finally(() => {
     suite.print();
@@ -33,7 +33,7 @@ suite
       .assert("Text field should say LOG IN", await button.getText())
       .like("log in");
     await button.click();
-    return context.page.waitForNavigation();
+    return context.waitForNavigation();
   })
   .next("Check employee listing page", async (context) => {
     context
@@ -42,5 +42,4 @@ suite
         await context.findAll("button")
       )
       .length.greaterThan(1);
-    return context.pause(3000);
   });

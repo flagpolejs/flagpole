@@ -411,7 +411,6 @@ sites.forEach((site) => {
       const total = await context.find("meta.total");
       const data = await context.find("data");
       const firstType = await context.find("data[0].type");
-      //context.comment(context.response.body);
       context.assert(total).greaterThan(0);
       context.assert(data.length).equals(total);
       context.assert(firstType).equals("product");

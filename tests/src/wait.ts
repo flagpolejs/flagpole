@@ -22,7 +22,7 @@ fp.suite("Test different wait methods", (suite) => {
     .html("Homepage Loads")
     .open("/")
     .next(async (context) => {
-      const communityLink = await context.exists("div.community h4 a");
+      const communityLink = await context.exists("div.community h3 a");
       communityLink.open(community);
     });
   const community = suite

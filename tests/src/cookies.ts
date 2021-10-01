@@ -1,7 +1,7 @@
 import { Flagpole } from "../../dist/index.js";
 
 const suite = Flagpole.suite("setCookie method").base(
-  "https://www.milesplit.com/"
+  "https://www.heroku.com/"
 );
 
 suite
