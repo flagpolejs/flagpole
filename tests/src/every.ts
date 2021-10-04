@@ -1,8 +1,8 @@
 import flagpole from "../../dist";
 
 const expectedDuration = 1;
-const arrayOfNumbers = [1, 1, 2];
-const arrayOfObjects = [{ duration: 1 }, { duration: 1 }, { duration: 2 }];
+const arrayOfNumbers = [1, 1, 1];
+const arrayOfObjects = [{ duration: 1 }, { duration: 1 }, { duration: 1 }];
 
 flagpole(
   "Getting better expected vs actual data in the test report",
