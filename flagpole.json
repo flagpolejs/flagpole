@@ -160,6 +160,11 @@
       "id": "",
       "name": "atom",
       "tags": []
+    },
+    "every": {
+      "id": "",
+      "name": "every",
+      "tags": []
     }
   }
 }
