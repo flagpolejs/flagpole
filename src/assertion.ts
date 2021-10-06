@@ -698,7 +698,8 @@ export class Assertion implements iAssertion {
     const result = await asyncEvery(this.value, callback);
     const which = result
       ? undefined
-      : `${await asyncFindNot(this.value, callback)}`;
+      : `${JSON.stringify(await asyncFindNot(this.value, callback), null, 2)}`;
+
     return this.execute(result, which);
   }
 
