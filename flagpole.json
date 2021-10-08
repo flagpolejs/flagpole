@@ -156,6 +156,11 @@
       "name": "equality",
       "tags": []
     },
+    "atom": {
+      "id": "",
+      "name": "atom",
+      "tags": []
+    },
     "every": {
       "id": "",
       "name": "every",
