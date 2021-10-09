@@ -508,6 +508,13 @@ export class Suite implements iSuite {
           context.assert(context.response.statusCode).equals(opts.statusCode);
         });
       }
+      if (opts.maxLoadTime) {
+        scenario.next((context) => {
+          context
+            .assert(context.response.loadTime)
+            .lessThanOrEquals(opts.maxLoadTime);
+        });
+      }
       if (opts.next) scenario.next(opts.next);
       return scenario;
     };
