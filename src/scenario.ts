@@ -22,6 +22,8 @@ import {
   HttpAuth,
   HttpTimeout,
   HttpMethodVerb,
+  CONTENT_TYPE_SOAP,
+  CONTENT_TYPE_JSON,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
@@ -330,8 +332,15 @@ export class Scenario implements iScenario {
     recordConsole: true,
     outputConsole: false,
   };
-  protected _defaultRequestOptions: HttpRequestOptions = {
-    method: "get",
+  protected _defaultMethodByType: { [type in ScenarioType]?: HttpMethodVerb } =
+    {
+      soap: "post",
+    };
+  protected _defaultContentTypeByType: {
+    [type in ScenarioType]?: string;
+  } = {
+    soap: CONTENT_TYPE_SOAP,
+    json: CONTENT_TYPE_JSON,
   };
   protected _aliasedData: any = {};
   protected _requestPromise: Promise<iScenario>;
@@ -353,7 +362,7 @@ export class Scenario implements iScenario {
 
   protected constructor(suite: iSuite, title: string) {
     this.suite = suite;
-    this._request = new HttpRequest(this._defaultRequestOptions);
+    this._request = new HttpRequest(this._getDefaultRequestOptions());
     this._title = title;
     this._response = new ResourceResponse(this);
     this._requestPromise = new Promise((resolve) => {
@@ -365,6 +374,18 @@ export class Scenario implements iScenario {
     this._webhookPromise = new Promise((resolve) => {
       this._webhookResolver = resolve;
     });
+  }
+
+  protected _getDefaultRequestOptions(): HttpRequestOptions {
+    const headers: KeyValue = {};
+    if (this._defaultContentTypeByType[this._responseType]) {
+      headers["Content-Type"] =
+        this._defaultContentTypeByType[this._responseType];
+    }
+    return {
+      method: this._defaultMethodByType[this._responseType] || "get",
+      headers,
+    };
   }
 
   protected _getArray(key: string): any[] {
@@ -969,7 +990,7 @@ export class Scenario implements iScenario {
     } else {
       this._request
         .setOptions({
-          ...this._defaultRequestOptions,
+          ...this._getDefaultRequestOptions(),
           ...opts,
         })
         .setType(this._responseType);
@@ -1311,7 +1332,7 @@ export class Scenario implements iScenario {
     } catch (err) {
       this._markScenarioCompleted(
         `Failed to load page ${this.url}`,
-        err,
+        String(err),
         ScenarioDisposition.aborted
       );
     }

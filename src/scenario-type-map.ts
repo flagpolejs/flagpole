@@ -16,6 +16,7 @@ import { fetchWithNeedle } from "./adapters/needle";
 import { fetchWithFfprobe } from "./adapters/ffprobe";
 import { fetchWithMediaStreamValidator } from "./adapters/mediastreamvalidator";
 import { fetchImageWithNeedle } from "./adapters/image";
+import { SoapResponse } from "./xml/soapresponse";
 
 const typeToClassMap: { [type: string]: any } = {
   html: HtmlResponse,
@@ -26,6 +27,7 @@ const typeToClassMap: { [type: string]: any } = {
   xml: XmlResponse,
   rss: RssResponse,
   atom: AtomResponse,
+  soap: SoapResponse,
   headers: HeadersResponse,
   hls: HLSResponse,
   ffprobe: FfprobeResponse,
@@ -39,6 +41,7 @@ const typeToFetchAdapter: { [type: string]: HttpRequestFetch } = {
   xml: fetchWithNeedle,
   rss: fetchWithNeedle,
   atom: fetchWithNeedle,
+  soap: fetchWithNeedle,
   headers: fetchWithNeedle,
   hls: fetchWithNeedle,
   resource: fetchWithNeedle,

@@ -11,4 +11,5 @@ export type ScenarioType =
   | "xml"
   | "rss"
   | "atom"
+  | "soap"
   | "headers";
