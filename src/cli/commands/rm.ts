@@ -91,7 +91,7 @@ async function removeSuite() {
           }
         }
       } catch (ex) {
-        thingsWeDid.push(`Error. Failed to delete files: ${ex.message}`);
+        thingsWeDid.push(`Error. Failed to delete files: ${String(ex)}`);
       }
     } else {
       thingsWeDid.push(
