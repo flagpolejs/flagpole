@@ -1055,4 +1055,5 @@ export interface ScenarioInitOptions {
   maxRedirects?: number;
   next?: iNextCallback;
   statusCode?: number;
+  maxLoadTime?: number;
 }
