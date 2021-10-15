@@ -90,8 +90,8 @@ async function removeSuite() {
             );
           }
         }
-      } catch (ex) {
-        thingsWeDid.push(`Error. Failed to delete files: ${ex.message}`);
+      } catch (ex: any) {
+        thingsWeDid.push(`Error. Failed to delete files: ${ex?.message}`);
       }
     } else {
       thingsWeDid.push(
