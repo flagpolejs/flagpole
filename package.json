@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.6.10",
+  "version": "2.6.11",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
@@ -27,7 +27,7 @@
   "author": "Jason Byrne <jasonbyrne662@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "@flagpolejs/json-to-jsonschema": "0.0.2",
+    "@flagpolejs/json-to-jsonschema": "^0.0.3",
     "@flagpolejs/json-to-jtd": "0.0.2",
     "@types/cheerio": "^0.22.30",
     "@zerodeps/image-probe": "0.0.3",

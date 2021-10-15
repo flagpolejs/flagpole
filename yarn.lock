@@ -43,10 +43,10 @@
     "minimatch" "^3.0.4"
     "strip-json-comments" "^3.1.1"
 
-"@flagpolejs/json-to-jsonschema@0.0.2":
-  "integrity" "sha512-/vSD7wx4Kf12OHKRHLqzcA2mM5EOb8aVnp/6iyOsOkUjKhsxhsXrseIAHtTiv83agx6S4eCAArvdEQFHZd7s/A=="
-  "resolved" "https://registry.npmjs.org/@flagpolejs/json-to-jsonschema/-/json-to-jsonschema-0.0.2.tgz"
-  "version" "0.0.2"
+"@flagpolejs/json-to-jsonschema@^0.0.3":
+  "integrity" "sha512-vXxRkE5b9tYQ227ID7xP0sx+aoGxRPuStaMYs35zXtCUIhCTEuDPoWFNYZKLrVIfDm2ae1UOm4FGspqu1ZfrkA=="
+  "resolved" "https://registry.npmjs.org/@flagpolejs/json-to-jsonschema/-/json-to-jsonschema-0.0.3.tgz"
+  "version" "0.0.3"
 
 "@flagpolejs/json-to-jtd@0.0.2":
   "integrity" "sha512-ZDB4GUYifAqxtsbRfAGQLSUqEmnIx8KjHdxgG+d/2RMgddRx44GhD4tpD0GuzPB1MDlwzJFb5vH/S8BQ9Qw3Kg=="
