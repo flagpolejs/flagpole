@@ -1,10 +1,9 @@
 import flagpole from "../../dist/index";
 
 const suite = flagpole("Lifecycle").finally(async () => {
-  console.log("my suite finally");
-
-  await new Promise((resolve, _) => setTimeout(() => resolve(), 100));
-  console.log("suite finally");
+  // console.log("my suite started");
+  await new Promise((resolve) => setTimeout(() => resolve(), 100));
+  // console.log("my suite finally finished");
 });
 
 suite
@@ -15,5 +14,5 @@ suite
   })
   .finally(async () => {
     await new Promise((resolve, _) => setTimeout(() => resolve(), 100));
-    console.log("scenario finally");
+    // console.log("scenario finally");
   });
