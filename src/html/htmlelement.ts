@@ -76,6 +76,9 @@ export class HTMLElement extends DOMElement implements iValue {
       if (params.contains || params.matches) {
       } else {
         const element = this.el.find(selector).eq(0);
+        if (element.length === 0) {
+          return this._wrapAsValue(null, name);
+        }
         if (element !== null) {
           return HTMLElement.create(element, this._context, name, path);
         }
