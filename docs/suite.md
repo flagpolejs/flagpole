@@ -128,7 +128,7 @@ Prints the results from the test execution to the console. This is often run ins
 suite.finally((suite) => suite.print(false));
 ```
 
-### promise(): Promise<Scenario>
+### promise(): Promise\<Scenario\>
 
 Promisifies the Suite. The returned promise will resolve once all scenarios in the suite complete successfully.
 
