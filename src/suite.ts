@@ -409,8 +409,9 @@ export class Suite implements iSuite {
 
   /**
    * This callback will run once everything else is completed, whether pass or fail
+   * prepend these callbacks so that the taskManager.finally runs last
    */
-  public finally(callback: SuiteCallback, prepend: boolean = false): Suite {
+  public finally(callback: SuiteCallback, prepend: boolean = true): Suite {
     this._taskManager.finally(callback, prepend);
     return this;
   }
