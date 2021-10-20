@@ -159,7 +159,7 @@ export class FlagpoleReport {
 
       log.forEach((item: iLogItem) => {
         if (item.className === "heading") {
-          subScenarioTitle = item.message;
+          subScenarioTitle = this.cleanXMLCharacters(item.message);
         }
 
         if (item.type.startsWith("result")) {
