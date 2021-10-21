@@ -222,8 +222,12 @@ export class TestRunner {
         "utf8"
       );
 
+      // write XML report to the file system
       template = template.replace("${output}", output);
       writeFileSync(filePath, template);
+
+      // also log it to the console
+      Cli.log(template);
 
       if (this.allPassing) {
         Cli.log("All suites passed.");
