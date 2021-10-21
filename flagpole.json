@@ -171,14 +171,14 @@
       "name": "soap",
       "tags": []
     },
-    "internal/repro": {
+    "finally": {
       "id": "",
-      "name": "internal/repro",
+      "name": "finally",
       "tags": []
     },
-    "internal/schemabug": {
+    "image": {
       "id": "",
-      "name": "internal/schemabug",
+      "name": "image",
       "tags": []
     }
   }

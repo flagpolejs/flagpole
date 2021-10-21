@@ -51,6 +51,7 @@ export const fetchImageWithNeedle: HttpRequestFetch = (
         response.statusCode = statusCode;
         response.headers = headers;
         response.length = Number(headers["content-length"]);
+        response.imageData.mimeType = headers["content-type"];
       })
       .on("readable", () => {
         // Read the first 512 bytes and process image

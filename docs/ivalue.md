@@ -167,7 +167,7 @@ If the input is an array of objects, the argument then should be the key of the 
 const averagePrice = rows.sum("price");
 ```
 
-### clear(): Promise<void>
+### clear(): Promise\<void\>
 
 Clear any text input into this form. This will not have any effect if the element is not a form text input.
 
@@ -176,15 +176,15 @@ const textBox = await context.find('input[name="title"]');
 await textBox.clear();
 ```
 
-### clearThenType(textToType: string, opts: any): Promise<void>
+### clearThenType(textToType: string, opts: any): Promise\<void\>
 
 Literally calls clear() and then type() methods. So just a shorthand to clear out the exiting text first before typing.
 
-### click(): Promise<void>
+### click(): Promise\<void\>
 
 If the DOM Element is something clickable like a link or a button, you can perform a "click" on it. There are multiple options for loverloading it.
 
-#### click(message: string, callback: function): Promise<void>
+#### click(message: string, callback: function): Promise\<void\>
 
 You can specify a message, which will become the sub-scenario title, and a callback. This will effectively create a new lambda scenario.
 
@@ -195,7 +195,7 @@ loginLink.click("Make sure link is valid", (subContext) => {
 });
 ```
 
-#### click(callback: function): Promise<void>
+#### click(callback: function): Promise\<void\>
 
 If you leave off the message it still works. This will set the sub-scenario title to the URL you are opening.
 
@@ -206,7 +206,7 @@ loginLink.click((subContext) => {
 });
 ```
 
-#### click(otherScenario: Scenario): Promise<void>
+#### click(otherScenario: Scenario): Promise\<void\>
 
 Alternately, you can pre-define another scenario you want to execute on this click. Just leave the `open` method off of that scenario definition. Calling click on this link will call open with this URL to kick off that other scenario.
 
@@ -215,7 +215,7 @@ const loginLink = await context.find("a.login");
 loginLink.click(otherScenario);
 ```
 
-#### click(): Promise<void>
+#### click(): Promise\<void\>
 
 Finally, you can leave off all of the arguments. This will execute a click with a basic scenario, which sometimes will be sufficient for a basic test of a valid link.
 
@@ -278,7 +278,7 @@ With an argument for key, it will sort as an array of objects by that field.
 const reverseAlphaUsStates = usStates.desc("name");
 ```
 
-### download(): Promise<string | Buffer | null>
+### download(): Promise\<string | Buffer | null\>
 
 This will download the URL that is referenced by this element. It will automatically pull the `src` attribute from an `img` tag, for example. Or extract the `href` from a link.
 
@@ -362,9 +362,9 @@ Loop through the array or object items and make sure all return true.
 const allAreActive = rows.every((row) => row.isActive);
 ```
 
-### exists(): Promise<iValue>
+### exists(): Promise\<iValue\>
 
-#### exists(): Promise<iValue>;
+#### exists(): Promise\<iValue\>;
 
 With no arguments, you are making an assertion that this element exists. That is, it is not `null` or `undefined`. An assertion message is automatically generated based on the original selector.
 
@@ -373,7 +373,7 @@ const h1 = await context.find("h1");
 await h1.exists();
 ```
 
-#### exists(message: string): Promise<iValue>;
+#### exists(message: string): Promise\<iValue\>;
 
 You can alternately specify a custom asertion message:
 
@@ -390,9 +390,9 @@ const h1 = await context.exists("There should be an H1 tag", "h1");
 
 But there may be situations where you already have an element from another type of method and want to make sure it exists.
 
-### fillForm(): Promise<Value>
+### fillForm(): Promise\<Value\>
 
-#### fillForm(data: { [key: string]: any }): Promise<Value>
+#### fillForm(data: { [key: string]: any }): Promise\<Value\>
 
 Fill out a form element with this data. The data object should match the input/select name attributes of elements within the form. For multi-select inputs pass in an array of values to be checked.
 
@@ -408,7 +408,7 @@ await form.fillForm({
 });
 ```
 
-#### fillForm(attributeName: string, data: { [key: string]: any }): Promise<Value>
+#### fillForm(attributeName: string, data: { [key: string]: any }): Promise\<Value\>
 
 This works just like the single-argument overload, except that you can specify the attribute name. The default is to search in the `name` attribute, but in some cases you may want to use a different field such as `id` or `ng-reflect-name` or antyhing else.
 
@@ -428,7 +428,7 @@ Loop through the array or object items and filter the input;
 const activeRows = rows.filter((row) => row.isActive);
 ```
 
-### find(selector: string): Promise<iValue>
+### find(selector: string): Promise\<iValue\>
 
 Find the first element in the descendents of the current element that matches this selector. If there are no matches, you will be returned a Value object that contains null.
 
@@ -438,7 +438,7 @@ const li = await someElement.find("li");
 
 There are additional overloads for this method. For more details see the documentation in `AssertionContext` because it works the same way.
 
-### findAll(selector: string): Promise<iValue>
+### findAll(selector: string): Promise\<iValue\>
 
 Find all of the elements in the descendents of the current element that match this selector. If there are no matches, it will be an empty array.
 
@@ -448,11 +448,11 @@ const li = await someElement.findAll("li");
 
 There are additional overloads for this method. For more details see the documentation in `AssertionContext` because it works the same way.
 
-### focus(): Promise<any>;
+### focus(): Promise\<any\>;
 
 Give this element focus.
 
-### getAttribute(key: string): Promise<Value>
+### getAttribute(key: string): Promise\<Value\>
 
 Get the attribute of the element with this key and return its value. If it is not present the Value object will contain null.
 
@@ -460,11 +460,11 @@ Get the attribute of the element with this key and return its value. If it is no
 const src = await img.getAttribute("src");
 ```
 
-### getBounds(boxType: string): Promise<iBounds | null>;
+### getBounds(boxType: string): Promise\<iBounds | null\>;
 
 Get the bounds of this DOM Element.
 
-### getChildren(selector?: string): Promise<DOMElement[]>
+### getChildren(selector?: string): Promise\<DOMElement[]\>
 
 Get the immediate children of the current element. If a selector string is passed, it will filter only children matching that selector. If none match the selector, an empty array will be returned.
 
@@ -472,7 +472,7 @@ Get the immediate children of the current element. If a selector string is passe
 const children = await someElement.getChildren("li");
 ```
 
-### getClassName(): Promise<Value>
+### getClassName(): Promise\<Value\>
 
 Get the class name of this element. If there are multiple classes then they will be space delimited.
 
@@ -480,7 +480,7 @@ Get the class name of this element. If there are multiple classes then they will
 const className = await someElement.getClassName();
 ```
 
-### getInnerHtml(): Promise<Value>
+### getInnerHtml(): Promise\<Value\>
 
 Get the child HTML tags that are between the opening and closing tag of this element.
 
@@ -488,7 +488,7 @@ Get the child HTML tags that are between the opening and closing tag of this ele
 const html = await someElement.getInnerHtml();
 ```
 
-### getInnerText(): Promise<Value>
+### getInnerText(): Promise\<Value\>
 
 Get the text inside the opening and closing tags of the given element.
 
@@ -496,7 +496,7 @@ Get the text inside the opening and closing tags of the given element.
 const text = await someElement.getInnerText();
 ```
 
-### getNextSibling(selector?: string): Promise<DOMElement | Value<null>>
+### getNextSibling(selector?: string): Promise\<DOMElement | Value\<null\>\>
 
 Traverse through the siblings proceeding the current element. If no selector is passed, the immediate following sibling is returned. If a selector is passed, the next one matching the selector is returned. If none match, a Value object containing null is returned.
 
@@ -504,7 +504,7 @@ Traverse through the siblings proceeding the current element. If no selector is 
 const nextSibling = await someElement.getNextSibling("li");
 ```
 
-### getNextSiblings(selector?: string): Promise<DOMElement[]>
+### getNextSiblings(selector?: string): Promise\<DOMElement[]\>
 
 Traverse through the siblings proceeding the current element. If no selector is passed, all next siblings will be returned. If a selector is passed, only those matching the selector. If none match, an empty array is returned.
 
@@ -512,7 +512,7 @@ Traverse through the siblings proceeding the current element. If no selector is 
 const siblings = await someElement.getNextSiblings("li");
 ```
 
-### getOuterHtml(): Promise<Value>
+### getOuterHtml(): Promise\<Value\>
 
 Get the HTML string of the current element and all of its child elemenets from the opening of the tag to the ending of the tag.
 
@@ -520,7 +520,7 @@ Get the HTML string of the current element and all of its child elemenets from t
 const html = await someElement.getOuterHtml();
 ```
 
-### getPreviousSibling(selector?: string): Promise<DOMElement | Value<null>>
+### getPreviousSibling(selector?: string): Promise\<DOMElement | Value\<null\>\>
 
 Traverse through the siblings preceeding the current element. If no selector is passed, the immediate preceeding sibling is returned. If a selector is passed, the previous one matching the selector is returned. If none match, a Value object containing null is returned.
 
@@ -528,7 +528,7 @@ Traverse through the siblings preceeding the current element. If no selector is 
 const prevSibling = await someElement.getPreviousSibling("li");
 ```
 
-### getPreviousSiblings(selector?: string): Promise<DOMElement[]>
+### getPreviousSiblings(selector?: string): Promise\<DOMElement[]\>
 
 Traverse through the siblings preceeding the current element. If no selector is passed, all previous siblings will be returned. If a selector is passed, only those matching the selector. If none match, an empty array is returned.
 
@@ -536,7 +536,7 @@ Traverse through the siblings preceeding the current element. If no selector is 
 const siblings = await someElement.getPreviousSiblings("li");
 ```
 
-### getProperty(key: string): Promise<Value>
+### getProperty(key: string): Promise\<Value\>
 
 Get the property of this input value with the key. If there is no such property then it will return null. This is an async method.
 
@@ -544,7 +544,7 @@ Get the property of this input value with the key. If there is no such property 
 const isChecked = await element.getProperty("checked");
 ```
 
-### getSiblings(selector?: string): Promise<DOMElement[]>
+### getSiblings(selector?: string): Promise\<DOMElement[]\>
 
 Get the siblings of the current element. If a selector string is passed, it will filter only siblings matching that selector. If none match, it will return an empty array.
 
@@ -552,7 +552,7 @@ Get the siblings of the current element. If a selector string is passed, it will
 const siblings = await someElement.getSiblings("li");
 ```
 
-### getTagName(): Promise<Value>
+### getTagName(): Promise\<Value\>
 
 Get the HTML tag of this element.
 
@@ -560,7 +560,7 @@ Get the HTML tag of this element.
 const tagName = await someElement.getTagName();
 ```
 
-### getText(): Promise<Value>
+### getText(): Promise\<Value\>
 
 Get the textContent of this element. This is slightly different from getInnerText() and here is a [StackOverflow question](https://stackoverflow.com/questions/35213147/difference-between-textcontent-vs-innertext) about that so I don't have to repeat it.
 
@@ -568,7 +568,7 @@ Get the textContent of this element. This is slightly different from getInnerTex
 const text = await div.getText();
 ```
 
-### getValue(): Promise<Value>
+### getValue(): Promise\<Value\>
 
 Get the value of this element. This is normally used with form elements.
 
@@ -584,7 +584,7 @@ Loops through the input array of objects and returns a new iValue with an object
 const eventsByCountry = events.groupBy("venueCountry");
 ```
 
-### hasAttribute(key: string): Promise<Value>
+### hasAttribute(key: string): Promise\<Value\>
 
 Does this element have an attribute by this name?
 
@@ -592,7 +592,7 @@ Does this element have an attribute by this name?
 context.assert(await img.hasAttribute("src")).equals(true);
 ```
 
-### hasClassName(className: string): Promise<Value>
+### hasClassName(className: string): Promise\<Value\>
 
 Does this element have the given class? The value will contain boolean.
 
@@ -600,7 +600,7 @@ Does this element have the given class? The value will contain boolean.
 context.assert(await element.hasClassName("heading")).equals(true);
 ```
 
-### hasData(key: string): Promise<Value>
+### hasData(key: string): Promise\<Value\>
 
 Does this element have a data property by this name?
 
@@ -608,7 +608,7 @@ Does this element have a data property by this name?
 context.assert(await element.hasData("athlete-id")).equals(true);
 ```
 
-### hasProperty(key: string): Promise<Value>
+### hasProperty(key: string): Promise\<Value\>
 
 If this element is an object of some sort, does it have the property matching key? Note this is an async function.
 
@@ -616,7 +616,7 @@ If this element is an object of some sort, does it have the property matching ke
 context.assert(await element.hasProperty("qa-name")).equals(true);
 ```
 
-### hover(): Promise<void>;
+### hover(): Promise\<void\>;
 
 Hover over this element with the virtual mouse.
 
@@ -680,7 +680,7 @@ jsonData.item("meta.count").assert().greaterThan(0);
 
 Convert the input to a array and join it into a string, return the resulting iValue;
 
-### load(): Promise<Scenario>
+### load(): Promise\<Scenario\>
 
 Load works basically the same way as `.click()`, so you should see the documentation on that.
 
@@ -788,7 +788,7 @@ array
   .every((name) => typeof name === "string");
 ```
 
-### press(key: string, opts?: any): Promise<void>;
+### press(key: string, opts?: any): Promise\<void\>;
 
 Press these keys on the keyboard.
 
@@ -800,11 +800,11 @@ Loop through the array or object items with reduce. Returns the final result.
 const totalPrice = rows.every((t, row) => t + row.quantity * row.unitPrice, 0);
 ```
 
-### screenshot(): Promise<Buffer>
+### screenshot(): Promise\<Buffer\>
 
 This is currently only supported with browser type scenarios. See documentation for `context.screenshot()` because the arguments are the same. The only difference is calling it on an Element will grab the image just of this element.
 
-### scrollTo(): Promise<void>;
+### scrollTo(): Promise\<void\>;
 
 For browser-based scenarios, scroll this element into view.
 
@@ -825,7 +825,7 @@ const anyAreActive = rows.some((row) => row.isActive);
 
 Convert the input to a string and split it into an array, return the resulting iValue;
 
-### submit(): Promise<Scenario>
+### submit(): Promise\<Scenario\>
 
 Load works basically the same way as `.click()` and `.load()`, so you can reference the documentation on those.
 
@@ -857,7 +857,7 @@ If the input is an array of objects, the argument then should be the key of the 
 const totalCount = rows.sum("quantity");
 ```
 
-### tap(): Promise<void>;
+### tap(): Promise\<void\>;
 
 Tap the element.
 
@@ -881,7 +881,7 @@ Casts the input value as a string.
 
 Grabs the type of the input value. It will be all lowercase and is a deep type look up, beyond a normal typeof.
 
-### type(textToType: string, opts: any): Promise<void>
+### type(textToType: string, opts: any): Promise\<void\>
 
 Type this text into an text input. This will not have any effect if the element is not a form text input.
 
