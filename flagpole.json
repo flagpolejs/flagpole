@@ -7,8 +7,8 @@
     "output": "out",
     "images": "images",
     "cache": "cache",
-    "reports": "reports",
-    "schemas": "schemas"
+    "schemas": "schemas",
+    "reports": "reports"
   },
   "environments": {
     "local": {
@@ -169,6 +169,16 @@
     "soap": {
       "id": "",
       "name": "soap",
+      "tags": []
+    },
+    "internal/repro": {
+      "id": "",
+      "name": "internal/repro",
+      "tags": []
+    },
+    "internal/schemabug": {
+      "id": "",
+      "name": "internal/schemabug",
       "tags": []
     }
   }
