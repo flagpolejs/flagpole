@@ -14,7 +14,7 @@ npm i puppeteer --save-dev
 
 ### TypeScript
 
-Writing tests is TypeScript is possible. During `flagpole init` the CLI will ask if you want to use TypeScript:
+Writing tests with TypeScript is possible. During `flagpole init` the CLI will ask if you want to use TypeScript:
 
 > Do you want Flagpole to use TypeScript?
 
