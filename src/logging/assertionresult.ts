@@ -16,7 +16,8 @@ import { isNullOrUndefined, toType } from "../util";
 
 export abstract class AssertionResult
   extends LogItem
-  implements iLogItem, iAssertionResult {
+  implements iLogItem, iAssertionResult
+{
   public abstract readonly type: LineType;
   public abstract className: string;
 
@@ -122,6 +123,15 @@ export class AssertionFail extends AssertionResult implements iLogItem {
       lines.push(new SourceCodeBlock(this.sourceCode, this._highlight));
     }
     return lines;
+  }
+
+  public toHtml(): string {
+    return `
+        <li class="${this.className}">
+          <span class="message">${this.message}</span>
+          <ul><li>${this.detailsMessage}</li></ul>
+        </li>
+      `;
   }
 }
 

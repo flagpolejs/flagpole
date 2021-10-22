@@ -34,7 +34,7 @@ export class WebResponse {
   }
 
   public parse(replace: { [key: string]: string }): WebResponse {
-    for (let key in replace) {
+    for (const key in replace) {
       this.replace(key, replace[key]);
     }
     return this;

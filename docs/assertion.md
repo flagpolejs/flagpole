@@ -100,7 +100,7 @@ context.assert(myValue).equals(5);
 
 If the values are objects it will test for a deep-equals with standard quality checks. If the values are arrays, it will check each array item.
 
-### every(callback: Function): Promise<Assertion>
+### every(callback: Function): Promise\<Assertion\>
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that every one is true.
 
@@ -270,7 +270,7 @@ context.assert(jsonData).matches({
 
 The above example schema evaluates for matching types, not values.
 
-### none(callback: Function): Promise<Assertion>
+### none(callback: Function): Promise\<Assertion\>
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that none are true.
 
@@ -278,6 +278,25 @@ Loops throught the input value, which should be an array, and checks them agains
 context.assert(["2pac", "biggie", "daz"]).none((rapper) => {
   return rapper == "snoop";
 });
+```
+
+### nth(index: number): Assertion
+
+Change the assertion to be against the `n`th value from the array or object.
+
+```javascript
+context.assert("2nd item is a string", array).nth(1).type.equals("string");
+```
+
+### pluck(property: string): Assertion
+
+When the assertion contains an array of objects, this will change the assertion to be against an array of values in the specified property.
+
+```javascript
+context
+  .assert("Every name is a string", array)
+  .pluck("name")
+  .every((name) => typeof name == "string");
 ```
 
 ### rejects(): Assertion
@@ -296,13 +315,9 @@ Tests whether the input promise resolves.
 await context.assert(myPromise).resolves();
 ```
 
-### schema(schema: iAssertionSchema): Promise<Assertion>
+### schema(schema: Schema, schemaType?: "JsonSchema" | "JTD"): Promise\<Assertion\>
 
-Test whether the input matches the schema provided. This currently is only valid for testing JSON. This assertion is async (returns a promise) so you should either await it or return it at the end of a next block.
-
-Flagpole ships with a simple JSON Schema validator. The format of the schema is similar to the standard, but it's simpler and has some nice enhancements. See documentation for [iAssertionSchema](assertion-schema.md) for more on how to define a schema.
-
-If you prefer a more powerful and complete schema validator, simply install AJV in your project. Flagpole will recognize if AJV is installed and use it by default. Read the [documentaiton about AJV](https://www.npmjs.com/package/ajv) to learn more.
+Test whether the input matches the schema provided. This is only valid for testing JSON. This assertion is async (returns a promise) so you should either await it or return it at the end of a next block. Flagpole supports two specifications: JSON Schema and JSON Type Definition ("JTD"). The default is "JsonSchema".
 
 Either way, the syntax to make the assertion will be the same:
 
@@ -310,13 +325,7 @@ Either way, the syntax to make the assertion will be the same:
 await context.assert(jsonResponse).schema(mySchema);
 ```
 
-If you have AJV installed, but want to use our built in simpler syntax in some places, you can force the use of the Flagpole validator by passing true as the second argument.
-
-```typescript
-await context.assert(jsonResponse).schema(mySchema, true);
-```
-
-### schema(shemaPath: string): Promise<Assertion>
+### schema(shemaPath: string, schemaType?: "JsonSchema" | "JTD")): Promise\<Assertion\>
 
 Pass in a name or path of a schema to check against. The first time you run this assertion (or if the file doesn't exist), it will PASS the test and CREATE the schema file for you from a snapshot of the current JSON response. This makes it trivial to create your control schema to test against on future runs.
 
@@ -334,9 +343,7 @@ But if you start the path with `@` then you only need to provide a name. This wi
 await context.assert(context.response.jsonBody).schema("@article-list");
 ```
 
-This functions very similar to how the `looksLike` method works for image screenshots.
-
-### some(callback: Function): Promise<Assertion>
+### some(callback: Function): Promise\<Assertion\>
 
 Loops throught the input value, which should be an array, and checks them against the callback function to be sure that at least one is true.
 

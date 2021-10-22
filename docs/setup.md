@@ -12,12 +12,46 @@ If you are going to do full browser testing, you will probably want to install [
 npm i puppeteer --save-dev
 ```
 
-### AJV
+### TypeScript
 
-AJV is a popular library that supports an emerging standard of JSON schema definitions. Flagpole comes with a simple JSON Schema validator, which is mostly compatible with AJV (but not as feature rich). The Flagpole library is probably good enough most of the time and has some nice features built in that makes schemas a little simpler to define.
+Writing tests with TypeScript is possible. During `flagpole init` the CLI will ask if you want to use TypeScript:
 
-However, if you want the full power of AJV then just install it. Flagpole will automatically recognize that it's there and use it.
+> Do you want Flagpole to use TypeScript?
 
-```cli
-npm i ajv --save-dev
+Selecting yes will prompt you for source and output directories. The default setup looks like this:
+
 ```
+tests/
+  cache/
+  images/
+  out/
+  reports/
+  scehmas/
+  src/
+  tsconfig.json
+```
+
+You can then compile your suites like so:
+
+```
+flagpole build
+flagpole run --all
+```
+
+or
+
+```
+flagpole run --build --all
+```
+
+If you want to instead build your tests with the rest of your TypeScript app, you may do so as such:
+
+```
+"path": "/",
+"source": "src/tests",
+"output": "dist/tests",
+```
+
+Then rely on your project's `tsconfig.json` to compile from `src/` to `dist/`
+
+Note: TypeScript version >= 4.2.3 is required.

@@ -35,8 +35,8 @@ export class HeadingLine extends ConsoleLine implements iConsoleLine {
   }
 
   public toString(): string {
-    let text: string = super.toString().trim();
-    let padLength: number = Math.ceil(
+    const text: string = super.toString().trim();
+    const padLength: number = Math.ceil(
       (ConsoleLine.targetLineLength - text.length) / 2
     );
     return oneLine`
@@ -55,7 +55,7 @@ export class SubheadingLine extends ConsoleLine implements iConsoleLine {
   }
 
   public toString(): string {
-    let text: string = super.toString().trim();
+    const text: string = super.toString().trim();
     return ` ${Ansi.fgYellow(Ansi.underlined(text))} \n`;
   }
 }
@@ -68,7 +68,7 @@ export class SectionHeadingLine extends ConsoleLine implements iConsoleLine {
   }
 
   public toString(): string {
-    let text: string = super.toString().trim();
+    const text: string = super.toString().trim();
     return `    ${Ansi.fgWhite(Ansi.bold(text))}${Ansi.reset()}`;
   }
 }

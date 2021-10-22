@@ -20,7 +20,8 @@ function assertionMethod(
 
 export class ValuePromise
   extends Promise<iValue>
-  implements PromiseLike<iValue> {
+  implements PromiseLike<iValue>
+{
   public static execute(func: () => Promise<iValue>) {
     return ValuePromise.create(func());
   }

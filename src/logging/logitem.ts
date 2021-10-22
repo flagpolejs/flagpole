@@ -36,10 +36,10 @@ export abstract class LogItem implements iLogItem {
 
   public toHtml(): string {
     return `
-            <li class="${this.className}">
-                <span class="message">${this.message}</span>
-            </li>
-        `;
+        <li class="${this.className}">
+          <span class="message">${this.message}</span>
+        </li>
+      `;
   }
 
   public toJson(): any {

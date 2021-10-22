@@ -60,4 +60,3 @@ More properties will be added to this in the future.
 ### name
 
 By default this is the same as the key, but you could change it to something else if you really felt motivated.
-

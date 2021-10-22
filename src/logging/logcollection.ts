@@ -1,19 +1,17 @@
-import { iLogItem } from '../interfaces'
+import { iLogItem } from "../interfaces";
 
 export class LogCollection {
+  protected _logItems: iLogItem[] = [];
 
-    protected _logItems: iLogItem[] = [];
+  public get items(): iLogItem[] {
+    return this._logItems;
+  }
 
-    public get items(): iLogItem[] {
-        return this._logItems;
+  public add(item: iLogItem) {
+    if (item && Reflect.has(item, "className")) {
+      this._logItems.push(item);
+      return;
     }
-    
-    public add(item: iLogItem) {
-        if (item && Reflect.has(item, 'className')) {
-            this._logItems.push(item);
-            return;
-        }
-        throw new TypeError(`Not a log item: ${item}`)
-    }
-    
+    throw new TypeError(`Not a log item: ${item}`);
+  }
 }

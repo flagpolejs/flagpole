@@ -1,11 +1,8 @@
 import { HtmlResponse } from "./html/htmlresponse";
 import { ResourceResponse } from "./resourceresponse";
 import { BrowserResponse } from "./puppeteer/browserresponse";
-import { CssResponse } from "./css/cssresponse";
 import { ImageResponse } from "./imageresponse";
 import { JsonResponse } from "./json/jsonresponse";
-import { ScriptResponse } from "./scriptresponse";
-import { VideoResponse } from "./media/videoresponse";
 import { ExtJSResponse } from "./puppeteer/extjsresponse";
 import { HttpRequestFetch, iResponse, iScenario } from "./interfaces";
 import { XmlResponse } from "./xml/xmlresponse";
@@ -19,38 +16,33 @@ import { fetchWithNeedle } from "./adapters/needle";
 import { fetchWithFfprobe } from "./adapters/ffprobe";
 import { fetchWithMediaStreamValidator } from "./adapters/mediastreamvalidator";
 import { fetchImageWithNeedle } from "./adapters/image";
+import { SoapResponse } from "./xml/soapresponse";
 
 const typeToClassMap: { [type: string]: any } = {
   html: HtmlResponse,
   browser: BrowserResponse,
   extjs: ExtJSResponse,
-  stylesheet: CssResponse,
   image: ImageResponse,
   json: JsonResponse,
-  script: ScriptResponse,
   xml: XmlResponse,
   rss: RssResponse,
   atom: AtomResponse,
+  soap: SoapResponse,
   headers: HeadersResponse,
-  video: VideoResponse,
   hls: HLSResponse,
   ffprobe: FfprobeResponse,
   resource: ResourceResponse,
-  audio: ResourceResponse,
   mediastreamvalidator: MediaStreamValidatorResponse,
 };
 
 const typeToFetchAdapter: { [type: string]: HttpRequestFetch } = {
   html: fetchWithNeedle,
   json: fetchWithNeedle,
-  script: fetchWithNeedle,
-  stylesheet: fetchWithNeedle,
   xml: fetchWithNeedle,
   rss: fetchWithNeedle,
   atom: fetchWithNeedle,
+  soap: fetchWithNeedle,
   headers: fetchWithNeedle,
-  video: fetchWithNeedle,
-  audio: fetchWithNeedle,
   hls: fetchWithNeedle,
   resource: fetchWithNeedle,
   ffprobe: fetchWithFfprobe,

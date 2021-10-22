@@ -3,6 +3,7 @@ import { Cli } from "./cli";
 import { SuiteExecution, SuiteExecutionResult } from "./suiteexecution";
 import { FlagpoleExecution } from "..";
 import { SuiteExecutionInline } from "./suiteexecutioninline";
+import Ansi from "cli-ansi";
 
 export class TestRunner {
   private _suiteConfigs: { [s: string]: SuiteConfig } = {};
@@ -10,12 +11,11 @@ export class TestRunner {
   private _timeStart: number = Date.now();
   private _subscribers: Function[] = [];
   private _finishedPromise: Promise<SuiteExecutionResult[]>;
-  private _finishedResolver: (
-    results: SuiteExecutionResult[]
-  ) => void = () => {};
+  private _finishedResolver: (results: SuiteExecutionResult[]) => void =
+    () => {};
 
   public get suites(): SuiteConfig[] {
-    let arr: SuiteConfig[] = [];
+    const arr: SuiteConfig[] = [];
     Object.keys(this._suiteConfigs).forEach((suiteName) => {
       arr.push(this._suiteConfigs[suiteName]);
     });
@@ -70,11 +70,11 @@ export class TestRunner {
     // Loop through each suite and run it
     const totalSuites = Object.keys(this._suiteConfigs).length;
     let count: number = 1;
-    for (let suiteName in this._suiteConfigs) {
+    for (const suiteName in this._suiteConfigs) {
       this._publish(
         `Running suite ${suiteName} (${count} of ${totalSuites})...`
       );
-      let execution: SuiteExecution = SuiteExecutionInline.executeSuite(
+      const execution: SuiteExecution = SuiteExecutionInline.executeSuite(
         this._suiteConfigs[suiteName]
       );
       this._executionResults.push(await execution.result);
@@ -95,11 +95,11 @@ export class TestRunner {
     // Loop through each suite and run it
     const totalSuites = Object.keys(this._suiteConfigs).length;
     let count: number = 1;
-    for (let suiteName in this._suiteConfigs) {
+    for (const suiteName in this._suiteConfigs) {
       this._publish(
         `Running suite ${suiteName} (${count} of ${totalSuites})...`
       );
-      let execution: SuiteExecution = SuiteExecution.executeSuite(
+      const execution: SuiteExecution = SuiteExecution.executeSuite(
         this._suiteConfigs[suiteName]
       );
       this._executionResults.push(await execution.result);
@@ -115,11 +115,11 @@ export class TestRunner {
       const totalSuites = Object.keys(this._suiteConfigs).length;
       const suitePromises: Promise<SuiteExecutionResult>[] = [];
       let count: number = 1;
-      for (let suiteName in this._suiteConfigs) {
+      for (const suiteName in this._suiteConfigs) {
         this._publish(
           `Running suite ${suiteName} (${count} of ${totalSuites})...`
         );
-        let execution: SuiteExecution = SuiteExecution.executeSuite(
+        const execution: SuiteExecution = SuiteExecution.executeSuite(
           this._suiteConfigs[suiteName]
         );
         suitePromises.push(execution.result);
@@ -135,37 +135,51 @@ export class TestRunner {
     });
   }
 
+  private _getSummary(): { duration: number; pass: number; fail: number } {
+    const duration = Date.now() - this._timeStart;
+    let pass = 0;
+    let fail = 0;
+
+    this._executionResults.forEach((result) => {
+      if (result.exitCode == 0) {
+        pass += 1;
+      } else {
+        fail += 1;
+      }
+    });
+
+    return { duration, pass, fail };
+  }
+
   private _onDone() {
-    const duration: number = Date.now() - this._timeStart;
     let output: string = "";
     this._finishedResolver(this._executionResults);
     if (FlagpoleExecution.global.isJsonOutput) {
-      let suiteOutput: string[] = [];
-      let overall = {
-        pass: 0,
-        fail: 0,
-      };
+      const suiteOutput: string[] = [];
       this._executionResults.forEach((result) => {
         suiteOutput.push(result.toString());
-        if (result.exitCode == 0) {
-          overall.pass += 1;
-        } else {
-          overall.fail += 1;
-        }
       });
+      const overall = this._getSummary();
       output =
         `
                 { 
                     "summary": {
                         "passCount": ${overall.pass}, 
                         "failCount": ${overall.fail}, 
-                        "duration": ${duration} 
+                        "duration": ${overall.duration} 
                     }, ` +
         `"suites": [
                         ${suiteOutput.join(",")}
                     ]
                 }
             `;
+    } else if (FlagpoleExecution.global.isCiOutput) {
+      this._executionResults.forEach((result) => {
+        const stringifiedResult = result.toString();
+        if (stringifiedResult) {
+          output += stringifiedResult + "\n\n";
+        }
+      });
     } else {
       this._executionResults.forEach((result) => {
         output += result.toString() + "\n";
@@ -188,6 +202,54 @@ export class TestRunner {
         await open(filePath);
         Cli.exit(this.allPassing ? 0 : 1);
       })();
+    } else if (FlagpoleExecution.global.isXmlOutput) {
+      const path = require("path");
+      const {
+        ensureDirSync,
+        readFileSync,
+        writeFileSync,
+      } = require("fs-extra");
+
+      const reportsFolder = FlagpoleExecution.global.config.getReportsFolder();
+
+      ensureDirSync(reportsFolder);
+
+      const reportFileName = `${this._timeStart}-report.xml`;
+      const filePath = path.join(reportsFolder, reportFileName);
+
+      let template: string = readFileSync(
+        `${__dirname}/web/report.xml`,
+        "utf8"
+      );
+
+      // write XML report to the file system
+      template = template.replace("${output}", output);
+      writeFileSync(filePath, template);
+
+      // also log it to the console
+      Cli.log(template);
+
+      if (this.allPassing) {
+        Cli.log("All suites passed.");
+      } else {
+        Cli.log("Some suites failed.");
+      }
+
+      Cli.log(`Writing output to: ${filePath}.`);
+      Cli.exit(this.allPassing ? 0 : 1);
+    } else if (FlagpoleExecution.global.isCiOutput) {
+      const overall = this._getSummary();
+
+      // erase the last "Running suite a ( x of y )"
+      Ansi.writeLine(Ansi.cursorUp(), Ansi.eraseLine());
+
+      Cli.subheader("SUMMARY");
+      Cli.log(`Passed: ${overall.pass}`);
+      Cli.log(`Failed: ${overall.fail}`);
+      Cli.log(`Duration: ${overall.duration}ms`);
+      Cli.log("\n");
+      Cli.log(output);
+      Cli.exit(this.allPassing ? 0 : 1);
     } else {
       Cli.log(output);
       if (!this.allPassing && FlagpoleExecution.global.shouldOutputToConsole) {

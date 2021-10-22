@@ -35,16 +35,14 @@ import {
   asyncFilter,
   asyncNone,
   asyncForEach,
-  asyncForEachUntilFirst,
-  arrayify,
+  asyncUntil,
+  toArray,
   asyncMapToObject,
   flatten,
 } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { getFindParams, getFindName, wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
-import { HttpRequest } from "./httprequest";
-import { SchemaValidator } from "./assertionschema";
 
 const getParamsFromExists = (
   a: string,
@@ -298,7 +296,7 @@ export class AssertionContext implements iAssertionContext {
    */
   public async waitForHidden(
     selector: string,
-    timeout: number = 100
+    timeout?: number
   ): Promise<iValue> {
     const el: iValue = await this.response.waitForHidden(selector, timeout);
     el.isNull()
@@ -315,7 +313,7 @@ export class AssertionContext implements iAssertionContext {
    */
   public async waitForVisible(
     selector: string,
-    timeout: number = 100
+    timeout?: number
   ): Promise<iValue> {
     const el: iValue = await this.response.waitForVisible(selector, timeout);
     el.isNull()
@@ -325,24 +323,63 @@ export class AssertionContext implements iAssertionContext {
   }
 
   /**
-   * Wait for element at the selected path to exist in the DOM
+   * Wait for element at the selected path with the given text to exist
    *
    * @param selector
+   * @param text
    * @param timeout
    */
-  public async waitForExists(
-    selector: string | string[],
+  public async waitForHavingText(
+    selector: string,
+    text: string | RegExp,
     timeout?: number
   ): Promise<iValue> {
-    const selectors = arrayify<string>(selector);
-    const promises = selectors.map((selector) =>
-      this.response.waitForExists(selector, timeout)
-    );
-    const el: iValue = await Promise.any(promises);
-    el.isNull()
-      ? this._failedAction("EXISTS", `${selector}`)
-      : this._completedAction("EXISTS", `${selector}`);
-    return el;
+    return this.waitForExists(selector, text, timeout);
+  }
+
+  /**
+   * Wait for element at the selected path to exist in the DOM
+   */
+  public async waitForExists(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string,
+    a?: number | string | RegExp,
+    b?: number
+  ): Promise<iValue> {
+    const selectors = toArray<string>(selector);
+    try {
+      // @ts-ignore TypeScript is being stupid
+      const el: iValue = await this.response.waitForExists(selector, a, b);
+      this._completedAction("EXISTS", `${selector}`);
+      return el;
+    } catch (ex) {
+      this._failedAction("EXISTS", `${selector}`);
+      throw `${selector} did not exist before timeout`;
+    }
+  }
+
+  public async waitForNotExists(
+    selector: string,
+    a?: number | string | RegExp,
+    b?: number
+  ): Promise<iValue> {
+    try {
+      // @ts-ignore This is fine, TypeScript is being stupid
+      const val = await this.response.waitForNotExists(selector, a, b);
+      this._completedAction("NOT EXISTS", `${selector}`);
+      return val;
+    } catch (ex) {
+      this._failedAction("NOT EXISTS", `${selector}`);
+      throw `${selector} still exists after timeout`;
+    }
   }
 
   /**
@@ -355,21 +392,20 @@ export class AssertionContext implements iAssertionContext {
     a?: string | FindOptions | RegExp,
     b?: FindOptions
   ): Promise<iValue> {
-    const selectors = arrayify<string>(selector);
+    const selectors = toArray<string>(selector);
     const params = getFindParams(a, b);
     const opts = params.opts || {};
-    const element = await asyncForEachUntilFirst(
-      selectors,
-      async (selector) => {
-        return params.contains
-          ? await this.response.find(selector, params.contains, opts)
-          : params.matches
-          ? await this.response.find(selector, params.matches, opts)
-          : await this.response.find(selector, opts);
-      }
+    const element = await asyncUntil<iValue>(selectors, async (selector) =>
+      params.contains
+        ? await this.response.find(selector, params.contains, opts)
+        : params.matches
+        ? await this.response.find(selector, params.matches, opts)
+        : await this.response.find(selector, opts)
     );
-    this._assertExists(null, getFindName(params, selectors, 0), element);
-    return element;
+    const name = getFindName(params, selectors, 0);
+    const value = element === null ? wrapAsValue(this, null, name) : element;
+    this._assertExists(null, name, value);
+    return value;
   }
 
   /**
@@ -382,7 +418,7 @@ export class AssertionContext implements iAssertionContext {
     a?: string | FindAllOptions | RegExp,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    const selectors = arrayify<string>(selector);
+    const selectors = toArray<string>(selector);
     const elements = await this._findAllForSelectors(selectors, a, b);
     this.assert(
       selectors.length > 1
@@ -419,21 +455,18 @@ export class AssertionContext implements iAssertionContext {
     b?: FindOptions
   ): ValuePromise {
     return ValuePromise.execute(async () => {
-      const selectors = arrayify<string>(selector);
+      const selectors = toArray<string>(selector);
       const params = getFindParams(a, b);
-      const element: iValue | false = await asyncForEachUntilFirst(
-        selectors,
-        async (selector) => {
-          const value =
-            typeof a == "string"
-              ? await this.response.find(selector, a, b)
-              : a instanceof RegExp
-              ? await this.response.find(selector, a, b)
-              : await this.response.find(selector, b);
-          return value.isNullOrUndefined() ? false : value;
-        }
-      );
-      return element === false
+      const element = await asyncUntil<iValue>(selectors, async (selector) => {
+        const value =
+          typeof a == "string"
+            ? await this.response.find(selector, a, b)
+            : a instanceof RegExp
+            ? await this.response.find(selector, a, b)
+            : await this.response.find(selector, b);
+        return value.isNullOrUndefined() ? false : value;
+      });
+      return element === null
         ? wrapAsValue(this, null, getFindName(params, selectors, null))
         : element;
     });
@@ -449,7 +482,7 @@ export class AssertionContext implements iAssertionContext {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    const selectors = arrayify<string>(selector);
+    const selectors = toArray<string>(selector);
     const elements = await this._findAllForSelectors(selectors, a, b);
     return flatten<iValue>(elements);
   }
@@ -587,10 +620,6 @@ export class AssertionContext implements iAssertionContext {
 
   public abort(message?: string): Promise<iScenario> {
     return this.scenario.abort(message);
-  }
-
-  public schema(schema: any): SchemaValidator {
-    return new SchemaValidator(schema);
   }
 
   protected async _findAllForSelectors(

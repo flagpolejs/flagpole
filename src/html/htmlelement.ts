@@ -76,7 +76,7 @@ export class HTMLElement extends DOMElement implements iValue {
       if (params.contains || params.matches) {
       } else {
         const element = this.el.find(selector).eq(0);
-        if (element !== null) {
+        if (element?.length) {
           return HTMLElement.create(element, this._context, name, path);
         }
       }
@@ -321,9 +321,18 @@ export class HTMLElement extends DOMElement implements iValue {
     const attributeName: string = typeof a === "string" ? a : "name";
     const formData: KeyValue = (typeof a === "string" ? b : a) || {};
     const form = this.el;
-    for (let name in formData) {
+    for (const name in formData) {
       const value = formData[name];
-      form.find(`[${attributeName}="${name}"]`).val(value);
+      const selector = `[${attributeName}="${name}"]`;
+      const field = form.find(selector);
+      if (field.length == 0) {
+        this.context.logOptionalFailure(
+          `Could not set form field ${name} to ${value}, because the field did not exist.`,
+          selector
+        );
+      } else {
+        field.val(value);
+      }
     }
     this._completedAction("FILL");
     return this;

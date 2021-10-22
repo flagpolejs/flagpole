@@ -128,7 +128,7 @@ Prints the results from the test execution to the console. This is often run ins
 suite.finally((suite) => suite.print(false));
 ```
 
-### promise(): Promise<Scenario>
+### promise(): Promise\<Scenario\>
 
 Promisifies the Suite. The returned promise will resolve once all scenarios in the suite complete successfully.
 
@@ -195,6 +195,10 @@ suite.extjs("User Sign Up Work Flow", {
 });
 ```
 
+#### ffprobe
+
+Use ffprobe to validatate media source
+
 #### headers
 
 This will make a request only for the headers of a given URI. This is useful when you want to test that a file exists (or doesn't exist) but not need to download it. Think about a video file whose content you don't need to parse and the file size may be large.
@@ -208,6 +212,10 @@ suite
   });
 ```
 
+#### hls
+
+HLS media streams
+
 #### html
 
 Creates a new Scenario of the HTML/DOM Only request type. This will use Cheerio to grab the HTML and load it into a jQuery-like DOM that we can test against. We can fake a browser here, allowing form completion, clicks, etc. However, it just is not a full browser so does not have JavaScript and won't work on SPAs, unless they have server side rendering as well.
@@ -220,6 +228,10 @@ An image scenario will load only the first 512 bytes of the image, which include
 
 Creates a Scenario for REST API endpoints. Asserts that the response is valid JSON.
 
+#### mediastreamvalidator
+
+Validate HLS stream with Apple's mediastreamvalidator.
+
 #### resource
 
 Generic resource
@@ -227,18 +239,6 @@ Generic resource
 #### rss
 
 Validate your RSS feed. Will automatically apply assertions to do basic validation to RSS 2.0 specifications.
-
-#### script
-
-Creates a new Scenario of the Script request type. It doesn't currently do anything more than load it. You can test the file size, mime type, HTTP Status, and such... so it may have some use but does not currently validate the JS.
-
-#### stylesheet
-
-Loads a stylesheet and asserts that it is valid CSS. You can do assertions against the properties.
-
-#### video
-
-Creates a new Scenario of the Video request type. This is most useful to test HLS manifests.
 
 ```javascript
 suite.scenario("Make sure video loads", "video");
@@ -264,6 +264,23 @@ Hit this callback after all Scenarios finish executing if all Scenarios passed. 
 
 ```javascript
 suite.success(() => {});
+```
+
+### template(template(templateOptions: ScenarioInitOptions): Function
+
+Often times we are generating scenarios that are almost duplicates of each other, with just one or two things different. This creates a lot of redundant code.
+
+This method creates a generator function for you. You set the default options that all of the scenarios will inherit. Then use this generator function to create each scenario, changing whatever needs to be changed in the second argument.
+
+```javascript
+const get = suite.template({
+  type: "html",
+  method: "get",
+  statusCode: 200,
+});
+
+get("Landing page", { url: "https://www.google.com/" });
+get("Search results page", { url: "https://www.google.com/search?q=test" });
 ```
 
 ### verifySslCert(verify: boolean): Suite

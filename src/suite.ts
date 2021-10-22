@@ -10,6 +10,7 @@ import {
   KeyValue,
   ScenarioMapper,
   BrowserOptions,
+  ScenarioInitOptions,
 } from "./interfaces";
 import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
@@ -260,39 +261,12 @@ export class Suite implements iSuite {
   }
 
   /**
-   * Create a new Video Scenario
-   *
-   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
-   */
-  public video(title: string): iScenario {
-    return this.scenario(title, "video");
-  }
-
-  /**
    * Create a new HTML/DOM Scenario
    *
    * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
    */
   public html(title: string): iScenario {
     return this.scenario(title, "html");
-  }
-
-  /**
-   * Create a new CSS Scenario
-   *
-   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
-   */
-  public stylesheet(title: string): iScenario {
-    return this.scenario(title, "stylesheet");
-  }
-
-  /**
-   * Create a new Script Scenario
-   *
-   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
-   */
-  public script(title: string): iScenario {
-    return this.scenario(title, "script");
   }
 
   /**
@@ -435,8 +409,9 @@ export class Suite implements iSuite {
 
   /**
    * This callback will run once everything else is completed, whether pass or fail
+   * prepend these callbacks so that the taskManager.finally runs last
    */
-  public finally(callback: SuiteCallback, prepend: boolean = false): Suite {
+  public finally(callback: SuiteCallback, prepend: boolean = true): Suite {
     this._taskManager.finally(callback, prepend);
     return this;
   }
@@ -494,7 +469,7 @@ export class Suite implements iSuite {
    * @param value
    * @returns
    */
-  public set(key: string, value: any): iSuite {
+  public set<T = any>(key: string, value: T): iSuite {
     this._aliasedData[key] = value;
     return this;
   }
@@ -507,5 +482,42 @@ export class Suite implements iSuite {
    */
   public get<T = any>(key: string): T {
     return this._aliasedData[key];
+  }
+
+  public template(templateOptions: ScenarioInitOptions) {
+    return (title: string, scenarioOptions: ScenarioInitOptions): iScenario => {
+      const opts: ScenarioInitOptions = {
+        ...templateOptions,
+        ...scenarioOptions,
+      };
+      const scenario = this.scenario(title, opts.type || "json");
+      if (opts.digestAuth) scenario.setDigestAuth(opts.digestAuth);
+      if (opts.basicAuth) scenario.setBasicAuth(opts.basicAuth);
+      if (opts.bearerToken) scenario.setBearerToken(opts.bearerToken);
+      if (opts.method) scenario.setMethod(opts.method);
+      if (opts.url) scenario.open(opts.url, opts.httpRequestOpts);
+      if (opts.jsonBody) scenario.setJsonBody(opts.jsonBody);
+      if (opts.rawBody) scenario.setRawBody(opts.rawBody);
+      if (opts.formData) scenario.setFormData(opts.formData);
+      if (opts.headers) scenario.setHeaders(opts.headers);
+      if (opts.cookies) scenario.setCookies(opts.cookies);
+      if (opts.timeout) scenario.setTimeout(opts.timeout);
+      if (opts.maxRedirects) scenario.setMaxRedirects(opts.maxRedirects);
+      if (opts.proxy) scenario.setProxy(opts.proxy);
+      if (opts.statusCode) {
+        scenario.next((context) => {
+          context.assert(context.response.statusCode).equals(opts.statusCode);
+        });
+      }
+      if (opts.maxLoadTime) {
+        scenario.next((context) => {
+          context
+            .assert(context.response.loadTime)
+            .lessThanOrEquals(opts.maxLoadTime);
+        });
+      }
+      if (opts.next) scenario.next(opts.next);
+      return scenario;
+    };
   }
 }

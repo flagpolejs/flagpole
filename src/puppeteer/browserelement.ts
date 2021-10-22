@@ -7,8 +7,8 @@ import {
   KeyValue,
 } from "../interfaces";
 import { ElementHandle, BoxModel, JSHandle, Page } from "puppeteer-core";
-import { asyncForEach, toType, arrayify, asyncMap } from "../util";
-import * as cssXPath from "css-xpath";
+import { asyncForEach, toType, toArray, asyncMap } from "../util";
+import csstoxpath from "csstoxpath";
 import { ValuePromise } from "../value-promise";
 
 export class BrowserElement extends PuppeteerElement implements iValue {
@@ -340,11 +340,16 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     }
     const attributeName: string = typeof a === "string" ? a : "name";
     const formData: KeyValue = (typeof a === "string" ? b : a) || {};
-    for (let name in formData) {
+    for (const name in formData) {
       const value: any = formData[name];
       const selector: string = `${this._path} [${attributeName}="${name}"]`;
       const inputs: ElementHandle[] = await this._page.$$(selector);
-      if (inputs.length > 0) {
+      if (inputs.length == 0) {
+        this.context.logOptionalFailure(
+          `Could not set form field ${name} to ${value}, because the field did not exist.`,
+          selector
+        );
+      } else {
         const input: ElementHandle = inputs[0];
         const tagName: string = String(
           await (await input.getProperty("tagName")).jsonValue()
@@ -367,11 +372,11 @@ export class BrowserElement extends PuppeteerElement implements iValue {
               toType(value) == "array" ? value : [value];
             // Loop through each checkbox/radio element with this name
             for (let i = 0; i < inputs.length; i++) {
-              let checkbox: ElementHandle = inputs[i];
-              let isChecked: boolean = !!(await (
+              const checkbox: ElementHandle = inputs[i];
+              const isChecked: boolean = !!(await (
                 await checkbox.getProperty("checked")
               ).jsonValue());
-              let checkboxValue: string = String(
+              const checkboxValue: string = String(
                 await (await checkbox.getProperty("value")).jsonValue()
               );
               // Toggle it by clicking
@@ -443,7 +448,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
   }
 
   public async selectOption(valuesToSelect: string | string[]): Promise<void> {
-    valuesToSelect = arrayify<string>(valuesToSelect);
+    valuesToSelect = toArray<string>(valuesToSelect);
     this._completedAction("SELECT", valuesToSelect.join(", "));
     const valuesSelected = await this.$.select.apply(this.$, valuesToSelect);
     this._context
@@ -564,7 +569,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     selector: string = "*",
     suffix: string = ""
   ) {
-    const path = `${prefix}${cssXPath(selector)}${suffix}`;
+    const path = `${prefix}${csstoxpath(selector)}${suffix}`;
     return this.$.$x(path);
   }
 }

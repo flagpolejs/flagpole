@@ -18,14 +18,19 @@ import { ServerOptions } from "https";
 import { Server } from "minikin";
 import validator from "validator";
 import { ValuePromise } from "./value-promise";
-import { SchemaValidator } from "./assertionschema";
 import { ScenarioType } from "./scenario-types";
 import { LaunchOptions } from "puppeteer-core";
 import * as http from "http";
-
-interface AjvSchema {
-  // TODO: Add this reference
-}
+import { ErrorObject, Schema } from "ajv";
+import {
+  AsyncIteratorBoolCallback,
+  IteratorBoolCallback,
+  IteratorCallback,
+  SyncIteratorBoolCallback,
+  SyncIteratorCallback,
+  SyncMapperCallback,
+  SyncReducerCallback,
+} from "./interfaces/iterator-callbacks";
 
 export type CompareCallback = (a: any, b: any) => number;
 
@@ -93,19 +98,6 @@ export type ScenarioCallbackAndMessage = {
   callback: ScenarioCallback;
 };
 
-export type MapperCallback = (value: any, index?: number, arr?: any[]) => any;
-export type IteratorCallback = (value: any, index: number, arr: any[]) => any;
-export type IteratorBoolCallback = (
-  value: any,
-  i?: number,
-  arr?: any[]
-) => boolean;
-export type ReducerCallback = (
-  prev: any,
-  cur: any,
-  i: number,
-  arr: any[]
-) => any;
 export type ScenarioMapper = (
   value: any,
   index: number,
@@ -214,13 +206,15 @@ export interface iValue {
   isHidden(): Promise<boolean>;
   split(splitter: string | RegExp, limit?: number): iValue;
   join(splitter: string): iValue;
-  map(mapper: MapperCallback): iValue;
-  filter(callback: (value: any, i?: number, arr?: any[]) => boolean): iValue;
-  each(callback: IteratorCallback): iValue;
-  every(callback: IteratorBoolCallback): iValue;
-  some(callback: IteratorBoolCallback): iValue;
-  none(callback: IteratorBoolCallback): iValue;
-  reduce(callback: ReducerCallback, initial?: any): iValue;
+  pluck(property: string): iValue;
+  nth(index: number): iValue;
+  map(mapper: SyncMapperCallback): iValue;
+  filter(callback: SyncIteratorBoolCallback): iValue;
+  each(callback: SyncIteratorCallback): iValue;
+  every(callback: SyncIteratorBoolCallback): iValue;
+  some(callback: SyncIteratorBoolCallback): iValue;
+  none(callback: SyncIteratorBoolCallback): iValue;
+  reduce(callback: SyncReducerCallback, initial?: any): iValue;
   sum(key?: string): iValue;
   median(key?: string): iValue;
   count(key?: string): iValue;
@@ -395,7 +389,23 @@ export interface iResponse {
   waitForHidden(selector: string, timeout?: number): Promise<iValue>;
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  waitForNotExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForNotExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
   waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
+  waitForHavingText(
+    selector: string,
+    text: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
@@ -500,7 +510,7 @@ export interface iAssertion {
   lessThan(value: any): iAssertion;
   lessThanOrEquals(value: any): iAssertion;
   between(min: any, max: any): iAssertion;
-  matches(value: any): iAssertion;
+  matches(pattern: string | RegExp): iAssertion;
   contains(value: any): iAssertion;
   startsWith(value: any): iAssertion;
   endsWith(value: any): iAssertion;
@@ -511,15 +521,21 @@ export interface iAssertion {
   visible(): Promise<iAssertion>;
   resolves(continueOnReject?: boolean): Promise<iAssertion>;
   rejects(continueOnReject?: boolean): Promise<any>;
+  pluck(property: string): iAssertion;
+  nth(index: number): iAssertion;
   map(callback: IteratorCallback): Promise<iAssertion>;
-  every(callback: IteratorCallback): Promise<iAssertion>;
+  every(callback: IteratorBoolCallback): Promise<iAssertion>;
   everySync(callback: IteratorBoolCallback): iAssertion;
-  some(callback: IteratorCallback): Promise<iAssertion>;
-  none(callback: IteratorCallback): Promise<iAssertion>;
+  some(callback: IteratorBoolCallback): Promise<iAssertion>;
+  none(callback: IteratorBoolCallback): Promise<iAssertion>;
   assert(a: any, b?: any): iAssertion;
   comment(input: any): iAssertion;
-  schema(schemaName: string, simple?: boolean): Promise<iAssertion>;
-  schema(schema: JsonSchema | AjvSchema, simple?: boolean): Promise<iAssertion>;
+  schema(schemaName: string, useJsonSchema: boolean): Promise<iAssertion>;
+  schema(
+    schemaName: string,
+    schemaType?: AssertSchemaType
+  ): Promise<iAssertion>;
+  schema(schema: Schema, schemaType?: AssertSchemaType): Promise<iAssertion>;
   looksLike(imageData: Buffer): iAssertion;
   looksLike(imageLocalPath: string): iAssertion;
   looksLike(imageData: Buffer, threshold: number): iAssertion;
@@ -565,7 +581,6 @@ export interface iAssertionContext {
   push(aliasName: string, value: any): iAssertionContext;
   set(aliasName: string, value: any): iAssertionContext;
   get<T = any>(aliasName: string): T;
-
   exists(selector: string | string[], opts?: FindOptions): Promise<iValue>;
   exists(
     selector: string | string[],
@@ -657,7 +672,23 @@ export interface iAssertionContext {
   waitForHidden(selector: string, timeout?: number): Promise<iValue>;
   waitForVisible(selector: string, timeout?: number): Promise<iValue>;
   waitForExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  waitForNotExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForNotExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
   waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
+  waitForHavingText(
+    selector: string,
+    text: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
   openInBrowser(): Promise<string>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
@@ -679,9 +710,6 @@ export interface iAssertionContext {
   filter(array: any[], callback: IteratorBoolCallback): Promise<any[]>;
   map(array: any[], callback: IteratorCallback): Promise<any[]>;
   abort(message?: string): Promise<iScenario>;
-  schema(schemaName: string): SchemaValidator;
-  schema(schemaPath: string): SchemaValidator;
-  schema(schema: object | any[]): SchemaValidator;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
@@ -695,6 +723,7 @@ export interface iSuite {
   executionDuration: number | null;
   title: string;
   finished: Promise<void>;
+  executionOptions: FlagpoleExecution;
   import(scenario: iScenario): iScenario;
   subscribe(callback: SuiteStatusCallback): iSuite;
   verifyCert(verify: boolean): iSuite;
@@ -711,10 +740,7 @@ export interface iSuite {
   scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
   json(title: string): iScenario;
   image(title: string): iScenario;
-  video(title: string): iScenario;
   html(title: string): iScenario;
-  stylesheet(title: string): iScenario;
-  script(title: string): iScenario;
   resource(title: string): iScenario;
   browser(title: string, opts?: BrowserOptions): iScenario;
   extjs(title: string, opts?: BrowserOptions): iScenario;
@@ -731,8 +757,11 @@ export interface iSuite {
   mapScenarios(key: string, mapper: ScenarioMapper): Promise<iScenario[]>;
   mapScenarios(arr: any[], mapper: ScenarioMapper): Promise<iScenario[]>;
   push(key: string, value: any): iSuite;
-  set(key: string, value: any): iSuite;
+  set<T = any>(key: string, value: any): iSuite;
   get<T = any>(key: string): T;
+  template(
+    templateOptions: ScenarioInitOptions
+  ): (title: string, scenarioOptions: ScenarioInitOptions) => iScenario;
 }
 
 export interface iScenario {
@@ -784,6 +813,7 @@ export interface iScenario {
   setBasicAuth(authorization: HttpAuth): iScenario;
   setDigestAuth(authorization: HttpAuth): iScenario;
   setBearerToken(token: string): iScenario;
+  setCookies(cookies: KeyValue): iScenario;
   setCookie(key: string, value: string): iScenario;
   setHeaders(headers: KeyValue): iScenario;
   setHeader(key: string, value: any): iScenario;
@@ -866,41 +896,12 @@ export type KeyValue = {
   [key: string]: any;
 };
 
-export type JsonSchema_Type =
-  | "object"
-  | "array"
-  | "string"
-  | "number"
-  | "integer"
-  | "null";
+export type AssertSchemaType = "JsonSchema" | "JTD";
 
-export type JsonSchema = {
-  type: JsonSchema_Type | JsonSchema_Type[];
-  properties?: { [key: string]: JsonSchema };
-  items?: JsonSchema;
-  enum?: any[];
-  pattern?: RegExp | string;
-};
-
-export interface iAjvLike {
-  errors: Error[];
-  validate(schema: any, root: any): Promise<boolean>;
-}
-
-export interface iAjvErrorObject {
-  keyword: string;
-  dataPath: string;
-  schemaPath: string;
-  params: any;
-  // Added to validation errors of propertyNames keyword schema
-  propertyName?: string;
-  // Excluded if messages set to false.
-  message?: string;
-  // These are added with the `verbose` option.
-  schema?: any;
-  parentSchema?: object;
-  data?: any;
-}
+export type AjvErrors =
+  | ErrorObject<string, Record<string, any>, unknown>[]
+  | null
+  | undefined;
 
 export interface HttpResponseOptions {
   body?: any;
@@ -1032,6 +1033,28 @@ export interface iHttpRequest {
 }
 
 export const CONTENT_TYPE_JSON = "application/json";
+export const CONTENT_TYPE_SOAP = "application/soap+xml";
 export const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
 export const CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
 export const ENCODING_GZIP = "gzip,deflate";
+
+export interface ScenarioInitOptions {
+  type?: ScenarioType;
+  bearerToken?: string;
+  url?: string;
+  httpRequestOpts?: HttpRequestOptions;
+  jsonBody?: any;
+  method?: HttpMethodVerb;
+  headers?: KeyValue;
+  cookies?: KeyValue;
+  rawBody?: string;
+  proxy?: HttpProxy;
+  timeout?: number;
+  formData?: KeyValue;
+  basicAuth?: HttpAuth;
+  digestAuth?: HttpAuth;
+  maxRedirects?: number;
+  next?: iNextCallback;
+  statusCode?: number;
+  maxLoadTime?: number;
+}

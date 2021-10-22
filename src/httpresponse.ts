@@ -105,7 +105,7 @@ export class HttpResponse {
   }
 
   static fromLocalFile(relativePath: string): Promise<HttpResponse> {
-    let path: string = __dirname + "/" + relativePath;
+    const path: string = __dirname + "/" + relativePath;
     return new Promise((resolve, reject) => {
       readFile(path, (err, data) => {
         if (err) {

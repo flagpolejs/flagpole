@@ -7,7 +7,8 @@
     "output": "out",
     "images": "images",
     "cache": "cache",
-    "schemas": "schemas"
+    "schemas": "schemas",
+    "reports": "reports"
   },
   "environments": {
     "local": {
@@ -20,96 +21,9 @@
     }
   },
   "suites": {
-    "debug": {
+    "api/flo": {
       "id": "",
-      "name": "debug",
-      "tags": [
-        "basic",
-        "hello"
-      ]
-    },
-    "smoke": {
-      "id": "",
-      "name": "smoke",
-      "tags": [
-        "smoke"
-      ]
-    },
-    "api-snapshot": {
-      "id": "",
-      "name": "api-snapshot",
-      "tags": []
-    },
-    "google": {
-      "id": "",
-      "name": "google",
-      "tags": []
-    },
-    "testcallbacks": {
-      "id": "",
-      "name": "testcallbacks",
-      "tags": []
-    },
-    "foobar": {
-      "id": "",
-      "name": "foobar",
-      "tags": [
-        "hello"
-      ]
-    },
-    "helpme": {
-      "id": "",
-      "name": "helpme",
-      "tags": []
-    },
-    "internal/beforeEachBug": {
-      "id": "",
-      "name": "internal/beforeEachBug",
-      "tags": []
-    },
-    "internal/many": {
-      "id": "",
-      "name": "internal/many",
-      "tags": []
-    },
-    "internal/repro": {
-      "id": "",
-      "name": "internal/repro",
-      "tags": []
-    },
-    "some-every-none": {
-      "id": "",
-      "name": "some-every-none",
-      "tags": []
-    },
-    "xml": {
-      "id": "",
-      "name": "xml",
-      "tags": []
-    },
-    "extjs": {
-      "id": "",
-      "name": "extjs",
-      "tags": []
-    },
-    "internal/houston": {
-      "id": "",
-      "name": "internal/houston",
-      "tags": []
-    },
-    "browser/google": {
-      "id": "",
-      "name": "browser/google",
-      "tags": []
-    },
-    "html/flrunners": {
-      "id": "",
-      "name": "html/flrunners",
-      "tags": []
-    },
-    "browser/milesplit": {
-      "id": "",
-      "name": "browser/milesplit",
+      "name": "api/flo",
       "tags": []
     },
     "api/itunes": {
@@ -117,44 +31,154 @@
       "name": "api/itunes",
       "tags": []
     },
-    "api/flo": {
+    "browser/evaluate": {
       "id": "",
-      "name": "api/flo",
+      "name": "browser/evaluate",
       "tags": []
     },
-    "test": {
+    "browser/google": {
       "id": "",
-      "name": "test",
+      "name": "browser/google",
       "tags": []
     },
-    "internal/hls": {
+    "browser/ubereats": {
       "id": "",
-      "name": "internal/hls",
-      "tags": []
-    },
-    "internal/headers": {
-      "id": "",
-      "name": "internal/headers",
-      "tags": []
-    },
-    "internal/mapScenarios": {
-      "id": "",
-      "name": "internal/mapScenarios",
-      "tags": []
-    },
-    "internal/expect": {
-      "id": "",
-      "name": "internal/expect",
-      "tags": []
-    },
-    "internal/ffprobe": {
-      "id": "",
-      "name": "internal/ffprobe",
+      "name": "browser/ubereats",
       "tags": []
     },
     "chaining-assertions": {
       "id": "",
       "name": "chaining-assertions",
+      "tags": []
+    },
+    "cookies": {
+      "id": "",
+      "name": "cookies",
+      "tags": []
+    },
+    "debug": {
+      "id": "",
+      "name": "debug",
+      "tags": []
+    },
+    "error": {
+      "id": "",
+      "name": "error",
+      "tags": []
+    },
+    "extjs/employees": {
+      "id": "",
+      "name": "extjs/employees",
+      "tags": []
+    },
+    "extjs/extjs": {
+      "id": "",
+      "name": "extjs/extjs",
+      "tags": []
+    },
+    "html/google": {
+      "id": "",
+      "name": "html/google",
+      "tags": []
+    },
+    "html/google2": {
+      "id": "",
+      "name": "html/google2",
+      "tags": []
+    },
+    "html/stackoverflow": {
+      "id": "",
+      "name": "html/stackoverflow",
+      "tags": []
+    },
+    "maxListener": {
+      "id": "",
+      "name": "maxListener",
+      "tags": []
+    },
+    "schema": {
+      "id": "",
+      "name": "schema",
+      "tags": []
+    },
+    "simple": {
+      "id": "",
+      "name": "simple",
+      "tags": []
+    },
+    "some-every-none": {
+      "id": "",
+      "name": "some-every-none",
+      "tags": []
+    },
+    "template": {
+      "id": "",
+      "name": "template",
+      "tags": []
+    },
+    "testcallbacks": {
+      "id": "",
+      "name": "testcallbacks",
+      "tags": []
+    },
+    "urltest": {
+      "id": "",
+      "name": "urltest",
+      "tags": []
+    },
+    "visual": {
+      "id": "",
+      "name": "visual",
+      "tags": []
+    },
+    "wait": {
+      "id": "",
+      "name": "wait",
+      "tags": []
+    },
+    "waitForHavingText": {
+      "id": "",
+      "name": "waitForHavingText",
+      "tags": []
+    },
+    "waitForVisible": {
+      "id": "",
+      "name": "waitForVisible",
+      "tags": []
+    },
+    "xml": {
+      "id": "",
+      "name": "xml",
+      "tags": []
+    },
+    "equality": {
+      "id": "",
+      "name": "equality",
+      "tags": []
+    },
+    "atom": {
+      "id": "",
+      "name": "atom",
+      "tags": []
+    },
+    "every": {
+      "id": "",
+      "name": "every",
+      "tags": []
+    },
+    "soap": {
+      "id": "",
+      "name": "soap",
+      "tags": []
+    },
+    "finally": {
+      "id": "",
+      "name": "finally",
+      "tags": []
+    },
+    "image": {
+      "id": "",
+      "name": "image",
       "tags": []
     }
   }

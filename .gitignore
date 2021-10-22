@@ -6,6 +6,7 @@ tests/cache
 tests/schemas
 tests/images
 **/out
+tests/reports
 
 # Logs
 logs

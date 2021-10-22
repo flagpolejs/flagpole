@@ -134,7 +134,7 @@ export const addSuite = async (
     : `const flagpole = require("flagpole");`;
   fileContents +=
     "\n\n" +
-    `const suite = flagpole('${suite.description || ""}');` +
+    `flagpole('${suite.description || ""}', async (suite) => {` +
     "\n\n" +
     `suite.scenario("${scenario.description}", "${scenario.type}")` +
     "\n" +
@@ -145,6 +145,8 @@ export const addSuite = async (
     `       ` +
     "\n" +
     `   });` +
+    "\n\n" +
+    `});` +
     "\n\n";
   await fs.writeFile(suitePath, fileContents);
   FlagpoleExecution.global.config.addSuite(suite);

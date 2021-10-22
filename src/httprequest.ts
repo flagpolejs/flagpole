@@ -13,6 +13,7 @@ import {
   CONTENT_TYPE_FORM_MULTIPART,
   CONTENT_TYPE_FORM,
   HttpRequestFetch,
+  CONTENT_TYPE_SOAP,
 } from "./interfaces";
 import { HttpResponse } from "./httpresponse";
 import tunnel = require("tunnel");

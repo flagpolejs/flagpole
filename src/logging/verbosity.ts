@@ -10,8 +10,8 @@ export const lineToVerbosity: { [key in LineType]: number } = {
   h3: 40,
   summaryData: 45,
   resultPass: 45,
-  comment: 50,
-  detail: 50,
+  comment: 49,
+  detail: 47,
   decoration: 50,
   debugInfo: 90,
 };

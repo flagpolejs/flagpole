@@ -173,6 +173,7 @@ flagpole run -e staging
 Specifies that type of output you want Flagpole to create. The defualt is this pretty colored console ASCII text. But there are other options:
 
 - browser - Formats it into HTML and opens it in your default web browser after
+- ci - Summary of suites and details on the failures only, no spinner
 - console - Default
 - csv - Comma separated
 - html - Outputs HTML to the console
@@ -180,6 +181,7 @@ Specifies that type of output you want Flagpole to create. The defualt is this p
 - psv - Pipe separated
 - text - Same as default but without the ASCII colors
 - tsv - Tab separated
+- xml - Write XML report to default `reports` directory defined in `flagpole.json`
 
 ```bash
 flagpole run -o browser

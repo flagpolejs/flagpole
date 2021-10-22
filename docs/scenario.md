@@ -36,7 +36,7 @@ scenario.before((scenario: Scenario) => {
 
 Write a comment line to the output log.
 
-### execute(): Promise<Scenario>
+### execute(): Promise\<Scenario\>
 
 A scenario will automatically execute, unless told otherwise by the `.wait()` method, once it has the necessary properties set to do so. Namely, it must know the URL to open (with the `.open(...)` method) and have at least one `.next()` block to run tests against.
 
@@ -101,7 +101,7 @@ If a value was previously saved on this Scenario `set` or within an Assertion, V
 console.log(scenario.get("foo"));
 ```
 
-### getLog(): Promise<iLogLine[]>
+### getLog(): Promise\<iLogLine[]\>
 
 Return the logs from each line of the test, including passes, fails, and comments.
 
@@ -252,7 +252,7 @@ scenario
   });
 ```
 
-### promise(): Promise<Scenario>
+### promise(): Promise\<Scenario\>
 
 Promisifies the Scenario. The returned promise will resolve once the scenario completes successfully.
 
@@ -267,7 +267,7 @@ try {
 }
 ```
 
-### server(): Promise<WebhookServer>
+### server(): Promise\<WebhookServer\>
 
 If you read the `webhook()` documentation here, there is a bit of gap. You can use that method to set up a local HTTP server to wait for an incoming request before kicking off a test scenario. However, you can have that `webhook` method pick your port for you, and that happens asynchronously. So how will you know the resulting port?
 
@@ -420,7 +420,7 @@ scenario.setRawBody("what up");
 
 Set the request timeout for how long to wait for a response.
 
-### skip(message?: string): Promise<Scenario>
+### skip(message?: string): Promise\<Scenario\>
 
 Sometimes, perhaps based on the results from a previous scenario in the suite, we want to skip a certain scenario. All scenarios must be completed in one way or another, in order for the parent suite to complete. So if we determine that a certain scenario should not run, we use skip. It will appear in the output as skipped and will not count as failed or passed.
 
@@ -489,7 +489,7 @@ Sometimes you may NOT want to execute a scenario until another scenario has succ
 scenario2.waitFor(scenario1);
 ```
 
-### waitForFinished(): Promise<void>;
+### waitForFinished(): Promise\<void\>;
 
 Wait for this scenario to complete, either success or failure.
 
@@ -497,7 +497,7 @@ Wait for this scenario to complete, either success or failure.
 await scenario.waitForFinished();
 ```
 
-### waitForResponse(): Promise<void>;
+### waitForResponse(): Promise\<void\>;
 
 Wait for the response to come back from the scenario's HTTP request.
 
@@ -587,7 +587,7 @@ The total time between when the Scenario's request went out and when the respons
 
 The type of Scenario this is, the type of request we'll make and the response we'll expect back.
 
-_Possible Values: html, json, image, stylesheet, script, video, audio, resource, browser, extjs_
+_Possible Values: html, json, image, script, video, audio, resource, browser, extjs_
 
 ### title: string
 

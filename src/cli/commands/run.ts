@@ -72,7 +72,7 @@ export default class Run extends Command {
       FlagpoleExecution.global.outputFormat = args.output;
     }
     // Build first
-    if (!!args.build) {
+    if (args.build) {
       await tsc(false);
     }
     Cli.subheader("Run Test Suites");
@@ -104,18 +104,6 @@ export default class Run extends Command {
     }
     // Now run them
     if (selectedSuites.length) {
-      if (FlagpoleExecution.global.shouldOutputToConsole) {
-        Cli.log(
-          "",
-          selectedSuites.length === 1 ? "Running Suite:" : "Running Suites: ",
-          selectedSuites
-            .map((suite) => {
-              return suite.name;
-            })
-            .join(", "),
-          ""
-        );
-      }
       return runSuites(selectedSuites, !!args.async, !!args.keepCache);
     }
     // None to run
@@ -225,7 +213,7 @@ const runSuites = async (
       Cli.exit(2);
     }
     if (
-      FlagpoleExecution.global.volume >= lineToVerbosity["decoration"] &&
+      FlagpoleExecution.global.volume >= lineToVerbosity.decoration &&
       FlagpoleExecution.global.isConsoleOutput
     ) {
       Ansi.writeLine();
@@ -238,6 +226,11 @@ const runSuites = async (
       runner.after(() => {
         spinner.stop();
         Ansi.write(Ansi.eraseLines(2));
+      });
+    } else {
+      // print the status of what suite we are running, but without the spinner
+      runner.subscribe((message: string) => {
+        Ansi.writeLine(Ansi.cursorUp(), Ansi.eraseLine(), message);
       });
     }
   }

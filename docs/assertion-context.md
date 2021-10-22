@@ -82,7 +82,7 @@ context.assert(await context.find("article.topStory h1")).exists();
 
 You can also pass a message as the first argument, which will override the default assertion message.
 
-### clear(selector: string): Promise<void>
+### clear(selector: string): Promise\<void\>
 
 Clear the existing text in this input and then type this text into the selected path.
 
@@ -90,7 +90,7 @@ Clear the existing text in this input and then type this text into the selected 
 await context.clear('input[name="q"]');
 ```
 
-### clearThenType(path: string, textToType: string, opts: any): Promise<void>
+### clearThenType(path: string, textToType: string, opts: any): Promise\<void\>
 
 Clear the existing text in this input and then type this text into the selected path. For browser scenarios this will be emulating literally pressing keys into the browser. For HTML scenarios it overwrite the value of that element.
 
@@ -104,13 +104,13 @@ Issues a click on the selected element. This works on both browser and html type
 
 There are a few forms of this
 
-#### click(selector: string): Promise<void>
+#### click(selector: string): Promise\<void\>
 
 ```javascript
 await context.click('input[name="q"]');
 ```
 
-#### click(selector: string, message: string): Promise<iScenario>
+#### click(selector: string, message: string): Promise\<iScenario\>
 
 This will select the object and, if it is a clickable element (like a link), it will create a new dynamic scenario with that URL loaded.
 
@@ -122,7 +122,7 @@ context.click('a.login', 'Load login page')).next((loginContext) => {
 
 It returns a promise that resolves to the dynamic scenario.
 
-#### click(selector: string, callback: Function): Promise<iScenario>
+#### click(selector: string, callback: Function): Promise\<iScenario\>
 
 Alternately, you can pass a callback for the dynamic scenario as the second argument. The title of the scenario will be automatically created.
 
@@ -132,7 +132,7 @@ await context.click("a.login", (loginContext) => {
 });
 ```
 
-#### click(selector: string, message: string, callback: Function): Promise<iScenario>
+#### click(selector: string, message: string, callback: Function): Promise\<iScenario\>
 
 Or combine the two methods with a message and callback.
 
@@ -142,7 +142,7 @@ context.click("a.login", "Load login page", (loginContext) => {
 });
 ```
 
-#### click(selector: string, subScenario: iScenario): Promise<iScenario>
+#### click(selector: string, subScenario: iScenario): Promise\<iScenario\>
 
 Finally if you have a scenario already and you want to execute it with the link from the element, pass in the reference to that scenario.
 
@@ -166,9 +166,9 @@ context.comment(context.response.body);
 context.comment(json.data);
 ```
 
-### exists(): Promise<iValue>
+### exists(): Promise\<iValue\>
 
-#### exists(selector: string): Promise<iValue>
+#### exists(selector: string): Promise\<iValue\>
 
 This is just like an `find`, but it also does an assertion that the element actually exists. It is similar to `waitForExists` except that it doesn't wait around.
 
@@ -184,7 +184,7 @@ Or you can grab the element that it returns:
 const firstArticle = await context.exists("section.topStories article");
 ```
 
-#### exists(selector: string, contains: string): Promise<iValue>
+#### exists(selector: string, contains: string): Promise\<iValue\>
 
 Pass in a third argument as a string to test whether the item exists that contains this text.
 
@@ -196,7 +196,7 @@ await context.exists(
 );
 ```
 
-#### exists(selector: string, mathces: RegExp): Promise<iValue>
+#### exists(selector: string, mathces: RegExp): Promise\<iValue\>
 
 This third argument can alternately be a regular expression:
 
@@ -208,7 +208,7 @@ await context.exists(
 );
 ```
 
-#### exists(selector: string, contains: string | RegExp, opts: FindOps): Promise<iValue>
+#### exists(selector: string, contains: string | RegExp, opts: FindOps): Promise\<iValue\>
 
 As a fourth argument, you can include any of the `opts` properties from `find()`, for example:
 
@@ -234,7 +234,7 @@ await context.exists(
 
 The `exists` method will return the matched element inside of the iValue or a null iValue if there is no match.
 
-#### exists(selectors: string[]): Promise<iValue>
+#### exists(selectors: string[]): Promise\<iValue\>
 
 With any variation of `exists`, your first agument can also be an array of selectors. Passing in more than one element for the array will make sure that at least one of them exists, and it will return the first one that does.
 
@@ -271,7 +271,7 @@ This works just like `existsAll`, except that it only asserts that at least one 
 const buttons = await context.existsAny(["button", "div.button"]);
 ```
 
-### evaluate(callback: Function): Promise<any>
+### evaluate(callback: Function): Promise\<any\>
 
 Passes this function off to the underlying response to run it in the context of that type.
 
@@ -303,9 +303,9 @@ const loginText = await context.evaluate((json) => {
 
 In theory, with any of these types, you could also manipulate the response with this method.
 
-### find(): Promise<iValue>
+### find(): Promise\<iValue\>
 
-#### find(selector: string, opts?: FindOpts): Promise<iValue>
+#### find(selector: string, opts?: FindOpts): Promise\<iValue\>
 
 Select the first matching element or value at the given path. What this actually does varies by the type of scenario.
 
@@ -323,7 +323,7 @@ const secondArticle = await context.find("section.topStories article", {
 });
 ```
 
-#### find(selector: string, contents: string, opts?: FindOpts): Promise<iValue>
+#### find(selector: string, contents: string, opts?: FindOpts): Promise\<iValue\>
 
 Find the first element matching the given selector that have the given text. The second argument is a string of the text we are looking for the element to contain
 
@@ -339,7 +339,7 @@ const buttonWithYesValue = await context.find("button", "Yes", {
 });
 ```
 
-#### find(selector: string, matches: RegExp, opts?: FindOpts): Promise<iValue>
+#### find(selector: string, matches: RegExp, opts?: FindOpts): Promise\<iValue\>
 
 Similar to the previous overload of `find`, we can also search the contents of the element for one that matches a regular expression. This gives us greater control over how exactly it should match, such as matching capitalization and spacing.
 
@@ -353,7 +353,7 @@ So if you want it to match EXACTLY "Yes", including a capital "Y" and no spaces 
 const buttonExactlyYes = await context.find("button", /^Yes$/);
 ```
 
-#### find(selectors: string[]): Promise<iValue>
+#### find(selectors: string[]): Promise\<iValue\>
 
 With any of the above variations, selector can also be an array of strings. This will cause `find` to look for the first instance of ANY of those selector paths.
 
@@ -361,13 +361,13 @@ With any of the above variations, selector can also be an array of strings. This
 const firstButtonLikeThing = await context.find(["button", ".button"]);
 ```
 
-### findAll(): Promise<iValue[]>
+### findAll(): Promise\<iValue[]\>
 
 Select the elements or values at the given path. What this actually does varies by the type of scenario.
 
 This always returns an array. It will be an empty array if nothing matched. The array elements themselves will be the same object types that you'd have gotten from `.find()`.
 
-#### findAll(selector: string, opts?: FindAllOpts): Promise<iValue[]>
+#### findAll(selector: string, opts?: FindAllOpts): Promise\<iValue[]\>
 
 The first argument is always the selector. It is the only required argument.
 
@@ -389,7 +389,7 @@ const articles = await context.findAll("section.headlines article", {
 });
 ```
 
-#### findAll(selector: string, contains: string, opts?: FindAllOpts): Promise<iValue[]>
+#### findAll(selector: string, contains: string, opts?: FindAllOpts): Promise\<iValue[]\>
 
 This overload will allow you to search for only elements that match the selector AND have the contains string in the text node.
 
@@ -399,7 +399,7 @@ const articles = await context.findAll("section.headlines article", "breaking");
 
 The optional `opts` argument allows you to use `offset`, `limit` and `findBy` (which works just like in the `find()` method).
 
-#### findAll(selector: string, matches: RegExp, opts?: FindAllOpts): Promise<iValue[]>
+#### findAll(selector: string, matches: RegExp, opts?: FindAllOpts): Promise\<iValue[]\>
 
 This works like the `contains` string, except you can use a regular expression for more exacting matches.
 
@@ -407,7 +407,7 @@ This works like the `contains` string, except you can use a regular expression f
 const itemsContainingTupac = await context.findAll("li", /tupac/i);
 ```
 
-#### findAll(selectors: string[]): Promise<iValue[]>
+#### findAll(selectors: string[]): Promise\<iValue[]\>
 
 With any of the above variations of `findAll`, the first argument can also be an array of strings. If you pass in more than one, the resulting response will include any items that match any of those selectors.
 
@@ -415,7 +415,7 @@ With any of the above variations of `findAll`, the first argument can also be an
 const allButtonLikeThings = await context.findAll(["button", ".button"]);
 ```
 
-### findAllXPath(xPath: string): Promise<DOMElement[]>
+### findAllXPath(xPath: string): Promise\<DOMElement[]\>
 
 Checks for any and all elements at XPath of `xPath`. Usually a CSS selector is preferable, but sometimes XPath is more powerful. This only works with Puppetteer tests currently.
 
@@ -423,7 +423,7 @@ Checks for any and all elements at XPath of `xPath`. Usually a CSS selector is p
 const links = await context.findAllXpath("//a");
 ```
 
-### findXPath(xPath: string): Promise<DOMElement>
+### findXPath(xPath: string): Promise\<DOMElement\>
 
 Checks for an element to exist with XPath of `xPath`. Usually a CSS selector is preferable, but sometimes XPath is more powerful. This only works with Puppeteer test currently.
 
@@ -437,15 +437,18 @@ If a value was previously saved on this Scenario `set` or within an Assertion, V
 
 ```javascript
 scenario
-  .next(context => {
-    context.assert(await context.find('title')).as('t').length.greaterThan(0);
+  .next((context) => {
+    context
+      .assert(await context.find("title"))
+      .as("t")
+      .length.greaterThan(0);
   })
-  .next(context => {
-    context.assert(await context.get('t').getInnerText()).equals('Google');
+  .next((context) => {
+    context.assert(await context.get("t").getInnerText()).equals("Google");
   });
 ```
 
-### openInBrowser(): Promise<string>
+### openInBrowser(): Promise\<string\>
 
 Saves the response body to a temporary file and opens it in a browser. This is really only for debugging. The promise resolves to the string of the temporary file.
 
@@ -453,7 +456,7 @@ Saves the response body to a temporary file and opens it in a browser. This is r
 await context.openInBrowser();
 ```
 
-### pause(milleseconds: number): Promise<void>
+### pause(milleseconds: number): Promise\<void\>
 
 Delay the execution by this much.
 
@@ -461,7 +464,7 @@ Delay the execution by this much.
 await context.pause(1000);
 ```
 
-### screenshot(): Promise<Buffer>
+### screenshot(): Promise\<Buffer\>
 
 Takes a screenshot of that point in time. Currently this is only supported in a browser-based scenario. The return value is a promise that resolves with a Buffer of the image bytes.
 
@@ -494,7 +497,7 @@ const screenshot = await context.screenshot("/path/to/local/file.png", {
 });
 ```
 
-### scrollTo({ x?: number, y?: number }): Promise<void>
+### scrollTo({ x?: number, y?: number }): Promise\<void\>
 
 For browser-based tests this will scroll to these coordinates on the page body. Both `x` and `y` properties are optional and will be assumed as `0` if not set.
 
@@ -502,7 +505,7 @@ For browser-based tests this will scroll to these coordinates on the page body. 
 await context.scrollTo({ y: 500 });
 ```
 
-### selectOption(selector: string, value: string | string[]): Promise<string[]>
+### selectOption(selector: string, value: string | string[]): Promise\<string[]\>
 
 Select items in a dropdown or multi-select box.
 
@@ -514,13 +517,13 @@ await context.select('select[name="favoriteSport"]', "Track & Field");
 
 Save `value` to alias `aliasName` so it that it can be retrieved later with a `.get(aliasName)` call.
 
-### submit(selector: string, ...): Promise<iScenario | void>
+### submit(selector: string, ...): Promise\<iScenario | void\>
 
 Submits the form, if the selected element is a form. This works on both browser and html types. For browser, it will do whatever submitting the form would do in the browser window. For html scenarios, it will serialize the form input and then submit it, navigating to the next page.
 
 Other than that, it works mostly the same as a `click()`.
 
-### type(path: string, textToType: string, opts: any): Promise<void>
+### type(path: string, textToType: string, opts: any): Promise\<void\>
 
 Type this text into the selected path. For browser scenarios this will be emulating literally typing into the browser. For HTML scenarios it set the value of that element.
 
@@ -528,7 +531,7 @@ Type this text into the selected path. For browser scenarios this will be emulat
 await context.type('input[name="q"]', "who shot 2pac?");
 ```
 
-### waitForReady(timeout: number = 10000): Promise<void>
+### waitForReady(timeout: number = 10000): Promise\<void\>
 
 Wait for `timeout` milliseconds for the browser's navigation to complete. This really only makes sense in a browser-based scenario. This is shorthand for the `domcontentloaded` in the Puppeteer API.
 
@@ -536,7 +539,7 @@ Wait for `timeout` milliseconds for the browser's navigation to complete. This r
 await context.waitForReady();
 ```
 
-### waitForExists(path: string, timeout: number): Promise<DOMElement>
+### waitForExists(path: string, timeout: number): Promise\<DOMElement\>
 
 Test if an element exists at that path. For a browser scenario it will wait a certain timeout (default 100ms) for the element to show up. If you want it to wait longer, set the timeout value in the second argument.
 
@@ -544,7 +547,7 @@ Test if an element exists at that path. For a browser scenario it will wait a ce
 const button = await context.waitForExists("a.submit", 2000);
 ```
 
-### waitForHavingText(path: string, text, timeout?: number): Promise<DOMElement>
+### waitForHavingText(path: string, text, timeout?: number): Promise\<DOMElement\>
 
 Checks for an element to exist at `path` CSS selector, which also contains the string `text` inside of its `innerText`. By default it will wait for 100ms for the element, you can change the timeout with the third argument.
 
@@ -552,7 +555,7 @@ Checks for an element to exist at `path` CSS selector, which also contains the s
 await context.waitForHavingText("h1", "Features", 2000);
 ```
 
-### waitForHidden(path: string): Promise<DOMElement>
+### waitForHidden(path: string): Promise\<DOMElement\>
 
 Checks if an element at this selector is hidden (display none or visibility hidden). This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change the timeout with the second argument.
 
@@ -560,7 +563,7 @@ Checks if an element at this selector is hidden (display none or visibility hidd
 const button = await context.waitForHidden('button[type="submit"]', 2000);
 ```
 
-### waitForLoad(timeout: number = 10000): Promise<void>
+### waitForLoad(timeout: number = 10000): Promise\<void\>
 
 Wait for `timeout` milliseconds for the browser's navigation to complete. This really only makes sense in a browser-based scenario. This is shorthand for the `load` in the Puppeteer API.
 
@@ -568,7 +571,7 @@ Wait for `timeout` milliseconds for the browser's navigation to complete. This r
 await context.waitForLoad(15000);
 ```
 
-### waitForNetworkIdle(timeout: number = 10000): Promise<void>
+### waitForNetworkIdle(timeout: number = 10000): Promise\<void\>
 
 Wait for `timeout` milliseconds for the browser's navigation to complete. This really only makes sense in a browser-based scenario. This is shorthand for the `networkidle0` in the Puppeteer API.
 
@@ -576,7 +579,7 @@ Wait for `timeout` milliseconds for the browser's navigation to complete. This r
 await context.waitForNetworkIdle(5000);
 ```
 
-### waitForNavigation(timeout: number = 10000, waitFor?: string | string[]): Promise<void>
+### waitForNavigation(timeout: number = 10000, waitFor?: string | string[]): Promise\<void\>
 
 Wait for `timeout` milliseconds for the browser's navigation to complete. This really only makes sense in a browser-based scenario.
 
@@ -588,7 +591,7 @@ await context.waitForNavigation();
 await context.exists("h1.headline");
 ```
 
-### waitForVisible(path: string): Promise<DOMElement>
+### waitForVisible(path: string): Promise\<DOMElement\>
 
 Checks if an element at this selector is visible. This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change the timeout with the second argument.
 
@@ -596,7 +599,7 @@ Checks if an element at this selector is visible. This only makes sense for brow
 const button = await context.waitForVisible('button[type="submit"]', 2000);
 ```
 
-### waitForXpath(xPath: string, timeout?: number): Promise<DOMElement>
+### waitForXpath(xPath: string, timeout?: number): Promise\<DOMElement\>
 
 Checks for an element to exist with XPath of `path`. Usually a CSS selector is preferable, but sometimes XPath is more powerful. By default it will wait for 100ms for the element, you can change the timeout with the second argument.
 

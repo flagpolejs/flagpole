@@ -16,12 +16,12 @@ import commander = require("commander");
 
 const typesOfTest: any[] = [
   {
-    title: "HTML Page/DOM",
-    value: "html",
-  },
-  {
     title: "REST API/JSON",
     value: "json",
+  },
+  {
+    title: "HTML Page/DOM",
+    value: "html",
   },
   {
     title: "Browser (Puppeteer)",
@@ -42,6 +42,10 @@ const typesOfTest: any[] = [
   {
     title: "ExtJS",
     value: "extjs",
+  },
+  {
+    title: "HLS Video Stream",
+    value: "hls",
   },
 ];
 

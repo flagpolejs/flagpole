@@ -2,6 +2,7 @@
   - [What is Flagpole?](about.md)
   - [Core Concepts](concepts.md)
   - [Quickstart](quickstart.md)
+  - [Best Practices](best-practices.md)
   - [Further Setup](setup.md)
   - [Config File](config.md)
 - [CLI](cli.md)
@@ -9,7 +10,6 @@
 - Classes
   - [iAssertion](assertion.md)
   - [iAssertionContext](assertion-context.md)
-  - [iAssertionSchema](assertion-schema.md)
   - [iResponse](iresponse.md)
   - [iScenario](scenario.md)
   - [iSuite](suite.md)

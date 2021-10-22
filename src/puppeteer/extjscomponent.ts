@@ -6,7 +6,7 @@ import {
   SerializableOrJSHandle,
   ElementHandle,
 } from "puppeteer-core";
-import { arrayify, asyncMap } from "../util";
+import { toArray, asyncMap } from "../util";
 import { ExtJSResponse } from "./extjsresponse";
 import * as ext from "./ext.helper";
 import { wrapAsValue } from "../helpers";
@@ -322,7 +322,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
 
   public async selectOption(valuesToSelect: string | string[]): Promise<void> {
     // TODO: Support multi-select. Right now this will only support a singlular selection
-    valuesToSelect = arrayify<string>(valuesToSelect);
+    valuesToSelect = toArray<string>(valuesToSelect);
     this._completedAction("SELECT", valuesToSelect.join(", "));
     const ableToSetValue = await this.eval((c, valuesToSelect) => {
       let value = "";

@@ -65,7 +65,7 @@ export class FlagpoleReport {
    */
   public async toJson(): Promise<any> {
     const scenarios: iScenario[] = this.suite.scenarios;
-    let out: any = {
+    const out: any = {
       title: this.suite.title,
       baseUrl: String(this.suite.baseUrl),
       summary: {},
@@ -74,7 +74,7 @@ export class FlagpoleReport {
     let failCount: number = 0;
     let passCount: number = 0;
     for (let i = 0; i < scenarios.length; i++) {
-      let scenario: iScenario = scenarios[i];
+      const scenario: iScenario = scenarios[i];
       const log: iLogItem[] = await scenario.getLog();
       out.scenarios[i] = {
         title: scenario.title,
@@ -123,7 +123,7 @@ export class FlagpoleReport {
     html += "</ul>\n";
     html += "</aside>\n";
     for (let i = 0; i < scenarios.length; i++) {
-      let scenario: iScenario = scenarios[i];
+      const scenario: iScenario = scenarios[i];
       const log = await scenario.getLog();
       html += '<section class="scenario">' + "\n";
       html += `
@@ -142,6 +142,103 @@ export class FlagpoleReport {
     return html;
   }
 
+  /**
+   * Create XML output for results
+   */
+  public async toXML(): Promise<string> {
+    const scenarios: iScenario[] = this.suite.scenarios;
+
+    const testCases: string[] = [];
+
+    for (let i = 0; i < scenarios.length; i++) {
+      const scenario: iScenario = scenarios[i];
+      const log = await scenario.getLog();
+
+      // .next("I am a subscenario title", async context => { })
+      let subScenarioTitle: string;
+
+      log.forEach((item: iLogItem) => {
+        if (item.className === "heading") {
+          subScenarioTitle = this.cleanXMLCharacters(item.message);
+        }
+
+        if (item.type.startsWith("result")) {
+          let testCase = "";
+          const message = this.cleanXMLCharacters(item.message);
+
+          if (item.type === "resultFailure") {
+            testCase += `<testcase id="${subScenarioTitle}" name="${scenario.title}">`;
+            testCase += `<failure message="${message}" type="WARNING">`;
+            testCase += message;
+            if (item["detailsMessage"]) {
+              const rawDetails = this.cleanXMLCharacters(
+                `\n${item["detailsMessage"]
+                  .join(" - ")
+                  .replace(/\s+/g, " ")
+                  .trim()}`
+              );
+              testCase += rawDetails;
+            }
+            testCase += `</failure></testcase>`;
+          } else {
+            testCase += `<testcase id="${subScenarioTitle}" name="${scenario.title}"></testcase>`;
+          }
+
+          testCases.push(testCase);
+        }
+      });
+    }
+
+    const suiteDurantionInSeconds = this.suite.executionDuration! / 1000;
+
+    let xml = `<testsuite id="${this.suite.title}" name="${this.suite.title}" tests="${testCases.length}" failures="${this.suite.failCount}" time="${suiteDurantionInSeconds}">`;
+    xml += testCases.join("");
+    xml += `</testsuite>`;
+
+    return xml;
+  }
+
+  /**
+   * Create CI output for results
+   * Details on failures only
+   */
+  public async toCI(): Promise<string> {
+    const scenarios: iScenario[] = this.suite.scenarios;
+
+    const ciOutput: string[] = [];
+
+    for (let i = 0; i < scenarios.length; i++) {
+      const scenario: iScenario = scenarios[i];
+      const log = await scenario.getLog();
+
+      // .next("I am a subscenario title", async context => { })
+      let subScenarioTitle: string;
+
+      log.forEach((item: iLogItem) => {
+        if (item.className === "heading") {
+          subScenarioTitle = item.message;
+        }
+
+        if (item.type.startsWith("result")) {
+          const message = item.message;
+
+          if (item.type === "resultFailure") {
+            ciOutput.push("---FAILURE---");
+            ciOutput.push(`Suite: ${this.suite.title}`);
+            ciOutput.push(`Scenario: ${scenario.title} - ${subScenarioTitle}`);
+            ciOutput.push(`Assertion: ${message}`);
+            if (item["detailsMessage"] && item["detailsMessage"].length) {
+              ciOutput.push(
+                item["detailsMessage"].join(" - ").replace(/\s+/g, " ").trim()
+              );
+            }
+          }
+        }
+      });
+    }
+    return ciOutput.join("\n");
+  }
+
   public async toDelimited(format: string): Promise<string[]> {
     const funcName: string = `to${format.charAt(0).toUpperCase()}${format.slice(
       1
@@ -149,7 +246,7 @@ export class FlagpoleReport {
     if (!Reflect.has(new LogComment(""), funcName)) {
       throw new Error(`Method for ${funcName} does not exist.`);
     }
-    let lines: string[] = [];
+    const lines: string[] = [];
     await this.suite.scenarios.forEach(async function (scenario) {
       const log = await scenario.getLog();
       log.forEach((item: iLogItem) => {
@@ -160,47 +257,83 @@ export class FlagpoleReport {
   }
 
   public async print(): Promise<any> {
-    const output = await this.toString();
-    const lines = output.split("\n");
-    lines.forEach((line) => {
-      process.send ? process.send(line) : console.log(line);
+    return new Promise(async (resolve, reject) => {
+      try {
+        const output = await this.toString();
+
+        const lines = output.split("\n");
+
+        lines.forEach((line) => {
+          // node child process has a 8192 character limit
+          const chunks = line.match(/.{1,8192}/g) || [];
+          chunks.forEach((chunk) => {
+            // send the chunks
+            process.send ? process.send(chunk) : console.log(chunk);
+          });
+        });
+        // wait for the chunks to send before resolving and exiting the process
+        setTimeout(() => {
+          resolve();
+        }, 0);
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
   public async toString(): Promise<string> {
-    let out: string = "";
-    // HTML
-    if (FlagpoleExecution.global.shouldWriteHtml) {
-      out += await this.toHTML();
+    let out = "";
+
+    switch (true) {
+      // HTML
+      case FlagpoleExecution.global.shouldWriteHtml:
+        return this.toHTML();
+      // JSON
+      case FlagpoleExecution.global.isJsonOutput:
+        const json: any = await this.toJson();
+        return JSON.stringify(json, null, 2);
+      // CSV
+      case FlagpoleExecution.global.isDelimitedOutput:
+        const format = FlagpoleExecution.global.outputFormat;
+        (await this.toDelimited(format)).forEach((line: string) => {
+          out += line + "\n";
+        });
+        return out;
+      // XML
+      case FlagpoleExecution.global.isXmlOutput:
+        return this.toXML();
+      // Text
+      case FlagpoleExecution.global.isTextOutput:
+        (await this.toConsole()).forEach((line: iConsoleLine) => {
+          if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
+            out += line.toString() + "\n";
+          }
+        });
+        return out;
+      case FlagpoleExecution.global.isCiOutput:
+        return this.toCI();
+      // Console
+      default:
+        (await this.toConsole()).forEach((line: iConsoleLine) => {
+          if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
+            out += line.toConsoleString() + "\n";
+          }
+        });
+        return out;
     }
-    // JSON
-    else if (FlagpoleExecution.global.isJsonOutput) {
-      const json: any = await this.toJson();
-      out += JSON.stringify(json, null, 2);
-    }
-    // Console
-    else if (FlagpoleExecution.global.shouldOutputToConsole) {
-      (await this.toConsole()).forEach((line: iConsoleLine) => {
-        if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
-          out += line.toConsoleString() + "\n";
-        }
-      });
-    }
-    // Text
-    else if (FlagpoleExecution.global.isTextOutput) {
-      (await this.toConsole()).forEach((line: iConsoleLine) => {
-        if (lineToVerbosity[line.type] >= FlagpoleExecution.global.volume) {
-          out += line.toString() + "\n";
-        }
-      });
-    }
-    // CSV
-    else if (FlagpoleExecution.global.isDelimitedOutput) {
-      const format = FlagpoleExecution.global.outputFormat;
-      (await this.toDelimited(format)).forEach((line: string) => {
-        out += line + "\n";
-      });
-    }
-    return out;
+  }
+
+  /**
+   * There are 5 pre-defined entity references in XML:
+   * @param unsafe message possibly containing forbidden XML characters
+   * @returns safe message for XML
+   */
+  private cleanXMLCharacters(unsafe: string): string {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
   }
 }

@@ -12,8 +12,12 @@ import { BrowserControl } from "./browsercontrol";
 import { DOMResponse } from "../html/domresponse";
 import { toType } from "../util";
 
-export abstract class PuppeteerResponse extends DOMResponse
-  implements iResponse {
+const DEFAULT_WAITFOR_TIMEOUT = 30000;
+
+export abstract class PuppeteerResponse
+  extends DOMResponse
+  implements iResponse
+{
   /**
    * Is this a browser based test
    */
@@ -59,9 +63,9 @@ export abstract class PuppeteerResponse extends DOMResponse
    *
    * @param timeout
    */
-  public async waitForNetworkIdle(timeout: number = 10000): Promise<void> {
+  public async waitForNetworkIdle(timeout?: number): Promise<void> {
     await this._page.waitForNavigation({
-      timeout: timeout,
+      timeout: this.getTimeoutFromOverload(timeout),
       waitUntil: "networkidle0",
     });
     return;
@@ -73,7 +77,7 @@ export abstract class PuppeteerResponse extends DOMResponse
    * @param timeout
    */
   public async waitForNavigation(
-    timeout: number = 10000,
+    timeout?: number,
     waitFor?: string | string[]
   ): Promise<void> {
     const allowedOptions: string[] = [
@@ -98,7 +102,7 @@ export abstract class PuppeteerResponse extends DOMResponse
       }
     })();
     await this._page.waitForNavigation({
-      timeout: timeout,
+      timeout: this.getTimeoutFromOverload(timeout),
       waitUntil: waitForEvent,
     });
     return;
@@ -109,9 +113,9 @@ export abstract class PuppeteerResponse extends DOMResponse
    *
    * @param timeout
    */
-  public async waitForLoad(timeout: number = 30000): Promise<void> {
+  public async waitForLoad(timeout?: number): Promise<void> {
     await this._page.waitForNavigation({
-      timeout: timeout,
+      timeout: this.getTimeoutFromOverload(timeout),
       waitUntil: "load",
     });
     return;
@@ -131,9 +135,9 @@ export abstract class PuppeteerResponse extends DOMResponse
    *
    * @param timeout
    */
-  public async waitForReady(timeout: number = 15000): Promise<void> {
+  public async waitForReady(timeout?: number): Promise<void> {
     await this._page.waitForNavigation({
-      timeout: timeout,
+      timeout: this.getTimeoutFromOverload(timeout),
       waitUntil: "domcontentloaded",
     });
     return;
@@ -186,5 +190,21 @@ export abstract class PuppeteerResponse extends DOMResponse
       point.y || 0
     );
     return this;
+  }
+
+  protected getTimeoutFromOverload(a: any, b?: any): number {
+    return typeof b == "number"
+      ? b
+      : typeof a == "number"
+      ? a
+      : DEFAULT_WAITFOR_TIMEOUT;
+  }
+
+  protected getContainsPatternFromOverload(contains: any): RegExp | null {
+    return contains instanceof RegExp
+      ? contains
+      : typeof contains == "string"
+      ? new RegExp(contains)
+      : null;
   }
 }
