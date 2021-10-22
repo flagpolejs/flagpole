@@ -2,6 +2,7 @@
   - [What is Flagpole?](about.md)
   - [Core Concepts](concepts.md)
   - [Quickstart](quickstart.md)
+  - [Best Practices](best-practices.md)
   - [Further Setup](setup.md)
   - [Config File](config.md)
 - [CLI](cli.md)
