@@ -101,7 +101,7 @@
     "typescript": "^4.3.2"
   },
   "lint-staged": {
-    "*.{js,ts,json,html}": [
+    "*.{js,ts,json}": [
       "prettier --write",
       "eslint --fix"
     ]
