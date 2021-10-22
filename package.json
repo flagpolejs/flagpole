@@ -15,7 +15,7 @@
     "copy-files": "copyfiles -u 1 src/**/**/*.html src/**/**/*.xml src/**/*.css dist/",
     "build": "npm run clean && tsc && npm run copy-files",
     "build-tests": "cd tests && tsc && cd ..",
-    "test": "npm run build-tests && flagpole run -t basic -h",
+    "test": "npm run build-tests && flagpole run -t basic",
     "cdeps": "node_modules/madge/bin/cli.js --warning --circular --extensions js ./",
     "pub": "npm run build && npm publish",
     "format": "prettier . --write",

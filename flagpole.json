@@ -24,12 +24,12 @@
     "api/flo": {
       "id": "",
       "name": "api/flo",
-      "tags": []
+      "tags": ["basic"]
     },
     "api/itunes": {
       "id": "",
       "name": "api/itunes",
-      "tags": []
+      "tags": ["basic"]
     },
     "browser/evaluate": {
       "id": "",
@@ -49,7 +49,7 @@
     "chaining-assertions": {
       "id": "",
       "name": "chaining-assertions",
-      "tags": []
+      "tags": ["basic"]
     },
     "cookies": {
       "id": "",
@@ -64,7 +64,7 @@
     "error": {
       "id": "",
       "name": "error",
-      "tags": []
+      "tags": ["basic"]
     },
     "extjs/employees": {
       "id": "",
@@ -79,17 +79,17 @@
     "html/google": {
       "id": "",
       "name": "html/google",
-      "tags": []
+      "tags": ["basic"]
     },
     "html/google2": {
       "id": "",
       "name": "html/google2",
-      "tags": []
+      "tags": ["basic"]
     },
     "html/stackoverflow": {
       "id": "",
       "name": "html/stackoverflow",
-      "tags": []
+      "tags": ["basic"]
     },
     "maxListener": {
       "id": "",
@@ -104,7 +104,7 @@
     "simple": {
       "id": "",
       "name": "simple",
-      "tags": []
+      "tags": ["basic"]
     },
     "some-every-none": {
       "id": "",
@@ -114,17 +114,17 @@
     "template": {
       "id": "",
       "name": "template",
-      "tags": []
+      "tags": ["basic"]
     },
     "testcallbacks": {
       "id": "",
       "name": "testcallbacks",
-      "tags": []
+      "tags": ["basic"]
     },
     "urltest": {
       "id": "",
       "name": "urltest",
-      "tags": []
+      "tags": ["basic"]
     },
     "visual": {
       "id": "",
@@ -134,7 +134,7 @@
     "wait": {
       "id": "",
       "name": "wait",
-      "tags": []
+      "tags": ["basic"]
     },
     "waitForHavingText": {
       "id": "",
@@ -149,27 +149,27 @@
     "xml": {
       "id": "",
       "name": "xml",
-      "tags": []
+      "tags": ["basic"]
     },
     "equality": {
       "id": "",
       "name": "equality",
-      "tags": []
+      "tags": ["basic"]
     },
     "atom": {
       "id": "",
       "name": "atom",
-      "tags": []
+      "tags": ["basic"]
     },
     "every": {
       "id": "",
       "name": "every",
-      "tags": []
+      "tags": ["basic"]
     },
     "soap": {
       "id": "",
       "name": "soap",
-      "tags": []
+      "tags": ["basic"]
     },
     "finally": {
       "id": "",

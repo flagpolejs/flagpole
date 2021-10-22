@@ -1,0 +1,39 @@
+name: Publish to NPM
+on: [push]
+# on:
+#   release:
+#     types: [created]
+jobs:
+  # install and test
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm install
+      - run: npm run test
+
+  # iterate the version and push
+  version:
+    runs-on: ubuntu-latest
+    if: "!startsWith(github.event.head_commit.message, '[RELEASE]')"
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+      - run: git config --global user.name 'John Sickels'
+      - run: git config --global user.email 'johnwsickels@gmail.com'
+      - run: npm version patch -m "[RELEASE] %s"
+      - run: git push
+
+  # release:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     # Setup .npmrc file to publish to npm
+  #     - uses: actions/setup-node@v2
+  #       with:
+  #         node-version: "12.x"
+  #         registry-url: "https://registry.npmjs.org"
+  #     - run: npm publish
+  #       env:
+  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
