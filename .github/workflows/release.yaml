@@ -19,6 +19,6 @@ jobs:
       - name: Npm install
         run: npm install
       - name: Build & Publish
-        run: npm build & npm publish
+        run: npm build && npm publish
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
