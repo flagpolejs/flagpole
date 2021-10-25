@@ -988,33 +988,32 @@ export class Scenario implements iScenario {
         },
       });
     } else if ("appium".includes(type)) {
-      const foo = async (opts: object) => {
+      this.before(async () => {
         const domain =
           FlagpoleExecution.global.environment?.defaultDomain || "";
-        const caps = new HttpRequest({
-          method: "post",
-          uri: domain + "session",
-          headers: { contentType: "application/json" },
-          data: {
-            capabilities: {
-              alwaysMatch: { ...opts },
-            },
-          },
+        const sessions = new HttpRequest({
+          method: "get",
+          uri: domain + "sessions",
         });
-        const res = await caps.fetch();
-        return res;
-      };
-      const hello = foo(opts);
-      console.log(hello);
-      this._request.setOptions({
-        method: "post",
-        uri: "/wd/hub/session/foo",
-        headers: { contentType: "application/json" },
-        data: {
-          capabilities: {
-            alwaysMatch: { ...opts },
-          },
-        },
+        const allSessions = await sessions.fetch();
+        let sessionId = JSON.parse(allSessions.body).value.sessionId;
+        console.log(sessionId);
+        if (!sessionId) {
+          const caps = new HttpRequest({
+            method: "post",
+            uri: domain + "session",
+            headers: { ContentType: "application/json" },
+            data: {
+              capabilities: {
+                alwaysMatch: { ...opts },
+              },
+            },
+          });
+          const newSession = await caps.fetch();
+          sessionId = JSON.parse(newSession.body).value.sessionId;
+        }
+        console.log(sessionId);
+        this.set("sessionId", sessionId);
       });
     } else {
       this._request
