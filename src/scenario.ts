@@ -987,6 +987,35 @@ export class Scenario implements iScenario {
           ...overrides, // What was in the command line
         },
       });
+    } else if ("appium".includes(type)) {
+      const foo = async (opts: object) => {
+        const domain =
+          FlagpoleExecution.global.environment?.defaultDomain || "";
+        const caps = new HttpRequest({
+          method: "post",
+          uri: domain + "session",
+          headers: { contentType: "application/json" },
+          data: {
+            capabilities: {
+              alwaysMatch: { ...opts },
+            },
+          },
+        });
+        const res = await caps.fetch();
+        return res;
+      };
+      const hello = foo(opts);
+      console.log(hello);
+      this._request.setOptions({
+        method: "post",
+        uri: "/wd/hub/session/foo",
+        headers: { contentType: "application/json" },
+        data: {
+          capabilities: {
+            alwaysMatch: { ...opts },
+          },
+        },
+      });
     } else {
       this._request
         .setOptions({
