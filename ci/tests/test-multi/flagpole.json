@@ -19,33 +19,21 @@
     "main": {
       "id": "",
       "name": "main",
-      "tags": [
-        "bar"
-      ]
+      "tags": ["bar"]
     },
     "other": {
       "id": "",
       "name": "other",
-      "tags": [
-        "foo"
-      ]
+      "tags": ["foo"]
     },
     "smoke": {
       "id": "",
       "name": "smoke",
-      "tags": [
-        "foo",
-        "bar"
-      ]
+      "tags": ["foo", "bar"]
     },
     "browser/google": {
       "id": "",
       "name": "browser/google",
-      "tags": []
-    },
-    "browser/milesplit": {
-      "id": "",
-      "name": "browser/milesplit",
       "tags": []
     }
   }
