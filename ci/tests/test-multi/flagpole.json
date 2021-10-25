@@ -35,6 +35,16 @@
       "id": "",
       "name": "browser/google",
       "tags": []
+    },
+    "browser/evaluate": {
+      "id": "",
+      "name": "browser/evaluate",
+      "tags": []
+    },
+    "browser/ubereats": {
+      "id": "",
+      "name": "browser/ubereats",
+      "tags": []
     }
   }
 }
