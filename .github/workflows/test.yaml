@@ -49,7 +49,6 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
-      - run: sudo apt-get install xvfb
       - run: npm install --no-save
       - run: npm run build --if-present
       - run: cd ci/tests/${{ matrix.flagpoleCommand.directory }} && xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run ${{ matrix.flagpoleCommand.command }}
