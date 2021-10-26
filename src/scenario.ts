@@ -1013,6 +1013,17 @@ export class Scenario implements iScenario {
         }
         this.set("sessionId", sessionId);
       });
+      this.after(async () => {
+        const domain =
+          FlagpoleExecution.global.environment?.defaultDomain || "";
+        const sessionId = this.get("sessionId");
+        const req = new HttpRequest({
+          method: "delete",
+          uri: `${domain}session/${sessionId}`,
+        });
+        const res = await req.fetch();
+        return res;
+      });
     } else {
       this._request
         .setOptions({
