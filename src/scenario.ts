@@ -1011,7 +1011,6 @@ export class Scenario implements iScenario {
           const newSession = await caps.fetch();
           sessionId = JSON.parse(newSession.body).value.sessionId;
         }
-        console.log(sessionId);
         this.set("sessionId", sessionId);
       });
     } else {
