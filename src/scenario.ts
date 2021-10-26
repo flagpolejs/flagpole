@@ -996,8 +996,7 @@ export class Scenario implements iScenario {
           uri: domain + "sessions",
         });
         const allSessions = await sessions.fetch();
-        let sessionId = JSON.parse(allSessions.body).value.sessionId;
-        console.log(sessionId);
+        let sessionId = JSON.parse(allSessions.body).value[0]?.id || null;
         if (!sessionId) {
           const caps = new HttpRequest({
             method: "post",
