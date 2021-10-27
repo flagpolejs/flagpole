@@ -18,6 +18,7 @@ import { SuiteTaskManager } from "./suitetaskmanager";
 import { ScenarioType } from "./scenario-types";
 import { FfprobeOptions } from "media-probe";
 import { MediaStreamValidatorOpts } from "media-stream-validator";
+import { forEach } from "puppeteer/DeviceDescriptors";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 
@@ -516,7 +517,15 @@ export class Suite implements iSuite {
             .lessThanOrEquals(opts.maxLoadTime);
         });
       }
-      if (opts.set) scenario.set(opts.set["alias"], opts.set["value"]);
+      if (opts.set) {
+        if (Array.isArray(opts.set)) {
+          opts.set.forEach((element) => {
+            scenario.set(element["alias"], element["value"]);
+          });
+        } else {
+          scenario.set(opts.set["alias"], opts.set["value"]);
+        }
+      }
       if (opts.next) scenario.next(opts.next);
       return scenario;
     };

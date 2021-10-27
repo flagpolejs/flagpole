@@ -1060,7 +1060,7 @@ export interface ScenarioInitOptions {
   digestAuth?: HttpAuth;
   maxRedirects?: number;
   next?: iNextCallback;
-  set?: iSetValues;
+  set?: Array<iSetValues> | iSetValues;
   statusCode?: number;
   maxLoadTime?: number;
 }
