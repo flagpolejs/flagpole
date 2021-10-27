@@ -518,13 +518,9 @@ export class Suite implements iSuite {
         });
       }
       if (opts.set) {
-        if (Array.isArray(opts.set)) {
-          opts.set.forEach((element) => {
-            scenario.set(element["alias"], element["value"]);
-          });
-        } else {
-          scenario.set(opts.set["alias"], opts.set["value"]);
-        }
+        Object.keys(opts.set).forEach((key) => {
+          if (opts.set) scenario.set(key, opts.set[key]);
+        });
       }
       if (opts.next) scenario.next(opts.next);
       return scenario;

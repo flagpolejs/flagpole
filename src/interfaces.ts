@@ -1032,11 +1032,6 @@ export interface iHttpRequest {
   proxyAgent?: http.Agent;
 }
 
-export interface iSetValues {
-  alias: string;
-  value: any;
-}
-
 export const CONTENT_TYPE_JSON = "application/json";
 export const CONTENT_TYPE_SOAP = "application/soap+xml";
 export const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
@@ -1060,7 +1055,7 @@ export interface ScenarioInitOptions {
   digestAuth?: HttpAuth;
   maxRedirects?: number;
   next?: iNextCallback;
-  set?: Array<iSetValues> | iSetValues;
+  set?: { [key: string]: any };
   statusCode?: number;
   maxLoadTime?: number;
 }
