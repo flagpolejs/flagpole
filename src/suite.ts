@@ -18,7 +18,6 @@ import { SuiteTaskManager } from "./suitetaskmanager";
 import { ScenarioType } from "./scenario-types";
 import { FfprobeOptions } from "media-probe";
 import { MediaStreamValidatorOpts } from "media-stream-validator";
-import { forEach } from "puppeteer/DeviceDescriptors";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 
