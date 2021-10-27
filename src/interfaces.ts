@@ -1055,7 +1055,7 @@ export interface ScenarioInitOptions {
   digestAuth?: HttpAuth;
   maxRedirects?: number;
   next?: iNextCallback;
-  set?: { [key: string]: any };
+  set?: KeyValue;
   statusCode?: number;
   maxLoadTime?: number;
 }
