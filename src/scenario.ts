@@ -61,6 +61,10 @@ import {
 } from "./decorators";
 import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
+import {
+  appiumSessionDestroy,
+  appiumSessionCreate,
+} from "./appium/appium-helpers";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -987,41 +991,10 @@ export class Scenario implements iScenario {
           ...overrides, // What was in the command line
         },
       });
-    } else if ("appium".includes(type)) {
-      this.before(async () => {
-        const domain = this.suite.baseUrl;
-        const sessions = new HttpRequest({
-          method: "get",
-          uri: domain + "sessions",
-        });
-        const allSessions = await sessions.fetch();
-        let sessionId = JSON.parse(allSessions.body).value[0]?.id || null;
-        if (!sessionId) {
-          const caps = new HttpRequest({
-            method: "post",
-            uri: domain + "session",
-            headers: { ContentType: "application/json" },
-            data: {
-              capabilities: {
-                alwaysMatch: { ...opts },
-              },
-            },
-          });
-          const newSession = await caps.fetch();
-          sessionId = JSON.parse(newSession.body).value.sessionId;
-        }
-        this.set("sessionId", sessionId);
-      });
-      this.after(async () => {
-        const domain = this.suite.baseUrl;
-        const sessionId = this.get("sessionId");
-        const req = new HttpRequest({
-          method: "delete",
-          uri: `${domain}session/${sessionId}`,
-        });
-        const res = await req.fetch();
-        return res;
-      });
+    } else if (type == "appium") {
+      this.before(appiumSessionCreate(this, opts))
+        .after(appiumSessionDestroy(this))
+        .open("/");
     } else {
       this._request
         .setOptions({
