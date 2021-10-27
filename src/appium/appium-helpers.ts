@@ -1,16 +1,17 @@
 import { HttpRequest } from "../httprequest";
-import { HttpRequestOptions } from "../interfaces";
+import { HttpRequestOptions, iScenario } from "../interfaces";
 import { Scenario } from "../scenario";
+import { JsonDoc } from "../json/jpath";
 
 const DEFAULT_APPIUM_PORT = 4723;
 
-const getUrlPrefix = (scenario: Scenario): string =>
+const getUrlPrefix = (scenario: iScenario): string =>
   scenario.suite.baseUrl
-    ? `${scenario.suite.baseUrl.protocol}//${scenario.suite.baseUrl.host}`
-    : `http://localhost:${DEFAULT_APPIUM_PORT}`;
+    ? `${scenario.suite.baseUrl.protocol}//${scenario.suite.baseUrl.host}/wd/hub`
+    : `http://localhost:${DEFAULT_APPIUM_PORT}/wd/hub`;
 
-const sendAppiumRequest = async (
-  scenario: Scenario,
+export const sendAppiumRequest = async (
+  scenario: iScenario,
   path: string,
   opts: HttpRequestOptions
 ) => {
@@ -23,14 +24,15 @@ const sendAppiumRequest = async (
     },
   });
   const res = await req.fetch();
-  return JSON.parse(res.body);
+  const doc = new JsonDoc(JSON.parse(res.body));
+  return doc;
 };
 
 const getAppiumSession = async (scenario: Scenario) => {
   const json = await sendAppiumRequest(scenario, "/sessions", {
     method: "get",
   });
-  return json.value[0]?.id || null;
+  return json.jsonRoot.value[0]?.id || null;
 };
 
 const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
@@ -42,7 +44,7 @@ const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
       },
     },
   });
-  return json.value.sessionId;
+  return json.jsonRoot.value.sessionId;
 };
 
 export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {

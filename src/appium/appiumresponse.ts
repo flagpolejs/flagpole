@@ -1,11 +1,9 @@
 import { ProtoResponse } from "../response";
-import { HttpResponse } from "../httpresponse";
 import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "../json/jpath";
-import { HttpRequest } from "../httprequest";
-import { FlagpoleExecution } from "../flagpoleexecution";
+import { sendAppiumRequest } from "./appium-helpers";
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
   public jsonDoc: JsonDoc | undefined;
@@ -29,13 +27,18 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   public find(selector: string): ValuePromise {
     return ValuePromise.execute(async () => {
       const usingValue = selector.split("/");
-      const res = await this._findElement(
-        this.scenario.get("sessionId"),
-        usingValue[0],
-        usingValue[1]
+      const res = await sendAppiumRequest(
+        this.scenario,
+        `/session/${this.scenario.get("sessionId")}/element`,
+        {
+          method: "post",
+          data: {
+            using: usingValue[0],
+            value: usingValue[1],
+          },
+        }
       );
-      res.json = JSON.parse(res.body);
-      this.jsonDoc = new JsonDoc(res.json);
+      this.jsonDoc = res;
       return jpathFind(this, "value.ELEMENT");
     });
   }
@@ -45,40 +48,22 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
   public click = (elementId: string | undefined): ValuePromise => {
     return ValuePromise.execute(async () => {
-      const req = new HttpRequest({
-        method: "post",
-        uri: `${this.scenario.suite.baseUrl}session/${this.scenario.get(
-          "sessionId"
-        )}/element/${elementId}/click`,
-      });
-      const res = await req.fetch();
-      res.json = JSON.parse(res.body);
-      if (res.json.value === null) {
-        res.json.value = "Success";
+      const res = await sendAppiumRequest(
+        this.scenario,
+        `/session/${this.scenario.get("sessionId")}/element/${elementId}/click`,
+        {
+          method: "post",
+        }
+      );
+
+      if (res.jsonRoot.value === "null") {
+        res.jsonRoot.value = "Success";
       } else {
-        res.json.value = null;
+        res.jsonRoot.value = null;
       }
-      this.jsonDoc = new JsonDoc(res.json);
+
+      this.jsonDoc = res;
       return jpathFind(this, "value");
     });
   };
-
-  private async _findElement(
-    sessionId: string,
-    using: string,
-    value: string
-  ): Promise<HttpResponse> {
-    const domain = this.scenario.suite.baseUrl;
-    const req = new HttpRequest({
-      method: "post",
-      uri: `${domain}session/${sessionId}/element`,
-      data: {
-        using: using,
-        value: value,
-      },
-    });
-    const res = await req.fetch();
-
-    return res;
-  }
 }
