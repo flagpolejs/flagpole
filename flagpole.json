@@ -180,6 +180,11 @@
       "id": "",
       "name": "image",
       "tags": []
+    },
+    "currentUrl": {
+      "id": "",
+      "name": "currentUrl",
+      "tags": []
     }
   }
 }
