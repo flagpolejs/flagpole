@@ -516,6 +516,11 @@ export class Suite implements iSuite {
             .lessThanOrEquals(opts.maxLoadTime);
         });
       }
+      if (opts.set) {
+        Object.keys(opts.set).forEach((key) => {
+          if (opts.set) scenario.set(key, opts.set[key]);
+        });
+      }
       if (opts.next) scenario.next(opts.next);
       return scenario;
     };
