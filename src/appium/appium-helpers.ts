@@ -18,7 +18,7 @@ const sendAppiumRequest = async (
   const req = new HttpRequest({
     ...opts,
     ...{
-      headers: { ContentType: "application/json" },
+      headers: { "Content-Type": "application/json" },
       uri: `${urlPrefix}${path}`,
     },
   });
