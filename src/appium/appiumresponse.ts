@@ -43,6 +43,26 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   public findAll = (path: string): Promise<iValue[]> =>
     jpathFindAll(this, path);
 
+  public click = (elementId: string | undefined): ValuePromise => {
+    return ValuePromise.execute(async () => {
+      const req = new HttpRequest({
+        method: "post",
+        uri: `${this.scenario.suite.baseUrl}session/${this.scenario.get(
+          "sessionId"
+        )}/element/${elementId}/click`,
+      });
+      const res = await req.fetch();
+      res.json = JSON.parse(res.body);
+      if (res.json.value === null) {
+        res.json.value = "Success";
+      } else {
+        res.json.value = null;
+      }
+      this.jsonDoc = new JsonDoc(res.json);
+      return jpathFind(this, "value");
+    });
+  };
+
   private async _findElement(
     sessionId: string,
     using: string,
