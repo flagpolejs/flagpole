@@ -48,7 +48,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     using: string,
     value: string
   ): Promise<HttpResponse> {
-    const domain = FlagpoleExecution.global.environment?.defaultDomain || "";
+    const domain = this.scenario.suite.baseUrl;
     const req = new HttpRequest({
       method: "post",
       uri: `${domain}session/${sessionId}/element`,

@@ -989,8 +989,7 @@ export class Scenario implements iScenario {
       });
     } else if ("appium".includes(type)) {
       this.before(async () => {
-        const domain =
-          FlagpoleExecution.global.environment?.defaultDomain || "";
+        const domain = this.suite.baseUrl;
         const sessions = new HttpRequest({
           method: "get",
           uri: domain + "sessions",
@@ -1014,8 +1013,7 @@ export class Scenario implements iScenario {
         this.set("sessionId", sessionId);
       });
       this.after(async () => {
-        const domain =
-          FlagpoleExecution.global.environment?.defaultDomain || "";
+        const domain = this.suite.baseUrl;
         const sessionId = this.get("sessionId");
         const req = new HttpRequest({
           method: "delete",
