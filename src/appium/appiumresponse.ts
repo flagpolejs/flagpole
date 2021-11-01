@@ -2,8 +2,10 @@ import { ProtoResponse } from "../response";
 import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { wrapAsValue } from "../helpers";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "../json/jpath";
 import { sendAppiumRequest } from "./appium-helpers";
+import { AppiumElement } from "./appiumelement";
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
   public jsonDoc: JsonDoc | undefined;
@@ -38,32 +40,35 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           },
         }
       );
-      this.jsonDoc = res;
-      return jpathFind(this, "value.ELEMENT");
+      if (res.jsonRoot.value.ELEMENT) {
+        const element = new AppiumElement(
+          selector,
+          this.context,
+          selector,
+          res.jsonRoot.value.ELEMENT
+        );
+        return element;
+      } else {
+        return wrapAsValue(this.context, null, selector);
+      }
     });
   }
 
-  public findAll = (path: string): Promise<iValue[]> =>
-    jpathFindAll(this, path);
-
-  public click = (elementId: string | undefined): ValuePromise => {
-    return ValuePromise.execute(async () => {
-      const res = await sendAppiumRequest(
-        this.scenario,
-        `/session/${this.scenario.get("sessionId")}/element/${elementId}/click`,
-        {
-          method: "post",
-        }
-      );
-
-      if (res.jsonRoot.value === "null") {
-        res.jsonRoot.value = "Success";
-      } else {
-        res.jsonRoot.value = null;
+  public async findAll(selector: string): Promise<iValue[]> {
+    const usingValue = selector.split("/");
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.scenario.get("sessionId")}/elements`,
+      {
+        method: "post",
+        data: {
+          using: usingValue[0],
+          value: usingValue[1],
+        },
       }
-
-      this.jsonDoc = res;
-      return jpathFind(this, "value");
-    });
-  };
+    );
+    this.jsonDoc = res;
+    console.log(res);
+    return jpathFindAll(this, "value[].ELEMENT");
+  }
 }
