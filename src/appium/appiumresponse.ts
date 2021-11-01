@@ -53,4 +53,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     });
   }
+
+  public findAll(selector: string): Promise<iValue[]> {
+    throw "findAll not implemented";
+  }
 }
