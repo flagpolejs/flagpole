@@ -56,6 +56,5 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
   public async findAll(selector: string): Promise<iValue[]> {
     throw "findAll not implemented";
-    // Coming soon!
   }
 }
