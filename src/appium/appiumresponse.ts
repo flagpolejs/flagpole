@@ -54,6 +54,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     });
   }
 
+
   public async findAll(selector: string): Promise<iValue[]> {
     const usingValue = selector.split("/");
     const res = await sendAppiumRequest(
