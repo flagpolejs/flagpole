@@ -60,7 +60,18 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   protected async _getText(): Promise<string> {
-    throw "_getText not implemented";
+    const res = await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${this.context.scenario.get("sessionId")}/element/${
+        this._elementId
+      }/text`,
+      {
+        method: "get",
+      }
+    );
+
+    console.log(res.jsonRoot);
+    return res.jsonRoot.value;
   }
 
   protected async _getTagName(): Promise<string> {
