@@ -54,7 +54,31 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     });
   }
 
-  public findAll(selector: string): Promise<iValue[]> {
-    throw "findAll not implemented";
+
+  public async findAll(selector: string): Promise<iValue[]> {
+    const usingValue = selector.split("/");
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.scenario.get("sessionId")}/elements`,
+      {
+        method: "post",
+        data: {
+          using: usingValue[0],
+          value: usingValue[1],
+        },
+      }
+    );
+    const elements: iValue[] = [];
+    for (let i = 0; i < res.jsonRoot.value.length; i++) {
+      elements.push(
+        new AppiumElement(
+          selector,
+          this.context,
+          selector,
+          res.jsonRoot.value[i].ELEMENT
+        )
+      );
+    }
+    return elements;
   }
 }
