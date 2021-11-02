@@ -74,7 +74,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           selector,
           this.context,
           selector,
-          res.jsonRoot.value[i]
+          res.jsonRoot.value[i].ELEMENT
         )
       );
     }
