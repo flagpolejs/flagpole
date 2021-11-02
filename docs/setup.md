@@ -12,6 +12,35 @@ If you are going to do full browser testing, you will probably want to install [
 npm i puppeteer --save-dev
 ```
 
+
+### Appium
+
+If you are going to test a mobile app, you will need to install Appium globally, either as an npm package or as an app.
+
+```cli
+npm i -g appium
+```
+
+or download [here](https://github.com/appium/appium-desktop/releases/latest)
+
+Run the Appium server before executing any Appium tests. Also, make sure the device, emulator, or simulator under test is connected and available.
+
+```javascript
+Add the desired capabilities to each scenario like so:
+flagpole("Basic Smoke Test of App", async (suite) => {
+  suite
+    .scenario("Basic smoke test", "appium", {
+      deviceName: "Android Emulator",
+      platformName: "Android",
+      automationName: "Uiautomator2",
+      app: "/path/to/apk/or/ipa"
+    });
+  });
+```
+
+See [here](https://appium.io/docs/en/writing-running-appium/caps/) for more information on setting capabilities.
+
+
 ### TypeScript
 
 Writing tests with TypeScript is possible. During `flagpole init` the CLI will ask if you want to use TypeScript:
