@@ -70,7 +70,6 @@ export class AppiumElement extends DOMElement implements iValue {
       }
     );
 
-    console.log(res.jsonRoot);
     return res.jsonRoot.value;
   }
 
