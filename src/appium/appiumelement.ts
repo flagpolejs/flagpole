@@ -70,6 +70,18 @@ export class AppiumElement extends DOMElement implements iValue {
     );
   }
 
+  public async clear(): Promise<void> {
+    await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${this.context.scenario.get("sessionId")}/element/${
+        this._elementId
+      }/clear`,
+      {
+        method: "post",
+      }
+    );
+  }
+
   protected async _getValue(): Promise<any> {
     throw "_getValue not implemented";
   }
