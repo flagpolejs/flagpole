@@ -82,6 +82,11 @@ export class AppiumElement extends DOMElement implements iValue {
     );
   }
 
+  public async clearThenType(input: string): Promise<void> {
+    await this.clear();
+    await this.type(input);
+  }
+
   protected async _getValue(): Promise<any> {
     throw "_getValue not implemented";
   }
