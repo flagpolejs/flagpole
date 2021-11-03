@@ -36,6 +36,7 @@ const getAppiumSession = async (scenario: Scenario) => {
 };
 
 const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
+  scenario.set("automationName", opts.automationName);
   const json = await sendAppiumRequest(scenario, "/session", {
     method: "post",
     data: {
