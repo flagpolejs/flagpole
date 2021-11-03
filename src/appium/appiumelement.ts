@@ -56,7 +56,7 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   public async type(input: string): Promise<void> {
-    await sendAppiumRequest(
+    const res = await sendAppiumRequest(
       this.context.scenario,
       `/session/${this.context.scenario.get("sessionId")}/element/${
         this._elementId
@@ -68,6 +68,10 @@ export class AppiumElement extends DOMElement implements iValue {
         },
       }
     );
+
+    if (res.jsonRoot.value.error) {
+      throw "Element cannot be typed into. Did you choose the correct element?";
+    }
   }
 
   public async clear(): Promise<void> {
