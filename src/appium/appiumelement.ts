@@ -55,6 +55,42 @@ export class AppiumElement extends DOMElement implements iValue {
     throw "findAll not implemented";
   }
 
+  public async type(input: string): Promise<void> {
+    const res = await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${this.context.scenario.get("sessionId")}/element/${
+        this._elementId
+      }/value`,
+      {
+        method: "post",
+        data: {
+          text: input,
+        },
+      }
+    );
+
+    if (res.jsonRoot.value.error) {
+      throw "Element cannot be typed into. Did you choose the correct element?";
+    }
+  }
+
+  public async clear(): Promise<void> {
+    await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${this.context.scenario.get("sessionId")}/element/${
+        this._elementId
+      }/clear`,
+      {
+        method: "post",
+      }
+    );
+  }
+
+  public async clearThenType(input: string): Promise<void> {
+    await this.clear();
+    await this.type(input);
+  }
+
   protected async _getValue(): Promise<any> {
     throw "_getValue not implemented";
   }
