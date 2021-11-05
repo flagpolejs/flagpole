@@ -1,4 +1,5 @@
 import { HttpRequest } from "../httprequest";
+import { Scenario } from "../scenario";
 import {
   HttpRequestOptions,
   iScenario,
@@ -41,12 +42,9 @@ const getAppiumSession = async (scenario: iScenario) => {
   return json.jsonRoot.value[0]?.id || null;
 };
 
-const createAppiumSession = async (
-  response: AppiumResponse,
-  opts: any = {}
-) => {
-  response.capabilities = opts;
-  const json = await sendAppiumRequest(response.scenario, "/session", {
+const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
+  scenario.set("automationName", opts.automationName);
+  const json = await sendAppiumRequest(scenario, "/session", {
     method: "post",
     data: {
       capabilities: {
@@ -57,23 +55,20 @@ const createAppiumSession = async (
   return json.jsonRoot.value.sessionId;
 };
 
-export const appiumSessionCreate = (
-  response: AppiumResponse,
-  opts: any = {}
-) => {
+export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
   return async () => {
-    const existingSessionId = await getAppiumSession(response.scenario);
+    const existingSessionId = await getAppiumSession(scenario);
     if (existingSessionId) {
-      return (response.sessionId = existingSessionId);
+      return scenario.set("sessionId", existingSessionId);
     }
-    return (response.sessionId = await createAppiumSession(response, opts));
+    return scenario.set("sessionId", await createAppiumSession(scenario, opts));
   };
 };
 
-export const appiumSessionDestroy = (response: AppiumResponse) => {
+export const appiumSessionDestroy = (scenario: Scenario) => {
   return async () => {
-    const sessionId = response.scenario.get("sessionId");
-    return sendAppiumRequest(response.scenario, `/session/${sessionId}`, {
+    const sessionId = scenario.get("sessionId");
+    return sendAppiumRequest(scenario, `/session/${sessionId}`, {
       method: "delete",
     });
   };
