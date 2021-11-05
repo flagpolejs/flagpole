@@ -175,3 +175,15 @@ const getAppiumSessionCapabilities = async (
 
   return res.jsonRoot.value;
 };
+
+const getAppiumSessionCapabilities = async (scenario: Scenario) => {
+  const res = await sendAppiumRequest(
+    scenario,
+    `/session/${scenario.get("sessionId")}`,
+    {
+      method: "get",
+    }
+  );
+
+  return res.jsonRoot.value;
+};
