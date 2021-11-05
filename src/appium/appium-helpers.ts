@@ -43,7 +43,6 @@ const getAppiumSession = async (scenario: iScenario) => {
 };
 
 const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
-  scenario.set("automationName", opts.automationName);
   const json = await sendAppiumRequest(scenario, "/session", {
     method: "post",
     data: {
@@ -59,8 +58,11 @@ export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
   return async () => {
     const existingSessionId = await getAppiumSession(scenario);
     if (existingSessionId) {
+      const capabilities = await getAppiumSessionCapabilities(scenario);
+      scenario.set("automationName", capabilities.automationName);
       return scenario.set("sessionId", existingSessionId);
     }
+    scenario.set("automationName", opts.automationName);
     return scenario.set("sessionId", await createAppiumSession(scenario, opts));
   };
 };
@@ -154,6 +156,18 @@ const appiumGetPackageName = async (
   const res = await sendAppiumRequest(
     response.scenario,
     `/session/${response.sessionId}/appium/device/current_package`,
+    {
+      method: "get",
+    }
+  );
+
+  return res.jsonRoot.value;
+};
+
+const getAppiumSessionCapabilities = async (scenario: Scenario) => {
+  const res = await sendAppiumRequest(
+    scenario,
+    `/session/${scenario.get("sessionId")}`,
     {
       method: "get",
     }
