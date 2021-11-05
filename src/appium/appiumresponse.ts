@@ -94,7 +94,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         this.capabilities.automationName.toLowerCase() === "espresso"
       ) {
         const values = await appiumFindByUiAutomator(
-          this.context,
+          this,
           selector,
           params.contains,
           params.opts

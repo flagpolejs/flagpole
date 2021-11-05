@@ -190,14 +190,6 @@ export abstract class ProtoResponse implements iResponse {
     return new AssertionContext(this.scenario, this);
   }
 
-  public get sessionId(): string {
-    throw "sessionId is not implemented on generic responses.";
-  }
-
-  public get capabilities(): any {
-    throw "capabilities is not implemented on generic responses.";
-  }
-
   constructor(scenario: iScenario) {
     this.scenario = scenario;
   }

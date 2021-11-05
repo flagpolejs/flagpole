@@ -351,8 +351,6 @@ export interface iResponse {
   trailers: iValue;
   method: iValue;
   isBrowser: boolean;
-  sessionId: string;
-  capabilities: any;
   readonly scenario: iScenario;
   init(httpResponse: HttpResponse): void;
   getRoot(): any;

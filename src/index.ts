@@ -28,6 +28,7 @@ import {
 import { HttpRequest } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { ScenarioType } from "./scenario-types";
+import { AppiumResponse } from "./appium/appiumresponse";
 
 // Aliases
 const fp = Flagpole;
@@ -62,6 +63,7 @@ export {
   Value,
   HLSResponse,
   HeadersResponse,
+  AppiumResponse,
   iScenario,
   iSuite,
   fp,
