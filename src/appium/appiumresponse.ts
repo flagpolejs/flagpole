@@ -90,9 +90,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       throw "Appium does not support finding elements by RegEx";
     } else if (params.contains) {
       if (
-        this.context.capabilities.automationName.toLowerCase() ===
-          "uiautomator2" ||
-        this.context.capabilities.automationName.toLowerCase() === "espresso"
+        this.capabilities.automationName.toLowerCase() === "uiautomator2" ||
+        this.capabilities.automationName.toLowerCase() === "espresso"
       ) {
         const values = await appiumFindByUiAutomator(
           this.context,
@@ -107,11 +106,11 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           return elements;
         }
       } else if (
-        this.context.capabilities.automationName.toLowerCase() === "xcuitest"
+        this.capabilities.automationName.toLowerCase() === "xcuitest"
       ) {
         res = await sendAppiumRequest(
           this.scenario,
-          `/session/${this.context.sessionId}/elements`,
+          `/session/${this.sessionId}/elements`,
           {
             method: "post",
             data: {
@@ -124,7 +123,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     } else {
       res = await sendAppiumRequest(
         this.scenario,
-        `/session/${this.context.sessionId}/elements`,
+        `/session/${this.sessionId}/elements`,
         {
           method: "post",
           data: {

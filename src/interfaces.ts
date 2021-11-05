@@ -351,6 +351,8 @@ export interface iResponse {
   trailers: iValue;
   method: iValue;
   isBrowser: boolean;
+  sessionId: string;
+  capabilities: any;
   readonly scenario: iScenario;
   init(httpResponse: HttpResponse): void;
   getRoot(): any;
@@ -575,8 +577,6 @@ export interface iAssertionContext {
   incompleteAssertions: iAssertion[];
   assertionsResolved: Promise<(iAssertionResult | null)[]>;
   subScenariosResolved: Promise<any[]>;
-  sessionId: string | undefined;
-  capabilities: any;
   comment(input: any): iAssertionContext;
   assert(a: any, b?: any): iAssertion;
   pause(milliseconds: number): Promise<void>;

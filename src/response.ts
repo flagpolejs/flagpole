@@ -190,6 +190,14 @@ export abstract class ProtoResponse implements iResponse {
     return new AssertionContext(this.scenario, this);
   }
 
+  public get sessionId(): string {
+    return this.scenario.get("sessionId");
+  }
+
+  public get capabilities(): any {
+    return this.scenario.get("capabilities");
+  }
+
   constructor(scenario: iScenario) {
     this.scenario = scenario;
   }

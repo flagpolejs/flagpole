@@ -127,7 +127,7 @@ export const appiumFindByUiAutomator = async (
 
   const res = await sendAppiumRequest(
     context.scenario,
-    `/session/${context.sessionId}/elements`,
+    `/session/${context.response.sessionId}/elements`,
     {
       method: "post",
       data: {
@@ -152,7 +152,7 @@ const appiumGetPackageName = async (
   // The call to the Appium API is part of the deprecated JSONWP specification and is subject to removal
   const res = await sendAppiumRequest(
     context.scenario,
-    `/session/${context.sessionId}/appium/device/current_package`,
+    `/session/${context.response.sessionId}/appium/device/current_package`,
     {
       method: "get",
     }

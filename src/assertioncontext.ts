@@ -133,14 +133,6 @@ export class AssertionContext implements iAssertionContext {
     return Promise.all(this._subScenarios);
   }
 
-  public get sessionId(): string {
-    return this.scenario.get("sessionId");
-  }
-
-  public get capabilities(): any {
-    return this.scenario.get("capabilities");
-  }
-
   constructor(scenario: iScenario, response: iResponse) {
     this._scenario = scenario;
     this._response = response;
