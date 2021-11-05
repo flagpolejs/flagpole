@@ -15,10 +15,6 @@ import { AppiumElement } from "./appiumelement";
 export class AppiumResponse extends ProtoResponse implements iResponse {
   public jsonDoc: JsonDoc | undefined;
 
-  public sessionId: string | undefined;
-
-  public capabilities: any;
-
   public get responseTypeName(): string {
     return "Appium";
   }
@@ -33,6 +29,14 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
   public async eval(): Promise<any> {
     throw "This type of scenario does not support eval.";
+  }
+
+  public get sessionId(): string {
+    return this.scenario.get("sessionId");
+  }
+
+  public get capabilities(): any {
+    return this.scenario.get("capabilities");
   }
 
   public find(
@@ -50,7 +54,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       const usingValue = selector.split("/");
       const res = await sendAppiumRequest(
         this.scenario,
-        `/session/${this.scenario.get("sessionId")}/element`,
+        `/session/${this.sessionId}/element`,
         {
           method: "post",
           data: {
@@ -78,22 +82,20 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    console.log(a);
-    console.log(b);
     const usingValue = selector.split("/");
     let elements: iValue[] = [];
     const params = getFindParams(a, b);
-    console.log("params: " + params.opts);
     let res: JsonDoc = new JsonDoc({});
     if (params.matches) {
       throw "Appium does not support finding elements by RegEx";
     } else if (params.contains) {
       if (
-        this.scenario.get("automationName").toLowerCase() === "uiautomator2" ||
-        this.scenario.get("automationName").toLowerCase() === "espresso"
+        this.context.capabilities.automationName.toLowerCase() ===
+          "uiautomator2" ||
+        this.context.capabilities.automationName.toLowerCase() === "espresso"
       ) {
         const values = await appiumFindByUiAutomator(
-          this.scenario,
+          this.context,
           selector,
           params.contains,
           params.opts
@@ -105,11 +107,11 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           return elements;
         }
       } else if (
-        this.scenario.get("automationName").toLowerCase() === "xcuitest"
+        this.context.capabilities.automationName.toLowerCase() === "xcuitest"
       ) {
         res = await sendAppiumRequest(
           this.scenario,
-          `/session/${this.scenario.get("sessionId")}/elements`,
+          `/session/${this.context.sessionId}/elements`,
           {
             method: "post",
             data: {
@@ -122,7 +124,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     } else {
       res = await sendAppiumRequest(
         this.scenario,
-        `/session/${this.scenario.get("sessionId")}/elements`,
+        `/session/${this.context.sessionId}/elements`,
         {
           method: "post",
           data: {
@@ -143,7 +145,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       );
     }
     if (params.opts) {
-      console.log(params.opts);
       elements = applyOffsetAndLimit(params.opts, elements);
     }
 

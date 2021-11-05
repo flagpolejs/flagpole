@@ -4,6 +4,7 @@ import {
   HttpRequestOptions,
   iScenario,
   iValue,
+  iAssertionContext,
   FindAllOptions,
 } from "../interfaces";
 import { applyOffsetAndLimit } from "../helpers";
@@ -43,7 +44,6 @@ const getAppiumSession = async (scenario: iScenario) => {
 };
 
 const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
-  scenario.set("automationName", opts.automationName);
   const json = await sendAppiumRequest(scenario, "/session", {
     method: "post",
     data: {
@@ -59,8 +59,14 @@ export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
   return async () => {
     const existingSessionId = await getAppiumSession(scenario);
     if (existingSessionId) {
+      const capabilities = await getAppiumSessionCapabilities(
+        existingSessionId,
+        scenario
+      );
+      scenario.set("capabilities", capabilities);
       return scenario.set("sessionId", existingSessionId);
     }
+    scenario.set("capabilities", opts);
     return scenario.set("sessionId", await createAppiumSession(scenario, opts));
   };
 };
@@ -75,7 +81,7 @@ export const appiumSessionDestroy = (scenario: Scenario) => {
 };
 
 export const appiumFindByUiAutomator = async (
-  scenario: iScenario,
+  context: iAssertionContext,
   selector: string,
   text: string,
   opts?: FindAllOptions | null
@@ -85,14 +91,7 @@ export const appiumFindByUiAutomator = async (
 
   switch (usingValue[0]) {
     case "id":
-      const packageNameRes = await sendAppiumRequest(
-        scenario,
-        `/session/${scenario.get("sessionId")}/appium/device/current_package`,
-        {
-          method: "get",
-        }
-      );
-      const packageName = packageNameRes.jsonRoot.value;
+      const packageName = await appiumGetPackageName(context);
 
       UiSelector =
         UiSelector +
@@ -127,8 +126,8 @@ export const appiumFindByUiAutomator = async (
   }
 
   const res = await sendAppiumRequest(
-    scenario,
-    `/session/${scenario.get("sessionId")}/elements`,
+    context.scenario,
+    `/session/${context.sessionId}/elements`,
     {
       method: "post",
       data: {
@@ -148,12 +147,27 @@ export const appiumFindByUiAutomator = async (
 };
 
 const appiumGetPackageName = async (
-  response: AppiumResponse
+  context: iAssertionContext
 ): Promise<string> => {
   // The call to the Appium API is part of the deprecated JSONWP specification and is subject to removal
   const res = await sendAppiumRequest(
-    response.scenario,
-    `/session/${response.sessionId}/appium/device/current_package`,
+    context.scenario,
+    `/session/${context.sessionId}/appium/device/current_package`,
+    {
+      method: "get",
+    }
+  );
+
+  return res.jsonRoot.value;
+};
+
+const getAppiumSessionCapabilities = async (
+  existingSessionId: string,
+  scenario: Scenario
+) => {
+  const res = await sendAppiumRequest(
+    scenario,
+    `/session/${existingSessionId}`,
     {
       method: "get",
     }
