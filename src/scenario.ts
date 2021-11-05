@@ -992,8 +992,8 @@ export class Scenario implements iScenario {
         },
       });
     } else if (type == "appium") {
-      this.before(appiumSessionCreate(this, opts))
-        .after(appiumSessionDestroy(this))
+      this.before(appiumSessionCreate(this._response, opts))
+        .after(appiumSessionDestroy(this._response))
         .open("/");
     } else {
       this._request

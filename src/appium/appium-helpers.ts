@@ -1,6 +1,12 @@
 import { HttpRequest } from "../httprequest";
-import { HttpRequestOptions, iScenario } from "../interfaces";
-import { Scenario } from "../scenario";
+import {
+  HttpRequestOptions,
+  iScenario,
+  iValue,
+  FindAllOptions,
+} from "../interfaces";
+import { applyOffsetAndLimit } from "../helpers";
+import { AppiumResponse } from "./appiumresponse";
 import { JsonDoc } from "../json/jpath";
 
 const DEFAULT_APPIUM_PORT = 4723;
@@ -28,16 +34,19 @@ export const sendAppiumRequest = async (
   return doc;
 };
 
-const getAppiumSession = async (scenario: Scenario) => {
+const getAppiumSession = async (scenario: iScenario) => {
   const json = await sendAppiumRequest(scenario, "/sessions", {
     method: "get",
   });
   return json.jsonRoot.value[0]?.id || null;
 };
 
-const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
-  scenario.set("automationName", opts.automationName);
-  const json = await sendAppiumRequest(scenario, "/session", {
+const createAppiumSession = async (
+  response: AppiumResponse,
+  opts: any = {}
+) => {
+  response.capabilities = opts;
+  const json = await sendAppiumRequest(response.scenario, "/session", {
     method: "post",
     data: {
       capabilities: {
@@ -48,21 +57,112 @@ const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
   return json.jsonRoot.value.sessionId;
 };
 
-export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
+export const appiumSessionCreate = (
+  response: AppiumResponse,
+  opts: any = {}
+) => {
   return async () => {
-    const existingSessionId = await getAppiumSession(scenario);
+    const existingSessionId = await getAppiumSession(response.scenario);
     if (existingSessionId) {
-      return scenario.set("sessionId", existingSessionId);
+      return (response.sessionId = existingSessionId);
     }
-    return scenario.set("sessionId", await createAppiumSession(scenario, opts));
+    return (response.sessionId = await createAppiumSession(response, opts));
   };
 };
 
-export const appiumSessionDestroy = (scenario: Scenario) => {
+export const appiumSessionDestroy = (response: AppiumResponse) => {
   return async () => {
-    const sessionId = scenario.get("sessionId");
-    return sendAppiumRequest(scenario, `/session/${sessionId}`, {
+    const sessionId = response.scenario.get("sessionId");
+    return sendAppiumRequest(response.scenario, `/session/${sessionId}`, {
       method: "delete",
     });
   };
+};
+
+export const appiumFindByUiAutomator = async (
+  scenario: iScenario,
+  selector: string,
+  text: string,
+  opts?: FindAllOptions | null
+): Promise<iValue[]> => {
+  const usingValue = selector.split("/");
+  let UiSelector = "new UiSelector().";
+
+  switch (usingValue[0]) {
+    case "id":
+      const packageNameRes = await sendAppiumRequest(
+        scenario,
+        `/session/${scenario.get("sessionId")}/appium/device/current_package`,
+        {
+          method: "get",
+        }
+      );
+      const packageName = packageNameRes.jsonRoot.value;
+
+      UiSelector =
+        UiSelector +
+        'resourceId("' +
+        packageName +
+        ":id/" +
+        usingValue[1] +
+        '").textContains("' +
+        text +
+        '")';
+      break;
+    case "class name":
+      UiSelector =
+        UiSelector +
+        'className("' +
+        usingValue[1] +
+        '").textContains("' +
+        text +
+        '")';
+      break;
+    case "accessibility id":
+      UiSelector =
+        UiSelector +
+        'description("' +
+        usingValue[1] +
+        '").textContains()' +
+        text +
+        '")';
+      break;
+    default:
+      UiSelector = UiSelector + 'text("' + text + '")';
+  }
+
+  const res = await sendAppiumRequest(
+    scenario,
+    `/session/${scenario.get("sessionId")}/elements`,
+    {
+      method: "post",
+      data: {
+        using: "-android uiautomator",
+        value: UiSelector,
+      },
+    }
+  );
+
+  let elements: iValue[] = res.jsonRoot.value;
+
+  if (opts?.offset || opts?.limit) {
+    elements = applyOffsetAndLimit(opts, elements);
+  }
+
+  return elements;
+};
+
+const appiumGetPackageName = async (
+  response: AppiumResponse
+): Promise<string> => {
+  // The call to the Appium API is part of the deprecated JSONWP specification and is subject to removal
+  const res = await sendAppiumRequest(
+    response.scenario,
+    `/session/${response.sessionId}/appium/device/current_package`,
+    {
+      method: "get",
+    }
+  );
+
+  return res.jsonRoot.value;
 };
