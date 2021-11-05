@@ -69,6 +69,7 @@ export class AppiumElement extends DOMElement implements iValue {
       }
     );
 
+
     if (res.jsonRoot.value?.error) {
       throw "Element cannot be typed into. Did you choose the correct element?";
     }
