@@ -81,7 +81,7 @@ export const appiumSessionDestroy = (scenario: Scenario) => {
 };
 
 export const appiumFindByUiAutomator = async (
-  context: iAssertionContext,
+  response: AppiumResponse,
   selector: string,
   text: string,
   opts?: FindAllOptions | null
@@ -91,7 +91,7 @@ export const appiumFindByUiAutomator = async (
 
   switch (usingValue[0]) {
     case "id":
-      const packageName = await appiumGetPackageName(context);
+      const packageName = await appiumGetPackageName(response);
 
       UiSelector =
         UiSelector +
@@ -126,8 +126,8 @@ export const appiumFindByUiAutomator = async (
   }
 
   const res = await sendAppiumRequest(
-    context.scenario,
-    `/session/${context.sessionId}/elements`,
+    response.scenario,
+    `/session/${response.sessionId}/elements`,
     {
       method: "post",
       data: {
@@ -147,12 +147,12 @@ export const appiumFindByUiAutomator = async (
 };
 
 const appiumGetPackageName = async (
-  context: iAssertionContext
+  response: AppiumResponse
 ): Promise<string> => {
   // The call to the Appium API is part of the deprecated JSONWP specification and is subject to removal
   const res = await sendAppiumRequest(
-    context.scenario,
-    `/session/${context.sessionId}/appium/device/current_package`,
+    response.scenario,
+    `/session/${response.sessionId}/appium/device/current_package`,
     {
       method: "get",
     }
