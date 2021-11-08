@@ -185,6 +185,11 @@
       "id": "",
       "name": "todo",
       "tags": []
+    },
+    "currentUrl": {
+      "id": "",
+      "name": "currentUrl",
+      "tags": []
     }
   }
 }

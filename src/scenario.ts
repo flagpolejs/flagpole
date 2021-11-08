@@ -61,6 +61,10 @@ import {
 } from "./decorators";
 import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
+import {
+  appiumSessionDestroy,
+  appiumSessionCreate,
+} from "./appium/appium-helpers";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -987,6 +991,10 @@ export class Scenario implements iScenario {
           ...overrides, // What was in the command line
         },
       });
+    } else if (type == "appium") {
+      this.before(appiumSessionCreate(this, opts))
+        .after(appiumSessionDestroy(this))
+        .open("/");
     } else {
       this._request
         .setOptions({

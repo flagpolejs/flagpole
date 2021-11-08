@@ -34,6 +34,11 @@ export const HttpMethodVerbAllowedValues = [
 ];
 
 export class HttpRequest implements iHttpRequest {
+  static createEmpty() {
+    const r = new HttpRequest({});
+    return r;
+  }
+
   private _uri: string | null = null;
   private _method: HttpMethodVerb = "get";
   private _headers: KeyValue = {};

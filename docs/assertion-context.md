@@ -510,7 +510,7 @@ await context.scrollTo({ y: 500 });
 Select items in a dropdown or multi-select box.
 
 ```javascript
-await context.select('select[name="favoriteSport"]', "Track & Field");
+await context.selectOption('select[name="favoriteSport"]', "Track & Field");
 ```
 
 ### set(aliasName: string, value: any): AssertionContext

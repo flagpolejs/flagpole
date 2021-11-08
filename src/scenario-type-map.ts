@@ -17,6 +17,7 @@ import { fetchWithFfprobe } from "./adapters/ffprobe";
 import { fetchWithMediaStreamValidator } from "./adapters/mediastreamvalidator";
 import { fetchImageWithNeedle } from "./adapters/image";
 import { SoapResponse } from "./xml/soapresponse";
+import { AppiumResponse } from "./appium/appiumresponse";
 
 const typeToClassMap: { [type: string]: any } = {
   html: HtmlResponse,
@@ -33,6 +34,7 @@ const typeToClassMap: { [type: string]: any } = {
   ffprobe: FfprobeResponse,
   resource: ResourceResponse,
   mediastreamvalidator: MediaStreamValidatorResponse,
+  appium: AppiumResponse,
 };
 
 const typeToFetchAdapter: { [type: string]: HttpRequestFetch } = {
@@ -48,6 +50,7 @@ const typeToFetchAdapter: { [type: string]: HttpRequestFetch } = {
   ffprobe: fetchWithFfprobe,
   mediastreamvalidator: fetchWithMediaStreamValidator,
   image: fetchImageWithNeedle,
+  appium: fetchWithNeedle,
 };
 
 export function createResponse(scenario: iScenario): iResponse {
