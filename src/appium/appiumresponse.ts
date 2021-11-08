@@ -78,12 +78,9 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    console.log(a);
-    console.log(b);
     const usingValue = selector.split("/");
     let elements: iValue[] = [];
     const params = getFindParams(a, b);
-    console.log("params: " + params.opts);
     let res: JsonDoc = new JsonDoc({});
     if (params.matches) {
       throw "Appium does not support finding elements by RegEx";
@@ -143,7 +140,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       );
     }
     if (params.opts) {
-      console.log(params.opts);
       elements = applyOffsetAndLimit(params.opts, elements);
     }
 
