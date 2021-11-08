@@ -3,6 +3,7 @@ import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
 import { sendAppiumRequest } from "./appium-helpers";
+import { AppiumResponse } from "./appiumresponse";
 
 export class AppiumElement extends DOMElement implements iValue {
   protected _elementId: string;
@@ -89,6 +90,19 @@ export class AppiumElement extends DOMElement implements iValue {
   public async clearThenType(input: string): Promise<void> {
     await this.clear();
     await this.type(input);
+  }
+
+  public async isVisible(): Promise<boolean> {
+    const response = this.context.response as AppiumResponse;
+    const res = await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${response.sessionId}/element/${this._elementId}/displayed`,
+      {
+        method: "get",
+      }
+    );
+
+    return res.jsonRoot.value;
   }
 
   protected async _getValue(): Promise<any> {
