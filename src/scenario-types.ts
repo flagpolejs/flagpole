@@ -12,4 +12,5 @@ export type ScenarioType =
   | "rss"
   | "atom"
   | "soap"
+  | "appium"
   | "headers";

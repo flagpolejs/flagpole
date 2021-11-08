@@ -60,3 +60,5 @@ Sure! Please contribute your pull request.
 - Start properties or methods that return booleans with "is" or "has" or "can" or something similar that reads what it is
 - Start methods that convert an object to a different type with "to" like "toArray"
 - Some things are designed to be chained, such as setting up a Suite or Scenario, so allow this to be chained by returning themselves, but don't chain just for the sake of chaining. Chain of readability and convenience of DX only.
+
+.

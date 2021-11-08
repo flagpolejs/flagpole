@@ -1923,10 +1923,10 @@
   "resolved" "https://registry.npmjs.org/mimic-fn/-/mimic-fn-2.1.0.tgz"
   "version" "2.1.0"
 
-"minikin@^1.0.28":
-  "integrity" "sha512-UZ0xknus/+6x/boa51YTso6ypoTEfOHcrCO4QmJFPlZjzw+aGo9XMU+nytOyRd/gTmiKEPd0YmefgFwbSESrxQ=="
-  "resolved" "https://registry.npmjs.org/minikin/-/minikin-1.0.28.tgz"
-  "version" "1.0.28"
+"minikin@^1.0.29":
+  "integrity" "sha512-HCuJrgUUA9CsLj5oU0qOrG4Uaw1MtJdxBM+hclu7vxae7CGQAjws6dK9NDusHVW7MgIxfn28ClhH0XGSGhZ1pA=="
+  "resolved" "https://registry.npmjs.org/minikin/-/minikin-1.0.29.tgz"
+  "version" "1.0.29"
 
 "minimatch@^3.0.3", "minimatch@^3.0.4":
   "integrity" "sha512-yJHVQEhyqPLUTgt9B83PXu6W3rx4MvvHvSUvToogpwoGDOUQ+yDrR0HRot+yOCdCO7u4hX3pWft6kWBBcqh0UA=="

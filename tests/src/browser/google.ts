@@ -59,4 +59,5 @@ suite
     context
       .assert("There are more than one divs in it", divCount)
       .greaterThan(0);
+    context.comment(context.currentUrl.$);
   });

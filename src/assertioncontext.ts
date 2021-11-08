@@ -133,6 +133,10 @@ export class AssertionContext implements iAssertionContext {
     return Promise.all(this._subScenarios);
   }
 
+  public get currentUrl(): iValue {
+    return this.response.currentUrl;
+  }
+
   constructor(scenario: iScenario, response: iResponse) {
     this._scenario = scenario;
     this._response = response;
