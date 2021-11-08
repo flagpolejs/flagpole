@@ -115,12 +115,13 @@ export const appiumFindByUiAutomator = async (
     }
   );
 
-  const elements: iValue[] = (res.jsonRoot.value as unknown[]).map((item, i) =>
-    wrapAsValue(
-      response.context,
-      item,
-      `${selector} with text "${text}" [${i}]`
-    )
+  const elements: iValue[] = (res.jsonRoot.value as AppiumValueResponse[]).map(
+    (item, i) =>
+      wrapAsValue(
+        response.context,
+        item.ELEMENT,
+        `${selector} with text "${text}" [${i}]`
+      )
   );
 
   return opts?.offset || opts?.limit
@@ -152,4 +153,9 @@ const getAppiumSessionCapabilities = async (
   });
 
   return res.jsonRoot.value;
+};
+
+type AppiumValueResponse = {
+  [0]: string;
+  ELEMENT: string;
 };
