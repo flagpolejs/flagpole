@@ -14,25 +14,10 @@ jobs:
       matrix:
         node-version: [12.x, 14.x]
         flagpoleCommand:
-          - directory: test-base
-            name: test-base
-            command: --build --base=https://jsonplaceholder.typicode.com --all
-          - directory: test-javascript
-            name: test-javascript
+          - name: test-todo
+            command: --build --base=https://jsonplaceholder.typicode.com -s todo
+          - name: run-all
             command: --all
-          - directory: test-multi
-            name: test-single-suite
-            command: -s main --build
-          - directory: test-multi
-            name: test-multi-suite
-            command: -s main,other,smoke --build
-          - directory: test-multi
-            name: test-single-tag
-            command: -t foo --build
-          - directory: test-multi
-            name: test-browser
-            command: -s browser/* --build
-
 
     steps:
       - uses: actions/checkout@v2
@@ -51,4 +36,4 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
       - run: npm install --no-save
       - run: npm run build --if-present
-      - run: cd ci/tests/${{ matrix.flagpoleCommand.directory }} && xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run ${{ matrix.flagpoleCommand.command }}
+      - run: xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run ${{ matrix.flagpoleCommand.command }}
