@@ -61,7 +61,7 @@ export class Value implements iValue {
   }
 
   public get tagName(): string {
-    return (this._tagName || "").toLowerCase();
+    return this._tagName?.toLowerCase() || "";
   }
 
   public get outerHTML(): string {
