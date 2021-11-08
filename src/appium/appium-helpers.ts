@@ -4,10 +4,9 @@ import {
   HttpRequestOptions,
   iScenario,
   iValue,
-  iAssertionContext,
   FindAllOptions,
 } from "../interfaces";
-import { applyOffsetAndLimit } from "../helpers";
+import { applyOffsetAndLimit, wrapAsValue } from "../helpers";
 import { AppiumResponse } from "./appiumresponse";
 import { JsonDoc } from "../json/jpath";
 
@@ -92,37 +91,16 @@ export const appiumFindByUiAutomator = async (
   switch (usingValue[0]) {
     case "id":
       const packageName = await appiumGetPackageName(response);
-
-      UiSelector =
-        UiSelector +
-        'resourceId("' +
-        packageName +
-        ":id/" +
-        usingValue[1] +
-        '").textContains("' +
-        text +
-        '")';
+      UiSelector += `resourceId("${packageName}:id/${usingValue[1]}").textContains("${text}")`;
       break;
     case "class name":
-      UiSelector =
-        UiSelector +
-        'className("' +
-        usingValue[1] +
-        '").textContains("' +
-        text +
-        '")';
+      UiSelector += `className("${usingValue[1]}").textContains("${text}")`;
       break;
     case "accessibility id":
-      UiSelector =
-        UiSelector +
-        'description("' +
-        usingValue[1] +
-        '").textContains()' +
-        text +
-        '")';
+      UiSelector += `description("${usingValue[1]}").textContains("${text}")`;
       break;
     default:
-      UiSelector = UiSelector + 'text("' + text + '")';
+      UiSelector += `text("${text}")`;
   }
 
   const res = await sendAppiumRequest(
@@ -137,13 +115,17 @@ export const appiumFindByUiAutomator = async (
     }
   );
 
-  let elements: iValue[] = res.jsonRoot.value;
+  const elements: iValue[] = (res.jsonRoot.value as unknown[]).map((item, i) =>
+    wrapAsValue(
+      response.context,
+      item,
+      `${selector} with text "${text}" [${i}]`
+    )
+  );
 
-  if (opts?.offset || opts?.limit) {
-    elements = applyOffsetAndLimit(opts, elements);
-  }
-
-  return elements;
+  return opts?.offset || opts?.limit
+    ? applyOffsetAndLimit(opts, elements)
+    : elements;
 };
 
 const appiumGetPackageName = async (
@@ -162,28 +144,12 @@ const appiumGetPackageName = async (
 };
 
 const getAppiumSessionCapabilities = async (
-  existingSessionId: string,
+  sessionId: string,
   scenario: Scenario
 ) => {
-  const res = await sendAppiumRequest(
-    scenario,
-    `/session/${existingSessionId}`,
-    {
-      method: "get",
-    }
-  );
-
-  return res.jsonRoot.value;
-};
-
-const getAppiumSessionCapabilities = async (scenario: Scenario) => {
-  const res = await sendAppiumRequest(
-    scenario,
-    `/session/${scenario.get("sessionId")}`,
-    {
-      method: "get",
-    }
-  );
+  const res = await sendAppiumRequest(scenario, `/session/${sessionId}`, {
+    method: "get",
+  });
 
   return res.jsonRoot.value;
 };
