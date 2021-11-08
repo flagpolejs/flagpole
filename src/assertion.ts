@@ -28,7 +28,7 @@ import {
   asyncFindNot,
   validateSchema,
 } from "./util";
-import { ImageCompare } from "./imagecompare";
+import { ImageCompare } from "./image/image-compare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { AssertionIs } from "./assertion-is";
 import { Schema } from "ajv";

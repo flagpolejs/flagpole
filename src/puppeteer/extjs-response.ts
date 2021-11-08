@@ -1,27 +1,21 @@
-import { ExtJsComponent } from "./extjscomponent";
-import {
-  iResponse,
-  iScenario,
-  FindOptions,
-  FindAllOptions,
-  iValue,
-} from "../interfaces";
-import { PuppeteerResponse } from "./puppeteerresponse";
-import { PuppeteerElement } from "./puppeteerelement";
+import { ExtJsComponent } from "./extjs-component";
+import { iResponse, FindOptions, FindAllOptions, iValue } from "../interfaces";
+import { PuppeteerResponse } from "./puppeteer-response";
+import { PuppeteerElement } from "./puppeteer-element";
 import { asyncForEach, asyncMap } from "../util";
 import {
   filterFind,
   getFindParams,
-  wrapAsValue,
   findOne,
   getFindName,
   FindParams,
 } from "../helpers";
 import { ElementHandle, JSHandle, EvaluateFn } from "puppeteer-core";
-import { BrowserElement } from "./browserelement";
-import { query, jsHandleArrayToHandles } from "./ext.helper";
+import { BrowserElement } from "./browser-element";
+import { query, jsHandleArrayToHandles } from "./extjs-helper";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { ExtJsScenario } from "./extjs-scenario";
 
 declare type globalThis = {
   Ext: any;
@@ -36,16 +30,16 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     return "extjs";
   }
 
-  constructor(scenario: iScenario) {
+  constructor(scenario: ExtJsScenario) {
     super(scenario);
     // Before this scenario starts to run
     scenario.before(() => {
       scenario.nextPrepend(async (context) => {
-        if (context.page === null) {
+        if (this.page === null) {
           context.logFailure("Browser page not found");
           return;
         }
-        await context.page.waitForFunction(
+        await this.page.waitForFunction(
           // @ts-ignore
           () => !!Ext && !!Ext.ComponentQuery
         );
@@ -55,7 +49,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
             isExtReady = true;
           });
         `);
-        await context.page.waitForFunction("isExtReady");
+        await this.page.waitForFunction("isExtReady");
       });
     });
   }
@@ -73,7 +67,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
         xPath
       );
     }
-    return wrapAsValue(this.context, null, xPath);
+    return this.wrapAsValue(this.context, null, xPath);
   }
 
   public async findAllXPath(xPath: string): Promise<iValue[]> {
@@ -82,8 +76,8 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     }
     const response: iResponse = this;
     const puppeteerElements: PuppeteerElement[] = [];
-    if (this.context.page !== null) {
-      const elements = await this.context.page.$x(xPath);
+    if (this.page !== null) {
+      const elements = await this.page.$x(xPath);
       await asyncForEach(elements, async (el, i) => {
         const element = await ExtJsComponent.create(
           el,
@@ -159,7 +153,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     const ref = await this._page.evaluateHandle(js);
     return ref
       ? await ExtJsComponent.create(ref, this.context, name, path)
-      : wrapAsValue(this.context, null, name, path);
+      : this.wrapAsValue(this.context, null, name, path);
   }
 
   private async _injectScript(content: string): Promise<void> {
@@ -203,7 +197,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
           return component;
         }
       }
-      return wrapAsValue(this.context, null, selector);
+      return this.wrapAsValue(this.context, null, selector);
     });
   }
 

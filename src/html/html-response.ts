@@ -1,15 +1,9 @@
-import { HTMLElement } from "./htmlelement";
+import { HTMLElement } from "./html-element";
 import { HttpResponse } from "../httpresponse";
-import { DOMResponse } from "./domresponse";
-import {
-  iResponse,
-  iValue,
-  FindAllOptions,
-  FindOptions,
-  iScenario,
-} from "../interfaces";
+import { DOMResponse } from "./dom-response";
+import { iResponse, iValue, FindAllOptions, FindOptions } from "../interfaces";
 import * as cheerio from "cheerio";
-import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
+import { getFindParams, filterFind, findOne } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 
@@ -36,7 +30,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
   }
 
   public get currentUrl(): iValue {
-    return wrapAsValue(this.context, this._currentUrl, "Current URL");
+    return this.wrapAsValue(this.context, this._currentUrl, "Current URL");
   }
 
   public init(res: HttpResponse) {
@@ -70,7 +64,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
             null,
             selector
           )
-        : wrapAsValue(this.context, null, selector);
+        : this.wrapAsValue(this.context, null, selector);
     });
   }
 

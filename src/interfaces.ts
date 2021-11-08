@@ -1,4 +1,3 @@
-import { BrowserControl } from "./puppeteer/browsercontrol";
 import {
   Page,
   EvaluateFn,
@@ -11,14 +10,12 @@ import {
   LineType,
   ScenarioDisposition,
 } from "./enums";
-import { HttpResponse } from "./httpresponse";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { Link } from "./link";
 import { ServerOptions } from "https";
 import { Server } from "minikin";
 import validator from "validator";
 import { ValuePromise } from "./value-promise";
-import { ScenarioType } from "./scenario-types";
 import { LaunchOptions } from "puppeteer-core";
 import * as http from "http";
 import { ErrorObject, Schema } from "ajv";
@@ -30,6 +27,7 @@ import {
   SyncMapperCallback,
   SyncReducerCallback,
 } from "./interfaces/iterator-callbacks";
+import { ScenarioType } from "./scenario-types";
 
 export type CompareCallback = (a: any, b: any) => number;
 
@@ -58,10 +56,10 @@ export interface FindAllOptions extends FindOptions {
   limit?: number;
 }
 
-export type ResponseSyncPipe = (resp: HttpResponse) => void | HttpResponse;
+export type ResponseSyncPipe = (resp: iHttpResponse) => void | iHttpResponse;
 export type ResponseAsyncPipe = (
-  resp: HttpResponse
-) => Promise<void | HttpResponse>;
+  resp: iHttpResponse
+) => Promise<void | iHttpResponse>;
 export type ResponsePipe = ResponseSyncPipe | ResponseAsyncPipe;
 export type ResponsePipeCallbackAndMessage = {
   message: string;
@@ -260,13 +258,13 @@ export interface iValue {
   hasText(text?: string | RegExp): Promise<boolean>;
   hasProperty(key: string, value?: any): Promise<boolean>;
   hasValue(value?: any): Promise<boolean>;
-  download(): Promise<HttpResponse | null>;
-  download(localFilePath: string): Promise<HttpResponse | null>;
+  download(): Promise<iHttpResponse | null>;
+  download(localFilePath: string): Promise<iHttpResponse | null>;
   download(
     localFilePath: string,
     opts: HttpRequestOptions
-  ): Promise<HttpResponse | null>;
-  download(opts: HttpRequestOptions): Promise<HttpResponse | null>;
+  ): Promise<iHttpResponse | null>;
+  download(opts: HttpRequestOptions): Promise<iHttpResponse | null>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
@@ -350,9 +348,8 @@ export interface iResponse {
   cookies: iValue;
   trailers: iValue;
   method: iValue;
-  isBrowser: boolean;
   readonly scenario: iScenario;
-  init(res: HttpResponse): void;
+  init(res: iHttpResponse): void;
   navigate(req: iHttpRequest): Promise<void>;
   getRoot(): any;
   find(path: string, opts?: FindOptions): ValuePromise;
@@ -423,6 +420,12 @@ export interface iResponse {
   ): Promise<iValue>;
   click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
   serialize(): object;
+  wrapAsValue(
+    context: iAssertionContext,
+    data: any,
+    name: string,
+    source?: any
+  ): iValue;
 }
 
 export interface iAssertionIs {
@@ -570,9 +573,7 @@ export interface iAssertionContext {
   response: iResponse;
   scenario: iScenario;
   suite: iSuite;
-  browserControl: BrowserControl | null;
   executionOptions: FlagpoleExecution;
-  page: Page | null;
   incompleteAssertions: iAssertion[];
   assertionsResolved: Promise<(iAssertionResult | null)[]>;
   subScenariosResolved: Promise<any[]>;
@@ -770,6 +771,8 @@ export interface iScenario {
   opts: any;
   suite: iSuite;
   responseType: ScenarioType;
+  request: iHttpRequest;
+  response: iResponse;
   title: string;
   totalDuration: number | null;
   executionDuration: number | null;
@@ -785,8 +788,6 @@ export interface iScenario {
   finalUrl: string | null;
   redirectCount: number;
   redirectChain: string[];
-  request: iHttpRequest;
-  browserControl: BrowserControl | null;
   hasAborted: boolean;
   hasBeenCancelled: boolean;
   hasBeenSkipped: boolean;
@@ -870,14 +871,18 @@ export interface iScenario {
   webhook(port: number, opts: ServerOptions): iScenario;
   webhook(opts: ServerOptions): iScenario;
   server(): Promise<WebhookServer>;
-  setResponseType(type: ScenarioType, opts?: KeyValue): iScenario;
   promise(): Promise<iScenario>;
   waitForFinished(): Promise<iScenario>;
   waitForResponse(): Promise<iScenario>;
   waitFor(thatScenario: iScenario): iScenario;
   repeat(): iScenario;
   repeat(count: number): iScenario[];
+  go(): Promise<iScenario>;
 }
+
+export type ClassConstructor<T> = {
+  new (...args: any[]): T;
+};
 
 export interface iMessageAndCallback {
   isSubScenario: boolean;
@@ -956,7 +961,7 @@ export interface BrowserOptions extends LaunchOptions {
 export type HttpRequestFetch = (
   request: iHttpRequest,
   opts?: KeyValue
-) => Promise<HttpResponse>;
+) => Promise<iHttpResponse>;
 
 export type HttpMethodVerb =
   | "get"
@@ -1032,6 +1037,18 @@ export interface iHttpRequest {
   outputFile?: string;
   options: HttpRequestOptions;
   proxyAgent?: http.Agent;
+}
+
+export interface iHttpResponse {
+  body: string;
+  json: any;
+  statusCode: number;
+  statusMessage: string;
+  headers: KeyValue;
+  cookies: KeyValue;
+  trailers: KeyValue;
+  url: string;
+  method: string;
 }
 
 export const CONTENT_TYPE_JSON = "application/json";

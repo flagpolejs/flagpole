@@ -1,5 +1,5 @@
 import { iAssertionContext, iValue } from "../interfaces";
-import { PuppeteerElement } from "./puppeteerelement";
+import { PuppeteerElement } from "./puppeteer-element";
 import {
   JSHandle,
   EvaluateFn,
@@ -7,10 +7,9 @@ import {
   ElementHandle,
 } from "puppeteer-core";
 import { toArray, asyncMap } from "../util";
-import { ExtJSResponse } from "./extjsresponse";
-import * as ext from "./ext.helper";
-import { wrapAsValue } from "../helpers";
-import { BrowserElement } from "./browserelement";
+import { ExtJSResponse } from "./extjs-response";
+import * as ext from "./extjs-helper";
+import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
 
 const visible: EvaluateFn = (c) => c.isVisible(true);
@@ -77,9 +76,8 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     return this._name || this._path || "ExtJs Component";
   }
 
-  private get _response(): ExtJSResponse {
-    // @ts-ignore
-    return this._context.response as ExtJSResponse;
+  protected get response(): ExtJSResponse {
+    return this.context.response as ExtJSResponse;
   }
 
   private get _isExtComponent(): boolean {
@@ -182,7 +180,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
           path
         );
       }
-      return wrapAsValue(this.context, null, name, path);
+      return this.response.wrapAsValue(this.context, null, name, path);
     });
   }
 
@@ -299,7 +297,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     selector: string
   ): Promise<ExtJsComponent | iValue> {
     const id = String(await this.eval((c) => c.nextSibling(selector)));
-    const component = await this._response.getComponentById(id);
+    const component = await this.response.getComponentById(id);
     return component || this._wrapAsValue(null, `Next Sibling of ${this.name}`);
   }
 
@@ -307,7 +305,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     selector: string
   ): Promise<ExtJsComponent | iValue> {
     const id = String(await this.eval((c) => c.previousSibling(selector)));
-    const component = await this._response.getComponentById(id);
+    const component = await this.response.getComponentById(id);
     return (
       component || this._wrapAsValue(null, `Previous Sibling of ${this.name}`)
     );

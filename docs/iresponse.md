@@ -36,10 +36,6 @@ Value object containing the key-value pair of all the response headers.
 context.assert(context.response.headers).contains("session");
 ```
 
-### isBrowser: boolean
-
-Is this current response the result of a browser (Puppetteer) scenario? Versus a more stanard HTTP request-response.
-
 ### jsonBody: iValue
 
 The JSON body of the response. If the response body was not in a valid JSON format this will be a null value.

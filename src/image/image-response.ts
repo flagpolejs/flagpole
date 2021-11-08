@@ -1,11 +1,10 @@
-import { ProtoResponse } from "./response";
-import { iResponse, iValue } from "./interfaces";
+import { ProtoResponse } from "../response";
+import { iResponse, iValue } from "../interfaces";
 import { URL } from "url";
-import { HttpResponse } from "./httpresponse";
-import { Value } from "./value";
-import { wrapAsValue } from "./helpers";
-import { ValuePromise } from "./value-promise";
-import { ScenarioType } from "./scenario-types";
+import { HttpResponse } from "../httpresponse";
+import { Value } from "../value";
+import { ValuePromise } from "../value-promise";
+import { ScenarioType } from "../scenario-types";
 
 export interface ImageProperties {
   width: number;
@@ -27,15 +26,23 @@ export class ImageResponse extends ProtoResponse implements iResponse {
   };
 
   public get length(): iValue {
-    return wrapAsValue(this.context, this.imageProperties.length, "Image Size");
+    return this.wrapAsValue(
+      this.context,
+      this.imageProperties.length,
+      "Image Size"
+    );
   }
 
   public get url(): iValue {
-    return wrapAsValue(this.context, this.imageProperties.url, "URL of Image");
+    return this.wrapAsValue(
+      this.context,
+      this.imageProperties.url,
+      "URL of Image"
+    );
   }
 
   public get path(): iValue {
-    return wrapAsValue(
+    return this.wrapAsValue(
       this.context,
       new URL(this.imageProperties.url).pathname,
       "URL Path of Image"

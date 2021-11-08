@@ -1,9 +1,9 @@
 import * as fs from "fs-extra";
 import { resolve } from "path";
 import { PNG } from "pngjs";
-import { toType, ensureFolderExists } from "./util";
-import { iAssertionContext } from "./interfaces";
-import { FlagpoleExecution } from "./flagpoleexecution";
+import { toType, ensureFolderExists } from "../util";
+import { iAssertionContext } from "../interfaces";
+import { FlagpoleExecution } from "../flagpoleexecution";
 import pixelmatch = require("pixelmatch");
 
 export class ImageCompare {

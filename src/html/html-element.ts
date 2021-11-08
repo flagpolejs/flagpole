@@ -1,4 +1,4 @@
-import { DOMElement } from "./domelement";
+import { DOMElement } from "./dom-element";
 import { Link } from "../link";
 import {
   iAssertionContext,

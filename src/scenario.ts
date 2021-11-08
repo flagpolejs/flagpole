@@ -16,7 +16,6 @@ import {
   iValue,
   HttpResponseOptions,
   WebhookServer,
-  BrowserOptions,
   HttpRequestOptions,
   HttpProxy,
   HttpAuth,
@@ -24,34 +23,25 @@ import {
   HttpMethodVerb,
   CONTENT_TYPE_SOAP,
   CONTENT_TYPE_JSON,
+  HttpRequestFetch,
+  ClassConstructor,
 } from "./interfaces";
-import * as puppeteer from "puppeteer-core";
-import {
-  BrowserControl,
-  iBrowserControlResponse,
-} from "./puppeteer/browsercontrol";
-import { getRequestAdapter, createResponse } from "./scenario-type-map";
 import {
   AssertionResult,
   AssertionPass,
   AssertionFail,
   AssertionFailWarning,
-  AssertionFailOptional,
 } from "./logging/assertionresult";
 import { HttpResponse } from "./httpresponse";
-import { ResourceResponse } from "./resourceresponse";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/logcollection";
 import { HttpRequest, HttpMethodVerbAllowedValues } from "./httprequest";
-import { FlagpoleExecution } from "./flagpoleexecution";
 import { toType, asyncForEach, runAsync } from "./util";
 import { AssertionContext } from "./assertioncontext";
 import * as bluebird from "bluebird";
-import { Browser } from "puppeteer-core";
-import minikin, { Response, Server } from "minikin";
+import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
-import { wrapAsValue } from "./helpers";
 import {
   beforeScenarioExecuted,
   afterScenarioReady,
@@ -61,10 +51,6 @@ import {
 } from "./decorators";
 import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
-import {
-  appiumSessionDestroy,
-  appiumSessionCreate,
-} from "./appium/appium-helpers";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -76,22 +62,47 @@ enum ScenarioRequestType {
 /**
  * A scenario contains tests that run against one request
  */
-export class Scenario implements iScenario {
-  public readonly suite: iSuite;
+export abstract class ProtoScenario implements iScenario {
+  protected abstract responseClass: ClassConstructor<iResponse>;
+  protected abstract requestAdapter: HttpRequestFetch;
+
+  public constructor(
+    public readonly suite: iSuite,
+    public readonly title: string,
+    type: ScenarioType,
+    opts: { [key: string]: any }
+  ) {
+    this._responseType = type;
+    this._requestPromise = new Promise((resolve) => {
+      this._requestResolve = resolve;
+    });
+    this._finishedPromise = new Promise((resolve) => {
+      this._finishedResolve = resolve;
+    });
+    this._webhookPromise = new Promise((resolve) => {
+      this._webhookResolver = resolve;
+    });
+    this._request = this._createRequest(opts);
+    this._response = this._createResponse(opts);
+  }
+
+  protected _createRequest(opts: { [key: string]: any }) {
+    const request = new HttpRequest(this._getDefaultRequestOptions());
+    request
+      .setOptions({
+        ...this._getDefaultRequestOptions(),
+        ...opts,
+      })
+      .setType(this._responseType);
+    return request;
+  }
+
+  protected _createResponse(opts: { [key: string]: any }) {
+    return new this.responseClass(this);
+  }
 
   public get responseType(): ScenarioType {
     return this._responseType;
-  }
-
-  public get title(): string {
-    return this._title;
-  }
-
-  public set title(newTitle: string) {
-    if (this.hasExecuted) {
-      throw "Can not change the scenario's title after execution has started.";
-    }
-    this._title = newTitle;
   }
 
   /**
@@ -196,17 +207,6 @@ export class Scenario implements iScenario {
     return this.hasExecuted && this._timeScenarioFinished !== null;
   }
 
-  public get browserControl(): BrowserControl | null {
-    if (this._response.isBrowser && this._browserControl === null) {
-      this._browserControl = new BrowserControl();
-    }
-    return this._browserControl;
-  }
-
-  public get browser(): Browser | null {
-    return this._browserControl?.browser || null;
-  }
-
   /**
    * We will implicitly wait if the URL is not defined or has params in it
    */
@@ -291,6 +291,10 @@ export class Scenario implements iScenario {
     return this._request;
   }
 
+  public get response(): iResponse {
+    return this._response;
+  }
+
   public get nextCallbacks(): Array<{
     message: string;
     callback: iNextCallback;
@@ -303,7 +307,6 @@ export class Scenario implements iScenario {
     });
   }
 
-  protected _title: string;
   protected _log: LogCollection = new LogCollection();
   protected _subscribers: ScenarioStatusCallback[] = [];
   protected _nextCallbacks: iNextCallback[] = [];
@@ -320,7 +323,7 @@ export class Scenario implements iScenario {
   protected _timeRequestLoaded: number | null = null;
   protected _timeScenarioFinished: number | null = null;
   protected _requestType: ScenarioRequestType = ScenarioRequestType.httpRequest;
-  protected _responseType: ScenarioType = "html";
+  protected _responseType: ScenarioType;
   protected _redirectChain: string[] = [];
   protected _finalUrl: string | null = null;
   protected _waitToExecute: boolean = false;
@@ -329,13 +332,8 @@ export class Scenario implements iScenario {
   protected _ignoreAssertion: boolean = false;
   protected _request: HttpRequest;
   protected _mockResponseOptions: HttpResponseOptions | null = null;
-  protected _browserControl: BrowserControl | null = null;
   protected _response: iResponse;
-  protected _defaultBrowserOptions: BrowserOptions = {
-    headless: true,
-    recordConsole: true,
-    outputConsole: false,
-  };
+
   protected _defaultMethodByType: { [type in ScenarioType]?: HttpMethodVerb } =
     {
       soap: "post",
@@ -354,31 +352,6 @@ export class Scenario implements iScenario {
   protected _disposition: ScenarioDisposition = ScenarioDisposition.pending;
   protected _webhookPromise: Promise<WebhookServer>;
   protected _webhookResolver: Function = () => {};
-
-  public static create(
-    suite: iSuite,
-    title: string,
-    type: ScenarioType,
-    opts: any
-  ): iScenario {
-    return new Scenario(suite, title).setResponseType(type, opts);
-  }
-
-  protected constructor(suite: iSuite, title: string) {
-    this.suite = suite;
-    this._request = new HttpRequest(this._getDefaultRequestOptions());
-    this._title = title;
-    this._response = new ResourceResponse(this);
-    this._requestPromise = new Promise((resolve) => {
-      this._requestResolve = resolve;
-    });
-    this._finishedPromise = new Promise((resolve) => {
-      this._finishedResolve = resolve;
-    });
-    this._webhookPromise = new Promise((resolve) => {
-      this._webhookResolver = resolve;
-    });
-  }
 
   protected _getDefaultRequestOptions(): HttpRequestOptions {
     const headers: KeyValue = {};
@@ -967,46 +940,6 @@ export class Scenario implements iScenario {
     return this._webhookPromise;
   }
 
-  /**
-   * Set the type of response this scenario is and the options
-   *
-   * @param type
-   * @param opts
-   */
-  @beforeScenarioExecuted
-  public setResponseType(type: ScenarioType, opts: any = {}): iScenario {
-    // Merge passed in opts with default opts
-    this._responseType = type;
-    if (["browser", "extjs"].includes(type)) {
-      // Overrides from command line
-      const overrides: any = {};
-      if (FlagpoleExecution.global.headless !== undefined) {
-        overrides.headless = FlagpoleExecution.global.headless;
-      }
-      // Set browser options
-      this._request.setOptions({
-        browserOptions: {
-          ...this._defaultBrowserOptions, // Flagpole defaults
-          ...opts, // What was in the code
-          ...overrides, // What was in the command line
-        },
-      });
-    } else if (type == "appium") {
-      this.before(appiumSessionCreate(this, opts))
-        .after(appiumSessionDestroy(this))
-        .open("/");
-    } else {
-      this._request
-        .setOptions({
-          ...this._getDefaultRequestOptions(),
-          ...opts,
-        })
-        .setType(this._responseType);
-    }
-    this._response = createResponse(this);
-    return this;
-  }
-
   public waitForFinished(): Promise<iScenario> {
     return this._finishedPromise;
   }
@@ -1061,7 +994,7 @@ export class Scenario implements iScenario {
     return new URL(path, this.suite.baseUrl.href);
   }
 
-  private _pushCallbacks(
+  protected _pushCallbacks(
     name: string,
     callbacksName: string,
     a:
@@ -1139,10 +1072,7 @@ export class Scenario implements iScenario {
     this._publish(ScenarioStatusEvent.executionProgress);
     bluebird
       .mapSeries(this._nextCallbacks, (_then, index) => {
-        const context: iAssertionContext = new AssertionContext(
-          this,
-          this._response
-        );
+        const context: iAssertionContext = new AssertionContext(this);
         const comment: string | null = this._nextMessages[index];
         if (comment !== null) {
           this._pushToLog(new LogScenarioSubHeading(comment));
@@ -1185,77 +1115,9 @@ export class Scenario implements iScenario {
   }
 
   /**
-   * Start a browser scenario
-   */
-  private _executeBrowserRequest() {
-    if (!this.browserControl) {
-      throw "Not a browser scenario";
-    }
-    const handleError = (message: string, e: any) => {
-      setTimeout(() => {
-        this._markScenarioCompleted(message, e, ScenarioDisposition.aborted);
-      }, 1000);
-    };
-    this.browserControl
-      .open(this._request)
-      .then((next: iBrowserControlResponse) => {
-        const puppeteerResponse: puppeteer.Response = next.response;
-        if (puppeteerResponse !== null) {
-          this._finalUrl = puppeteerResponse.url();
-          // Loop through the redirects to populate our array
-          puppeteerResponse
-            .request()
-            .redirectChain()
-            .forEach((req) => {
-              this._redirectChain.push(req.url());
-            });
-          // Handle errors
-          this.browser?.on("disconnected", (e) =>
-            handleError("Puppeteer instance unexpectedly closed.", e)
-          );
-          this.browserControl?.page?.on("close", (e) =>
-            handleError("Puppeteer closed unexpectedly.", e)
-          );
-          this.browserControl?.page?.on("error", (e) =>
-            handleError("Puppeteer got an unexpected error.", e)
-          );
-          this.browserControl?.page?.on("pageerror", (e) =>
-            this._pushToLog(
-              new AssertionFailOptional(
-                "Puppeteer got an unexpected page error.",
-                e
-              )
-            )
-          );
-          // Finishing processing the response
-          this._processResponse(
-            HttpResponse.fromPuppeteer(
-              puppeteerResponse,
-              next.body,
-              next.cookies
-            )
-          );
-        } else {
-          this._markScenarioCompleted(
-            `Failed to load ${this._request.uri}`,
-            null,
-            ScenarioDisposition.aborted
-          );
-        }
-        return;
-      })
-      .catch((err) =>
-        this._markScenarioCompleted(
-          `Failed to load ${this._request.uri}`,
-          err,
-          ScenarioDisposition.aborted
-        )
-      );
-  }
-  /**
    * Start a regular request scenario
    */
-  private _executeDefaultRequest() {
+  protected _executeDefaultRequest() {
     this._request
       .fetch(
         {
@@ -1264,7 +1126,7 @@ export class Scenario implements iScenario {
             this._redirectChain.push(url);
           },
         },
-        getRequestAdapter(this)
+        this.requestAdapter
       )
       .then((response) => {
         this._processResponse(response);
@@ -1278,7 +1140,7 @@ export class Scenario implements iScenario {
       });
   }
 
-  private _markRequestAsStarted() {
+  protected _markRequestAsStarted() {
     this._timeRequestStarted = Date.now();
   }
 
@@ -1296,11 +1158,7 @@ export class Scenario implements iScenario {
     }
     this._markRequestAsStarted();
     this._finalUrl = this._request.uri;
-    if (["extjs", "browser"].includes(this._responseType)) {
-      this._executeBrowserRequest();
-    } else {
-      this._executeDefaultRequest();
-    }
+    this._executeDefaultRequest();
   }
 
   /**
@@ -1392,23 +1250,22 @@ export class Scenario implements iScenario {
         : await this._fireFailure(details || message || disposition);
       // Finally
       await this._fireFinally();
-      // Close the browser window
       // Important! Don't close right away, some things may need to finish that were async
-      runAsync(() => {
-        this.browserControl?.close();
-      }, 100);
+      runAsync(this._destroySession, 100);
     }
     return this;
   }
 
-  private async _fireCallbacks(callbacks: ScenarioCallbackAndMessage[]) {
+  protected _destroySession() {}
+
+  protected async _fireCallbacks(callbacks: ScenarioCallbackAndMessage[]) {
     await asyncForEach(callbacks, async (cb) => {
       cb.message && this._pushToLog(new LogComment(cb.message));
       return await cb.callback(this, this.suite);
     });
   }
 
-  private _logScenarioHeading() {
+  protected _logScenarioHeading() {
     // Log the start of this scenario
     this._pushToLog(new LogScenarioHeading(this.title));
     // If we waited first
@@ -1417,7 +1274,7 @@ export class Scenario implements iScenario {
     }
   }
 
-  private _markExecutionAsStarted() {
+  protected _markExecutionAsStarted() {
     this._timeScenarioExecuted = Date.now();
   }
 
@@ -1474,7 +1331,12 @@ export class Scenario implements iScenario {
       //console.log(json.root);
       await context.each(paths, async (path) => {
         const data = await json.search(path);
-        const thisValue: iValue = wrapAsValue(context, data, path, data);
+        const thisValue: iValue = this.response.wrapAsValue(
+          context,
+          data,
+          path,
+          data
+        );
         const thatValue = responseValues[path];
         const type = toType(thatValue);
         if (type === "function") {

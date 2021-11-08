@@ -423,7 +423,10 @@ export class Value implements iValue {
 
   public async getLink(): Promise<Link> {
     const src = await this.getUrl();
-    return new Link(src.isString() ? src.toString() : "", this._context);
+    return new Link(
+      src.isString() ? src.toString() : "",
+      this._context.scenario.buildUrl()
+    );
   }
 
   public async getUrl(): Promise<iValue> {

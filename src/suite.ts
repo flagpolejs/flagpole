@@ -1,4 +1,3 @@
-import { Scenario } from "./scenario";
 import { URL } from "url";
 import { FlagpoleReport } from "./logging/flagpolereport";
 import {
@@ -18,6 +17,7 @@ import { SuiteTaskManager } from "./suitetaskmanager";
 import { ScenarioType } from "./scenario-types";
 import { FfprobeOptions } from "media-probe";
 import { MediaStreamValidatorOpts } from "media-stream-validator";
+import { createScenario } from "./scenario-type-map";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 
@@ -208,13 +208,9 @@ export class Suite implements iSuite {
     type: "mediastreamvalidator",
     opts?: MediaStreamValidatorOpts
   ): iScenario;
-  public scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
-  public scenario(
-    title: string,
-    type: ScenarioType = "html",
-    opts?: any
-  ): iScenario {
-    const scenario: iScenario = Scenario.create(this, title, type, opts);
+  public scenario(title: string, type: ScenarioType, opts?: any): iScenario;
+  public scenario(title: string, type: ScenarioType, opts?: any): iScenario {
+    const scenario = createScenario(this, title, type, opts);
     // Some local tests fail with SSL verify on, so may have been disabled on this suite
     scenario.verifyCert(this._verifySslCert);
     // Should we hold off on executing?

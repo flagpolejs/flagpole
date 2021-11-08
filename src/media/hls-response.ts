@@ -1,11 +1,10 @@
 import { iResponse, iValue } from "../interfaces";
 import { HttpResponse } from "../httpresponse";
 import HLS from "parse-hls";
-import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "../json/jpath";
-import { MediaResponse } from "./mediaresponse";
+import { MediaResponse } from "./media-response";
 
 export class HLSResponse
   extends MediaResponse
@@ -23,7 +22,11 @@ export class HLSResponse
   }
 
   public get jsonBody(): iValue {
-    return wrapAsValue(this.context, this.jsonDoc?.root, "Parsed Manifest");
+    return this.wrapAsValue(
+      this.context,
+      this.jsonDoc?.root,
+      "Parsed Manifest"
+    );
   }
 
   protected get isM3U8(): boolean {

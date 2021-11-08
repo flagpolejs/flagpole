@@ -1,6 +1,5 @@
 import { HttpRequest } from "../httprequest";
 import { HttpRequestOptions, iScenario } from "../interfaces";
-import { Scenario } from "../scenario";
 import { JsonDoc } from "../json/jpath";
 
 const DEFAULT_APPIUM_PORT = 4723;
@@ -28,14 +27,14 @@ export const sendAppiumRequest = async (
   return doc;
 };
 
-const getAppiumSession = async (scenario: Scenario) => {
+const getAppiumSession = async (scenario: iScenario) => {
   const json = await sendAppiumRequest(scenario, "/sessions", {
     method: "get",
   });
   return json.jsonRoot.value[0]?.id || null;
 };
 
-const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
+const createAppiumSession = async (scenario: iScenario, opts: any = {}) => {
   const json = await sendAppiumRequest(scenario, "/session", {
     method: "post",
     data: {
@@ -47,7 +46,7 @@ const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
   return json.jsonRoot.value.sessionId;
 };
 
-export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
+export const appiumSessionCreate = (scenario: iScenario, opts: any = {}) => {
   return async () => {
     const existingSessionId = await getAppiumSession(scenario);
     if (existingSessionId) {
@@ -57,7 +56,7 @@ export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
   };
 };
 
-export const appiumSessionDestroy = (scenario: Scenario) => {
+export const appiumSessionDestroy = (scenario: iScenario) => {
   return async () => {
     const sessionId = scenario.get("sessionId");
     return sendAppiumRequest(scenario, `/session/${sessionId}`, {

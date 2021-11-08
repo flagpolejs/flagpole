@@ -1,15 +1,9 @@
 import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
 import { ElementHandle } from "puppeteer-core";
-import { PuppeteerResponse } from "./puppeteerresponse";
+import { PuppeteerResponse } from "./puppeteer-response";
 import { asyncForEach, toArray, asyncMap } from "../util";
-import {
-  getFindParams,
-  filterFind,
-  findOne,
-  wrapAsValue,
-  getFindName,
-} from "../helpers";
-import { BrowserElement } from "./browserelement";
+import { getFindParams, filterFind, findOne, getFindName } from "../helpers";
+import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 
@@ -41,7 +35,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
       // No options, so just find from selector
       const el: ElementHandle<Element> | null = await this._page.$(selector);
       return el === null
-        ? wrapAsValue(this.context, null, selector)
+        ? this.wrapAsValue(this.context, null, selector)
         : BrowserElement.create(el, this.context, selector, selector);
     });
   }
@@ -81,7 +75,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
         xPath
       );
     }
-    return wrapAsValue(this.context, null, xPath);
+    return this.wrapAsValue(this.context, null, xPath);
   }
 
   public async findAllXPath(xPath: string): Promise<BrowserElement[]> {
@@ -208,7 +202,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
         opts
       );
     }
-    return wrapAsValue(this.context, true, selector);
+    return this.wrapAsValue(this.context, true, selector);
   }
 
   public async selectOption(

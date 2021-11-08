@@ -1,6 +1,5 @@
 import * as jmespath from "jmespath";
 import { iResponse, iValue } from "../interfaces";
-import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 
 export class JsonDoc {
@@ -43,6 +42,11 @@ export const jpathFind = (
       throw Error("No JSON document is defined.");
     }
     const selection = await self.jsonDoc.search(path);
-    return wrapAsValue(self.context, selection, path, selection);
+    return self.context.response.wrapAsValue(
+      self.context,
+      selection,
+      path,
+      selection
+    );
   });
 };

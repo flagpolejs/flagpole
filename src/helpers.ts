@@ -1,21 +1,5 @@
-import {
-  iAssertionContext,
-  iValue,
-  iResponse,
-  FindAllOptions,
-  FindOptions,
-} from "./interfaces";
-import { Value } from "./value";
+import { iValue, iResponse, FindAllOptions, FindOptions } from "./interfaces";
 import { toType, asyncFilter } from "./util";
-
-export function wrapAsValue(
-  context: iAssertionContext,
-  data: any,
-  name: string,
-  source?: any
-): iValue {
-  return new Value(data, context, name, source);
-}
 
 export async function findOne(
   scope: iValue | iResponse,
@@ -32,7 +16,10 @@ export async function findOne(
       : params.matches !== null
       ? await scope.findAll(selector, params.matches, opts)
       : await scope.findAll(selector, opts);
-  return elements[0] || wrapAsValue(scope.context, null, selector);
+  return (
+    elements[0] ||
+    scope.context.response.wrapAsValue(scope.context, null, selector)
+  );
 }
 
 export type FindParams = {

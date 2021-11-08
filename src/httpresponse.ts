@@ -1,9 +1,13 @@
 import * as puppeteer from "puppeteer-core";
 import { NeedleResponse } from "needle";
-import { KeyValue, HttpResponseOptions, iHttpRequest } from "./interfaces";
+import {
+  KeyValue,
+  HttpResponseOptions,
+  iHttpRequest,
+  iHttpResponse,
+} from "./interfaces";
 import { readFile } from "fs-extra";
 import { FfprobeData } from "media-probe";
-import { probeImageResponse } from "./adapters/image";
 
 export interface ffprobeResponse {
   headers: KeyValue;
@@ -12,7 +16,7 @@ export interface ffprobeResponse {
   length: number;
   probeData: FfprobeData;
 }
-export class HttpResponse {
+export class HttpResponse implements iHttpResponse {
   public body: string = "";
   public json: any = null;
   public statusCode: number = 0;
@@ -35,11 +39,6 @@ export class HttpResponse {
       this.url = opts.url || "";
       this.method = opts.method || "";
     }
-  }
-
-  static createEmpty() {
-    const r = new HttpResponse();
-    return r;
   }
 
   static fromNeedle(response: NeedleResponse): HttpResponse {
@@ -83,24 +82,8 @@ export class HttpResponse {
     return r;
   }
 
-  static fromProbeImage(
-    response: probeImageResponse,
-    cookies?: KeyValue
-  ): HttpResponse {
+  static createEmpty(): HttpResponse {
     const r = new HttpResponse();
-    r.headers = response.headers;
-    r.statusCode = response.statusCode;
-    r.json = {
-      ...response.imageData,
-      ...{
-        length: response.length,
-        url: response.url,
-        mime: response.imageData.mimeType,
-      },
-    };
-    r.body = "";
-    r.cookies = cookies || {};
-    r.url = response.url;
     return r;
   }
 

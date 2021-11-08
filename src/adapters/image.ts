@@ -66,8 +66,22 @@ export const fetchImageWithNeedle: HttpRequestFetch = (
           // @ts-ignore
           stream.destroy();
         } catch {}
+        // Create response
+        const r = HttpResponse.createEmpty();
+        r.headers = response.headers;
+        r.statusCode = response.statusCode;
+        r.json = {
+          ...response.imageData,
+          ...{
+            length: response.length,
+            url: response.url,
+            mime: response.imageData.mimeType,
+          },
+        };
+        r.body = "";
+        r.url = response.url;
         // Set the response
-        resolve(HttpResponse.fromProbeImage(response));
+        resolve(r);
       });
   });
 };

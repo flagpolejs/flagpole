@@ -5,7 +5,7 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
   suite.base("https://www.google.com").finally((suite) => suite.print());
 
   suite
-    .html("Homepage Loads")
+    .scenario("Homepage Loads", "browser")
     .open("/")
     .next("Test the basic headers", (ctx) => {
       ctx.assert("Status is 200", ctx.response.statusCode).equals(200);

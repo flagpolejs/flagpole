@@ -8,10 +8,10 @@ import {
   PageFnOptions,
 } from "puppeteer-core";
 import { iResponse, ScreenshotOpts, iValue, iHttpRequest } from "../interfaces";
-import { BrowserControl } from "./browsercontrol";
-import { DOMResponse } from "../html/domresponse";
+import { BrowserControl } from "./browser-control";
+import { DOMResponse } from "../html/dom-response";
 import { toType } from "../util";
-import { wrapAsValue } from "../helpers";
+import { PuppeteerScenario } from "./puppeteer-scenario";
 
 const DEFAULT_WAITFOR_TIMEOUT = 30000;
 
@@ -19,11 +19,11 @@ export abstract class PuppeteerResponse
   extends DOMResponse
   implements iResponse
 {
-  /**
-   * Is this a browser based test
-   */
-  public get isBrowser(): boolean {
-    return true;
+  public scenario: PuppeteerScenario;
+
+  constructor(scenario: PuppeteerScenario) {
+    super(scenario);
+    this.scenario = scenario;
   }
 
   public get browserControl(): BrowserControl | null {
@@ -43,12 +43,12 @@ export abstract class PuppeteerResponse
   }
 
   public get currentUrl(): iValue {
-    const page = this.context.page;
+    const page = this.browserControl?.page;
     let url: string | null = null;
     if (page) {
       url = page.url();
     }
-    return wrapAsValue(this.context, url, "Current URL");
+    return this.wrapAsValue(this.context, url, "Current URL");
   }
 
   protected get _page(): Page {

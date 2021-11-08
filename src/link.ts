@@ -1,18 +1,12 @@
 import { URL } from "url";
-import { iAssertionContext } from "./interfaces";
 import { toType } from "./util";
 
 const isValidDataUrl = require("valid-data-url");
 
 export class Link {
-  protected _context: iAssertionContext;
-  protected _uri: string;
   protected _qs: any;
 
-  constructor(uri: string, context: iAssertionContext) {
-    this._uri = uri;
-    this._context = context;
-  }
+  constructor(protected _uri: string, protected _baseUrl: URL) {}
 
   /**
    * Get full URL including host, optionally add query string
@@ -20,8 +14,7 @@ export class Link {
    * @param queryString
    */
   public getUri(): string {
-    const baseUrl: URL = this._context.scenario.buildUrl();
-    const thisUrl: URL = new URL(this._uri, baseUrl.href);
+    const thisUrl: URL = new URL(this._uri, this._baseUrl.href);
     if (typeof this._qs != "undefined") {
       const type: string = toType(this._qs);
       if (type == "object") {

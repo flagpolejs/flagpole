@@ -1,9 +1,8 @@
 import { iResponse, iValue } from "../interfaces";
 import { HttpResponse } from "../httpresponse";
 import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
-import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
-import { JsonResponse } from "../json/jsonresponse";
+import { JsonResponse } from "../json/json-response";
 import { ScenarioType } from "../scenario-types";
 
 export class FfprobeResponse
@@ -21,7 +20,7 @@ export class FfprobeResponse
   }
 
   public get jsonBody(): iValue {
-    return wrapAsValue(this.context, this.jsonDoc?.root, "FFprobe Data");
+    return this.wrapAsValue(this.context, this.jsonDoc?.root, "FFprobe Data");
   }
 
   public init(httpResponse: HttpResponse) {

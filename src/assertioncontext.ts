@@ -1,6 +1,4 @@
-import { BrowserControl } from "./puppeteer/browsercontrol";
 import {
-  Page,
   EvaluateFn,
   SerializableOrJSHandle,
   PageFnOptions,
@@ -41,7 +39,7 @@ import {
   flatten,
 } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
-import { getFindParams, getFindName, wrapAsValue } from "./helpers";
+import { getFindParams, getFindName } from "./helpers";
 import { ValuePromise } from "./value-promise";
 
 const getParamsFromExists = (
@@ -70,11 +68,16 @@ const getParamsFromExists = (
   };
 };
 
-export class AssertionContext implements iAssertionContext {
+export class AssertionContext<Type extends iScenario>
+  implements iAssertionContext
+{
   protected _scenario: iScenario;
-  protected _response: iResponse;
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
+
+  constructor(scenario: Type) {
+    this._scenario = scenario;
+  }
 
   /**
    * Get returned value from previous next block
@@ -86,7 +89,7 @@ export class AssertionContext implements iAssertionContext {
   }
 
   public get response(): iResponse {
-    return this._response;
+    return this._scenario.response;
   }
 
   public get scenario(): iScenario {
@@ -97,16 +100,8 @@ export class AssertionContext implements iAssertionContext {
     return this._scenario.suite;
   }
 
-  public get browserControl(): BrowserControl | null {
-    return this.response.isBrowser ? this._scenario.browserControl : null;
-  }
-
   public get executionOptions(): FlagpoleExecution {
     return FlagpoleExecution.global;
-  }
-
-  public get page(): Page | null {
-    return this.browserControl !== null ? this.browserControl.page : null;
   }
 
   public get incompleteAssertions(): Assertion[] {
@@ -135,11 +130,6 @@ export class AssertionContext implements iAssertionContext {
 
   public get currentUrl(): iValue {
     return this.response.currentUrl;
-  }
-
-  constructor(scenario: iScenario, response: iResponse) {
-    this._scenario = scenario;
-    this._response = response;
   }
 
   /**
@@ -407,7 +397,8 @@ export class AssertionContext implements iAssertionContext {
         : await this.response.find(selector, opts)
     );
     const name = getFindName(params, selectors, 0);
-    const value = element === null ? wrapAsValue(this, null, name) : element;
+    const value =
+      element === null ? this.response.wrapAsValue(this, null, name) : element;
     this._assertExists(null, name, value);
     return value;
   }
@@ -471,7 +462,11 @@ export class AssertionContext implements iAssertionContext {
         return value.isNullOrUndefined() ? false : value;
       });
       return element === null
-        ? wrapAsValue(this, null, getFindName(params, selectors, null))
+        ? this.response.wrapAsValue(
+            this,
+            null,
+            getFindName(params, selectors, null)
+          )
         : element;
     });
   }

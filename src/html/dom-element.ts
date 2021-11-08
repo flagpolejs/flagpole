@@ -177,16 +177,16 @@ export abstract class DOMElement extends Value {
     b?: Function
   ): Promise<void | iScenario> {
     const overloaded = getMessageAndCallbackFromOverloading(a, b, this._path);
-    const scenario = this._createSubScenario(overloaded);
+    const scenarioType: ScenarioType = await this._getLambdaScenarioType();
+    const scenario = this._createSubScenario(
+      overloaded,
+      scenarioType,
+      this._getLambdaScenarioOpts(scenarioType)
+    );
     this._completedAction("LOAD");
     const link: Link = await this.getLink();
     // If this is a lmabda scenario, define the response type and options
     if (overloaded.scenario === undefined) {
-      const scenarioType: ScenarioType = await this._getLambdaScenarioType();
-      scenario.setResponseType(
-        scenarioType,
-        this._getLambdaScenarioOpts(scenarioType)
-      );
       scenario.next(overloaded.callback);
     }
     // If no message was provided, set a default one
@@ -282,7 +282,7 @@ export abstract class DOMElement extends Value {
 
   protected _createSubScenario(
     overloaded: iMessageAndCallback,
-    defaultResponseType: ScenarioType = "resource",
+    defaultResponseType: ScenarioType,
     defaultOpts: any = {}
   ): iScenario {
     return overloaded.scenario === undefined

@@ -7,17 +7,22 @@ import {
   PageFnOptions,
   SerializableOrJSHandle,
 } from "puppeteer-core";
-import { DOMElement } from "../html/domelement";
+import { DOMElement } from "../html/dom-element";
+import { PuppeteerResponse } from "./puppeteer-response";
 
 export abstract class PuppeteerElement extends DOMElement implements iValue {
   protected abstract _input: ElementHandle | JSHandle;
   public abstract get $(): ElementHandle | JSHandle;
 
+  protected get response(): PuppeteerResponse {
+    return this.context.response as PuppeteerResponse;
+  }
+
   protected get _page(): Page {
-    if (this.context.page === null) {
+    if (this.response.page === null) {
       throw "Puppeteer page object was not found.";
     }
-    return this.context.page;
+    return this.response.page;
   }
 
   protected constructor(

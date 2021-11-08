@@ -1,5 +1,5 @@
 import { JSHandle, Page, EvaluateFn } from "puppeteer-core";
-import { ExtJsComponent } from "./extjscomponent";
+import { ExtJsComponent } from "./extjs-component";
 import { iAssertionContext, iValue } from "../interfaces";
 import { Value } from "../value";
 import { asyncMap } from "../util";

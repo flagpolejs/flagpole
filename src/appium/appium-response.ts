@@ -1,8 +1,8 @@
 import { ProtoResponse } from "../response";
-import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
+import { iResponse, iValue } from "../interfaces";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
-import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "../json/jpath";
+import { jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
 import { sendAppiumRequest } from "./appium-helpers";
 
 export class AppiumResponse extends ProtoResponse implements iResponse {

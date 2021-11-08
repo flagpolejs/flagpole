@@ -1,6 +1,6 @@
 import { HttpResponse } from "../httpresponse";
 import { FindAllOptions, FindOptions, iResponse } from "../interfaces";
-import { HtmlResponse } from "../html/htmlresponse";
+import { HtmlResponse } from "../html/html-response";
 import * as cheerio from "cheerio";
 import { ScenarioType } from "../scenario-types";
 import { ValuePromise } from "../value-promise";

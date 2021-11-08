@@ -1,4 +1,4 @@
-import { PuppeteerElement } from "./puppeteerelement";
+import { PuppeteerElement } from "./puppeteer-element";
 import {
   iValue,
   iAssertionContext,
@@ -413,10 +413,10 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     if (!this._isFormTag()) {
       throw new Error("You can only use .submit() with a form element.");
     }
-    if (this._context.page === null) {
+    if (this.response.page === null) {
       throw new Error("Page was null");
     }
-    await this._context.page.evaluate((form) => form.submit(), this.$);
+    await this.response.page.evaluate((form) => form.submit(), this.$);
     this._completedAction("SUBMIT");
     return this;
   }
