@@ -17,7 +17,7 @@ jobs:
           - name: test-todo
             command: --build --base=https://jsonplaceholder.typicode.com -s todo
           - name: run-all
-            command: --all
+            command: --all --build
 
     steps:
       - uses: actions/checkout@v2
