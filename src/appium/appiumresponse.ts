@@ -149,4 +149,66 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
     return elements;
   }
+
+  public async touchMove(
+    array: [x: number, y: number, duration?: number],
+    ...otherArrays: [x: number, y: number, duration?: number][]
+  ): Promise<void> {
+    const touchActions = [
+      {
+        type: "pointerMove",
+        duration: 0,
+        x: array[0],
+        y: array[1],
+        relative: false,
+      },
+      {
+        type: "pointerDown",
+        button: 0,
+      },
+      {
+        type: "pause",
+        duration: array[2] || 0,
+      },
+    ];
+
+    if (otherArrays.length) {
+      otherArrays.forEach((array) => {
+        touchActions.push({
+          type: "pointerMove",
+          duration: array![2] || 500,
+          x: array![0],
+          y: array![1],
+          relative: true,
+        });
+      });
+    }
+
+    touchActions.push({
+      type: "pointerUp",
+      button: 0,
+    });
+
+    const toSend = {
+      actions: [
+        {
+          type: "pointer",
+          id: "0",
+          parameters: {
+            pointerType: "touch",
+          },
+          actions: touchActions,
+        },
+      ],
+    };
+
+    await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/actions`,
+      {
+        method: "post",
+        data: toSend,
+      }
+    );
+  }
 }
