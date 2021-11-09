@@ -21,11 +21,6 @@
     }
   },
   "suites": {
-    "api/flo": {
-      "id": "",
-      "name": "api/flo",
-      "tags": []
-    },
     "api/itunes": {
       "id": "",
       "name": "api/itunes",
@@ -34,16 +29,6 @@
     "browser/evaluate": {
       "id": "",
       "name": "browser/evaluate",
-      "tags": []
-    },
-    "browser/google": {
-      "id": "",
-      "name": "browser/google",
-      "tags": []
-    },
-    "browser/ubereats": {
-      "id": "",
-      "name": "browser/ubereats",
       "tags": []
     },
     "chaining-assertions": {
