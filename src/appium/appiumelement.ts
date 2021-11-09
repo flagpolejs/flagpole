@@ -157,7 +157,51 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   protected async _getAttribute(key: string): Promise<string | null> {
-    throw "_getAttribute not implemented";
+    const possibleAttributes = [
+      "checkable",
+      "checked",
+      "class",
+      "className",
+      "clickable",
+      "content-desc",
+      "contentDescription",
+      "enabled",
+      "focusable",
+      "focused",
+      "long-clickable",
+      "longClickable",
+      "package",
+      "password",
+      "resource-id",
+      "resourceId",
+      "scrollable",
+      "selection-start",
+      "selection-end",
+      "selected",
+      "text",
+      "name",
+      "bounds",
+      "displayed",
+      "contentSize",
+    ];
+
+    if (!possibleAttributes.includes(key)) {
+      throw `Invalid attribute: must be one of ${possibleAttributes.join(
+        ", "
+      )}`;
+    }
+
+    const response = this.context.response as AppiumResponse;
+
+    const res = await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${response.sessionId}/element/${this._elementId}/attribute/${key}`,
+      {
+        method: "get",
+      }
+    );
+
+    return res.jsonRoot.value;
   }
 
   public toString(): string {
