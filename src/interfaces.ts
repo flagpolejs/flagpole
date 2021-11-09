@@ -1059,3 +1059,8 @@ export interface ScenarioInitOptions {
   statusCode?: number;
   maxLoadTime?: number;
 }
+
+export type AppiumElementIdResponse = {
+  [0]: string;
+  ELEMENT: string;
+};
