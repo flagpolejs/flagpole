@@ -5,6 +5,7 @@ import {
   iScenario,
   iValue,
   FindAllOptions,
+  AppiumElementIdResponse,
 } from "../interfaces";
 import { applyOffsetAndLimit, wrapAsValue } from "../helpers";
 import { AppiumResponse } from "./appiumresponse";
@@ -159,13 +160,14 @@ export const appiumFindByUiAutomator = async (
     }
   );
 
-  const elements: iValue[] = (res.jsonRoot.value as AppiumValueResponse[]).map(
-    (item, i) =>
-      wrapAsValue(
-        response.context,
-        item.ELEMENT,
-        `${selector} with text "${text}" [${i}]`
-      )
+  const elements: iValue[] = (
+    res.jsonRoot.value as AppiumElementIdResponse[]
+  ).map((item, i) =>
+    wrapAsValue(
+      response.context,
+      item.ELEMENT,
+      `${selector} with text "${text}" [${i}]`
+    )
   );
 
   return opts?.offset || opts?.limit
@@ -208,10 +210,4 @@ const getAppiumSessionCapabilities = async (
   });
 
   return res.jsonRoot.value;
-};
-
-// Appium HTTP call response which contains elementId
-type AppiumValueResponse = {
-  [0]: string;
-  ELEMENT: string;
 };
