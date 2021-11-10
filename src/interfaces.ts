@@ -422,6 +422,12 @@ export interface iResponse {
   ): Promise<iValue>;
   click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
   serialize(): object;
+  touchMove(array: [x: number, y: number]): Promise<void>;
+  touchMove(array: [x: number, y: number, duration?: number]): Promise<void>;
+  touchMove(
+    array: [x: number, y: number, duration?: number],
+    ...otherMoves: [x: number, y: number, duration?: number][]
+  ): Promise<void>;
 }
 
 export interface iAssertionIs {

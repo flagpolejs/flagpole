@@ -361,6 +361,15 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
+  public async touchMove(
+    array: [x: number, y: number, duration?: number],
+    ...otherMoves: [x: number, y: number, duration?: number][]
+  ): Promise<void> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support touchMove.`
+    );
+  }
+
   public async scrollTo(_point: OptionalXY): Promise<iResponse> {
     return this;
   }
