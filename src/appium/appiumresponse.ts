@@ -153,7 +153,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
     return elements;
   }
-  
+
   public async hideKeyboard(): Promise<void> {
     await sendAppiumRequest(
       this.scenario,
@@ -163,7 +163,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
-
 
   public async touchMove(
     array: [x: number, y: number, duration?: number],
@@ -223,6 +222,19 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       {
         method: "post",
         data: toSend,
+      }
+    );
+  }
+
+  public async setImplicitWait(ms: number): Promise<void> {
+    await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/timeouts/implicit_wait`,
+      {
+        method: "post",
+        data: {
+          ms: ms,
+        },
       }
     );
   }
