@@ -149,4 +149,14 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
     return elements;
   }
+
+  public async hideKeyboard(): Promise<void> {
+    await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/appium/device/hide_keyboard`,
+      {
+        method: "post",
+      }
+    );
+  }
 }
