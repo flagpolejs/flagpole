@@ -6,6 +6,7 @@
 
 > Simple and fast testing framework.
 
+- Appium
 - DOM
 - Headless or headful browser
 - REST/SOAP API
