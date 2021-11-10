@@ -64,7 +64,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         }
       );
       if (res.jsonRoot.value.ELEMENT) {
-        const element = new AppiumElement(
+        const element = await AppiumElement.create(
           selector,
           this.context,
           selector,
@@ -100,9 +100,13 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           params.opts
         );
         for (let i = 0; i < values?.length; i++) {
-          elements.push(
-            new AppiumElement(selector, this.context, selector, values[i].$)
+          const element = await AppiumElement.create(
+            selector,
+            this.context,
+            selector,
+            values[i].$
           );
+          elements.push(element);
           return elements;
         }
       } else if (
@@ -135,7 +139,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     }
     for (let i = 0; i < res.jsonRoot.value?.length; i++) {
       elements.push(
-        new AppiumElement(
+        await AppiumElement.create(
           selector,
           this.context,
           selector,
@@ -149,6 +153,17 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
     return elements;
   }
+  
+  public async hideKeyboard(): Promise<void> {
+    await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/appium/device/hide_keyboard`,
+      {
+        method: "post",
+      }
+    );
+  }
+
 
   public async touchMove(
     array: [x: number, y: number, duration?: number],
