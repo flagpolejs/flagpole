@@ -359,9 +359,14 @@ export class Scenario implements iScenario {
     suite: iSuite,
     title: string,
     type: ScenarioType,
-    opts: any
+    opts: any,
+    devProperties?: any
   ): iScenario {
-    return new Scenario(suite, title).setResponseType(type, opts);
+    return new Scenario(suite, title).setResponseType(
+      type,
+      opts,
+      devProperties
+    );
   }
 
   protected constructor(suite: iSuite, title: string) {
@@ -974,7 +979,11 @@ export class Scenario implements iScenario {
    * @param opts
    */
   @beforeScenarioExecuted
-  public setResponseType(type: ScenarioType, opts: any = {}): iScenario {
+  public setResponseType(
+    type: ScenarioType,
+    opts: any = {},
+    devProperties?: any
+  ): iScenario {
     // Merge passed in opts with default opts
     this._responseType = type;
     if (["browser", "extjs"].includes(type)) {
@@ -992,7 +1001,7 @@ export class Scenario implements iScenario {
         },
       });
     } else if (type == "appium") {
-      this.before(appiumSessionCreate(this, opts))
+      this.before(appiumSessionCreate(this, opts, devProperties))
         .after(appiumSessionDestroy(this))
         .open("/");
     } else {

@@ -208,13 +208,26 @@ export class Suite implements iSuite {
     type: "mediastreamvalidator",
     opts?: MediaStreamValidatorOpts
   ): iScenario;
+  public scenario(
+    title: string,
+    type: "appium",
+    opts: any,
+    devProperties?: any
+  ): iScenario;
   public scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
   public scenario(
     title: string,
     type: ScenarioType = "html",
-    opts?: any
+    opts?: any,
+    devProperties?: any
   ): iScenario {
-    const scenario: iScenario = Scenario.create(this, title, type, opts);
+    const scenario: iScenario = Scenario.create(
+      this,
+      title,
+      type,
+      opts,
+      devProperties
+    );
     // Some local tests fail with SSL verify on, so may have been disabled on this suite
     scenario.verifyCert(this._verifySslCert);
     // Should we hold off on executing?
