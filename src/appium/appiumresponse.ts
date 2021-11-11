@@ -11,6 +11,7 @@ import {
 import { JsonDoc } from "../json/jpath";
 import { sendAppiumRequest, appiumFindByUiAutomator } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
+import { toType } from "../util";
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
   public jsonDoc: JsonDoc | undefined;
@@ -237,5 +238,52 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         },
       }
     );
+  }
+
+  public async getTimeout(): Promise<number> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/timeouts`,
+      {
+        method: "get",
+      }
+    );
+    return res.jsonRoot.value.implicit;
+  }
+
+  public async waitForExists(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string,
+    a?: number | string | RegExp,
+    b?: number
+  ): Promise<iValue> {
+    const previousTime = await this.getTimeout();
+    if (typeof a === "number") {
+      await this.setImplicitWait(a);
+      const element = await this.find(selector);
+      await this.setImplicitWait(previousTime);
+      return element;
+    } else if (typeof a === "string") {
+      await this.setImplicitWait(b || 30000);
+      const element = await this.find(selector, a);
+      await this.setImplicitWait(previousTime);
+      return element;
+    } else if (toType(a) === "regexp") {
+      await this.setImplicitWait(previousTime);
+      throw "Appium does not support finding element by RegEx";
+    } else {
+      await this.setImplicitWait(30000);
+      const element = await this.find(selector);
+      await this.setImplicitWait(previousTime);
+      return element;
+    }
   }
 }
