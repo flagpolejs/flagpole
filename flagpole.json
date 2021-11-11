@@ -21,11 +21,6 @@
     }
   },
   "suites": {
-    "appium/smoke": {
-      "id": "",
-      "name": "appium/smoke",
-      "tags": []
-    },
     "api/flo": {
       "id": "",
       "name": "api/flo",
