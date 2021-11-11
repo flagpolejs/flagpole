@@ -18,7 +18,9 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       const textViews = await context.findAll(
         "class name/android.widget.TextView"
       );
-      context.assert("textViews exists", textViews).exists();
+      context
+        .assert("textViews length is greater than 0", textViews.length)
+        .greaterThan(0);
       context.comment(textViews.length);
       const onboardingTitle = await context.find("id/onboarding_page_title");
       context.assert(onboardingTitle).exists();
@@ -45,7 +47,9 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       await loginField.type("hello@world.com");
       await loginField.clearThenType(process.env.EMAIL!);
       const passwordTexts = await context.findAll("", "Password");
-      context.assert("passwordTexts exists", passwordTexts).exists();
+      context
+        .assert("passwordTexts length is greater than 0", passwordTexts.length)
+        .greaterThan(0);
       context
         .assert("passwordTexts length is 1", passwordTexts.length)
         .equals(1);

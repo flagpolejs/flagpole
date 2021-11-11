@@ -1,6 +1,6 @@
 # AppiumResponse
 
-This class is specific to Appium testing. To use it with TypeScript, first import AppiumResponse into the FlagPole testing file, like so:
+This class is specific to Appium testing. To use it with TypeScript, first import AppiumResponse into the Flagpole testing file, like so:
 
 ```typescript
 import flagpole, { AppiumResponse } from "flagpole";
