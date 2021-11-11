@@ -51,7 +51,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       } else if (params.contains || params.opts) {
         return findOne(this, selector, params);
       }
-      const usingValue = selector.replace("/", "@").split("@");
+      const usingValue = selector.split(/\/(.+)/);
       const res = await sendAppiumRequest(
         this.scenario,
         `/session/${this.sessionId}/element`,
@@ -82,7 +82,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    const usingValue = selector.replace("/", "@").split("@");
+    const usingValue = selector.split(/\/(.+)/);
     let elements: iValue[] = [];
     const params = getFindParams(a, b);
     let res: JsonDoc = new JsonDoc({});
