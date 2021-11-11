@@ -286,4 +286,12 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       return element;
     }
   }
+
+  public async waitForXPath(xPath: string, timeout?: number): Promise<iValue> {
+    const previousTime = await this.getTimeout();
+    await this.setImplicitWait(timeout || 30000);
+    const element = await this.find(xPath);
+    await this.setImplicitWait(previousTime);
+    return element;
+  }
 }
