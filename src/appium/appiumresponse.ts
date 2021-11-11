@@ -1,5 +1,12 @@
 import { ProtoResponse } from "../response";
-import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
+import {
+  iResponse,
+  iValue,
+  FindOptions,
+  FindAllOptions,
+  ScreenProperties,
+  Dimensions,
+} from "../interfaces";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import {
@@ -248,5 +255,35 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     );
 
     return res.jsonRoot.value;
+  }
+
+  public async getScreenProperties(): Promise<ScreenProperties> {
+    const rotationRes = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/orientation`,
+      {
+        method: "get",
+      }
+    );
+
+    const rotation: string = rotationRes.jsonRoot.value;
+
+    const dimensionsRes = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/window/current/size`,
+      {
+        method: "get",
+      }
+    );
+
+    const dimensions: Dimensions = dimensionsRes.jsonRoot.value;
+
+    const screenProperties: ScreenProperties = {
+      angle: rotation,
+      dimensions: dimensions,
+      orientation: rotation,
+    };
+
+    return screenProperties;
   }
 }

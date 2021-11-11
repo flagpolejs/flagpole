@@ -19,6 +19,7 @@ import {
   FindAllOptions,
   OptionalXY,
   iHttpRequest,
+  ScreenProperties,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -624,6 +625,10 @@ export class AssertionContext implements iAssertionContext {
 
   public async rotate(rotation: string | number): Promise<string | number> {
     return await this.response.rotate(rotation);
+  }
+
+  public async getScreenProperties(): Promise<ScreenProperties> {
+    return await this.response.getScreenProperties();
   }
 
   protected async _findAllForSelectors(
