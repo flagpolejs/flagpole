@@ -219,6 +219,13 @@ const getAppiumSessionCapabilities = async (
   return res.jsonRoot.value;
 };
 
+// Set device properties, currently only for Appium
+/*
+ * @param {string} sessionId - ID for currently running session
+ * @param {Scenario} scenario - FlagPole scenario
+ * @param {any} devProperties - Object containing the properties to be set
+ * @return {Promise<any>} - Object containing device properties
+ * */
 const setDevProperties = async (
   sessionId: string,
   scenario: Scenario,

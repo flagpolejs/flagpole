@@ -39,6 +39,25 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return this.scenario.get("capabilities");
   }
 
+  public async getGeolocation(): Promise<any> {
+    if (this.scenario.get("location")) {
+      return this.scenario.get("location");
+    } else {
+      const res = await sendAppiumRequest(
+        this.scenario,
+        `/session/${this.sessionId}/location`,
+        {
+          method: "get",
+        }
+      );
+
+      const location = res.jsonRoot.value;
+      this.scenario.set("location", location);
+
+      return this.scenario.get("location");
+    }
+  }
+
   public find(
     selector: string,
     a?: string | RegExp | FindOptions,
