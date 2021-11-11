@@ -14,7 +14,7 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       const response = context.response as AppiumResponse;
       const hello = await context.findAll("id/pager_signin_button");
       context.assert(hello[0]).exists();
-      context.assert(hello).exists();
+      context.assert(hello.length).greaterThan(0);
       const textViews = await context.findAll(
         "class name/android.widget.TextView"
       );
