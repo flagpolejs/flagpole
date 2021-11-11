@@ -623,7 +623,7 @@ export class AssertionContext implements iAssertionContext {
   }
 
   public async rotate(rotation: string | number): Promise<string | number> {
-    throw "rotate not implemented for this kind of scenario";
+    return await this.response.rotate(rotation);
   }
 
   protected async _findAllForSelectors(
