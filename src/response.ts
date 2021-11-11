@@ -425,4 +425,8 @@ export abstract class ProtoResponse implements iResponse {
       trailers: this.trailers.$,
     };
   }
+
+  public async rotate(rotation: string | number): Promise<string | number> {
+    throw "rotate not implemented for this kind of scenario";
+  }
 }

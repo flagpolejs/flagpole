@@ -153,7 +153,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
     return elements;
   }
-  
+
   public async hideKeyboard(): Promise<void> {
     await sendAppiumRequest(
       this.scenario,
@@ -163,7 +163,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
-
 
   public async touchMove(
     array: [x: number, y: number, duration?: number],
@@ -225,5 +224,29 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         data: toSend,
       }
     );
+  }
+
+  public async rotate(rotation: string | number): Promise<string | number> {
+    if (typeof rotation === "number") {
+      throw "Appium only supports rotating by a string.";
+    } else if (
+      rotation.toLowerCase() !== "portrait" &&
+      rotation.toLowerCase() !== "landscape"
+    ) {
+      throw "Appium rotation must be either PORTRAIT or LANDSCAPE.";
+    }
+
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/orientation`,
+      {
+        method: "post",
+        data: {
+          orientation: rotation,
+        },
+      }
+    );
+
+    return res.jsonRoot.value;
   }
 }

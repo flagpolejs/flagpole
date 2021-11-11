@@ -622,6 +622,10 @@ export class AssertionContext implements iAssertionContext {
     return this.scenario.abort(message);
   }
 
+  public async rotate(rotation: string | number): Promise<string | number> {
+    throw "rotate not implemented for this kind of scenario";
+  }
+
   protected async _findAllForSelectors(
     selectors: string[],
     a?: string | FindAllOptions | RegExp,
