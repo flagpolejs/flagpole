@@ -294,4 +294,42 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     await this.setImplicitWait(previousTime);
     return element;
   }
+
+  public async waitForVisible(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue> {
+    const sessionId = this.sessionId;
+    const scenario = this.scenario;
+    setTimeout(() => {
+      const interval = setInterval(isVisible, 10);
+      async function isVisible(): Promise<void> {
+        const res = await sendAppiumRequest(
+          scenario,
+          `/session/${sessionId}/element/${selector}/displayed`,
+          {
+            method: "get",
+          }
+        );
+        if (res.jsonRoot.value === true) {
+          clearInterval(interval);
+        }
+      }
+      // const element = await this.find(selector);
+      // return element;
+    }, timeout || 30000);
+    const element = await this.find(selector);
+    return element;
+  }
+
+  // public async isVisible(selector: any): Promise<boolean> {
+  //   const res = await sendAppiumRequest(
+  //     this.scenario,
+  //     `/session/${this.sessionId}/element/${selector}/displayed`,
+  //     {
+  //       method: "get",
+  //     }
+  //   );
+  //   return res.jsonRoot.value;
+  // }
 }
