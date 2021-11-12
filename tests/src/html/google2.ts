@@ -19,7 +19,17 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
         q: searchTerm,
       });
       ctx.assert(await searchBox.getValue()).equals(searchTerm);
-      await form.submit();
+      const res = await form.submit();
+      const resUrl = res.context.response.currentUrl.$;
+      resultsScenatio.open(resUrl);
+    });
+
+  const resultsScenatio = suite
+    .html("Results Page Loads")
+    .next("Test the basic headers", (ctx) => {
+      ctx.assert("Status is 200", ctx.response.statusCode).equals(200);
+    })
+    .next("Assert results", async (ctx) => {
       const result = await ctx.find(
         'a[href*="https://www.npmjs.com/package/flagpole"]'
       );

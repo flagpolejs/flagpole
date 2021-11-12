@@ -23,7 +23,6 @@ import { LaunchOptions } from "puppeteer-core";
 import * as http from "http";
 import { ErrorObject, Schema } from "ajv";
 import {
-  AsyncIteratorBoolCallback,
   IteratorBoolCallback,
   IteratorCallback,
   SyncIteratorBoolCallback,
@@ -341,8 +340,9 @@ export interface iResponse {
   statusMessage: iValue;
   body: iValue;
   jsonBody: iValue;
-  url: iValue;
-  finalUrl: iValue;
+  url: iValue; // The URL initially requested
+  finalUrl: iValue; // The URL after any redirects
+  currentUrl: iValue; // The URL right now, after any further navigation
   length: iValue;
   loadTime: iValue;
   context: iAssertionContext;
@@ -352,7 +352,8 @@ export interface iResponse {
   method: iValue;
   isBrowser: boolean;
   readonly scenario: iScenario;
-  init(httpResponse: HttpResponse): void;
+  init(res: HttpResponse): void;
+  navigate(req: iHttpRequest): Promise<void>;
   getRoot(): any;
   find(path: string, opts?: FindOptions): ValuePromise;
   find(path: string, contains: string, opts?: FindOptions): ValuePromise;
@@ -581,6 +582,7 @@ export interface iAssertionContext {
   incompleteAssertions: iAssertion[];
   assertionsResolved: Promise<(iAssertionResult | null)[]>;
   subScenariosResolved: Promise<any[]>;
+  currentUrl: iValue;
   comment(input: any): iAssertionContext;
   assert(a: any, b?: any): iAssertion;
   pause(milliseconds: number): Promise<void>;
