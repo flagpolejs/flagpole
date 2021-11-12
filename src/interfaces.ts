@@ -429,6 +429,7 @@ export interface iResponse {
     array: [x: number, y: number, duration?: number],
     ...otherMoves: [x: number, y: number, duration?: number][]
   ): Promise<void>;
+  hideKeyboard(): Promise<void>;
 }
 
 export interface iAssertionIs {
@@ -718,6 +719,7 @@ export interface iAssertionContext {
   filter(array: any[], callback: IteratorBoolCallback): Promise<any[]>;
   map(array: any[], callback: IteratorCallback): Promise<any[]>;
   abort(message?: string): Promise<iScenario>;
+  hideKeyboard(): Promise<void>;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;

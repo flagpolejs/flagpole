@@ -445,4 +445,8 @@ export abstract class ProtoResponse implements iResponse {
       trailers: this.trailers.$,
     };
   }
+
+  public async hideKeyboard(): Promise<void> {
+    throw "hideKeyboard not implemented for this kind of scenario.";
+  }
 }
