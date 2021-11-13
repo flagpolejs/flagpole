@@ -299,37 +299,29 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     selector: string,
     timeout?: number
   ): Promise<iValue> {
-    const sessionId = this.sessionId;
-    const scenario = this.scenario;
-    setTimeout(() => {
-      const interval = setInterval(isVisible, 10);
-      async function isVisible(): Promise<void> {
-        const res = await sendAppiumRequest(
-          scenario,
-          `/session/${sessionId}/element/${selector}/displayed`,
-          {
-            method: "get",
+    return new Promise((resolve, reject) => {
+      let timedOut = false;
+      setTimeout(() => (timedOut = true), timeout || 30000);
+      const targetInterval = setInterval(async () => {
+        if (timedOut) reject(`${selector} is not visible`);
+        else {
+          const element = await this.find(selector);
+          if (element.$ != null) {
+            const res = await sendAppiumRequest(
+              this.scenario,
+              `/session/${this.sessionId}/element/${element}/displayed`,
+              {
+                method: "get",
+              }
+            );
+            console.log(res.jsonRoot.value);
+            if (res.jsonRoot.value === true) {
+              clearInterval(targetInterval);
+              resolve(element);
+            }
           }
-        );
-        if (res.jsonRoot.value === true) {
-          clearInterval(interval);
         }
-      }
-      // const element = await this.find(selector);
-      // return element;
-    }, timeout || 30000);
-    const element = await this.find(selector);
-    return element;
+      }, 10);
+    });
   }
-
-  // public async isVisible(selector: any): Promise<boolean> {
-  //   const res = await sendAppiumRequest(
-  //     this.scenario,
-  //     `/session/${this.sessionId}/element/${selector}/displayed`,
-  //     {
-  //       method: "get",
-  //     }
-  //   );
-  //   return res.jsonRoot.value;
-  // }
 }
