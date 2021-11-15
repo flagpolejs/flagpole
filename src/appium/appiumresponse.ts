@@ -307,15 +307,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         else {
           const element = await this.find(selector);
           if (element.$ != null) {
-            const res = await sendAppiumRequest(
-              this.scenario,
-              `/session/${this.sessionId}/element/${element}/displayed`,
-              {
-                method: "get",
-              }
-            );
-            console.log(res.jsonRoot.value);
-            if (res.jsonRoot.value === true) {
+            const isVisible = await this.isVisible(element);
+            if (isVisible === true) {
               clearInterval(targetInterval);
               resolve(element);
             }
@@ -323,5 +316,39 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         }
       }, 10);
     });
+  }
+
+  public async waitForHidden(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue> {
+    return new Promise((resolve, reject) => {
+      let timedOut = false;
+      setTimeout(() => (timedOut = true), timeout || 30000);
+      const targetInterval = setInterval(async () => {
+        if (timedOut) reject(`${selector} is not hidden`);
+        else {
+          const element = await this.find(selector);
+          if (element.$ != null) {
+            const isVisible = await this.isVisible(element);
+            if (isVisible === false) {
+              clearInterval(targetInterval);
+              resolve(element);
+            }
+          }
+        }
+      });
+    });
+  }
+
+  public async isVisible(element: iValue): Promise<boolean> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/element/${element}/displayed`,
+      {
+        method: "get",
+      }
+    );
+    return res.jsonRoot.value;
   }
 }
