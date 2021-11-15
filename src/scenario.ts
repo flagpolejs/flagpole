@@ -1166,7 +1166,7 @@ export class Scenario implements iScenario {
             context.assertionsResolved,
             context.subScenariosResolved,
           ])
-          .timeout(30000);
+          .timeout(this.suite.maxScenarioDuration);
       })
       .then(() => {
         this._markScenarioCompleted();
@@ -1471,7 +1471,6 @@ export class Scenario implements iScenario {
     return async (context) => {
       const json = new JsonDoc(context.response.serialize());
       const paths = Object.keys(responseValues);
-      //console.log(json.root);
       await context.each(paths, async (path) => {
         const data = await json.search(path);
         const thisValue: iValue = wrapAsValue(context, data, path, data);

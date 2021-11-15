@@ -723,6 +723,8 @@ export interface iSuite {
   hasFinished: boolean;
   totalDuration: number | null;
   executionDuration: number | null;
+  maxScenarioDuration: number;
+  concurrencyLimit: number;
   title: string;
   finished: Promise<void>;
   executionOptions: FlagpoleExecution;
@@ -730,8 +732,6 @@ export interface iSuite {
   subscribe(callback: SuiteStatusCallback): iSuite;
   verifyCert(verify: boolean): iSuite;
   verifySslCert(verify: boolean): iSuite;
-  setConcurrencyLimit(maxExecutions: number): iSuite;
-  setMaxScenarioDuration(timeout: number): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
   scenario(
