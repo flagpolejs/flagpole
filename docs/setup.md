@@ -25,8 +25,8 @@ or download [here](https://github.com/appium/appium-desktop/releases/latest)
 
 Run the Appium server before executing any Appium tests. Also, make sure the device, emulator, or simulator under test is connected and available.
 
-```javascript
 Add the desired capabilities to each scenario like so:
+```javascript
 flagpole("Basic Smoke Test of App", async (suite) => {
   suite
     .scenario("Basic smoke test", "appium", {
@@ -39,6 +39,24 @@ flagpole("Basic Smoke Test of App", async (suite) => {
 ```
 
 See [here](https://appium.io/docs/en/writing-running-appium/caps/) for more information on setting capabilities.
+
+You may also pass device properties as a fourth argument. Currently, only geolocation is capable of being set this way.
+
+```javascript
+flagpole("Basic Smoke Test of App", async (suite) => {
+  suite
+  .scenario("Basic smoke test", "appium", {
+    deviceName: "Android Emulator",
+    platformName: "Android",
+    automationName: "Uiautomator2",
+    app: "/path/to/apk/or/ipa"
+    }, {
+      latitude: 121.21,
+      longitude: 11.56,
+      altitude: 94.23
+    });
+});
+```
 
 
 ### TypeScript
