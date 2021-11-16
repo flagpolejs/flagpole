@@ -352,7 +352,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return res.jsonRoot.value;
   }
 
-  private _delay(ms: number) {
+  protected _delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
