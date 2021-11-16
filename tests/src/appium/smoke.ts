@@ -75,11 +75,13 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       context
         .assert("passwordTexts length is 1", passwordTexts.length)
         .equals(1);
-      const passwordField = await context.find("id/password_login");
+      const passwordField = await context.waitForVisible("id/password_login");
       await passwordField.type(process.env.PASSWORD!);
       (await context.find("id/login_button")).click();
-      await context.pause(5000);
-      const addUserButton = await context.find("accessibility id/add button");
+      const addUserButton = await context.waitForExists(
+        "accessibility id/add button",
+        6000
+      );
       context.assert(addUserButton).exists();
       const user = await context.find("id/initials_switch_user");
       await user.click();
