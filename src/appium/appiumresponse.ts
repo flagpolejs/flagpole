@@ -225,4 +225,15 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
+
+  // Uses call from deprecated JSONWP protocol and is subject to change
+  public async launchApp(): Promise<void> {
+    await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/appium/app/launch`,
+      {
+        method: "post",
+      }
+    );
+  }
 }
