@@ -136,8 +136,17 @@ export class AppiumElement extends DOMElement implements iValue {
     return res.jsonRoot.value || null;
   }
 
-  protected async _getProperty(key: string): Promise<any> {
-    throw "_getProperty not implemented";
+  protected async _getProperty(property: string): Promise<string> {
+    const response = this.context.response as AppiumResponse;
+    const res = await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${response.sessionId}/element/${this._elementId}/css/${property}`,
+      {
+        method: "get",
+      }
+    );
+
+    return res.jsonRoot.value || null;
   }
 
   protected async _getOuterHtml(): Promise<string> {
