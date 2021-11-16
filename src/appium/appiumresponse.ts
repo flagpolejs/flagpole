@@ -225,4 +225,39 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
+
+  // Uses call from deprecated JSONWP protocol and is subject to change
+  public async terminateApp(app: string, timeout?: number): Promise<void> {
+    let data: any = {};
+    if (
+      this.capabilities.automationName.toLowerCase() === "uiautomator2" ||
+      this.capabilities.automationName.toLowerCase() === "espresso"
+    ) {
+      if (timeout) {
+        data = {
+          appId: app,
+          options: {
+            timeout: timeout,
+          },
+        };
+      } else {
+        data = {
+          appId: app,
+        };
+      }
+    } else if (this.capabilities.automationName.toLowerCase() === "xcuitest") {
+      data = {
+        bundleId: app,
+      };
+    }
+
+    await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/appium/device/terminate_app`,
+      {
+        method: "post",
+        data: data,
+      }
+    );
+  }
 }
