@@ -5,7 +5,6 @@ import {
   FindOptions,
   FindAllOptions,
   ScreenProperties,
-  Dimensions,
 } from "../interfaces";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
@@ -276,11 +275,12 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
 
-    const dimensions: Dimensions = dimensionsRes.jsonRoot.value;
-
     const screenProperties: ScreenProperties = {
       angle: rotation,
-      dimensions: dimensions,
+      dimensions: {
+        height: dimensionsRes.jsonRoot.value.height,
+        width: dimensionsRes.jsonRoot.value.width,
+      },
       orientation: rotation,
     };
 

@@ -1077,11 +1077,9 @@ export type AppiumElementIdResponse = {
 
 export type ScreenProperties = {
   angle: string | number;
-  dimensions: Dimensions;
+  dimensions: {
+    height: number;
+    width: number;
+  };
   orientation: string;
-};
-
-export type Dimensions = {
-  height: number;
-  width: number;
 };
