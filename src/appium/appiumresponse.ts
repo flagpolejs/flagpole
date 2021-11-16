@@ -225,4 +225,23 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
+
+  public async backgroundApp(seconds: number = -1): Promise<void> {
+    let data: any = {};
+
+    if (seconds > -1) {
+      data = {
+        seconds: seconds,
+      };
+    }
+
+    await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/appium/app/background`,
+      {
+        method: "post",
+        data: data,
+      }
+    );
+  }
 }
