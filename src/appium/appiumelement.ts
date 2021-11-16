@@ -141,6 +141,20 @@ export class AppiumElement extends DOMElement implements iValue {
     return bounds;
   }
 
+  public async doubleTap(ms: number = 10): Promise<string | void> {
+    const boundsRes = await this.getBounds();
+    if (!boundsRes) return "Error: element bounds not acquired";
+    await this.context.response.touchMove([
+      boundsRes.points[1].x,
+      boundsRes.points[1].y,
+    ]);
+    await this.context.pause(ms);
+    await this.context.response.touchMove([
+      boundsRes.points[1].x,
+      boundsRes.points[1].y,
+    ]);
+  }
+
   protected async _getValue(): Promise<any> {
     throw "_getValue not implemented";
   }
