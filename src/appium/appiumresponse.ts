@@ -52,7 +52,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       } else if (params.contains || params.opts) {
         return findOne(this, selector, params);
       }
-      const usingValue = selector.replace("/", "@").split("@");
+      const usingValue = selector.split(/\/(.+)/);
       const res = await sendAppiumRequest(
         this.scenario,
         `/session/${this.sessionId}/element`,
@@ -83,7 +83,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    const usingValue = selector.replace("/", "@").split("@");
+    const usingValue = selector.split(/\/(.+)/);
     let elements: iValue[] = [];
     const params = getFindParams(a, b);
     let res: JsonDoc = new JsonDoc({});
@@ -299,46 +299,46 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     selector: string,
     timeout?: number
   ): Promise<iValue> {
-    return new Promise((resolve, reject) => {
-      let timedOut = false;
-      setTimeout(() => (timedOut = true), timeout || 30000);
-      const targetInterval = setInterval(async () => {
-        if (timedOut) reject(`${selector} is not visible`);
-        else {
-          const element = await this.find(selector);
-          if (element.$ != null) {
-            const isVisible = await this.isVisible(element);
-            if (isVisible === true) {
-              clearInterval(targetInterval);
-              resolve(element);
-            }
-          }
-        }
-      }, 10);
-    });
+    let timedOut = false;
+    let elementCheckStr = "";
+    let element: any = {};
+    let isVisible: Boolean = false;
+    setTimeout(() => (timedOut = true), timeout || 30000);
+    while (!elementCheckStr) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      element = await this.find(selector);
+      elementCheckStr = element.$;
+      await this._delay(10);
+    }
+    while (!isVisible) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      isVisible = await this.isVisible(element);
+      await this._delay(10);
+    }
+    return element;
   }
 
   public async waitForHidden(
     selector: string,
     timeout?: number
   ): Promise<iValue> {
-    return new Promise((resolve, reject) => {
-      let timedOut = false;
-      setTimeout(() => (timedOut = true), timeout || 30000);
-      const targetInterval = setInterval(async () => {
-        if (timedOut) reject(`${selector} is not hidden`);
-        else {
-          const element = await this.find(selector);
-          if (element.$ != null) {
-            const isVisible = await this.isVisible(element);
-            if (isVisible === false) {
-              clearInterval(targetInterval);
-              resolve(element);
-            }
-          }
-        }
-      });
-    });
+    let timedOut = false;
+    let elementCheckStr = "";
+    let element: any = {};
+    let isVisible: Boolean = true;
+    setTimeout(() => (timedOut = true), timeout || 30000);
+    while (!elementCheckStr) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      element = (await this.find(selector)) as AppiumElement;
+      elementCheckStr = element.$;
+      await this._delay(10);
+    }
+    while (isVisible) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      isVisible = await this.isVisible(element);
+      await this._delay(10);
+    }
+    return element;
   }
 
   public async isVisible(element: iValue): Promise<boolean> {
@@ -350,5 +350,9 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
     return res.jsonRoot.value;
+  }
+
+  private _delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
