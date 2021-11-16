@@ -1,4 +1,4 @@
-import { iValue, iAssertionContext } from "../interfaces";
+import { iValue, iAssertionContext, iBounds } from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
@@ -103,6 +103,42 @@ export class AppiumElement extends DOMElement implements iValue {
     );
 
     return res.jsonRoot.value;
+  }
+
+  public async getBounds(): Promise<iBounds | null> {
+    const response = this.context.response as AppiumResponse;
+    const res = await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${response.sessionId}/element/${this._elementId}/rect`,
+      {
+        method: "get",
+      }
+    );
+
+    if (res.jsonRoot.value.error) return null;
+
+    const bounds: iBounds = {
+      x: res.jsonRoot.value.x,
+      y: res.jsonRoot.value.y,
+      height: res.jsonRoot.value.height,
+      width: res.jsonRoot.value.width,
+      points: [
+        {
+          x: res.jsonRoot.value.x,
+          y: res.jsonRoot.value.y,
+        },
+        {
+          x: res.jsonRoot.value.x + res.jsonRoot.value.width / 2,
+          y: res.jsonRoot.value.y + res.jsonRoot.value.height / 2,
+        },
+        {
+          x: res.jsonRoot.value.x + res.jsonRoot.value.width,
+          y: res.jsonRoot.value.y + res.jsonRoot.value.height,
+        },
+      ],
+    };
+
+    return bounds;
   }
 
   protected async _getValue(): Promise<any> {

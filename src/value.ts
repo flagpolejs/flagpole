@@ -712,7 +712,7 @@ export class Value implements iValue {
     throw `getNextSiblings() is not supported by ${this.name}`;
   }
 
-  public async getBounds(boxType: string): Promise<iBounds | null> {
+  public async getBounds(boxType?: string): Promise<iBounds | null> {
     return null;
   }
 
