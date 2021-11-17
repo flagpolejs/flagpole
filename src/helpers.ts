@@ -94,9 +94,18 @@ export async function filterFind(
   }
   // Apply offset and limit
   if (opts?.offset || opts?.limit) {
-    const start = opts.offset || 0;
-    const end = opts.limit ? start + opts.limit : undefined;
-    elements = elements.slice(start, end);
+    elements = applyOffsetAndLimit(opts, elements);
   }
+  return elements;
+}
+
+export function applyOffsetAndLimit(
+  opts: FindAllOptions,
+  elements: iValue[]
+): iValue[] {
+  const start = opts.offset || 0;
+  const end = opts.limit ? start + opts.limit : undefined;
+  elements = elements.slice(start, end);
+
   return elements;
 }
