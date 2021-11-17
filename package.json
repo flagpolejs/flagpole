@@ -41,6 +41,7 @@
     "form-data": "^2.5.1",
     "form-urlencoded": "^4.1.3",
     "fs-extra": "^9.0.1",
+    "jimp": "^0.16.1",
     "jmespath": "^0.15.0",
     "media-probe": "^1.0.1",
     "media-stream-validator": "^1.0.0",

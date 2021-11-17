@@ -1,4 +1,5 @@
 import { promises } from "fs";
+import * as Jimp from "jimp";
 import { ProtoResponse } from "../response";
 import {
   iResponse,
@@ -246,8 +247,11 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     a?: string | ScreenshotOpts,
     b?: ScreenshotOpts
   ): Promise<Buffer> {
-    const localFilePath = typeof a == "string" ? a : undefined;
     const opts: ScreenshotOpts = (typeof a !== "string" ? a : b) || {};
+    let localFilePath = typeof a == "string" ? a : undefined;
+    if (!localFilePath && opts.path) {
+      localFilePath = opts.path;
+    }
 
     const res = await sendAppiumRequest(
       this.scenario,
@@ -260,11 +264,27 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     const encodedData = res.jsonRoot.value;
     const buff = Buffer.from(encodedData, "base64");
     const dateTime = new Date();
+    const filename = `${localFilePath}/Appium ${this.scenario.title} ${dateTime}.png`;
 
-    await fs.writeFile(
-      `${localFilePath}/Appium ${this.scenario.title} ${dateTime}.png`,
-      buff
-    );
+    await fs.writeFile(filename, buff);
+
+    if (opts.clip) {
+      Jimp.read(filename)
+        .then((image) => {
+          image
+            .crop(
+              opts.clip!.x,
+              opts.clip!.y,
+              opts.clip!.width,
+              opts.clip!.height
+            )
+            .quality(100)
+            .write(filename);
+        })
+        .catch((err) => {
+          if (err) throw err;
+        });
+    }
 
     return buff;
   }
