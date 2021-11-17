@@ -167,6 +167,23 @@ suite.scenario("Load this HTML page", "html");
 
 The allowed types for the second argument are:
 
+#### appium
+
+Run appium tests on Android or iOS. Requires a running Appium server and a device or emulator/simulator to run the AUT.
+
+```typescript
+suite.scenario("User login flow", "appium", {
+  deviceName: "Name of device",
+  platformName: "Android" | "iOS",
+  automationName: "Uiautomator2" | "XCUITest" | "Espresso",
+  app: "/path/to/apk/or/ipa"
+});
+```
+
+For more information on the key/values to pass into the third argument, see [here](https://appium.io/docs/en/writing-running-appium/caps/index.html).
+
+For more information on the three supported automation drivers see [XCUITest](https://appium.io/docs/en/drivers/ios-xcuitest/) | [Uiautomator2](https://appium.io/docs/en/drivers/android-uiautomator2/) | [Espresso](https://appium.io/docs/en/drivers/android-espresso/)
+
 #### atom
 
 Validate your Atom feed. Will automatically apply assertions to do basic validation to Atom specifications.

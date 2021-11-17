@@ -12,6 +12,7 @@ suite
   .html("Homepage Loads")
   .open("/")
   .next(async (context) => {
+    // selectors are obfuscated, cannot guarantee articel in this example
     const subHeadings = await context.findAll("a");
     const randomStory =
       subHeadings[Math.floor(Math.random() * subHeadings.length)];
@@ -23,5 +24,6 @@ suite
   });
 
 const articleScenario = suite.html("Test Article").next(async (context) => {
-  context.assert(await context.find("h2")).exists();
+  // assert that anything exists
+  await context.exists("div");
 });

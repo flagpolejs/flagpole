@@ -155,6 +155,7 @@ export class Suite implements iSuite {
   /**
    * How many scenarios should be able to execute concurrently?
    *
+   * @deprecated
    * @param maxExecutions
    */
   public setConcurrencyLimit(maxExecutions: number): iSuite {
@@ -162,15 +163,32 @@ export class Suite implements iSuite {
     return this;
   }
 
+  public get concurrencyLimit(): number {
+    return this._taskManager.concurrencyLimit;
+  }
+
+  public set concurrencyLimit(maxExecutions: number) {
+    this._taskManager.concurrencyLimit = maxExecutions;
+  }
+
   /**
    * If a scenario hasn't completed in this period of time, cut it off
    *
    * @param timeout
+   * @deprecated
    * @returns
    */
   public setMaxScenarioDuration(timeout: number): iSuite {
     this._taskManager.maxScenarioDuration = timeout;
     return this;
+  }
+
+  public get maxScenarioDuration(): number {
+    return this._taskManager.maxScenarioDuration;
+  }
+
+  public set maxScenarioDuration(timeoutMs: number) {
+    this._taskManager.maxScenarioDuration = timeoutMs;
   }
 
   /**
