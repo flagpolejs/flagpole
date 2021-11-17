@@ -227,13 +227,42 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   }
 
   // Uses call from deprecated JSONWP protocol and is subject to change
-  public async launchApp(): Promise<void> {
-    await sendAppiumRequest(
-      this.scenario,
-      `/session/${this.sessionId}/appium/app/launch`,
-      {
-        method: "post",
-      }
-    );
+  public async launchApp(
+    app?: string,
+    args?: string[],
+    environment?: any
+  ): Promise<void> {
+    if (
+      this.capabilities.automationName.toLowerCase() === "uiautomator2" ||
+      this.capabilities.automationName.toLowerCase() === "espresso"
+    ) {
+      await sendAppiumRequest(
+        this.scenario,
+        `/session/${this.sessionId}/appium/app/launch`,
+        {
+          method: "post",
+        }
+      );
+      // This call is not deprecated
+    } else if (this.capabilities.automationName.toLowerCase() === "xcuitest") {
+      if (!app) throw "App bundleId required for launching an iOS app";
+      const data: any = {
+        script: "mobile: launchApp",
+        args: {
+          bundleId: app,
+          arguments: args,
+          environment: environment,
+        },
+      };
+
+      await sendAppiumRequest(
+        this.scenario,
+        `/session/${this.sessionId}/execute`,
+        {
+          method: "post",
+          data: data,
+        }
+      );
+    }
   }
 }
