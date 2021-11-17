@@ -1,5 +1,12 @@
+import { promises } from "fs";
 import { ProtoResponse } from "../response";
-import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
+import {
+  iResponse,
+  iValue,
+  FindOptions,
+  FindAllOptions,
+  ScreenshotOpts,
+} from "../interfaces";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import {
@@ -11,6 +18,8 @@ import {
 import { JsonDoc } from "../json/jpath";
 import { sendAppiumRequest, appiumFindByUiAutomator } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
+
+const fs = promises;
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
   public jsonDoc: JsonDoc | undefined;
@@ -224,5 +233,39 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         data: toSend,
       }
     );
+  }
+
+  public async screenshot(): Promise<Buffer>;
+  public async screenshot(localFilePath: string): Promise<Buffer>;
+  public async screenshot(
+    localFilePath: string,
+    opts: ScreenshotOpts
+  ): Promise<Buffer>;
+  public async screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  public async screenshot(
+    a?: string | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ): Promise<Buffer> {
+    const localFilePath = typeof a == "string" ? a : undefined;
+    const opts: ScreenshotOpts = (typeof a !== "string" ? a : b) || {};
+
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/screenshot`,
+      {
+        method: "get",
+      }
+    );
+
+    const encodedData = res.jsonRoot.value;
+    const buff = Buffer.from(encodedData, "base64");
+    const dateTime = new Date();
+
+    await fs.writeFile(
+      `${localFilePath}/Appium ${this.scenario.title} ${dateTime}.png`,
+      buff
+    );
+
+    return buff;
   }
 }
