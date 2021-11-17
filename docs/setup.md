@@ -25,8 +25,8 @@ or download [here](https://github.com/appium/appium-desktop/releases/latest)
 
 Run the Appium server before executing any Appium tests. Also, make sure the device, emulator, or simulator under test is connected and available.
 
-Add the desired capabilities to each scenario like so:
 ```javascript
+Add the desired capabilities to each scenario like so:
 flagpole("Basic Smoke Test of App", async (suite) => {
   suite
     .scenario("Basic smoke test", "appium", {
