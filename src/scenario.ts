@@ -49,7 +49,7 @@ import { toType, asyncForEach, runAsync } from "./util";
 import { AssertionContext } from "./assertioncontext";
 import * as bluebird from "bluebird";
 import { Browser } from "puppeteer-core";
-import minikin, { Response, Server } from "minikin";
+import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
 import { wrapAsValue } from "./helpers";
 import {
