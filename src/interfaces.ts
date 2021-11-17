@@ -244,7 +244,7 @@ export interface iValue {
   getInnerHtml(): Promise<iValue>;
   getOuterHtml(): Promise<iValue>;
   setValue(text: string): Promise<void>;
-  getBounds(boxType: string): Promise<iBounds | null>;
+  getBounds(boxType?: string): Promise<iBounds | null>;
   getUrl(): Promise<iValue>;
   getLink(): Promise<Link>;
   getStyleProperty(key: string): Promise<iValue>;

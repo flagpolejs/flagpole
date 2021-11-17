@@ -260,16 +260,11 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         method: "get",
       }
     );
-
     const encodedData = res.jsonRoot.value;
-    const buff = Buffer.from(encodedData, "base64");
-    const dateTime = new Date();
-    const filename = `${localFilePath}/Appium ${this.scenario.title} ${dateTime}.png`;
-
-    await fs.writeFile(filename, buff);
+    let buff = Buffer.from(encodedData, "base64");
 
     if (opts.clip) {
-      Jimp.read(filename)
+      await Jimp.read(buff)
         .then((image) => {
           image
             .crop(
@@ -279,11 +274,24 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
               opts.clip!.height
             )
             .quality(100)
-            .write(filename);
+            .getBufferAsync(Jimp.MIME_PNG)
+            .then((buffer) => {
+              buff = buffer;
+            })
+            .catch((err) => {
+              if (err) throw err;
+            });
         })
         .catch((err) => {
           if (err) throw err;
         });
+    }
+
+    if (localFilePath) {
+      const dateTime = new Date();
+      const filename = `${localFilePath}/Appium ${this.scenario.title} ${dateTime}.png`;
+
+      await fs.writeFile(filename, buff);
     }
 
     return buff;

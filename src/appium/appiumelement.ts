@@ -1,9 +1,18 @@
-import { iValue, iAssertionContext } from "../interfaces";
+import { promises } from "fs";
+import * as Jimp from "jimp";
+import {
+  iValue,
+  iAssertionContext,
+  iBounds,
+  ScreenshotOpts,
+} from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
 import { sendAppiumRequest } from "./appium-helpers";
 import { AppiumResponse } from "./appiumresponse";
+
+const fs = promises;
 
 export class AppiumElement extends DOMElement implements iValue {
   protected _elementId: string;
@@ -105,6 +114,42 @@ export class AppiumElement extends DOMElement implements iValue {
     return res.jsonRoot.value;
   }
 
+  public async getBounds(): Promise<iBounds | null> {
+    const response = this.context.response as AppiumResponse;
+    const res = await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${response.sessionId}/element/${this._elementId}/rect`,
+      {
+        method: "get",
+      }
+    );
+
+    if (res.jsonRoot.value.error) return null;
+
+    const bounds: iBounds = {
+      x: res.jsonRoot.value.x,
+      y: res.jsonRoot.value.y,
+      height: res.jsonRoot.value.height,
+      width: res.jsonRoot.value.width,
+      points: [
+        {
+          x: res.jsonRoot.value.x,
+          y: res.jsonRoot.value.y,
+        },
+        {
+          x: res.jsonRoot.value.x + res.jsonRoot.value.width / 2,
+          y: res.jsonRoot.value.y + res.jsonRoot.value.height / 2,
+        },
+        {
+          x: res.jsonRoot.value.x + res.jsonRoot.value.width,
+          y: res.jsonRoot.value.y + res.jsonRoot.value.height,
+        },
+      ],
+    };
+
+    return bounds;
+  }
+
   protected async _getValue(): Promise<any> {
     throw "_getValue not implemented";
   }
@@ -202,6 +247,74 @@ export class AppiumElement extends DOMElement implements iValue {
     );
 
     return res.jsonRoot.value;
+  }
+
+  public async screenshot(): Promise<Buffer>;
+  public async screenshot(localFilePath: string): Promise<Buffer>;
+  public async screenshot(
+    localFilePath: string,
+    opts: ScreenshotOpts
+  ): Promise<Buffer>;
+  public async screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  public async screenshot(
+    a?: string | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ): Promise<Buffer> {
+    const response = this.context.response as AppiumResponse;
+    const opts: ScreenshotOpts = (typeof a !== "string" ? a : b) || {};
+    let localFilePath = typeof a == "string" ? a : undefined;
+    if (!localFilePath && opts.path) {
+      localFilePath = opts.path;
+    }
+
+    const bounds = await this.getBounds();
+
+    const res = await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${response.sessionId}/screenshot`,
+      {
+        method: "get",
+      }
+    );
+
+    const encodedData = res.jsonRoot.value;
+    let buff = Buffer.from(encodedData, "base64");
+
+    let x: number = bounds!.x;
+    let y: number = bounds!.y;
+    let width: number = bounds!.width;
+    let height: number = bounds!.height;
+    if (opts.clip) {
+      x = opts.clip.x + bounds!.x;
+      y = opts.clip.y + bounds!.y;
+      width = opts.clip.width;
+      height = opts.clip.height;
+    }
+
+    await Jimp.read(buff)
+      .then((image) => {
+        image
+          .crop(x, y, width, height)
+          .quality(100)
+          .getBufferAsync(Jimp.MIME_PNG)
+          .then((buffer) => {
+            buff = buffer;
+          })
+          .catch((err) => {
+            if (err) throw err;
+          });
+      })
+      .catch((err) => {
+        if (err) throw err;
+      });
+
+    if (localFilePath) {
+      const dateTime = new Date();
+      const validElementName = this.name.replace("/", ":");
+      const filename = `${localFilePath}/Appium ${this.context.scenario.title} ${validElementName} ${dateTime}.png`;
+      await fs.writeFile(filename, buff);
+    }
+    return buff;
   }
 
   public toString(): string {
