@@ -230,7 +230,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   public async terminateApp(
     app: string,
     timeout?: number
-  ): Promise<void | any> {
+  ): Promise<void | boolean> {
     let data: any = {};
     if (
       this.capabilities.automationName.toLowerCase() === "uiautomator2" ||
