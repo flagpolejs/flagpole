@@ -225,4 +225,10 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
+
+  public async goBack(): Promise<void> {
+    await sendAppiumRequest(this.scenario, `/session/${this.sessionId}/back`, {
+      method: "post",
+    });
+  }
 }
