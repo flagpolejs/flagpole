@@ -186,7 +186,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         duration: array[2] || 0,
       },
     ];
-
     if (otherArrays.length) {
       otherArrays.forEach((array) => {
         touchActions.push({

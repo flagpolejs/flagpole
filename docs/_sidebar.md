@@ -8,6 +8,7 @@
 - [CLI](cli.md)
 - [Events](events.md)
 - Classes
+  - [AppiumResponse](appiumresponse.md)
   - [iAssertion](assertion.md)
   - [iAssertionContext](assertion-context.md)
   - [iResponse](iresponse.md)

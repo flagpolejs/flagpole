@@ -176,13 +176,19 @@ const textBox = await context.find('input[name="title"]');
 await textBox.clear();
 ```
 
+This also works on Appium elements.
+
 ### clearThenType(textToType: string, opts: any): Promise\<void\>
 
 Literally calls clear() and then type() methods. So just a shorthand to clear out the exiting text first before typing.
 
+This also works on Appium elements.
+
 ### click(): Promise\<void\>
 
-If the DOM Element is something clickable like a link or a button, you can perform a "click" on it. There are multiple options for loverloading it.
+If the DOM Element is something clickable like a link or a button, you can perform a "click" on it. There are multiple options for overloading it.
+
+Note that Appium does not support overloading `click()`
 
 #### click(message: string, callback: function): Promise\<void\>
 
@@ -373,6 +379,8 @@ const h1 = await context.find("h1");
 await h1.exists();
 ```
 
+Note that using exists in this manner is not supported in Appium testing.
+
 #### exists(message: string): Promise\<iValue\>;
 
 You can alternately specify a custom asertion message:
@@ -438,6 +446,8 @@ const li = await someElement.find("li");
 
 There are additional overloads for this method. For more details see the documentation in `AssertionContext` because it works the same way.
 
+Note that find does not work in this manner on Appium elements.
+
 ### findAll(selector: string): Promise\<iValue\>
 
 Find all of the elements in the descendents of the current element that match this selector. If there are no matches, it will be an empty array.
@@ -447,6 +457,8 @@ const li = await someElement.findAll("li");
 ```
 
 There are additional overloads for this method. For more details see the documentation in `AssertionContext` because it works the same way.
+
+Note that findAll does not work in this manner on Appium elements.
 
 ### focus(): Promise\<any\>;
 
@@ -459,6 +471,9 @@ Get the attribute of the element with this key and return its value. If it is no
 ```javascript
 const src = await img.getAttribute("src");
 ```
+
+This also works with Appium testing. Valid attributes for Appium elements are:
+checkable, checked, class, className, clickable, content-desc, contentDescription, enabled, focusable, focused, long-clickable, longClickable, package, password, resource-id, resourceId, scrollable, selection-start, selection-end, selected, text, name, bounds, displayed, contentSize
 
 ### getBounds(boxType: string): Promise\<iBounds | null\>;
 
@@ -560,6 +575,8 @@ Get the HTML tag of this element.
 const tagName = await someElement.getTagName();
 ```
 
+Also works to get tag names of Appium elements, depending on the automation driver.
+
 ### getText(): Promise\<Value\>
 
 Get the textContent of this element. This is slightly different from getInnerText() and here is a [StackOverflow question](https://stackoverflow.com/questions/35213147/difference-between-textcontent-vs-innertext) about that so I don't have to repeat it.
@@ -567,6 +584,8 @@ Get the textContent of this element. This is slightly different from getInnerTex
 ```javascript
 const text = await div.getText();
 ```
+
+This also works on Appium elements.
 
 ### getValue(): Promise\<Value\>
 

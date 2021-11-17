@@ -52,11 +52,12 @@ suite
     context.assert("Search results found", results).exists();
   })
   .next("See if evalulate works", async (context) => {
-    const divCount = await context.page?.evaluate(() => {
+    const divCount = await context.eval(() => {
       return document.querySelectorAll("div").length;
     });
     context.comment(`There are ${divCount} divs in this page`);
     context
       .assert("There are more than one divs in it", divCount)
       .greaterThan(0);
+    context.comment(context.currentUrl.$);
   });

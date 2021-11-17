@@ -1,7 +1,13 @@
 import { HTMLElement } from "./htmlelement";
 import { HttpResponse } from "../httpresponse";
 import { DOMResponse } from "./domresponse";
-import { iResponse, iValue, FindAllOptions, FindOptions } from "../interfaces";
+import {
+  iResponse,
+  iValue,
+  FindAllOptions,
+  FindOptions,
+  iScenario,
+} from "../interfaces";
 import * as cheerio from "cheerio";
 import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
 import { ValuePromise } from "../value-promise";
@@ -29,9 +35,13 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     return "html";
   }
 
-  public init(httpResponse: HttpResponse) {
-    super.init(httpResponse);
-    this._cheerio = cheerio.load(httpResponse.body);
+  public get currentUrl(): iValue {
+    return wrapAsValue(this.context, this._currentUrl, "Current URL");
+  }
+
+  public init(res: HttpResponse) {
+    super.init(res);
+    this._cheerio = cheerio.load(res.body);
   }
 
   public getRoot(): cheerio.Root {
