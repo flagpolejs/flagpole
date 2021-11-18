@@ -296,4 +296,67 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
     return buff;
   }
+
+  public async screenshotCompare(infile: string): Promise<boolean>;
+  public async screenshotCompare(
+    infile: string,
+    percentage: number
+  ): Promise<boolean>;
+  public async screenshotCompare(
+    infile: string,
+    opts: ScreenshotOpts
+  ): Promise<boolean>;
+  public async screenshotCompare(
+    infile: string,
+    percentage: number,
+    opts: ScreenshotOpts
+  ): Promise<boolean>;
+  public async screenshotCompare(
+    infile: string,
+    a?: number | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ) {
+    const opts: ScreenshotOpts = (typeof a !== "number" ? a : b) || {};
+    let percentage = typeof a === "number" ? a : -1;
+    let threshold = 0.15;
+    if (percentage && percentage > 0 && percentage < 100) {
+      percentage = percentage / 100;
+      threshold = parseFloat(Number(1.0 - percentage).toFixed(2));
+    }
+    const image1 = await Jimp.read(infile);
+    let image2: any = {};
+
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/screenshot`,
+      {
+        method: "get",
+      }
+    );
+
+    const encodedData = res.jsonRoot.value;
+    const buff = Buffer.from(encodedData, "base64");
+
+    if (opts?.clip) {
+      console.log("if");
+      await Jimp.read(buff).then((image) => {
+        image
+          .crop(opts.clip!.x, opts.clip!.y, opts.clip!.width, opts.clip!.height)
+          .quality(100);
+        image2 = image;
+      });
+    } else {
+      console.log("else");
+      image2 = await Jimp.read(buff);
+    }
+
+    const distance = Jimp.distance(image1, image2);
+    const diff = Jimp.diff(image1, image2);
+
+    if (distance <= threshold && diff.percent <= threshold) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
