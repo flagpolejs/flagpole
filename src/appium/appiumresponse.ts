@@ -319,7 +319,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     const opts: ScreenshotOpts = (typeof a !== "number" ? a : b) || {};
     let percentage = typeof a === "number" ? a : -1;
     let threshold = 0.15;
-    if (percentage && percentage > 0 && percentage < 100) {
+    if (percentage && percentage >= 0 && percentage <= 100) {
       percentage = percentage / 100;
       threshold = parseFloat(Number(1.0 - percentage).toFixed(2));
     }
