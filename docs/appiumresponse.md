@@ -33,12 +33,21 @@ const automationName = response.capabilities.automationName;
 
 ## Methods
 
-### hideKeyboard(): Promise\<void\>
+### getGeolocation(): Promise \<any\>
 
-Hide onscreen keyboard
+Get device geolocation
 
 ```typescript
-await response.hideKeyboard();
+const response = context.response as AppiumResponse;
+const geolocation = await response.getGeolocation();
+```
+
+### setImplicitWait(ms: number): Promise<void>
+
+Sets implicit wait duration for finding Appium elements. This sets the timeout for finding each and every element to be found after calling this method. Appium starts with an implicit wait time of 3000 ms.
+
+```typescript
+await response.setImplicitWait(5000);
 ```
 
 ### touchMove(array: [x: number, y: number, duration?: number]): Promise\<void\>

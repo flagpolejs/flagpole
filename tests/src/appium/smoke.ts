@@ -2,16 +2,38 @@ import flagpole, { AppiumResponse } from "../../../dist/index";
 flagpole("Basic Smoke Test of Site", async (suite) => {
   suite
     .base("http://127.0.0.1:4723")
-    .scenario("Homepage Loads", "appium", {
-      deviceName: "Android Emulator",
-      platformName: "Android",
-      automationName: "Uiautomator2",
-      app: process.env.APKPATH,
-      appWaitActivity:
-        "echelon_android.fitnation.viatek.com.echelon_android_new.SetupActivity",
-    })
+    .scenario(
+      "Homepage Loads",
+      "appium",
+      {
+        deviceName: "Android Emulator",
+        platformName: "Android",
+        automationName: "Uiautomator2",
+        app: process.env.APKPATH,
+        appWaitActivity:
+          "echelon_android.fitnation.viatek.com.echelon_android_new.SetupActivity",
+      },
+      {
+        location: {
+          latitude: 40.71278,
+          longitude: -74.00611,
+          altitude: 1,
+        },
+      }
+    )
     .next(async (context) => {
       const response = context.response as AppiumResponse;
+      const geolocation = await response.getGeolocation();
+      context.assert(geolocation.latitude).equals(40.71278);
+      context.assert(geolocation.longitude).equals(-74.00611);
+      context.assert(geolocation.altitude).equals(1);
+      let screenProps = await context.getScreenProperties();
+      context.assert(screenProps.rotation).equals("PORTRAIT");
+      let rotation = await context.rotate("LANDSCAPE");
+      context.assert(rotation).equals("LANDSCAPE");
+      screenProps = await context.getScreenProperties();
+      context.assert(screenProps.rotation).equals("LANDSCAPE");
+      rotation = await context.rotate("PORTRAIT");
       const hello = await context.findAll("id/pager_signin_button");
       context.assert(hello[0]).exists();
       context.assert(hello.length).greaterThan(0);
@@ -42,7 +64,7 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       const loginField = await context.find("id/username_login");
       context.assert(loginField).exists();
       await loginField.type("ncalaway@echelonfit.com");
-      await response.hideKeyboard();
+      await context.hideKeyboard();
       await loginField.clear();
       await loginField.type("hello@world.com");
       await loginField.clearThenType(process.env.EMAIL!);
@@ -53,11 +75,13 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       context
         .assert("passwordTexts length is 1", passwordTexts.length)
         .equals(1);
-      const passwordField = await context.find("id/password_login");
+      const passwordField = await context.waitForVisible("id/password_login");
       await passwordField.type(process.env.PASSWORD!);
       (await context.find("id/login_button")).click();
-      await context.pause(5000);
-      const addUserButton = await context.find("accessibility id/add button");
+      const addUserButton = await context.waitForExists(
+        "accessibility id/add button",
+        6000
+      );
       context.assert(addUserButton).exists();
       const user = await context.find("id/initials_switch_user");
       await user.click();

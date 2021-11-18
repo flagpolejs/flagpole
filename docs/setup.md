@@ -40,6 +40,24 @@ flagpole("Basic Smoke Test of App", async (suite) => {
 
 See [here](https://appium.io/docs/en/writing-running-appium/caps/) for more information on setting capabilities.
 
+You may also pass device properties as a fourth argument. Currently, only geolocation is capable of being set this way.
+
+```javascript
+flagpole("Basic Smoke Test of App", async (suite) => {
+  suite
+  .scenario("Basic smoke test", "appium", {
+    deviceName: "Android Emulator",
+    platformName: "Android",
+    automationName: "Uiautomator2",
+    app: "/path/to/apk/or/ipa"
+    }, {
+      latitude: 121.21,
+      longitude: 11.56,
+      altitude: 94.23
+    });
+});
+```
+
 
 ### TypeScript
 
