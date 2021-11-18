@@ -626,6 +626,11 @@ export class AssertionContext implements iAssertionContext {
     return this.scenario.abort(message);
   }
 
+  /* Hides the software keyboard */
+  public async hideKeyboard(): Promise<void> {
+    await this.response.hideKeyboard();
+  }
+
   protected async _findAllForSelectors(
     selectors: string[],
     a?: string | FindAllOptions | RegExp,
