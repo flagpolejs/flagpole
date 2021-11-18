@@ -362,7 +362,11 @@ export class AssertionContext implements iAssertionContext {
     try {
       // @ts-ignore TypeScript is being stupid
       const el: iValue = await this.response.waitForExists(selector, a, b);
-      this._completedAction("EXISTS", `${selector}`);
+      if (el.isNull()) {
+        this._failedAction("EXISTS", `${selector}`);
+      } else {
+        this._completedAction("EXISTS", `${selector}`);
+      }
       return el;
     } catch (ex) {
       this._failedAction("EXISTS", `${selector}`);

@@ -11,6 +11,7 @@ import {
 import { JsonDoc } from "../json/jpath";
 import { sendAppiumRequest, appiumFindByUiAutomator } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
+import { toType } from "../util";
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
   public jsonDoc: JsonDoc | undefined;
@@ -185,7 +186,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         duration: array[2] || 0,
       },
     ];
-
     if (otherArrays.length) {
       otherArrays.forEach((array) => {
         touchActions.push({
@@ -237,5 +237,121 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         },
       }
     );
+  }
+
+  public async getTimeout(): Promise<number> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/timeouts`,
+      {
+        method: "get",
+      }
+    );
+    return res.jsonRoot.value.implicit;
+  }
+
+  public async waitForExists(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string,
+    a?: number | string | RegExp,
+    b?: number
+  ): Promise<iValue> {
+    const previousTime = await this.getTimeout();
+    if (typeof a === "number") {
+      await this.setImplicitWait(a);
+      const element = await this.find(selector);
+      await this.setImplicitWait(previousTime);
+      return element;
+    } else if (typeof a === "string") {
+      await this.setImplicitWait(b || 30000);
+      const element = await this.find(selector, a);
+      await this.setImplicitWait(previousTime);
+      return element;
+    } else if (toType(a) === "regexp") {
+      await this.setImplicitWait(previousTime);
+      throw "Appium does not support finding element by RegEx";
+    } else {
+      await this.setImplicitWait(30000);
+      const element = await this.find(selector);
+      await this.setImplicitWait(previousTime);
+      return element;
+    }
+  }
+
+  public async waitForXPath(xPath: string, timeout?: number): Promise<iValue> {
+    const previousTime = await this.getTimeout();
+    await this.setImplicitWait(timeout || 30000);
+    const element = await this.find(xPath);
+    await this.setImplicitWait(previousTime);
+    return element;
+  }
+
+  public async waitForVisible(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue> {
+    let timedOut = false;
+    let elementCheckStr = "";
+    let element: any = {};
+    let isVisible: Boolean = false;
+    setTimeout(() => (timedOut = true), timeout || 30000);
+    while (!elementCheckStr) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      element = await this.find(selector);
+      elementCheckStr = element.$;
+      await this._delay(10);
+    }
+    while (!isVisible) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      isVisible = await this.isVisible(element);
+      await this._delay(10);
+    }
+    return element;
+  }
+
+  public async waitForHidden(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue> {
+    let timedOut = false;
+    let elementCheckStr = "";
+    let element: any = {};
+    let isVisible: Boolean = true;
+    setTimeout(() => (timedOut = true), timeout || 30000);
+    while (!elementCheckStr) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      element = (await this.find(selector)) as AppiumElement;
+      elementCheckStr = element.$;
+      await this._delay(10);
+    }
+    while (isVisible) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      isVisible = await this.isVisible(element);
+      await this._delay(10);
+    }
+    return element;
+  }
+
+  public async isVisible(element: iValue): Promise<boolean> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/element/${element}/displayed`,
+      {
+        method: "get",
+      }
+    );
+    return res.jsonRoot.value;
+  }
+
+  protected _delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
