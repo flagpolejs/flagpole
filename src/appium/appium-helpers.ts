@@ -6,6 +6,7 @@ import {
   iValue,
   FindAllOptions,
   AppiumElementIdResponse,
+  DeviceProperties,
 } from "../interfaces";
 import { applyOffsetAndLimit, wrapAsValue } from "../helpers";
 import { AppiumResponse } from "./appiumresponse";
@@ -89,7 +90,7 @@ const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
 export const appiumSessionCreate = (
   scenario: Scenario,
   opts: any = {},
-  devProperties: any = {}
+  devProperties: DeviceProperties = {}
 ) => {
   return async () => {
     const existingSessionId = await getAppiumSession(scenario);
