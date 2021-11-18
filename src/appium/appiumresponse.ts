@@ -17,6 +17,7 @@ import {
 import { JsonDoc } from "../json/jpath";
 import { sendAppiumRequest, appiumFindByUiAutomator } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
+import { toType } from "../util";
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
   public jsonDoc: JsonDoc | undefined;
@@ -45,6 +46,25 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return this.scenario.get("capabilities");
   }
 
+  public async getGeolocation(): Promise<any> {
+    if (this.scenario.get("location")) {
+      return this.scenario.get("location");
+    } else {
+      const res = await sendAppiumRequest(
+        this.scenario,
+        `/session/${this.sessionId}/location`,
+        {
+          method: "get",
+        }
+      );
+
+      const location = res.jsonRoot.value;
+      this.scenario.set("location", location);
+
+      return this.scenario.get("location");
+    }
+  }
+
   public find(
     selector: string,
     a?: string | RegExp | FindOptions,
@@ -57,7 +77,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       } else if (params.contains || params.opts) {
         return findOne(this, selector, params);
       }
-      const usingValue = selector.split("/");
+      const usingValue = selector.split(/\/(.+)/);
       const res = await sendAppiumRequest(
         this.scenario,
         `/session/${this.sessionId}/element`,
@@ -88,7 +108,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    const usingValue = selector.split("/");
+    const usingValue = selector.split(/\/(.+)/);
     let elements: iValue[] = [];
     const params = getFindParams(a, b);
     let res: JsonDoc = new JsonDoc({});
@@ -191,7 +211,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         duration: array[2] || 0,
       },
     ];
-
     if (otherArrays.length) {
       otherArrays.forEach((array) => {
         touchActions.push({
@@ -231,7 +250,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
-
+  
   public async rotate(rotation: string | number): Promise<string | number> {
     if (typeof rotation === "number") {
       throw "Appium only supports rotating by a string.";
@@ -255,7 +274,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
     return res.jsonRoot.value;
   }
-
+  
   public async getScreenProperties(): Promise<ScreenProperties> {
     const rotationRes = await sendAppiumRequest(
       this.scenario,
@@ -274,7 +293,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         method: "get",
       }
     );
-
+    
     const screenProperties: ScreenProperties = {
       angle: rotation,
       dimensions: {
@@ -285,5 +304,136 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     };
 
     return screenProperties;
+  }
+
+  public async setImplicitWait(ms: number): Promise<void> {
+    await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/timeouts/implicit_wait`,
+      {
+        method: "post",
+        data: {
+          ms: ms,
+        },
+      }
+    );
+  }
+
+  public async getTimeout(): Promise<number> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/timeouts`,
+      {
+        method: "get",
+      }
+    );
+
+    return res.jsonRoot.value.implicit;
+  }
+
+  public async waitForExists(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): Promise<iValue>;
+  public async waitForExists(
+    selector: string,
+    a?: number | string | RegExp,
+    b?: number
+  ): Promise<iValue> {
+    const previousTime = await this.getTimeout();
+    if (typeof a === "number") {
+      await this.setImplicitWait(a);
+      const element = await this.find(selector);
+      await this.setImplicitWait(previousTime);
+      return element;
+    } else if (typeof a === "string") {
+      await this.setImplicitWait(b || 30000);
+      const element = await this.find(selector, a);
+      await this.setImplicitWait(previousTime);
+      return element;
+    } else if (toType(a) === "regexp") {
+      await this.setImplicitWait(previousTime);
+      throw "Appium does not support finding element by RegEx";
+    } else {
+      await this.setImplicitWait(30000);
+      const element = await this.find(selector);
+      await this.setImplicitWait(previousTime);
+      return element;
+    }
+  }
+
+  public async waitForXPath(xPath: string, timeout?: number): Promise<iValue> {
+    const previousTime = await this.getTimeout();
+    await this.setImplicitWait(timeout || 30000);
+    const element = await this.find(xPath);
+    await this.setImplicitWait(previousTime);
+    return element;
+  }
+
+  public async waitForVisible(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue> {
+    let timedOut = false;
+    let elementCheckStr = "";
+    let element: any = {};
+    let isVisible: Boolean = false;
+    setTimeout(() => (timedOut = true), timeout || 30000);
+    while (!elementCheckStr) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      element = await this.find(selector);
+      elementCheckStr = element.$;
+      await this._delay(10);
+    }
+    while (!isVisible) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      isVisible = await this.isVisible(element);
+      await this._delay(10);
+    }
+    return element;
+  }
+
+  public async waitForHidden(
+    selector: string,
+    timeout?: number
+  ): Promise<iValue> {
+    let timedOut = false;
+    let elementCheckStr = "";
+    let element: any = {};
+    let isVisible: Boolean = true;
+    setTimeout(() => (timedOut = true), timeout || 30000);
+    while (!elementCheckStr) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      element = (await this.find(selector)) as AppiumElement;
+      elementCheckStr = element.$;
+      await this._delay(10);
+    }
+    while (isVisible) {
+      if (timedOut) return wrapAsValue(this.context, null, selector);
+      isVisible = await this.isVisible(element);
+      await this._delay(10);
+    }
+    return element;
+  }
+
+  public async isVisible(element: iValue): Promise<boolean> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/element/${element}/displayed`,
+      {
+        method: "get",
+      }
+    );
+
+    return res.jsonRoot.value;
+  }
+
+  protected _delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

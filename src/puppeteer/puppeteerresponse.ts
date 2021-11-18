@@ -7,10 +7,11 @@ import {
   SerializableOrJSHandle,
   PageFnOptions,
 } from "puppeteer-core";
-import { iResponse, ScreenshotOpts } from "../interfaces";
+import { iResponse, ScreenshotOpts, iValue, iHttpRequest } from "../interfaces";
 import { BrowserControl } from "./browsercontrol";
 import { DOMResponse } from "../html/domresponse";
 import { toType } from "../util";
+import { wrapAsValue } from "../helpers";
 
 const DEFAULT_WAITFOR_TIMEOUT = 30000;
 
@@ -39,6 +40,15 @@ export abstract class PuppeteerResponse
 
   public get response(): Response | null {
     return this.scenario.browserControl?.response || null;
+  }
+
+  public get currentUrl(): iValue {
+    const page = this.context.page;
+    let url: string | null = null;
+    if (page) {
+      url = page.url();
+    }
+    return wrapAsValue(this.context, url, "Current URL");
   }
 
   protected get _page(): Page {
@@ -206,5 +216,11 @@ export abstract class PuppeteerResponse
       : typeof contains == "string"
       ? new RegExp(contains)
       : null;
+  }
+
+  public async navigate(req: iHttpRequest) {
+    if (req.uri) {
+      await this.page?.goto(req.uri);
+    }
   }
 }

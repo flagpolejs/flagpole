@@ -23,7 +23,6 @@ import { LaunchOptions } from "puppeteer-core";
 import * as http from "http";
 import { ErrorObject, Schema } from "ajv";
 import {
-  AsyncIteratorBoolCallback,
   IteratorBoolCallback,
   IteratorCallback,
   SyncIteratorBoolCallback,
@@ -341,8 +340,9 @@ export interface iResponse {
   statusMessage: iValue;
   body: iValue;
   jsonBody: iValue;
-  url: iValue;
-  finalUrl: iValue;
+  url: iValue; // The URL initially requested
+  finalUrl: iValue; // The URL after any redirects
+  currentUrl: iValue; // The URL right now, after any further navigation
   length: iValue;
   loadTime: iValue;
   context: iAssertionContext;
@@ -352,7 +352,8 @@ export interface iResponse {
   method: iValue;
   isBrowser: boolean;
   readonly scenario: iScenario;
-  init(httpResponse: HttpResponse): void;
+  init(res: HttpResponse): void;
+  navigate(req: iHttpRequest): Promise<void>;
   getRoot(): any;
   find(path: string, opts?: FindOptions): ValuePromise;
   find(path: string, contains: string, opts?: FindOptions): ValuePromise;
@@ -430,6 +431,7 @@ export interface iResponse {
   ): Promise<void>;
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
+  hideKeyboard(): Promise<void>;
 }
 
 export interface iAssertionIs {
@@ -583,6 +585,7 @@ export interface iAssertionContext {
   incompleteAssertions: iAssertion[];
   assertionsResolved: Promise<(iAssertionResult | null)[]>;
   subScenariosResolved: Promise<any[]>;
+  currentUrl: iValue;
   comment(input: any): iAssertionContext;
   assert(a: any, b?: any): iAssertion;
   pause(milliseconds: number): Promise<void>;
@@ -720,6 +723,7 @@ export interface iAssertionContext {
   abort(message?: string): Promise<iScenario>;
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
+  hideKeyboard(): Promise<void>;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
@@ -731,6 +735,8 @@ export interface iSuite {
   hasFinished: boolean;
   totalDuration: number | null;
   executionDuration: number | null;
+  maxScenarioDuration: number;
+  concurrencyLimit: number;
   title: string;
   finished: Promise<void>;
   executionOptions: FlagpoleExecution;
@@ -738,8 +744,6 @@ export interface iSuite {
   subscribe(callback: SuiteStatusCallback): iSuite;
   verifyCert(verify: boolean): iSuite;
   verifySslCert(verify: boolean): iSuite;
-  setConcurrencyLimit(maxExecutions: number): iSuite;
-  setMaxScenarioDuration(timeout: number): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
   scenario(
@@ -1083,3 +1087,15 @@ export type ScreenProperties = {
   };
   orientation: string;
 };
+
+export interface DeviceProperties {
+  airplaneMode?: boolean;
+  locationServices?: boolean;
+  wifi?: boolean;
+  mobileData?: boolean;
+  location?: {
+    latitude: number;
+    longitude: number;
+    altitude?: number;
+  };
+}

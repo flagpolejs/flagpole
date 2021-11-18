@@ -10,7 +10,6 @@ import {
 } from "../interfaces";
 import { asyncForEach } from "../util";
 import { getFindParams, filterFind } from "../helpers";
-import * as cheerio from "cheerio";
 import { ValuePromise } from "../value-promise";
 import { HttpRequest } from "../httprequest";
 
@@ -267,19 +266,20 @@ export class HTMLElement extends DOMElement implements iValue {
   }
 
   /**
-   * Click on this element and then load a new page. For HTML/DOM scenarios this creates a new scenario
+   * Click on this element and then load a new page.
    */
   public async click(): Promise<iValue> {
     // If this is a link tag, treat it the same as load
     if (await this._isLinkTag()) {
       const link = await this.getLink();
       if (link.isNavigation()) {
-        const request = new HttpRequest({
-          uri: link.getUri(),
-          method: "get",
-        });
         this._completedAction("CLICK");
-        this.context.response.init(await request.fetch());
+        this.context.response.navigate(
+          new HttpRequest({
+            uri: link.getUri(),
+            method: "get",
+          })
+        );
         return this;
       }
     }
@@ -370,7 +370,7 @@ export class HTMLElement extends DOMElement implements iValue {
         request.setFormData(formData);
       }
       this._completedAction("SUBMIT");
-      this.context.response.init(await request.fetch());
+      this.context.response.navigate(request);
       return this;
     }
     this.context.logFailure(

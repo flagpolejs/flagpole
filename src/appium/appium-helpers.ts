@@ -6,6 +6,7 @@ import {
   iValue,
   FindAllOptions,
   AppiumElementIdResponse,
+  DeviceProperties,
 } from "../interfaces";
 import { applyOffsetAndLimit, wrapAsValue } from "../helpers";
 import { AppiumResponse } from "./appiumresponse";
@@ -86,7 +87,11 @@ const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
  * @param {any} opts - Appium session settings, called "capabilities"
  * @return {Promise<Scenario>} Initial scenario with alias set
  * */
-export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
+export const appiumSessionCreate = (
+  scenario: Scenario,
+  opts: any = {},
+  devProperties: DeviceProperties = {}
+) => {
   return async () => {
     const existingSessionId = await getAppiumSession(scenario);
     if (existingSessionId) {
@@ -95,10 +100,13 @@ export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
         scenario
       );
       scenario.set("capabilities", capabilities);
+      await setDevProperties(existingSessionId, scenario, devProperties);
       return scenario.set("sessionId", existingSessionId);
     }
     scenario.set("capabilities", opts);
-    return scenario.set("sessionId", await createAppiumSession(scenario, opts));
+    const newSessionId = await createAppiumSession(scenario, opts);
+    await setDevProperties(newSessionId, scenario, devProperties);
+    return scenario.set("sessionId", newSessionId);
   };
 };
 
@@ -210,4 +218,32 @@ const getAppiumSessionCapabilities = async (
   });
 
   return res.jsonRoot.value;
+};
+
+// Set device properties, currently only for Appium
+/*
+ * @param {string} sessionId - ID for currently running session
+ * @param {Scenario} scenario - FlagPole scenario
+ * @param {DeviceProperties} devProperties - Object containing the properties to be set
+ * @return {Promise<any>} - Object containing device properties
+ * */
+const setDevProperties = async (
+  sessionId: string,
+  scenario: Scenario,
+  devProperties: DeviceProperties = {}
+): Promise<any> => {
+  if (devProperties.location) {
+    await sendAppiumRequest(scenario, `/session/${sessionId}/location`, {
+      method: "post",
+      data: {
+        location: {
+          latitude: devProperties.location.latitude,
+          longitude: devProperties.location.longitude,
+          altitude: devProperties.location.altitude || 0,
+        },
+      },
+    });
+  }
+
+  return devProperties;
 };

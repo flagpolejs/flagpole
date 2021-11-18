@@ -24,6 +24,7 @@ import {
   HttpMethodVerb,
   CONTENT_TYPE_SOAP,
   CONTENT_TYPE_JSON,
+  DeviceProperties,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
@@ -49,7 +50,7 @@ import { toType, asyncForEach, runAsync } from "./util";
 import { AssertionContext } from "./assertioncontext";
 import * as bluebird from "bluebird";
 import { Browser } from "puppeteer-core";
-import minikin, { Response, Server } from "minikin";
+import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
 import { wrapAsValue } from "./helpers";
 import {
@@ -359,9 +360,14 @@ export class Scenario implements iScenario {
     suite: iSuite,
     title: string,
     type: ScenarioType,
-    opts: any
+    opts: any,
+    devProperties?: DeviceProperties
   ): iScenario {
-    return new Scenario(suite, title).setResponseType(type, opts);
+    return new Scenario(suite, title).setResponseType(
+      type,
+      opts,
+      devProperties
+    );
   }
 
   protected constructor(suite: iSuite, title: string) {
@@ -974,7 +980,11 @@ export class Scenario implements iScenario {
    * @param opts
    */
   @beforeScenarioExecuted
-  public setResponseType(type: ScenarioType, opts: any = {}): iScenario {
+  public setResponseType(
+    type: ScenarioType,
+    opts: any = {},
+    devProperties?: DeviceProperties
+  ): iScenario {
     // Merge passed in opts with default opts
     this._responseType = type;
     if (["browser", "extjs"].includes(type)) {
@@ -992,7 +1002,7 @@ export class Scenario implements iScenario {
         },
       });
     } else if (type == "appium") {
-      this.before(appiumSessionCreate(this, opts))
+      this.before(appiumSessionCreate(this, opts, devProperties))
         .after(appiumSessionDestroy(this))
         .open("/");
     } else {
@@ -1166,7 +1176,7 @@ export class Scenario implements iScenario {
             context.assertionsResolved,
             context.subScenariosResolved,
           ])
-          .timeout(30000);
+          .timeout(this.suite.maxScenarioDuration);
       })
       .then(() => {
         this._markScenarioCompleted();
@@ -1471,7 +1481,6 @@ export class Scenario implements iScenario {
     return async (context) => {
       const json = new JsonDoc(context.response.serialize());
       const paths = Object.keys(responseValues);
-      //console.log(json.root);
       await context.each(paths, async (path) => {
         const data = await json.search(path);
         const thisValue: iValue = wrapAsValue(context, data, path, data);

@@ -323,6 +323,14 @@ const secondArticle = await context.find("section.topStories article", {
 });
 ```
 
+Note that when finding an Appium element, pass the path as `<selector_strategy>/<value>`. Paths are interpreted with the selector strategy to the left of a forward slash, with the value to the right of the slash.
+For instance:
+
+```javascript
+const loginButton = await context.find("id/login_button");
+```
+Valid selector strategies are `id`, `xpath`, `class name`, `accessibility id`. When testing an Android app, you may also use `-android uiautomator`, though it is recommended to use a different strategy, see below. When testing an iOS app, you may also use `-ios class chain` and `-ios predicate string`. Note that spaces are valid in the selector strategy.
+
 #### find(selector: string, contents: string, opts?: FindOpts): Promise\<iValue\>
 
 Find the first element matching the given selector that have the given text. The second argument is a string of the text we are looking for the element to contain
@@ -331,6 +339,10 @@ Find the first element matching the given selector that have the given text. The
 const buttonContainingYes = await context.find("button", "Yes");
 ```
 
+With Appium testing Android, Flagpole parses the selector strategy and text to use `-android uiautomator` under the hood. This allows for finding an element by selector and text. Anything passed into the path parameter that is not a valid selector strategy/value pair will search by text only.
+
+With Appium testing iOS, Flagpole uses the `-ios predicate string` selector strategy and only searches by text. Searching by selector and text is not supported by Appium on iOS.
+
 With the optional `opts` argument, you can specify `offset` as previously documented. You can also set where Flagpole should look for the matching text with the `findBy` property. The default is "text", which will use the text node value inside of the element. But you can also use "value" to seach in the value or "alt" to search in the alt attribute.
 
 ```javascript
@@ -338,6 +350,8 @@ const buttonWithYesValue = await context.find("button", "Yes", {
   findBy: "value",
 });
 ```
+
+Please note that findBy is not supported in Appium testing.
 
 #### find(selector: string, matches: RegExp, opts?: FindOpts): Promise\<iValue\>
 
@@ -353,6 +367,8 @@ So if you want it to match EXACTLY "Yes", including a capital "Y" and no spaces 
 const buttonExactlyYes = await context.find("button", /^Yes$/);
 ```
 
+RegEx is not supported in Appium testing.
+
 #### find(selectors: string[]): Promise\<iValue\>
 
 With any of the above variations, selector can also be an array of strings. This will cause `find` to look for the first instance of ANY of those selector paths.
@@ -360,6 +376,8 @@ With any of the above variations, selector can also be an array of strings. This
 ```javascript
 const firstButtonLikeThing = await context.find(["button", ".button"]);
 ```
+
+This is not supported in Appium testing.
 
 ### findAll(): Promise\<iValue[]\>
 
@@ -373,6 +391,12 @@ The first argument is always the selector. It is the only required argument.
 
 ```javascript
 const articles = await context.findAll("section.topStories article");
+```
+
+Appium:
+
+```javascript
+const textViews = await context.findAll("class name/android.widget.TextView");
 ```
 
 You can pass an optional `opts` argument. In the simple form of `findAll` this allows you to set two things:
@@ -399,6 +423,8 @@ const articles = await context.findAll("section.headlines article", "breaking");
 
 The optional `opts` argument allows you to use `offset`, `limit` and `findBy` (which works just like in the `find()` method).
 
+With Appium, this works the same way as the find by selector and text overload does in the `find()` method, with the addition of the `offset` and `limit` fields in the `opts` argument.
+
 #### findAll(selector: string, matches: RegExp, opts?: FindAllOpts): Promise\<iValue[]\>
 
 This works like the `contains` string, except you can use a regular expression for more exacting matches.
@@ -407,6 +433,8 @@ This works like the `contains` string, except you can use a regular expression f
 const itemsContainingTupac = await context.findAll("li", /tupac/i);
 ```
 
+This is not supported when Appium testing.
+
 #### findAll(selectors: string[]): Promise\<iValue[]\>
 
 With any of the above variations of `findAll`, the first argument can also be an array of strings. If you pass in more than one, the resulting response will include any items that match any of those selectors.
@@ -414,6 +442,8 @@ With any of the above variations of `findAll`, the first argument can also be an
 ```javascript
 const allButtonLikeThings = await context.findAll(["button", ".button"]);
 ```
+
+This is not supported with Appium testing.
 
 ### findAllXPath(xPath: string): Promise\<DOMElement[]\>
 
@@ -448,6 +478,22 @@ scenario
   });
 ```
 
+### getScreenProperties(): Promise\<ScreenProperties\>
+
+Get properties of screen of device under tests. Currently only works with Appium. Returns angle, dimensions, and rotation.
+
+```javascript
+const screenProperties = await context.getScreenProperties();
+```
+
+### hideKeyboard(): Promise\<void\>
+
+Hide onscreen keyboard. Currently only works in Appium scenarios. Does not work on iOS unless the keyboard on the device under test has a dedicated dismiss button.
+
+```typescript
+await context.hideKeyboard();
+```
+
 ### openInBrowser(): Promise\<string\>
 
 Saves the response body to a temporary file and opens it in a browser. This is really only for debugging. The promise resolves to the string of the temporary file.
@@ -462,6 +508,18 @@ Delay the execution by this much.
 
 ```javascript
 await context.pause(1000);
+```
+
+### rotate(rotation: string | number): Promise\<string | number\>
+
+Rotate the screen by either degrees or screen orientation, such as landscape or portrait. Currently only works with Appium, using strings "PORTRAIT" or "LANDSCAPE".
+
+```javascript
+let rotation = await context.rotate("LANDSCAPE");
+```
+
+```javascript
+let rotation = await context.rotate(90);
 ```
 
 ### screenshot(): Promise\<Buffer\>
@@ -510,7 +568,7 @@ await context.scrollTo({ y: 500 });
 Select items in a dropdown or multi-select box.
 
 ```javascript
-await context.select('select[name="favoriteSport"]', "Track & Field");
+await context.selectOption('select[name="favoriteSport"]', "Track & Field");
 ```
 
 ### set(aliasName: string, value: any): AssertionContext
@@ -541,7 +599,7 @@ await context.waitForReady();
 
 ### waitForExists(path: string, timeout: number): Promise\<DOMElement\>
 
-Test if an element exists at that path. For a browser scenario it will wait a certain timeout (default 100ms) for the element to show up. If you want it to wait longer, set the timeout value in the second argument.
+Test if an element exists at that path. For a browser or an Appium scenario it will wait a certain timeout (default 30000ms) for the element to show up. If you want to change it, set the timeout value in the second argument.
 
 ```javascript
 const button = await context.waitForExists("a.submit", 2000);
@@ -549,7 +607,7 @@ const button = await context.waitForExists("a.submit", 2000);
 
 ### waitForHavingText(path: string, text, timeout?: number): Promise\<DOMElement\>
 
-Checks for an element to exist at `path` CSS selector, which also contains the string `text` inside of its `innerText`. By default it will wait for 100ms for the element, you can change the timeout with the third argument.
+Checks for an element to exist at `path` CSS selector, which also contains the string `text` inside of its `innerText`. By default it will wait for 30000ms for the element, you can change the timeout with the third argument.
 
 ```javascript
 await context.waitForHavingText("h1", "Features", 2000);
@@ -557,7 +615,7 @@ await context.waitForHavingText("h1", "Features", 2000);
 
 ### waitForHidden(path: string): Promise\<DOMElement\>
 
-Checks if an element at this selector is hidden (display none or visibility hidden). This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change the timeout with the second argument.
+Checks if an element at this selector is hidden (display none or visibility hidden). This only makes sense for browser or Appium tests, it will error for other types of scenario. By default it will wait for 30000ms for the element to show up, you can change the timeout with the second argument.
 
 ```javascript
 const button = await context.waitForHidden('button[type="submit"]', 2000);
@@ -593,7 +651,7 @@ await context.exists("h1.headline");
 
 ### waitForVisible(path: string): Promise\<DOMElement\>
 
-Checks if an element at this selector is visible. This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change the timeout with the second argument.
+Checks if an element at this selector is visible. This only makes sense for browser or Appium tests, it will error for other types of scenario. By default it will wait for 30000ms for the element to show up, you can change the timeout with the second argument.
 
 ```javascript
 const button = await context.waitForVisible('button[type="submit"]', 2000);
@@ -601,7 +659,9 @@ const button = await context.waitForVisible('button[type="submit"]', 2000);
 
 ### waitForXpath(xPath: string, timeout?: number): Promise\<DOMElement\>
 
-Checks for an element to exist with XPath of `path`. Usually a CSS selector is preferable, but sometimes XPath is more powerful. By default it will wait for 100ms for the element, you can change the timeout with the second argument.
+Checks for an element to exist with XPath of `path`. Usually a CSS selector is preferable, but sometimes XPath is more powerful. By default it will wait for 30000ms for the element, you can change the timeout with the second argument.
+
+Also works with Appium scenarios.
 
 ```javascript
 await context.waitForXpath("/main/h1[1]/span", 2000);

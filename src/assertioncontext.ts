@@ -134,6 +134,10 @@ export class AssertionContext implements iAssertionContext {
     return Promise.all(this._subScenarios);
   }
 
+  public get currentUrl(): iValue {
+    return this.response.currentUrl;
+  }
+
   constructor(scenario: iScenario, response: iResponse) {
     this._scenario = scenario;
     this._response = response;
@@ -359,7 +363,11 @@ export class AssertionContext implements iAssertionContext {
     try {
       // @ts-ignore TypeScript is being stupid
       const el: iValue = await this.response.waitForExists(selector, a, b);
-      this._completedAction("EXISTS", `${selector}`);
+      if (el.isNull()) {
+        this._failedAction("EXISTS", `${selector}`);
+      } else {
+        this._completedAction("EXISTS", `${selector}`);
+      }
       return el;
     } catch (ex) {
       this._failedAction("EXISTS", `${selector}`);
@@ -629,6 +637,11 @@ export class AssertionContext implements iAssertionContext {
 
   public async getScreenProperties(): Promise<ScreenProperties> {
     return await this.response.getScreenProperties();
+  }
+
+  /* Hides the software keyboard */
+  public async hideKeyboard(): Promise<void> {
+    await this.response.hideKeyboard();
   }
 
   protected async _findAllForSelectors(

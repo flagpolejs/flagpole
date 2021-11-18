@@ -10,9 +10,9 @@ import {
   ScreenProperties,
 } from "./interfaces";
 import { HttpResponse } from "./httpresponse";
+import { HttpRequest } from "./httprequest";
 import { AssertionContext } from "./assertioncontext";
 import { wrapAsValue } from "./helpers";
-import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { ValuePromise } from "./value-promise";
 import { ScenarioType } from "./scenario-types";
 
@@ -23,7 +23,8 @@ export function isPuppeteer(type: ScenarioType): boolean {
 export abstract class ProtoResponse implements iResponse {
   public readonly scenario: iScenario;
 
-  private _httpResponse: HttpResponse = HttpResponse.createEmpty();
+  protected _currentUrl: string | null = null;
+  protected _httpResponse: HttpResponse = HttpResponse.createEmpty();
 
   abstract get responseType(): ScenarioType;
   abstract get responseTypeName(): string;
@@ -162,6 +163,13 @@ export abstract class ProtoResponse implements iResponse {
   }
 
   /**
+   * Current URL after any navigation, is nothing for static requets but comes into play with browser requests
+   */
+  public get currentUrl(): iValue {
+    return wrapAsValue(this.context, this.scenario.finalUrl, "Current URL");
+  }
+
+  /**
    * URL of the response, after all redirects
    */
   public get redirectCount(): iValue {
@@ -193,10 +201,22 @@ export abstract class ProtoResponse implements iResponse {
 
   constructor(scenario: iScenario) {
     this.scenario = scenario;
+    this._currentUrl = scenario.finalUrl;
   }
 
-  public init(httpResponse: HttpResponse) {
-    this._httpResponse = httpResponse;
+  public init(res: HttpResponse) {
+    this._httpResponse = res;
+  }
+
+  /**
+   * After the response is loaded, can navigate to a different one
+   *
+   * @param req
+   * @returns
+   */
+  public async navigate(req: HttpRequest) {
+    this._currentUrl = this.absolutizeUri(req.uri || "");
+    return this.init(await req.fetch());
   }
 
   /**
@@ -433,5 +453,9 @@ export abstract class ProtoResponse implements iResponse {
 
   public async getScreenProperties(): Promise<ScreenProperties> {
     throw "getScreenProperties not implemented for this kind of scenario.";
+  }
+  
+  public async hideKeyboard(): Promise<void> {
+    throw "hideKeyboard not implemented for this kind of scenario.";
   }
 }
