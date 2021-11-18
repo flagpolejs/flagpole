@@ -338,7 +338,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     const buff = Buffer.from(encodedData, "base64");
 
     if (opts?.clip) {
-      console.log("if");
       await Jimp.read(buff).then((image) => {
         image
           .crop(opts.clip!.x, opts.clip!.y, opts.clip!.width, opts.clip!.height)
@@ -346,7 +345,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         image2 = image;
       });
     } else {
-      console.log("else");
       image2 = await Jimp.read(buff);
     }
 
