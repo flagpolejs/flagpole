@@ -224,13 +224,13 @@ const getAppiumSessionCapabilities = async (
 /*
  * @param {string} sessionId - ID for currently running session
  * @param {Scenario} scenario - FlagPole scenario
- * @param {any} devProperties - Object containing the properties to be set
+ * @param {DeviceProperties} devProperties - Object containing the properties to be set
  * @return {Promise<any>} - Object containing device properties
  * */
 const setDevProperties = async (
   sessionId: string,
   scenario: Scenario,
-  devProperties: any = {}
+  devProperties: DeviceProperties = {}
 ): Promise<any> => {
   if (devProperties.location) {
     await sendAppiumRequest(scenario, `/session/${sessionId}/location`, {

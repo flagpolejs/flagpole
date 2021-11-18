@@ -11,6 +11,7 @@ import {
   ScenarioMapper,
   BrowserOptions,
   ScenarioInitOptions,
+  DeviceProperties,
 } from "./interfaces";
 import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
@@ -212,14 +213,14 @@ export class Suite implements iSuite {
     title: string,
     type: "appium",
     opts: any,
-    devProperties?: any
+    devProperties?: DeviceProperties
   ): iScenario;
   public scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
   public scenario(
     title: string,
     type: ScenarioType = "html",
     opts?: any,
-    devProperties?: any
+    devProperties?: DeviceProperties
   ): iScenario {
     const scenario: iScenario = Scenario.create(
       this,

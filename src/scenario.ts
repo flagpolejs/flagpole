@@ -24,6 +24,7 @@ import {
   HttpMethodVerb,
   CONTENT_TYPE_SOAP,
   CONTENT_TYPE_JSON,
+  DeviceProperties,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
@@ -360,7 +361,7 @@ export class Scenario implements iScenario {
     title: string,
     type: ScenarioType,
     opts: any,
-    devProperties?: any
+    devProperties?: DeviceProperties
   ): iScenario {
     return new Scenario(suite, title).setResponseType(
       type,
@@ -982,7 +983,7 @@ export class Scenario implements iScenario {
   public setResponseType(
     type: ScenarioType,
     opts: any = {},
-    devProperties?: any
+    devProperties?: DeviceProperties
   ): iScenario {
     // Merge passed in opts with default opts
     this._responseType = type;
