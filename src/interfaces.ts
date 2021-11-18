@@ -271,6 +271,14 @@ export interface iValue {
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  screenshotCompare(infile: string): Promise<boolean>;
+  screenshotCompare(infile: string, percentage: number): Promise<boolean>;
+  screenshotCompare(infile: string, opts: ScreenshotOpts): Promise<boolean>;
+  screenshotCompare(
+    infile: string,
+    percentage: number,
+    opts: ScreenshotOpts
+  ): Promise<boolean>;
   focus(): Promise<any>;
   blur(): Promise<any>;
   hover(): Promise<void>;
@@ -411,6 +419,14 @@ export interface iResponse {
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  screenshotCompare(infile: string): Promise<boolean>;
+  screenshotCompare(infile: string, percentage: number): Promise<boolean>;
+  screenshotCompare(infile: string, opts: ScreenshotOpts): Promise<boolean>;
+  screenshotCompare(
+    infile: string,
+    percentage: number,
+    opts: ScreenshotOpts
+  ): Promise<boolean>;
   clear(selector: string): Promise<any>;
   type(selector: string, textToType: string, opts: any): Promise<any>;
   selectOption(selector: string, value: string | string[]): Promise<void>;
@@ -702,6 +718,14 @@ export interface iAssertionContext {
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: {}): Promise<Buffer>;
   screenshot(opts: {}): Promise<Buffer>;
+  screenshotCompare(infile: string): Promise<boolean>;
+  screenshotCompare(infile: string, percentage: number): Promise<boolean>;
+  screenshotCompare(infile: string, opts: ScreenshotOpts): Promise<boolean>;
+  screenshotCompare(
+    infile: string,
+    percentage: number,
+    opts: ScreenshotOpts
+  ): Promise<boolean>;
   logFailure(
     message: string,
     errorDetails?: any,

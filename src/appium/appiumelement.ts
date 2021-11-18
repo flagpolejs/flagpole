@@ -317,6 +317,75 @@ export class AppiumElement extends DOMElement implements iValue {
     return buff;
   }
 
+  public async screenshotCompare(infile: string): Promise<boolean>;
+  public async screenshotCompare(
+    infile: string,
+    percentage: number
+  ): Promise<boolean>;
+  public async screenshotCompare(
+    infile: string,
+    opts: ScreenshotOpts
+  ): Promise<boolean>;
+  public async screenshotCompare(
+    infile: string,
+    percentage: number,
+    opts: ScreenshotOpts
+  ): Promise<boolean>;
+  public async screenshotCompare(
+    infile: string,
+    a?: number | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ) {
+    const response = this.context.response as AppiumResponse;
+    const opts: ScreenshotOpts = (typeof a !== "number" ? a : b) || {};
+    let percentage = typeof a === "number" ? a : -1;
+    let threshold = 0.15;
+    if (percentage && percentage >= 0 && percentage <= 100) {
+      percentage = percentage / 100;
+      threshold = parseFloat(Number(1.0 - percentage).toFixed(2));
+    }
+    const image1 = await Jimp.read(infile);
+    let image2: any = {};
+
+    const bounds = await this.getBounds();
+
+    const res = await sendAppiumRequest(
+      this.context.scenario,
+      `/session/${response.sessionId}/screenshot`,
+      {
+        method: "get",
+      }
+    );
+
+    const encodedData = res.jsonRoot.value;
+    const buff = Buffer.from(encodedData, "base64");
+
+    let x: number = bounds!.x;
+    let y: number = bounds!.y;
+    let width: number = bounds!.width;
+    let height: number = bounds!.height;
+    if (opts.clip) {
+      x = opts.clip.x + bounds!.x;
+      y = opts.clip.y + bounds!.y;
+      width = opts.clip.width;
+      height = opts.clip.height;
+    }
+
+    await Jimp.read(buff).then((image) => {
+      image.crop(x, y, width, height).quality(100);
+      image2 = image;
+    });
+
+    const distance = Jimp.distance(image1, image2);
+    const diff = Jimp.diff(image1, image2);
+
+    if (distance <= threshold && diff.percent <= threshold) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   public toString(): string {
     return this._elementId;
   }

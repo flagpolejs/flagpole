@@ -608,6 +608,14 @@ export class Value implements iValue {
     );
   }
 
+  public async screenshotCompare(infile: string): Promise<boolean> {
+    throw new Error(
+      `This value type (${this.toType()}) or scenario type (${
+        this._context.scenario.responseType
+      }) does not support comparing screenshots.`
+    );
+  }
+
   public async eval(js: string): Promise<any> {
     throw `This element does not support eval().`;
   }
