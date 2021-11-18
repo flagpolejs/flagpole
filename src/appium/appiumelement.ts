@@ -309,10 +309,7 @@ export class AppiumElement extends DOMElement implements iValue {
       });
 
     if (localFilePath) {
-      const dateTime = new Date();
-      const validElementName = this.name.replace("/", ":");
-      const filename = `${localFilePath}/Appium ${this.context.scenario.title} ${validElementName} ${dateTime}.png`;
-      await fs.writeFile(filename, buff);
+      await fs.writeFile(localFilePath, buff);
     }
     return buff;
   }

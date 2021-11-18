@@ -288,10 +288,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     }
 
     if (localFilePath) {
-      const dateTime = new Date();
-      const filename = `${localFilePath}/Appium ${this.scenario.title} ${dateTime}.png`;
-
-      await fs.writeFile(filename, buff);
+      await fs.writeFile(localFilePath, buff);
     }
 
     return buff;
