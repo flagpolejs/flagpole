@@ -166,6 +166,11 @@
       "name": "image",
       "tags": []
     },
+    "todo": {
+      "id": "",
+      "name": "todo",
+      "tags": []
+    },
     "currentUrl": {
       "id": "",
       "name": "currentUrl",

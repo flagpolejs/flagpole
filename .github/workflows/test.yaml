@@ -1,0 +1,39 @@
+name: Test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x, 16.x]
+        flagpoleCommand:
+          - name: test-todo
+            command: --build --base=https://jsonplaceholder.typicode.com -s todo
+          - name: run-all
+            command: --all --build
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+      - run: npm install --no-save
+      - run: npm run build --if-present
+      - run: xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run ${{ matrix.flagpoleCommand.command }}
