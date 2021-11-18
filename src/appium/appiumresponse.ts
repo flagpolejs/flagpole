@@ -312,7 +312,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     infile: string,
     a?: number | ScreenshotOpts,
     b?: ScreenshotOpts
-  ) {
+  ): Promise<boolean> {
     const opts: ScreenshotOpts = (typeof a !== "number" ? a : b) || {};
     let percentage = typeof a === "number" ? a : -1;
     let threshold = 0.15;

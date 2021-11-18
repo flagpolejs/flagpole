@@ -332,7 +332,7 @@ export class AppiumElement extends DOMElement implements iValue {
     infile: string,
     a?: number | ScreenshotOpts,
     b?: ScreenshotOpts
-  ) {
+  ): Promise<boolean> {
     const response = this.context.response as AppiumResponse;
     const opts: ScreenshotOpts = (typeof a !== "number" ? a : b) || {};
     let percentage = typeof a === "number" ? a : -1;
