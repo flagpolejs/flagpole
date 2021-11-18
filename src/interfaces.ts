@@ -1062,10 +1062,11 @@ export interface ScenarioInitOptions {
   basicAuth?: HttpAuth;
   digestAuth?: HttpAuth;
   maxRedirects?: number;
-  next?: iNextCallback;
+  next?: iNextCallback | { [title: string]: iNextCallback } | iNextCallback[];
   set?: KeyValue;
   statusCode?: number;
   maxLoadTime?: number;
+  opts?: any;
 }
 
 export type AppiumElementIdResponse = {
