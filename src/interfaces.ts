@@ -1074,3 +1074,15 @@ export type AppiumElementIdResponse = {
   [0]: string;
   ELEMENT: string;
 };
+
+export interface DeviceProperties {
+  airplaneMode?: boolean;
+  locationServices?: boolean;
+  wifi?: boolean;
+  mobileData?: boolean;
+  location?: {
+    latitude: number;
+    longitude: number;
+    altitude?: number;
+  };
+}
