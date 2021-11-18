@@ -225,4 +225,17 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
+
+  public async setImplicitWait(ms: number): Promise<void> {
+    await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/timeouts/implicit_wait`,
+      {
+        method: "post",
+        data: {
+          ms: ms,
+        },
+      }
+    );
+  }
 }
