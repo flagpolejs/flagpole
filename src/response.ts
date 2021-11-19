@@ -7,6 +7,7 @@ import {
   FindOptions,
   FindAllOptions,
   OptionalXY,
+  ScreenProperties,
 } from "./interfaces";
 import { HttpResponse } from "./httpresponse";
 import { HttpRequest } from "./httprequest";
@@ -446,6 +447,14 @@ export abstract class ProtoResponse implements iResponse {
     };
   }
 
+  public async rotate(rotation: string | number): Promise<string | number> {
+    throw "rotate not implemented for this kind of scenario.";
+  }
+
+  public async getScreenProperties(): Promise<ScreenProperties> {
+    throw "getScreenProperties not implemented for this kind of scenario.";
+  }
+  
   public async hideKeyboard(): Promise<void> {
     throw "hideKeyboard not implemented for this kind of scenario.";
   }

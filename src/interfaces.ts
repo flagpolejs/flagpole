@@ -429,6 +429,8 @@ export interface iResponse {
     array: [x: number, y: number, duration?: number],
     ...otherMoves: [x: number, y: number, duration?: number][]
   ): Promise<void>;
+  rotate(rotation: string | number): Promise<string | number>;
+  getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
 }
 
@@ -719,6 +721,8 @@ export interface iAssertionContext {
   filter(array: any[], callback: IteratorBoolCallback): Promise<any[]>;
   map(array: any[], callback: IteratorCallback): Promise<any[]>;
   abort(message?: string): Promise<iScenario>;
+  rotate(rotation: string | number): Promise<string | number>;
+  getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
 }
 export interface iSuite {
@@ -1073,6 +1077,15 @@ export interface ScenarioInitOptions {
 export type AppiumElementIdResponse = {
   [0]: string;
   ELEMENT: string;
+};
+
+export type ScreenProperties = {
+  angle: string | number;
+  dimensions: {
+    height: number;
+    width: number;
+  };
+  orientation: string;
 };
 
 export interface DeviceProperties {

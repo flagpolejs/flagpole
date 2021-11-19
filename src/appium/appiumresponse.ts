@@ -1,5 +1,11 @@
 import { ProtoResponse } from "../response";
-import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
+import {
+  iResponse,
+  iValue,
+  FindOptions,
+  FindAllOptions,
+  ScreenProperties,
+} from "../interfaces";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import {
@@ -244,6 +250,61 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
+  
+  public async rotate(rotation: string | number): Promise<string | number> {
+    if (typeof rotation === "number") {
+      throw "Appium only supports rotating by a string.";
+    } else if (
+      rotation.toLowerCase() !== "portrait" &&
+      rotation.toLowerCase() !== "landscape"
+    ) {
+      throw "Appium rotation must be either PORTRAIT or LANDSCAPE.";
+    }
+
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/orientation`,
+      {
+        method: "post",
+        data: {
+          orientation: rotation,
+        },
+      }
+    );
+
+    return res.jsonRoot.value;
+  }
+  
+  public async getScreenProperties(): Promise<ScreenProperties> {
+    const rotationRes = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/orientation`,
+      {
+        method: "get",
+      }
+    );
+
+    const rotation: string = rotationRes.jsonRoot.value;
+
+    const dimensionsRes = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/window/current/size`,
+      {
+        method: "get",
+      }
+    );
+    
+    const screenProperties: ScreenProperties = {
+      angle: rotation,
+      dimensions: {
+        height: dimensionsRes.jsonRoot.value.height,
+        width: dimensionsRes.jsonRoot.value.width,
+      },
+      orientation: rotation,
+    };
+
+    return screenProperties;
+  }
 
   public async setImplicitWait(ms: number): Promise<void> {
     await sendAppiumRequest(
@@ -266,6 +327,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         method: "get",
       }
     );
+
     return res.jsonRoot.value.implicit;
   }
 
@@ -367,6 +429,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         method: "get",
       }
     );
+
     return res.jsonRoot.value;
   }
 
