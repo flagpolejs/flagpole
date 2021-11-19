@@ -29,6 +29,28 @@ flagpole("Test Assertion Schema", async (suite) => {
     },
   };
 
+  const userResponse: HttpResponseOptions = {
+    status: [200, "OK"],
+    body: {
+      user: {
+        first_name: "Jason",
+        last_name: "Byrne",
+        level: 100,
+      },
+    },
+  };
+
+  const nullUserResponse: HttpResponseOptions = {
+    status: [200, "OK"],
+    body: {
+      user: {
+        first_name: "Ima",
+        last_name: null,
+        level: null,
+      },
+    },
+  };
+
   suite
     .scenario("Matching Schema - File JsonSchema", "json")
     .mock(validResponse)
@@ -87,4 +109,24 @@ flagpole("Test Assertion Schema", async (suite) => {
       context.comment(json);
       await context.assert(json).schema("@ditto");
     });
+
+  suite
+    .scenario("Matching User Schema - String or Null Property - String", "json")
+    .mock(userResponse)
+    .next((context) => {
+      context.assert(context.response.jsonBody).schema("@user");
+    });
+
+  // this fails one property at a time
+  // we want to get all properties in the first failure
+  // issue #176
+  // suite
+  //   .scenario(
+  //     "Matching Null User Schema - String or Null Property - Null",
+  //     "json"
+  //   )
+  //   .mock(nullUserResponse)
+  //   .next((context) => {
+  //     context.assert(context.response.jsonBody).schema("@user");
+  //   });
 });
