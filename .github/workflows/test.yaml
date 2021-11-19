@@ -36,6 +36,6 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
-      - run: npm install --no-save
+      - run: npm install --no-save --ignore-scripts
       - run: npm run build --if-present
       - run: xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run ${{ matrix.flagpoleCommand.command }}
