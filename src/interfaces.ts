@@ -1,10 +1,5 @@
 import { BrowserControl } from "./puppeteer/browsercontrol";
-import {
-  Page,
-  EvaluateFn,
-  SerializableOrJSHandle,
-  PageFnOptions,
-} from "puppeteer-core";
+import { Page, EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import {
   SuiteStatusEvent,
   ScenarioStatusEvent,
@@ -290,7 +285,7 @@ export interface iValue {
   ): Promise<iValue>;
   waitForFunction(
     js: EvaluateFn<any>,
-    opts?: PageFnOptions,
+    opts?: Object,
     ...args: SerializableOrJSHandle[]
   ): Promise<iValue>;
   waitForHidden(timeout?: number): Promise<iValue>;
@@ -384,7 +379,7 @@ export interface iResponse {
   waitForReady(timeout?: number): Promise<void>;
   waitForFunction(
     js: EvaluateFn<any>,
-    opts?: PageFnOptions,
+    opts?: Object,
     ...args: SerializableOrJSHandle[]
   ): Promise<void>;
   waitForHidden(selector: string, timeout?: number): Promise<iValue>;
@@ -1073,3 +1068,15 @@ export type AppiumElementIdResponse = {
   [0]: string;
   ELEMENT: string;
 };
+
+export interface PuppeteerCookie {
+  name: string;
+  value: string;
+  url?: string;
+  domain?: string;
+  path?: string;
+  expires?: number;
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: "Strict" | "Lax";
+}

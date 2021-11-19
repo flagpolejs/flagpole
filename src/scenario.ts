@@ -1199,7 +1199,7 @@ export class Scenario implements iScenario {
     this.browserControl
       .open(this._request)
       .then((next: iBrowserControlResponse) => {
-        const puppeteerResponse: puppeteer.Response = next.response;
+        const puppeteerResponse: puppeteer.HTTPResponse = next.response;
         if (puppeteerResponse !== null) {
           this._finalUrl = puppeteerResponse.url();
           // Loop through the redirects to populate our array

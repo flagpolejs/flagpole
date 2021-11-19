@@ -2,10 +2,9 @@ import {
   Page,
   ElementHandle,
   Browser,
-  Response,
+  HTTPResponse,
   EvaluateFn,
   SerializableOrJSHandle,
-  PageFnOptions,
 } from "puppeteer-core";
 import { iResponse, ScreenshotOpts, iValue, iHttpRequest } from "../interfaces";
 import { BrowserControl } from "./browsercontrol";
@@ -38,7 +37,7 @@ export abstract class PuppeteerResponse
     return this.scenario.browserControl?.browser || null;
   }
 
-  public get response(): Response | null {
+  public get response(): HTTPResponse | null {
     return this.scenario.browserControl?.response || null;
   }
 
@@ -133,7 +132,7 @@ export abstract class PuppeteerResponse
 
   public async waitForFunction(
     js: EvaluateFn<any>,
-    opts?: PageFnOptions,
+    opts?: Object,
     ...args: SerializableOrJSHandle[]
   ): Promise<void> {
     await this._page.waitForFunction.apply(this._page, [js, opts, ...args]);

@@ -1,7 +1,7 @@
 import * as puppeteer from "puppeteer-core";
-import { Page, Browser, Response, SetCookie } from "puppeteer-core";
+import { Page, Browser, HTTPResponse } from "puppeteer-core";
 import { HttpRequest } from "../httprequest";
-import { BrowserOptions, KeyValue } from "../interfaces";
+import { BrowserOptions, KeyValue, PuppeteerCookie } from "../interfaces";
 
 export type BrowserConsoleMessage = {
   type: string;
@@ -10,7 +10,7 @@ export type BrowserConsoleMessage = {
 };
 
 export interface iBrowserControlResponse {
-  response: Response;
+  response: HTTPResponse;
   body: string;
   cookies: KeyValue;
 }
@@ -19,7 +19,7 @@ export class BrowserControl {
   private _request: HttpRequest = new HttpRequest({});
   private _browser: Browser | null = null;
   private _page: Page | null = null;
-  private _response: Response | null = null;
+  private _response: HTTPResponse | null = null;
   private _consoleMessages: BrowserConsoleMessage[] = [];
   private _puppeteer: typeof puppeteer | null = null;
 
@@ -27,7 +27,7 @@ export class BrowserControl {
     return this._consoleMessages;
   }
 
-  public get response(): Response | null {
+  public get response(): HTTPResponse | null {
     return this._response;
   }
 
@@ -51,7 +51,7 @@ export class BrowserControl {
     return this._request.browser;
   }
 
-  private get _dynamicPuppeteer(): Promise<typeof puppeteer> {
+  private get _dynamicPuppeteer(): Promise<typeof puppeteer | null> {
     if (!this._puppeteer) {
       // Try importing puppeteer.
       return (
@@ -62,7 +62,7 @@ export class BrowserControl {
             return this._puppeteer;
           })
           // If puppeteer could not be loaded then load core.
-          .catch((e) => {
+          .catch(() => {
             this._puppeteer = puppeteer;
             // Fallback to our current import.
             return this._puppeteer;
@@ -76,7 +76,8 @@ export class BrowserControl {
     if (this._page === null) {
       throw new Error("Page is null");
     }
-    const puppeteerCookies: puppeteer.Cookie[] = await this._page.cookies();
+    const puppeteerCookies: { name: string; value: string }[] =
+      await this._page.cookies();
     const cookies: KeyValue = {};
     puppeteerCookies.forEach((puppeteerCookie) => {
       cookies[puppeteerCookie.name] = puppeteerCookie.value;
@@ -172,7 +173,7 @@ export class BrowserControl {
       const tld = this._request.uri
         ? new URL(this._request.uri).hostname.split(".").slice(-2).join(".")
         : undefined;
-      const puppeteerCookies: SetCookie[] = Object.keys(
+      const puppeteerCookies: PuppeteerCookie[] = Object.keys(
         this.request.cookies
       ).map((key) => {
         return {
@@ -185,11 +186,11 @@ export class BrowserControl {
     }
   }
 
-  private async _openUri(): Promise<Response> {
+  private async _openUri(): Promise<HTTPResponse> {
     if (this._page === null) {
       throw new Error("Page is null.");
     }
-    const response: Response | null = await this._page.goto(
+    const response: HTTPResponse | null = await this._page.goto(
       this.request.uri || "/",
       {
         timeout: 30000,

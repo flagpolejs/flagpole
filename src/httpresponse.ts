@@ -59,7 +59,7 @@ export class HttpResponse {
   }
 
   static fromPuppeteer(
-    response: puppeteer.Response,
+    response: puppeteer.HTTPResponse,
     body: string,
     cookies?: KeyValue
   ): HttpResponse {

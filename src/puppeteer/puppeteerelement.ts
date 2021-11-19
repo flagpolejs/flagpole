@@ -4,7 +4,6 @@ import {
   ElementHandle,
   EvaluateFn,
   Page,
-  PageFnOptions,
   SerializableOrJSHandle,
 } from "puppeteer-core";
 import { DOMElement } from "../html/domelement";
@@ -52,15 +51,15 @@ export abstract class PuppeteerElement extends DOMElement implements iValue {
   ): Promise<iValue>;
   public async waitForFunction(
     js: EvaluateFn<any>,
-    opts?: PageFnOptions,
+    opts?: Object,
     ...args: SerializableOrJSHandle[]
   ): Promise<iValue>;
   public async waitForFunction(
     js: EvaluateFn<any>,
-    a?: PageFnOptions | number,
+    a?: Object | number,
     ...args: SerializableOrJSHandle[]
   ): Promise<iValue> {
-    const opts: PageFnOptions = typeof a == "number" ? { timeout: a } : a || {};
+    const opts: Object = typeof a == "number" ? { timeout: a } : a || {};
     try {
       await this._page.waitForFunction.apply(this._page, [
         js,

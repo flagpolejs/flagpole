@@ -1,10 +1,5 @@
 import { BrowserControl } from "./puppeteer/browsercontrol";
-import {
-  Page,
-  EvaluateFn,
-  SerializableOrJSHandle,
-  PageFnOptions,
-} from "puppeteer-core";
+import { Page, EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { Assertion } from "./assertion";
 import {
   iResponse,
@@ -250,7 +245,7 @@ export class AssertionContext implements iAssertionContext {
 
   public async waitForFunction(
     js: EvaluateFn<any>,
-    opts?: PageFnOptions,
+    opts?: Object,
     ...args: SerializableOrJSHandle[]
   ): Promise<void> {
     await this.response.waitForFunction.apply(this.response, [

@@ -25,11 +25,7 @@ import {
 } from "./logging/assertionresult";
 import { Link } from "./link";
 import * as fs from "fs";
-import {
-  EvaluateFn,
-  PageFnOptions,
-  SerializableOrJSHandle,
-} from "puppeteer-core";
+import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { ValuePromise } from "./value-promise";
 import { ScenarioType } from "./scenario-types";
 import { HttpResponse } from "./httpresponse";
@@ -763,7 +759,7 @@ export class Value implements iValue {
 
   public async waitForFunction(
     js: EvaluateFn<any>,
-    opts?: PageFnOptions | number,
+    opts?: Object | number,
     ...args: SerializableOrJSHandle[]
   ): Promise<iValue> {
     return this;
