@@ -1,4 +1,5 @@
 import flagpole from "../../dist/index";
+import { browserOpts } from "./browser/browserOpts";
 
 const suite = flagpole("Lifecycle").finally(async () => {
   // console.log("my suite started");
@@ -8,7 +9,7 @@ const suite = flagpole("Lifecycle").finally(async () => {
 
 suite
   .scenario("Homepage Loads", "browser")
-  .open("https://www.npmjs.com")
+  .open("https://www.npmjs.com", browserOpts)
   .next(async (context) => {
     await context.waitForExists("div");
   })

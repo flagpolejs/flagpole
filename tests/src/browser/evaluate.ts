@@ -1,15 +1,7 @@
 import flagpole from "../../../dist/index";
+import { browserOpts } from "./browserOpts";
 
 const suite = flagpole("Test Google Search").base("https://www.google.com/");
-// .finally((suite) => suite.print());
-
-const browserOpts = {
-  headless: false,
-  recordConsole: true,
-  outputConsole: false,
-  width: 1024,
-  height: 768,
-};
 
 suite
   .browser("Test evaluate method", browserOpts)

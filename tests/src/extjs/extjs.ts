@@ -1,10 +1,5 @@
 import flagpole from "../../../dist/index";
-
-const browserOpts = {
-  headless: false,
-  width: 1280,
-  height: 768,
-};
+import { browserOpts } from "../browser/browserOpts";
 
 const inputValues = {
   userName: "norma.flores",

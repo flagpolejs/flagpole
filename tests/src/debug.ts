@@ -1,4 +1,5 @@
 import flagpole from "../../dist/index.js";
+import { browserOpts } from "./browser/browserOpts.js";
 
 const suite = flagpole("Basic Smoke Test of Site").base(
   "http://jsonprettyprint.net/"
@@ -15,6 +16,6 @@ suite
   });
 
 suite
-  .scenario("Homepage Loads", "browser", { headless: false })
+  .scenario("Homepage Loads", "browser", browserOpts)
   .open("/")
   .next(async (context) => {});

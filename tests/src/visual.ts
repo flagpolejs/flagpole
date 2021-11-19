@@ -1,4 +1,5 @@
 import { Flagpole } from "../../dist/index";
+import { browserOpts } from "./browser/browserOpts";
 
 const baseDomain = "https://www.google.com";
 const suite = Flagpole.suite("Basic Smoke Test of Site").base(baseDomain);
@@ -16,9 +17,7 @@ suite
   });
 
 suite
-  .browser("Puppeteer test of Google screenshot", {
-    headless: false,
-  })
+  .browser("Puppeteer test of Google screenshot", browserOpts)
   .open("/")
   .next("Screenshot", async (context) => {
     await context.waitForExists("img[alt='Google']");

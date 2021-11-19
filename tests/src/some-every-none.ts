@@ -1,4 +1,5 @@
 import flagpole from "../../dist/index";
+import { browserOpts } from "./browser/browserOpts";
 
 const suite = flagpole("Basic Test of some, every, and none methods").base(
   "https://www.flagpolejs.com"
@@ -6,7 +7,7 @@ const suite = flagpole("Basic Test of some, every, and none methods").base(
 
 suite
   .scenario("Let's test these methods", "browser")
-  .open("/")
+  .open("/", browserOpts)
   .next("Some", async (context) => {
     const navItems = await context.findAll("li.nav-item");
 

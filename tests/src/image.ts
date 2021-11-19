@@ -1,11 +1,13 @@
 import flagpole from "../../dist";
+import { browserOpts } from "./browser/browserOpts";
 
 const suite = flagpole("Basic Smoke Test of Site");
 
 suite
   .scenario("Homepage Loads", "browser")
   .open(
-    "https://www.johnkrausphotos.com/Galleries/Launches/Falcon-9-Inspiration4/"
+    "https://www.johnkrausphotos.com/Galleries/Launches/Falcon-9-Inspiration4/",
+    browserOpts
   )
   .next("Get all images", async (context) => {
     const imgs = await context.findAll("img");

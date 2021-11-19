@@ -1,10 +1,14 @@
 import flagpole from "../../dist/index";
+import { browserOpts } from "./browser/browserOpts";
 
 const suite = flagpole("Basic Smoke Test of Site");
 
 suite
   .scenario("Homepage Loads", "browser")
-  .open("https://www.w3schools.com/bootstrap/bootstrap_carousel.asp")
+  .open(
+    "https://www.w3schools.com/bootstrap/bootstrap_carousel.asp",
+    browserOpts
+  )
   .next(async (context) => {
     const before = Date.now();
     await context.waitForVisible(".carousel-inner .item");
@@ -15,7 +19,7 @@ suite
 
 suite
   .scenario("Wait for hidden", "browser")
-  .open("https://getbootstrap.com/docs/4.0/components/collapse/")
+  .open("https://getbootstrap.com/docs/4.0/components/collapse/", browserOpts)
   .next(async (context) => {
     const before = Date.now();
     await context.waitForHidden("#collapseExample");

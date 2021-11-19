@@ -1,10 +1,11 @@
 import flagpole from "../../dist/index";
+import { browserOpts } from "./browser/browserOpts";
 
 const suite = flagpole("Wait for having text");
 
 suite
   .scenario("Go to Google", "browser")
-  .open("https://www.google.com/")
+  .open("https://www.google.com/", browserOpts)
   .next(async (context) => {
     const howSearchWorks = await context.waitForHavingText(
       "a",

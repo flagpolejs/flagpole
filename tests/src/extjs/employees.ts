@@ -1,16 +1,11 @@
 import flagpole from "../../../dist/index";
+import { browserOpts } from "../browser/browserOpts";
 
 const suite = flagpole("Test Employee Directory Example")
   .base("https://examples.sencha.com")
   .finally(() => {
     suite.print();
   });
-
-const browserOpts = {
-  headless: false,
-  width: 1280,
-  height: 768,
-};
 
 const inputValues = {
   userName: "norma.flores",

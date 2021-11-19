@@ -1,4 +1,5 @@
 import flagpole from "../../dist/index";
+import { browserOpts } from "./browser/browserOpts";
 
 const sites = [
   "https://github.com/SheetJS/sheetjs",
@@ -25,7 +26,7 @@ const suite = flagpole("View five GitHub repos at a time").setConcurrencyLimit(
 sites.forEach((site) => {
   suite
     .scenario(`${site} - GitHub Repo`, "browser")
-    .open(site)
+    .open(site, browserOpts)
     .next(async (context) => {
       await context.pause(5000); // take time to check it out
       context.assert(context.response.statusCode).equals(200);

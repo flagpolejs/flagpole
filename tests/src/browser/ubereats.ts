@@ -1,4 +1,5 @@
 import flagpole from "../../../dist/index";
+import { browserOpts } from "./browserOpts";
 
 const suite = flagpole("Uber Eats Sample Test").base(
   "https://www.ubereats.com/"
@@ -16,9 +17,7 @@ const paths = {
 const address = "2180 W State Rd 434, Longwood, FL 32779";
 
 suite
-  .browser("Start on homepage and find local restaurants", {
-    headless: false,
-  })
+  .browser("Start on homepage and find local restaurants", browserOpts)
   .open("/")
   .next(
     "Go to front page, type in an address, and click search",
