@@ -28,11 +28,11 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       context.assert(geolocation.longitude).equals(-74.00611);
       context.assert(geolocation.altitude).equals(1);
       let screenProps = await context.getScreenProperties();
-      context.assert(screenProps.rotation).equals("PORTRAIT");
+      context.assert(screenProps.angle).equals("PORTRAIT");
       let rotation = await context.rotate("LANDSCAPE");
       context.assert(rotation).equals("LANDSCAPE");
       screenProps = await context.getScreenProperties();
-      context.assert(screenProps.rotation).equals("LANDSCAPE");
+      context.assert(screenProps.angle).equals("LANDSCAPE");
       rotation = await context.rotate("PORTRAIT");
       const hello = await context.findAll("id/pager_signin_button");
       context.assert(hello[0]).exists();
