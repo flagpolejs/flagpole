@@ -226,6 +226,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     );
   }
 
+  // Uses deprecated JSONWP call
   public async getAppiumContexts(): Promise<string[]> {
     const res = await sendAppiumRequest(
       this.scenario,
@@ -238,6 +239,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return res.jsonRoot.value;
   }
 
+  // Uses deprecated JSONWP call
   public async setAppiumContext(appiumContext: string): Promise<void> {
     const res = await sendAppiumRequest(
       this.scenario,
