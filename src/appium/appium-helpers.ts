@@ -87,11 +87,7 @@ const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
  * @param {any} opts - Appium session settings, called "capabilities"
  * @return {Promise<Scenario>} Initial scenario with alias set
  * */
-export const appiumSessionCreate = (
-  scenario: Scenario,
-  opts: any = {},
-  devProperties: DeviceProperties = {}
-) => {
+export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
   return async () => {
     const existingSessionId = await getAppiumSession(scenario);
     if (existingSessionId) {
@@ -100,12 +96,18 @@ export const appiumSessionCreate = (
         scenario
       );
       scenario.set("capabilities", capabilities);
-      await setDevProperties(existingSessionId, scenario, devProperties);
+      if (opts.devProperties) {
+        await setDevProperties(existingSessionId, scenario, opts.devProperties);
+        delete opts.devProperties;
+      }
       return scenario.set("sessionId", existingSessionId);
     }
     scenario.set("capabilities", opts);
     const newSessionId = await createAppiumSession(scenario, opts);
-    await setDevProperties(newSessionId, scenario, devProperties);
+    if (opts.devProperties) {
+      await setDevProperties(newSessionId, scenario, opts.devProperties);
+      delete opts.devProperties;
+    }
     return scenario.set("sessionId", newSessionId);
   };
 };
