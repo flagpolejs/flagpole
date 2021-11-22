@@ -597,38 +597,6 @@ export class AssertionContext implements iAssertionContext {
     return output;
   }
 
-  public async screenshotCompare(infile: string): Promise<boolean>;
-  public async screenshotCompare(
-    infile: string,
-    percentage: number
-  ): Promise<boolean>;
-  public async screenshotCompare(
-    infile: string,
-    opts: ScreenshotOpts
-  ): Promise<boolean>;
-  public async screenshotCompare(
-    infile: string,
-    percentage: number,
-    opts: ScreenshotOpts
-  ): Promise<boolean>;
-  public async screenshotCompare(
-    infile: string,
-    a?: number | ScreenshotOpts,
-    b?: ScreenshotOpts
-  ): Promise<boolean> {
-    const output = (() => {
-      if (typeof a === "number") {
-        return b
-          ? this.response.screenshotCompare(infile, a, b)
-          : this.response.screenshotCompare(infile, a);
-      }
-      return a
-        ? this.response.screenshotCompare(infile, a)
-        : this.response.screenshotCompare(infile);
-    })();
-    return output;
-  }
-
   public push(key: string, value: any): iAssertionContext {
     this._scenario.push(key, value);
     return this;
