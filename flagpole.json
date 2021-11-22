@@ -174,12 +174,12 @@
     "currentUrl": {
       "id": "",
       "name": "currentUrl",
-      "tags,": []
+      "tags,": ["safe"]
     },
-    "repro": {
+    "timeout": {
       "id": "",
-      "name": "repro",
-      "tags": []
+      "name": "timeout",
+      "tags": ["should-fail"]
     }
   }
 }

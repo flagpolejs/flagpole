@@ -16,8 +16,10 @@ jobs:
         flagpoleCommand:
           - name: test-todo
             command: --build --base=https://jsonplaceholder.typicode.com -s todo
-          - name: run-all
-            command: --all --build
+          - name: should-pass
+            command: -t safe --build
+          - name: should-fail
+            command: -t should-fail --build && exit 1 || exit 0
 
     steps:
       - uses: actions/checkout@v2
@@ -34,10 +36,11 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
-      - run: sudo apt update -qq -y
-      - run: sudo apt install -qq -y wget fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcups2 libgbm1 libgtk-3-0 libnspr4 libnss3 libxcomposite1 libxdamage1 libxkbcommon0 libxrandr2 xdg-utils > /dev/null
+      - run: apt update -qq -y
+      - run: apt install -qq -y wget fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcups2 libgbm1 libgtk-3-0 libnspr4 libnss3 libxcomposite1 libxdamage1 libxkbcommon0 libxrandr2 xdg-utils > /dev/null
       - run: wget --quiet https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-      - run: sudo dpkg -i google-chrome-stable_current_amd64.deb > /dev/null
+      - run: dpkg -i google-chrome-stable_current_amd64.deb > /dev/null
+      - run: npm i -g typescript
       - run: npm install --no-save
       - run: npm run build --if-present
       - run: PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run ${{ matrix.flagpoleCommand.command }}
