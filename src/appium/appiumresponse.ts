@@ -250,7 +250,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
-  
+
   public async rotate(rotation: string | number): Promise<string | number> {
     if (typeof rotation === "number") {
       throw "Appium only supports rotating by a string.";
@@ -274,7 +274,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
     return res.jsonRoot.value;
   }
-  
+
   public async getScreenProperties(): Promise<ScreenProperties> {
     const rotationRes = await sendAppiumRequest(
       this.scenario,
@@ -293,7 +293,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         method: "get",
       }
     );
-    
+
     const screenProperties: ScreenProperties = {
       angle: rotation,
       dimensions: {
@@ -427,6 +427,22 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       `/session/${this.sessionId}/element/${element}/displayed`,
       {
         method: "get",
+      }
+    );
+
+    return res.jsonRoot.value;
+  }
+
+  // Uses deprecated JSONWP call
+  public async isAppInstalled(bundleId: string): Promise<boolean> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/appium/device/app_installed`,
+      {
+        method: "post",
+        data: {
+          bundleId: bundleId,
+        },
       }
     );
 
