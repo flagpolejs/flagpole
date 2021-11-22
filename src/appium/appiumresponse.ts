@@ -250,7 +250,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
 
-    if (res.jsonRoot.value.error) {
+    if (res.jsonRoot.value?.error) {
       throw res.jsonRoot.value.message;
     }
   }
