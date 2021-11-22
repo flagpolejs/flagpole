@@ -320,12 +320,6 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public async screenshotCompare(infile: string): Promise<boolean> {
-    throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support comparing screenshots.`
-    );
-  }
-
   public async type(
     selector: string,
     textToType: string,
