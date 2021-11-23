@@ -730,6 +730,7 @@ export interface iSuite {
   totalDuration: number | null;
   executionDuration: number | null;
   maxScenarioDuration: number;
+  maxSuiteDuration: number;
   concurrencyLimit: number;
   title: string;
   finished: Promise<void>;
