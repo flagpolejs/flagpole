@@ -14,11 +14,11 @@ jobs:
         node-version: [12.x, 14.x, 16.x]
         flagpoleCommand:
           - name: test-todo
-            command: node /home/runner/work/flagpole/flagpole/dist/cli/main.js run --build --base=https://jsonplaceholder.typicode.com -s todo
+            command: --build --base=https://jsonplaceholder.typicode.com -s todo
           - name: should-pass
-            command: node /home/runner/work/flagpole/flagpole/dist/cli/main.js run --build --all
+            command: --build --all
           - name: should-fail
-            command: ! node /home/runner/work/flagpole/flagpole/dist/cli/main.js run --build -c flagpole-should-fail.json --all
+            command: --build -c flagpole-should-fail.json --all; __retval=$?; if [ $__retval -eq 0 ]; then exit 1; elif [ $__retval -eq 1 ]; then exit 0; else exit $?; fi
 
     steps:
       - uses: actions/checkout@v2
@@ -41,4 +41,4 @@ jobs:
       - run: sudo dpkg -i google-chrome-stable_current_amd64.deb > /dev/null
       - run: npm install --no-save
       - run: npm run build --if-present
-      - run: PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome xvfb-run ${{ matrix.flagpoleCommand.command }}
+      - run: set +eo pipefail; PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run ${{ matrix.flagpoleCommand.command }}; set -eo pipefail;
