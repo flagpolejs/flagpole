@@ -38,7 +38,7 @@ export class SuiteTaskManager {
   private _statusCallbacks: SuiteStatusCallback[] = [];
   private _concurrencyLimit: number = 99;
   private _maxScenarioDuration: number = 30000;
-  private _maxTimeToWaitForPendingScenariosToBeReady = 30000;
+  private _maxSuiteDuration: number = 60000;
   private _finishedPromise: Promise<void>;
   private _finishedResolve = () => {};
 
@@ -52,6 +52,14 @@ export class SuiteTaskManager {
 
   public set maxScenarioDuration(value: number) {
     this._maxScenarioDuration = value;
+  }
+
+  public get maxSuiteDuration(): number {
+    return this._maxSuiteDuration;
+  }
+
+  public set maxSuiteDuration(value: number) {
+    this._maxSuiteDuration = value;
   }
 
   public get concurrencyLimit(): number {
@@ -343,6 +351,17 @@ export class SuiteTaskManager {
         // If we have some pending + we didn't start any new ones, kill them
         // Important! Don't finish it off right away, there may be something pending in a few milliseconds
         runAsync(() => {
+          if (
+            this.scenariosWaitingToExecute.length > 0 &&
+            this._dateExecutionBegan &&
+            Date.now() - this._dateExecutionBegan > this._maxSuiteDuration
+          ) {
+            resolve(
+              this._cancelPendingScenarios(
+                "Suite timed out! This scenario was never called or had no assertions."
+              )
+            );
+          }
           // If there are more scenarios now ready to execute, do those
           if (this.scenariosWaitingToExecute.length > 0) {
             return execute();

@@ -176,7 +176,7 @@ suite.scenario("User login flow", "appium", {
   deviceName: "Name of device",
   platformName: "Android" | "iOS",
   automationName: "Uiautomator2" | "XCUITest" | "Espresso",
-  app: "/path/to/apk/or/ipa"
+  app: "/path/to/apk/or/ipa",
 });
 ```
 
@@ -332,6 +332,19 @@ The execution options specified from the command line arguments or defaults. Thi
 
 ```javascript
 const baseDomain = suite.executionOptions.environment?.defaultDomain;
+```
+
+### maxSuiteDuration: number
+
+How long a suite will run before timing out. The default is 60000 ( one minute )
+
+```javascript
+const suite = flagpole("A very long suite");
+
+// this suite can run for two minutes
+suite.maxSuiteDuration = 120000;
+
+suite.browser("Interact with the browser for a while");
 ```
 
 ### title: string

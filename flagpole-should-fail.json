@@ -25,6 +25,16 @@
       "id": "",
       "name": "timeout",
       "tags": []
+    },
+    "dangle": {
+      "id": "",
+      "name": "dangle",
+      "tags": []
+    },
+    "noNext": {
+      "id": "",
+      "name": "noNext",
+      "tags": []
     }
   }
 }
