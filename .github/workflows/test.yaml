@@ -2,12 +2,11 @@ name: Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -17,9 +16,9 @@ jobs:
           - name: test-todo
             command: --build --base=https://jsonplaceholder.typicode.com -s todo
           - name: should-pass
-            command: -t safe --build
+            command: --build --all
           - name: should-fail
-            command: -t should-fail --build; if [ $? -eq 0 ]; then exit 1; elif [ $? -eq 1 ]; then exit 0; else exit $?; fi
+            command: --build -c flagpole-should-fail.json --all; if [ $? -eq 0 ]; then exit 1; elif [ $? -eq 1 ]; then exit 0; else exit $?; fi
 
     steps:
       - uses: actions/checkout@v2
@@ -36,8 +35,8 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
-      - run: apt update -qq -y
-      - run: apt install -qq -y wget fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcups2 libgbm1 libgtk-3-0 libnspr4 libnss3 libxcomposite1 libxdamage1 libxkbcommon0 libxrandr2 xdg-utils > /dev/null
+      - run: sudo apt update -qq -y
+      - run: sudo apt install -qq -y wget fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcups2 libgbm1 libgtk-3-0 libnspr4 libnss3 libxcomposite1 libxdamage1 libxkbcommon0 libxrandr2 xdg-utils > /dev/null
       - run: wget --quiet https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
       - run: dpkg -i google-chrome-stable_current_amd64.deb > /dev/null
       - run: npm install --no-save

@@ -26,11 +26,6 @@
       "name": "api/itunes",
       "tags": []
     },
-    "browser/evaluate": {
-      "id": "",
-      "name": "browser/evaluate",
-      "tags": []
-    },
     "chaining-assertions": {
       "id": "",
       "name": "chaining-assertions",
@@ -174,7 +169,7 @@
     "currentUrl": {
       "id": "",
       "name": "currentUrl",
-      "tags": ["safe"]
+      "tags": []
     },
     "timeout": {
       "id": "",
