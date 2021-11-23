@@ -18,7 +18,7 @@ jobs:
           - name: should-pass
             command: node /home/runner/work/flagpole/flagpole/dist/cli/main.js run --build --all
           - name: should-fail
-            command: set +eo pipefail; node /home/runner/work/flagpole/flagpole/dist/cli/main.js run --build -c flagpole-should-fail.json --all; __retval=$?; if [ $__retval -eq 0 ]; then exit 1; elif [ $__retval -eq 1 ]; then exit 0; else exit $?; fi; set -eo pipefail;
+            command: set +eo pipefail; node /home/runner/work/flagpole/flagpole/dist/cli/main.js run --build -c flagpole-should-fail.json --all; __retval=$?; if [ $__retval -eq 0 ]; then exit 1; elif [ $__retval -eq 1 ]; then exit 0; else exit $?; fi; set -eo pipefail
 
     steps:
       - uses: actions/checkout@v2
