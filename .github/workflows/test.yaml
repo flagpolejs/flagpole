@@ -18,7 +18,7 @@ jobs:
           - name: should-pass
             command: --build --all
           - name: should-fail
-            command: --build -c flagpole-should-fail.json --all; if [ $? -eq 0 ]; then exit 1; elif [ $? -eq 1 ]; then exit 0; else exit $?; fi
+            command: --build -c flagpole-should-fail.json --all 2>&1; if [ $? -eq 0 ]; then exit 1; elif [ $? -eq 1 ]; then exit 0; else exit $?; fi
 
     steps:
       - uses: actions/checkout@v2
