@@ -1,0 +1,30 @@
+{
+  "project": {
+    "id": "",
+    "name": "flagpole",
+    "path": "tests",
+    "source": "src",
+    "output": "out",
+    "images": "images",
+    "cache": "cache",
+    "schemas": "schemas",
+    "reports": "reports"
+  },
+  "environments": {
+    "local": {
+      "name": "local",
+      "defaultDomain": "http://localhost:8000"
+    },
+    "dev": {
+      "name": "dev",
+      "defaultDomain": "http://localhost:8000"
+    }
+  },
+  "suites": {
+    "timeout": {
+      "id": "",
+      "name": "timeout",
+      "tags": []
+    }
+  }
+}

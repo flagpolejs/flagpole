@@ -26,11 +26,6 @@
       "name": "api/itunes",
       "tags": []
     },
-    "browser/evaluate": {
-      "id": "",
-      "name": "browser/evaluate",
-      "tags": []
-    },
     "chaining-assertions": {
       "id": "",
       "name": "chaining-assertions",
@@ -49,16 +44,6 @@
     "error": {
       "id": "",
       "name": "error",
-      "tags": []
-    },
-    "extjs/employees": {
-      "id": "",
-      "name": "extjs/employees",
-      "tags": []
-    },
-    "extjs/extjs": {
-      "id": "",
-      "name": "extjs/extjs",
       "tags": []
     },
     "html/google": {
@@ -174,11 +159,6 @@
     "currentUrl": {
       "id": "",
       "name": "currentUrl",
-      "tags": []
-    },
-    "repro": {
-      "id": "",
-      "name": "repro",
       "tags": []
     }
   }
