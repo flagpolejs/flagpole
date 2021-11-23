@@ -41,4 +41,4 @@ jobs:
       - run: sudo dpkg -i google-chrome-stable_current_amd64.deb > /dev/null
       - run: npm install --no-save
       - run: npm run build --if-present
-      - run: PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome set +eo pipefail; xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run --build ${{ matrix.flagpoleCommand.command }};
+      - run: set +eo pipefail; PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run --build ${{ matrix.flagpoleCommand.command }};
