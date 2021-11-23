@@ -2,7 +2,7 @@ import flagpole from "../../dist";
 
 const suite = flagpole("Scenario with no open method");
 
-suite.maxSuiteDuration = 2000;
+suite.maxSuiteDuration = 5000;
 
 suite
   .scenario("Scenario should timeout", "html")
