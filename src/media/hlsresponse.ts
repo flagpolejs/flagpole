@@ -12,7 +12,7 @@ export class HLSResponse
   implements iResponse, JPathProvider
 {
   public jsonDoc: JsonDoc | undefined;
-  protected _mimePattern = /mpegurl/i;
+  protected _mimePattern = /mpegurl|octet-stream/i;
 
   public get responseTypeName(): string {
     return "HLS Video";
