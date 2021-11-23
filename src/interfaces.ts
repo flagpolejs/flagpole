@@ -226,7 +226,8 @@ export interface iValue {
   col(key: string): iValue;
   groupBy(key: string): iValue;
   unique(): iValue;
-  as(aliasName: string): iValue;
+  //as(aliasName: string): iValue;
+  rename(newName: string): iValue;
   echo(callback: (str: string) => void): iValue;
   echo(): iValue;
   // DOM Elements only

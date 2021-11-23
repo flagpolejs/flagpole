@@ -209,6 +209,13 @@ export class Value implements iValue {
     this._highlight = highlight;
   }
 
+  public rename(newName: string): iValue {
+    const oldName = this.name;
+    this._name = newName;
+    this._completedAction("RENAME", `${oldName} to ${newName}`);
+    return this;
+  }
+
   public toArray(): any[] {
     return this.isArray() ? this._input : [this._input];
   }
@@ -341,10 +348,12 @@ export class Value implements iValue {
     return value == thisValue.$;
   }
 
+  /*
   public as(aliasName: string): iValue {
     this._context.scenario.set(aliasName, this);
     return this;
   }
+  */
 
   public async getProperty(key: string): Promise<iValue> {
     return this._wrapAsValue(

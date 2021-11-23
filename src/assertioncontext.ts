@@ -604,6 +604,7 @@ export class AssertionContext implements iAssertionContext {
 
   public set(aliasName: string, value: any): iAssertionContext {
     this._scenario.set(aliasName, value);
+
     return this;
   }
 
