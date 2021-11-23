@@ -18,7 +18,7 @@ jobs:
           - name: should-pass
             command: --build --all
           - name: should-fail
-            command: --build -c flagpole-should-fail.json --all; __retval=$?; if [ $__retval -eq "0" ]; then exit 1; elif [ $__retval -eq "1" ]; then exit 0; else exit $?; fi
+            command: --build -c flagpole-should-fail.json --all; __retval=$?; if [ $__retval -eq 0 ]; then exit 1; elif [ $__retval -eq 1 ]; then exit 0; else exit $?; fi
 
     steps:
       - uses: actions/checkout@v2
@@ -41,4 +41,4 @@ jobs:
       - run: sudo dpkg -i google-chrome-stable_current_amd64.deb > /dev/null
       - run: npm install --no-save
       - run: npm run build --if-present
-      - run: PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run ${{ matrix.flagpoleCommand.command }}
+      - run: set +o pipefail; PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run ${{ matrix.flagpoleCommand.command }}
