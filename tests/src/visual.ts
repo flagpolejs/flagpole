@@ -24,5 +24,5 @@ suite
     await context.waitForExists("img[alt='Google']");
     context
       .assert("Homepage matches control screenshot", await context.screenshot())
-      .looksLike("@homepage", "1");
+      .looksLike("@homepage", "5");
   });
