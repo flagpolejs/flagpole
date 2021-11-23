@@ -358,7 +358,7 @@ export class SuiteTaskManager {
           ) {
             resolve(
               this._cancelPendingScenarios(
-                "Suite timed out, scenario never called"
+                "Suite timed out! This scenario was never called or had no assertions."
               )
             );
           }

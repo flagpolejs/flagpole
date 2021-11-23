@@ -30,6 +30,11 @@
       "id": "",
       "name": "dangle",
       "tags": []
+    },
+    "noNext": {
+      "id": "",
+      "name": "noNext",
+      "tags": []
     }
   }
 }
