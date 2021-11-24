@@ -93,6 +93,12 @@ export class ValuePromise
     return cast<AssertionPromise>(null);
   }
 
+  public rename = (newName: string): ValuePromise => {
+    return new ValuePromise((resolve) =>
+      this.then((value) => resolve(value.rename(newName)))
+    );
+  };
+
   public assert = (message: string): AssertionPromise => {
     return new AssertionPromise((resolve) =>
       this.then((value) => resolve(value.assert(message)))

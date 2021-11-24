@@ -590,17 +590,17 @@ export interface iAssertionContext {
   push(aliasName: string, value: any): iAssertionContext;
   set(aliasName: string, value: any): iAssertionContext;
   get<T = any>(aliasName: string): T;
-  exists(selector: string | string[], opts?: FindOptions): Promise<iValue>;
+  exists(selector: string | string[], opts?: FindOptions): ValuePromise;
   exists(
     selector: string | string[],
     contains: string,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   exists(
     selector: string | string[],
     matches: RegExp,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   existsAll(selector: string | string[], opts?: FindOptions): Promise<iValue[]>;
   existsAll(
     selector: string | string[],
@@ -648,21 +648,17 @@ export interface iAssertionContext {
     matches: RegExp,
     opts?: FindAllOptions
   ): Promise<iValue[]>;
-  findXPath(xPath: string): Promise<iValue>;
+  findXPath(xPath: string): ValuePromise;
   findAllXPath(xPath: string): Promise<iValue[]>;
   clearThenType(
     selector: string,
     textToType: string,
     opts?: any
   ): Promise<void>;
-  click(selector: string, opts?: FindOptions): Promise<iValue>;
-  click(
-    selector: string,
-    contains: string,
-    opts?: FindOptions
-  ): Promise<iValue>;
-  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
-  submit(selector: string): Promise<void>;
+  click(selector: string, opts?: FindOptions): ValuePromise;
+  click(selector: string, contains: string, opts?: FindOptions): ValuePromise;
+  click(selector: string, matches: RegExp, opts?: FindOptions): ValuePromise;
+  submit(selector: string): ValuePromise;
   type(selector: string, textToType: string, opts?: any): Promise<void>;
   selectOption(selector: string, value: string | string[]): Promise<void>;
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
@@ -678,26 +674,26 @@ export interface iAssertionContext {
     timeout?: number,
     waitFor?: string | string[]
   ): Promise<void>;
-  waitForHidden(selector: string, timeout?: number): Promise<iValue>;
-  waitForVisible(selector: string, timeout?: number): Promise<iValue>;
-  waitForExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForHidden(selector: string, timeout?: number): ValuePromise;
+  waitForVisible(selector: string, timeout?: number): ValuePromise;
+  waitForExists(selector: string, timeout?: number): ValuePromise;
   waitForExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
-  waitForNotExists(selector: string, timeout?: number): Promise<iValue>;
+  ): ValuePromise;
+  waitForNotExists(selector: string, timeout?: number): ValuePromise;
   waitForNotExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
-  waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
+  ): ValuePromise;
+  waitForXPath(xPath: string, timeout?: number): ValuePromise;
   waitForHavingText(
     selector: string,
     text: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
+  ): ValuePromise;
   openInBrowser(): Promise<string>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
