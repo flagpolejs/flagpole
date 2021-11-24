@@ -1,6 +1,6 @@
-import { iScenario } from "./interfaces";
-import { AssertionFail } from "./logging/assertionresult";
-import { ValuePromise } from "./value-promise";
+import { iScenario } from "../interfaces";
+import { AssertionFail } from "../logging/assertionresult";
+import { ValuePromise } from "../value-promise";
 
 function cast<T>(val: any): T {
   return val;

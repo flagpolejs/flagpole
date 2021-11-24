@@ -39,10 +39,12 @@ import {
   toArray,
   asyncMapToObject,
   flatten,
+  asyncCount,
 } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
 import { getFindParams, getFindName, wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
+import { IteratorBoolCallback } from "./interfaces/iterator-callbacks";
 
 const getParamsFromExists = (
   a: string,
@@ -191,13 +193,12 @@ export class AssertionContext implements iAssertionContext {
    * @param textToType
    * @param opts
    */
-  public async clearThenType(
+  public clearThenType(
     selector: string,
     textToType: string,
     opts: any = {}
-  ): Promise<any> {
-    await this.clear(selector);
-    return this.type(selector, textToType, opts);
+  ): ValuePromise {
+    return this.clearThenType(selector, textToType, opts);
   }
 
   /**
@@ -205,18 +206,16 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param selector
    */
-  public async clear(selector: string): Promise<void> {
-    await this.response.clear(selector);
-    this._completedAction("CLEAR", selector);
+  public clear(selector: string): ValuePromise {
+    return this.response.clear(selector);
   }
 
-  public async type(
+  public type(
     selector: string,
     textToType: string,
     opts: any = {}
-  ): Promise<void> {
-    await this.response.type(selector, textToType, opts);
-    this._completedAction("TYPE", textToType);
+  ): ValuePromise {
+    return this.response.type(selector, textToType, opts);
   }
 
   /**
@@ -630,6 +629,16 @@ export class AssertionContext implements iAssertionContext {
   public filter = asyncFilter;
   public none = asyncNone;
   public each = asyncForEach;
+
+  public count<T>(arr: T[], callback?: IteratorBoolCallback): ValuePromise {
+    return ValuePromise.execute(async () => {
+      if (callback) {
+        const n = await asyncCount<T>(arr, callback);
+        return wrapAsValue(this, n, "Count");
+      }
+      return wrapAsValue(this, arr.length, "Count");
+    });
+  }
 
   public abort(message?: string): Promise<iScenario> {
     return this.scenario.abort(message);

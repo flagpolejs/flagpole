@@ -41,7 +41,7 @@ export interface ScreenshotOpts {
 }
 
 export interface iNextCallback {
-  (context: iAssertionContext): Promise<any> | void;
+  (context: iAssertionContext, ...args: any[]): Promise<any> | void;
 }
 
 export interface iCallbackAndMessage {
@@ -272,17 +272,17 @@ export interface iValue {
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
-  focus(): Promise<any>;
-  blur(): Promise<any>;
-  hover(): Promise<void>;
-  tap(): Promise<void>;
-  press(key: string, opts?: any): Promise<void>;
-  clearThenType(textToType: string, opts?: any): Promise<void>;
-  type(textToType: string, opts?: any): Promise<void>;
-  clear(): Promise<void>;
+  focus(): Promise<iValue>;
+  blur(): Promise<iValue>;
+  hover(): Promise<iValue>;
+  tap(): Promise<iValue>;
+  press(key: string, opts?: any): Promise<iValue>;
+  clearThenType(textToType: string, opts?: any): Promise<iValue>;
+  type(textToType: string, opts?: any): Promise<iValue>;
+  clear(): Promise<iValue>;
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
   selectOption(value: string | string[]): Promise<void>;
-  pressEnter(): Promise<void>;
+  pressEnter(): Promise<iValue>;
   scrollTo(): Promise<void>;
   waitForFunction(
     js: EvaluateFn<any>,
@@ -412,8 +412,9 @@ export interface iResponse {
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
-  clear(selector: string): Promise<any>;
-  type(selector: string, textToType: string, opts: any): Promise<any>;
+  clear(selector: string): ValuePromise;
+  type(selector: string, textToType: string, opts: any): ValuePromise;
+  clearThenType(selector: string, textToType: string, opts: any): ValuePromise;
   selectOption(selector: string, value: string | string[]): Promise<void>;
   scrollTo(point: OptionalXY): Promise<iResponse>;
   click(selector: string, opts?: FindOptions): Promise<iValue>;
@@ -650,16 +651,13 @@ export interface iAssertionContext {
   ): Promise<iValue[]>;
   findXPath(xPath: string): ValuePromise;
   findAllXPath(xPath: string): Promise<iValue[]>;
-  clearThenType(
-    selector: string,
-    textToType: string,
-    opts?: any
-  ): Promise<void>;
   click(selector: string, opts?: FindOptions): ValuePromise;
   click(selector: string, contains: string, opts?: FindOptions): ValuePromise;
   click(selector: string, matches: RegExp, opts?: FindOptions): ValuePromise;
   submit(selector: string): ValuePromise;
-  type(selector: string, textToType: string, opts?: any): Promise<void>;
+  type(selector: string, textToType: string, opts?: any): ValuePromise;
+  clear(selector: string): ValuePromise;
+  clearThenType(selector: string, textToType: string, opts?: any): ValuePromise;
   selectOption(selector: string, value: string | string[]): Promise<void>;
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
   waitForFunction(
@@ -708,12 +706,14 @@ export interface iAssertionContext {
   logOptionalFailure(message: string, errorDetails?: any): iAssertionResult;
   logPassing(message: string): iAssertionResult;
   scrollTo(point: OptionalXY): Promise<iAssertionContext>;
-  some(array: any[], callback: IteratorBoolCallback): Promise<boolean>;
-  none(array: any[], callback: IteratorBoolCallback): Promise<boolean>;
-  every(array: any[], callback: IteratorBoolCallback): Promise<boolean>;
-  each(array: any[], callback: IteratorCallback): Promise<void>;
-  filter(array: any[], callback: IteratorBoolCallback): Promise<any[]>;
-  map(array: any[], callback: IteratorCallback): Promise<any[]>;
+  count<T>(array: T[]): ValuePromise;
+  count<T>(array: T[], callback: IteratorBoolCallback): ValuePromise;
+  some<T>(array: T[], callback: IteratorBoolCallback): Promise<boolean>;
+  none<T>(array: T[], callback: IteratorBoolCallback): Promise<boolean>;
+  every<T>(array: T[], callback: IteratorBoolCallback): Promise<boolean>;
+  each<T>(array: T[], callback: IteratorCallback): Promise<void>;
+  filter<T>(array: T[], callback: IteratorBoolCallback): Promise<T[]>;
+  map<T>(array: T[], callback: IteratorCallback): Promise<any[]>;
   abort(message?: string): Promise<iScenario>;
 }
 export interface iSuite {
