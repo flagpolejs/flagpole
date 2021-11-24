@@ -5,6 +5,7 @@ import {
   FindOptions,
   FindAllOptions,
   ScreenProperties,
+  DeviceProperties,
 } from "../interfaces";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
@@ -21,6 +22,7 @@ import {
   appiumFindByUiAutomator,
   getTimeout,
   setImplicitWait,
+  setDevProperties,
 } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
 import { toType } from "../util";
@@ -438,5 +440,15 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     );
 
     return res.jsonRoot.value;
+  }
+
+  public async setDeviceProperties(
+    devProperties: DeviceProperties
+  ): Promise<void> {
+    await setDevProperties(
+      this.sessionId,
+      this.context.scenario,
+      devProperties
+    );
   }
 }

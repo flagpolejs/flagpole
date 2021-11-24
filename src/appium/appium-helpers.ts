@@ -229,11 +229,11 @@ const getAppiumSessionCapabilities = async (
  * @param {string} sessionId - ID for currently running session
  * @param {Scenario} scenario - FlagPole scenario
  * @param {DeviceProperties} devProperties - Object containing the properties to be set
- * @return {Promise<any>} - Object containing device properties
+ * @return {Promise<void>}
  * */
-const setDevProperties = async (
+export const setDevProperties = async (
   sessionId: string,
-  scenario: Scenario,
+  scenario: iScenario,
   devProperties: DeviceProperties = {}
 ): Promise<void> => {
   if (devProperties.location) {
@@ -392,7 +392,7 @@ const setDevProperties = async (
 
 const sendAdbCommand = async (
   sessionId: string,
-  scenario: Scenario,
+  scenario: iScenario,
   command: string,
   args?: any[],
   timeout: number = 20000,
@@ -422,7 +422,7 @@ const sendAdbCommand = async (
 
 const sendSiriCommand = async (
   sessionId: string,
-  scenario: Scenario,
+  scenario: iScenario,
   command: string
 ): Promise<void> => {
   await sendAppiumRequest(scenario, `/session/${sessionId}/execute`, {
@@ -438,7 +438,7 @@ const sendSiriCommand = async (
 
 const getSiriEffect = async (
   sessionId: string,
-  scenario: Scenario,
+  scenario: iScenario,
   setting: string
 ): Promise<string> => {
   const prevTimeout = await getTimeout(sessionId, scenario);
@@ -471,7 +471,7 @@ const getSiriEffect = async (
 
 export const setImplicitWait = async (
   sessionId: string,
-  scenario: Scenario | iScenario,
+  scenario: iScenario,
   ms: number
 ): Promise<void> => {
   await sendAppiumRequest(
@@ -488,7 +488,7 @@ export const setImplicitWait = async (
 
 export const getTimeout = async (
   sessionId: string,
-  scenario: Scenario | iScenario
+  scenario: iScenario
 ): Promise<number> => {
   const res = await sendAppiumRequest(
     scenario,
