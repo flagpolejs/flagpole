@@ -236,19 +236,6 @@ export const setDevProperties = async (
   scenario: iScenario,
   devProperties: DeviceProperties = {}
 ): Promise<void> => {
-  if (devProperties.location) {
-    await sendAppiumRequest(scenario, `/session/${sessionId}/location`, {
-      method: "post",
-      data: {
-        location: {
-          latitude: devProperties.location.latitude,
-          longitude: devProperties.location.longitude,
-          altitude: devProperties.location.altitude || 0,
-        },
-      },
-    });
-  }
-
   if (devProperties.network) {
     const capabilities = scenario.get("capabilities");
     const automationName = capabilities.automationName;
@@ -388,9 +375,22 @@ export const setDevProperties = async (
       await delay(3500);
     }
   }
+
+  if (devProperties.location) {
+    await sendAppiumRequest(scenario, `/session/${sessionId}/location`, {
+      method: "post",
+      data: {
+        location: {
+          latitude: devProperties.location.latitude,
+          longitude: devProperties.location.longitude,
+          altitude: devProperties.location.altitude || 0,
+        },
+      },
+    });
+  }
 };
 
-const sendAdbCommand = async (
+export const sendAdbCommand = async (
   sessionId: string,
   scenario: iScenario,
   command: string,
@@ -420,7 +420,7 @@ const sendAdbCommand = async (
   return res.jsonRoot.value;
 };
 
-const sendSiriCommand = async (
+export const sendSiriCommand = async (
   sessionId: string,
   scenario: iScenario,
   command: string
@@ -436,7 +436,7 @@ const sendSiriCommand = async (
   });
 };
 
-const getSiriEffect = async (
+export const getSiriEffect = async (
   sessionId: string,
   scenario: iScenario,
   setting: string

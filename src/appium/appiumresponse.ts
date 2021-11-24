@@ -23,6 +23,9 @@ import {
   getTimeout,
   setImplicitWait,
   setDevProperties,
+  sendAdbCommand,
+  sendSiriCommand,
+  getSiriEffect,
 } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
 import { toType } from "../util";
@@ -450,5 +453,109 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       this.context.scenario,
       devProperties
     );
+  }
+
+  public async getDeviceProperties(): Promise<DeviceProperties> {
+    const devProperties: DeviceProperties = {};
+    const location = await this.getGeolocation();
+    devProperties.location = {
+      latitude: location.latitude,
+      longitude: location.longitude,
+      altitude: location.altitude || 0,
+    };
+    // Android
+    if (
+      this.capabilities.automationName.toLowerCase() === "uiautomator2" ||
+      this.capabilities.automationName.toLowerCase() === "espresso"
+    ) {
+      const wifiState: number = await sendAdbCommand(
+        this.sessionId,
+        this.context.scenario,
+        "settings",
+        ["get", "global", "wifi_on"]
+      );
+      const mobileDataState: number = await sendAdbCommand(
+        this.sessionId,
+        this.context.scenario,
+        "settings",
+        ["get", "global", "mobile_data"]
+      );
+      const locationServicesState: number = await sendAdbCommand(
+        this.sessionId,
+        this.context.scenario,
+        "settings",
+        ["get", "secure", "location_mode"]
+      );
+      const airplaneModeState: number = await sendAdbCommand(
+        this.sessionId,
+        this.context.scenario,
+        "settings",
+        ["get", "global", "airplane_mode_on"]
+      );
+
+      devProperties.network = {
+        wifi: wifiState == 0 ? false : true,
+        mobileData: mobileDataState == 0 ? false : true,
+        locationServices: locationServicesState == 0 ? false : true,
+        airplaneMode: airplaneModeState == 0 ? false : true,
+      };
+      // iOS
+    } else if (this.capabilities.automationName.toLowerCase() === "xcuitest") {
+      await sendSiriCommand(
+        this.sessionId,
+        this.context.scenario,
+        "Get wifi status"
+      );
+      const wifiState = await getSiriEffect(
+        this.sessionId,
+        this.context.scenario,
+        "Wi-Fi"
+      );
+      await sendSiriCommand(
+        this.sessionId,
+        this.context.scenario,
+        "Get mobile data status"
+      );
+      const dataState = await getSiriEffect(
+        this.sessionId,
+        this.context.scenario,
+        "Cellular Data"
+      );
+      await sendSiriCommand(
+        this.sessionId,
+        this.context.scenario,
+        "Get location services status"
+      );
+      const locationSvcsState = await getSiriEffect(
+        this.sessionId,
+        this.context.scenario,
+        "Location Services"
+      );
+      await sendSiriCommand(
+        this.sessionId,
+        this.context.scenario,
+        "Get airplane mode status"
+      );
+      const airplaneModeState = await getSiriEffect(
+        this.sessionId,
+        this.context.scenario,
+        "Airplane Mode"
+      );
+      await sendSiriCommand(
+        this.sessionId,
+        this.context.scenario,
+        "Close Siri"
+      );
+      await delay(3500);
+
+      devProperties.network = {
+        wifi: wifiState === "On" ? true : false,
+        mobileData: dataState === "On" ? true : false,
+        locationServices: locationSvcsState === "On" ? true : false,
+        airplaneMode: airplaneModeState === "On" ? true : false,
+      };
+    }
+
+    return devProperties;
   }
 }
