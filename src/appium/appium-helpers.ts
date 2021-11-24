@@ -8,7 +8,7 @@ import {
   AppiumElementIdResponse,
   DeviceProperties,
 } from "../interfaces";
-import { applyOffsetAndLimit, wrapAsValue } from "../helpers";
+import { applyOffsetAndLimit, delay, wrapAsValue } from "../helpers";
 import { AppiumResponse } from "./appiumresponse";
 import { JsonDoc } from "../json/jpath";
 
@@ -98,15 +98,17 @@ export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
       scenario.set("capabilities", capabilities);
       if (opts.devProperties) {
         await setDevProperties(existingSessionId, scenario, opts.devProperties);
-        delete opts.devProperties;
       }
       return scenario.set("sessionId", existingSessionId);
     }
-    scenario.set("capabilities", opts);
     const newSessionId = await createAppiumSession(scenario, opts);
+    const capabilities = await getAppiumSessionCapabilities(
+      newSessionId,
+      scenario
+    );
+    scenario.set("capabilities", capabilities);
     if (opts.devProperties) {
       await setDevProperties(newSessionId, scenario, opts.devProperties);
-      delete opts.devProperties;
     }
     return scenario.set("sessionId", newSessionId);
   };
@@ -233,7 +235,7 @@ const setDevProperties = async (
   sessionId: string,
   scenario: Scenario,
   devProperties: DeviceProperties = {}
-): Promise<any> => {
+): Promise<void> => {
   if (devProperties.location) {
     await sendAppiumRequest(scenario, `/session/${sessionId}/location`, {
       method: "post",
@@ -247,5 +249,254 @@ const setDevProperties = async (
     });
   }
 
-  return devProperties;
+  if (devProperties.network) {
+    const capabilities = scenario.get("capabilities");
+    const automationName = capabilities.automationName;
+
+    // Android
+    if (
+      automationName.toLowerCase() === "uiautomator2" ||
+      automationName.toLowerCase() === "espresso"
+    ) {
+      if (devProperties.network.wifi !== undefined) {
+        await sendAdbCommand(
+          sessionId,
+          scenario,
+          `svc wifi ${devProperties.network.wifi ? "enable" : "disable"}`
+        );
+      }
+
+      if (devProperties.network.mobileData !== undefined) {
+        await sendAdbCommand(
+          sessionId,
+          scenario,
+          `svc data ${devProperties.network.mobileData ? "enable" : "disable"}`
+        );
+      }
+
+      if (devProperties.network.locationServices !== undefined) {
+        await sendAdbCommand(sessionId, scenario, "settings", [
+          "put",
+          "secure",
+          "location_mode",
+          devProperties.network.locationServices ? 3 : 0,
+        ]);
+      }
+
+      if (devProperties.network.airplaneMode === true) {
+        await sendAdbCommand(sessionId, scenario, "settings", [
+          "put",
+          "global",
+          "airplane_mode_on",
+          1,
+        ]);
+        await sendAdbCommand(sessionId, scenario, "svc wifi disable");
+        await sendAdbCommand(sessionId, scenario, "svc data disable");
+      }
+
+      if (devProperties.network.airplaneMode === false) {
+        await sendAdbCommand(sessionId, scenario, "settings", [
+          "put",
+          "global",
+          "airplane_mode_on",
+          0,
+        ]);
+      }
+    } else if (capabilities.automationName.toLowerCase() === "xcuitest") {
+      if (devProperties.network.wifi !== undefined) {
+        await sendSiriCommand(
+          sessionId,
+          scenario,
+          `Turn ${devProperties.network.wifi ? "on" : "off"} WiFi`
+        );
+        const siriVal = await getSiriEffect(sessionId, scenario, "Wi-Fi");
+        if (siriVal !== (devProperties.network.wifi ? "On" : "Off"))
+          throw "Failed to set WiFi";
+      }
+
+      if (devProperties.network.mobileData !== undefined) {
+        await sendSiriCommand(
+          sessionId,
+          scenario,
+          `Turn ${devProperties.network.mobileData ? "on" : "off"} mobile data`
+        );
+        const siriVal = await getSiriEffect(
+          sessionId,
+          scenario,
+          "Cellular Data"
+        );
+        if (siriVal !== (devProperties.network.mobileData ? "On" : "Off"))
+          throw "Failed to set mobile data";
+      }
+
+      // iOS
+      if (devProperties.network.locationServices !== undefined) {
+        if (devProperties.network.locationServices) {
+          await sendSiriCommand(
+            sessionId,
+            scenario,
+            "Turn on location services"
+          );
+          const siriVal = await getSiriEffect(
+            sessionId,
+            scenario,
+            "Location Services"
+          );
+          if (siriVal !== "On") throw "Failed to set location services";
+        } else {
+          await sendSiriCommand(
+            sessionId,
+            scenario,
+            "Turn off location services"
+          );
+          let siriVal = await getSiriEffect(
+            sessionId,
+            scenario,
+            "Location Services"
+          );
+          if (siriVal === "On") {
+            await sendSiriCommand(sessionId, scenario, "Yes");
+            await delay(100);
+          }
+          siriVal = await getSiriEffect(
+            sessionId,
+            scenario,
+            "Location Services"
+          );
+          if (siriVal !== "Off") throw "Failed to set location services";
+        }
+      }
+
+      if (devProperties.network.airplaneMode !== undefined) {
+        await sendSiriCommand(
+          sessionId,
+          scenario,
+          `Turn ${
+            devProperties.network.airplaneMode ? "on" : "off"
+          } airplane mode`
+        );
+        const siriVal = await getSiriEffect(
+          sessionId,
+          scenario,
+          "Airplane Mode"
+        );
+        if (siriVal !== (devProperties.network.airplaneMode ? "On" : "Off"))
+          throw "Failed to set airplane mode";
+      }
+
+      await sendSiriCommand(sessionId, scenario, "Close Siri");
+      await delay(3500);
+    }
+  }
+};
+
+const sendAdbCommand = async (
+  sessionId: string,
+  scenario: Scenario,
+  command: string,
+  args?: any[],
+  timeout: number = 20000,
+  includeStderr: boolean = false
+): Promise<any> => {
+  const res = await sendAppiumRequest(
+    scenario,
+    `/session/${sessionId}/execute`,
+    {
+      method: "post",
+      data: {
+        script: "mobile: shell",
+        args: {
+          command: command,
+          args: args,
+          timeout: timeout,
+          includeStderr: includeStderr,
+        },
+      },
+    }
+  );
+
+  if (res.jsonRoot.value?.error) throw res.jsonRoot.value.error.message;
+
+  return res.jsonRoot.value;
+};
+
+const sendSiriCommand = async (
+  sessionId: string,
+  scenario: Scenario,
+  command: string
+): Promise<void> => {
+  await sendAppiumRequest(scenario, `/session/${sessionId}/execute`, {
+    method: "post",
+    data: {
+      script: "mobile: siriCommand",
+      args: {
+        text: command,
+      },
+    },
+  });
+};
+
+const getSiriEffect = async (
+  sessionId: string,
+  scenario: Scenario,
+  setting: string
+): Promise<string> => {
+  const prevTimeout = await getTimeout(sessionId, scenario);
+  await setImplicitWait(sessionId, scenario, 3000);
+
+  const elRes = await sendAppiumRequest(
+    scenario,
+    `/session/${sessionId}/element`,
+    {
+      method: "post",
+      data: {
+        using: "accessibility id",
+        value: setting,
+      },
+    }
+  );
+
+  const textRes = await sendAppiumRequest(
+    scenario,
+    `/session/${sessionId}/element/${elRes.jsonRoot.value.ELEMENT}/text`,
+    {
+      method: "get",
+    }
+  );
+
+  await setImplicitWait(sessionId, scenario, prevTimeout);
+
+  return textRes.jsonRoot.value;
+};
+
+export const setImplicitWait = async (
+  sessionId: string,
+  scenario: Scenario | iScenario,
+  ms: number
+): Promise<void> => {
+  await sendAppiumRequest(
+    scenario,
+    `/session/${sessionId}/timeouts/implicit_wait`,
+    {
+      method: "post",
+      data: {
+        ms: ms,
+      },
+    }
+  );
+};
+
+export const getTimeout = async (
+  sessionId: string,
+  scenario: Scenario | iScenario
+): Promise<number> => {
+  const res = await sendAppiumRequest(
+    scenario,
+    `/session/${sessionId}/timeouts`,
+    {
+      method: "get",
+    }
+  );
+
+  return res.jsonRoot.value.implicit;
 };
