@@ -160,6 +160,16 @@
       "id": "",
       "name": "currentUrl",
       "tags": []
+    },
+    "browser/google": {
+      "id": "",
+      "name": "browser/google",
+      "tags": []
+    },
+    "browser/ubereats": {
+      "id": "",
+      "name": "browser/ubereats",
+      "tags": []
     }
   }
 }
