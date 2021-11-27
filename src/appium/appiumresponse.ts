@@ -20,7 +20,22 @@ import { AppiumElement } from "./appiumelement";
 import { toType } from "../util";
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
-  public jsonDoc: JsonDoc | undefined;
+  protected _sessionId?: string;
+  protected _geolocation?: any;
+  protected _capabilities?: any;
+
+  protected get _isAndroid(): boolean {
+    return (
+      this.capabilities?.automationName?.toLowerCase() === "uiautomator2" ||
+      this.capabilities?.automationName?.toLowerCase() === "espresso"
+    );
+  }
+
+  protected get _isIos(): boolean {
+    return this.capabilities.automationName.toLowerCase() === "xcuitest";
+  }
+
+  public jsonDoc?: JsonDoc;
 
   public get responseTypeName(): string {
     return "Appium";
@@ -39,29 +54,20 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   }
 
   public get sessionId(): string {
-    return this.scenario.get("sessionId");
+    return this._sessionId || "";
   }
 
   public get capabilities(): any {
-    return this.scenario.get("capabilities");
+    return this._capabilities;
   }
 
   public async getGeolocation(): Promise<any> {
-    if (this.scenario.get("location")) {
-      return this.scenario.get("location");
+    if (this._geolocation) {
+      return this._geolocation;
     } else {
-      const res = await sendAppiumRequest(
-        this.scenario,
-        `/session/${this.sessionId}/location`,
-        {
-          method: "get",
-        }
-      );
-
-      const location = res.jsonRoot.value;
-      this.scenario.set("location", location);
-
-      return this.scenario.get("location");
+      const res = await this.get("location");
+      this._geolocation = res.jsonRoot.value;
+      return this._geolocation;
     }
   }
 
@@ -78,17 +84,10 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         return findOne(this, selector, params);
       }
       const usingValue = selector.split(/\/(.+)/);
-      const res = await sendAppiumRequest(
-        this.scenario,
-        `/session/${this.sessionId}/element`,
-        {
-          method: "post",
-          data: {
-            using: usingValue[0],
-            value: usingValue[1],
-          },
-        }
-      );
+      const res = await this.post("element", {
+        using: usingValue[0],
+        value: usingValue[1],
+      });
       if (res.jsonRoot.value.ELEMENT) {
         const element = await AppiumElement.create(
           selector,
@@ -115,10 +114,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     if (params.matches) {
       throw "Appium does not support finding elements by RegEx";
     } else if (params.contains) {
-      if (
-        this.capabilities.automationName.toLowerCase() === "uiautomator2" ||
-        this.capabilities.automationName.toLowerCase() === "espresso"
-      ) {
+      if (this._isAndroid) {
         const values = await appiumFindByUiAutomator(
           this,
           selector,
@@ -135,33 +131,17 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           elements.push(element);
           return elements;
         }
-      } else if (
-        this.capabilities.automationName.toLowerCase() === "xcuitest"
-      ) {
-        res = await sendAppiumRequest(
-          this.scenario,
-          `/session/${this.sessionId}/elements`,
-          {
-            method: "post",
-            data: {
-              using: "-ios predicate string",
-              value: `label == "${params.contains}"`,
-            },
-          }
-        );
+      } else if (this._isIos) {
+        res = await this.post("elements", {
+          using: "-ios predicate string",
+          value: `label == "${params.contains}"`,
+        });
       }
     } else {
-      res = await sendAppiumRequest(
-        this.scenario,
-        `/session/${this.sessionId}/elements`,
-        {
-          method: "post",
-          data: {
-            using: usingValue[0],
-            value: usingValue[1],
-          },
-        }
-      );
+      res = await this.post("elements", {
+        using: usingValue[0],
+        value: usingValue[1],
+      });
     }
     for (let i = 0; i < res.jsonRoot.value?.length; i++) {
       elements.push(
@@ -181,13 +161,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   }
 
   public async hideKeyboard(): Promise<void> {
-    await sendAppiumRequest(
-      this.scenario,
-      `/session/${this.sessionId}/appium/device/hide_keyboard`,
-      {
-        method: "post",
-      }
-    );
+    await this.post("appium/device/hide_keyboard", {});
   }
 
   public async touchMove(
@@ -241,14 +215,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       ],
     };
 
-    await sendAppiumRequest(
-      this.scenario,
-      `/session/${this.sessionId}/actions`,
-      {
-        method: "post",
-        data: toSend,
-      }
-    );
+    await this.post("actions", toSend);
   }
 
   public async rotate(rotation: string | number): Promise<string | number> {
@@ -261,40 +228,18 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       throw "Appium rotation must be either PORTRAIT or LANDSCAPE.";
     }
 
-    const res = await sendAppiumRequest(
-      this.scenario,
-      `/session/${this.sessionId}/orientation`,
-      {
-        method: "post",
-        data: {
-          orientation: rotation,
-        },
-      }
-    );
+    const res = await this.post("orientation", {
+      orientation: rotation,
+    });
 
     return res.jsonRoot.value;
   }
 
   public async getScreenProperties(): Promise<ScreenProperties> {
-    const rotationRes = await sendAppiumRequest(
-      this.scenario,
-      `/session/${this.sessionId}/orientation`,
-      {
-        method: "get",
-      }
-    );
-
+    const rotationRes = await this.get("orientation");
+    const dimensionsRes = await this.get("window/current/size");
     const rotation: string = rotationRes.jsonRoot.value;
-
-    const dimensionsRes = await sendAppiumRequest(
-      this.scenario,
-      `/session/${this.sessionId}/window/current/size`,
-      {
-        method: "get",
-      }
-    );
-
-    const screenProperties: ScreenProperties = {
+    return {
       angle: rotation,
       dimensions: {
         height: dimensionsRes.jsonRoot.value.height,
@@ -302,8 +247,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       },
       orientation: rotation,
     };
-
-    return screenProperties;
   }
 
   public async waitForExists(
@@ -332,7 +275,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       await this._setImplicitWait(previousTime);
       return element;
     } else if (toType(a) === "regexp") {
-      await this._setImplicitWait(previousTime);
       throw "Appium does not support finding element by RegEx";
     } else {
       await this._setImplicitWait(30000);
@@ -397,43 +339,43 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   }
 
   public async isVisible(element: iValue): Promise<boolean> {
-    const res = await sendAppiumRequest(
-      this.scenario,
-      `/session/${this.sessionId}/element/${element}/displayed`,
-      {
-        method: "get",
-      }
-    );
-
+    const res = await this.get(`element/${element}/displayed`);
     return res.jsonRoot.value;
   }
 
   private async _setImplicitWait(ms: number): Promise<void> {
-    await sendAppiumRequest(
-      this.scenario,
-      `/session/${this.sessionId}/timeouts/implicit_wait`,
-      {
-        method: "post",
-        data: {
-          ms: ms,
-        },
-      }
-    );
+    await this.post("/timeouts/implicit_wait", {
+      ms: ms,
+    });
   }
 
   private async _getTimeout(): Promise<number> {
-    const res = await sendAppiumRequest(
-      this.scenario,
-      `/session/${this.sessionId}/timeouts`,
-      {
-        method: "get",
-      }
-    );
-
+    const res = await this.get("timeouts");
     return res.jsonRoot.value.implicit;
   }
 
   protected _delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  public async get(suffix: string): Promise<any> {
+    return sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/${suffix}`,
+      {
+        method: "get",
+      }
+    );
+  }
+
+  public async post(suffix: string, data: any): Promise<any> {
+    return sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/${suffix}`,
+      {
+        method: "post",
+        data,
+      }
+    );
   }
 }
