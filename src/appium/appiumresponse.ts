@@ -369,6 +369,12 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  public async getSource(): Promise<string> {
+    const res = await this.get("source");
+
+    return res.jsonRoot.value;
+  }
+
   public async get(suffix: string): Promise<any> {
     return sendAppiumRequest(
       this.scenario,
