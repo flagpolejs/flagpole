@@ -105,16 +105,24 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     return nodeElements;
   }
 
-  public async type(
+  public type(
     selector: string,
     textToType: string,
     opts: any = {}
-  ): Promise<any> {
-    const currentValue = this.cheerio(selector).val();
-    this.cheerio(selector).val(currentValue + textToType);
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const el = await this.find(selector);
+      const currentValue = await el.getValue();
+      el.setValue(currentValue + textToType);
+      return el;
+    });
   }
 
-  public async clear(selector: string): Promise<any> {
-    this.cheerio(selector).val("");
+  public clear(selector: string): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const el = await this.find(selector);
+      el.setValue("");
+      return el;
+    });
   }
 }
