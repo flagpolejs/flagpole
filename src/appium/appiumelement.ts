@@ -79,14 +79,7 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   public async getBounds(): Promise<iBounds | null> {
-    const response = this.context.response as AppiumResponse;
-    const res = await sendAppiumRequest(
-      this.context.scenario,
-      `/session/${response.sessionId}/element/${this._elementId}/rect`,
-      {
-        method: "get",
-      }
-    );
+    const res = await this.session.get(`element/${this._elementId}/rect`);
 
     if (res.jsonRoot.value.error) return null;
 
