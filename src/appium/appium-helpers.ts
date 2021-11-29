@@ -89,24 +89,10 @@ const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
  * */
 export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
   return async () => {
-    const existingSessionId = await getAppiumSession(scenario);
-    if (existingSessionId) {
-      const capabilities = await getAppiumSessionCapabilities(
-        existingSessionId,
-        scenario
-      );
-      scenario.set("capabilities", capabilities);
-      if (opts.devProperties) {
-        await setDevProperties(existingSessionId, scenario, opts.devProperties);
-        delete opts.devProperties;
-      }
-      return scenario.set("sessionId", existingSessionId);
-    }
     scenario.set("capabilities", opts);
     const newSessionId = await createAppiumSession(scenario, opts);
     if (opts.devProperties) {
       await setDevProperties(newSessionId, scenario, opts.devProperties);
-      delete opts.devProperties;
     }
     return scenario.set("sessionId", newSessionId);
   };
