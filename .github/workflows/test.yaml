@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x, 16.x]
+        flagpoleCommand:
+          - name: test-todo
+            command: --base=https://jsonplaceholder.typicode.com -s todo
+          - name: should-pass
+            command: --all
+          - name: should-fail
+            command: -c flagpole-should-fail.json --all; __retval=$?; if [ $__retval -eq 0 ]; then exit 1; elif [ $__retval -eq 1 ]; then exit 0; else exit $?; fi
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+      - run: sudo apt update -qq -y
+      - run: sudo apt install -qq -y wget fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcups2 libgbm1 libgtk-3-0 libnspr4 libnss3 libxcomposite1 libxdamage1 libxkbcommon0 libxrandr2 xdg-utils > /dev/null
+      - run: wget --quiet https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      - run: sudo dpkg -i google-chrome-stable_current_amd64.deb > /dev/null
+      - run: npm install --no-save
+      - run: npm run build --if-present
+      - run: set +eo pipefail; PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome xvfb-run node /home/runner/work/flagpole/flagpole/dist/cli/main.js run --build ${{ matrix.flagpoleCommand.command }};
