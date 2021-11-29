@@ -1,4 +1,5 @@
 import { ProtoResponse } from "../response";
+import { HttpResponse } from "../httpresponse";
 import {
   iResponse,
   iValue,
@@ -23,6 +24,12 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   protected _sessionId?: string;
   protected _geolocation?: any;
   protected _capabilities?: any;
+
+  public init(res: HttpResponse) {
+    super.init(res);
+    this._sessionId = this.scenario.get("sessionId");
+    this._capabilities = this.scenario.get("capabilities");
+  }
 
   protected get _isAndroid(): boolean {
     return (
@@ -55,6 +62,10 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
   public get sessionId(): string {
     return this._sessionId || "";
+  }
+
+  public set sessionId(sessionId) {
+    this._sessionId = sessionId;
   }
 
   public get capabilities(): any {
