@@ -396,37 +396,20 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     args?: string[],
     environment?: any
   ): Promise<void> {
-    if (
-      this.capabilities.automationName.toLowerCase() === "uiautomator2" ||
-      this.capabilities.automationName.toLowerCase() === "espresso"
-    ) {
-      await sendAppiumRequest(
-        this.scenario,
-        `/session/${this.sessionId}/appium/app/launch`,
-        {
-          method: "post",
-        }
-      );
+    if (this._isAndroid) {
+      await this.post("appium/app/launch", {});
       // This call is not deprecated
-    } else if (this.capabilities.automationName.toLowerCase() === "xcuitest") {
+    } else if (this._isIos) {
       if (!app) throw "App bundleId required for launching an iOS app";
-      const data: any = {
+
+      await this.post("execute", {
         script: "mobile: launchApp",
         args: {
           bundleId: app,
           arguments: args,
           environment: environment,
         },
-      };
-
-      await sendAppiumRequest(
-        this.scenario,
-        `/session/${this.sessionId}/execute`,
-        {
-          method: "post",
-          data: data,
-        }
-      );
+      });
     }
   }
 }
