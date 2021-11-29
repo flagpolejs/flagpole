@@ -392,12 +392,6 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
 
   // Based on deprecated JSONWP protocol and subject to change
   public async resetApp(): Promise<void> {
-    await sendAppiumRequest(
-      this.scenario,
-      `/session/${this.sessionId}/appium/app/reset`,
-      {
-        method: "post",
-      }
-    );
+    await this.post("appium/app/reset", {});
   }
 }
