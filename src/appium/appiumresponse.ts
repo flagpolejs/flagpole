@@ -358,11 +358,11 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   public async isAppInstalled(bundleId: string): Promise<boolean> {
     let res = new JsonDoc("");
     if (this._isAndroid) {
-      res = await this.post("/appium/device/app_installed", {
+      res = await this.post("appium/device/app_installed", {
         bundleId: bundleId,
       });
     } else if (this._isIos) {
-      res = await this.post("/execute", {
+      res = await this.post("execute", {
         script: "mobile: isAppInstalled",
         args: [
           {
@@ -374,7 +374,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return res.jsonRoot.value;
   }
   private async _setImplicitWait(ms: number): Promise<void> {
-    await this.post("/timeouts/implicit_wait", {
+    await this.post("timeouts/implicit_wait", {
       ms: ms,
     });
   }
