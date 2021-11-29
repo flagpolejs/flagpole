@@ -93,13 +93,19 @@ export class ValuePromise
     return cast<AssertionPromise>(null);
   }
 
-  public assert = (message: string): AssertionPromise => {
+  rename = (newName: string) => this.toValuePromise("rename", newName);
+  clear = () => this.toValuePromise("clear");
+  clearThenType = (text: string, opts?: any) =>
+    this.toValuePromise("clearThenType", text, opts);
+  type = (text: string, opts?: any) => this.toValuePromise("type", text, opts);
+
+  assert = (message: string): AssertionPromise => {
     return new AssertionPromise((resolve) =>
       this.then((value) => resolve(value.assert(message)))
     );
   };
 
-  public exists = (): Promise<iValue> => this._promisifyMethod("exists");
+  exists = (): Promise<iValue> => this._promisifyMethod("exists");
 
   private _promisifyAssertMethod<T>(
     method: string,
@@ -117,11 +123,22 @@ export class ValuePromise
     return new Promise((r) => this.then((v) => r(v.assert()[property])));
   }
 
-  private _promisifyMethod<T>(method: string, args: any[] = []): Promise<T> {
-    return new Promise((r) => this.then((v) => r(v[method].apply(v, args))));
+  private async _promisifyMethod<T>(
+    method: string,
+    args: any[] = []
+  ): Promise<T> {
+    const value = await this;
+    return value[method].apply(value, args);
   }
 
   private _promisifyProperty<T>(property: string): Promise<T> {
     return new Promise((r) => this.then((v) => r(v[property])));
+  }
+
+  private toValuePromise(method: string, ...args: any[]): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const value = await this;
+      return value[method].apply(value, args);
+    });
   }
 }

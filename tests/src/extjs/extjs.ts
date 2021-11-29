@@ -44,7 +44,7 @@ suite
     await textFields[0].type(inputValues.userName);
     await textFields[1].type(inputValues.password);
     await button.click();
-    return context.page?.waitForNavigation();
+    return context.waitForNavigation();
   })
   .next("Check employee listing page", async (context) => {
     const buttons = await context.findAll("button");

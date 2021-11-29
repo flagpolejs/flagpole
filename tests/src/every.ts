@@ -8,7 +8,7 @@ flagpole(
   "Getting better expected vs actual data in the test report",
   async (suite) => {
     suite
-      .scenario("Every number matches")
+      .scenario("Every number matches", "json")
       .mock(JSON.stringify(arrayOfNumbers))
       .next(async (context) => {
         const body = context.response.jsonBody.$;
@@ -18,7 +18,7 @@ flagpole(
       });
 
     suite
-      .scenario("Every object property matches")
+      .scenario("Every object property matches", "json")
       .mock(JSON.stringify(arrayOfObjects))
       .next(async (context) => {
         const body = context.response.jsonBody.$;
