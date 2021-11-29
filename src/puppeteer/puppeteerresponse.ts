@@ -1,6 +1,5 @@
 import {
   Page,
-  ElementHandle,
   Browser,
   Response,
   EvaluateFn,
@@ -12,6 +11,9 @@ import { BrowserControl } from "./browsercontrol";
 import { DOMResponse } from "../html/domresponse";
 import { toType } from "../util";
 import { wrapAsValue } from "../helpers";
+import { ValuePromise } from "../value-promise";
+import { BrowserElement } from "./browserelement";
+import { text } from "cheerio/lib/api/manipulation";
 
 const DEFAULT_WAITFOR_TIMEOUT = 30000;
 
@@ -175,20 +177,36 @@ export abstract class PuppeteerResponse
     });
   }
 
-  public async type(
+  public clearThenType(
     selector: string,
     textToType: string,
     opts: any = {}
-  ): Promise<any> {
-    return await this._page.type(selector, textToType, opts);
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const el = await this.clear(selector);
+      await el.type(textToType, opts);
+      return el;
+    });
   }
 
-  public async clear(selector: string): Promise<any> {
-    const input: ElementHandle<Element> | null = await this._page.$(selector);
-    if (input !== null) {
-      await input.click({ clickCount: 3 });
-      return await this._page.keyboard.press("Backspace");
-    }
+  public type(
+    selector: string,
+    textToType: string,
+    opts: any = {}
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const el = await this.find(selector);
+      await el.type(textToType, opts);
+      return el;
+    });
+  }
+
+  public clear(selector: string): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const el = await this.find(selector);
+      await el.clear();
+      return el;
+    });
   }
 
   public async scrollTo(point: { x: number; y: number }): Promise<iResponse> {
