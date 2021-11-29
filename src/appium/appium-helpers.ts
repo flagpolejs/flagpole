@@ -215,7 +215,7 @@ const appiumGetPackageName = async (
  * */
 const getAppiumSessionCapabilities = async (
   sessionId: string,
-  scenario: Scenario
+  scenario: iScenario
 ) => {
   const res = await sendAppiumRequest(scenario, `/session/${sessionId}`, {
     method: "get",
@@ -237,7 +237,10 @@ export const setDevProperties = async (
   devProperties: DeviceProperties = {}
 ): Promise<void> => {
   if (devProperties.network) {
-    const capabilities = scenario.get("capabilities");
+    const capabilities = await getAppiumSessionCapabilities(
+      sessionId,
+      scenario
+    );
     const automationName = capabilities.automationName;
 
     // Android
@@ -289,34 +292,26 @@ export const setDevProperties = async (
           0,
         ]);
       }
+      // iOS
     } else if (capabilities.automationName.toLowerCase() === "xcuitest") {
       if (devProperties.network.wifi !== undefined) {
-        await sendSiriCommand(
+        await siriCommandAndResponse(
           sessionId,
           scenario,
-          `Turn ${devProperties.network.wifi ? "on" : "off"} WiFi`
+          "Wi-Fi",
+          devProperties.network.wifi
         );
-        const siriVal = await getSiriEffect(sessionId, scenario, "Wi-Fi");
-        if (siriVal !== (devProperties.network.wifi ? "On" : "Off"))
-          throw "Failed to set WiFi";
       }
 
       if (devProperties.network.mobileData !== undefined) {
-        await sendSiriCommand(
+        await siriCommandAndResponse(
           sessionId,
           scenario,
-          `Turn ${devProperties.network.mobileData ? "on" : "off"} mobile data`
+          "Cellular Data",
+          devProperties.network.mobileData
         );
-        const siriVal = await getSiriEffect(
-          sessionId,
-          scenario,
-          "Cellular Data"
-        );
-        if (siriVal !== (devProperties.network.mobileData ? "On" : "Off"))
-          throw "Failed to set mobile data";
       }
 
-      // iOS
       if (devProperties.network.locationServices !== undefined) {
         if (devProperties.network.locationServices) {
           await sendSiriCommand(
@@ -355,20 +350,12 @@ export const setDevProperties = async (
       }
 
       if (devProperties.network.airplaneMode !== undefined) {
-        await sendSiriCommand(
+        await siriCommandAndResponse(
           sessionId,
           scenario,
-          `Turn ${
-            devProperties.network.airplaneMode ? "on" : "off"
-          } airplane mode`
+          "Airplane Mode",
+          devProperties.network.airplaneMode
         );
-        const siriVal = await getSiriEffect(
-          sessionId,
-          scenario,
-          "Airplane Mode"
-        );
-        if (siriVal !== (devProperties.network.airplaneMode ? "On" : "Off"))
-          throw "Failed to set airplane mode";
       }
 
       await sendSiriCommand(sessionId, scenario, "Close Siri");
@@ -467,6 +454,22 @@ export const getSiriEffect = async (
   await setImplicitWait(sessionId, scenario, prevTimeout);
 
   return textRes.jsonRoot.value;
+};
+
+export const siriCommandAndResponse = async (
+  sessionId: string,
+  scenario: iScenario,
+  setting: string,
+  isSet: boolean
+): Promise<void> => {
+  await sendSiriCommand(
+    sessionId,
+    scenario,
+    `Turn ${isSet ? "on" : "off"} ${setting}`
+  );
+
+  const siriVal = await getSiriEffect(sessionId, scenario, setting);
+  if (siriVal !== (isSet ? "On" : "Off")) throw `Failed to set ${setting}`;
 };
 
 export const setImplicitWait = async (

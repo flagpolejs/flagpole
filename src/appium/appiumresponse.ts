@@ -1,4 +1,5 @@
 import { ProtoResponse } from "../response";
+import { HttpResponse } from "../httpresponse";
 import {
   iResponse,
   iValue,
@@ -35,6 +36,12 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   protected _geolocation?: any;
   protected _capabilities?: any;
 
+  public init(res: HttpResponse) {
+    super.init(res);
+    this._sessionId = this.scenario.get("sessionId");
+    this._capabilities = this.scenario.get("capabilities");
+  }
+
   protected get _isAndroid(): boolean {
     return (
       this.capabilities?.automationName?.toLowerCase() === "uiautomator2" ||
@@ -43,7 +50,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   }
 
   protected get _isIos(): boolean {
-    return this.capabilities.automationName.toLowerCase() === "xcuitest";
+    return this.capabilities?.automationName?.toLowerCase() === "xcuitest";
   }
 
   public jsonDoc?: JsonDoc;
@@ -274,59 +281,33 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     a?: number | string | RegExp,
     b?: number
   ): Promise<iValue> {
-    const previousTime = await getTimeout(
-      this.sessionId,
-      this.context.scenario
-    );
+    const previousTime = await getTimeout(this.sessionId, this.scenario);
     if (typeof a === "number") {
-      await setImplicitWait(this.sessionId, this.context.scenario, a);
+      await setImplicitWait(this.sessionId, this.scenario, a);
       const element = await this.find(selector);
-      await setImplicitWait(
-        this.sessionId,
-        this.context.scenario,
-        previousTime
-      );
+      await setImplicitWait(this.sessionId, this.scenario, previousTime);
       return element;
     } else if (typeof a === "string") {
-      await setImplicitWait(this.sessionId, this.context.scenario, b || 30000);
+      await setImplicitWait(this.sessionId, this.scenario, b || 30000);
       const element = await this.find(selector, a);
-      await setImplicitWait(
-        this.sessionId,
-        this.context.scenario,
-        previousTime
-      );
+      await setImplicitWait(this.sessionId, this.scenario, previousTime);
       return element;
     } else if (toType(a) === "regexp") {
-      await setImplicitWait(
-        this.sessionId,
-        this.context.scenario,
-        previousTime
-      );
+      await setImplicitWait(this.sessionId, this.scenario, previousTime);
       throw "Appium does not support finding element by RegEx";
     } else {
-      await setImplicitWait(this.sessionId, this.context.scenario, 30000);
+      await setImplicitWait(this.sessionId, this.scenario, 30000);
       const element = await this.find(selector);
-      await setImplicitWait(
-        this.sessionId,
-        this.context.scenario,
-        previousTime
-      );
+      await setImplicitWait(this.sessionId, this.scenario, previousTime);
       return element;
     }
   }
 
   public async waitForXPath(xPath: string, timeout?: number): Promise<iValue> {
-    const previousTime = await getTimeout(
-      this.sessionId,
-      this.context.scenario
-    );
-    await setImplicitWait(
-      this.sessionId,
-      this.context.scenario,
-      timeout || 30000
-    );
+    const previousTime = await getTimeout(this.sessionId, this.scenario);
+    await setImplicitWait(this.sessionId, this.scenario, timeout || 30000);
     const element = await this.find(xPath);
-    await setImplicitWait(this.sessionId, this.context.scenario, previousTime);
+    await setImplicitWait(this.sessionId, this.scenario, previousTime);
     return element;
   }
 
@@ -434,44 +415,12 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       };
       // iOS
     } else if (this._isIos) {
-      await sendSiriCommand(
-        this.sessionId,
-        this.context.scenario,
-        "Get wifi status"
-      );
-      const wifiState = await getSiriEffect(
-        this.sessionId,
-        this.context.scenario,
-        "Wi-Fi"
-      );
-      await sendSiriCommand(
-        this.sessionId,
-        this.context.scenario,
-        "Get mobile data status"
-      );
-      const dataState = await getSiriEffect(
-        this.sessionId,
-        this.context.scenario,
-        "Cellular Data"
-      );
-      await sendSiriCommand(
-        this.sessionId,
-        this.context.scenario,
-        "Get location services status"
-      );
-      const locationSvcsState = await getSiriEffect(
-        this.sessionId,
-        this.context.scenario,
+      const wifiState = await this._siriQueryAndResponse("Wi-Fi");
+      const dataState = await this._siriQueryAndResponse("Cellular Data");
+      const locationSvcsState = await this._siriQueryAndResponse(
         "Location Services"
       );
-      await sendSiriCommand(
-        this.sessionId,
-        this.context.scenario,
-        "Get airplane mode status"
-      );
-      const airplaneModeState = await getSiriEffect(
-        this.sessionId,
-        this.context.scenario,
+      const airplaneModeState = await this._siriQueryAndResponse(
         "Airplane Mode"
       );
       await sendSiriCommand(
@@ -482,14 +431,30 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       await delay(3500);
 
       devProperties.network = {
-        wifi: wifiState === "On" ? true : false,
-        mobileData: dataState === "On" ? true : false,
-        locationServices: locationSvcsState === "On" ? true : false,
-        airplaneMode: airplaneModeState === "On" ? true : false,
+        wifi: wifiState,
+        mobileData: dataState,
+        locationServices: locationSvcsState,
+        airplaneMode: airplaneModeState,
       };
     }
 
     return devProperties;
+  }
+
+  protected async _siriQueryAndResponse(setting: string): Promise<boolean> {
+    await sendSiriCommand(
+      this.sessionId,
+      this.context.scenario,
+      `Get ${setting} status`
+    );
+
+    const res = await getSiriEffect(
+      this.sessionId,
+      this.context.scenario,
+      setting
+    );
+
+    return res === "On" ? true : false;
   }
 
   public async get(suffix: string): Promise<any> {
