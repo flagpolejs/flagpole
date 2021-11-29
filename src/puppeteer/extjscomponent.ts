@@ -111,15 +111,15 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     this._input = handle;
   }
 
-  public async focus(): Promise<any> {
+  public async focus(): Promise<iValue> {
     return this._action("focus");
   }
 
-  public async hover(): Promise<void> {
+  public async hover(): Promise<iValue> {
     return this._action("hover");
   }
 
-  public async blur(): Promise<any> {
+  public async blur(): Promise<iValue> {
     return this._action("blur");
   }
 
@@ -197,9 +197,12 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     );
   }
 
-  public async clear(): Promise<void> {
+  public async clear(): Promise<iValue> {
+    await this.focus();
     await this.setValue("");
+    await this.blur();
     this._completedAction("CLEAR");
+    return this;
   }
 
   public async type(textToType: string, opts: any) {
@@ -214,7 +217,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     return this.blur();
   }
 
-  public async pressEnter(): Promise<void> {
+  public async pressEnter(): Promise<iValue> {
     return this._action("action");
   }
 
@@ -358,7 +361,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     this.eval((c) => c.element.dom.scrollIntoView());
   }
 
-  protected async _action(eventName: string): Promise<void> {
+  protected async _action(eventName: string): Promise<iValue> {
     eventName = eventName.toLowerCase();
     await this.eval((c, eventName) => {
       c[eventName] && c[eventName]();
@@ -367,6 +370,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
       c.fireEvent(eventName);
     }, eventName);
     this._completedAction(eventName.toUpperCase());
+    return this;
   }
 
   protected async _getClassName(): Promise<string> {

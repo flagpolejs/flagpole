@@ -27,6 +27,7 @@ import {
   asyncFind,
   asyncFindNot,
   validateSchema,
+  asyncCount,
 } from "./util";
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";

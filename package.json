@@ -1,6 +1,6 @@
 {
   "name": "flagpole",
-  "version": "2.6.18",
+  "version": "2.6.23",
   "description": "Simple and fast DOM integration, headless or headful browser, and REST API testing framework.",
   "files": [
     "dist/",
