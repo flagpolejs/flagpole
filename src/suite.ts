@@ -11,6 +11,7 @@ import {
   ScenarioMapper,
   BrowserOptions,
   ScenarioInitOptions,
+  DeviceProperties,
 } from "./interfaces";
 import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
@@ -155,6 +156,7 @@ export class Suite implements iSuite {
   /**
    * How many scenarios should be able to execute concurrently?
    *
+   * @deprecated
    * @param maxExecutions
    */
   public setConcurrencyLimit(maxExecutions: number): iSuite {
@@ -162,15 +164,51 @@ export class Suite implements iSuite {
     return this;
   }
 
+  public get concurrencyLimit(): number {
+    return this._taskManager.concurrencyLimit;
+  }
+
+  public set concurrencyLimit(maxExecutions: number) {
+    this._taskManager.concurrencyLimit = maxExecutions;
+  }
+
   /**
    * If a scenario hasn't completed in this period of time, cut it off
    *
    * @param timeout
+   * @deprecated
    * @returns
    */
   public setMaxScenarioDuration(timeout: number): iSuite {
     this._taskManager.maxScenarioDuration = timeout;
     return this;
+  }
+
+  public get maxScenarioDuration(): number {
+    return this._taskManager.maxScenarioDuration;
+  }
+
+  public set maxScenarioDuration(timeoutMs: number) {
+    this._taskManager.maxScenarioDuration = timeoutMs;
+  }
+
+  /**
+   * If a suite hasn't completed in this period of time, cut the scenarios off
+   *
+   * @param timeout
+   * @returns
+   */
+  public setMaxSuiteDuration(timeout: number): iSuite {
+    this._taskManager.maxSuiteDuration = timeout;
+    return this;
+  }
+
+  public get maxSuiteDuration(): number {
+    return this._taskManager.maxSuiteDuration;
+  }
+
+  public set maxSuiteDuration(timeoutMs: number) {
+    this._taskManager.maxSuiteDuration = timeoutMs;
   }
 
   /**
@@ -208,6 +246,7 @@ export class Suite implements iSuite {
     type: "mediastreamvalidator",
     opts?: MediaStreamValidatorOpts
   ): iScenario;
+  public scenario(title: string, type: "appium", opts: any): iScenario;
   public scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
   public scenario(
     title: string,
@@ -490,7 +529,7 @@ export class Suite implements iSuite {
         ...templateOptions,
         ...scenarioOptions,
       };
-      const scenario = this.scenario(title, opts.type || "json");
+      const scenario = this.scenario(title, opts.type || "json", opts.opts);
       if (opts.digestAuth) scenario.setDigestAuth(opts.digestAuth);
       if (opts.basicAuth) scenario.setBasicAuth(opts.basicAuth);
       if (opts.bearerToken) scenario.setBearerToken(opts.bearerToken);
@@ -521,7 +560,21 @@ export class Suite implements iSuite {
           if (opts.set) scenario.set(key, opts.set[key]);
         });
       }
-      if (opts.next) scenario.next(opts.next);
+      if (opts.next) {
+        if (typeof opts.next == "function") {
+          scenario.next(opts.next);
+        } else if (Array.isArray(opts.next)) {
+          opts.next.forEach((callback) => {
+            scenario.next(callback);
+          });
+        } else {
+          Object.keys(opts.next).forEach((title) => {
+            if (opts.next && typeof opts.next[title] == "function") {
+              scenario.next(title, opts.next[title]);
+            }
+          });
+        }
+      }
       return scenario;
     };
   }

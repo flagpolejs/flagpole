@@ -38,7 +38,7 @@ export class SuiteTaskManager {
   private _statusCallbacks: SuiteStatusCallback[] = [];
   private _concurrencyLimit: number = 99;
   private _maxScenarioDuration: number = 30000;
-  private _maxTimeToWaitForPendingScenariosToBeReady = 30000;
+  private _maxSuiteDuration: number = 60000;
   private _finishedPromise: Promise<void>;
   private _finishedResolve = () => {};
 
@@ -46,11 +46,23 @@ export class SuiteTaskManager {
     return this._finishedPromise;
   }
 
-  public get concurrencyLimit(): number {
-    return this._concurrencyLimit;
+  public get maxScenarioDuration(): number {
+    return this._maxScenarioDuration;
   }
 
-  public get maxScenarioDuration(): number {
+  public set maxScenarioDuration(value: number) {
+    this._maxScenarioDuration = value;
+  }
+
+  public get maxSuiteDuration(): number {
+    return this._maxSuiteDuration;
+  }
+
+  public set maxSuiteDuration(value: number) {
+    this._maxSuiteDuration = value;
+  }
+
+  public get concurrencyLimit(): number {
     return this._concurrencyLimit;
   }
 
@@ -59,10 +71,6 @@ export class SuiteTaskManager {
       throw "Can not change concurrency limit after execution has started.";
     }
     this._concurrencyLimit = value;
-  }
-
-  public set maxScenarioDuration(value: number) {
-    this._maxScenarioDuration = value;
   }
 
   public get scenarioCount(): number {
@@ -328,11 +336,8 @@ export class SuiteTaskManager {
       const execute = async () => {
         // Execute this batch
         const scenariosExecuting = await this._startExecutingScenarios();
-        const finished = await this._waitForScenariosToFinish(
-          scenariosExecuting
-        );
         // Catch error completing scenarios (typically a timeout)
-        if (!finished) {
+        if (scenariosExecuting === null) {
           return resolve(this._cancelScenariosAnyNotFinished("Timed out"));
         }
         // If there are no more left to execute, we are done
@@ -346,6 +351,17 @@ export class SuiteTaskManager {
         // If we have some pending + we didn't start any new ones, kill them
         // Important! Don't finish it off right away, there may be something pending in a few milliseconds
         runAsync(() => {
+          if (
+            this.scenariosWaitingToExecute.length > 0 &&
+            this._dateExecutionBegan &&
+            Date.now() - this._dateExecutionBegan > this._maxSuiteDuration
+          ) {
+            resolve(
+              this._cancelPendingScenarios(
+                "Suite timed out! This scenario was never called or had no assertions."
+              )
+            );
+          }
           // If there are more scenarios now ready to execute, do those
           if (this.scenariosWaitingToExecute.length > 0) {
             return execute();
@@ -376,41 +392,37 @@ export class SuiteTaskManager {
     return true;
   }
 
-  private async _waitForScenariosToFinish(
-    scenarios: iScenario[]
-  ): Promise<boolean> {
-    try {
-      await bluebird
-        .all(
-          scenarios.map((scenario) => {
-            return scenario.waitForFinished();
-          })
-        )
-        .timeout(this._maxScenarioDuration);
-    } catch (e) {
-      return false;
-    }
-    return true;
-  }
-
-  private async _startExecutingScenarios(): Promise<iScenario[]> {
+  /**
+   * Pull the next batch of scenarios, execute it and wait for it to finish
+   * Resolves null if there is an error
+   */
+  private async _startExecutingScenarios(): Promise<iScenario[] | null> {
     return new Promise(async (resolve) => {
       // Execute all scenarios that are ready to go
       const batch = this.scenariosReadyToExecute;
+      const waitForBrowserToCloseBuffer = 200;
       if (batch.length > 0) {
-        await bluebird.map(
-          batch,
-          async (scenario) => {
-            await this._executeScenario(scenario);
-            await scenario.waitForFinished();
-            // wait for browser to close to avoid overlap and thrown MaxListenersExceededWarning error
-            await new Promise((resolve) => setTimeout(resolve, 200));
-          },
-          {
-            concurrency: this._concurrencyLimit,
-          }
-        );
+        await bluebird
+          .map(
+            batch,
+            async (scenario) => {
+              await this._executeScenario(scenario);
+              await scenario.waitForFinished();
+              // wait for browser to close to avoid overlap and thrown MaxListenersExceededWarning error
+              await new Promise((resolve) =>
+                setTimeout(resolve, waitForBrowserToCloseBuffer)
+              );
+            },
+            {
+              concurrency: this._concurrencyLimit,
+            }
+          )
+          .timeout(this.maxScenarioDuration + waitForBrowserToCloseBuffer)
+          .catch((err) => {
+            resolve(null);
+          });
       }
+      // Finished all of the pending scenarios
       resolve(batch);
     });
   }

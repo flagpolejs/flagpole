@@ -36,9 +36,10 @@ export abstract class PuppeteerElement extends DOMElement implements iValue {
   public async clearThenType(
     textToType: string,
     opts: any = {}
-  ): Promise<void> {
+  ): Promise<iValue> {
     await this.clear();
     await this.type(textToType, opts);
+    return this;
   }
 
   public async eval(js: string): Promise<any> {
