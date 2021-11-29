@@ -395,45 +395,25 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     app: string,
     timeout?: number
   ): Promise<void | boolean> {
-    let data: any = {};
-    if (
-      this.capabilities.automationName.toLowerCase() === "uiautomator2" ||
-      this.capabilities.automationName.toLowerCase() === "espresso"
-    ) {
+    if (this._isAndroid) {
       if (timeout) {
-        data = {
+        await this.post("appium/device/terminate_app", {
           appId: app,
           options: {
             timeout: timeout,
           },
-        };
+        });
       } else {
-        data = {
+        await this.post("appium/device/terminate_app", {
           appId: app,
-        };
+        });
       }
-      await sendAppiumRequest(
-        this.scenario,
-        `/session/${this.sessionId}/appium/device/terminate_app`,
-        {
-          method: "post",
-          data: data,
-        }
-      );
       // This call is not deprecated
-    } else if (this.capabilities.automationName.toLowerCase() === "xcuitest") {
-      data = {
+    } else if (this._isIos) {
+      const res = await this.post("execute", {
         script: "mobile: terminateApp",
         args: [{ bundleId: app }],
-      };
-      const res = await sendAppiumRequest(
-        this.scenario,
-        `/session/${this.sessionId}/execute`,
-        {
-          method: "post",
-          data: data,
-        }
-      );
+      });
 
       return res.jsonRoot.value;
     }
