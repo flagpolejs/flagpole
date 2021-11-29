@@ -24,6 +24,7 @@ import {
   HttpMethodVerb,
   CONTENT_TYPE_SOAP,
   CONTENT_TYPE_JSON,
+  DeviceProperties,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
@@ -45,11 +46,11 @@ import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/logcollection";
 import { HttpRequest, HttpMethodVerbAllowedValues } from "./httprequest";
 import { FlagpoleExecution } from "./flagpoleexecution";
-import { toType, asyncForEach, runAsync } from "./util";
+import { toType, asyncForEach, runAsync, getFunctionArgs } from "./util";
 import { AssertionContext } from "./assertioncontext";
 import * as bluebird from "bluebird";
 import { Browser } from "puppeteer-core";
-import minikin, { Response, Server } from "minikin";
+import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
 import { wrapAsValue } from "./helpers";
 import {
@@ -58,13 +59,14 @@ import {
   beforeScenarioFinished,
   afterScenarioExecuted,
   beforeScenarioRequestStarted,
-} from "./decorators";
+} from "./decorators/internal";
 import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
 import {
   appiumSessionDestroy,
   appiumSessionCreate,
 } from "./appium/appium-helpers";
+import { _ } from "ajv";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -1149,7 +1151,13 @@ export class Scenario implements iScenario {
         }
         context.result = lastReturnValue;
         // Run this next
-        lastReturnValue = _then.apply(context, [context]);
+        const callbackArgNames = getFunctionArgs(_then);
+        const args: any[] = callbackArgNames.slice(1).map((name) => {
+          if (context[name]) return context[name];
+          else if (context.response[name]) return context.response[name];
+          return context;
+        });
+        lastReturnValue = _then.apply(context, [context, ...args]);
         // Warn about any incomplete assertions
         context.incompleteAssertions.forEach((assertion: iAssertion) => {
           this.result(
@@ -1166,7 +1174,7 @@ export class Scenario implements iScenario {
             context.assertionsResolved,
             context.subScenariosResolved,
           ])
-          .timeout(30000);
+          .timeout(this.suite.maxScenarioDuration);
       })
       .then(() => {
         this._markScenarioCompleted();
@@ -1471,7 +1479,6 @@ export class Scenario implements iScenario {
     return async (context) => {
       const json = new JsonDoc(context.response.serialize());
       const paths = Object.keys(responseValues);
-      //console.log(json.root);
       await context.each(paths, async (path) => {
         const data = await json.search(path);
         const thisValue: iValue = wrapAsValue(context, data, path, data);

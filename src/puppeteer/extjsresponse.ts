@@ -114,34 +114,26 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     return await ExtJsComponent.create(ref, this.context, `${path}[0]`, path);
   }
 
-  public async type(
+  public type(
     selector: string,
     textToType: string,
     opts: any = {}
-  ): Promise<any> {
-    if (this.page !== null) {
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
       const component: ExtJsComponent | iValue = await this.find(selector);
-      if (component instanceof ExtJsComponent) {
-        return component.type(textToType, opts);
-      } else {
-        throw new Error(`Could not find component at ${selector}`);
-      }
-    }
-    throw new Error(`Can not type into element ${selector}`);
+      await component.type(textToType, opts);
+      return component;
+    });
   }
 
-  public async clear(selector: string): Promise<any> {
-    if (this.page !== null) {
-      const component: ExtJsComponent | iValue = await this.find(selector);
-      if (component instanceof ExtJsComponent) {
-        component.focus();
-        component.setValue("");
-        component.blur();
-      } else {
-        throw new Error(`Could not find component at ${selector}`);
-      }
-    }
-    throw new Error(`Can not type into this element ${selector}`);
+  public clear(selector: string): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const component = await this.find(selector);
+      await component.focus();
+      await component.setValue("");
+      await component.blur();
+      return component;
+    });
   }
 
   public async getComponentById(id: string) {

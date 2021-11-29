@@ -33,12 +33,13 @@ const automationName = response.capabilities.automationName;
 
 ## Methods
 
-### hideKeyboard(): Promise\<void\>
+### getGeolocation(): Promise \<any\>
 
-Hide onscreen keyboard
+Get device geolocation
 
 ```typescript
-await response.hideKeyboard();
+const response = context.response as AppiumResponse;
+const geolocation = await response.getGeolocation();
 ```
 
 ### touchMove(array: [x: number, y: number, duration?: number]): Promise\<void\>
