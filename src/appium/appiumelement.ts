@@ -9,11 +9,15 @@ export class AppiumElement extends DOMElement implements iValue {
   protected _elementId: string;
   protected _response: JsonDoc | undefined;
 
+  protected get session(): AppiumResponse {
+    return this.context.response as AppiumResponse;
+  }
+
   public static async create(
-    input: any,
+    input: string,
     context: iAssertionContext,
-    name: string | null = null,
-    elementId: string | undefined = undefined
+    name: string,
+    elementId: string
   ): Promise<AppiumElement> {
     const element = new AppiumElement(input, context, name, elementId);
     element._tagName = await element._getTagName();
@@ -26,26 +30,17 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   protected constructor(
-    input: any,
+    input: string,
     context: iAssertionContext,
-    name?: string | null,
-    elementId?: string
+    name: string | null,
+    elementId: string
   ) {
-    super(input, context, name || "Appium Element");
+    super(input, context, name || "Appium Element", input);
     this._elementId = elementId || "";
-    this._input = input;
   }
 
   public async click(): Promise<iValue> {
-    const response = this.context.response as AppiumResponse;
-    await sendAppiumRequest(
-      this.context.scenario,
-      `/session/${response.sessionId}/element/${this._elementId}/click`,
-      {
-        method: "post",
-      }
-    );
-
+    await this.session.post(`element/${this._elementId}/click`, {});
     return this;
   }
 
@@ -57,52 +52,30 @@ export class AppiumElement extends DOMElement implements iValue {
     throw "findAll not implemented";
   }
 
-  public async type(input: string): Promise<void> {
-    const res = await sendAppiumRequest(
-      this.context.scenario,
-      `/session/${this.context.scenario.get("sessionId")}/element/${
-        this._elementId
-      }/value`,
-      {
-        method: "post",
-        data: {
-          text: input,
-        },
-      }
-    );
-
+  public async type(input: string): Promise<iValue> {
+    const res = await this.session.post(`element/${this._elementId}/value`, {
+      text: input,
+    });
     if (res.jsonRoot.value?.error) {
       throw "Element cannot be typed into. Did you choose the correct element?";
     }
+    return this;
   }
 
-  public async clear(): Promise<void> {
-    const response = this.context.response as AppiumResponse;
-    await sendAppiumRequest(
-      this.context.scenario,
-      `/session/${response.sessionId}/element/${this._elementId}/clear`,
-      {
-        method: "post",
-      }
-    );
+  public async clear(): Promise<iValue> {
+    await this.session.post(`element/${this._elementId}/clear`, {});
+    return this;
   }
 
-  public async clearThenType(input: string): Promise<void> {
+  public async clearThenType(input: string): Promise<iValue> {
     await this.clear();
     await this.type(input);
+    return this;
   }
 
   public async isVisible(): Promise<boolean> {
-    const response = this.context.response as AppiumResponse;
-    const res = await sendAppiumRequest(
-      this.context.scenario,
-      `/session/${response.sessionId}/element/${this._elementId}/displayed`,
-      {
-        method: "get",
-      }
-    );
-
-    return res.jsonRoot.value;
+    const res = await this.session.get(`element/${this._elementId}/displayed`);
+    return !!res.jsonRoot.value;
   }
 
   public async getBounds(): Promise<iBounds | null> {
@@ -160,29 +133,11 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   protected async _getText(): Promise<string> {
-    const res = await sendAppiumRequest(
-      this.context.scenario,
-      `/session/${this.context.scenario.get("sessionId")}/element/${
-        this._elementId
-      }/text`,
-      {
-        method: "get",
-      }
-    );
-
-    return res.jsonRoot.value;
+    return this.session.get(`element/${this._elementId}/text`);
   }
 
   protected async _getTagName(): Promise<string> {
-    const response = this.context.response as AppiumResponse;
-    const res = await sendAppiumRequest(
-      this.context.scenario,
-      `/session/${response.sessionId}/element/${this._elementId}/name`,
-      {
-        method: "get",
-      }
-    );
-
+    const res = await this.session.get(`element/${this._elementId}/name`);
     return res.jsonRoot.value || null;
   }
 
@@ -240,18 +195,7 @@ export class AppiumElement extends DOMElement implements iValue {
         ", "
       )}`;
     }
-
-    const response = this.context.response as AppiumResponse;
-
-    const res = await sendAppiumRequest(
-      this.context.scenario,
-      `/session/${response.sessionId}/element/${this._elementId}/attribute/${key}`,
-      {
-        method: "get",
-      }
-    );
-
-    return res.jsonRoot.value;
+    return this.session.get(`element/${this._elementId}/attribute/${key}`);
   }
 
   public toString(): string {
