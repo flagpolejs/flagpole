@@ -2,25 +2,21 @@ import flagpole, { AppiumResponse } from "../../../dist/index";
 flagpole("Basic Smoke Test of Site", async (suite) => {
   suite
     .base("http://127.0.0.1:4723")
-    .scenario(
-      "Homepage Loads",
-      "appium",
-      {
-        deviceName: "Android Emulator",
-        platformName: "Android",
-        automationName: "Uiautomator2",
-        app: process.env.APKPATH,
-        appWaitActivity:
-          "echelon_android.fitnation.viatek.com.echelon_android_new.SetupActivity",
-      },
-      {
+    .scenario("Homepage Loads", "appium", {
+      deviceName: "Android Emulator",
+      platformName: "Android",
+      automationName: "Uiautomator2",
+      app: process.env.APKPATH,
+      appWaitActivity:
+        "echelon_android.fitnation.viatek.com.echelon_android_new.SetupActivity",
+      devProperties: {
         location: {
           latitude: 40.71278,
           longitude: -74.00611,
           altitude: 1,
         },
-      }
-    )
+      },
+    })
     .next(async (context) => {
       const response = context.response as AppiumResponse;
       const geolocation = await response.getGeolocation();
