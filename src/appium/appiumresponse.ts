@@ -305,7 +305,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   public async waitForXPath(xPath: string, timeout?: number): Promise<iValue> {
     const previousTime = await this._getTimeout();
     await this._setImplicitWait(timeout || 30000);
-    const element = await this.find(xPath);
+    const element = await this.find(`xpath/${xPath}`);
     await this._setImplicitWait(previousTime);
     return element;
   }
@@ -362,7 +362,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   }
 
   private async _setImplicitWait(ms: number): Promise<void> {
-    await this.post("/timeouts/implicit_wait", {
+    await this.post("timeouts/implicit_wait", {
       ms: ms,
     });
   }
