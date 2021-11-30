@@ -329,7 +329,7 @@ For instance:
 ```javascript
 const loginButton = await context.find("id/login_button");
 ```
-Valid selector strategies are `id`, `xpath`, `class name`, `accessibility id`. When testing an Android app, you may also use `-android uiautomator`, though it is recommended to use a different strategy, see below. When testing an iOS app, you may also use `-ios class chain` and `-ios predicate string`. Note that spaces are valid in the selector strategy.
+Valid selector strategies are `id`, `xpath`, `class name`, `accessibility id`, `css selector`. It is only possible to find elements by CSS selector in a Webview context. When testing an Android app with UiAutomator2, you may also use `-android uiautomator`, though it is recommended to use a different strategy, see below. When testing an Android app with Espresso, additional selector strategies include `-android viewtag`, `tag name`, `-android datamatcher`, `-android viewmatcher`, `text`. When testing an iOS app, you may also use `-ios class chain` and `-ios predicate string`. Note that spaces are valid in the selector strategy.
 
 #### find(selector: string, contents: string, opts?: FindOpts): Promise\<iValue\>
 

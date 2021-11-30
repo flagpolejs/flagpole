@@ -34,7 +34,13 @@ const automationName = response.capabilities.automationName;
 ## Methods
 
 ### backgroundApp(seconds: number = -1): Promise\<void\>;
+
 Sends the application under test to the background. If a duration is specified which is greater than -1, it will background the app for that many seconds. This is an async function.
+
+### getAppiumContexts(): Promise\<string[]\>;
+
+Gets the automation contexts for a given page. On most pages, only one will exist, which is NATIVE_APP. On pages with webviews, the first index will be NATIVE_APP and the last index will be the Webview context.
+It is necessary to use the Webview context for finding Webview elements. This is an async function.
 
 ### getGeolocation(): Promise \<any\>
 
@@ -68,6 +74,10 @@ On Android, launches application under test. On iOS, launches app specified by a
 ### resetApp(): Promise\<void\>;
 
 Resets application under test. This is an async function.
+
+### setAppiumContext(appiumContext: string): Promise\<void\>;
+
+Sets the automation context. It is necessary to set the context to the Webview context when finding Webview elements. This is an async function.
 
 ### setDeviceProperties(devProperties: DeviceProperties): Promise\<void\>;
 

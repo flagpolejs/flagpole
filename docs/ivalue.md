@@ -557,7 +557,7 @@ const siblings = await someElement.getPreviousSiblings("li");
 
 ### getProperty(key: string): Promise\<Value\>
 
-Get the property of this input value with the key. If there is no such property then it will return null. This is an async method. In Appium tests, this gets the chosen CSS property of the element.
+Get the property of this input value with the key. If there is no such property then it will return null. This is an async method. In Appium tests, this gets the chosen CSS property of the element, which is only possible in a Webview context.
 
 ```javascript
 const isChecked = await element.getProperty("checked");
