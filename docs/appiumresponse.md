@@ -77,7 +77,7 @@ Resets application under test. This is an async function.
 
 ### setAppiumContext(appiumContext: string): Promise\<void\>;
 
-Sets the automation context. It is necessary to set the context to the Webview context when finding Webview elements. This is an async function.
+Sets the automation context. It is necessary to set the context to the Webview context when finding Webview elements. In order to use a Webview context, the Appium Chromedriver must be in use. See [here](https://github.com/appium/appium/blob/master/docs/en/writing-running-appium/web/chromedriver.md). This is an async function.
 
 ### setDeviceProperties(devProperties: DeviceProperties): Promise\<void\>;
 
