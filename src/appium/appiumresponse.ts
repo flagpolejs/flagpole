@@ -200,7 +200,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       },
       {
         type: "pause",
-        duration: array[2] || 0,
+        duration: array[2] || 10,
       },
     ];
     if (otherArrays.length) {
