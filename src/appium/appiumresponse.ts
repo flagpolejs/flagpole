@@ -192,7 +192,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         duration: 0,
         x: array[0],
         y: array[1],
-        relative: false,
+        origin: "viewport",
       },
       {
         type: "pointerDown",
@@ -210,7 +210,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           duration: array![2] || 500,
           x: array![0],
           y: array![1],
-          relative: true,
+          origin: "pointer",
         });
       });
     }
