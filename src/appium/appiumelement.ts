@@ -113,11 +113,13 @@ export class AppiumElement extends DOMElement implements iValue {
     await this.context.response.touchMove([
       boundsRes.points[1].x,
       boundsRes.points[1].y,
+      10,
     ]);
     await this.context.pause(ms);
     await this.context.response.touchMove([
       boundsRes.points[1].x,
       boundsRes.points[1].y,
+      10,
     ]);
   }
 
