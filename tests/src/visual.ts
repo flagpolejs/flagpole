@@ -14,7 +14,7 @@ suite
       "/Users/nick/Documents/GitHub/flagpole/tests/images/debian.png"
     );
     context
-      .assert("Logo should look like the control.", download!.body)
+      .assert("Logo should look like the control.", download)
       .looksLike("@debian");
   });
 

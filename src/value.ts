@@ -722,13 +722,13 @@ export class Value implements iValue {
    *
    * @param opts
    */
-  public download(): Promise<HttpResponse | null>;
-  public download(localFilePath: string): Promise<HttpResponse | null>;
+  public download(): Promise<string | Buffer | null>;
+  public download(localFilePath: string): Promise<string | Buffer | null>;
   public download(
     localFilePath: string,
     opts: HttpRequestOptions
   ): Promise<HttpResponse | null>;
-  public download(opts: HttpRequestOptions): Promise<HttpResponse | null>;
+  public download(opts: HttpRequestOptions): Promise<string | Buffer | null>;
   public async download(
     a?: string | HttpRequestOptions,
     b?: HttpRequestOptions
@@ -755,14 +755,15 @@ export class Value implements iValue {
       ...opts,
     });
     const resp = await request.fetch();
+    let file: string | Buffer = resp.body;
     if (localFilePath) {
       if (resp.trailers["content-type"].split("/")[0] === "image") {
-        fs.writeFileSync(localFilePath, Buffer.from(resp.body, "base64"));
-      } else {
-        fs.writeFileSync(localFilePath, resp.body);
+        file = Buffer.from(resp.body, "base64");
       }
+      fs.writeFileSync(localFilePath, file);
     }
-    return resp;
+
+    return file;
   }
 
   public async waitForFunction(
