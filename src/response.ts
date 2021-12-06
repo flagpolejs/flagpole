@@ -320,19 +320,29 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public async type(
+  public type(
     selector: string,
     textToType: string,
     opts: any = {}
-  ): Promise<any> {
+  ): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support type.`
     );
   }
 
-  public async clear(selector: string): Promise<any> {
+  public clear(selector: string): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support clear.`
+    );
+  }
+
+  public clearThenType(
+    selector: string,
+    textToType: string,
+    opts: any = {}
+  ): ValuePromise {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support clearThenType.`
     );
   }
 

@@ -76,7 +76,7 @@ export class Value implements iValue {
     throw "This Value does not support select.";
   }
 
-  public async pressEnter(): Promise<void> {
+  public async pressEnter(): Promise<iValue> {
     throw "This Value does not support pressEnter.";
   }
 
@@ -207,6 +207,13 @@ export class Value implements iValue {
     this._name = name || null;
     this._parent = parent;
     this._highlight = highlight;
+  }
+
+  public rename(newName: string): iValue {
+    const oldName = this.name;
+    this._name = newName;
+    //this._completedAction("RENAME", `${oldName} to ${newName}`);
+    return this;
   }
 
   public toArray(): any[] {
@@ -341,10 +348,12 @@ export class Value implements iValue {
     return value == thisValue.$;
   }
 
+  /*
   public as(aliasName: string): iValue {
     this._context.scenario.set(aliasName, this);
     return this;
   }
+  */
 
   public async getProperty(key: string): Promise<iValue> {
     return this._wrapAsValue(
@@ -612,35 +621,35 @@ export class Value implements iValue {
     throw `This element does not support eval().`;
   }
 
-  public async focus() {
+  public async focus(): Promise<iValue> {
     throw `This element does not support focus().`;
   }
 
-  public async hover() {
+  public async hover(): Promise<iValue> {
     throw `This element does not support hover().`;
   }
 
-  public async blur() {
+  public async blur(): Promise<iValue> {
     throw `This element does not support blur().`;
   }
 
-  public async tap() {
+  public async tap(): Promise<iValue> {
     throw `This element does not support tap().`;
   }
 
-  public async press(key: string, opts?: any) {
+  public async press(key: string, opts?: any): Promise<iValue> {
     throw `This element does not support press().`;
   }
 
-  public async clearThenType(textToType: string, opts?: any) {
+  public async clearThenType(textToType: string, opts?: any): Promise<iValue> {
     throw `This element does not support clearThenType().`;
   }
 
-  public async type(textToType: string, opts?: any) {
+  public async type(textToType: string, opts?: any): Promise<iValue> {
     throw `This element does not support type().`;
   }
 
-  public async clear() {
+  public async clear(): Promise<iValue> {
     throw `This element does not support clear().`;
   }
 
