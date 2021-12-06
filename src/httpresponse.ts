@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import * as puppeteer from "puppeteer-core";
 import { NeedleResponse } from "needle";
 import { KeyValue, HttpResponseOptions, iHttpRequest } from "./interfaces";
@@ -25,8 +26,7 @@ export class HttpResponse {
 
   private constructor(opts?: HttpResponseOptions) {
     if (opts) {
-      this.body =
-        typeof opts.body == "string" ? opts.body : JSON.stringify(opts.body);
+      this.body = opts.body;
       this.statusCode = opts.status ? opts.status[0] : 200;
       this.statusMessage = opts.status ? opts.status[1] : "OK";
       this.headers = opts.headers || {};
@@ -46,15 +46,13 @@ export class HttpResponse {
     const r = new HttpResponse({
       status: [response.statusCode || 0, response.statusMessage || ""],
       headers: <KeyValue>response.headers,
-      body:
-        typeof response.body === "string"
-          ? response.body
-          : response.body.toString("utf8"),
+      body: response.body,
       cookies: response.cookies ? <KeyValue>response.cookies : {},
       trailers: <KeyValue>response.trailers,
       method: response.method,
       url: response.url,
     });
+
     return r;
   }
 

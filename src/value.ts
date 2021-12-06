@@ -745,7 +745,7 @@ export class Value implements iValue {
       if (typeof b == "object" && b !== null) {
         return b;
       }
-      return { encoding: null };
+      return { encoding: "utf8" };
     })();
     const request = new HttpRequest({
       ...{
