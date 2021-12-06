@@ -10,7 +10,9 @@ suite
     // ✕  Logo should look like the control.
     //  …  Actual: Error: Input image is invalid.
     const logo = await context.exists("img[alt=Debian]");
-    const download = await logo.download();
+    const download = await logo.download(
+      "/Users/nick/Documents/GitHub/flagpole/tests/images/debian.png"
+    );
     context
       .assert("Logo should look like the control.", download!.body)
       .looksLike("@debian");

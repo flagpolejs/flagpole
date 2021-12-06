@@ -756,7 +756,11 @@ export class Value implements iValue {
     });
     const resp = await request.fetch();
     if (localFilePath) {
-      fs.writeFileSync(localFilePath, resp.body);
+      if (resp.trailers["content-type"].split("/")[0] === "image") {
+        fs.writeFileSync(localFilePath, Buffer.from(resp.body, "base64"));
+      } else {
+        fs.writeFileSync(localFilePath, resp.body);
+      }
     }
     return resp;
   }

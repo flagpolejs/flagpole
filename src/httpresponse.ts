@@ -26,7 +26,8 @@ export class HttpResponse {
 
   private constructor(opts?: HttpResponseOptions) {
     if (opts) {
-      this.body = opts.body;
+      this.body =
+        typeof opts.body == "string" ? opts.body : JSON.stringify(opts.body);
       this.statusCode = opts.status ? opts.status[0] : 200;
       this.statusMessage = opts.status ? opts.status[1] : "OK";
       this.headers = opts.headers || {};
@@ -43,10 +44,17 @@ export class HttpResponse {
   }
 
   static fromNeedle(response: NeedleResponse): HttpResponse {
+    const contentType = response.headers["content-type"];
+    response.trailers["content-type"] = contentType;
     const r = new HttpResponse({
       status: [response.statusCode || 0, response.statusMessage || ""],
       headers: <KeyValue>response.headers,
-      body: response.body,
+      body:
+        typeof response.body === "string"
+          ? response.body
+          : contentType?.split("/")[0] === "image"
+          ? response.body.toString("base64")
+          : response.body.toString("utf8"),
       cookies: response.cookies ? <KeyValue>response.cookies : {},
       trailers: <KeyValue>response.trailers,
       method: response.method,
