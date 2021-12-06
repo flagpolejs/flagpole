@@ -54,7 +54,6 @@ export const fetchWithNeedle: HttpRequestFetch = (
       request.data || null,
       getNeedleOptions(request),
       (err, resp) => {
-        console.log(request.uri);
         if (!err && resp) {
           const response = HttpResponse.fromNeedle(resp);
           if (request.options.cacheKey) {
