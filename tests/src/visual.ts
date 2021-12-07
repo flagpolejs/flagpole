@@ -7,12 +7,8 @@ suite
   .html("Cheerio test of Debian Logo")
   .open("/")
   .next("Logo", async (context) => {
-    // ✕  Logo should look like the control.
-    //  …  Actual: Error: Input image is invalid.
     const logo = await context.exists("img[alt=Debian]");
-    const download = await logo.download(
-      "/Users/nick/Documents/GitHub/flagpole/tests/images/debian.png"
-    );
+    const download = await logo.download();
     context
       .assert("Logo should look like the control.", download)
       .looksLike("@debian");

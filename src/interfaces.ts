@@ -261,13 +261,13 @@ export interface iValue {
   hasText(text?: string | RegExp): Promise<boolean>;
   hasProperty(key: string, value?: any): Promise<boolean>;
   hasValue(value?: any): Promise<boolean>;
-  download(): Promise<string | Buffer | null>;
-  download(localFilePath: string): Promise<string | Buffer | null>;
+  download(): Promise<HttpResponse | null>;
+  download(localFilePath: string): Promise<HttpResponse | null>;
   download(
     localFilePath: string,
     opts: HttpRequestOptions
-  ): Promise<string | Buffer | null>;
-  download(opts: HttpRequestOptions): Promise<string | Buffer | null>;
+  ): Promise<HttpResponse | null>;
+  download(opts: HttpRequestOptions): Promise<HttpResponse | null>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
