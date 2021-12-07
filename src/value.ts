@@ -765,10 +765,10 @@ export class Value implements iValue {
     });
     const resp = await request.fetch();
     let file: string | Buffer = resp.body;
+    if (resp.headers["content-type"].split("/")[0] === "image") {
+      file = Buffer.from(resp.body, "base64");
+    }
     if (localFilePath) {
-      if (resp.headers["content-type"].split("/")[0] === "image") {
-        file = Buffer.from(resp.body, "base64");
-      }
       fs.writeFileSync(localFilePath, file);
     }
 
