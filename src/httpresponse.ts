@@ -51,7 +51,7 @@ export class HttpResponse {
       body:
         typeof response.body === "string"
           ? response.body
-          : contentType?.split("/")[0] === "image"
+          : contentType?.startsWith("image")
           ? response.body.toString("base64")
           : response.body.toString("utf8"),
       cookies: response.cookies ? <KeyValue>response.cookies : {},
