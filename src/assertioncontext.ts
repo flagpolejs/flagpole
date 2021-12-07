@@ -668,7 +668,7 @@ export class AssertionContext implements iAssertionContext {
         ? this.response.findAll(selector, a, b)
         : a instanceof RegExp
         ? this.response.findAll(selector, a, b)
-        : this.response.findAll(selector, b)
+        : this.response.findAll(selector, a)
     );
   }
 
