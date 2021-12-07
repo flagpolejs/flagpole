@@ -1,9 +1,20 @@
-import { iValue, iAssertionContext } from "../interfaces";
+import {
+  iValue,
+  iAssertionContext,
+  FindOptions,
+  FindAllOptions,
+} from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
-import { sendAppiumRequest } from "./appium-helpers";
 import { AppiumResponse } from "./appiumresponse";
+import {
+  getFindParams,
+  findOne,
+  wrapAsValue,
+  applyOffsetAndLimit,
+} from "../helpers";
+import { appiumFindByUiAutomator } from "./appium-helpers";
 
 export class AppiumElement extends DOMElement implements iValue {
   protected _elementId: string;
@@ -44,13 +55,112 @@ export class AppiumElement extends DOMElement implements iValue {
     return this;
   }
 
-  public find(selector: string): ValuePromise {
-    throw "find not implemented";
+  public find(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const params = getFindParams(a, b);
+      if (params.matches) {
+        throw "Appium does not support finding element by RegEx";
+      } else if (params.contains || params.opts) {
+        return findOne(this, selector, params);
+      }
+      const usingValue = selector.split(/\/(.+)/);
+      const res = await this.session.post(
+        `element/${this._elementId}/element`,
+        {
+          using: usingValue[0],
+          value: usingValue[1],
+        }
+      );
+      if (res.jsonRoot.value.ELEMENT) {
+        const element = await AppiumElement.create(
+          selector,
+          this.session.context,
+          selector,
+          res.jsonRoot.value.ELEMENT
+        );
+        return element;
+      } else {
+        return wrapAsValue(this.session.context, null, selector);
+      }
+    });
   }
 
-  public async findAll(selector: string): Promise<iValue[]> {
-    throw "findAll not implemented";
+  public async findAll(
+    selector: string,
+    a?: string | RegExp | FindAllOptions,
+    b?: FindAllOptions
+  ): Promise<iValue[]> {
+    const usingValue = selector.split(/\/(.+)/);
+    let elements: iValue[] = [];
+    const params = getFindParams(a, b);
+    let res: JsonDoc = new JsonDoc({});
+    if (params.matches) {
+      throw "Appium does not support finding elements by RegEx";
+    } else if (params.contains) {
+      if (
+        this.session.capabilities.automationName.toLowerCase() ===
+        "uiautomator2"
+      ) {
+        const values = await appiumFindByUiAutomator(
+          this.session,
+          selector,
+          params.contains,
+          params.opts,
+          this._elementId
+        );
+        for (let i = 0; i < values?.length; i++) {
+          const element = await AppiumElement.create(
+            selector,
+            this.session.context,
+            selector,
+            values[i].$
+          );
+          elements.push(element);
+        }
+        return elements;
+      } else if (
+        this.session.capabilities.automationName.toLowerCase() === "espresso"
+      ) {
+        res = await this.session.post(`element/${this._elementId}/elements`, {
+          using: "text",
+          value: params.contains,
+        });
+      } else if (
+        this.session.capabilities.automationName.toLowerCase() === "xcuitest"
+      ) {
+        res = await this.session.post(`element/${this._elementId}/elements`, {
+          using: "-ios predicate string",
+          value: `label == "${params.contains}"`,
+        });
+      }
+    } else {
+      res = await this.session.post(`element/${this._elementId}/elements`, {
+        using: usingValue[0],
+        value: usingValue[1],
+      });
+    }
+    for (let i = 0; i < res.jsonRoot.value?.length; i++) {
+      elements.push(
+        await AppiumElement.create(
+          selector,
+          this.context,
+          selector,
+          res.jsonRoot.value[i].ELEMENT
+        )
+      );
+    }
+    if (params.opts) {
+      elements = applyOffsetAndLimit(params.opts, elements);
+    }
+
+    return elements;
   }
+
+  protected;
 
   public async type(input: string): Promise<iValue> {
     const res = await this.session.post(`element/${this._elementId}/value`, {
