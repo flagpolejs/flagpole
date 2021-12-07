@@ -75,6 +75,10 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return this._sessionId || "";
   }
 
+  public set sessionId(sessionId) {
+    this._sessionId = sessionId;
+  }
+
   public get capabilities(): any {
     return this._capabilities;
   }
@@ -132,7 +136,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     if (params.matches) {
       throw "Appium does not support finding elements by RegEx";
     } else if (params.contains) {
-      if (this._isAndroid) {
+      if (this.capabilities.automationName.toLowerCase() === "uiautomator2") {
         const values = await appiumFindByUiAutomator(
           this,
           selector,
@@ -149,6 +153,13 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           elements.push(element);
           return elements;
         }
+      } else if (
+        this.capabilities.automationName.toLowerCase() === "espresso"
+      ) {
+        res = await this.post("elements", {
+          using: "text",
+          value: params.contains,
+        });
       } else if (this._isIos) {
         res = await this.post("elements", {
           using: "-ios predicate string",
@@ -192,7 +203,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         duration: 0,
         x: array[0],
         y: array[1],
-        relative: false,
+        origin: "viewport",
       },
       {
         type: "pointerDown",
@@ -200,7 +211,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       },
       {
         type: "pause",
-        duration: array[2] || 0,
+        duration: array[2] || 10,
       },
     ];
     if (otherArrays.length) {
@@ -210,7 +221,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           duration: array![2] || 500,
           x: array![0],
           y: array![1],
-          relative: true,
+          origin: "pointer",
         });
       });
     }
