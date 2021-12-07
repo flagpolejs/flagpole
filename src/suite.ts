@@ -192,6 +192,25 @@ export class Suite implements iSuite {
   }
 
   /**
+   * If a suite hasn't completed in this period of time, cut the scenarios off
+   *
+   * @param timeout
+   * @returns
+   */
+  public setMaxSuiteDuration(timeout: number): iSuite {
+    this._taskManager.maxSuiteDuration = timeout;
+    return this;
+  }
+
+  public get maxSuiteDuration(): number {
+    return this._taskManager.maxSuiteDuration;
+  }
+
+  public set maxSuiteDuration(timeoutMs: number) {
+    this._taskManager.maxSuiteDuration = timeoutMs;
+  }
+
+  /**
    * Print all logs to console
    *
    * @returns {Suite}

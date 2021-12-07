@@ -41,7 +41,7 @@ export interface ScreenshotOpts {
 }
 
 export interface iNextCallback {
-  (context: iAssertionContext): Promise<any> | void;
+  (context: iAssertionContext, ...args: any[]): Promise<any> | void;
 }
 
 export interface iCallbackAndMessage {
@@ -226,7 +226,8 @@ export interface iValue {
   col(key: string): iValue;
   groupBy(key: string): iValue;
   unique(): iValue;
-  as(aliasName: string): iValue;
+  //as(aliasName: string): iValue;
+  rename(newName: string): iValue;
   echo(callback: (str: string) => void): iValue;
   echo(): iValue;
   // DOM Elements only
@@ -271,17 +272,17 @@ export interface iValue {
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
-  focus(): Promise<any>;
-  blur(): Promise<any>;
-  hover(): Promise<void>;
-  tap(): Promise<void>;
-  press(key: string, opts?: any): Promise<void>;
-  clearThenType(textToType: string, opts?: any): Promise<void>;
-  type(textToType: string, opts?: any): Promise<void>;
-  clear(): Promise<void>;
+  focus(): Promise<iValue>;
+  blur(): Promise<iValue>;
+  hover(): Promise<iValue>;
+  tap(): Promise<iValue>;
+  press(key: string, opts?: any): Promise<iValue>;
+  clearThenType(textToType: string, opts?: any): Promise<iValue>;
+  type(textToType: string, opts?: any): Promise<iValue>;
+  clear(): Promise<iValue>;
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
   selectOption(value: string | string[]): Promise<void>;
-  pressEnter(): Promise<void>;
+  pressEnter(): Promise<iValue>;
   scrollTo(): Promise<void>;
   waitForFunction(
     js: EvaluateFn<any>,
@@ -411,8 +412,9 @@ export interface iResponse {
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
-  clear(selector: string): Promise<any>;
-  type(selector: string, textToType: string, opts: any): Promise<any>;
+  clear(selector: string): ValuePromise;
+  type(selector: string, textToType: string, opts: any): ValuePromise;
+  clearThenType(selector: string, textToType: string, opts: any): ValuePromise;
   selectOption(selector: string, value: string | string[]): Promise<void>;
   scrollTo(point: OptionalXY): Promise<iResponse>;
   click(selector: string, opts?: FindOptions): Promise<iValue>;
@@ -589,17 +591,17 @@ export interface iAssertionContext {
   push(aliasName: string, value: any): iAssertionContext;
   set(aliasName: string, value: any): iAssertionContext;
   get<T = any>(aliasName: string): T;
-  exists(selector: string | string[], opts?: FindOptions): Promise<iValue>;
+  exists(selector: string | string[], opts?: FindOptions): ValuePromise;
   exists(
     selector: string | string[],
     contains: string,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   exists(
     selector: string | string[],
     matches: RegExp,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   existsAll(selector: string | string[], opts?: FindOptions): Promise<iValue[]>;
   existsAll(
     selector: string | string[],
@@ -647,22 +649,15 @@ export interface iAssertionContext {
     matches: RegExp,
     opts?: FindAllOptions
   ): Promise<iValue[]>;
-  findXPath(xPath: string): Promise<iValue>;
+  findXPath(xPath: string): ValuePromise;
   findAllXPath(xPath: string): Promise<iValue[]>;
-  clearThenType(
-    selector: string,
-    textToType: string,
-    opts?: any
-  ): Promise<void>;
-  click(selector: string, opts?: FindOptions): Promise<iValue>;
-  click(
-    selector: string,
-    contains: string,
-    opts?: FindOptions
-  ): Promise<iValue>;
-  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
-  submit(selector: string): Promise<void>;
-  type(selector: string, textToType: string, opts?: any): Promise<void>;
+  click(selector: string, opts?: FindOptions): ValuePromise;
+  click(selector: string, contains: string, opts?: FindOptions): ValuePromise;
+  click(selector: string, matches: RegExp, opts?: FindOptions): ValuePromise;
+  submit(selector: string): ValuePromise;
+  type(selector: string, textToType: string, opts?: any): ValuePromise;
+  clear(selector: string): ValuePromise;
+  clearThenType(selector: string, textToType: string, opts?: any): ValuePromise;
   selectOption(selector: string, value: string | string[]): Promise<void>;
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
   waitForFunction(
@@ -677,26 +672,26 @@ export interface iAssertionContext {
     timeout?: number,
     waitFor?: string | string[]
   ): Promise<void>;
-  waitForHidden(selector: string, timeout?: number): Promise<iValue>;
-  waitForVisible(selector: string, timeout?: number): Promise<iValue>;
-  waitForExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForHidden(selector: string, timeout?: number): ValuePromise;
+  waitForVisible(selector: string, timeout?: number): ValuePromise;
+  waitForExists(selector: string, timeout?: number): ValuePromise;
   waitForExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
-  waitForNotExists(selector: string, timeout?: number): Promise<iValue>;
+  ): ValuePromise;
+  waitForNotExists(selector: string, timeout?: number): ValuePromise;
   waitForNotExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
-  waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
+  ): ValuePromise;
+  waitForXPath(xPath: string, timeout?: number): ValuePromise;
   waitForHavingText(
     selector: string,
     text: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
+  ): ValuePromise;
   openInBrowser(): Promise<string>;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
@@ -711,12 +706,14 @@ export interface iAssertionContext {
   logOptionalFailure(message: string, errorDetails?: any): iAssertionResult;
   logPassing(message: string): iAssertionResult;
   scrollTo(point: OptionalXY): Promise<iAssertionContext>;
-  some(array: any[], callback: IteratorBoolCallback): Promise<boolean>;
-  none(array: any[], callback: IteratorBoolCallback): Promise<boolean>;
-  every(array: any[], callback: IteratorBoolCallback): Promise<boolean>;
-  each(array: any[], callback: IteratorCallback): Promise<void>;
-  filter(array: any[], callback: IteratorBoolCallback): Promise<any[]>;
-  map(array: any[], callback: IteratorCallback): Promise<any[]>;
+  count<T>(array: T[]): ValuePromise;
+  count<T>(array: T[], callback: IteratorBoolCallback): ValuePromise;
+  some<T>(array: T[], callback: IteratorBoolCallback): Promise<boolean>;
+  none<T>(array: T[], callback: IteratorBoolCallback): Promise<boolean>;
+  every<T>(array: T[], callback: IteratorBoolCallback): Promise<boolean>;
+  each<T>(array: T[], callback: IteratorCallback): Promise<void>;
+  filter<T>(array: T[], callback: IteratorBoolCallback): Promise<T[]>;
+  map<T>(array: T[], callback: IteratorCallback): Promise<any[]>;
   abort(message?: string): Promise<iScenario>;
 }
 export interface iSuite {
@@ -730,6 +727,7 @@ export interface iSuite {
   totalDuration: number | null;
   executionDuration: number | null;
   maxScenarioDuration: number;
+  maxSuiteDuration: number;
   concurrencyLimit: number;
   title: string;
   finished: Promise<void>;

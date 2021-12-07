@@ -287,32 +287,37 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     return null;
   }
 
-  public async focus(): Promise<any> {
+  public async focus(): Promise<iValue> {
     await this._input.focus();
     this._completedAction("FOCUS");
+    return this;
   }
 
-  public async blur(): Promise<any> {
+  public async blur(): Promise<iValue> {
     await this._input.evaluate((node) => node.parentElement?.focus());
     this._completedAction("BLUR");
+    return this;
   }
 
-  public async hover(): Promise<void> {
+  public async hover(): Promise<iValue> {
     await this._input.hover();
     this._completedAction("HOVER");
+    return this;
   }
 
-  public async tap(): Promise<void> {
+  public async tap(): Promise<iValue> {
     await this._input.tap();
     this._completedAction("TAP");
+    return this;
   }
 
-  public async press(key: string, opts?: any): Promise<void> {
+  public async press(key: string, opts?: any): Promise<iValue> {
     await this._input.press(key, opts || {});
     this._completedAction("PRESS", key);
+    return this;
   }
 
-  public async type(textToType: string, opts: any = {}): Promise<void> {
+  public async type(textToType: string, opts: any = {}): Promise<iValue> {
     await this._input.type(textToType, opts);
     this._completedAction(
       "TYPE",
@@ -320,12 +325,14 @@ export class BrowserElement extends PuppeteerElement implements iValue {
         ? textToType.replace(/./g, "*")
         : textToType
     );
+    return this;
   }
 
-  public async clear(): Promise<void> {
+  public async clear(): Promise<iValue> {
     await this._input.click({ clickCount: 3 });
     await this._page.keyboard.press("Backspace");
     this._completedAction("CLEAR");
+    return this;
   }
 
   public async fillForm(
@@ -459,9 +466,10 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       .equals(true);
   }
 
-  public async pressEnter(): Promise<void> {
+  public async pressEnter(): Promise<iValue> {
     await this.$.press("Enter");
     this._completedAction("ENTER");
+    return this;
   }
 
   public async scrollTo(): Promise<void> {
