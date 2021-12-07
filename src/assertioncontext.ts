@@ -19,6 +19,7 @@ import {
   FindAllOptions,
   OptionalXY,
   iHttpRequest,
+  ScreenProperties,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -642,6 +643,19 @@ export class AssertionContext implements iAssertionContext {
 
   public abort(message?: string): Promise<iScenario> {
     return this.scenario.abort(message);
+  }
+
+  public async rotate(rotation: string | number): Promise<string | number> {
+    return await this.response.rotate(rotation);
+  }
+
+  public async getScreenProperties(): Promise<ScreenProperties> {
+    return await this.response.getScreenProperties();
+  }
+
+  /* Hides the software keyboard */
+  public async hideKeyboard(): Promise<void> {
+    await this.response.hideKeyboard();
   }
 
   protected async _findAllForSelectors(

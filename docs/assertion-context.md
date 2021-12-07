@@ -339,7 +339,9 @@ Find the first element matching the given selector that have the given text. The
 const buttonContainingYes = await context.find("button", "Yes");
 ```
 
-With Appium testing Android, Flagpole parses the selector strategy and text to use `-android uiautomator` under the hood. This allows for finding an element by selector and text. Anything passed into the path parameter that is not a valid selector strategy/value pair will search by text only.
+With Appium testing Android, using UIAutomator2, Flagpole parses the selector strategy and text to use `-android uiautomator` under the hood. This allows for finding an element by selector and text. Anything passed into the path parameter that is not a valid selector strategy/value pair will search by text only.
+
+With Appium testing Android, using Espresso, Flagpole simply searches for an element by text, regardless of what you pass into the selector argument.
 
 With Appium testing iOS, Flagpole uses the `-ios predicate string` selector strategy and only searches by text. Searching by selector and text is not supported by Appium on iOS.
 
@@ -478,6 +480,22 @@ scenario
   });
 ```
 
+### getScreenProperties(): Promise\<ScreenProperties\>
+
+Get properties of screen of device under tests. Currently only works with Appium. Returns angle, dimensions, and rotation.
+
+```javascript
+const screenProperties = await context.getScreenProperties();
+```
+
+### hideKeyboard(): Promise\<void\>
+
+Hide onscreen keyboard. Currently only works in Appium scenarios. Does not work on iOS unless the keyboard on the device under test has a dedicated dismiss button.
+
+```typescript
+await context.hideKeyboard();
+```
+
 ### openInBrowser(): Promise\<string\>
 
 Saves the response body to a temporary file and opens it in a browser. This is really only for debugging. The promise resolves to the string of the temporary file.
@@ -492,6 +510,18 @@ Delay the execution by this much.
 
 ```javascript
 await context.pause(1000);
+```
+
+### rotate(rotation: string | number): Promise\<string | number\>
+
+Rotate the screen by either degrees or screen orientation, such as landscape or portrait. Currently only works with Appium, using strings "PORTRAIT" or "LANDSCAPE".
+
+```javascript
+let rotation = await context.rotate("LANDSCAPE");
+```
+
+```javascript
+let rotation = await context.rotate(90);
 ```
 
 ### screenshot(): Promise\<Buffer\>
@@ -571,7 +601,7 @@ await context.waitForReady();
 
 ### waitForExists(path: string, timeout: number): Promise\<DOMElement\>
 
-Test if an element exists at that path. For a browser scenario it will wait a certain timeout (default 100ms) for the element to show up. If you want it to wait longer, set the timeout value in the second argument.
+Test if an element exists at that path. For a browser or an Appium scenario it will wait a certain timeout (default 30000ms) for the element to show up. If you want to change it, set the timeout value in the second argument.
 
 ```javascript
 const button = await context.waitForExists("a.submit", 2000);
@@ -579,7 +609,7 @@ const button = await context.waitForExists("a.submit", 2000);
 
 ### waitForHavingText(path: string, text, timeout?: number): Promise\<DOMElement\>
 
-Checks for an element to exist at `path` CSS selector, which also contains the string `text` inside of its `innerText`. By default it will wait for 100ms for the element, you can change the timeout with the third argument.
+Checks for an element to exist at `path` CSS selector, which also contains the string `text` inside of its `innerText`. By default it will wait for 30000ms for the element, you can change the timeout with the third argument.
 
 ```javascript
 await context.waitForHavingText("h1", "Features", 2000);
@@ -587,7 +617,7 @@ await context.waitForHavingText("h1", "Features", 2000);
 
 ### waitForHidden(path: string): Promise\<DOMElement\>
 
-Checks if an element at this selector is hidden (display none or visibility hidden). This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change the timeout with the second argument.
+Checks if an element at this selector is hidden (display none or visibility hidden). This only makes sense for browser or Appium tests, it will error for other types of scenario. By default it will wait for 30000ms for the element to show up, you can change the timeout with the second argument.
 
 ```javascript
 const button = await context.waitForHidden('button[type="submit"]', 2000);
@@ -623,7 +653,7 @@ await context.exists("h1.headline");
 
 ### waitForVisible(path: string): Promise\<DOMElement\>
 
-Checks if an element at this selector is visible. This only makes sense for browser tests, it will error for other types of scenario. By default it will wait for 100ms for the element to show up, you can change the timeout with the second argument.
+Checks if an element at this selector is visible. This only makes sense for browser or Appium tests, it will error for other types of scenario. By default it will wait for 30000ms for the element to show up, you can change the timeout with the second argument.
 
 ```javascript
 const button = await context.waitForVisible('button[type="submit"]', 2000);
@@ -631,7 +661,9 @@ const button = await context.waitForVisible('button[type="submit"]', 2000);
 
 ### waitForXpath(xPath: string, timeout?: number): Promise\<DOMElement\>
 
-Checks for an element to exist with XPath of `path`. Usually a CSS selector is preferable, but sometimes XPath is more powerful. By default it will wait for 100ms for the element, you can change the timeout with the second argument.
+Checks for an element to exist with XPath of `path`. Usually a CSS selector is preferable, but sometimes XPath is more powerful. By default it will wait for 30000ms for the element, you can change the timeout with the second argument.
+
+Also works with Appium scenarios.
 
 ```javascript
 await context.waitForXpath("/main/h1[1]/span", 2000);

@@ -11,6 +11,7 @@ import {
   ScenarioMapper,
   BrowserOptions,
   ScenarioInitOptions,
+  DeviceProperties,
 } from "./interfaces";
 import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
@@ -245,6 +246,7 @@ export class Suite implements iSuite {
     type: "mediastreamvalidator",
     opts?: MediaStreamValidatorOpts
   ): iScenario;
+  public scenario(title: string, type: "appium", opts: any): iScenario;
   public scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
   public scenario(
     title: string,

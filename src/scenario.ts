@@ -24,6 +24,7 @@ import {
   HttpMethodVerb,
   CONTENT_TYPE_SOAP,
   CONTENT_TYPE_JSON,
+  DeviceProperties,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
