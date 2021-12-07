@@ -339,7 +339,7 @@ export interface iResponse {
   responseTypeName: string;
   statusCode: iValue;
   statusMessage: iValue;
-  body: iValue;
+  body: iValue | Promise<iValue>;
   jsonBody: iValue;
   url: iValue; // The URL initially requested
   finalUrl: iValue; // The URL after any redirects

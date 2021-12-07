@@ -88,7 +88,7 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * Raw Response Body
    */
-  public get body(): iValue {
+  public get body(): iValue | Promise<iValue> {
     return wrapAsValue(
       this.context,
       this.httpResponse.body,
@@ -464,7 +464,7 @@ export abstract class ProtoResponse implements iResponse {
   public async getScreenProperties(): Promise<ScreenProperties> {
     throw "getScreenProperties not implemented for this kind of scenario.";
   }
-  
+
   public async hideKeyboard(): Promise<void> {
     throw "hideKeyboard not implemented for this kind of scenario.";
   }
