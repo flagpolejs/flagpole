@@ -45,7 +45,6 @@ export class HttpResponse {
 
   static fromNeedle(response: NeedleResponse): HttpResponse {
     const contentType = response.headers["content-type"];
-    response.trailers["content-type"] = contentType;
     const r = new HttpResponse({
       status: [response.statusCode || 0, response.statusMessage || ""],
       headers: <KeyValue>response.headers,
