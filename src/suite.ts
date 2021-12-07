@@ -11,6 +11,7 @@ import {
   ScenarioMapper,
   BrowserOptions,
   ScenarioInitOptions,
+  DeviceProperties,
 } from "./interfaces";
 import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpoleexecution";
@@ -192,6 +193,25 @@ export class Suite implements iSuite {
   }
 
   /**
+   * If a suite hasn't completed in this period of time, cut the scenarios off
+   *
+   * @param timeout
+   * @returns
+   */
+  public setMaxSuiteDuration(timeout: number): iSuite {
+    this._taskManager.maxSuiteDuration = timeout;
+    return this;
+  }
+
+  public get maxSuiteDuration(): number {
+    return this._taskManager.maxSuiteDuration;
+  }
+
+  public set maxSuiteDuration(timeoutMs: number) {
+    this._taskManager.maxSuiteDuration = timeoutMs;
+  }
+
+  /**
    * Print all logs to console
    *
    * @returns {Suite}
@@ -226,6 +246,7 @@ export class Suite implements iSuite {
     type: "mediastreamvalidator",
     opts?: MediaStreamValidatorOpts
   ): iScenario;
+  public scenario(title: string, type: "appium", opts: any): iScenario;
   public scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
   public scenario(
     title: string,
