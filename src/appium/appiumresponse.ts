@@ -236,6 +236,63 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     await this.post("actions", toSend);
   }
 
+  public async multiTouchMove(
+    ...matrices: [x: number, y: number, duration?: number][][]
+  ): Promise<void> {
+    if (!matrices.length) return;
+
+    const multiTouchActions: any[] = [];
+    for (let i = 0; i < matrices.length; i++) {
+      multiTouchActions.push({
+        type: "pointer",
+        id: i.toString(),
+        parameters: {
+          pointerType: "touch",
+        },
+        actions: [],
+      });
+      for (let j = 0; j < matrices[i].length; j++) {
+        if (j === 0) {
+          multiTouchActions[i].actions.push(
+            {
+              type: "pointerMove",
+              duration: 0,
+              x: matrices[i][j][0],
+              y: matrices[i][j][1],
+              origin: "viewport",
+            },
+            {
+              type: "pointerDown",
+              button: 0,
+            },
+            {
+              type: "pause",
+              duration: matrices[i][j]["duration"] || 10,
+            }
+          );
+        } else {
+          multiTouchActions[i].actions.push({
+            type: "pointerMove",
+            x: matrices[i][j][0],
+            y: matrices[i][j][1],
+            duration: 500,
+            origin: "pointer",
+          });
+        }
+        if (j === matrices[i].length - 1) {
+          multiTouchActions[i].actions.push({
+            type: "pointerUp",
+            button: 0,
+          });
+        }
+      }
+    }
+
+    await this.post("actions", {
+      actions: multiTouchActions,
+    });
+  }
+
   public async rotate(rotation: string | number): Promise<string | number> {
     if (typeof rotation === "number") {
       throw "Appium only supports rotating by a string.";
