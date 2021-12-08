@@ -267,7 +267,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
             },
             {
               type: "pause",
-              duration: matrices[i][j]["duration"] || 10,
+              duration: matrices[i][j][2] || 10,
             }
           );
         } else {
@@ -275,7 +275,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
             type: "pointerMove",
             x: matrices[i][j][0],
             y: matrices[i][j][1],
-            duration: 500,
+            duration: matrices[i][j][2] || 500,
             origin: "pointer",
           });
         }
