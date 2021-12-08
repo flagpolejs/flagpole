@@ -42,7 +42,7 @@ const response = context.response as AppiumResponse;
 const geolocation = await response.getGeolocation();
 ```
 
-### touchMove(array: [x: number, y: number, duration?: number]): Promise\<void\>
+### touchMove(...matrices: [x: number, y: number, duration?: number][] | [x: number, y: number, duration?: number][][]): Promise\<void\>
 
 Send a touch interaction to a specific, onscreen x-y coordinate. The optional duration index specifies how many milliseconds to hold the touch interaction.
 
@@ -50,11 +50,13 @@ Send a touch interaction to a specific, onscreen x-y coordinate. The optional du
 await touchMove([500, 500, 1000]);
 ```
 
-This supports only 1-finger touch interactions.
+Can pass an array of multiple arrays of tuples to send multiple touch interactions at once.
 
-### touchMove(array: [x: number, y: number, duration?: number], ...otherMoves: [x: number, y: number, duration?: number][]): Promise\<void\>
+```typescript
+await touchMove([[500, 500, 1000], [100, 100, 1000]]);
+```
 
-Send a touch interaction to a specific, onscreen x-y coordinate followed by an arbitrary number of movement interactions. 
+Can also send a touch interaction to specific, onscreen x-y coordinates followed by an arbitrary number of movement interactions. 
 
 The optional duration index in the first tuple specifies how many milliseconds to hold the initial touch interaction.
 
@@ -72,4 +74,10 @@ await response.touchMove([500, 500], [-250, -125, 1000], [-100, 0, 700]);
 
 The finger is immediately lifted from the screen upon reaching the last set of x-y coordinates.
 
-This supports only 1-finger touch and move interactions.
+It is also possible to send multiple touch and move actions at the same time, by passing multiple arrays of arrays of tuples.
+
+```typescript
+await response.touchMove([[500, 500], [-250, -125, 1000], [-100, 0, 700]], [[100, 100], [300, 300, 1000], [50, 0, 700]]);
+```
+
+There is no limit to the number of simultaneous touch actions that can be performed. Likewise, there is no limit to the number of subsequent touch actions that can be performed.

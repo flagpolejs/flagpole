@@ -790,6 +790,10 @@ Get the `n`th value in the array or object.
 const fourthItem = array.nth(3);
 ```
 
+### pinch(tuple: [x: number, y: number, duration?: number]): Promise\<iValue\>;
+
+Send a pinch interaction on the given element. The x and y coordinates in the tuple are the number of pixels to start away from center. The duration in the tuple is the number of milliseconds the pinch interaction will take. Currently only supported with Appium elements.
+
 ### pluck(property: string): iValue;
 
 When the Value contains an array of objects, this method will "pluck" the value of that property from each item in the array. It returns an iValue containing that array of values.
@@ -925,3 +929,7 @@ Takes the input array of items or object values, removes duplicates, and returns
 ```javascript
 const countries = rows.col("venueCountry").unique();
 ```
+
+### zoom(tuple: [x: number, y: number, duration?: number]): Promise\<iValue\>;
+
+Send a zoom interaction on the target element. The x and y coordinates in the tuple are how far to move each finger away from the element's midpoint. The duration in the tuple is how many milliseconds the zoom interaction will take.
