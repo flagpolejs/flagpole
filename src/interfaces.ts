@@ -245,7 +245,7 @@ export interface iValue {
   getInnerHtml(): Promise<iValue>;
   getOuterHtml(): Promise<iValue>;
   setValue(text: string): Promise<void>;
-  getBounds(boxType: string): Promise<iBounds | null>;
+  getBounds(boxType?: string): Promise<iBounds | null>;
   getUrl(): Promise<iValue>;
   getLink(): Promise<Link>;
   getStyleProperty(key: string): Promise<iValue>;
@@ -329,6 +329,12 @@ export interface iValue {
   getPreviousSiblings(selector?: string): Promise<iValue[]>;
   getNextSibling(selector?: string): Promise<iValue>;
   getNextSiblings(selector?: string): Promise<iValue[]>;
+  pinch(
+    tuple: [x: number, y: number, duration?: number]
+  ): Promise<string | void>;
+  zoom(
+    tuple: [x: number, y: number, duration?: number]
+  ): Promise<string | void>;
 }
 
 /**

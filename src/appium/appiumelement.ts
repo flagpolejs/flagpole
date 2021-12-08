@@ -1,8 +1,7 @@
-import { iValue, iAssertionContext } from "../interfaces";
+import { iValue, iAssertionContext, iBounds } from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
-import { sendAppiumRequest } from "./appium-helpers";
 import { AppiumResponse } from "./appiumresponse";
 
 export class AppiumElement extends DOMElement implements iValue {
@@ -76,6 +75,69 @@ export class AppiumElement extends DOMElement implements iValue {
   public async isVisible(): Promise<boolean> {
     const res = await this.session.get(`element/${this._elementId}/displayed`);
     return !!res.jsonRoot.value;
+  }
+
+  public async getBounds(): Promise<iBounds | null> {
+    const res = await this.session.get(`element/${this._elementId}/rect`);
+
+    if (res.jsonRoot.value.error) return null;
+
+    const bounds: iBounds = {
+      x: res.jsonRoot.value.x,
+      y: res.jsonRoot.value.y,
+      height: res.jsonRoot.value.height,
+      width: res.jsonRoot.value.width,
+      points: [
+        {
+          x: res.jsonRoot.value.x,
+          y: res.jsonRoot.value.y,
+        },
+        {
+          x: res.jsonRoot.value.x + res.jsonRoot.value.width / 2,
+          y: res.jsonRoot.value.y + res.jsonRoot.value.height / 2,
+        },
+        {
+          x: res.jsonRoot.value.x + res.jsonRoot.value.width,
+          y: res.jsonRoot.value.y + res.jsonRoot.value.height,
+        },
+      ],
+    };
+
+    return bounds;
+  }
+
+  public async zoom(
+    tuple: [x: number, y: number, duration?: number]
+  ): Promise<string | void> {
+    const boundsRes = await this.getBounds();
+    if (!boundsRes) return "Error: element bounds not acquired";
+    await this.session.touchMove(
+      [
+        [boundsRes.points[1].x - 10, boundsRes.points[1].y - 10],
+        [tuple[0], tuple[1], tuple[2] || 500],
+      ],
+      [
+        [boundsRes.points[1].x + 10, boundsRes.points[1].y + 10],
+        [tuple[0] * -1, tuple[1] * -1, tuple[2] || 500],
+      ]
+    );
+  }
+
+  public async pinch(
+    tuple: [x: number, y: number, duration?: number]
+  ): Promise<string | void> {
+    const boundsRes = await this.getBounds();
+    if (!boundsRes) return "Error: element bounds not acquired";
+    await this.session.touchMove(
+      [
+        [boundsRes.points[0].x, boundsRes.points[0].y],
+        [tuple[0], tuple[1], tuple[2] || 500],
+      ],
+      [
+        [boundsRes.points[2].x, boundsRes.points[2].y],
+        [tuple[0] * -1, tuple[1] * -1, tuple[2] || 500],
+      ]
+    );
   }
 
   protected async _getValue(): Promise<any> {

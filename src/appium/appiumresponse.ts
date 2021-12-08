@@ -197,7 +197,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       // Start a new touch actions
       // Push starting object either if starting a new external array of actions
       // Or start the only external array of actions
-      if (matrices[i][0][0] || i === 0) {
+      if (matrices[i][0][0] !== undefined || i === 0) {
         touchActions.push({
           type: "pointer",
           id: i.toString(),
@@ -209,7 +209,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
 
       // Check if we're trying to make touch actions with multiple fingers
-      if (matrices[i][0][0]) {
+      if (matrices[i][0][0] !== undefined) {
         // Add actions to the internal array of the current finger array
         for (let j = 0; j < matrices[i].length; j++) {
           // If at the beginning of the current finger array, do starting actions

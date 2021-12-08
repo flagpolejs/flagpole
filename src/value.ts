@@ -1011,6 +1011,18 @@ export class Value implements iValue {
     );
   }
 
+  public pinch(
+    tuple: [x: number, y: number, duration?: number]
+  ): Promise<string | void> {
+    throw `pinch not implemented for ${this.name}`;
+  }
+
+  public zoom(
+    tuple: [x: number, y: number, duration?: number]
+  ): Promise<string | void> {
+    throw `zoom not implemented for ${this.name}`;
+  }
+
   protected async _completedAction(verb: string, noun?: string) {
     this._context.scenario.result(
       new AssertionActionCompleted(verb, noun || this.name)
