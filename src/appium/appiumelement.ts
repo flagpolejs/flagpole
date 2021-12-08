@@ -130,12 +130,12 @@ export class AppiumElement extends DOMElement implements iValue {
     if (!boundsRes) return "Error: element bounds not acquired";
     await this.session.touchMove(
       [
-        [boundsRes.points[0].x, boundsRes.points[0].y],
-        [tuple[0], tuple[1], tuple[2] || 500],
+        [boundsRes.points[1].x - tuple[0], boundsRes.points[1].y - tuple[1]],
+        [tuple[0] - 10, tuple[1] - 10, tuple[2] || 500],
       ],
       [
-        [boundsRes.points[2].x, boundsRes.points[2].y],
-        [tuple[0] * -1, tuple[1] * -1, tuple[2] || 500],
+        [boundsRes.points[1].x + tuple[0], boundsRes.points[1].y + tuple[1]],
+        [tuple[0] * -1 + 10, tuple[1] * -1 + 10, tuple[2] || 500],
       ]
     );
   }
