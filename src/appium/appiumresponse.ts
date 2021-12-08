@@ -183,82 +183,81 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   }
 
   public async touchMove(
-    array: [x: number, y: number, duration?: number],
-    ...otherArrays: [x: number, y: number, duration?: number][]
-  ): Promise<void> {
-    const touchActions = [
-      {
-        type: "pointerMove",
-        duration: 0,
-        x: array[0],
-        y: array[1],
-        origin: "viewport",
-      },
-      {
-        type: "pointerDown",
-        button: 0,
-      },
-      {
-        type: "pause",
-        duration: array[2] || 10,
-      },
-    ];
-    if (otherArrays.length) {
-      otherArrays.forEach((array) => {
-        touchActions.push({
-          type: "pointerMove",
-          duration: array![2] || 500,
-          x: array![0],
-          y: array![1],
-          origin: "pointer",
-        });
-      });
-    }
-
-    touchActions.push({
-      type: "pointerUp",
-      button: 0,
-    });
-
-    const toSend = {
-      actions: [
-        {
-          type: "pointer",
-          id: "0",
-          parameters: {
-            pointerType: "touch",
-          },
-          actions: touchActions,
-        },
-      ],
-    };
-
-    await this.post("actions", toSend);
-  }
-
-  public async multiTouchMove(
-    ...matrices: [x: number, y: number, duration?: number][][]
+    ...matrices:
+      | [x: number, y: number, duration?: number][]
+      | [x: number, y: number, duration?: number][][]
   ): Promise<void> {
     if (!matrices.length) return;
 
-    const multiTouchActions: any[] = [];
+    // There is an external array called actions and an internal array called actions
+    // The external array represents the fingers used to touch the device
+    // The internal array represents the actions conducted by the fingers
+    const touchActions: any[] = [];
     for (let i = 0; i < matrices.length; i++) {
-      multiTouchActions.push({
-        type: "pointer",
-        id: i.toString(),
-        parameters: {
-          pointerType: "touch",
-        },
-        actions: [],
-      });
-      for (let j = 0; j < matrices[i].length; j++) {
-        if (j === 0) {
-          multiTouchActions[i].actions.push(
+      // Start a new touch actions
+      // Push starting object either if starting a new external array of actions
+      // Or start the only external array of actions
+      if (matrices[i][0][0] || i === 0) {
+        touchActions.push({
+          type: "pointer",
+          id: i.toString(),
+          parameters: {
+            pointerType: "touch",
+          },
+          actions: [],
+        });
+      }
+
+      // Check if we're trying to make touch actions with multiple fingers
+      if (matrices[i][0][0]) {
+        // Add actions to the internal array of the current finger array
+        for (let j = 0; j < matrices[i].length; j++) {
+          // If at the beginning of the current finger array, do starting actions
+          if (j === 0) {
+            touchActions[i].actions.push(
+              {
+                type: "pointerMove",
+                duration: 0,
+                x: matrices[i][j][0],
+                y: matrices[i][j][1],
+                origin: "viewport",
+              },
+              {
+                type: "pointerDown",
+                button: 0,
+              },
+              {
+                type: "pause",
+                duration: matrices[i][j][2] || 10,
+              }
+            );
+          } else {
+            touchActions[i].actions.push({
+              type: "pointerMove",
+              x: matrices[i][j]![0],
+              y: matrices[i][j]![1],
+              duration: matrices[i][j]![2] || 500,
+              origin: "pointer",
+            });
+          }
+          // If at the end of the current finger array, lift the finger
+          if (j === matrices[i].length - 1) {
+            touchActions[i].actions.push({
+              type: "pointerUp",
+              button: 0,
+            });
+          }
+        }
+        // If only using one finger, push all actions to the internal array of that finger
+      } else {
+        // If at the beginning of the one-finger array, do starting actions
+        if (i === 0) {
+          touchActions[0].actions.push(
             {
               type: "pointerMove",
               duration: 0,
-              x: matrices[i][j][0],
-              y: matrices[i][j][1],
+              x: matrices[i][0],
+              y: matrices[i][1],
               origin: "viewport",
             },
             {
@@ -267,20 +266,21 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
             },
             {
               type: "pause",
-              duration: matrices[i][j][2] || 10,
+              duration: matrices[i][2] || 10,
             }
           );
         } else {
-          multiTouchActions[i].actions.push({
+          touchActions[0].actions.push({
             type: "pointerMove",
-            x: matrices[i][j][0],
-            y: matrices[i][j][1],
-            duration: matrices[i][j][2] || 500,
+            duration: matrices[i][2] || 500,
+            x: matrices[i][0],
+            y: matrices[i][1],
             origin: "pointer",
           });
         }
-        if (j === matrices[i].length - 1) {
-          multiTouchActions[i].actions.push({
+        // If at the end of the one-finger array, lift the finger
+        if (i === matrices.length - 1) {
+          touchActions[0].actions.push({
             type: "pointerUp",
             button: 0,
           });
@@ -289,7 +289,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     }
 
     await this.post("actions", {
-      actions: multiTouchActions,
+      actions: touchActions,
     });
   }
 
