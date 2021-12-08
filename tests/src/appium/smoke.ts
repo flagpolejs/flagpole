@@ -33,6 +33,8 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       const hello = await context.findAll("id/pager_signin_button");
       context.assert(hello[0]).exists();
       context.assert(hello.length).greaterThan(0);
+      await hello[0].zoom([100, 100, 1000]);
+      await hello[0].pinch([100, 100, 1000]);
       const textViews = await context.findAll(
         "class name/android.widget.TextView"
       );
