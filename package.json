@@ -29,6 +29,7 @@
   "dependencies": {
     "@flagpolejs/json-to-jsonschema": "^0.0.3",
     "@flagpolejs/json-to-jtd": "0.0.2",
+    "@rgrove/parse-xml": "^3.0.0",
     "@types/cheerio": "^0.22.30",
     "@zerodeps/image-probe": "0.0.3",
     "ajv": "^8.6.2",

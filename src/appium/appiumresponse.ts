@@ -118,6 +118,21 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
+    const selectors = [
+      "id",
+      "xpath",
+      "class name",
+      "accessibility id",
+      "css selector",
+      "-ios class chain",
+      "-ios predicate string",
+      "-android uiautomator",
+      "-android viewtag",
+      "-android datamatcher",
+      "-android viewmatcher",
+      "tag name",
+      "text",
+    ];
     const usingValue = selector.split(/\/(.+)/);
     let elements: iValue[] = [];
     const params = getFindParams(a, b);
@@ -136,7 +151,9 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           const element = await AppiumElement.create(
             selector,
             this.context,
-            selector,
+            selectors.includes(selector.split(/\/(.+)/)[0])
+              ? selector
+              : "text/" + params.contains,
             values[i].$
           );
           elements.push(element);

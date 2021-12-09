@@ -88,6 +88,11 @@
     "@nodelib/fs.scandir" "2.1.4"
     "fastq" "^1.6.0"
 
+"@rgrove/parse-xml@^3.0.0":
+  "integrity" "sha512-GFGDywRwGbuGq9yeL8wTjjLOsZ5Ps4O5tQ71eDcAfaZrZeA7Oe8QJzrnmFgplWtnoaBIBaFBB3n5Ht9iU4jLLw=="
+  "resolved" "https://registry.npmjs.org/@rgrove/parse-xml/-/parse-xml-3.0.0.tgz"
+  "version" "3.0.0"
+
 "@types/bluebird-global@^3.5.12":
   "integrity" "sha512-nRtDpyG4+SZej9mTOMG9Omunbgw04nhmHzVB1qgQUwREAX2lumCmvn5EzwydUuj7b1D3nOjm6elXQyNarsBUFw=="
   "resolved" "https://registry.npmjs.org/@types/bluebird-global/-/bluebird-global-3.5.12.tgz"
@@ -2920,9 +2925,9 @@
   "version" "1.0.0"
 
 "validator@^13.6.0":
-  "integrity" "sha512-gVgKbdbHgtxpRyR8K0O6oFZPhhB5tT1jeEHZR0Znr9Svg03U0+r9DXWMrnRAB+HtCStDQKlaIZm42tVsVjqtjg=="
-  "resolved" "https://registry.npmjs.org/validator/-/validator-13.6.0.tgz"
-  "version" "13.6.0"
+  "integrity" "sha512-nYXQLCBkpJ8X6ltALua9dRrZDHVYxjJ1wgskNt1lH9fzGjs3tgojGSCBjmEPwkWS1y29+DrizMTW19Pr9uB2nw=="
+  "resolved" "https://registry.npmjs.org/validator/-/validator-13.7.0.tgz"
+  "version" "13.7.0"
 
 "walkdir@^0.4.1":
   "integrity" "sha512-3eBwRyEln6E1MSzcxcVpQIhRG8Q1jLvEqRmCZqS3dsfXEDR/AhOF4d+jHg1qvDCpYaVRZjENPQyrVxAkQqxPgQ=="
@@ -2982,6 +2987,11 @@
   "integrity" "sha512-kQ/dHIzuLrS6Je9+uv81ueZomEwH0qVYstcAQ4/Z93K8zeko9gtAbttJWzoC5ukqXY1PpoouV3+VSOqEAFt5wg=="
   "resolved" "https://registry.npmjs.org/ws/-/ws-7.5.3.tgz"
   "version" "7.5.3"
+
+"xpath@^0.0.32":
+  "integrity" "sha512-rxMJhSIoiO8vXcWvSifKqhvV96GjiD5wYb8/QHdoRyQvraTpp4IEv944nhGausZZ3u7dhQXteZuZbaqfpB7uYw=="
+  "resolved" "https://registry.npmjs.org/xpath/-/xpath-0.0.32.tgz"
+  "version" "0.0.32"
 
 "xtend@~4.0.1":
   "integrity" "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ=="

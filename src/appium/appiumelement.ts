@@ -2,8 +2,8 @@ import { iValue, iAssertionContext } from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
-import { sendAppiumRequest } from "./appium-helpers";
 import { AppiumResponse } from "./appiumresponse";
+import * as parseXml from "@rgrove/parse-xml";
 
 export class AppiumElement extends DOMElement implements iValue {
   protected _elementId: string;
@@ -111,7 +111,7 @@ export class AppiumElement extends DOMElement implements iValue {
     throw "_getClassName not implemented";
   }
 
-  protected async _getAttribute(key: string): Promise<string | null> {
+  protected async _getAttribute(key?: string): Promise<string | null> {
     const possibleAttributes = [
       "checkable",
       "checked",
@@ -140,12 +140,41 @@ export class AppiumElement extends DOMElement implements iValue {
       "contentSize",
     ];
 
-    if (!possibleAttributes.includes(key)) {
+    if (key && !possibleAttributes.includes(key)) {
       throw `Invalid attribute: must be one of ${possibleAttributes.join(
         ", "
       )}`;
     }
+
+    if (!key) {
+      const xmlString = await this.session.body;
+      const doc = parseXml(xmlString.$);
+      const childrenJson = doc.children[0].toJSON();
+      const packageName = childrenJson.children[1].attributes.package;
+      const elementIdentifier = this.name.startsWith("id")
+        ? packageName + ":" + this.name
+        : this.name.split(/\/(.+)/)[1];
+      const node = this._findVal(doc.children, elementIdentifier);
+      console.log(node.attributes);
+    }
+
     return this.session.get(`element/${this._elementId}/attribute/${key}`);
+  }
+
+  protected _findVal(obj: any, searchVal: string) {
+    for (const node of obj) {
+      if (node.attributes) {
+        if (
+          node.attributes["resource-id"] === searchVal ||
+          node.attributes["content-desc"] === searchVal
+        )
+          return node;
+      }
+      if (node.children) {
+        const child = this._findVal(node.children, searchVal);
+        if (child) return child;
+      }
+    }
   }
 
   public toString(): string {

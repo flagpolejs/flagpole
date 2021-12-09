@@ -252,7 +252,7 @@ export interface iValue {
   getValue(): Promise<iValue>;
   getText(): Promise<iValue>;
   getClassName(): Promise<iValue>;
-  getAttribute(key: string): Promise<iValue>;
+  getAttribute(key?: string): Promise<iValue>;
   getProperty(key: string): Promise<iValue>;
   getTag(): Promise<iValue>;
   hasTag(tag?: string | RegExp): Promise<boolean>;
