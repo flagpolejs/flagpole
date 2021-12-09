@@ -155,7 +155,7 @@ export class AppiumElement extends DOMElement implements iValue {
         ? packageName + ":" + this.name
         : this.name.split(/\/(.+)/)[1];
       const node = this._findVal(doc.children, elementIdentifier);
-      console.log(node.attributes);
+      return JSON.stringify(node.attributes);
     }
 
     return this.session.get(`element/${this._elementId}/attribute/${key}`);
@@ -166,7 +166,8 @@ export class AppiumElement extends DOMElement implements iValue {
       if (node.attributes) {
         if (
           node.attributes["resource-id"] === searchVal ||
-          node.attributes["content-desc"] === searchVal
+          node.attributes["content-desc"] === searchVal ||
+          node.attributes["text"] === searchVal
         )
           return node;
       }
