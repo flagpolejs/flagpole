@@ -182,6 +182,27 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     await this.post("appium/device/hide_keyboard", {});
   }
 
+  public async click(selector: string, opts?: FindOptions): Promise<iValue>;
+  public async click(
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async click(
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async click(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<iValue> {
+    let element = await this.find(selector, a, b);
+    element = await element.click();
+    return element;
+  }
+
   public async touchMove(
     array: [x: number, y: number, duration?: number],
     ...otherArrays: [x: number, y: number, duration?: number][]
