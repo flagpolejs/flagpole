@@ -358,7 +358,7 @@ export interface iResponse {
   getRoot(): any;
   find(path: string, opts?: FindOptions): ValuePromise;
   find(path: string, contains: string, opts?: FindOptions): ValuePromise;
-  find(path: string, mathces: RegExp, opts?: FindOptions): ValuePromise;
+  find(path: string, matches: RegExp, opts?: FindOptions): ValuePromise;
   findAll(path: string, opts?: FindAllOptions): Promise<iValue[]>;
   findAll(
     path: string,
