@@ -151,28 +151,37 @@ export class AppiumElement extends DOMElement implements iValue {
       const doc = parseXml(xmlString.$);
       const childrenJson = doc.children[0].toJSON();
       const packageName = childrenJson.children[1].attributes.package;
-      const elementIdentifier = this.name.startsWith("id")
+      let elementIdAttr = "resource-id";
+      switch (this.name.split(/\/(.+)/)[0]) {
+        case "class name":
+          elementIdAttr = "class";
+          break;
+        case "accessibility id":
+          elementIdAttr = "content-desc";
+          break;
+        case "text":
+          elementIdAttr = "text";
+          break;
+        default:
+          elementIdAttr = "resource-id";
+      }
+      const elementUniqueId = this.name.startsWith("id")
         ? packageName + ":" + this.name
         : this.name.split(/\/(.+)/)[1];
-      const node = this._findVal(doc.children, elementIdentifier);
+      const node = this._findVal(doc.children, elementUniqueId, elementIdAttr);
       return JSON.stringify(node.attributes);
     }
 
     return this.session.get(`element/${this._elementId}/attribute/${key}`);
   }
 
-  protected _findVal(obj: any, searchVal: string) {
+  protected _findVal(obj: any, searchVal: string, elementIdAttr: string) {
     for (const node of obj) {
       if (node.attributes) {
-        if (
-          node.attributes["resource-id"] === searchVal ||
-          node.attributes["content-desc"] === searchVal ||
-          node.attributes["text"] === searchVal
-        )
-          return node;
+        if (node.attributes[elementIdAttr] === searchVal) return node;
       }
       if (node.children) {
-        const child = this._findVal(node.children, searchVal);
+        const child = this._findVal(node.children, searchVal, elementIdAttr);
         if (child) return child;
       }
     }
