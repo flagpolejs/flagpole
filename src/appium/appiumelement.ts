@@ -8,6 +8,7 @@ import * as parseXml from "@rgrove/parse-xml";
 export class AppiumElement extends DOMElement implements iValue {
   protected _elementId: string;
   protected _response: JsonDoc | undefined;
+  protected _offset: number;
 
   protected get session(): AppiumResponse {
     return this.context.response as AppiumResponse;
@@ -17,9 +18,10 @@ export class AppiumElement extends DOMElement implements iValue {
     input: string,
     context: iAssertionContext,
     name: string,
-    elementId: string
+    elementId: string,
+    offset: number
   ): Promise<AppiumElement> {
-    const element = new AppiumElement(input, context, name, elementId);
+    const element = new AppiumElement(input, context, name, elementId, offset);
     element._tagName = await element._getTagName();
     if (name === null || name === "") {
       if (element._tagName !== null) {
@@ -33,10 +35,12 @@ export class AppiumElement extends DOMElement implements iValue {
     input: string,
     context: iAssertionContext,
     name: string | null,
-    elementId: string
+    elementId: string,
+    offset: number
   ) {
     super(input, context, name || "Appium Element", input);
     this._elementId = elementId || "";
+    this._offset = offset || 0;
   }
 
   public async click(): Promise<iValue> {
@@ -168,20 +172,40 @@ export class AppiumElement extends DOMElement implements iValue {
       const elementUniqueId = this.name.startsWith("id")
         ? packageName + ":" + this.name
         : this.name.split(/\/(.+)/)[1];
-      const node = this._findVal(doc.children, elementUniqueId, elementIdAttr);
+      const node = this._findVal(
+        doc.children,
+        elementUniqueId,
+        elementIdAttr,
+        this._offset
+      );
       return JSON.stringify(node.attributes);
     }
 
     return this.session.get(`element/${this._elementId}/attribute/${key}`);
   }
 
-  protected _findVal(obj: any, searchVal: string, elementIdAttr: string) {
+  protected _findVal(
+    obj: any,
+    searchVal: string,
+    elementIdAttr: string,
+    offset: number,
+    iter: number = 0
+  ) {
     for (const node of obj) {
       if (node.attributes) {
-        if (node.attributes[elementIdAttr] === searchVal) return node;
+        if (node.attributes[elementIdAttr] === searchVal) {
+          if (iter === offset) return node;
+          iter++;
+        }
       }
       if (node.children) {
-        const child = this._findVal(node.children, searchVal, elementIdAttr);
+        const child = this._findVal(
+          node.children,
+          searchVal,
+          elementIdAttr,
+          offset,
+          iter
+        );
         if (child) return child;
       }
     }

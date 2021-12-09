@@ -104,7 +104,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           selector,
           this.context,
           selector,
-          res.jsonRoot.value.ELEMENT
+          res.jsonRoot.value.ELEMENT,
+          0
         );
         return element;
       } else {
@@ -154,7 +155,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
             selectors.includes(selector.split(/\/(.+)/)[0])
               ? selector
               : "text/" + params.contains,
-            values[i].$
+            values[i].$,
+            i
           );
           elements.push(element);
           return elements;
@@ -177,7 +179,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           selector,
           this.context,
           selector,
-          res.jsonRoot.value[i].ELEMENT
+          res.jsonRoot.value[i].ELEMENT,
+          i
         )
       );
     }
