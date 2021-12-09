@@ -464,7 +464,7 @@ Note that findAll does not work in this manner on Appium elements.
 
 Give this element focus.
 
-### getAttribute(key: string): Promise\<Value\>
+### getAttribute(key?: string): Promise\<Value\>
 
 Get the attribute of the element with this key and return its value. If it is not present the Value object will contain null.
 
@@ -473,7 +473,9 @@ const src = await img.getAttribute("src");
 ```
 
 This also works with Appium testing. Valid attributes for Appium elements are:
-checkable, checked, class, className, clickable, content-desc, contentDescription, enabled, focusable, focused, long-clickable, longClickable, package, password, resource-id, resourceId, scrollable, selection-start, selection-end, selected, text, name, bounds, displayed, contentSize
+checkable, checked, class, className, clickable, content-desc, contentDescription, enabled, focusable, focused, long-clickable, longClickable, package, password, resource-id, resourceId, scrollable, selection-start, selection-end, selected, text, name, bounds, displayed, contentSize.
+
+In Appium testing, if no key is passed, a JSON string will be returned containing all attributes of an element. Currently, this does not work if getting all attributes for an element found by xpath. Getting a single attribute of an element found by xpath still works.
 
 ### getBounds(boxType: string): Promise\<iBounds | null\>;
 

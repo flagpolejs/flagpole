@@ -400,6 +400,17 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     })();
   }
 
+  public async getAttribute(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions,
+    key?: string
+  ): Promise<iValue | null> {
+    const element = await this.find(selector, a, b);
+    const attr = await element.getAttribute(key);
+    return attr;
+  }
+
   public async get(suffix: string): Promise<any> {
     return sendAppiumRequest(
       this.scenario,
