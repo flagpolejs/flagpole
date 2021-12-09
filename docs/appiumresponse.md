@@ -42,6 +42,26 @@ const response = context.response as AppiumResponse;
 const geolocation = await response.getGeolocation();
 ```
 
+### isVisible(selector: string, opts?: FindOptions): Promise\<boolean\>
+
+Select the first matching element and check if it is visible.
+
+Note that it only checks one element.
+
+The `opts` argument works the same way as it does when running `find()`. See that documentation for details.
+
+```typescript
+const response = context.response as AppiumResponse;
+const loginVisible = await response.isVisible("id/login_button");
+context.assert(loginVisible).equals(true);
+```
+
+### isVisible(selector: string, contents: string, opts?: FindOptions): Promise\<boolean\>
+
+Select the first matching element by selector and text. Check if it is visible.
+
+This works the same way as `find()`, only it also checks if the element is visible.
+
 ### touchMove(array: [x: number, y: number, duration?: number]): Promise\<void\>
 
 Send a touch interaction to a specific, onscreen x-y coordinate. The optional duration index specifies how many milliseconds to hold the touch interaction.

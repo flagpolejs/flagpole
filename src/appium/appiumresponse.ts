@@ -327,7 +327,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     }
     while (!isVisible) {
       if (timedOut) return wrapAsValue(this.context, null, selector);
-      isVisible = await this.isVisible(element);
+      isVisible = await element.isVisible();
       await this._delay(10);
     }
     return element;
@@ -350,15 +350,20 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     }
     while (isVisible) {
       if (timedOut) return wrapAsValue(this.context, null, selector);
-      isVisible = await this.isVisible(element);
+      isVisible = await element.isVisible();
       await this._delay(10);
     }
     return element;
   }
 
-  public async isVisible(element: iValue): Promise<boolean> {
-    const res = await this.get(`element/${element}/displayed`);
-    return res.jsonRoot.value;
+  public async isVisible(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<boolean> {
+    const element = await this.find(selector, a, b);
+    const res = await element.isVisible();
+    return res;
   }
 
   private async _setImplicitWait(ms: number): Promise<void> {
