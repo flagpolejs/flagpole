@@ -42,6 +42,15 @@ const response = context.response as AppiumResponse;
 const geolocation = await response.getGeolocation();
 ```
 
+### getTagName(): Promise \<iValue\>
+
+Get tag name of an element by selector
+
+```typescript
+const response = context.response as AppiumResponse;
+const tagName = await response.getTagName("id/login-button");
+```
+
 ### touchMove(array: [x: number, y: number, duration?: number]): Promise\<void\>
 
 Send a touch interaction to a specific, onscreen x-y coordinate. The optional duration index specifies how many milliseconds to hold the touch interaction.
