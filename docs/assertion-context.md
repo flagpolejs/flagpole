@@ -478,6 +478,22 @@ scenario
   });
 ```
 
+### getAttribute(selector: string, opts?: FindOptions): Promise\<iValue\>
+
+Get all attributes of an element by selector, if it's an Appium element. Non-Appium elements must have a key argument to get a specific attribute.
+
+### getAttribute(selector: string, key: string, opts?: FindOptions): Promise\<iValue\>
+
+Get a single attribute of an element by selector.
+
+### getAttribute(selector: string, contains: string, key: string, opts?: FindOptions): Promise\<iValue\>
+
+Get a single attribute of an element by selector and text. Please note that if finding an element by seletor and text, the argument for text, `contains`, comes before the argument for the attribute, `key`.
+
+### getAttribute(selector: string, matches: RegExp, key: string, opts?: FindOptions): Promise\<iValue\>
+
+Get a single attribute of an element by selector and regular expression.
+
 ### getScreenProperties(): Promise\<ScreenProperties\>
 
 Get properties of screen of device under tests. Currently only works with Appium. Returns angle, dimensions, and rotation.
