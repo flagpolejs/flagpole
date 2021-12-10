@@ -464,8 +464,27 @@ export abstract class ProtoResponse implements iResponse {
   public async getScreenProperties(): Promise<ScreenProperties> {
     throw "getScreenProperties not implemented for this kind of scenario.";
   }
-  
+
   public async hideKeyboard(): Promise<void> {
     throw "hideKeyboard not implemented for this kind of scenario.";
+  }
+
+  public async getText(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<iValue> {
+    const contains = typeof a == "string" ? a : undefined;
+    const matches = a instanceof RegExp ? a : undefined;
+    const opts = (b || a || {}) as FindOptions;
+    const element = contains
+      ? await this.find(selector, contains, opts)
+      : matches
+      ? await this.find(selector, matches, opts)
+      : await this.find(selector, opts);
+    if (!(await element.exists()).isNull()) {
+      return await element.getText();
+    }
+    return element;
   }
 }

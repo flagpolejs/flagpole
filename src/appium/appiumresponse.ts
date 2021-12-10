@@ -361,6 +361,16 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return res.jsonRoot.value;
   }
 
+  public async getText(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<iValue> {
+    const element = await this.find(selector, a, b);
+    const textVal = await element.getText();
+    return textVal;
+  }
+
   private async _setImplicitWait(ms: number): Promise<void> {
     await this.post("timeouts/implicit_wait", {
       ms: ms,

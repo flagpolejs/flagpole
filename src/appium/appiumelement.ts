@@ -2,8 +2,8 @@ import { iValue, iAssertionContext } from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
-import { sendAppiumRequest } from "./appium-helpers";
 import { AppiumResponse } from "./appiumresponse";
+import { wrapAsValue } from "../helpers";
 
 export class AppiumElement extends DOMElement implements iValue {
   protected _elementId: string;
@@ -78,12 +78,18 @@ export class AppiumElement extends DOMElement implements iValue {
     return !!res.jsonRoot.value;
   }
 
+  public async getText(): Promise<iValue> {
+    const text = await this._getText();
+    return wrapAsValue(this.context, text, this.name);
+  }
+
   protected async _getValue(): Promise<any> {
     throw "_getValue not implemented";
   }
 
   protected async _getText(): Promise<string> {
-    return this.session.get(`element/${this._elementId}/text`);
+    const res = await this.session.get(`element/${this._elementId}/text`);
+    return res.jsonRoot.value;
   }
 
   protected async _getTagName(): Promise<string> {

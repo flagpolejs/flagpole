@@ -480,6 +480,14 @@ scenario
   });
 ```
 
+### getText(selector: string, a?: string | RegExp | FindOpts, b?: FindOptions): Promise\<iValue\>
+
+Gets the text of an element, which will be found using the parameters passed in.
+
+Parameters work the same way as `find()`, since this is a shortcut to calling `find()` followed by `getText()`.
+
+### getText(selector: string): Promise\<iValue\>
+
 ### getScreenProperties(): Promise\<ScreenProperties\>
 
 Get properties of screen of device under tests. Currently only works with Appium. Returns angle, dimensions, and rotation.
