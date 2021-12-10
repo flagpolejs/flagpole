@@ -468,4 +468,71 @@ export abstract class ProtoResponse implements iResponse {
   public async hideKeyboard(): Promise<void> {
     throw "hideKeyboard not implemented for this kind of scenario.";
   }
+
+  public async getAttribute(
+    selector: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async getAttribute(
+    selector: string,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async getAttribute(
+    selector: string,
+    contains: string,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async getAttribute(
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async getAttribute(
+    selector: string,
+    matches: RegExp,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async getAttribute(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: string | FindOptions,
+    c?: FindOptions
+  ): Promise<iValue> {
+    // Attribute key to check for
+    // This is the third argument if it's a string, or the second argument if it's a string and the third arguemnt is not, else it's undefined
+    const key: string | undefined =
+      typeof b === "string" ? b : typeof a === "string" ? a : undefined;
+    // Text or RegEx to be found on the element
+    // Is the second argument if it's a RegEx, the third argument if both the second and third arguments are strings
+    const containsOrMatches: string | RegExp | undefined =
+      a instanceof RegExp || (typeof a === "string" && typeof b === "string")
+        ? a
+        : undefined;
+    // FindOptions
+    // Is whichever argument is an instance of FindOptions
+    const opts: FindOptions | undefined =
+      typeof a !== "string" && !(a instanceof RegExp)
+        ? a
+        : typeof b !== "string"
+        ? b
+        : c;
+
+    const contains =
+      typeof containsOrMatches === "string" ? containsOrMatches : undefined;
+    const matches =
+      containsOrMatches instanceof RegExp ? containsOrMatches : undefined;
+
+    const element = contains
+      ? await this.find(selector, contains, opts)
+      : matches
+      ? await this.find(selector, matches, opts)
+      : await this.find(selector, opts);
+    if (!(await element.exists()).isNull()) {
+      return await element.getAttribute(key);
+    }
+    return element;
+  }
 }

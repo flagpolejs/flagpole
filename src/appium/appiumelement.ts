@@ -181,7 +181,10 @@ export class AppiumElement extends DOMElement implements iValue {
       return JSON.stringify(node.attributes);
     }
 
-    return this.session.get(`element/${this._elementId}/attribute/${key}`);
+    const res = await this.session.get(
+      `element/${this._elementId}/attribute/${key}`
+    );
+    return res.jsonRoot.value;
   }
 
   protected _findVal(

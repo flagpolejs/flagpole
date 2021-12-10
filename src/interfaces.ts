@@ -434,6 +434,35 @@ export interface iResponse {
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getAttribute(selector: string, opts?: FindOptions): Promise<iValue>;
+  getAttribute(
+    selector: string,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  getAttribute(
+    selector: string,
+    contains: string,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  getAttribute(
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  getAttribute(
+    selector: string,
+    matches: RegExp,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  getAttribute(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: string | FindOptions,
+    c?: FindOptions
+  ): Promise<iValue>;
 }
 
 export interface iAssertionIs {
@@ -721,6 +750,35 @@ export interface iAssertionContext {
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getAttribute(selector: string, opts?: FindOptions): Promise<iValue>;
+  getAttribute(
+    selector: string,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  getAttribute(
+    selector: string,
+    contains: string,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  getAttribute(
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  getAttribute(
+    selector: string,
+    matches: RegExp,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  getAttribute(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: string | FindOptions,
+    c?: FindOptions
+  ): Promise<iValue>;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;

@@ -400,6 +400,62 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     })();
   }
 
+  public async getAttribute(
+    selector: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async getAttribute(
+    selector: string,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async getAttribute(
+    selector: string,
+    contains: string,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async getAttribute(
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async getAttribute(
+    selector: string,
+    matches: RegExp,
+    key: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  public async getAttribute(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: string | FindOptions,
+    c?: FindOptions
+  ): Promise<iValue> {
+    // Attribute key to check for
+    // This is the third argument if it's a string, or the second argument if it's a string and the third arguemnt is not, else it's undefined
+    const key: string | undefined =
+      typeof b === "string" ? b : typeof a === "string" ? a : undefined;
+    // Text or RegEx to be found on the element
+    // Is the second argument if it's a RegEx, the third argument if both the second and third arguments are strings
+    const containsOrMatches: string | RegExp | undefined =
+      a instanceof RegExp || (typeof a === "string" && typeof b === "string")
+        ? a
+        : undefined;
+    // FindOptions
+    // Is whichever argument is an instance of FindOptions
+    const opts: FindOptions | undefined =
+      typeof a !== "string" && !(a instanceof RegExp)
+        ? a
+        : typeof b !== "string"
+        ? b
+        : c;
+
+    const element = await this.find(selector, containsOrMatches, opts);
+    const attribute = await element.getAttribute(key);
+    return attribute;
+  }
+
   public async get(suffix: string): Promise<any> {
     return sendAppiumRequest(
       this.scenario,
