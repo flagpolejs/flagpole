@@ -13,6 +13,10 @@ export class AppiumElement extends DOMElement implements iValue {
     return this.context.response as AppiumResponse;
   }
 
+  public get tagName(): string {
+    return this._name!;
+  }
+
   public static async create(
     input: string,
     context: iAssertionContext,

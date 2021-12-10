@@ -42,14 +42,6 @@ const response = context.response as AppiumResponse;
 const geolocation = await response.getGeolocation();
 ```
 
-### getTagName(): Promise \<iValue\>
-
-Get tag name of an element by selector
-
-```typescript
-const response = context.response as AppiumResponse;
-const tagName = await response.getTagName("id/login-button");
-```
 
 ### touchMove(array: [x: number, y: number, duration?: number]): Promise\<void\>
 

@@ -434,6 +434,22 @@ export interface iResponse {
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getTag(selector: string, opts?: FindOptions): Promise<iValue>;
+  getTag(
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  getTag(
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): Promise<iValue>;
+  getTag(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<iValue>;
 }
 
 export interface iAssertionIs {
@@ -721,6 +737,11 @@ export interface iAssertionContext {
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getTag(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): Promise<iValue>;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;

@@ -361,7 +361,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return res.jsonRoot.value;
   }
 
-  public async getTagName(
+  public async getTag(
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions

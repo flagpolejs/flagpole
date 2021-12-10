@@ -567,12 +567,12 @@ Get the siblings of the current element. If a selector string is passed, it will
 const siblings = await someElement.getSiblings("li");
 ```
 
-### getTagName(): Promise\<Value\>
+### getTag(): Promise\<Value\>
 
 Get the HTML tag of this element.
 
 ```javascript
-const tagName = await someElement.getTagName();
+const tagName = await someElement.getTag();
 ```
 
 Also works to get tag names of Appium elements, depending on the automation driver.

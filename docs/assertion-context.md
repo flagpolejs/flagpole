@@ -488,6 +488,15 @@ Get properties of screen of device under tests. Currently only works with Appium
 const screenProperties = await context.getScreenProperties();
 ```
 
+### getTag(selector: string, a?: string | RegExp | FindOpts, b?: FindOpts): Promise \<iValue\>
+
+Get tag name of an element by selector. Selector and other parameters works the same way as in `find()`.
+
+```typescript
+const tagName = await context.getTag("li");
+```
+
+
 ### hideKeyboard(): Promise\<void\>
 
 Hide onscreen keyboard. Currently only works in Appium scenarios. Does not work on iOS unless the keyboard on the device under test has a dedicated dismiss button.
