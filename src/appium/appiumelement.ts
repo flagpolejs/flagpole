@@ -2,7 +2,6 @@ import { iValue, iAssertionContext, iBounds } from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
-import { sendAppiumRequest } from "./appium-helpers";
 import { AppiumResponse } from "./appiumresponse";
 
 export class AppiumElement extends DOMElement implements iValue {
@@ -109,7 +108,7 @@ export class AppiumElement extends DOMElement implements iValue {
 
   public async longPress(ms: number = 1000): Promise<string | void> {
     const boundsRes = await this.getBounds();
-    if (!boundsRes) return "Error: element bounds not acquired";
+    if (!boundsRes) throw "Error: element bounds not acquired";
     await this.context.response.touchMove([
       boundsRes.points[1].x,
       boundsRes.points[1].y,
