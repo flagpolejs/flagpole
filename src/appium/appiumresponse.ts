@@ -366,20 +366,13 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     textToType: string,
     opts: any = {}
   ): ValuePromise {
-    return ValuePromise.execute(async () => {
-      let element = await this.find(selector, opts);
-      element = await element.type(textToType);
-
-      return element;
-    });
+    return ValuePromise.execute(async () =>
+      this.find(selector, opts).type(textToType)
+    );
   }
 
   public clear(selector: string): ValuePromise {
-    return ValuePromise.execute(async () => {
-      let element = await this.find(selector);
-      element = await element.clear();
-      return element;
-    });
+    return ValuePromise.execute(async () => this.find(selector).clear());
   }
 
   public clearThenType(
@@ -387,13 +380,9 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     textToType: string,
     opts: any = {}
   ): ValuePromise {
-    return ValuePromise.execute(async () => {
-      let element = await this.find(selector, opts);
-      element = await element.clear();
-      element = await element.type(textToType);
-
-      return element;
-    });
+    return ValuePromise.execute(async () =>
+      this.find(selector, opts).clear().type(textToType)
+    );
   }
 
   private async _setImplicitWait(ms: number): Promise<void> {
