@@ -464,7 +464,7 @@ export abstract class ProtoResponse implements iResponse {
   public async getScreenProperties(): Promise<ScreenProperties> {
     throw "getScreenProperties not implemented for this kind of scenario.";
   }
-  
+
   public async hideKeyboard(): Promise<void> {
     throw "hideKeyboard not implemented for this kind of scenario.";
   }

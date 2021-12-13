@@ -361,6 +361,26 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return res.jsonRoot.value;
   }
 
+  // Uses deprecated JSONWP call
+  public async isAppInstalled(bundleId: string): Promise<boolean> {
+    let res = new JsonDoc("");
+    if (this._isAndroid) {
+      res = await this.post("appium/device/app_installed", {
+        bundleId: bundleId,
+      });
+    } else if (this._isIos) {
+      res = await this.post("execute", {
+        script: "mobile: isAppInstalled",
+        args: [
+          {
+            bundleId: bundleId,
+          },
+        ],
+      });
+    }
+    return res.jsonRoot.value;
+  }
+
   public type(
     selector: string,
     textToType: string,
