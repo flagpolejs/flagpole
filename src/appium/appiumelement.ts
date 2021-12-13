@@ -19,7 +19,7 @@ export class AppiumElement extends DOMElement implements iValue {
     context: iAssertionContext,
     name: string,
     elementId: string,
-    offset: number
+    offset: number = 0
   ): Promise<AppiumElement> {
     const element = new AppiumElement(input, context, name, elementId, offset);
     element._tagName = await element._getTagName();
