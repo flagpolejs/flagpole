@@ -486,6 +486,15 @@ Get properties of screen of device under tests. Currently only works with Appium
 const screenProperties = await context.getScreenProperties();
 ```
 
+### getSource(): Promise\<iValue\>
+
+Get HTML or XML representation of current page or viewport.
+Currently only works to get XML of Appium viewport.
+
+```javascript
+const source = await context.getSource();
+```
+
 ### hideKeyboard(): Promise\<void\>
 
 Hide onscreen keyboard. Currently only works in Appium scenarios. Does not work on iOS unless the keyboard on the device under test has a dedicated dismiss button.

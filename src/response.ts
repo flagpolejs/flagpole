@@ -88,7 +88,7 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * Raw Response Body
    */
-  public get body(): iValue | Promise<iValue> {
+  public get body(): iValue {
     return wrapAsValue(
       this.context,
       this.httpResponse.body,
@@ -230,6 +230,12 @@ export abstract class ProtoResponse implements iResponse {
 
   public getRoot(): any {
     return this.httpResponse.body;
+  }
+
+  public async getSource(): Promise<iValue> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support getSource.`
+    );
   }
 
   /**

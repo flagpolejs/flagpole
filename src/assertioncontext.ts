@@ -658,6 +658,10 @@ export class AssertionContext implements iAssertionContext {
     await this.response.hideKeyboard();
   }
 
+  public async getSource(): Promise<iValue> {
+    return await this.response.getSource();
+  }
+
   protected async _findAllForSelectors(
     selectors: string[],
     a?: string | FindAllOptions | RegExp,
