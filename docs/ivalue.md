@@ -475,9 +475,11 @@ const src = await img.getAttribute("src");
 This also works with Appium testing. Valid attributes for Appium elements are:
 checkable, checked, class, className, clickable, content-desc, contentDescription, enabled, focusable, focused, long-clickable, longClickable, package, password, resource-id, resourceId, scrollable, selection-start, selection-end, selected, text, name, bounds, displayed, contentSize
 
-### getBounds(boxType: string): Promise\<iBounds | null\>;
+### getBounds(boxType?: string): Promise\<iBounds | null\>;
 
 Get the bounds of this DOM Element.
+
+Supported with browser and Appium type scenarios.
 
 ### getChildren(selector?: string): Promise\<DOMElement[]\>
 

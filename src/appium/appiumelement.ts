@@ -1,4 +1,4 @@
-import { iValue, iAssertionContext } from "../interfaces";
+import { iValue, iAssertionContext, iBounds } from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
@@ -78,6 +78,35 @@ export class AppiumElement extends DOMElement implements iValue {
     return !!res.jsonRoot.value;
   }
 
+  public async getBounds(): Promise<iBounds | null> {
+    const res = await this.session.get(`element/${this._elementId}/rect`);
+
+    if (res.jsonRoot.value.error) return null;
+
+    const bounds: iBounds = {
+      x: res.jsonRoot.value.x,
+      y: res.jsonRoot.value.y,
+      height: res.jsonRoot.value.height,
+      width: res.jsonRoot.value.width,
+      points: [
+        {
+          x: res.jsonRoot.value.x,
+          y: res.jsonRoot.value.y,
+        },
+        {
+          x: res.jsonRoot.value.x + res.jsonRoot.value.width / 2,
+          y: res.jsonRoot.value.y + res.jsonRoot.value.height / 2,
+        },
+        {
+          x: res.jsonRoot.value.x + res.jsonRoot.value.width,
+          y: res.jsonRoot.value.y + res.jsonRoot.value.height,
+        },
+      ],
+    };
+
+    return bounds;
+  }
+
   protected async _getValue(): Promise<any> {
     throw "_getValue not implemented";
   }
@@ -91,8 +120,12 @@ export class AppiumElement extends DOMElement implements iValue {
     return res.jsonRoot.value || null;
   }
 
-  protected async _getProperty(key: string): Promise<any> {
-    throw "_getProperty not implemented";
+  protected async _getProperty(property: string): Promise<string> {
+    const res = await this.session.get(
+      `element/${this._elementId}/css/${property}`
+    );
+
+    return res.jsonRoot.value || null;
   }
 
   protected async _getOuterHtml(): Promise<string> {
