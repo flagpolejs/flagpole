@@ -199,7 +199,7 @@ export class AssertionContext implements iAssertionContext {
     textToType: string,
     opts: any = {}
   ): ValuePromise {
-    return this.clearThenType(selector, textToType, opts);
+    return this.response.clearThenType(selector, textToType, opts);
   }
 
   /**
