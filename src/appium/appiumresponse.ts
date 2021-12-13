@@ -421,6 +421,37 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     );
   }
 
+  // Uses deprecated JSONWP call
+  public async getAppiumContexts(): Promise<string[]> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/contexts`,
+      {
+        method: "get",
+      }
+    );
+
+    return res.jsonRoot.value;
+  }
+
+  // Uses deprecated JSONWP call
+  public async setAppiumContext(appiumContext: string): Promise<void> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/context`,
+      {
+        method: "post",
+        data: {
+          name: appiumContext,
+        },
+      }
+    );
+
+    if (res.jsonRoot.value?.error) {
+      throw res.jsonRoot.value.message;
+    }
+  }
+  
   public async goBack(): Promise<void> {
     await this.post("back", {});
 }
