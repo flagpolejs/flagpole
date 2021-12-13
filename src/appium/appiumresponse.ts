@@ -388,8 +388,10 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     opts: any = {}
   ): ValuePromise {
     return ValuePromise.execute(async () => {
-      let element = await this.clear(selector);
-      element = await this.type(selector, textToType, opts);
+      let element = await this.find(selector, opts);
+      element = await element.clear();
+      element = await element.type(textToType);
+
       return element;
     });
   }
