@@ -441,6 +441,11 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     );
   }
 
+  // Based on deprecated JSONWP protocol and subject to change
+  public async resetApp(): Promise<void> {
+    await this.post("appium/app/reset", {});
+}
+
   // Uses call from deprecated JSONWP protocol and is subject to change
   public async launchApp(
     app?: string,
