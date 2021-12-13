@@ -381,7 +381,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     opts: any = {}
   ): ValuePromise {
     return ValuePromise.execute(async () =>
-      this.find(selector, opts).clear().type(textToType)
+      this.find(selector).clear().type(textToType, opts)
     );
   }
 
