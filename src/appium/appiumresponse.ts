@@ -421,6 +421,10 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     );
   }
 
+  public async goBack(): Promise<void> {
+    await this.post("back", {});
+}
+
   public async backgroundApp(seconds: number = -1): Promise<void> {
     if (seconds > -1) {
       await this.post("appium/app/background", {
