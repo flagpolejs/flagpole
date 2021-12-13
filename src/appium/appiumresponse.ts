@@ -441,6 +441,27 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     );
   }
 
+  // Uses call from deprecated JSONWP protocol and is subject to change
+  public async launchApp(
+    app?: string,
+    args?: string[],
+    environment?: any
+  ): Promise<void> {
+    if (this._isAndroid) {
+      await this.post("appium/app/launch", {});
+      // This call is not deprecated
+    } else if (this._isIos) {
+      if (!app) throw "App bundleId required for launching an iOS app";
+
+      await this.post("execute", {
+        script: "mobile: launchApp",
+        args: {
+          bundleId: app,
+          arguments: args,
+          environment: environment,
+        },
+      });
+
   // Uses deprecated JSONWP call
   public async getAppiumContexts(): Promise<string[]> {
     const res = await sendAppiumRequest(
