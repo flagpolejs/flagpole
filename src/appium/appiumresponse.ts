@@ -125,7 +125,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     if (params.matches) {
       throw "Appium does not support finding elements by RegEx";
     } else if (params.contains) {
-      if (this._isAndroid) {
+      if (this.capabilities.automationName.toLowerCase() === "uiautomator2") {
         const values = await appiumFindByUiAutomator(
           this,
           selector,
@@ -142,6 +142,13 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           elements.push(element);
           return elements;
         }
+      } else if (
+        this.capabilities.automationName.toLowerCase() === "espresso"
+      ) {
+        res = await this.post("elements", {
+          using: "text",
+          value: params.contains,
+        });
       } else if (this._isIos) {
         res = await this.post("elements", {
           using: "-ios predicate string",
@@ -185,7 +192,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         duration: 0,
         x: array[0],
         y: array[1],
-        relative: false,
+        origin: "viewport",
       },
       {
         type: "pointerDown",
@@ -193,7 +200,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       },
       {
         type: "pause",
-        duration: array[2] || 0,
+        duration: array[2] || 10,
       },
     ];
     if (otherArrays.length) {
@@ -203,7 +210,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           duration: array![2] || 500,
           x: array![0],
           y: array![1],
-          relative: true,
+          origin: "pointer",
         });
       });
     }
@@ -298,7 +305,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   public async waitForXPath(xPath: string, timeout?: number): Promise<iValue> {
     const previousTime = await this._getTimeout();
     await this._setImplicitWait(timeout || 30000);
-    const element = await this.find(xPath);
+    const element = await this.find(`xpath/${xPath}`);
     await this._setImplicitWait(previousTime);
     return element;
   }
@@ -354,8 +361,52 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return res.jsonRoot.value;
   }
 
+  // Uses deprecated JSONWP call
+  public async isAppInstalled(bundleId: string): Promise<boolean> {
+    let res = new JsonDoc("");
+    if (this._isAndroid) {
+      res = await this.post("appium/device/app_installed", {
+        bundleId: bundleId,
+      });
+    } else if (this._isIos) {
+      res = await this.post("execute", {
+        script: "mobile: isAppInstalled",
+        args: [
+          {
+            bundleId: bundleId,
+          },
+        ],
+      });
+    }
+    return res.jsonRoot.value;
+  }
+
+  public type(
+    selector: string,
+    textToType: string,
+    opts: any = {}
+  ): ValuePromise {
+    return ValuePromise.execute(async () =>
+      this.find(selector, opts).type(textToType)
+    );
+  }
+
+  public clear(selector: string): ValuePromise {
+    return ValuePromise.execute(async () => this.find(selector).clear());
+  }
+
+  public clearThenType(
+    selector: string,
+    textToType: string,
+    opts: any = {}
+  ): ValuePromise {
+    return ValuePromise.execute(async () =>
+      this.find(selector).clear().type(textToType, opts)
+    );
+  }
+
   private async _setImplicitWait(ms: number): Promise<void> {
-    await this.post("/timeouts/implicit_wait", {
+    await this.post("timeouts/implicit_wait", {
       ms: ms,
     });
   }
@@ -410,6 +461,49 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           environment: environment,
         },
       });
+
+  // Uses deprecated JSONWP call
+  public async getAppiumContexts(): Promise<string[]> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/contexts`,
+      {
+        method: "get",
+      }
+    );
+
+    return res.jsonRoot.value;
+  }
+
+  // Uses deprecated JSONWP call
+  public async setAppiumContext(appiumContext: string): Promise<void> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/context`,
+      {
+        method: "post",
+        data: {
+          name: appiumContext,
+        },
+      }
+    );
+
+    if (res.jsonRoot.value?.error) {
+      throw res.jsonRoot.value.message;
+    }
+  }
+  
+  public async goBack(): Promise<void> {
+    await this.post("back", {});
+}
+
+  public async backgroundApp(seconds: number = -1): Promise<void> {
+    if (seconds > -1) {
+      await this.post("appium/app/background", {
+        seconds: seconds,
+      });
+    } else {
+      await this.post("appium/app/background", {});
     }
   }
 }
