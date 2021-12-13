@@ -361,6 +361,30 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return res.jsonRoot.value;
   }
 
+  public type(
+    selector: string,
+    textToType: string,
+    opts: any = {}
+  ): ValuePromise {
+    return ValuePromise.execute(async () =>
+      this.find(selector, opts).type(textToType)
+    );
+  }
+
+  public clear(selector: string): ValuePromise {
+    return ValuePromise.execute(async () => this.find(selector).clear());
+  }
+
+  public clearThenType(
+    selector: string,
+    textToType: string,
+    opts: any = {}
+  ): ValuePromise {
+    return ValuePromise.execute(async () =>
+      this.find(selector).clear().type(textToType, opts)
+    );
+  }
+
   private async _setImplicitWait(ms: number): Promise<void> {
     await this.post("timeouts/implicit_wait", {
       ms: ms,
