@@ -330,6 +330,7 @@ export interface iValue {
   getNextSibling(selector?: string): Promise<iValue>;
   getNextSiblings(selector?: string): Promise<iValue[]>;
   longPress(ms?: number): Promise<string | void>;
+  doubleTap(ms?: number): Promise<string | void>;
 }
 
 /**
@@ -435,6 +436,7 @@ export interface iResponse {
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getSource(): ValuePromise;
 }
 
 export interface iAssertionIs {
@@ -722,6 +724,7 @@ export interface iAssertionContext {
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getSource(): ValuePromise;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
