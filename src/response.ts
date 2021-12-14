@@ -232,7 +232,7 @@ export abstract class ProtoResponse implements iResponse {
     return this.httpResponse.body;
   }
 
-  public async getSource(): Promise<iValue> {
+  public getSource(): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support getSource.`
     );
