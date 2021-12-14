@@ -435,6 +435,7 @@ export interface iResponse {
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getSource(): ValuePromise;
 }
 
 export interface iAssertionIs {
@@ -722,6 +723,7 @@ export interface iAssertionContext {
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getSource(): ValuePromise;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
