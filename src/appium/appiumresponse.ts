@@ -457,6 +457,35 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     );
   }
 
+  // Uses call from deprecated JSONWP protocol and is subject to change
+  public async terminateApp(
+    app: string,
+    timeout?: number
+  ): Promise<void | boolean> {
+    if (this._isAndroid) {
+      if (timeout) {
+        await this.post("appium/device/terminate_app", {
+          appId: app,
+          options: {
+            timeout: timeout,
+          },
+        });
+      } else {
+        await this.post("appium/device/terminate_app", {
+          appId: app,
+        });
+      }
+      // This call is not deprecated
+    } else if (this._isIos) {
+      const res = await this.post("execute", {
+        script: "mobile: terminateApp",
+        args: [{ bundleId: app }],
+      });
+
+      return res.jsonRoot.value;
+    }
+  }
+
   public async screenshot(): Promise<Buffer>;
   public async screenshot(localFilePath: string): Promise<Buffer>;
   public async screenshot(
