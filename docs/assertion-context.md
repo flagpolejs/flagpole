@@ -339,7 +339,9 @@ Find the first element matching the given selector that have the given text. The
 const buttonContainingYes = await context.find("button", "Yes");
 ```
 
-With Appium testing Android, Flagpole parses the selector strategy and text to use `-android uiautomator` under the hood. This allows for finding an element by selector and text. Anything passed into the path parameter that is not a valid selector strategy/value pair will search by text only.
+With Appium testing Android, using UIAutomator2, Flagpole parses the selector strategy and text to use `-android uiautomator` under the hood. This allows for finding an element by selector and text. Anything passed into the path parameter that is not a valid selector strategy/value pair will search by text only.
+
+With Appium testing Android, using Espresso, Flagpole simply searches for an element by text, regardless of what you pass into the selector argument.
 
 With Appium testing iOS, Flagpole uses the `-ios predicate string` selector strategy and only searches by text. Searching by selector and text is not supported by Appium on iOS.
 

@@ -24,8 +24,8 @@ suite
     context.assert(context.response.statusCode).equals(200);
   })
   .next("Check Logo", async (context) => {
-    const logo = await context.exists("img[alt='Google']");
-    context.assert(await logo.getAttribute("alt")).equals("Google");
+    const logo = await context.exists("img#hplogo");
+    context.assert("Logo is visible", await logo.isVisible()).equals(true);
   })
   .next("Look for I'm feeling lucky button", async (context) => {
     const btn = await context.find("input", "lucky", {
