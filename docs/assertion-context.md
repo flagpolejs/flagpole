@@ -486,7 +486,7 @@ Get properties of screen of device under tests. Currently only works with Appium
 const screenProperties = await context.getScreenProperties();
 ```
 
-### getSource(): Promise\<iValue\>
+### getSource(): ValuePromise
 
 Get HTML or XML representation of current page or viewport.
 Currently only works to get XML of Appium viewport.
