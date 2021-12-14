@@ -245,7 +245,7 @@ export interface iValue {
   getInnerHtml(): Promise<iValue>;
   getOuterHtml(): Promise<iValue>;
   setValue(text: string): Promise<void>;
-  getBounds(boxType: string): Promise<iBounds | null>;
+  getBounds(boxType?: string): Promise<iBounds | null>;
   getUrl(): Promise<iValue>;
   getLink(): Promise<Link>;
   getStyleProperty(key: string): Promise<iValue>;
@@ -329,6 +329,8 @@ export interface iValue {
   getPreviousSiblings(selector?: string): Promise<iValue[]>;
   getNextSibling(selector?: string): Promise<iValue>;
   getNextSiblings(selector?: string): Promise<iValue[]>;
+  longPress(ms?: number): Promise<string | void>;
+  doubleTap(ms?: number): Promise<string | void>;
 }
 
 /**
@@ -434,6 +436,7 @@ export interface iResponse {
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getSource(): ValuePromise;
 }
 
 export interface iAssertionIs {
@@ -721,6 +724,7 @@ export interface iAssertionContext {
   rotate(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getSource(): ValuePromise;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
