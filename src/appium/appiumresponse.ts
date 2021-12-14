@@ -1,3 +1,5 @@
+import { promises } from "fs";
+import * as Jimp from "jimp";
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../httpresponse";
 import {
@@ -5,6 +7,7 @@ import {
   iValue,
   FindOptions,
   FindAllOptions,
+  ScreenshotOpts,
   ScreenProperties,
 } from "../interfaces";
 import { ValuePromise } from "../value-promise";
@@ -19,6 +22,8 @@ import { JsonDoc } from "../json/jpath";
 import { sendAppiumRequest, appiumFindByUiAutomator } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
 import { toType } from "../util";
+
+const fs = promises;
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
   protected _sessionId?: string;
@@ -450,6 +455,58 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         data,
       }
     );
+  }
+
+  public async screenshot(): Promise<Buffer>;
+  public async screenshot(localFilePath: string): Promise<Buffer>;
+  public async screenshot(
+    localFilePath: string,
+    opts: ScreenshotOpts
+  ): Promise<Buffer>;
+  public async screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  public async screenshot(
+    a?: string | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ): Promise<Buffer> {
+    const opts: ScreenshotOpts = (typeof a !== "string" ? a : b) || {};
+    let localFilePath = typeof a == "string" ? a : undefined;
+    if (!localFilePath && opts.path) {
+      localFilePath = opts.path;
+    }
+
+    const res = await this.get("screenshot");
+    const encodedData = res.jsonRoot.value;
+    let buff = Buffer.from(encodedData, "base64");
+
+    if (opts.clip) {
+      await Jimp.read(buff)
+        .then((image) => {
+          image
+            .crop(
+              opts.clip!.x,
+              opts.clip!.y,
+              opts.clip!.width,
+              opts.clip!.height
+            )
+            .quality(100)
+            .getBufferAsync(Jimp.MIME_PNG)
+            .then((buffer) => {
+              buff = buffer;
+            })
+            .catch((err) => {
+              if (err) return err;
+            });
+        })
+        .catch((err) => {
+          if (err) return err;
+        });
+    }
+
+    if (localFilePath) {
+      await fs.writeFile(localFilePath, buff);
+    }
+
+    return buff;
   }
 
   // Based on deprecated JSONWP protocol and subject to change

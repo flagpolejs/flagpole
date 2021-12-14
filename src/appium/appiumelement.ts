@@ -1,8 +1,17 @@
-import { iValue, iAssertionContext, iBounds } from "../interfaces";
+import { promises } from "fs";
+import * as Jimp from "jimp";
+import {
+  iValue,
+  iAssertionContext,
+  iBounds,
+  ScreenshotOpts,
+} from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
 import { AppiumResponse } from "./appiumresponse";
+
+const fs = promises;
 
 export class AppiumElement extends DOMElement implements iValue {
   protected _elementId: string;
@@ -204,6 +213,64 @@ export class AppiumElement extends DOMElement implements iValue {
       )}`;
     }
     return this.session.get(`element/${this._elementId}/attribute/${key}`);
+  }
+
+  public async screenshot(): Promise<Buffer>;
+  public async screenshot(localFilePath: string): Promise<Buffer>;
+  public async screenshot(
+    localFilePath: string,
+    opts: ScreenshotOpts
+  ): Promise<Buffer>;
+  public async screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  public async screenshot(
+    a?: string | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ): Promise<Buffer> {
+    const opts: ScreenshotOpts = (typeof a !== "string" ? a : b) || {};
+    let localFilePath = typeof a == "string" ? a : undefined;
+    if (!localFilePath && opts.path) {
+      localFilePath = opts.path;
+    }
+
+    const bounds = await this.getBounds();
+
+    const res = await this.session.get("screenshot");
+
+    const encodedData = res.jsonRoot.value;
+    let buff = Buffer.from(encodedData, "base64");
+
+    let x: number = bounds!.x;
+    let y: number = bounds!.y;
+    let width: number = bounds!.width;
+    let height: number = bounds!.height;
+    if (opts.clip) {
+      x = opts.clip.x + bounds!.x;
+      y = opts.clip.y + bounds!.y;
+      width = opts.clip.width;
+      height = opts.clip.height;
+    }
+
+    await Jimp.read(buff)
+      .then((image) => {
+        image
+          .crop(x, y, width, height)
+          .quality(100)
+          .getBufferAsync(Jimp.MIME_PNG)
+          .then((buffer) => {
+            buff = buffer;
+          })
+          .catch((err) => {
+            if (err) return err;
+          });
+      })
+      .catch((err) => {
+        if (err) return err;
+      });
+
+    if (localFilePath) {
+      await fs.writeFile(localFilePath, buff);
+    }
+    return buff;
   }
 
   public toString(): string {
