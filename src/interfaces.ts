@@ -329,6 +329,7 @@ export interface iValue {
   getPreviousSiblings(selector?: string): Promise<iValue[]>;
   getNextSibling(selector?: string): Promise<iValue>;
   getNextSiblings(selector?: string): Promise<iValue[]>;
+  longPress(ms?: number): Promise<string | void>;
   doubleTap(ms?: number): Promise<string | void>;
 }
 
