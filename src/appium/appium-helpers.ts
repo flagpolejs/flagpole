@@ -124,7 +124,8 @@ export const appiumFindByUiAutomator = async (
   response: AppiumResponse,
   selector: string,
   text: string,
-  opts?: FindAllOptions | null
+  opts?: FindAllOptions | null,
+  parent?: string | null
 ): Promise<iValue[]> => {
   const usingValue = selector.split("/");
   let UiSelector = "new UiSelector().";
@@ -146,7 +147,9 @@ export const appiumFindByUiAutomator = async (
 
   const res = await sendAppiumRequest(
     response.scenario,
-    `/session/${response.sessionId}/elements`,
+    `/session/${response.sessionId}/${
+      parent ? "element/" + parent + "/" : ""
+    }elements`,
     {
       method: "post",
       data: {

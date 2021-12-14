@@ -145,8 +145,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
             values[i].$
           );
           elements.push(element);
-          return elements;
         }
+        return elements;
       } else if (
         this.capabilities.automationName.toLowerCase() === "espresso"
       ) {
