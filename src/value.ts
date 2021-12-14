@@ -1011,6 +1011,14 @@ export class Value implements iValue {
     );
   }
 
+  public longPress(ms?: number): Promise<string | void> {
+    throw "longPress not implemented for this type of element";
+  }
+  
+  public async doubleTap(ms?: number): Promise<string | void> {
+    throw "doubleTap not implemented for this type of element";
+  }
+
   protected async _completedAction(verb: string, noun?: string) {
     this._context.scenario.result(
       new AssertionActionCompleted(verb, noun || this.name)

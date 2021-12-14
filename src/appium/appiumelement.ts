@@ -9,7 +9,6 @@ import {
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
-import { sendAppiumRequest } from "./appium-helpers";
 import { AppiumResponse } from "./appiumresponse";
 
 const fs = promises;
@@ -88,14 +87,7 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   public async getBounds(): Promise<iBounds | null> {
-    const response = this.context.response as AppiumResponse;
-    const res = await sendAppiumRequest(
-      this.context.scenario,
-      `/session/${response.sessionId}/element/${this._elementId}/rect`,
-      {
-        method: "get",
-      }
-    );
+    const res = await this.session.get(`element/${this._elementId}/rect`);
 
     if (res.jsonRoot.value.error) return null;
 
@@ -123,6 +115,32 @@ export class AppiumElement extends DOMElement implements iValue {
     return bounds;
   }
 
+  public async doubleTap(ms: number = 10): Promise<void> {
+    const boundsRes = await this.getBounds();
+    if (!boundsRes) throw "Error: element bounds not acquired";
+    await this.context.response.touchMove([
+      boundsRes.points[1].x,
+      boundsRes.points[1].y,
+      ms,
+    ]);
+    await this.context.pause(ms);
+    await this.context.response.touchMove([
+      boundsRes.points[1].x,
+      boundsRes.points[1].y,
+      ms,
+    ]);
+  }
+  
+  public async longPress(ms: number = 1000): Promise<void> {
+    const boundsRes = await this.getBounds();
+    if (!boundsRes) throw "Error: element bounds not acquired";
+    await this.context.response.touchMove([
+      boundsRes.points[1].x,
+      boundsRes.points[1].y,
+      ms,
+    ]);
+  }
+
   protected async _getValue(): Promise<any> {
     throw "_getValue not implemented";
   }
@@ -136,8 +154,12 @@ export class AppiumElement extends DOMElement implements iValue {
     return res.jsonRoot.value || null;
   }
 
-  protected async _getProperty(key: string): Promise<any> {
-    throw "_getProperty not implemented";
+  protected async _getProperty(property: string): Promise<string> {
+    const res = await this.session.get(
+      `element/${this._elementId}/css/${property}`
+    );
+
+    return res.jsonRoot.value || null;
   }
 
   protected async _getOuterHtml(): Promise<string> {
