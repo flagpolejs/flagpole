@@ -40,7 +40,7 @@ flagpole("Basic Smoke Test of App", async (suite) => {
 
 See [here](https://appium.io/docs/en/writing-running-appium/caps/) for more information on setting capabilities.
 
-You may also pass device properties as a subproperty of the third argument. Currently, only geolocation is capable of being set this way.
+You may also pass device properties as a subproperty of the third argument. These settings include geolocation and network settings. All of these are optional.
 
 ```javascript
 flagpole("Basic Smoke Test of App", async (suite) => {
@@ -55,6 +55,12 @@ flagpole("Basic Smoke Test of App", async (suite) => {
         latitude: 121.21,
         longitude: 11.56,
         altitude: 94.23
+      },
+      network: {
+        wifi: true,
+        mobileData: true,
+        locationServices: true,
+        airplaneMode: false
       }
     }
   });

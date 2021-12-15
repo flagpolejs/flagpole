@@ -284,6 +284,10 @@ With an argument for key, it will sort as an array of objects by that field.
 const reverseAlphaUsStates = usStates.desc("name");
 ```
 
+### doubleTap(ms?: number): Promise\<string | null\>;
+
+Does a double tap on an element. You can set the delay between taps, which defaults to 10 milliseconds.
+
 ### download(): Promise\<string | Buffer | null\>
 
 This will download the URL that is referenced by this element. It will automatically pull the `src` attribute from an `img` tag, for example. Or extract the `href` from a link.
@@ -477,7 +481,7 @@ checkable, checked, class, className, clickable, content-desc, contentDescriptio
 
 ### getBounds(boxType?: string): Promise\<iBounds | null\>;
 
-Get the bounds of this DOM Element.
+Get the bounds of this DOM or Appium Element.
 
 Supported with browser and Appium type scenarios.
 
@@ -555,7 +559,7 @@ const siblings = await someElement.getPreviousSiblings("li");
 
 ### getProperty(key: string): Promise\<Value\>
 
-Get the property of this input value with the key. If there is no such property then it will return null. This is an async method.
+Get the property of this input value with the key. If there is no such property then it will return null. This is an async method. In Appium tests, this gets the chosen CSS property of the element, which is only possible in a Webview context.
 
 ```javascript
 const isChecked = await element.getProperty("checked");
@@ -712,6 +716,10 @@ const image = await context.find("img.logo");
 image.load("Make sure logo is a valid image");
 ```
 
+### longPress(ms?: number): Promise\<string | void\>;
+
+Longpress on an element. Holds touch action for 1000 milliseconds by default. This currently only works for Appium elements.
+
 ### map(mapper: Function): iValue;
 
 If input is an array, map over each element in the array to transform it. Otherwise, use mapper to transform the input itself. This method returns a new iValue with the transformed input.
@@ -823,7 +831,7 @@ const totalPrice = rows.every((t, row) => t + row.quantity * row.unitPrice, 0);
 
 ### screenshot(): Promise\<Buffer\>
 
-This is currently only supported with browser type scenarios. See documentation for `context.screenshot()` because the arguments are the same. The only difference is calling it on an Element will grab the image just of this element.
+This is currently only supported with browser and Appium type scenarios. See documentation for `context.screenshot()` because the arguments are the same. The only difference is calling it on an Element will grab the image just of this element.
 
 ### scrollTo(): Promise\<void\>;
 
