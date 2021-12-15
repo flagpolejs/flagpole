@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import * as puppeteer from "puppeteer-core";
 import { NeedleResponse } from "needle";
 import { KeyValue, HttpResponseOptions, iHttpRequest } from "./interfaces";
@@ -43,18 +44,22 @@ export class HttpResponse {
   }
 
   static fromNeedle(response: NeedleResponse): HttpResponse {
+    const contentType = response.headers["content-type"];
     const r = new HttpResponse({
       status: [response.statusCode || 0, response.statusMessage || ""],
       headers: <KeyValue>response.headers,
-      body:
-        typeof response.body === "string"
-          ? response.body
-          : response.body.toString("utf8"),
+      body: (() => {
+        if (typeof response.body === "string") return response.body;
+        return contentType?.startsWith("image")
+          ? response.body.toString("base64")
+          : response.body.toString("utf8");
+      })(),
       cookies: response.cookies ? <KeyValue>response.cookies : {},
       trailers: <KeyValue>response.trailers,
       method: response.method,
       url: response.url,
     });
+
     return r;
   }
 

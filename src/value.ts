@@ -754,7 +754,7 @@ export class Value implements iValue {
       if (typeof b == "object" && b !== null) {
         return b;
       }
-      return { encoding: null };
+      return { encoding: "utf8" };
     })();
     const request = new HttpRequest({
       ...{
@@ -764,9 +764,15 @@ export class Value implements iValue {
       ...opts,
     });
     const resp = await request.fetch();
+    const file: string | Buffer = resp.headers["content-type"].startsWith(
+      "image"
+    )
+      ? Buffer.from(resp.body, "base64")
+      : resp.body;
     if (localFilePath) {
-      fs.writeFileSync(localFilePath, resp.body);
+      fs.writeFileSync(localFilePath, file);
     }
+
     return resp;
   }
 

@@ -29,6 +29,7 @@ import {
   validateSchema,
   asyncCount,
 } from "./util";
+import { HttpResponse } from "./httpresponse";
 import { ImageCompare } from "./imagecompare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { AssertionIs } from "./assertion-is";
@@ -496,12 +497,16 @@ export class Assertion implements iAssertion {
     controlImage: string | Buffer,
     allowedDifference: number | string = 0
   ): iAssertion {
+    const toCompare =
+      this.value instanceof HttpResponse
+        ? Buffer.from(this.value.body, "base64")
+        : this.value;
     this.setDefaultMessages(`Images do not match.`, `Images match.`);
     let assertionPassed: boolean = false;
     let details: string = "";
     const imageCompare = new ImageCompare(
       this._context,
-      this.value,
+      toCompare,
       controlImage
     );
     // Return a number between 0 and 99.99 to represent a percentage
