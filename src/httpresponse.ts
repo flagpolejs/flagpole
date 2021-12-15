@@ -48,12 +48,12 @@ export class HttpResponse {
     const r = new HttpResponse({
       status: [response.statusCode || 0, response.statusMessage || ""],
       headers: <KeyValue>response.headers,
-      body:
-        typeof response.body === "string"
-          ? response.body
-          : contentType?.startsWith("image")
+      body: (() => {
+        if (typeof response.body === "string") return response.body;
+        return contentType?.startsWith("image")
           ? response.body.toString("base64")
-          : response.body.toString("utf8"),
+          : response.body.toString("utf8");
+      })(),
       cookies: response.cookies ? <KeyValue>response.cookies : {},
       trailers: <KeyValue>response.trailers,
       method: response.method,

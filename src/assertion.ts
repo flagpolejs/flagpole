@@ -497,10 +497,10 @@ export class Assertion implements iAssertion {
     controlImage: string | Buffer,
     allowedDifference: number | string = 0
   ): iAssertion {
-    let toCompare = this.value;
-    if (this.value instanceof HttpResponse) {
-      toCompare = Buffer.from(this.value.body, "base64");
-    }
+    const toCompare =
+      this.value instanceof HttpResponse
+        ? Buffer.from(this.value.body, "base64")
+        : this.value;
     this.setDefaultMessages(`Images do not match.`, `Images match.`);
     let assertionPassed: boolean = false;
     let details: string = "";
