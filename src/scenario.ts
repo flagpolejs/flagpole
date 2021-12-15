@@ -64,8 +64,9 @@ import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
 import {
   appiumSessionDestroy,
-  appiumSessionCreate,
+  setDevProperties,
 } from "./appium/appium-helpers";
+import { AppiumResponse } from "./appium/appiumresponse";
 import { _ } from "ajv";
 
 enum ScenarioRequestType {
@@ -994,9 +995,19 @@ export class Scenario implements iScenario {
         },
       });
     } else if (type == "appium") {
-      this.before(appiumSessionCreate(this, opts))
-        .after(appiumSessionDestroy(this))
-        .open("/");
+      const appiumresponse = this._response as AppiumResponse;
+      this.after(() => console.log(appiumresponse.sessionId)).open(
+        "POST /wd/hub/session",
+        {
+          data: {
+            capabilities: {
+              alwaysMatch: {
+                ...opts,
+              },
+            },
+          },
+        }
+      );
     } else {
       this._request
         .setOptions({

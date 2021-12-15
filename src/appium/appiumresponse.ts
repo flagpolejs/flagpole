@@ -37,9 +37,10 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   protected _capabilities?: any;
 
   public init(res: HttpResponse) {
+    const body = JSON.parse(res.body);
     super.init(res);
-    this._sessionId = this.scenario.get("sessionId");
-    this._capabilities = this.scenario.get("capabilities");
+    this._sessionId = body.value.sessionId;
+    this._capabilities = body.value.capabilities;
   }
 
   protected get _isAndroid(): boolean {
@@ -476,5 +477,9 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         data,
       }
     );
+  }
+
+  public destroySession() {
+    console.log("hello");
   }
 }
