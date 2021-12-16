@@ -145,7 +145,9 @@ export class AppiumElement extends DOMElement implements iValue {
         ", "
       )}`;
     }
-    return this.session.get(`element/${this._elementId}/attribute/${key}`);
+    return await this.session.get(
+      `element/${this._elementId}/attribute/${key}`
+    );
   }
 
   public toString(): string {
