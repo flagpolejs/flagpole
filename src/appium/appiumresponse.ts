@@ -42,7 +42,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     this._sessionId = res.json.value.sessionId;
     this._capabilities = res.json.value.capabilities;
     this.scenario.nextPrepend(async () => {
-      this.setDeviceProperties(this.scenario.opts.devProperties || {});
+      await this.setDeviceProperties(this.scenario.opts.devProperties || {});
     });
     this.scenario.after(async (scenario) => {
       await appiumSessionDestroy(scenario, String(this._sessionId));
