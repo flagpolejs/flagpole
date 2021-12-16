@@ -238,7 +238,7 @@ export class AppiumElement extends DOMElement implements iValue {
       ms,
     ]);
   }
-  
+
   public async longPress(ms: number = 1000): Promise<void> {
     const boundsRes = await this.getBounds();
     if (!boundsRes) throw "Error: element bounds not acquired";
@@ -254,7 +254,8 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   protected async _getText(): Promise<string> {
-    return this.session.get(`element/${this._elementId}/text`);
+    const res = await this.session.get(`element/${this._elementId}/text`);
+    return res.jsonRoot.value;
   }
 
   protected async _getTagName(): Promise<string> {
