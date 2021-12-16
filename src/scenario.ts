@@ -995,19 +995,15 @@ export class Scenario implements iScenario {
         },
       });
     } else if (type == "appium") {
-      const appiumresponse = this._response as AppiumResponse;
-      this.after(() => console.log(appiumresponse.sessionId)).open(
-        "POST /wd/hub/session",
-        {
-          data: {
-            capabilities: {
-              alwaysMatch: {
-                ...opts,
-              },
+      this.open("POST /wd/hub/session", {
+        data: {
+          capabilities: {
+            alwaysMatch: {
+              ...opts,
             },
           },
-        }
-      );
+        },
+      });
     } else {
       this._request
         .setOptions({

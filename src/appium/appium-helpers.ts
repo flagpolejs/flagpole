@@ -108,13 +108,13 @@ export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
  * @param {Scenario} scenario - FlagPole scenario
  * @return {Promise<JsonDoc>} JSON response from DELETE call
  * */
-export const appiumSessionDestroy = (scenario: Scenario) => {
-  return async () => {
-    const sessionId = scenario.get("sessionId");
-    return sendAppiumRequest(scenario, `/session/${sessionId}`, {
-      method: "delete",
-    });
-  };
+export const appiumSessionDestroy = (
+  scenario: iScenario,
+  sessionId: string
+) => {
+  return sendAppiumRequest(scenario, `/session/${sessionId}`, {
+    method: "delete",
+  });
 };
 
 // Find by Android specific uiautomator selector

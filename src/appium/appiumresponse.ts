@@ -27,6 +27,7 @@ import {
   sendAdbCommand,
   sendSiriCommand,
   getSiriEffect,
+  appiumSessionDestroy,
 } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
 import { toType } from "../util";
@@ -37,10 +38,15 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   protected _capabilities?: any;
 
   public init(res: HttpResponse) {
-    const body = JSON.parse(res.body);
     super.init(res);
-    this._sessionId = body.value.sessionId;
-    this._capabilities = body.value.capabilities;
+    this._sessionId = res.json.value.sessionId;
+    this._capabilities = res.json.value.capabilities;
+    this.scenario.nextPrepend(async () => {
+      this.setDeviceProperties(this.scenario.opts.devProperties || {});
+    });
+    this.scenario.after(async (scenario) => {
+      await appiumSessionDestroy(scenario, String(this._sessionId));
+    });
   }
 
   protected get _isAndroid(): boolean {
