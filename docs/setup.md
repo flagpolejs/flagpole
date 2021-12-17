@@ -30,26 +30,30 @@ Add the desired capabilities to each scenario like so:
 flagpole("Basic Smoke Test of App", async (suite) => {
   suite
     .scenario("Basic smoke test", "appium", {
-      deviceName: "Android Emulator",
-      platformName: "Android",
-      automationName: "Uiautomator2",
-      app: "/path/to/apk/or/ipa"
+      capabilities: {
+        deviceName: "Android Emulator",
+        platformName: "Android",
+        automationName: "Uiautomator2",
+        app: "/path/to/apk/or/ipa"
+      }
     });
   });
 ```
 
 See [here](https://appium.io/docs/en/writing-running-appium/caps/) for more information on setting capabilities.
 
-You may also pass device properties as a subproperty of the third argument. Currently, only geolocation is capable of being set this way.
+You may also pass device properties as another subproperty of the third argument. Currently, only geolocation is capable of being set this way.
 
 ```javascript
 flagpole("Basic Smoke Test of App", async (suite) => {
   suite
   .scenario("Basic smoke test", "appium", {
-    deviceName: "Android Emulator",
-    platformName: "Android",
-    automationName: "Uiautomator2",
-    app: "/path/to/apk/or/ipa"
+    capabilities: {
+      deviceName: "Android Emulator",
+      platformName: "Android",
+      automationName: "Uiautomator2",
+      app: "/path/to/apk/or/ipa"
+    },
     devProperties: {
       location: {
         latitude: 121.21,
