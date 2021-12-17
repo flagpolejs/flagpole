@@ -110,7 +110,7 @@ export class AppiumElement extends DOMElement implements iValue {
     tuple: [x: number, y: number, duration?: number]
   ): Promise<string | void> {
     const boundsRes = await this.getBounds();
-    if (!boundsRes) return "Error: element bounds not acquired";
+    if (!boundsRes) throw "Error: element bounds not acquired";
     await this.session.touchMove(
       [
         [boundsRes.points[1].x - 10, boundsRes.points[1].y - 10],
@@ -127,7 +127,7 @@ export class AppiumElement extends DOMElement implements iValue {
     tuple: [x: number, y: number, duration?: number]
   ): Promise<string | void> {
     const boundsRes = await this.getBounds();
-    if (!boundsRes) return "Error: element bounds not acquired";
+    if (!boundsRes) throw "Error: element bounds not acquired";
     await this.session.touchMove(
       [
         [boundsRes.points[1].x - tuple[0], boundsRes.points[1].y - tuple[1]],
