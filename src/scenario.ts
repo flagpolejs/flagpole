@@ -999,9 +999,10 @@ export class Scenario implements iScenario {
         data: {
           capabilities: {
             alwaysMatch: {
-              ...opts,
+              ...opts.capabilities,
             },
           },
+          devProperties: { ...opts.devProperties },
         },
       });
     } else {

@@ -225,6 +225,8 @@ export const setDevProperties = async (
   scenario: iScenario,
   devProperties: DeviceProperties = {}
 ): Promise<void> => {
+  console.log("setDevProperties");
+  console.log(devProperties);
   if (devProperties.network) {
     const capabilities = await getAppiumSessionCapabilities(
       sessionId,
