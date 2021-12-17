@@ -498,8 +498,4 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
   }
-
-  public destroySession() {
-    console.log("hello");
-  }
 }
