@@ -59,6 +59,12 @@ flagpole("Basic Smoke Test of App", async (suite) => {
         latitude: 121.21,
         longitude: 11.56,
         altitude: 94.23
+      },
+      network: {
+        wifi: true,
+        mobileData: true,
+        locationServices: true,
+        airplaneMode: false
       }
     }
   });

@@ -721,7 +721,7 @@ export class Value implements iValue {
     throw `getNextSiblings() is not supported by ${this.name}`;
   }
 
-  public async getBounds(boxType: string): Promise<iBounds | null> {
+  public async getBounds(boxType?: string): Promise<iBounds | null> {
     return null;
   }
 
@@ -1009,6 +1009,14 @@ export class Value implements iValue {
       this._context,
       name
     );
+  }
+
+  public longPress(ms?: number): Promise<string | void> {
+    throw "longPress not implemented for this type of element";
+  }
+  
+  public async doubleTap(ms?: number): Promise<string | void> {
+    throw "doubleTap not implemented for this type of element";
   }
 
   protected async _completedAction(verb: string, noun?: string) {

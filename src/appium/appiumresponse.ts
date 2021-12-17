@@ -1,3 +1,5 @@
+import { promises } from "fs";
+import * as Jimp from "jimp";
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../httpresponse";
 import {
@@ -5,6 +7,7 @@ import {
   iValue,
   FindOptions,
   FindAllOptions,
+  ScreenshotOpts,
   ScreenProperties,
   DeviceProperties,
 } from "../interfaces";
@@ -31,6 +34,8 @@ import {
 } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
 import { toType } from "../util";
+
+const fs = promises;
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
   protected _sessionId?: string;
@@ -160,8 +165,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
             values[i].$
           );
           elements.push(element);
-          return elements;
         }
+        return elements;
       } else if (
         this.capabilities.automationName.toLowerCase() === "espresso"
       ) {
@@ -385,11 +390,54 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   public async setDeviceProperties(
     devProperties: DeviceProperties
   ): Promise<void> {
-    console.log("setDeviceProperties");
     await setDevProperties(
       this.sessionId,
       this.context.scenario,
       devProperties
+    );
+  }
+
+  // Uses deprecated JSONWP call
+  public async isAppInstalled(bundleId: string): Promise<boolean> {
+    let res = new JsonDoc("");
+    if (this._isAndroid) {
+      res = await this.post("appium/device/app_installed", {
+        bundleId: bundleId,
+      });
+    } else if (this._isIos) {
+      res = await this.post("execute", {
+        script: "mobile: isAppInstalled",
+        args: [
+          {
+            bundleId: bundleId,
+          },
+        ],
+      });
+    }
+    return res.jsonRoot.value;
+  }
+
+  public type(
+    selector: string,
+    textToType: string,
+    opts: any = {}
+  ): ValuePromise {
+    return ValuePromise.execute(async () =>
+      this.find(selector, opts).type(textToType)
+    );
+  }
+
+  public clear(selector: string): ValuePromise {
+    return ValuePromise.execute(async () => this.find(selector).clear());
+  }
+
+  public clearThenType(
+    selector: string,
+    textToType: string,
+    opts: any = {}
+  ): ValuePromise {
+    return ValuePromise.execute(async () =>
+      this.find(selector).clear().type(textToType, opts)
     );
   }
 
@@ -478,6 +526,17 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     return res === "On" ? true : false;
   }
 
+  public getSource(): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const res = await this.get("source");
+      return wrapAsValue(
+        this.context,
+        res.jsonRoot.value,
+        "XML source for current viewport"
+      );
+    });
+  }
+
   public async get(suffix: string): Promise<any> {
     return sendAppiumRequest(
       this.scenario,
@@ -497,5 +556,157 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         data,
       }
     );
+  }
+
+  // Uses call from deprecated JSONWP protocol and is subject to change
+  public async terminateApp(
+    app: string,
+    timeout?: number
+  ): Promise<void | boolean> {
+    if (this._isAndroid) {
+      if (timeout) {
+        await this.post("appium/device/terminate_app", {
+          appId: app,
+          options: {
+            timeout: timeout,
+          },
+        });
+      } else {
+        await this.post("appium/device/terminate_app", {
+          appId: app,
+        });
+      }
+      // This call is not deprecated
+    } else if (this._isIos) {
+      const res = await this.post("execute", {
+        script: "mobile: terminateApp",
+        args: [{ bundleId: app }],
+      });
+
+      return res.jsonRoot.value;
+    }
+  }
+
+  public async screenshot(): Promise<Buffer>;
+  public async screenshot(localFilePath: string): Promise<Buffer>;
+  public async screenshot(
+    localFilePath: string,
+    opts: ScreenshotOpts
+  ): Promise<Buffer>;
+  public async screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  public async screenshot(
+    a?: string | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ): Promise<Buffer> {
+    const opts: ScreenshotOpts = (typeof a !== "string" ? a : b) || {};
+    let localFilePath = typeof a == "string" ? a : undefined;
+    if (!localFilePath && opts.path) {
+      localFilePath = opts.path;
+    }
+
+    const res = await this.get("screenshot");
+    const encodedData = res.jsonRoot.value;
+    let buff = Buffer.from(encodedData, "base64");
+
+    if (opts.clip) {
+      await Jimp.read(buff)
+        .then((image) => {
+          image
+            .crop(
+              opts.clip!.x,
+              opts.clip!.y,
+              opts.clip!.width,
+              opts.clip!.height
+            )
+            .quality(100)
+            .getBufferAsync(Jimp.MIME_PNG)
+            .then((buffer) => {
+              buff = buffer;
+            })
+            .catch((err) => {
+              if (err) return err;
+            });
+        })
+        .catch((err) => {
+          if (err) return err;
+        });
+    }
+
+    if (localFilePath) {
+      await fs.writeFile(localFilePath, buff);
+    }
+
+    return buff;
+  }
+
+  // Based on deprecated JSONWP protocol and subject to change
+  public async resetApp(): Promise<void> {
+    await this.post("appium/app/reset", {});
+}
+
+  // Uses call from deprecated JSONWP protocol and is subject to change
+  public async launchApp(
+    app?: string,
+    args?: string[],
+    environment?: any
+  ): Promise<void> {
+    if (this._isAndroid) {
+      await this.post("appium/app/launch", {});
+      // This call is not deprecated
+    } else if (this._isIos) {
+      if (!app) throw "App bundleId required for launching an iOS app";
+
+      await this.post("execute", {
+        script: "mobile: launchApp",
+        args: {
+          bundleId: app,
+          arguments: args,
+          environment: environment,
+        },
+      });
+
+  // Uses deprecated JSONWP call
+  public async getAppiumContexts(): Promise<string[]> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/contexts`,
+      {
+        method: "get",
+      }
+    );
+
+    return res.jsonRoot.value;
+  }
+
+  // Uses deprecated JSONWP call
+  public async setAppiumContext(appiumContext: string): Promise<void> {
+    const res = await sendAppiumRequest(
+      this.scenario,
+      `/session/${this.sessionId}/context`,
+      {
+        method: "post",
+        data: {
+          name: appiumContext,
+        },
+      }
+    );
+
+    if (res.jsonRoot.value?.error) {
+      throw res.jsonRoot.value.message;
+    }
+  }
+  
+  public async goBack(): Promise<void> {
+    await this.post("back", {});
+}
+
+  public async backgroundApp(seconds: number = -1): Promise<void> {
+    if (seconds > -1) {
+      await this.post("appium/app/background", {
+        seconds: seconds,
+      });
+    } else {
+      await this.post("appium/app/background", {});
+    }
   }
 }
