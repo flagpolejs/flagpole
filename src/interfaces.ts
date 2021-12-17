@@ -1092,10 +1092,12 @@ export type ScreenProperties = {
 };
 
 export interface DeviceProperties {
-  airplaneMode?: boolean;
-  locationServices?: boolean;
-  wifi?: boolean;
-  mobileData?: boolean;
+  network?: {
+    airplaneMode?: boolean;
+    locationServices?: boolean;
+    wifi?: boolean;
+    mobileData?: boolean;
+  };
   location?: {
     latitude: number;
     longitude: number;
