@@ -200,7 +200,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     await this.post("appium/device/hide_keyboard", {});
   }
 
-  public async pointer(...pointers: PointerMove[]): Promise<iResponse> {
+  public async movePointer(...pointers: PointerMove[]): Promise<iResponse> {
     if (!pointers.length) return this;
     const actions: AppiumPointerAction[] = [];
     pointers.forEach((pointer, i) => {
