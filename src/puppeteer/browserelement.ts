@@ -281,6 +281,14 @@ export class BrowserElement extends PuppeteerElement implements iValue {
         y: boxModel[boxType][0].y,
         width: boxModel.width,
         height: boxModel.height,
+        left: boxModel[boxType][0].x,
+        right: boxModel[boxType][0].x + boxModel.width,
+        top: boxModel[boxType][0].y,
+        bottom: boxModel[boxType][0].y + boxModel.height,
+        middle: {
+          x: boxModel[boxType][0].x + boxModel.width / 2,
+          y: boxModel[boxType][0].y + boxModel.height / 2,
+        },
         points: boxModel[boxType],
       };
     }

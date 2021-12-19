@@ -7,6 +7,8 @@ import {
   iNextCallback,
   iAssertionIs,
   HttpRequestOptions,
+  GestureType,
+  GestureOpts,
 } from "./interfaces";
 import {
   toType,
@@ -1011,18 +1013,8 @@ export class Value implements iValue {
     );
   }
 
-  public pinch(
-    moveAmount: [x: number, y: number],
-    duration: number
-  ): Promise<iValue> {
-    throw `pinch not implemented for ${this.name}`;
-  }
-
-  public zoom(
-    moveAmount: [x: number, y: number],
-    duration: number
-  ): Promise<iValue> {
-    throw `zoom not implemented for ${this.name}`;
+  public gesture(type: GestureType, opts: GestureOpts): Promise<iValue> {
+    throw `gesture not implemented for ${this.name}`;
   }
 
   protected async _completedAction(verb: string, noun?: string) {

@@ -95,6 +95,13 @@ export interface PointerMove {
   button?: PointerButton;
 }
 
+export type GestureType = "pinch" | "stretch";
+export interface GestureOpts {
+  start: PointerPoint;
+  duration?: number;
+  amount?: PointerPoint;
+}
+
 export type SuiteAsyncCallback = (suite: iSuite) => Promise<void>;
 export type SuiteSyncCallback = (suite: iSuite) => void;
 export type SuiteCallback = SuiteAsyncCallback | SuiteSyncCallback;
@@ -346,8 +353,7 @@ export interface iValue {
   getPreviousSiblings(selector?: string): Promise<iValue[]>;
   getNextSibling(selector?: string): Promise<iValue>;
   getNextSiblings(selector?: string): Promise<iValue[]>;
-  pinch(moveAmount: [x: number, y: number], duration: number): Promise<iValue>;
-  zoom(moveAmount: [x: number, y: number], duration: number): Promise<iValue>;
+  gesture(type: GestureType, opts: GestureOpts): Promise<iValue>;
 }
 
 /**
@@ -915,6 +921,11 @@ export interface iBounds {
   y: number;
   width: number;
   height: number;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  middle: { x: number; y: number };
   points: { x: number; y: number }[];
 }
 

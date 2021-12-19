@@ -1,4 +1,12 @@
-import { iValue, iAssertionContext, iBounds, PointerMove } from "../interfaces";
+import {
+  iValue,
+  iAssertionContext,
+  iBounds,
+  PointerMove,
+  GestureOpts,
+  GestureType,
+  PointerPoint,
+} from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
@@ -87,6 +95,14 @@ export class AppiumElement extends DOMElement implements iValue {
       y: res.jsonRoot.value.y,
       height: res.jsonRoot.value.height,
       width: res.jsonRoot.value.width,
+      left: res.jsonRoot.value.x,
+      right: res.jsonRoot.value.x + res.jsonRoot.value.width,
+      top: res.jsonRoot.value.y,
+      bottom: res.jsonRoot.value.y + res.jsonRoot.value.height,
+      middle: {
+        x: res.jsonRoot.value.x + res.jsonRoot.value.width / 2,
+        y: res.jsonRoot.value.y + res.jsonRoot.value.height / 2,
+      },
       points: [
         {
           x: res.jsonRoot.value.x,
@@ -106,56 +122,62 @@ export class AppiumElement extends DOMElement implements iValue {
     return bounds;
   }
 
-  public async zoom(
-    moveAmount: [x: number, y: number],
-    duration: number
-  ): Promise<iValue> {
-    const boundsRes = await this.getBounds();
-    if (!boundsRes) throw "Error: element bounds not acquired";
-    const fingerMoveX = moveAmount[0] / 2;
-    const fingerMoveY = moveAmount[1] / 2;
-    const startX = (boundsRes.x + boundsRes.width) / 2;
-    const startY = (boundsRes.y + boundsRes.height) / 2;
-    const finger1: PointerMove = {
-      start: [startX, startY],
-      end: [startX - fingerMoveX, startY - fingerMoveY],
-      duration,
-      type: "touch",
+  public async gesture(type: GestureType, opts: GestureOpts): Promise<iValue> {
+    // Get bounds
+    const bounds = await this.getBounds();
+    if (!bounds) throw "Error: element bounds not acquired";
+    // Defaults
+    if (!opts.amount) {
+      opts.amount = [bounds.width / 2, bounds.height / 2];
+    }
+    // Start position
+    const start: { pointer1: PointerPoint; pointer2: PointerPoint } = {
+      pointer1:
+        type == "stretch"
+          ? [bounds.middle.x - 10, bounds.middle.y - 10]
+          : [bounds.left, bounds.top],
+      pointer2:
+        type == "stretch"
+          ? [bounds.middle.x + 10, bounds.middle.y + 10]
+          : [bounds.right, bounds.bottom],
     };
-    const finger2: PointerMove = {
-      start: [startX + 20, startY + 20],
-      end: [boundsRes.x + 20 + fingerMoveX, boundsRes.y + 20 + fingerMoveY],
-      duration,
-      type: "touch",
+    // End position
+    const end: { pointer1: PointerPoint; pointer2: PointerPoint } = {
+      pointer1:
+        type == "stretch"
+          ? [
+              start.pointer1[0] - opts.amount[0],
+              start.pointer1[1] - opts.amount[1],
+            ]
+          : [
+              start.pointer1[0] + opts.amount[0],
+              start.pointer1[1] + opts.amount[1],
+            ],
+      pointer2:
+        type == "stretch"
+          ? [
+              start.pointer2[0] + opts.amount[0],
+              start.pointer2[1] + opts.amount[1],
+            ]
+          : [
+              start.pointer2[0] - opts.amount[0],
+              start.pointer2[1] - opts.amount[1],
+            ],
     };
-    await this.session.pointer(finger1, finger2);
-    return this;
-  }
-
-  public async pinch(
-    moveAmount: [x: number, y: number],
-    duration: number
-  ): Promise<iValue> {
-    const boundsRes = await this.getBounds();
-    if (!boundsRes) throw "Error: element bounds not acquired";
-    const fingerMoveX = moveAmount[0] / 2;
-    const fingerMoveY = moveAmount[1] / 2;
-    const finger1: PointerMove = {
-      start: [boundsRes.x, boundsRes.y],
-      end: [boundsRes.x + fingerMoveX, boundsRes.y + fingerMoveY],
-      duration,
-      type: "touch",
-    };
-    const finger2: PointerMove = {
-      start: [boundsRes.x + boundsRes.width, boundsRes.y + boundsRes.height],
-      end: [
-        boundsRes.x + boundsRes.width - fingerMoveX,
-        boundsRes.y + boundsRes.height - fingerMoveY,
-      ],
-      duration,
-      type: "touch",
-    };
-    await this.session.pointer(finger1, finger2);
+    await this.session.movePointer(
+      {
+        type: "touch",
+        duration: opts.duration || 500,
+        start: start.pointer1,
+        end: end.pointer1,
+      },
+      {
+        type: "touch",
+        duration: opts.duration || 500,
+        start: start.pointer2,
+        end: end.pointer2,
+      }
+    );
     return this;
   }
 
