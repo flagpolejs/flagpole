@@ -78,6 +78,23 @@ export type SuiteStatusCallback = (
   statusEvent: SuiteStatusEvent
 ) => any;
 
+export type PointerButton = "default" | "left" | "right" | "middle";
+export type PointerDisposition = "down" | "up";
+export type PointerType = "default" | "mouse" | "pen" | "touch";
+export type PointerPoint = [x: number, y: number];
+
+export interface PointerMove {
+  start: PointerPoint;
+  end?: PointerPoint;
+  duration?: number;
+  type?: PointerType;
+  disposition?: {
+    start: PointerDisposition;
+    end: PointerDisposition;
+  };
+  button?: PointerButton;
+}
+
 export type SuiteAsyncCallback = (suite: iSuite) => Promise<void>;
 export type SuiteSyncCallback = (suite: iSuite) => void;
 export type SuiteCallback = SuiteAsyncCallback | SuiteSyncCallback;
@@ -329,12 +346,8 @@ export interface iValue {
   getPreviousSiblings(selector?: string): Promise<iValue[]>;
   getNextSibling(selector?: string): Promise<iValue>;
   getNextSiblings(selector?: string): Promise<iValue[]>;
-  pinch(
-    tuple: [x: number, y: number, duration?: number]
-  ): Promise<string | void>;
-  zoom(
-    tuple: [x: number, y: number, duration?: number]
-  ): Promise<string | void>;
+  pinch(moveAmount: [x: number, y: number], duration: number): Promise<iValue>;
+  zoom(moveAmount: [x: number, y: number], duration: number): Promise<iValue>;
 }
 
 /**
@@ -431,13 +444,8 @@ export interface iResponse {
   ): Promise<iValue>;
   click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
   serialize(): object;
-  touchMove(array: [x: number, y: number]): Promise<void>;
-  touchMove(array: [x: number, y: number, duration?: number]): Promise<void>;
-  touchMove(
-    array: [x: number, y: number, duration?: number],
-    ...otherMoves: [x: number, y: number, duration?: number][]
-  ): Promise<void>;
-  rotate(rotation: string | number): Promise<string | number>;
+  movePointer(...pointers: PointerMove[]): Promise<iResponse>;
+  rotateScreen(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
 }

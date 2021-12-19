@@ -1,4 +1,4 @@
-import { iValue, iAssertionContext, iBounds } from "../interfaces";
+import { iValue, iAssertionContext, iBounds, PointerMove } from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
@@ -107,37 +107,56 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   public async zoom(
-    tuple: [x: number, y: number, duration?: number]
-  ): Promise<string | void> {
+    moveAmount: [x: number, y: number],
+    duration: number
+  ): Promise<iValue> {
     const boundsRes = await this.getBounds();
     if (!boundsRes) throw "Error: element bounds not acquired";
-    await this.session.touchMove(
-      [
-        [boundsRes.points[1].x - 10, boundsRes.points[1].y - 10],
-        [tuple[0], tuple[1], tuple[2] || 500],
-      ],
-      [
-        [boundsRes.points[1].x + 10, boundsRes.points[1].y + 10],
-        [tuple[0] * -1, tuple[1] * -1, tuple[2] || 500],
-      ]
-    );
+    const fingerMoveX = moveAmount[0] / 2;
+    const fingerMoveY = moveAmount[1] / 2;
+    const startX = (boundsRes.x + boundsRes.width) / 2;
+    const startY = (boundsRes.y + boundsRes.height) / 2;
+    const finger1: PointerMove = {
+      start: [startX, startY],
+      end: [startX - fingerMoveX, startY - fingerMoveY],
+      duration,
+      type: "touch",
+    };
+    const finger2: PointerMove = {
+      start: [startX + 20, startY + 20],
+      end: [boundsRes.x + 20 + fingerMoveX, boundsRes.y + 20 + fingerMoveY],
+      duration,
+      type: "touch",
+    };
+    await this.session.pointer(finger1, finger2);
+    return this;
   }
 
   public async pinch(
-    tuple: [x: number, y: number, duration?: number]
-  ): Promise<string | void> {
+    moveAmount: [x: number, y: number],
+    duration: number
+  ): Promise<iValue> {
     const boundsRes = await this.getBounds();
     if (!boundsRes) throw "Error: element bounds not acquired";
-    await this.session.touchMove(
-      [
-        [boundsRes.points[1].x - tuple[0], boundsRes.points[1].y - tuple[1]],
-        [tuple[0] - 10, tuple[1] - 10, tuple[2] || 500],
+    const fingerMoveX = moveAmount[0] / 2;
+    const fingerMoveY = moveAmount[1] / 2;
+    const finger1: PointerMove = {
+      start: [boundsRes.x, boundsRes.y],
+      end: [boundsRes.x + fingerMoveX, boundsRes.y + fingerMoveY],
+      duration,
+      type: "touch",
+    };
+    const finger2: PointerMove = {
+      start: [boundsRes.x + boundsRes.width, boundsRes.y + boundsRes.height],
+      end: [
+        boundsRes.x + boundsRes.width - fingerMoveX,
+        boundsRes.y + boundsRes.height - fingerMoveY,
       ],
-      [
-        [boundsRes.points[1].x + tuple[0], boundsRes.points[1].y + tuple[1]],
-        [tuple[0] * -1 + 10, tuple[1] * -1 + 10, tuple[2] || 500],
-      ]
-    );
+      duration,
+      type: "touch",
+    };
+    await this.session.pointer(finger1, finger2);
+    return this;
   }
 
   protected async _getValue(): Promise<any> {

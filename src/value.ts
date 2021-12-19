@@ -1012,14 +1012,16 @@ export class Value implements iValue {
   }
 
   public pinch(
-    tuple: [x: number, y: number, duration?: number]
-  ): Promise<string | void> {
+    moveAmount: [x: number, y: number],
+    duration: number
+  ): Promise<iValue> {
     throw `pinch not implemented for ${this.name}`;
   }
 
   public zoom(
-    tuple: [x: number, y: number, duration?: number]
-  ): Promise<string | void> {
+    moveAmount: [x: number, y: number],
+    duration: number
+  ): Promise<iValue> {
     throw `zoom not implemented for ${this.name}`;
   }
 

@@ -1,4 +1,12 @@
-import { iResponse, iValue, FindOptions, FindAllOptions } from "../interfaces";
+import {
+  iResponse,
+  iValue,
+  FindOptions,
+  FindAllOptions,
+  PointerMove,
+  PointerButton,
+  PointerDisposition,
+} from "../interfaces";
 import { ElementHandle } from "puppeteer-core";
 import { PuppeteerResponse } from "./puppeteerresponse";
 import { asyncForEach, toArray, asyncMap } from "../util";
@@ -219,5 +227,37 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
       selector,
       ...toArray<string>(value),
     ]);
+  }
+
+  protected async mouseAction(
+    disposition: PointerDisposition,
+    button?: PointerButton
+  ) {
+    if (!button || button == "default") button = "left";
+    const opts = {
+      button,
+    };
+    if (disposition == "down") return this.page?.mouse.down(opts);
+    if (disposition == "up") return this.page?.mouse.up(opts);
+  }
+
+  public async movePointer(...pointers: PointerMove[]): Promise<iResponse> {
+    asyncForEach(pointers, async (pointer: PointerMove) => {
+      // Default values
+      if (!pointer.end) pointer.end = pointer.start;
+      if (!pointer.type || pointer.type == "default") pointer.type = "mouse";
+      if (!pointer.duration) pointer.duration = 500;
+      if (!pointer.disposition) {
+        pointer.disposition = { start: "down", end: "up" };
+      }
+      // Non-mouse events not supported
+      if (pointer.type != "mouse") return;
+      // Perform the action
+      await this.page?.mouse.move(pointer.start[0], pointer.start[1]);
+      await this.mouseAction(pointer.disposition.start, pointer.button);
+      await this.page?.mouse.move(pointer.end[0], pointer.end[1]);
+      await this.mouseAction(pointer.disposition.end, pointer.button);
+    });
+    return this;
   }
 }

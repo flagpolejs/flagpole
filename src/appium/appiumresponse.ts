@@ -6,6 +6,8 @@ import {
   FindOptions,
   FindAllOptions,
   ScreenProperties,
+  PointerMove,
+  PointerType,
 } from "../interfaces";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
@@ -19,6 +21,22 @@ import { JsonDoc } from "../json/jpath";
 import { sendAppiumRequest, appiumFindByUiAutomator } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
 import { toType } from "../util";
+
+interface AppiumPointerAction {
+  type: "pointer";
+  id: string;
+  parameters: {
+    pointerType: PointerType;
+  };
+  actions: {
+    type: "pause" | "pointerMove" | "pointerUp" | "pointerDown";
+    duration?: number;
+    x?: number;
+    y?: number;
+    origin?: "viewport" | "pointer";
+    button?: number;
+  }[];
+}
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
   protected _sessionId?: string;
@@ -182,118 +200,68 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     await this.post("appium/device/hide_keyboard", {});
   }
 
-  public async touchMove(
-    ...matrices:
-      | [x: number, y: number, duration?: number][]
-      | [x: number, y: number, duration?: number][][]
-  ): Promise<void> {
-    if (!matrices.length) return;
-
-    // There is an external array called actions and an internal array called actions
-    // The external array represents the fingers used to touch the device
-    // The internal array represents the actions conducted by the fingers
-    const touchActions: any[] = [];
-    for (let i = 0; i < matrices.length; i++) {
-      // Start a new touch actions
-      // Push starting object either if starting a new external array of actions
-      // Or start the only external array of actions
-      if (matrices[i][0][0] !== undefined || i === 0) {
-        touchActions.push({
-          type: "pointer",
-          id: i.toString(),
-          parameters: {
-            pointerType: "touch",
-          },
-          actions: [],
-        });
+  public async pointer(...pointers: PointerMove[]): Promise<iResponse> {
+    if (!pointers.length) return this;
+    const actions: AppiumPointerAction[] = [];
+    pointers.forEach((pointer, i) => {
+      // Default values
+      if (!pointer.end) pointer.end = pointer.start;
+      if (!pointer.type || pointer.type == "default") pointer.type = "touch";
+      if (!pointer.duration) pointer.duration = 500;
+      if (!pointer.disposition) {
+        pointer.disposition = {
+          start: "down",
+          end: "up",
+        };
       }
-
-      // Check if we're trying to make touch actions with multiple fingers
-      if (matrices[i][0][0] !== undefined) {
-        // Add actions to the internal array of the current finger array
-        for (let j = 0; j < matrices[i].length; j++) {
-          // If at the beginning of the current finger array, do starting actions
-          if (j === 0) {
-            touchActions[i].actions.push(
-              {
-                type: "pointerMove",
-                duration: 0,
-                x: matrices[i][j][0],
-                y: matrices[i][j][1],
-                origin: "viewport",
-              },
-              {
-                type: "pointerDown",
-                button: 0,
-              },
-              {
-                type: "pause",
-                duration: matrices[i][j][2] || 10,
-              }
-            );
-          } else {
-            touchActions[i].actions.push({
-              type: "pointerMove",
-              x: matrices[i][j]![0],
-              y: matrices[i][j]![1],
-              duration: matrices[i][j]![2] || 500,
-              origin: "pointer",
-            });
-          }
-          // If at the end of the current finger array, lift the finger
-          if (j === matrices[i].length - 1) {
-            touchActions[i].actions.push({
-              type: "pointerUp",
-              button: 0,
-            });
-          }
-        }
-        // If only using one finger, push all actions to the internal array of that finger
-      } else {
-        // If at the beginning of the one-finger array, do starting actions
-        if (i === 0) {
-          touchActions[0].actions.push(
-            {
-              type: "pointerMove",
-              duration: 0,
-              x: matrices[i][0],
-              y: matrices[i][1],
-              origin: "viewport",
-            },
-            {
-              type: "pointerDown",
-              button: 0,
-            },
-            {
-              type: "pause",
-              duration: matrices[i][2] || 10,
-            }
-          );
-        } else {
-          touchActions[0].actions.push({
+      // Add this pointer to output
+      actions.push({
+        type: "pointer",
+        id: `pointer_${i}`,
+        parameters: {
+          pointerType: pointer.type,
+        },
+        actions: [
+          {
             type: "pointerMove",
-            duration: matrices[i][2] || 500,
-            x: matrices[i][0],
-            y: matrices[i][1],
-            origin: "pointer",
-          });
-        }
-        // If at the end of the one-finger array, lift the finger
-        if (i === matrices.length - 1) {
-          touchActions[0].actions.push({
-            type: "pointerUp",
+            duration: 0,
+            x: pointer.start[0],
+            y: pointer.start[1],
+            origin: "viewport",
+          },
+          {
+            type:
+              pointer.disposition.start == "up" ? "pointerUp" : "pointerDown",
             button: 0,
-          });
-        }
-      }
-    }
-
-    await this.post("actions", {
-      actions: touchActions,
+          },
+          {
+            type: "pointerMove",
+            duration: pointer.duration,
+            x: pointer.end[0],
+            y: pointer.end[1],
+            origin: "viewport",
+          },
+          {
+            type: "pause",
+            duration: 10,
+          },
+          {
+            type:
+              pointer.disposition.end == "down" ? "pointerDown" : "pointerUp",
+            button: 0,
+          },
+        ],
+      });
     });
+    await this.post("actions", {
+      actions,
+    });
+    return this;
   }
 
-  public async rotate(rotation: string | number): Promise<string | number> {
+  public async rotateScreen(
+    rotation: string | number
+  ): Promise<string | number> {
     if (typeof rotation === "number") {
       throw "Appium only supports rotating by a string.";
     } else if (
