@@ -270,6 +270,9 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     if (!opts.amount) {
       throw "Error: must specify amount of pixels to gesture";
     }
+    if (!opts.start) {
+      throw "Error: must specify starting coordinates";
+    }
     // Start position
     const start: { pointer1: PointerPoint; pointer2: PointerPoint } = {
       pointer1: [opts.start[0] - 10, opts.start[1] - 10],
