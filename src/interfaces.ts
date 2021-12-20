@@ -99,7 +99,7 @@ export type TapType = "single" | "double";
 
 export type GestureType = "pinch" | "stretch";
 export interface GestureOpts {
-  start: PointerPoint;
+  start?: PointerPoint;
   duration?: number;
   amount?: PointerPoint;
 }

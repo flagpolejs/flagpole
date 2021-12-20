@@ -464,6 +464,20 @@ Note that findAll does not work in this manner on Appium elements.
 
 Give this element focus.
 
+### gesture(type: GestureType, opts: GestureOpts): Promise\<iValue\>
+
+Perform a gesture on an element. Currently, pinch and stretch gestures are supported.
+
+```javascript
+const element = await someElement.gesture("pinch", {
+ duration?: 1000,
+ amount?: [200, 200]
+});
+```
+
+By default, the pointers will move half the width and height of the element, in opposite directions, for 500 milliseconds.
+
+
 ### getAttribute(key: string): Promise\<Value\>
 
 Get the attribute of the element with this key and return its value. If it is not present the Value object will contain null.
@@ -790,10 +804,6 @@ Get the `n`th value in the array or object.
 const fourthItem = array.nth(3);
 ```
 
-### pinch(tuple: [x: number, y: number, duration?: number]): Promise\<iValue\>;
-
-Send a pinch interaction on the given element. The x and y coordinates in the tuple are the number of pixels to start away from center. The duration in the tuple is the number of milliseconds the pinch interaction will take. Currently only supported with Appium elements.
-
 ### pluck(property: string): iValue;
 
 When the Value contains an array of objects, this method will "pluck" the value of that property from each item in the array. It returns an iValue containing that array of values.
@@ -880,9 +890,19 @@ If the input is an array of objects, the argument then should be the key of the 
 const totalCount = rows.sum("quantity");
 ```
 
-### tap(): Promise\<void\>;
+### tap(duration?: number, tapType?: TapType): Promise\<void\>;
 
 Tap the element.
+
+On Appium elements, single and double taps are supported, as well as a duration that is either the length of time the single tap is depressed, or the length of time between double taps.
+
+```javascript
+await element.tap(100, "double");
+```
+
+```javascript
+await element.tap(1000, "single");
+```
 
 ### toArray(): any[]
 
@@ -930,6 +950,3 @@ Takes the input array of items or object values, removes duplicates, and returns
 const countries = rows.col("venueCountry").unique();
 ```
 
-### zoom(tuple: [x: number, y: number, duration?: number]): Promise\<iValue\>;
-
-Send a zoom interaction on the target element. The x and y coordinates in the tuple are how far to move each finger away from the element's midpoint. The duration in the tuple is how many milliseconds the zoom interaction will take.

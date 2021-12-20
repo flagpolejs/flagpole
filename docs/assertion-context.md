@@ -463,6 +463,24 @@ Checks for an element to exist with XPath of `xPath`. Usually a CSS selector is 
 const title = await context.findXpath("/main/h1[1]/span");
 ```
 
+### gesture(type: GestureType, opts: GestureOpts): Promise\<iResponse\>
+
+Executes a gesture onscreen. Currently, pinch and stretch gestures are supported.
+
+```javascript
+const res = await context.gesture("stretch", {
+  start: [500, 500],
+  amount: [200, 200],
+  duration?: 500
+});
+```
+`start` is the XY coordinate near to where each pointer will start. One pointer will start -10 square pixels away, the other +10 square pixels away.
+`amount` is the number of pixels the pointers will move on each axis. The pointers move in opposite directions.
+`duration` is how long the execution of the gesture takes.
+
+Please note that `start` and `amount` are required when gesturing on the screen itself, rather than on an element.
+
+
 ### get(aliasName: string): any
 
 If a value was previously saved on this Scenario `set` or within an Assertion, Value or DOMElement with `as` then use this `get` method to retrieve it.
@@ -495,6 +513,39 @@ Hide onscreen keyboard. Currently only works in Appium scenarios. Does not work 
 ```typescript
 await context.hideKeyboard();
 ```
+
+### movePointer(...pointers: PointerMove[]): Promise\<iResponse\>
+
+Move pointer on screen. Can be used for touches, gestures, pinching, zooming, rotating, dragging, etc.
+
+```typescript
+const res = await context.movePointer({
+    start: [500, 500],
+    end?: [700, 700],
+    type?: "default" | "mouse" | "pen" | "touch",
+    duration?: 500,
+    disposition?: { 
+      start: "down",
+      end: "up"
+    }
+  }, {
+    start: [600, 600],
+    end?: [800, 800],
+    type?: "default" | "mouse" | "pen" | "touch",
+    duration?: 500,
+    disposition?: {
+      start: "down",
+      end: "up"
+    }
+  });
+```
+
+Pass one object per pointer device. Actions will be executed simultaneously for each pointer device.
+`start` is the XY coordinate for the beginning of the action.
+`end` is the XY coordinate where the pointer will move.
+`type` is the type of pointer device simulated.
+`duration` is how long each action takes to complete.
+`disposition` is whether the pointer will start or end up or down. Up means the screen is not being touched, down means the screen is being touched.
 
 ### openInBrowser(): Promise\<string\>
 
