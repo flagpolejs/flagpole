@@ -95,6 +95,8 @@ export interface PointerMove {
   button?: PointerButton;
 }
 
+export type TapType = "single" | "double";
+
 export type GestureType = "pinch" | "stretch";
 export interface GestureOpts {
   start: PointerPoint;
@@ -299,7 +301,7 @@ export interface iValue {
   focus(): Promise<iValue>;
   blur(): Promise<iValue>;
   hover(): Promise<iValue>;
-  tap(): Promise<iValue>;
+  tap(duration?: number, tapType?: TapType): Promise<iValue>;
   press(key: string, opts?: any): Promise<iValue>;
   clearThenType(textToType: string, opts?: any): Promise<iValue>;
   type(textToType: string, opts?: any): Promise<iValue>;
@@ -738,7 +740,7 @@ export interface iAssertionContext {
   filter<T>(array: T[], callback: IteratorBoolCallback): Promise<T[]>;
   map<T>(array: T[], callback: IteratorCallback): Promise<any[]>;
   abort(message?: string): Promise<iScenario>;
-  rotate(rotation: string | number): Promise<string | number>;
+  rotateScreen(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
 }

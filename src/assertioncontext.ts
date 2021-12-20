@@ -645,8 +645,10 @@ export class AssertionContext implements iAssertionContext {
     return this.scenario.abort(message);
   }
 
-  public async rotate(rotation: string | number): Promise<string | number> {
-    return await this.response.rotate(rotation);
+  public async rotateScreen(
+    rotation: string | number
+  ): Promise<string | number> {
+    return await this.response.rotateScreen(rotation);
   }
 
   public async getScreenProperties(): Promise<ScreenProperties> {

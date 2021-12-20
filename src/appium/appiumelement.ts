@@ -6,6 +6,7 @@ import {
   GestureOpts,
   GestureType,
   PointerPoint,
+  TapType,
 } from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
@@ -178,6 +179,40 @@ export class AppiumElement extends DOMElement implements iValue {
         end: end.pointer2,
       }
     );
+    return this;
+  }
+
+  public async tap(
+    duration: number = 500,
+    tapType: TapType = "single"
+  ): Promise<iValue> {
+    const bounds = await this.getBounds();
+    if (!bounds) throw "Error: element bounds not acquired";
+
+    if (tapType === "double") {
+      await this.session.movePointer({
+        type: "touch",
+        duration: 200,
+        start: [bounds.middle.x, bounds.middle.y],
+      });
+
+      await this.context.pause(duration);
+
+      await this.session.movePointer({
+        type: "touch",
+        duration: 200,
+        start: [bounds.middle.x, bounds.middle.y],
+      });
+
+      return this;
+    }
+
+    await this.session.movePointer({
+      type: "touch",
+      duration: duration,
+      start: [bounds.middle.x, bounds.middle.y],
+    });
+
     return this;
   }
 
