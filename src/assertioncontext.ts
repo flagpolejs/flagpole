@@ -20,6 +20,9 @@ import {
   OptionalXY,
   iHttpRequest,
   ScreenProperties,
+  PointerMove,
+  GestureOpts,
+  GestureType,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -603,6 +606,14 @@ export class AssertionContext implements iAssertionContext {
     })();
     this._completedAction("SCREENSHOT");
     return output;
+  }
+
+  public movePointer(...pointers: PointerMove[]): Promise<iResponse> {
+    return this.response.movePointer(...pointers);
+  }
+
+  public gesture(type: GestureType, opts: GestureOpts): Promise<iResponse> {
+    return this.response.gesture(type, opts);
   }
 
   public push(key: string, value: any): iAssertionContext {

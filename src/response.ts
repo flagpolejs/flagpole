@@ -9,6 +9,8 @@ import {
   OptionalXY,
   ScreenProperties,
   PointerMove,
+  GestureOpts,
+  GestureType,
 } from "./interfaces";
 import { HttpResponse } from "./httpresponse";
 import { HttpRequest } from "./httprequest";
@@ -393,9 +395,18 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  movePointer(...pointers: PointerMove[]): Promise<iResponse> {
+  public async movePointer(...pointers: PointerMove[]): Promise<iResponse> {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support pointer.`
+    );
+  }
+
+  public async gesture(
+    type: GestureType,
+    opts: GestureOpts
+  ): Promise<iResponse> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support gesture.`
     );
   }
 

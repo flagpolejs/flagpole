@@ -453,6 +453,7 @@ export interface iResponse {
   click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
   serialize(): object;
   movePointer(...pointers: PointerMove[]): Promise<iResponse>;
+  gesture(type: GestureType, opts: GestureOpts): Promise<iResponse>;
   rotateScreen(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
@@ -743,6 +744,8 @@ export interface iAssertionContext {
   rotateScreen(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  movePointer(...pointers: PointerMove[]): Promise<iResponse>;
+  gesture(type: GestureType, opts: GestureOpts): Promise<iResponse>;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
