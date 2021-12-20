@@ -25,16 +25,22 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       context.assert(geolocation.altitude).equals(1);
       let screenProps = await context.getScreenProperties();
       context.assert(screenProps.angle).equals("PORTRAIT");
-      let rotation = await context.rotate("LANDSCAPE");
+      let rotation = await context.rotateScreen("LANDSCAPE");
       context.assert(rotation).equals("LANDSCAPE");
       screenProps = await context.getScreenProperties();
       context.assert(screenProps.angle).equals("LANDSCAPE");
-      rotation = await context.rotate("PORTRAIT");
+      rotation = await context.rotateScreen("PORTRAIT");
       const hello = await context.findAll("id/pager_signin_button");
       context.assert(hello[0]).exists();
       context.assert(hello.length).greaterThan(0);
-      await hello[0].zoom([100, 100, 1000]);
-      await hello[0].pinch([100, 100, 1000]);
+      await hello[0].gesture("stretch", {
+        amount: [100, 100],
+        duration: 1000,
+      });
+      await hello[0].gesture("pinch", {
+        amount: [100, 100],
+        duration: 1000,
+      });
       const textViews = await context.findAll(
         "class name/android.widget.TextView"
       );
@@ -84,6 +90,10 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       const user = await context.find("id/initials_switch_user");
       await user.click();
       await context.pause(3000);
-      await response.touchMove([500, 500, 3000], [-500, -500]);
+      await context.movePointer({
+        start: [500, 500],
+        end: [0, 0],
+        duration: 3000,
+      });
     });
 });
