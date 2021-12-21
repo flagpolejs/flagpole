@@ -306,33 +306,37 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     a?: number | string | RegExp,
     b?: number
   ): Promise<iValue> {
-    const previousTime = await getTimeout(this.sessionId, this.scenario);
-    if (typeof a === "number") {
-      await setImplicitWait(this.sessionId, this.scenario, a);
-      const element = await this.find(selector);
-      await setImplicitWait(this.sessionId, this.scenario, previousTime);
-      return element;
-    } else if (typeof a === "string") {
-      await setImplicitWait(this.sessionId, this.scenario, b || 30000);
-      const element = await this.find(selector, a);
-      await setImplicitWait(this.sessionId, this.scenario, previousTime);
-      return element;
-    } else if (toType(a) === "regexp") {
-      await setImplicitWait(this.sessionId, this.scenario, previousTime);
-      throw "Appium does not support finding element by RegEx";
-    } else {
-      await setImplicitWait(this.sessionId, this.scenario, 30000);
-      const element = await this.find(selector);
-      await setImplicitWait(this.sessionId, this.scenario, previousTime);
-      return element;
+    const timeout =
+      typeof a === "number" ? a : typeof b === "number" ? b : 30000;
+    let timedOut = false;
+    let elementCheckStr = "";
+    let element: any = {};
+    setTimeout(() => (timedOut = true), timeout);
+    while (!elementCheckStr && !timedOut) {
+      if (typeof a === "string") {
+        element = await this.find(selector, a);
+        elementCheckStr = element.$;
+      } else if (toType(a) === "regexp") {
+        throw "Appium does not support finding element by RegEx";
+      } else {
+        element = await this.find(selector);
+        elementCheckStr = element.$;
+      }
+      await delay(10);
     }
+    return element;
   }
 
   public async waitForXPath(xPath: string, timeout?: number): Promise<iValue> {
-    const previousTime = await getTimeout(this.sessionId, this.scenario);
-    await setImplicitWait(this.sessionId, this.scenario, timeout || 30000);
-    const element = await this.find(xPath);
-    await setImplicitWait(this.sessionId, this.scenario, previousTime);
+    let timedOut = false;
+    let elementCheckStr = "";
+    let element: any = {};
+    setTimeout(() => (timedOut = true), timeout || 30000);
+    while (!elementCheckStr && !timedOut) {
+      element = await this.find(xPath);
+      elementCheckStr = element.$;
+      await delay(10);
+    }
     return element;
   }
 
@@ -642,7 +646,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   // Based on deprecated JSONWP protocol and subject to change
   public async resetApp(): Promise<void> {
     await this.post("appium/app/reset", {});
-}
+  }
 
   // Uses call from deprecated JSONWP protocol and is subject to change
   public async launchApp(
@@ -664,6 +668,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           environment: environment,
         },
       });
+    }
+  }
 
   // Uses deprecated JSONWP call
   public async getAppiumContexts(): Promise<string[]> {
@@ -695,10 +701,10 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       throw res.jsonRoot.value.message;
     }
   }
-  
+
   public async goBack(): Promise<void> {
     await this.post("back", {});
-}
+  }
 
   public async backgroundApp(seconds: number = -1): Promise<void> {
     if (seconds > -1) {

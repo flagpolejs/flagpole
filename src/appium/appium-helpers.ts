@@ -48,6 +48,21 @@ export const sendAppiumRequest = async (
   return doc;
 };
 
+// End Appium session
+/*
+ * @param {iScenario} scenario - FlagPole scenario
+ * @param {string} sessionId - Appium session ID
+ * @return {Promise<JsonDoc>} JSON response from DELETE call
+ * */
+export const appiumSessionDestroy = async (
+  scenario: iScenario,
+  sessionId: string
+) => {
+  return await sendAppiumRequest(scenario, `/session/${sessionId}`, {
+    method: "delete",
+  });
+};
+
 // Find by Android specific uiautomator selector
 /*
  * @param {AppiumResponse} response - AppiumResponse which initiated findAll call referencing this method

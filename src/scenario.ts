@@ -62,10 +62,6 @@ import {
 } from "./decorators/internal";
 import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
-import {
-  appiumSessionDestroy,
-  setDevProperties,
-} from "./appium/appium-helpers";
 import { AppiumResponse } from "./appium/appiumresponse";
 import { _ } from "ajv";
 
