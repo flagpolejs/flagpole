@@ -312,7 +312,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     let elementCheckStr = "";
     let element: any = {};
     setTimeout(() => (timedOut = true), timeout);
-    while (!elementCheckStr && !timedOut) {
+    while (!elementCheckStr) {
+      if (timedOut) throw "Timed out";
       if (typeof a === "string") {
         element = await this.find(selector, a);
         elementCheckStr = element.$;
@@ -332,7 +333,8 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     let elementCheckStr = "";
     let element: any = {};
     setTimeout(() => (timedOut = true), timeout || 30000);
-    while (!elementCheckStr && !timedOut) {
+    while (!elementCheckStr) {
+      if (timedOut) throw "Timed out";
       element = await this.find(xPath);
       elementCheckStr = element.$;
       await delay(10);
