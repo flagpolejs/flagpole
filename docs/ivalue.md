@@ -729,9 +729,9 @@ const image = await context.find("img.logo");
 image.load("Make sure logo is a valid image");
 ```
 
-### longPress(ms?: number): Promise\<string | void\>;
+### longpress(): Promise\<string | void\>;
 
-Longpress on an element. Holds touch action for 1000 milliseconds by default. This currently only works for Appium elements.
+Longpress on an element. Holds touch action for 2000 milliseconds by default. This currently only works for Appium elements.
 
 ### map(mapper: Function): iValue;
 
@@ -899,9 +899,9 @@ If the input is an array of objects, the argument then should be the key of the 
 const totalCount = rows.sum("quantity");
 ```
 
-### tap(opts: PointerClick): Promise\<void\>;
+### tap(opts?: PointerClick): Promise\<iValue\>;
 
-Tap the element.
+Tap the element, by default with touch.
 
 On Appium elements, single and double taps are supported, as well as a duration that is either the length of time the single tap is depressed, or the length of time between double taps.
 
@@ -912,12 +912,16 @@ Opts are...
 - delay: Number of milliseconds between each tap. Default: 200
 - count: How many taps? Default: 1
 
-```javascript
-await element.tap({ duration: 100, : count: 2 });
-```
+Double-tap
 
 ```javascript
-await element.tap({ duration: 1000, count: 1 });
+await element.tap({ count: 2 });
+```
+
+Single-tap
+
+```javascript
+await element.tap();
 ```
 
 ### toArray(): any[]
