@@ -1,9 +1,13 @@
 import {
   iValue,
   iAssertionContext,
+  iBounds,
+  GestureOpts,
+  GestureType,
+  PointerPoint,
+  PointerClick,
   FindOptions,
   FindAllOptions,
-  iBounds,
   ScreenshotOpts,
 } from "../interfaces";
 import { promises } from "fs";
@@ -56,9 +60,12 @@ export class AppiumElement extends DOMElement implements iValue {
     this._elementId = elementId || "";
   }
 
-  public async click(): Promise<iValue> {
-    await this.session.post(`element/${this._elementId}/click`, {});
-    return this;
+  public async click(opts: PointerClick): Promise<iValue> {
+    if (opts.count == 1) {
+      await this.session.post(`element/${this._elementId}/click`, {});
+      return this;
+    }
+    return this.tap(opts);
   }
 
   public find(
@@ -204,6 +211,14 @@ export class AppiumElement extends DOMElement implements iValue {
       y: res.jsonRoot.value.y,
       height: res.jsonRoot.value.height,
       width: res.jsonRoot.value.width,
+      left: res.jsonRoot.value.x,
+      right: res.jsonRoot.value.x + res.jsonRoot.value.width,
+      top: res.jsonRoot.value.y,
+      bottom: res.jsonRoot.value.y + res.jsonRoot.value.height,
+      middle: {
+        x: res.jsonRoot.value.x + res.jsonRoot.value.width / 2,
+        y: res.jsonRoot.value.y + res.jsonRoot.value.height / 2,
+      },
       points: [
         {
           x: res.jsonRoot.value.x,
@@ -223,30 +238,92 @@ export class AppiumElement extends DOMElement implements iValue {
     return bounds;
   }
 
-  public async doubleTap(ms: number = 10): Promise<void> {
-    const boundsRes = await this.getBounds();
-    if (!boundsRes) throw "Error: element bounds not acquired";
-    await this.context.response.touchMove([
-      boundsRes.points[1].x,
-      boundsRes.points[1].y,
-      ms,
-    ]);
-    await this.context.pause(ms);
-    await this.context.response.touchMove([
-      boundsRes.points[1].x,
-      boundsRes.points[1].y,
-      ms,
-    ]);
+  public async gesture(type: GestureType, opts: GestureOpts): Promise<iValue> {
+    // Get bounds
+    const bounds = await this.getBounds();
+    if (!bounds) throw "Error: element bounds not acquired";
+    // Defaults
+    if (!opts.amount) {
+      opts.amount = [bounds.width / 2, bounds.height / 2];
+    }
+    // Start position
+    const start: { pointer1: PointerPoint; pointer2: PointerPoint } = {
+      pointer1:
+        type == "stretch"
+          ? [bounds.middle.x - 10, bounds.middle.y - 10]
+          : [bounds.left, bounds.top],
+      pointer2:
+        type == "stretch"
+          ? [bounds.middle.x + 10, bounds.middle.y + 10]
+          : [bounds.right, bounds.bottom],
+    };
+    // End position
+    const end: { pointer1: PointerPoint; pointer2: PointerPoint } = {
+      pointer1:
+        type == "stretch"
+          ? [
+              start.pointer1[0] - opts.amount[0],
+              start.pointer1[1] - opts.amount[1],
+            ]
+          : [
+              start.pointer1[0] + opts.amount[0],
+              start.pointer1[1] + opts.amount[1],
+            ],
+      pointer2:
+        type == "stretch"
+          ? [
+              start.pointer2[0] + opts.amount[0],
+              start.pointer2[1] + opts.amount[1],
+            ]
+          : [
+              start.pointer2[0] - opts.amount[0],
+              start.pointer2[1] - opts.amount[1],
+            ],
+    };
+    await this.session.movePointer(
+      {
+        type: "touch",
+        duration: opts.duration || 500,
+        start: start.pointer1,
+        end: end.pointer1,
+      },
+      {
+        type: "touch",
+        duration: opts.duration || 500,
+        start: start.pointer2,
+        end: end.pointer2,
+      }
+    );
+    return this;
   }
 
-  public async longPress(ms: number = 1000): Promise<void> {
-    const boundsRes = await this.getBounds();
-    if (!boundsRes) throw "Error: element bounds not acquired";
-    await this.context.response.touchMove([
-      boundsRes.points[1].x,
-      boundsRes.points[1].y,
-      ms,
-    ]);
+  public async tap(opts: PointerClick): Promise<iValue> {
+    const bounds = await this.getBounds();
+    if (!bounds) throw "Error: element bounds not acquired";
+    // Set defaults
+    const duration = opts.duration || 200;
+    const count = opts.count || 1;
+    const delay = opts.delay || 200;
+    const type = opts.type || "touch";
+    // Handle multiple
+    for (let i = 0; i < count; i++) {
+      await this.session.movePointer({
+        type,
+        duration,
+        start: [bounds.middle.x, bounds.middle.y],
+      });
+      await this.context.pause(delay);
+    }
+    return this;
+  }
+
+  public async longpress(opts: PointerClick): Promise<iValue> {
+    return this.tap({
+      type: opts.type || "touch",
+      duration: opts.duration || 2000,
+      delay: opts.delay || 200,
+      count: opts.count || 1,
+    });
   }
 
   protected async _getValue(): Promise<any> {

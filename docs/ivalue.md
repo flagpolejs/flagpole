@@ -468,6 +468,20 @@ Note that findAll does not work in this manner on Appium elements.
 
 Give this element focus.
 
+### gesture(type: GestureType, opts: GestureOpts): Promise\<iValue\>
+
+Perform a gesture on an element. Currently, pinch and stretch gestures are supported.
+
+```javascript
+const element = await someElement.gesture("pinch", {
+ duration?: 1000,
+ amount?: [200, 200]
+});
+```
+
+By default, the pointers will move half the width and height of the element, in opposite directions, for 500 milliseconds.
+
+
 ### getAttribute(key: string): Promise\<Value\>
 
 Get the attribute of the element with this key and return its value. If it is not present the Value object will contain null.
@@ -886,9 +900,19 @@ If the input is an array of objects, the argument then should be the key of the 
 const totalCount = rows.sum("quantity");
 ```
 
-### tap(): Promise\<void\>;
+### tap(duration?: number, tapType?: TapType): Promise\<void\>;
 
 Tap the element.
+
+On Appium elements, single and double taps are supported, as well as a duration that is either the length of time the single tap is depressed, or the length of time between double taps.
+
+```javascript
+await element.tap(100, "double");
+```
+
+```javascript
+await element.tap(1000, "single");
+```
 
 ### toArray(): any[]
 
@@ -935,3 +959,4 @@ Takes the input array of items or object values, removes duplicates, and returns
 ```javascript
 const countries = rows.col("venueCountry").unique();
 ```
+

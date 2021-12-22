@@ -31,11 +31,11 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       context.assert(geolocation.altitude).equals(1);
       let screenProps = await context.getScreenProperties();
       context.assert(screenProps.angle).equals("PORTRAIT");
-      let rotation = await context.rotate("LANDSCAPE");
+      let rotation = await context.rotateScreen("LANDSCAPE");
       context.assert(rotation).equals("LANDSCAPE");
       screenProps = await context.getScreenProperties();
       context.assert(screenProps.angle).equals("LANDSCAPE");
-      rotation = await context.rotate("PORTRAIT");
+      rotation = await context.rotateScreen("PORTRAIT");
       let devProps = await response.getDeviceProperties();
       context.assert(devProps.network.wifi).equals(true);
       context.assert(devProps.network.mobileData).equals(true);
@@ -128,8 +128,11 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       const user = await context.find("id/initials_switch_user");
       await user.click();
       await context.pause(3000);
-      await response.touchMove([500, 500, 3000], [-500, -500]);
-      await response.resetApp();
+      await context.movePointer({
+        start: [500, 500],
+        end: [0, 0],
+        duration: 3000,
+      });
       const helloAgain = await context.find("id/pager_signin_button");
       context.assert(helloAgain).exists();
     });

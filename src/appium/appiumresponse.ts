@@ -9,6 +9,11 @@ import {
   FindAllOptions,
   ScreenshotOpts,
   ScreenProperties,
+  PointerMove,
+  PointerType,
+  PointerPoint,
+  GestureType,
+  GestureOpts,
   DeviceProperties,
 } from "../interfaces";
 import { ValuePromise } from "../value-promise";
@@ -35,6 +40,21 @@ import {
 import { AppiumElement } from "./appiumelement";
 import { toType } from "../util";
 
+interface AppiumPointerAction {
+  type: "pointer";
+  id: string;
+  parameters: {
+    pointerType: PointerType;
+  };
+  actions: {
+    type: "pause" | "pointerMove" | "pointerUp" | "pointerDown";
+    duration?: number;
+    x?: number;
+    y?: number;
+    origin?: "viewport" | "pointer";
+    button?: number;
+  }[];
+}
 const fs = promises;
 
 export class AppiumResponse extends ProtoResponse implements iResponse {
@@ -207,61 +227,125 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     await this.post("appium/device/hide_keyboard", {});
   }
 
-  public async touchMove(
-    array: [x: number, y: number, duration?: number],
-    ...otherArrays: [x: number, y: number, duration?: number][]
-  ): Promise<void> {
-    const touchActions = [
-      {
-        type: "pointerMove",
-        duration: 0,
-        x: array[0],
-        y: array[1],
-        origin: "viewport",
-      },
-      {
-        type: "pointerDown",
-        button: 0,
-      },
-      {
-        type: "pause",
-        duration: array[2] || 10,
-      },
-    ];
-    if (otherArrays.length) {
-      otherArrays.forEach((array) => {
-        touchActions.push({
-          type: "pointerMove",
-          duration: array![2] || 500,
-          x: array![0],
-          y: array![1],
-          origin: "pointer",
-        });
-      });
-    }
-
-    touchActions.push({
-      type: "pointerUp",
-      button: 0,
-    });
-
-    const toSend = {
-      actions: [
-        {
-          type: "pointer",
-          id: "0",
-          parameters: {
-            pointerType: "touch",
-          },
-          actions: touchActions,
+  public async movePointer(...pointers: PointerMove[]): Promise<iResponse> {
+    if (!pointers.length) return this;
+    const actions: AppiumPointerAction[] = [];
+    pointers.forEach((pointer, i) => {
+      // Default values
+      if (!pointer.end) pointer.end = pointer.start;
+      if (!pointer.type || pointer.type == "default") pointer.type = "touch";
+      if (!pointer.duration) pointer.duration = 500;
+      if (!pointer.disposition) {
+        pointer.disposition = {
+          start: "down",
+          end: "up",
+        };
+      }
+      // Add this pointer to output
+      actions.push({
+        type: "pointer",
+        id: `pointer_${i}`,
+        parameters: {
+          pointerType: pointer.type,
         },
-      ],
-    };
-
-    await this.post("actions", toSend);
+        actions: [
+          {
+            type: "pointerMove",
+            duration: 0,
+            x: pointer.start[0],
+            y: pointer.start[1],
+            origin: "viewport",
+          },
+          {
+            type:
+              pointer.disposition.start == "up" ? "pointerUp" : "pointerDown",
+            button: 0,
+          },
+          {
+            type: "pointerMove",
+            duration: pointer.duration,
+            x: pointer.end[0],
+            y: pointer.end[1],
+            origin: "viewport",
+          },
+          {
+            type: "pause",
+            duration: 10,
+          },
+          {
+            type:
+              pointer.disposition.end == "down" ? "pointerDown" : "pointerUp",
+            button: 0,
+          },
+        ],
+      });
+    });
+    await this.post("actions", {
+      actions,
+    });
+    return this;
   }
 
-  public async rotate(rotation: string | number): Promise<string | number> {
+  public async gesture(
+    type: GestureType,
+    opts: GestureOpts
+  ): Promise<iResponse> {
+    // Must specify amount when not gesturing on a specific element
+    if (!opts.amount) {
+      throw "Error: must specify amount of pixels to gesture";
+    }
+    if (!opts.start) {
+      throw "Error: must specify starting coordinates";
+    }
+    // Start position
+    const start: { pointer1: PointerPoint; pointer2: PointerPoint } = {
+      pointer1: [opts.start[0] - 10, opts.start[1] - 10],
+      pointer2: [opts.start[0] + 10, opts.start[1] + 10],
+    };
+    // End position
+    const end: { pointer1: PointerPoint; pointer2: PointerPoint } = {
+      pointer1:
+        type == "stretch"
+          ? [
+              start.pointer1[0] - opts.amount[0],
+              start.pointer1[1] - opts.amount[1],
+            ]
+          : [
+              start.pointer1[0] + opts.amount[0],
+              start.pointer1[1] + opts.amount[1],
+            ],
+      pointer2:
+        type == "stretch"
+          ? [
+              start.pointer2[0] + opts.amount[0],
+              start.pointer2[1] + opts.amount[1],
+            ]
+          : [
+              start.pointer2[0] - opts.amount[0],
+              start.pointer2[1] - opts.amount[1],
+            ],
+    };
+    await this.movePointer(
+      {
+        type: "touch",
+        duration: opts.duration || 500,
+        start: start.pointer1,
+        end: end.pointer1,
+      },
+      {
+        type: "touch",
+        duration: opts.duration || 500,
+        start: start.pointer2,
+        end: end.pointer2,
+      }
+    );
+
+    return this.context.response;
+  }
+
+  public async rotateScreen(
+    rotation: string | number
+  ): Promise<string | number> {
     if (typeof rotation === "number") {
       throw "Appium only supports rotating by a string.";
     } else if (

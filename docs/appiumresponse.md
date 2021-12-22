@@ -117,7 +117,7 @@ This supports only 1-finger touch interactions.
 
 ### touchMove(array: [x: number, y: number, duration?: number], ...otherMoves: [x: number, y: number, duration?: number][]): Promise\<void\>
 
-Send a touch interaction to a specific, onscreen x-y coordinate followed by an arbitrary number of movement interactions. 
+Send a touch interaction to a specific, onscreen x-y coordinate followed by an arbitrary number of movement interactions.
 
 The optional duration index in the first tuple specifies how many milliseconds to hold the initial touch interaction.
 

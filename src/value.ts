@@ -7,6 +7,9 @@ import {
   iNextCallback,
   iAssertionIs,
   HttpRequestOptions,
+  GestureType,
+  GestureOpts,
+  PointerClick,
 } from "./interfaces";
 import {
   toType,
@@ -362,7 +365,7 @@ export class Value implements iValue {
     );
   }
 
-  public async click(): Promise<iValue> {
+  public async click(opts: PointerClick): Promise<iValue> {
     this._context.logFailure(`Element could not be clicked on: ${this.name}`);
     return this;
   }
@@ -633,8 +636,12 @@ export class Value implements iValue {
     throw `This element does not support blur().`;
   }
 
-  public async tap(): Promise<iValue> {
+  public async tap(opts: PointerClick): Promise<iValue> {
     throw `This element does not support tap().`;
+  }
+
+  public async longpress(opts: PointerClick): Promise<iValue> {
+    throw `This element does not support longpress().`;
   }
 
   public async press(key: string, opts?: any): Promise<iValue> {
@@ -1011,12 +1018,8 @@ export class Value implements iValue {
     );
   }
 
-  public longPress(ms?: number): Promise<string | void> {
-    throw "longPress not implemented for this type of element";
-  }
-  
-  public async doubleTap(ms?: number): Promise<string | void> {
-    throw "doubleTap not implemented for this type of element";
+  public gesture(type: GestureType, opts: GestureOpts): Promise<iValue> {
+    throw `gesture not implemented for ${this.name}`;
   }
 
   protected async _completedAction(verb: string, noun?: string) {
