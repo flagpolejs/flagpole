@@ -9,6 +9,7 @@ suite
   .next("Logo", async (context) => {
     const logo = await context.exists("img[alt=Debian]");
     const download = await logo.download();
+    //console.log(download);
     context
       .assert("Logo should look like the control.", download)
       .looksLike("@debian");

@@ -49,7 +49,8 @@ export class HttpResponse {
     r.statusMessage = response.statusMessage || "";
     r.headers = <KeyValue>response.headers;
     r.body =
-      typeof response.body === "string"
+      typeof response.body === "string" ||
+      response.headers["content-type"]?.includes("image")
         ? response.body
         : response.body.toString("utf8");
     r.json = response.headers["content-type"]?.includes("json")
