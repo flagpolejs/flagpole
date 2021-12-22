@@ -37,17 +37,21 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       context.assert(screenProps.angle).equals("LANDSCAPE");
       rotation = await context.rotateScreen("PORTRAIT");
       let devProps = await response.getDeviceProperties();
-      context.assert(devProps.network.wifi).equals(true);
-      context.assert(devProps.network.mobileData).equals(true);
-      context.assert(devProps.network.locationServices).equals(true);
-      context.assert(devProps.network.airplaneMode).equals(false);
+      if (devProps.network) {
+        context.assert(devProps.network.wifi).equals(true);
+        context.assert(devProps.network.mobileData).equals(true);
+        context.assert(devProps.network.locationServices).equals(true);
+        context.assert(devProps.network.airplaneMode).equals(false);
+      }
       await response.setDeviceProperties({
         network: {
           mobileData: false,
         },
       });
       devProps = await response.getDeviceProperties();
-      context.assert(devProps.network.mobileData).equals(false);
+      if (devProps.network) {
+        context.assert(devProps.network.mobileData).equals(false);
+      }
       const pageSource = await response.getSource();
       context.assert(pageSource.length).greaterThan(0);
       const isInstalled = await response.isAppInstalled(
