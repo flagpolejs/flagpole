@@ -284,6 +284,10 @@ With an argument for key, it will sort as an array of objects by that field.
 const reverseAlphaUsStates = usStates.desc("name");
 ```
 
+### doubleTap(ms?: number): Promise\<string | null\>;
+
+Does a double tap on an element. You can set the delay between taps, which defaults to 10 milliseconds.
+
 ### download(): Promise\<string | Buffer | null\>
 
 This will download the URL that is referenced by this element. It will automatically pull the `src` attribute from an `img` tag, for example. Or extract the `href` from a link.
@@ -464,6 +468,19 @@ Note that findAll does not work in this manner on Appium elements.
 
 Give this element focus.
 
+### gesture(type: GestureType, opts: GestureOpts): Promise\<iValue\>
+
+Perform a gesture on an element. Currently, pinch and stretch gestures are supported.
+
+```javascript
+const element = await someElement.gesture("pinch", {
+ duration?: 1000,
+ amount?: [200, 200]
+});
+```
+
+By default, the pointers will move half the width and height of the element, in opposite directions, for 500 milliseconds.
+
 ### getAttribute(key: string): Promise\<Value\>
 
 Get the attribute of the element with this key and return its value. If it is not present the Value object will contain null.
@@ -475,9 +492,11 @@ const src = await img.getAttribute("src");
 This also works with Appium testing. Valid attributes for Appium elements are:
 checkable, checked, class, className, clickable, content-desc, contentDescription, enabled, focusable, focused, long-clickable, longClickable, package, password, resource-id, resourceId, scrollable, selection-start, selection-end, selected, text, name, bounds, displayed, contentSize
 
-### getBounds(boxType: string): Promise\<iBounds | null\>;
+### getBounds(boxType?: string): Promise\<iBounds | null\>;
 
-Get the bounds of this DOM Element.
+Get the bounds of this DOM or Appium Element.
+
+Supported with browser and Appium type scenarios.
 
 ### getChildren(selector?: string): Promise\<DOMElement[]\>
 
@@ -553,7 +572,7 @@ const siblings = await someElement.getPreviousSiblings("li");
 
 ### getProperty(key: string): Promise\<Value\>
 
-Get the property of this input value with the key. If there is no such property then it will return null. This is an async method.
+Get the property of this input value with the key. If there is no such property then it will return null. This is an async method. In Appium tests, this gets the chosen CSS property of the element, which is only possible in a Webview context.
 
 ```javascript
 const isChecked = await element.getProperty("checked");
@@ -710,6 +729,10 @@ const image = await context.find("img.logo");
 image.load("Make sure logo is a valid image");
 ```
 
+### longpress(): Promise\<string | void\>;
+
+Longpress on an element. Holds touch action for 2000 milliseconds by default. This currently only works for Appium elements.
+
 ### map(mapper: Function): iValue;
 
 If input is an array, map over each element in the array to transform it. Otherwise, use mapper to transform the input itself. This method returns a new iValue with the transformed input.
@@ -821,7 +844,7 @@ const totalPrice = rows.every((t, row) => t + row.quantity * row.unitPrice, 0);
 
 ### screenshot(): Promise\<Buffer\>
 
-This is currently only supported with browser type scenarios. See documentation for `context.screenshot()` because the arguments are the same. The only difference is calling it on an Element will grab the image just of this element.
+This is currently only supported with browser and Appium type scenarios. See documentation for `context.screenshot()` because the arguments are the same. The only difference is calling it on an Element will grab the image just of this element.
 
 ### scrollTo(): Promise\<void\>;
 
@@ -876,9 +899,30 @@ If the input is an array of objects, the argument then should be the key of the 
 const totalCount = rows.sum("quantity");
 ```
 
-### tap(): Promise\<void\>;
+### tap(opts?: PointerClick): Promise\<iValue\>;
 
-Tap the element.
+Tap the element, by default with touch.
+
+On Appium elements, single and double taps are supported, as well as a duration that is either the length of time the single tap is depressed, or the length of time between double taps.
+
+Opts are...
+
+- type: "touch" | "mouse" | "pen" | "default"
+- duration: Number of milliseconds for each tap. Default: 200
+- delay: Number of milliseconds between each tap. Default: 200
+- count: How many taps? Default: 1
+
+Double-tap
+
+```javascript
+await element.tap({ count: 2 });
+```
+
+Single-tap
+
+```javascript
+await element.tap();
+```
 
 ### toArray(): any[]
 

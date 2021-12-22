@@ -8,6 +8,9 @@ import {
   FindAllOptions,
   OptionalXY,
   ScreenProperties,
+  PointerMove,
+  GestureOpts,
+  GestureType,
 } from "./interfaces";
 import { HttpResponse } from "./httpresponse";
 import { HttpRequest } from "./httprequest";
@@ -232,6 +235,12 @@ export abstract class ProtoResponse implements iResponse {
     return this.httpResponse.body;
   }
 
+  public getSource(): ValuePromise {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support getSource.`
+    );
+  }
+
   /**
    * Return a single header by key or all headers in an object
    *
@@ -392,12 +401,18 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public async touchMove(
-    array: [x: number, y: number, duration?: number],
-    ...otherMoves: [x: number, y: number, duration?: number][]
-  ): Promise<void> {
+  public async movePointer(...pointers: PointerMove[]): Promise<iResponse> {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support touchMove.`
+      `This scenario type (${this.responseTypeName}) does not support pointer.`
+    );
+  }
+
+  public async gesture(
+    type: GestureType,
+    opts: GestureOpts
+  ): Promise<iResponse> {
+    throw new Error(
+      `This scenario type (${this.responseTypeName}) does not support gesture.`
     );
   }
 
@@ -457,14 +472,16 @@ export abstract class ProtoResponse implements iResponse {
     };
   }
 
-  public async rotate(rotation: string | number): Promise<string | number> {
-    throw "rotate not implemented for this kind of scenario.";
+  public async rotateScreen(
+    rotation: string | number
+  ): Promise<string | number> {
+    throw "rotateScreen not implemented for this kind of scenario.";
   }
 
   public async getScreenProperties(): Promise<ScreenProperties> {
     throw "getScreenProperties not implemented for this kind of scenario.";
   }
-  
+
   public async hideKeyboard(): Promise<void> {
     throw "hideKeyboard not implemented for this kind of scenario.";
   }

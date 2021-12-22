@@ -20,6 +20,9 @@ import {
   OptionalXY,
   iHttpRequest,
   ScreenProperties,
+  PointerMove,
+  GestureOpts,
+  GestureType,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -199,7 +202,7 @@ export class AssertionContext implements iAssertionContext {
     textToType: string,
     opts: any = {}
   ): ValuePromise {
-    return this.clearThenType(selector, textToType, opts);
+    return this.response.clearThenType(selector, textToType, opts);
   }
 
   /**
@@ -605,6 +608,14 @@ export class AssertionContext implements iAssertionContext {
     return output;
   }
 
+  public movePointer(...pointers: PointerMove[]): Promise<iResponse> {
+    return this.response.movePointer(...pointers);
+  }
+
+  public gesture(type: GestureType, opts: GestureOpts): Promise<iResponse> {
+    return this.response.gesture(type, opts);
+  }
+
   public push(key: string, value: any): iAssertionContext {
     this._scenario.push(key, value);
     return this;
@@ -645,8 +656,10 @@ export class AssertionContext implements iAssertionContext {
     return this.scenario.abort(message);
   }
 
-  public async rotate(rotation: string | number): Promise<string | number> {
-    return await this.response.rotate(rotation);
+  public async rotateScreen(
+    rotation: string | number
+  ): Promise<string | number> {
+    return await this.response.rotateScreen(rotation);
   }
 
   public async getScreenProperties(): Promise<ScreenProperties> {
@@ -656,6 +669,12 @@ export class AssertionContext implements iAssertionContext {
   /* Hides the software keyboard */
   public async hideKeyboard(): Promise<void> {
     await this.response.hideKeyboard();
+  }
+
+  public getSource(): ValuePromise {
+    return ValuePromise.execute(async () => {
+      return await this.response.getSource();
+    });
   }
 
   protected async _findAllForSelectors(

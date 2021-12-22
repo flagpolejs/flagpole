@@ -78,6 +78,36 @@ export type SuiteStatusCallback = (
   statusEvent: SuiteStatusEvent
 ) => any;
 
+export type PointerButton = "default" | "left" | "right" | "middle";
+export type PointerDisposition = "down" | "up";
+export type PointerType = "default" | "mouse" | "pen" | "touch";
+export type PointerPoint = [x: number, y: number];
+export type PointerClick = {
+  duration?: number;
+  count?: number;
+  delay?: number;
+  type?: PointerType;
+};
+
+export interface PointerMove {
+  start: PointerPoint;
+  end?: PointerPoint;
+  duration?: number;
+  type?: PointerType;
+  disposition?: {
+    start: PointerDisposition;
+    end: PointerDisposition;
+  };
+  button?: PointerButton;
+}
+
+export type GestureType = "pinch" | "stretch";
+export interface GestureOpts {
+  start?: PointerPoint;
+  duration?: number;
+  amount?: PointerPoint;
+}
+
 export type SuiteAsyncCallback = (suite: iSuite) => Promise<void>;
 export type SuiteSyncCallback = (suite: iSuite) => void;
 export type SuiteCallback = SuiteAsyncCallback | SuiteSyncCallback;
@@ -231,7 +261,7 @@ export interface iValue {
   echo(callback: (str: string) => void): iValue;
   echo(): iValue;
   // DOM Elements only
-  click(): Promise<iValue>;
+  click(opts?: PointerClick): Promise<iValue>;
   submit(): Promise<iValue>;
   open(message: string): iScenario;
   open(message: string, type: ScenarioType): iScenario;
@@ -245,7 +275,7 @@ export interface iValue {
   getInnerHtml(): Promise<iValue>;
   getOuterHtml(): Promise<iValue>;
   setValue(text: string): Promise<void>;
-  getBounds(boxType: string): Promise<iBounds | null>;
+  getBounds(boxType?: string): Promise<iBounds | null>;
   getUrl(): Promise<iValue>;
   getLink(): Promise<Link>;
   getStyleProperty(key: string): Promise<iValue>;
@@ -275,7 +305,8 @@ export interface iValue {
   focus(): Promise<iValue>;
   blur(): Promise<iValue>;
   hover(): Promise<iValue>;
-  tap(): Promise<iValue>;
+  tap(opts?: PointerClick): Promise<iValue>;
+  longpress(opts?: PointerClick): Promise<iValue>;
   press(key: string, opts?: any): Promise<iValue>;
   clearThenType(textToType: string, opts?: any): Promise<iValue>;
   type(textToType: string, opts?: any): Promise<iValue>;
@@ -329,6 +360,7 @@ export interface iValue {
   getPreviousSiblings(selector?: string): Promise<iValue[]>;
   getNextSibling(selector?: string): Promise<iValue>;
   getNextSiblings(selector?: string): Promise<iValue[]>;
+  gesture(type: GestureType, opts: GestureOpts): Promise<iValue>;
 }
 
 /**
@@ -425,15 +457,12 @@ export interface iResponse {
   ): Promise<iValue>;
   click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
   serialize(): object;
-  touchMove(array: [x: number, y: number]): Promise<void>;
-  touchMove(array: [x: number, y: number, duration?: number]): Promise<void>;
-  touchMove(
-    array: [x: number, y: number, duration?: number],
-    ...otherMoves: [x: number, y: number, duration?: number][]
-  ): Promise<void>;
-  rotate(rotation: string | number): Promise<string | number>;
+  movePointer(...pointers: PointerMove[]): Promise<iResponse>;
+  gesture(type: GestureType, opts: GestureOpts): Promise<iResponse>;
+  rotateScreen(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getSource(): ValuePromise;
 }
 
 export interface iAssertionIs {
@@ -718,9 +747,12 @@ export interface iAssertionContext {
   filter<T>(array: T[], callback: IteratorBoolCallback): Promise<T[]>;
   map<T>(array: T[], callback: IteratorCallback): Promise<any[]>;
   abort(message?: string): Promise<iScenario>;
-  rotate(rotation: string | number): Promise<string | number>;
+  rotateScreen(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  movePointer(...pointers: PointerMove[]): Promise<iResponse>;
+  gesture(type: GestureType, opts: GestureOpts): Promise<iResponse>;
+  getSource(): ValuePromise;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
@@ -901,6 +933,11 @@ export interface iBounds {
   y: number;
   width: number;
   height: number;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  middle: { x: number; y: number };
   points: { x: number; y: number }[];
 }
 
@@ -1088,10 +1125,12 @@ export type ScreenProperties = {
 };
 
 export interface DeviceProperties {
-  airplaneMode?: boolean;
-  locationServices?: boolean;
-  wifi?: boolean;
-  mobileData?: boolean;
+  network?: {
+    airplaneMode?: boolean;
+    locationServices?: boolean;
+    wifi?: boolean;
+    mobileData?: boolean;
+  };
   location?: {
     latitude: number;
     longitude: number;

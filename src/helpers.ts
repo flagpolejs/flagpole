@@ -109,3 +109,7 @@ export function applyOffsetAndLimit(
 
   return elements;
 }
+
+export const delay = (ms: number) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
