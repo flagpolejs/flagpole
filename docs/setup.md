@@ -25,6 +25,14 @@ or download [here](https://github.com/appium/appium-desktop/releases/latest)
 
 Run the Appium server before executing any Appium tests. Also, make sure the device, emulator, or simulator under test is connected and available.
 
+To setup an Android emulator for testing, install [Android Studio](https://developer.android.com/studio/). Make sure when you run the installer that an Android Virtual Device (AVD) is selected for installation under the custom installation options. Once Android Studio is up and running, click on the menu item Tools and select AVD Manager. From this screen you can create your Android emulator. 
+Appium should recognize the emulator without any addtional configuration, but if you want to run multiple tests in parallel, specify the device UDID in the session capabilities.
+You can get the device UDID by running `adb devices` from a terminal emulator. The capability for the device UDID is simply `udid`.
+
+To setup an iOS device or simulator for testing, install [Xcode](https://developer.apple.com/xcode/). Create a new app in Xcode and install a developer certificate for Apple development.
+Check the simulators available in Xcode from the center, top portion of the Xcode window. Use those simulator names as the values for the `deviceName` capabilitiy.
+Refer [here](https://appium.io/docs/en/drivers/ios-xcuitest-real-devices/) for real devices.
+
 ```javascript
 Add the desired capabilities to each scenario like so:
 flagpole("Basic Smoke Test of App", async (suite) => {
