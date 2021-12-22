@@ -6,7 +6,7 @@ import {
   GestureOpts,
   GestureType,
   PointerPoint,
-  TapType,
+  PointerClick,
 } from "../interfaces";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
@@ -47,9 +47,12 @@ export class AppiumElement extends DOMElement implements iValue {
     this._elementId = elementId || "";
   }
 
-  public async click(): Promise<iValue> {
-    await this.session.post(`element/${this._elementId}/click`, {});
-    return this;
+  public async click(opts: PointerClick): Promise<iValue> {
+    if (opts.count == 1) {
+      await this.session.post(`element/${this._elementId}/click`, {});
+      return this;
+    }
+    return this.tap(opts);
   }
 
   public find(selector: string): ValuePromise {
@@ -182,38 +185,33 @@ export class AppiumElement extends DOMElement implements iValue {
     return this;
   }
 
-  public async tap(
-    duration: number = 500,
-    tapType: TapType = "single"
-  ): Promise<iValue> {
+  public async tap(opts: PointerClick): Promise<iValue> {
     const bounds = await this.getBounds();
     if (!bounds) throw "Error: element bounds not acquired";
-
-    if (tapType === "double") {
+    // Set defaults
+    const duration = opts.duration || 200;
+    const count = opts.count || 1;
+    const delay = opts.delay || 200;
+    const type = opts.type || "touch";
+    // Handle multiple
+    for (let i = 0; i < count; i++) {
       await this.session.movePointer({
-        type: "touch",
-        duration: 200,
+        type,
+        duration,
         start: [bounds.middle.x, bounds.middle.y],
       });
-
-      await this.context.pause(duration);
-
-      await this.session.movePointer({
-        type: "touch",
-        duration: 200,
-        start: [bounds.middle.x, bounds.middle.y],
-      });
-
-      return this;
+      await this.context.pause(delay);
     }
-
-    await this.session.movePointer({
-      type: "touch",
-      duration: duration,
-      start: [bounds.middle.x, bounds.middle.y],
-    });
-
     return this;
+  }
+
+  public async longpress(opts: PointerClick): Promise<iValue> {
+    return this.tap({
+      type: opts.type || "touch",
+      duration: opts.duration || 2000,
+      delay: opts.delay || 200,
+      count: opts.count || 1,
+    });
   }
 
   protected async _getValue(): Promise<any> {

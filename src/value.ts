@@ -9,6 +9,7 @@ import {
   HttpRequestOptions,
   GestureType,
   GestureOpts,
+  PointerClick,
 } from "./interfaces";
 import {
   toType,
@@ -364,7 +365,7 @@ export class Value implements iValue {
     );
   }
 
-  public async click(): Promise<iValue> {
+  public async click(opts: PointerClick): Promise<iValue> {
     this._context.logFailure(`Element could not be clicked on: ${this.name}`);
     return this;
   }
@@ -635,8 +636,12 @@ export class Value implements iValue {
     throw `This element does not support blur().`;
   }
 
-  public async tap(): Promise<iValue> {
+  public async tap(opts: PointerClick): Promise<iValue> {
     throw `This element does not support tap().`;
+  }
+
+  public async longpress(opts: PointerClick): Promise<iValue> {
+    throw `This element does not support longpress().`;
   }
 
   public async press(key: string, opts?: any): Promise<iValue> {

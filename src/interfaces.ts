@@ -82,6 +82,12 @@ export type PointerButton = "default" | "left" | "right" | "middle";
 export type PointerDisposition = "down" | "up";
 export type PointerType = "default" | "mouse" | "pen" | "touch";
 export type PointerPoint = [x: number, y: number];
+export type PointerClick = {
+  duration?: number;
+  count?: number;
+  delay?: number;
+  type?: PointerType;
+};
 
 export interface PointerMove {
   start: PointerPoint;
@@ -94,8 +100,6 @@ export interface PointerMove {
   };
   button?: PointerButton;
 }
-
-export type TapType = "single" | "double";
 
 export type GestureType = "pinch" | "stretch";
 export interface GestureOpts {
@@ -257,7 +261,7 @@ export interface iValue {
   echo(callback: (str: string) => void): iValue;
   echo(): iValue;
   // DOM Elements only
-  click(): Promise<iValue>;
+  click(opts?: PointerClick): Promise<iValue>;
   submit(): Promise<iValue>;
   open(message: string): iScenario;
   open(message: string, type: ScenarioType): iScenario;
@@ -301,7 +305,8 @@ export interface iValue {
   focus(): Promise<iValue>;
   blur(): Promise<iValue>;
   hover(): Promise<iValue>;
-  tap(duration?: number, tapType?: TapType): Promise<iValue>;
+  tap(opts?: PointerClick): Promise<iValue>;
+  longpress(opts?: PointerClick): Promise<iValue>;
   press(key: string, opts?: any): Promise<iValue>;
   clearThenType(textToType: string, opts?: any): Promise<iValue>;
   type(textToType: string, opts?: any): Promise<iValue>;
