@@ -29,8 +29,6 @@ import { delay } from "../helpers";
 import {
   sendAppiumRequest,
   appiumFindByUiAutomator,
-  getTimeout,
-  setImplicitWait,
   setDevProperties,
   sendAdbCommand,
   sendSiriCommand,
