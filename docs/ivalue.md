@@ -481,7 +481,6 @@ const element = await someElement.gesture("pinch", {
 
 By default, the pointers will move half the width and height of the element, in opposite directions, for 500 milliseconds.
 
-
 ### getAttribute(key: string): Promise\<Value\>
 
 Get the attribute of the element with this key and return its value. If it is not present the Value object will contain null.
@@ -900,18 +899,25 @@ If the input is an array of objects, the argument then should be the key of the 
 const totalCount = rows.sum("quantity");
 ```
 
-### tap(duration?: number, tapType?: TapType): Promise\<void\>;
+### tap(opts: PointerClick): Promise\<void\>;
 
 Tap the element.
 
 On Appium elements, single and double taps are supported, as well as a duration that is either the length of time the single tap is depressed, or the length of time between double taps.
 
+Opts are...
+
+- type: "touch" | "mouse" | "pen" | "default"
+- duration: Number of milliseconds for each tap. Default: 200
+- delay: Number of milliseconds between each tap. Default: 200
+- count: How many taps? Default: 1
+
 ```javascript
-await element.tap(100, "double");
+await element.tap({ duration: 100, : count: 2 });
 ```
 
 ```javascript
-await element.tap(1000, "single");
+await element.tap({ duration: 1000, count: 1 });
 ```
 
 ### toArray(): any[]
@@ -959,4 +965,3 @@ Takes the input array of items or object values, removes duplicates, and returns
 ```javascript
 const countries = rows.col("venueCountry").unique();
 ```
-
