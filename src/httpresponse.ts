@@ -43,18 +43,21 @@ export class HttpResponse {
   }
 
   static fromNeedle(response: NeedleResponse): HttpResponse {
-    const r = new HttpResponse({
-      status: [response.statusCode || 0, response.statusMessage || ""],
-      headers: <KeyValue>response.headers,
-      body:
-        typeof response.body === "string"
-          ? response.body
-          : response.body.toString("utf8"),
-      cookies: response.cookies ? <KeyValue>response.cookies : {},
-      trailers: <KeyValue>response.trailers,
-      method: response.method,
-      url: response.url,
-    });
+    const r = new HttpResponse();
+    r.statusCode = response.statusCode || 0;
+    r.statusMessage = response.statusMessage || "";
+    r.headers = <KeyValue>response.headers;
+    r.body =
+      typeof response.body === "string"
+        ? response.body
+        : response.body.toString("utf8");
+    r.json = response.headers["content-type"]?.includes("json")
+      ? JSON.parse(r.body)
+      : null;
+    r.cookies = response.cookies ? <KeyValue>response.cookies : {};
+    r.trailers = <KeyValue>response.trailers;
+    r.method = response.method || "get";
+    r.url = response.url || "";
     return r;
   }
 

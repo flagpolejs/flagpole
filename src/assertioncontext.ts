@@ -202,7 +202,7 @@ export class AssertionContext implements iAssertionContext {
     textToType: string,
     opts: any = {}
   ): ValuePromise {
-    return this.clearThenType(selector, textToType, opts);
+    return this.response.clearThenType(selector, textToType, opts);
   }
 
   /**
@@ -669,6 +669,12 @@ export class AssertionContext implements iAssertionContext {
   /* Hides the software keyboard */
   public async hideKeyboard(): Promise<void> {
     await this.response.hideKeyboard();
+  }
+
+  public getSource(): ValuePromise {
+    return ValuePromise.execute(async () => {
+      return await this.response.getSource();
+    });
   }
 
   protected async _findAllForSelectors(

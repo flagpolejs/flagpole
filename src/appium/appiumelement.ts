@@ -2,16 +2,29 @@ import {
   iValue,
   iAssertionContext,
   iBounds,
-  PointerMove,
   GestureOpts,
   GestureType,
   PointerPoint,
   PointerClick,
+  FindOptions,
+  FindAllOptions,
+  ScreenshotOpts,
 } from "../interfaces";
+import { promises } from "fs";
+import * as Jimp from "jimp";
 import { DOMElement } from "../html/domelement";
 import { ValuePromise } from "../value-promise";
 import { JsonDoc } from "../json/jpath";
 import { AppiumResponse } from "./appiumresponse";
+import {
+  getFindParams,
+  findOne,
+  wrapAsValue,
+  applyOffsetAndLimit,
+} from "../helpers";
+import { appiumFindByUiAutomator } from "./appium-helpers";
+
+const fs = promises;
 
 export class AppiumElement extends DOMElement implements iValue {
   protected _elementId: string;
@@ -55,13 +68,112 @@ export class AppiumElement extends DOMElement implements iValue {
     return this.tap(opts);
   }
 
-  public find(selector: string): ValuePromise {
-    throw "find not implemented";
+  public find(
+    selector: string,
+    a?: string | RegExp | FindOptions,
+    b?: FindOptions
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const params = getFindParams(a, b);
+      if (params.matches) {
+        throw "Appium does not support finding element by RegEx";
+      } else if (params.contains || params.opts) {
+        return findOne(this, selector, params);
+      }
+      const usingValue = selector.split(/\/(.+)/);
+      const res = await this.session.post(
+        `element/${this._elementId}/element`,
+        {
+          using: usingValue[0],
+          value: usingValue[1],
+        }
+      );
+      if (res.jsonRoot.value.ELEMENT) {
+        const element = await AppiumElement.create(
+          selector,
+          this.session.context,
+          selector,
+          res.jsonRoot.value.ELEMENT
+        );
+        return element;
+      } else {
+        return wrapAsValue(this.session.context, null, selector);
+      }
+    });
   }
 
-  public async findAll(selector: string): Promise<iValue[]> {
-    throw "findAll not implemented";
+  public async findAll(
+    selector: string,
+    a?: string | RegExp | FindAllOptions,
+    b?: FindAllOptions
+  ): Promise<iValue[]> {
+    const usingValue = selector.split(/\/(.+)/);
+    let elements: iValue[] = [];
+    const params = getFindParams(a, b);
+    let res: JsonDoc = new JsonDoc({});
+    if (params.matches) {
+      throw "Appium does not support finding elements by RegEx";
+    } else if (params.contains) {
+      if (
+        this.session.capabilities.automationName.toLowerCase() ===
+        "uiautomator2"
+      ) {
+        const values = await appiumFindByUiAutomator(
+          this.session,
+          selector,
+          params.contains,
+          params.opts,
+          this._elementId
+        );
+        for (let i = 0; i < values?.length; i++) {
+          const element = await AppiumElement.create(
+            selector,
+            this.session.context,
+            selector,
+            values[i].$
+          );
+          elements.push(element);
+        }
+        return elements;
+      } else if (
+        this.session.capabilities.automationName.toLowerCase() === "espresso"
+      ) {
+        res = await this.session.post(`element/${this._elementId}/elements`, {
+          using: "text",
+          value: params.contains,
+        });
+      } else if (
+        this.session.capabilities.automationName.toLowerCase() === "xcuitest"
+      ) {
+        res = await this.session.post(`element/${this._elementId}/elements`, {
+          using: "-ios predicate string",
+          value: `label == "${params.contains}"`,
+        });
+      }
+    } else {
+      res = await this.session.post(`element/${this._elementId}/elements`, {
+        using: usingValue[0],
+        value: usingValue[1],
+      });
+    }
+    for (let i = 0; i < res.jsonRoot.value?.length; i++) {
+      elements.push(
+        await AppiumElement.create(
+          selector,
+          this.context,
+          selector,
+          res.jsonRoot.value[i].ELEMENT
+        )
+      );
+    }
+    if (params.opts) {
+      elements = applyOffsetAndLimit(params.opts, elements);
+    }
+
+    return elements;
   }
+
+  protected;
 
   public async type(input: string): Promise<iValue> {
     const res = await this.session.post(`element/${this._elementId}/value`, {
@@ -219,7 +331,8 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   protected async _getText(): Promise<string> {
-    return this.session.get(`element/${this._elementId}/text`);
+    const res = await this.session.get(`element/${this._elementId}/text`);
+    return res.jsonRoot.value;
   }
 
   protected async _getTagName(): Promise<string> {
@@ -227,8 +340,12 @@ export class AppiumElement extends DOMElement implements iValue {
     return res.jsonRoot.value || null;
   }
 
-  protected async _getProperty(key: string): Promise<any> {
-    throw "_getProperty not implemented";
+  protected async _getProperty(property: string): Promise<string> {
+    const res = await this.session.get(
+      `element/${this._elementId}/css/${property}`
+    );
+
+    return res.jsonRoot.value || null;
   }
 
   protected async _getOuterHtml(): Promise<string> {
@@ -281,7 +398,67 @@ export class AppiumElement extends DOMElement implements iValue {
         ", "
       )}`;
     }
-    return this.session.get(`element/${this._elementId}/attribute/${key}`);
+    return await this.session.get(
+      `element/${this._elementId}/attribute/${key}`
+    );
+  }
+
+  public async screenshot(): Promise<Buffer>;
+  public async screenshot(localFilePath: string): Promise<Buffer>;
+  public async screenshot(
+    localFilePath: string,
+    opts: ScreenshotOpts
+  ): Promise<Buffer>;
+  public async screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  public async screenshot(
+    a?: string | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ): Promise<Buffer> {
+    const opts: ScreenshotOpts = (typeof a !== "string" ? a : b) || {};
+    let localFilePath = typeof a == "string" ? a : undefined;
+    if (!localFilePath && opts.path) {
+      localFilePath = opts.path;
+    }
+
+    const bounds = await this.getBounds();
+
+    const res = await this.session.get("screenshot");
+
+    const encodedData = res.jsonRoot.value;
+    let buff = Buffer.from(encodedData, "base64");
+
+    let x: number = bounds!.x;
+    let y: number = bounds!.y;
+    let width: number = bounds!.width;
+    let height: number = bounds!.height;
+    if (opts.clip) {
+      x = opts.clip.x + bounds!.x;
+      y = opts.clip.y + bounds!.y;
+      width = opts.clip.width;
+      height = opts.clip.height;
+    }
+
+    await Jimp.read(buff)
+      .then((image) => {
+        image
+          .crop(x, y, width, height)
+          .quality(100)
+          .getBufferAsync(Jimp.MIME_PNG)
+          .then((buffer) => {
+            buff = buffer;
+          })
+          .catch((err) => {
+            if (err) return err;
+          });
+      })
+      .catch((err) => {
+        if (err) return err;
+      });
+
+    if (localFilePath) {
+      await fs.writeFile(localFilePath, buff);
+    }
+    return buff;
   }
 
   public toString(): string {

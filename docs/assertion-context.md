@@ -329,7 +329,7 @@ For instance:
 ```javascript
 const loginButton = await context.find("id/login_button");
 ```
-Valid selector strategies are `id`, `xpath`, `class name`, `accessibility id`. When testing an Android app, you may also use `-android uiautomator`, though it is recommended to use a different strategy, see below. When testing an iOS app, you may also use `-ios class chain` and `-ios predicate string`. Note that spaces are valid in the selector strategy.
+Valid selector strategies are `id`, `xpath`, `class name`, `accessibility id`, `css selector`. It is only possible to find elements by CSS selector in a Webview context. When testing an Android app with UiAutomator2, you may also use `-android uiautomator`, though it is recommended to use a different strategy, see below. When testing an Android app with Espresso, additional selector strategies include `-android viewtag`, `tag name`, `-android datamatcher`, `-android viewmatcher`, `text`. When testing an iOS app, you may also use `-ios class chain` and `-ios predicate string`. Note that spaces are valid in the selector strategy.
 
 #### find(selector: string, contents: string, opts?: FindOpts): Promise\<iValue\>
 
@@ -506,6 +506,15 @@ Get properties of screen of device under tests. Currently only works with Appium
 const screenProperties = await context.getScreenProperties();
 ```
 
+### getSource(): ValuePromise
+
+Get HTML or XML representation of current page or viewport.
+Currently only works to get XML of Appium viewport.
+
+```javascript
+const source = await context.getSource();
+```
+
 ### hideKeyboard(): Promise\<void\>
 
 Hide onscreen keyboard. Currently only works in Appium scenarios. Does not work on iOS unless the keyboard on the device under test has a dedicated dismiss button.
@@ -577,7 +586,7 @@ let rotation = await context.rotate(90);
 
 ### screenshot(): Promise\<Buffer\>
 
-Takes a screenshot of that point in time. Currently this is only supported in a browser-based scenario. The return value is a promise that resolves with a Buffer of the image bytes.
+Takes a screenshot of that point in time. Currently this is only supported in a browser-based or an Appium scenario. The return value is a promise that resolves with a Buffer of the image bytes.
 
 ```typescript
 const screenshot = await context.screenshot();
@@ -601,6 +610,8 @@ const screenshot = await context.screenshot({
 ```
 
 You can also combine the two arguments. In this case, the first argument of the local file path would override a `path` property in the `opts` second argument.
+
+Please note that the fullPage and omitBackground properties are not supported with Appium screenshots.
 
 ```typescript
 const screenshot = await context.screenshot("/path/to/local/file.png", {

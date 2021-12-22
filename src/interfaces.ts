@@ -462,6 +462,7 @@ export interface iResponse {
   rotateScreen(rotation: string | number): Promise<string | number>;
   getScreenProperties(): Promise<ScreenProperties>;
   hideKeyboard(): Promise<void>;
+  getSource(): ValuePromise;
 }
 
 export interface iAssertionIs {
@@ -751,6 +752,7 @@ export interface iAssertionContext {
   hideKeyboard(): Promise<void>;
   movePointer(...pointers: PointerMove[]): Promise<iResponse>;
   gesture(type: GestureType, opts: GestureOpts): Promise<iResponse>;
+  getSource(): ValuePromise;
 }
 export interface iSuite {
   scenarios: Array<iScenario>;
@@ -1123,10 +1125,12 @@ export type ScreenProperties = {
 };
 
 export interface DeviceProperties {
-  airplaneMode?: boolean;
-  locationServices?: boolean;
-  wifi?: boolean;
-  mobileData?: boolean;
+  network?: {
+    airplaneMode?: boolean;
+    locationServices?: boolean;
+    wifi?: boolean;
+    mobileData?: boolean;
+  };
   location?: {
     latitude: number;
     longitude: number;

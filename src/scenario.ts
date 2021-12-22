@@ -62,10 +62,7 @@ import {
 } from "./decorators/internal";
 import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
-import {
-  appiumSessionDestroy,
-  appiumSessionCreate,
-} from "./appium/appium-helpers";
+import { AppiumResponse } from "./appium/appiumresponse";
 import { _ } from "ajv";
 
 enum ScenarioRequestType {
@@ -994,9 +991,16 @@ export class Scenario implements iScenario {
         },
       });
     } else if (type == "appium") {
-      this.before(appiumSessionCreate(this, opts))
-        .after(appiumSessionDestroy(this))
-        .open("/");
+      this.open("POST /wd/hub/session", {
+        data: {
+          capabilities: {
+            alwaysMatch: {
+              ...opts.capabilities,
+            },
+          },
+          devProperties: { ...opts.devProperties },
+        },
+      });
     } else {
       this._request
         .setOptions({
