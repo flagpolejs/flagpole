@@ -729,7 +729,7 @@ const image = await context.find("img.logo");
 image.load("Make sure logo is a valid image");
 ```
 
-### longpress(): Promise\<string | void\>;
+### longpress(): Promise\<iValue\>;
 
 Longpress on an element. Holds touch action for 2000 milliseconds by default. This currently only works for Appium elements.
 
