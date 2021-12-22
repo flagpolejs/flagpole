@@ -48,6 +48,56 @@ export const sendAppiumRequest = async (
   return doc;
 };
 
+// Get first returned Appium sessionId
+// This is necessary for all other HTTP calls to the Appium server
+/*
+ * @param {iScenario} scenario - FlagPole scenario
+ * @return {Promise<string>} sessionId to route all other HTTP requests
+ * */
+const getAppiumSession = async (scenario: iScenario) => {
+  const json = await sendAppiumRequest(scenario, "/sessions", {
+    method: "get",
+  });
+  return json.jsonRoot.value[0]?.id || null;
+};
+
+// Create a new Appium session
+// Returns sessionId from newly created session
+/*
+ * @param {Scenario} scenario - FlagPole scenario
+ * @param {any} opts - Appium session settings, called "capabilities"
+ * @return {Promise<string>} sessionId to route all other HTTP requests
+ * */
+const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
+  const json = await sendAppiumRequest(scenario, "/session", {
+    method: "post",
+    data: {
+      capabilities: {
+        alwaysMatch: { ...opts },
+      },
+    },
+  });
+  return json.jsonRoot.value.sessionId;
+};
+
+// Wrapper method which checks if an Appium session already exists
+// Returns scenario with existing or new Appium sessionId set to a scenario alias
+/*
+ * @param {Scenario} scenario - FlagPole scenario
+ * @param {any} opts - Appium session settings, called "capabilities"
+ * @return {Promise<Scenario>} Initial scenario with alias set
+ * */
+export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
+  return async () => {
+    scenario.set("capabilities", opts);
+    const newSessionId = await createAppiumSession(scenario, opts);
+    if (opts.devProperties) {
+      await setDevProperties(newSessionId, scenario, opts.devProperties);
+    }
+    return scenario.set("sessionId", newSessionId);
+  };
+};
+
 // End Appium session
 /*
  * @param {iScenario} scenario - FlagPole scenario

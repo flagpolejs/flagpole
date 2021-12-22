@@ -329,6 +329,7 @@ For instance:
 ```javascript
 const loginButton = await context.find("id/login_button");
 ```
+
 Valid selector strategies are `id`, `xpath`, `class name`, `accessibility id`, `css selector`. It is only possible to find elements by CSS selector in a Webview context. When testing an Android app with UiAutomator2, you may also use `-android uiautomator`, though it is recommended to use a different strategy, see below. When testing an Android app with Espresso, additional selector strategies include `-android viewtag`, `tag name`, `-android datamatcher`, `-android viewmatcher`, `text`. When testing an iOS app, you may also use `-ios class chain` and `-ios predicate string`. Note that spaces are valid in the selector strategy.
 
 #### find(selector: string, contents: string, opts?: FindOpts): Promise\<iValue\>
@@ -474,12 +475,12 @@ const res = await context.gesture("stretch", {
   duration?: 500
 });
 ```
+
 `start` is the XY coordinate near to where each pointer will start. One pointer will start -10 square pixels away, the other +10 square pixels away.
 `amount` is the number of pixels the pointers will move on each axis. The pointers move in opposite directions.
 `duration` is how long the execution of the gesture takes.
 
 Please note that `start` and `amount` are required when gesturing on the screen itself, rather than on an element.
-
 
 ### get(aliasName: string): any
 
@@ -528,25 +529,28 @@ await context.hideKeyboard();
 Move pointer on screen. Can be used for touches, gestures, pinching, zooming, rotating, dragging, etc.
 
 ```typescript
-const res = await context.movePointer({
+const res = await context.movePointer(
+  {
     start: [500, 500],
-    end?: [700, 700],
-    type?: "default" | "mouse" | "pen" | "touch",
-    duration?: 500,
-    disposition?: { 
+    end: [700, 700],
+    type: "default" | "mouse" | "pen" | "touch",
+    duration: 500,
+    disposition: {
       start: "down",
-      end: "up"
-    }
-  }, {
+      end: "up",
+    },
+  },
+  {
     start: [600, 600],
-    end?: [800, 800],
-    type?: "default" | "mouse" | "pen" | "touch",
-    duration?: 500,
-    disposition?: {
+    end: [800, 800],
+    type: "default" | "mouse" | "pen" | "touch",
+    duration: 500,
+    disposition: {
       start: "down",
-      end: "up"
-    }
-  });
+      end: "up",
+    },
+  }
+);
 ```
 
 Pass one object per pointer device. Actions will be executed simultaneously for each pointer device.

@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import * as puppeteer from "puppeteer-core";
 import { NeedleResponse } from "needle";
 import { KeyValue, HttpResponseOptions, iHttpRequest } from "./interfaces";
