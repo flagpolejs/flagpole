@@ -443,7 +443,7 @@ export class Value implements iValue {
 
   public getUrl(): ValuePromise {
     return createValuePromise(async () => {
-      const url = (async () => {
+      const url = await (async () => {
         if (this.isString()) {
           return this.toString();
         }
