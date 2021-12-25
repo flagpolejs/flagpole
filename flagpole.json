@@ -170,6 +170,11 @@
       "id": "",
       "name": "browser/ubereats",
       "tags": []
+    },
+    "hls": {
+      "id": "",
+      "name": "hls",
+      "tags": []
     }
   }
 }

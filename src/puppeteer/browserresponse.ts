@@ -16,6 +16,7 @@ import {
   findOne,
   wrapAsValue,
   getFindName,
+  createValuePromise,
 } from "../helpers";
 import { BrowserElement } from "./browserelement";
 import { ValuePromise } from "../value-promise";
@@ -79,17 +80,19 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     return filterFind(elements, params.contains || params.matches, params.opts);
   }
 
-  public async findXPath(xPath: string): Promise<iValue> {
-    const elements: ElementHandle<Element>[] = await this._page.$x(xPath);
-    if (elements.length > 0) {
-      return await BrowserElement.create(
-        elements[0],
-        this.context,
-        xPath,
-        xPath
-      );
-    }
-    return wrapAsValue(this.context, null, xPath);
+  public findXPath(xPath: string): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const elements: ElementHandle<Element>[] = await this._page.$x(xPath);
+      if (elements.length > 0) {
+        return await BrowserElement.create(
+          elements[0],
+          this.context,
+          xPath,
+          xPath
+        );
+      }
+      return wrapAsValue(this.context, null, xPath);
+    });
   }
 
   public async findAllXPath(xPath: string): Promise<BrowserElement[]> {
@@ -114,119 +117,117 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
    * @param selector
    * @param timeout
    */
-  public async waitForHidden(
-    selector: string,
-    timeout?: number
-  ): Promise<BrowserElement> {
-    const opts = {
-      timeout: this.getTimeoutFromOverload(timeout),
-      hidden: true,
-    };
-    const element = await this._page.waitForSelector(selector, opts);
-    return BrowserElement.create(element, this.context, selector, selector);
+  public waitForHidden(selector: string, timeout?: number): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const opts = {
+        timeout: this.getTimeoutFromOverload(timeout),
+        hidden: true,
+      };
+      const element = await this._page.waitForSelector(selector, opts);
+      return BrowserElement.create(element, this.context, selector, selector);
+    });
   }
 
-  public async waitForVisible(
-    selector: string,
-    timeout?: number
-  ): Promise<BrowserElement> {
-    const opts = {
-      timeout: this.getTimeoutFromOverload(timeout),
-      visible: true,
-    };
-    const element = await this._page.waitForSelector(selector, opts);
-    return BrowserElement.create(element, this.context, selector, selector);
+  public waitForVisible(selector: string, timeout?: number): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const opts = {
+        timeout: this.getTimeoutFromOverload(timeout),
+        visible: true,
+      };
+      const element = await this._page.waitForSelector(selector, opts);
+      return BrowserElement.create(element, this.context, selector, selector);
+    });
   }
 
-  public async waitForExists(
-    selector: string,
-    timeout?: number
-  ): Promise<iValue>;
-  public async waitForExists(
+  public waitForExists(selector: string, timeout?: number): ValuePromise;
+  public waitForExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
-  public async waitForExists(
+  ): ValuePromise;
+  public waitForExists(
     selector: string,
     a?: number | string | RegExp,
     b?: number
-  ): Promise<BrowserElement> {
-    const opts = { timeout: this.getTimeoutFromOverload(a, b) };
-    const pattern = this.getContainsPatternFromOverload(a);
-    if (pattern === null) {
-      const element = await this._page.waitForSelector(selector, opts);
-      return BrowserElement.create(element, this.context, selector, selector);
-    }
-    const element = (
-      await this._page.waitForFunction(
-        `Array.from(document.querySelectorAll("${selector}")).find(function(element) {
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const opts = { timeout: this.getTimeoutFromOverload(a, b) };
+      const pattern = this.getContainsPatternFromOverload(a);
+      if (pattern === null) {
+        const element = await this._page.waitForSelector(selector, opts);
+        return BrowserElement.create(element, this.context, selector, selector);
+      }
+      const element = (
+        await this._page.waitForFunction(
+          `Array.from(document.querySelectorAll("${selector}")).find(function(element) {
             return (${pattern}).test(element.innerText)
           })`,
-        opts
-      )
-    ).asElement();
-    return BrowserElement.create(element!, this.context, selector, selector);
+          opts
+        )
+      ).asElement();
+      return BrowserElement.create(element!, this.context, selector, selector);
+    });
   }
 
-  public async waitForXPath(
-    xPath: string,
-    timeout?: number
-  ): Promise<BrowserElement> {
-    const opts = { timeout: this.getTimeoutFromOverload(timeout) };
-    const element = await this._page.waitForXPath(xPath, opts);
-    return BrowserElement.create(element, this.context, xPath, xPath);
+  public waitForXPath(xPath: string, timeout?: number): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const opts = { timeout: this.getTimeoutFromOverload(timeout) };
+      const element = await this._page.waitForXPath(xPath, opts);
+      return BrowserElement.create(element, this.context, xPath, xPath);
+    });
   }
 
-  public async waitForHavingText(
+  public waitForHavingText(
     selector: string,
     text: string | RegExp,
     timeout?: number
-  ): Promise<iValue> {
-    return this.waitForExists(selector, text, timeout);
+  ): ValuePromise {
+    return ValuePromise.execute(async () =>
+      this.waitForExists(selector, text, timeout)
+    );
   }
 
-  public async waitForNotExists(
-    selector: string,
-    timeout?: number
-  ): Promise<iValue>;
-  public async waitForNotExists(
+  public waitForNotExists(selector: string, timeout?: number): ValuePromise;
+  public waitForNotExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
-  public async waitForNotExists(
+  ): ValuePromise;
+  public waitForNotExists(
     selector: string,
     a?: number | string | RegExp,
     b?: number
-  ): Promise<iValue> {
-    const opts = { timeout: this.getTimeoutFromOverload(a, b) };
-    const pattern = this.getContainsPatternFromOverload(a);
-    if (pattern === null) {
-      await this._page.waitForFunction(
-        (selector) => !document.querySelector(selector),
-        opts,
-        selector
-      );
-    } else {
-      await this._page.waitForFunction(
-        `Array.from(document.querySelectorAll("${selector}")).filter(function(element) {
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const opts = { timeout: this.getTimeoutFromOverload(a, b) };
+      const pattern = this.getContainsPatternFromOverload(a);
+      if (pattern === null) {
+        await this._page.waitForFunction(
+          (selector) => !document.querySelector(selector),
+          opts,
+          selector
+        );
+      } else {
+        await this._page.waitForFunction(
+          `Array.from(document.querySelectorAll("${selector}")).filter(function(element) {
             return (${pattern}).test(element.innerText)
           }).length == 0`,
-        opts
-      );
-    }
-    return wrapAsValue(this.context, true, selector);
+          opts
+        );
+      }
+      return wrapAsValue(this.context, true, selector);
+    });
   }
 
-  public async selectOption(
+  public selectOption(
     selector: string,
     value: string | string[]
-  ): Promise<void> {
-    await this._page.select.apply(this.page, [
-      selector,
-      ...toArray<string>(value),
-    ]);
+  ): ValuePromise {
+    return createValuePromise(async () => {
+      const element = await this.find(selector);
+      await element.selectOption(value);
+      return element;
+    });
   }
 
   protected async mouseAction(

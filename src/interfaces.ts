@@ -261,30 +261,30 @@ export interface iValue {
   echo(callback: (str: string) => void): iValue;
   echo(): iValue;
   // DOM Elements only
-  click(opts?: PointerClick): Promise<iValue>;
-  submit(): Promise<iValue>;
+  click(opts?: PointerClick): ValuePromise;
+  submit(): ValuePromise;
   open(message: string): iScenario;
   open(message: string, type: ScenarioType): iScenario;
   open(message: string, type: ScenarioType, callback: iNextCallback): iScenario;
   open(message: string, callback: iNextCallback): iScenario;
   open(callback: iNextCallback): iScenario;
   open(scenario: iScenario): iScenario;
-  fillForm(attribute: string, formData: KeyValue): Promise<iValue>;
-  fillForm(formData: KeyValue): Promise<iValue>;
-  getInnerText(): Promise<iValue>;
-  getInnerHtml(): Promise<iValue>;
-  getOuterHtml(): Promise<iValue>;
-  setValue(text: string): Promise<void>;
+  fillForm(attribute: string, formData: KeyValue): ValuePromise;
+  fillForm(formData: KeyValue): ValuePromise;
+  getInnerText(): ValuePromise;
+  getInnerHtml(): ValuePromise;
+  getOuterHtml(): ValuePromise;
+  setValue(text: string): ValuePromise;
   getBounds(boxType?: string): Promise<iBounds | null>;
-  getUrl(): Promise<iValue>;
+  getUrl(): ValuePromise;
   getLink(): Promise<Link>;
-  getStyleProperty(key: string): Promise<iValue>;
-  getValue(): Promise<iValue>;
-  getText(): Promise<iValue>;
-  getClassName(): Promise<iValue>;
-  getAttribute(key: string): Promise<iValue>;
-  getProperty(key: string): Promise<iValue>;
-  getTag(): Promise<iValue>;
+  getStyleProperty(key: string): ValuePromise;
+  getValue(): ValuePromise;
+  getText(): ValuePromise;
+  getClassName(): ValuePromise;
+  getAttribute(key: string): ValuePromise;
+  getProperty(key: string): ValuePromise;
+  getTag(): ValuePromise;
   hasTag(tag?: string | RegExp): Promise<boolean>;
   hasAttribute(key: string, value?: string | RegExp): Promise<boolean>;
   hasClassName(className: string | RegExp): Promise<boolean>;
@@ -302,33 +302,33 @@ export interface iValue {
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
-  focus(): Promise<iValue>;
-  blur(): Promise<iValue>;
-  hover(): Promise<iValue>;
-  tap(opts?: PointerClick): Promise<iValue>;
-  longpress(opts?: PointerClick): Promise<iValue>;
-  press(key: string, opts?: any): Promise<iValue>;
-  clearThenType(textToType: string, opts?: any): Promise<iValue>;
-  type(textToType: string, opts?: any): Promise<iValue>;
-  clear(): Promise<iValue>;
+  focus(): ValuePromise;
+  blur(): ValuePromise;
+  hover(): ValuePromise;
+  tap(opts?: PointerClick): ValuePromise;
+  longpress(opts?: PointerClick): ValuePromise;
+  press(key: string, opts?: any): ValuePromise;
+  clearThenType(textToType: string, opts?: any): ValuePromise;
+  type(textToType: string, opts?: any): ValuePromise;
+  clear(): ValuePromise;
   eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
-  selectOption(value: string | string[]): Promise<void>;
-  pressEnter(): Promise<iValue>;
-  scrollTo(): Promise<void>;
+  selectOption(value: string | string[]): ValuePromise;
+  pressEnter(): ValuePromise;
+  scrollTo(): ValuePromise;
   waitForFunction(
     js: EvaluateFn<any>,
     timeout: number,
     ...args: SerializableOrJSHandle[]
-  ): Promise<iValue>;
+  ): ValuePromise;
   waitForFunction(
     js: EvaluateFn<any>,
     opts?: PageFnOptions,
     ...args: SerializableOrJSHandle[]
-  ): Promise<iValue>;
-  waitForHidden(timeout?: number): Promise<iValue>;
-  waitForVisible(timeout?: number): Promise<iValue>;
+  ): ValuePromise;
+  waitForHidden(timeout?: number): ValuePromise;
+  waitForVisible(timeout?: number): ValuePromise;
   // Tree traversal
-  exists(selector?: string): Promise<iValue>;
+  exists(selector?: string): ValuePromise;
   find(selector: string, opts?: FindOptions): ValuePromise;
   find(selector: string, contains: string, opts?: FindOptions): ValuePromise;
   find(selector: string, matches: RegExp, opts?: FindOptions): ValuePromise;
@@ -344,23 +344,23 @@ export interface iValue {
     opts?: FindAllOptions
   ): Promise<iValue[]>;
   getChildren(selector?: string): Promise<iValue[]>;
-  getFirstChild(selector?: string): Promise<iValue>;
-  getLastChild(selector?: string): Promise<iValue>;
-  getChildOrSelf(selector: string): Promise<iValue>;
+  getFirstChild(selector?: string): ValuePromise;
+  getLastChild(selector?: string): ValuePromise;
+  getChildOrSelf(selector: string): ValuePromise;
   getDescendants(selector: string): Promise<iValue[]>;
-  getDescendantOrSelf(selector: string): Promise<iValue>;
-  getParent(): Promise<iValue>;
-  getAncestor(selector: string): Promise<iValue>;
+  getDescendantOrSelf(selector: string): ValuePromise;
+  getParent(): ValuePromise;
+  getAncestor(selector: string): ValuePromise;
   getAncestors(selector: string): Promise<iValue[]>;
-  getAncestorOrSelf(selector: string): Promise<iValue>;
+  getAncestorOrSelf(selector: string): ValuePromise;
   getSiblings(selector?: string): Promise<iValue[]>;
-  getFirstSibling(selector?: string): Promise<iValue>;
-  getLastSibling(selector?: string): Promise<iValue>;
-  getPreviousSibling(selector?: string): Promise<iValue>;
+  getFirstSibling(selector?: string): ValuePromise;
+  getLastSibling(selector?: string): ValuePromise;
+  getPreviousSibling(selector?: string): ValuePromise;
   getPreviousSiblings(selector?: string): Promise<iValue[]>;
-  getNextSibling(selector?: string): Promise<iValue>;
+  getNextSibling(selector?: string): ValuePromise;
   getNextSiblings(selector?: string): Promise<iValue[]>;
-  gesture(type: GestureType, opts: GestureOpts): Promise<iValue>;
+  gesture(type: GestureType, opts: GestureOpts): ValuePromise;
 }
 
 /**
@@ -402,7 +402,7 @@ export interface iResponse {
     matches: RegExp,
     opts?: FindAllOptions
   ): Promise<iValue[]>;
-  findXPath(xPath: string): Promise<iValue>;
+  findXPath(xPath: string): ValuePromise;
   findAllXPath(xPath: string): Promise<iValue[]>;
   header(key?: string): iValue;
   cookie(key?: string): iValue;
@@ -420,26 +420,26 @@ export interface iResponse {
     opts?: PageFnOptions,
     ...args: SerializableOrJSHandle[]
   ): Promise<void>;
-  waitForHidden(selector: string, timeout?: number): Promise<iValue>;
-  waitForVisible(selector: string, timeout?: number): Promise<iValue>;
-  waitForExists(selector: string, timeout?: number): Promise<iValue>;
+  waitForHidden(selector: string, timeout?: number): ValuePromise;
+  waitForVisible(selector: string, timeout?: number): ValuePromise;
+  waitForExists(selector: string, timeout?: number): ValuePromise;
   waitForExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
-  waitForNotExists(selector: string, timeout?: number): Promise<iValue>;
+  ): ValuePromise;
+  waitForNotExists(selector: string, timeout?: number): ValuePromise;
   waitForNotExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
-  waitForXPath(xPath: string, timeout?: number): Promise<iValue>;
+  ): ValuePromise;
+  waitForXPath(xPath: string, timeout?: number): ValuePromise;
   waitForHavingText(
     selector: string,
     text: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
+  ): ValuePromise;
   screenshot(): Promise<Buffer>;
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
@@ -447,15 +447,11 @@ export interface iResponse {
   clear(selector: string): ValuePromise;
   type(selector: string, textToType: string, opts: any): ValuePromise;
   clearThenType(selector: string, textToType: string, opts: any): ValuePromise;
-  selectOption(selector: string, value: string | string[]): Promise<void>;
+  selectOption(selector: string, value: string | string[]): ValuePromise;
   scrollTo(point: OptionalXY): Promise<iResponse>;
-  click(selector: string, opts?: FindOptions): Promise<iValue>;
-  click(
-    selector: string,
-    contains: string,
-    opts?: FindOptions
-  ): Promise<iValue>;
-  click(selector: string, matches: RegExp, opts?: FindOptions): Promise<iValue>;
+  click(selector: string, opts?: FindOptions): ValuePromise;
+  click(selector: string, contains: string, opts?: FindOptions): ValuePromise;
+  click(selector: string, matches: RegExp, opts?: FindOptions): ValuePromise;
   serialize(): object;
   movePointer(...pointers: PointerMove[]): Promise<iResponse>;
   gesture(type: GestureType, opts: GestureOpts): Promise<iResponse>;

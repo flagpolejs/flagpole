@@ -44,6 +44,7 @@ import {
   SyncMapperCallback,
   SyncReducerCallback,
 } from "./interfaces/iterator-callbacks";
+import { createValuePromise } from "./helpers";
 
 export class Value implements iValue {
   protected _input: any;
@@ -75,11 +76,11 @@ export class Value implements iValue {
     return this.assert().is;
   }
 
-  public selectOption(value: string | string[]): Promise<void> {
+  public selectOption(value: string | string[]): ValuePromise {
     throw "This Value does not support select.";
   }
 
-  public async pressEnter(): Promise<iValue> {
+  public pressEnter(): ValuePromise {
     throw "This Value does not support pressEnter.";
   }
 
@@ -358,21 +359,23 @@ export class Value implements iValue {
   }
   */
 
-  public async getProperty(key: string): Promise<iValue> {
-    return this._wrapAsValue(
-      this._input[key],
-      `${this.name} property of ${key}`
-    );
+  public getProperty(key: string): ValuePromise {
+    return createValuePromise(async () => {
+      return this._wrapAsValue(
+        this._input[key],
+        `${this.name} property of ${key}`
+      );
+    });
   }
 
-  public async click(opts: PointerClick): Promise<iValue> {
+  public click(opts: PointerClick): ValuePromise {
     this._context.logFailure(`Element could not be clicked on: ${this.name}`);
-    return this;
+    return createValuePromise(this);
   }
 
-  public async submit(): Promise<iValue> {
+  public submit(): ValuePromise {
     this._context.logFailure(`Element could not be submitted on: ${this.name}`);
-    return this;
+    return createValuePromise(this);
   }
 
   public open(message: string): iScenario;
@@ -438,57 +441,58 @@ export class Value implements iValue {
     return new Link(src.isString() ? src.toString() : "", this._context);
   }
 
-  public async getUrl(): Promise<iValue> {
-    const url = await (async () => {
-      if (this.isString()) {
-        return this.toString();
-      }
-      if (
-        this.isTag(
-          "img",
-          "script",
-          "video",
-          "audio",
-          "object",
-          "iframe",
-          "source"
-        )
-      ) {
-        return (await this.getAttribute("src")).$;
-      } else if (this.isTag("a", "link")) {
-        return (await this.getAttribute("href")).$;
-      } else if (this.isTag("form")) {
-        return (
-          (await this.getAttribute("action")).$ || this._context.scenario.url
-        );
-      }
-      return null;
-    })();
-    return this._wrapAsValue(url, `URL from ${this.name}`, this);
+  public getUrl(): ValuePromise {
+    return createValuePromise(async () => {
+      const url = (async () => {
+        if (this.isString()) {
+          return this.toString();
+        }
+        if (
+          this.isTag(
+            "img",
+            "script",
+            "video",
+            "audio",
+            "object",
+            "iframe",
+            "source"
+          )
+        ) {
+          return (await this.getAttribute("src")).$;
+        } else if (this.isTag("a", "link")) {
+          return (await this.getAttribute("href")).$;
+        } else if (this.isTag("form")) {
+          return (
+            (await this.getAttribute("action")).$ || this._context.scenario.url
+          );
+        }
+        return null;
+      })();
+      return this._wrapAsValue(url, `URL from ${this.name}`, this);
+    });
   }
 
-  public async fillForm(
-    attributeName: string,
-    formData: KeyValue
-  ): Promise<iValue>;
-  public async fillForm(formData: KeyValue): Promise<iValue>;
-  public async fillForm(a: string | KeyValue, b?: KeyValue): Promise<iValue> {
-    return this;
+  public fillForm(attributeName: string, formData: KeyValue): ValuePromise;
+  public fillForm(formData: KeyValue): ValuePromise;
+  public fillForm(a: string | KeyValue, b?: KeyValue): ValuePromise {
+    return createValuePromise(this);
   }
 
-  public async exists(selector?: string): Promise<iValue> {
-    if (selector === undefined) {
-      this.isNullOrUndefined()
-        ? this._failedAction("EXISTS", `${this.name}`)
-        : this._completedAction("EXISTS", `${this.name}`);
-      return this;
-    } else {
-      const el: iValue = await this.find(selector);
-      el.isNull()
-        ? this._failedAction("EXISTS", `${selector}`)
-        : this._completedAction("EXISTS", `${selector}`);
-      return el;
-    }
+  public exists(selector?: string): ValuePromise {
+    return createValuePromise(async () => {
+      if (selector === undefined) {
+        this.isNullOrUndefined()
+          ? this._failedAction("EXISTS", `${this.name}`)
+          : this._completedAction("EXISTS", `${this.name}`);
+        return this;
+      } else {
+        const el: iValue = await this.find(selector);
+        el.isNull()
+          ? this._failedAction("EXISTS", `${selector}`)
+          : this._completedAction("EXISTS", `${selector}`);
+        return el;
+      }
+    });
   }
 
   public find(selector: string): ValuePromise {
@@ -499,8 +503,8 @@ export class Value implements iValue {
     return [await this.find(selector)];
   }
 
-  public async getClassName(): Promise<iValue> {
-    return this._wrapAsValue(null, `${this.name} Class`);
+  public getClassName(): ValuePromise {
+    return createValuePromise(this._wrapAsValue(null, `${this.name} Class`));
   }
 
   public async hasClassName(name?: string | RegExp): Promise<boolean> {
@@ -518,8 +522,10 @@ export class Value implements iValue {
     })();
   }
 
-  public async getTag(): Promise<iValue> {
-    return this._wrapAsValue(this.tagName, `Tag Name of ${this.name}`);
+  public getTag(): ValuePromise {
+    return createValuePromise(
+      this._wrapAsValue(this.tagName, `Tag Name of ${this.name}`)
+    );
   }
 
   public async hasTag(tag?: string | RegExp): Promise<boolean> {
@@ -530,16 +536,22 @@ export class Value implements iValue {
     return tag instanceof RegExp ? (tag as RegExp).test(myTag) : myTag == tag;
   }
 
-  public async getInnerText(): Promise<iValue> {
-    return this._wrapAsValue(this.toString(), `Inner Text of ${this.name}`);
+  public getInnerText(): ValuePromise {
+    return createValuePromise(
+      this._wrapAsValue(this.toString(), `Inner Text of ${this.name}`)
+    );
   }
 
-  public async getInnerHtml(): Promise<iValue> {
-    return this._wrapAsValue(null, `Inner HTML of ${this.name}`);
+  public getInnerHtml(): ValuePromise {
+    return createValuePromise(
+      this._wrapAsValue(null, `Inner HTML of ${this.name}`)
+    );
   }
 
-  public async getOuterHtml(): Promise<iValue> {
-    return this._wrapAsValue(null, `Outer HTML of ${this.name}`);
+  public getOuterHtml(): ValuePromise {
+    return createValuePromise(
+      this._wrapAsValue(null, `Outer HTML of ${this.name}`)
+    );
   }
 
   public async hasAttribute(
@@ -558,31 +570,30 @@ export class Value implements iValue {
       : (value as RegExp).test(strThisValue);
   }
 
-  public getAttribute(key: string): Promise<iValue> {
+  public getAttribute(key: string): ValuePromise {
     return this.getProperty(key);
   }
 
-  public async getStyleProperty(key: string): Promise<iValue> {
-    return this._wrapAsValue(null, `Style of ${key}`);
+  public getStyleProperty(key: string): ValuePromise {
+    return createValuePromise(this._wrapAsValue(null, `Style of ${key}`));
   }
 
-  public async getValue(): Promise<iValue> {
-    return this;
+  public getValue(): ValuePromise {
+    return createValuePromise(this);
   }
 
-  public async scrollTo(): Promise<void> {}
+  public scrollTo(): ValuePromise {
+    return createValuePromise(this);
+  }
 
   public async hasText(text?: string): Promise<boolean> {
     const myText = (await this.getText()).$;
     return text ? text == myText : !!myText;
   }
 
-  public async getText(): Promise<iValue> {
-    return this._wrapAsValue(
-      this.toString(),
-      this.name,
-      this.parent,
-      this.highlight
+  public getText(): ValuePromise {
+    return createValuePromise(
+      this._wrapAsValue(this.toString(), this.name, this.parent, this.highlight)
     );
   }
 
@@ -624,43 +635,43 @@ export class Value implements iValue {
     throw `This element does not support eval().`;
   }
 
-  public async focus(): Promise<iValue> {
+  public focus(): ValuePromise {
     throw `This element does not support focus().`;
   }
 
-  public async hover(): Promise<iValue> {
+  public hover(): ValuePromise {
     throw `This element does not support hover().`;
   }
 
-  public async blur(): Promise<iValue> {
+  public blur(): ValuePromise {
     throw `This element does not support blur().`;
   }
 
-  public async tap(opts: PointerClick): Promise<iValue> {
+  public tap(opts: PointerClick): ValuePromise {
     throw `This element does not support tap().`;
   }
 
-  public async longpress(opts: PointerClick): Promise<iValue> {
+  public longpress(opts: PointerClick): ValuePromise {
     throw `This element does not support longpress().`;
   }
 
-  public async press(key: string, opts?: any): Promise<iValue> {
+  public press(key: string, opts?: any): ValuePromise {
     throw `This element does not support press().`;
   }
 
-  public async clearThenType(textToType: string, opts?: any): Promise<iValue> {
+  public clearThenType(textToType: string, opts?: any): ValuePromise {
     throw `This element does not support clearThenType().`;
   }
 
-  public async type(textToType: string, opts?: any): Promise<iValue> {
+  public type(textToType: string, opts?: any): ValuePromise {
     throw `This element does not support type().`;
   }
 
-  public async clear(): Promise<iValue> {
+  public clear(): ValuePromise {
     throw `This element does not support clear().`;
   }
 
-  public async getAncestor(selector: string): Promise<iValue> {
+  public getAncestor(selector: string): ValuePromise {
     throw `getAncestor() is not supported by ${this.name}`;
   }
 
@@ -672,31 +683,31 @@ export class Value implements iValue {
     throw `getAncestors() is not supported by ${this.name}`;
   }
 
-  public async getAncestorOrSelf(selector: string): Promise<iValue> {
+  public getAncestorOrSelf(selector: string): ValuePromise {
     throw `getAncestorOrSelf() is not supported by ${this.name}`;
   }
 
-  public async getFirstChild(selector?: string): Promise<iValue> {
+  public getFirstChild(selector?: string): ValuePromise {
     throw `getFirstChild() is not supported by ${this.name}`;
   }
 
-  public async getLastChild(selector?: string): Promise<iValue> {
+  public getLastChild(selector?: string): ValuePromise {
     throw `getLastChild() is not supported by ${this.name}`;
   }
 
-  public async getFirstSibling(selector?: string): Promise<iValue> {
+  public getFirstSibling(selector?: string): ValuePromise {
     throw `getFirstSibling() is not supported by ${this.name}`;
   }
 
-  public async getLastSibling(selector?: string): Promise<iValue> {
+  public getLastSibling(selector?: string): ValuePromise {
     throw `getLastSibling() is not supported by ${this.name}`;
   }
 
-  public async getChildOrSelf(selector?: string): Promise<iValue> {
+  public getChildOrSelf(selector?: string): ValuePromise {
     throw `getChildOrSelf() is not supported by ${this.name}`;
   }
 
-  public async getDescendantOrSelf(selector?: string): Promise<iValue> {
+  public getDescendantOrSelf(selector?: string): ValuePromise {
     throw `getDescendantOrSelf() is not supported by ${this.name}`;
   }
 
@@ -704,7 +715,7 @@ export class Value implements iValue {
     throw `getDescendants() is not supported by ${this.name}`;
   }
 
-  public async getParent(): Promise<iValue> {
+  public getParent(): ValuePromise {
     throw `getParent() is not supported by ${this.name}`;
   }
 
@@ -712,7 +723,7 @@ export class Value implements iValue {
     throw `getSiblings() is not supported by ${this.name}`;
   }
 
-  public async getPreviousSibling(selector?: string): Promise<iValue> {
+  public getPreviousSibling(selector?: string): ValuePromise {
     throw `getPreviousSibling() is not supported by ${this.name}`;
   }
 
@@ -720,7 +731,7 @@ export class Value implements iValue {
     throw `getPreviousSiblings() is not supported by ${this.name}`;
   }
 
-  public async getNextSibling(selector?: string): Promise<iValue> {
+  public getNextSibling(selector?: string): ValuePromise {
     throw `getNextSibling() is not supported by ${this.name}`;
   }
 
@@ -783,23 +794,23 @@ export class Value implements iValue {
     return resp;
   }
 
-  public async waitForFunction(
+  public waitForFunction(
     js: EvaluateFn<any>,
     opts?: PageFnOptions | number,
     ...args: SerializableOrJSHandle[]
-  ): Promise<iValue> {
-    return this;
+  ): ValuePromise {
+    return createValuePromise(this);
   }
 
-  public async waitForHidden(): Promise<iValue> {
-    return this;
+  public waitForHidden(): ValuePromise {
+    return createValuePromise(this);
   }
 
-  public async waitForVisible(): Promise<iValue> {
-    return this;
+  public waitForVisible(): ValuePromise {
+    return createValuePromise(this);
   }
 
-  public async setValue(text: string) {
+  public setValue(text: string): ValuePromise {
     throw `setValue() is not supported by ${this.name}`;
   }
 
@@ -1024,7 +1035,7 @@ export class Value implements iValue {
     );
   }
 
-  public gesture(type: GestureType, opts: GestureOpts): Promise<iValue> {
+  public gesture(type: GestureType, opts: GestureOpts): ValuePromise {
     throw `gesture not implemented for ${this.name}`;
   }
 
@@ -1052,5 +1063,14 @@ export class Value implements iValue {
       val._sourceCode = parent.sourceCode;
     }
     return val;
+  }
+
+  protected _wrapAsValuePromise(
+    data: any,
+    name: string,
+    parent?: any,
+    highlight?: string
+  ): ValuePromise {
+    return createValuePromise(this._wrapAsValue(data, name, parent, highlight));
   }
 }

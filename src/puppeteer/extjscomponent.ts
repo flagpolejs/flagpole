@@ -9,7 +9,7 @@ import {
 import { toArray, asyncMap } from "../util";
 import { ExtJSResponse } from "./extjsresponse";
 import * as ext from "./ext.helper";
-import { wrapAsValue } from "../helpers";
+import { createValuePromise, wrapAsValue } from "../helpers";
 import { BrowserElement } from "./browserelement";
 import { ValuePromise } from "../value-promise";
 
@@ -111,48 +111,56 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     this._input = handle;
   }
 
-  public async focus(): Promise<iValue> {
+  public focus(): ValuePromise {
     return this._action("focus");
   }
 
-  public async hover(): Promise<iValue> {
+  public hover(): ValuePromise {
     return this._action("hover");
   }
 
-  public async blur(): Promise<iValue> {
+  public blur(): ValuePromise {
     return this._action("blur");
   }
 
-  public async click(): Promise<iValue> {
-    this._action("click");
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(this), 100);
+  public click(): ValuePromise {
+    return createValuePromise(async () => {
+      const out = this._action("click");
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(out), 100);
+      });
     });
   }
 
-  public async getAncestor(selector: string): Promise<iValue> {
-    const result = await ext.up(this.$, selector);
-    return ext.jsHandleToComponent(
-      result,
-      this.context,
-      `${selector} above ${this.name}`,
-      `${this.path}.up(${selector})`
-    );
+  public getAncestor(selector: string): ValuePromise {
+    return createValuePromise(async () => {
+      const result = await ext.up(this.$, selector);
+      return ext.jsHandleToComponent(
+        result,
+        this.context,
+        `${selector} above ${this.name}`,
+        `${this.path}.up(${selector})`
+      );
+    });
   }
 
-  public async getFirstChild(selector: string): Promise<iValue> {
-    const result = await ext.child(this.$, selector);
-    return ext.jsHandleToComponent(
-      result,
-      this.context,
-      `Child ${selector} ${this.name}`,
-      `${this.path}.child(${selector})`
-    );
+  public getFirstChild(selector: string): ValuePromise {
+    return createValuePromise(async () => {
+      const result = await ext.child(this.$, selector);
+      return ext.jsHandleToComponent(
+        result,
+        this.context,
+        `Child ${selector} ${this.name}`,
+        `${this.path}.child(${selector})`
+      );
+    });
   }
 
-  public async getLastChild(selector: string): Promise<iValue> {
-    const result = await this.getChildren(selector);
-    return result[result.length - 1];
+  public getLastChild(selector: string): ValuePromise {
+    return createValuePromise(async () => {
+      const result = await this.getChildren(selector);
+      return result[result.length - 1];
+    });
   }
 
   public async getAncestors(selector: string): Promise<iValue[]> {
@@ -197,35 +205,39 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     );
   }
 
-  public async clear(): Promise<iValue> {
-    await this.focus();
-    await this.setValue("");
-    await this.blur();
-    this._completedAction("CLEAR");
-    return this;
+  public clear(): ValuePromise {
+    return createValuePromise(async () => {
+      await this.focus();
+      await this.setValue("");
+      await this.blur();
+      this._completedAction("CLEAR");
+      return this;
+    });
   }
 
-  public async type(textToType: string, opts: any) {
-    await this.focus();
-    await this.setValue(textToType);
-    this._completedAction(
-      "TYPE",
-      (await this._isPasswordField())
-        ? textToType.replace(/./g, "*")
-        : textToType
-    );
-    return this.blur();
+  public type(textToType: string, opts: any): ValuePromise {
+    return createValuePromise(async () => {
+      await this.focus();
+      await this.setValue(textToType);
+      this._completedAction(
+        "TYPE",
+        (await this._isPasswordField())
+          ? textToType.replace(/./g, "*")
+          : textToType
+      );
+      return this.blur();
+    });
   }
 
-  public async pressEnter(): Promise<iValue> {
+  public pressEnter(): ValuePromise {
     return this._action("action");
   }
 
-  public async waitForVisible(timeout?: number): Promise<iValue> {
+  public waitForVisible(timeout?: number): ValuePromise {
     return this._waitForIt(visible, "visible", timeout);
   }
 
-  public async waitForHidden(timeout?: number): Promise<iValue> {
+  public waitForHidden(timeout?: number): ValuePromise {
     return this._waitForIt(hidden, "hidden", timeout);
   }
 
@@ -237,25 +249,30 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     return await this.$.evaluate(hidden);
   }
 
-  public async setValue(text: string) {
-    return this.eval((c, text) => {
-      if (c.setValue) {
-        c.setValue(text);
-      }
-      if (c.setCriteriaValue) {
-        c.setCriteriaValue(text);
-      }
-    }, text);
+  public setValue(text: string): ValuePromise {
+    return createValuePromise(async () => {
+      await this.eval((c, text) => {
+        if (c.setValue) {
+          c.setValue(text);
+        }
+        if (c.setCriteriaValue) {
+          c.setCriteriaValue(text);
+        }
+      }, text);
+      return this;
+    });
   }
 
-  public async getParent(): Promise<iValue> {
-    const result = await ext.parent(this.$);
-    return ext.jsHandleToComponent(
-      result,
-      this.context,
-      `Parent of ${this.name}`,
-      `${this.path}.getParent()`
-    );
+  public getParent(): ValuePromise {
+    return createValuePromise(async () => {
+      const result = await ext.parent(this.$);
+      return ext.jsHandleToComponent(
+        result,
+        this.context,
+        `Parent of ${this.name}`,
+        `${this.path}.getParent()`
+      );
+    });
   }
 
   public async getSiblings(selector: string = "*"): Promise<iValue[]> {
@@ -279,13 +296,17 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     );
   }
 
-  public async getFirstSibling(selector: string = "*"): Promise<iValue> {
-    return (await this.getSiblings(selector))[0];
+  public getFirstSibling(selector: string = "*"): ValuePromise {
+    return createValuePromise(async () => {
+      return (await this.getSiblings(selector))[0];
+    });
   }
 
-  public async getLastSibling(selector: string = "*"): Promise<iValue> {
-    const siblings = await this.getSiblings(selector);
-    return siblings[siblings.length - 1];
+  public getLastSibling(selector: string = "*"): ValuePromise {
+    return createValuePromise(async () => {
+      const siblings = await this.getSiblings(selector);
+      return siblings[siblings.length - 1];
+    });
   }
 
   public async getChildren(selector: string = "*"): Promise<iValue[]> {
@@ -298,22 +319,24 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     );
   }
 
-  public async getNextSibling(
-    selector: string
-  ): Promise<ExtJsComponent | iValue> {
-    const id = String(await this.eval((c) => c.nextSibling(selector)));
-    const component = await this._response.getComponentById(id);
-    return component || this._wrapAsValue(null, `Next Sibling of ${this.name}`);
+  public getNextSibling(selector: string): ValuePromise {
+    return createValuePromise(async () => {
+      const id = String(await this.eval((c) => c.nextSibling(selector)));
+      const component = await this._response.getComponentById(id);
+      return (
+        component || this._wrapAsValue(null, `Next Sibling of ${this.name}`)
+      );
+    });
   }
 
-  public async getPreviousSibling(
-    selector: string
-  ): Promise<ExtJsComponent | iValue> {
-    const id = String(await this.eval((c) => c.previousSibling(selector)));
-    const component = await this._response.getComponentById(id);
-    return (
-      component || this._wrapAsValue(null, `Previous Sibling of ${this.name}`)
-    );
+  public getPreviousSibling(selector: string): ValuePromise {
+    return createValuePromise(async () => {
+      const id = String(await this.eval((c) => c.previousSibling(selector)));
+      const component = await this._response.getComponentById(id);
+      return (
+        component || this._wrapAsValue(null, `Previous Sibling of ${this.name}`)
+      );
+    });
   }
 
   public async eval(
@@ -323,54 +346,62 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
     return this.$.evaluate.apply(this.$, [js, ...args]);
   }
 
-  public async selectOption(valuesToSelect: string | string[]): Promise<void> {
-    // TODO: Support multi-select. Right now this will only support a singlular selection
-    valuesToSelect = toArray<string>(valuesToSelect);
-    this._completedAction("SELECT", valuesToSelect.join(", "));
-    const ableToSetValue = await this.eval((c, valuesToSelect) => {
-      let value = "";
-      const displayField = c.getDisplayField();
-      const valueField = c.getValueField();
-      const searchValue = valuesToSelect[0];
-      const store = c.getStore();
-      // Search & set by value
-      const valueResult = store.queryBy(valueField, searchValue);
-      if (valueResult && valueResult.indices) {
-        value = Object.keys(valueResult.indices)[0];
-      }
-      // If we didn't find it by value, search & set by display text
-      if (!value.length) {
-        const displayResult = store.queryBy(displayField, searchValue);
-        if (displayResult && displayResult.indices) {
-          value = Object.keys(displayResult.indices)[0];
+  public selectOption(valuesToSelect: string | string[]): ValuePromise {
+    return createValuePromise(async () => {
+      // TODO: Support multi-select. Right now this will only support a singlular selection
+      valuesToSelect = toArray<string>(valuesToSelect);
+      this._completedAction("SELECT", valuesToSelect.join(", "));
+      const ableToSetValue = await this.eval((c, valuesToSelect) => {
+        let value = "";
+        const displayField = c.getDisplayField();
+        const valueField = c.getValueField();
+        const searchValue = valuesToSelect[0];
+        const store = c.getStore();
+        // Search & set by value
+        const valueResult = store.queryBy(valueField, searchValue);
+        if (valueResult && valueResult.indices) {
+          value = Object.keys(valueResult.indices)[0];
         }
-      }
-      // Set value
-      if (value.length) {
-        c.setValue(value);
-        return true;
-      }
-      return false;
-    }, valuesToSelect);
-    this._context
-      .assert(`Select values on ${this.name}`, ableToSetValue)
-      .equals(true);
+        // If we didn't find it by value, search & set by display text
+        if (!value.length) {
+          const displayResult = store.queryBy(displayField, searchValue);
+          if (displayResult && displayResult.indices) {
+            value = Object.keys(displayResult.indices)[0];
+          }
+        }
+        // Set value
+        if (value.length) {
+          c.setValue(value);
+          return true;
+        }
+        return false;
+      }, valuesToSelect);
+      this._context
+        .assert(`Select values on ${this.name}`, ableToSetValue)
+        .equals(true);
+      return this;
+    });
   }
 
-  public async scrollTo(): Promise<void> {
-    this.eval((c) => c.element.dom.scrollIntoView());
+  public scrollTo(): ValuePromise {
+    return createValuePromise(async () => {
+      await this.eval((c) => c.element.dom.scrollIntoView());
+      return this;
+    });
   }
 
-  protected async _action(eventName: string): Promise<iValue> {
-    eventName = eventName.toLowerCase();
-    await this.eval((c, eventName) => {
-      c[eventName] && c[eventName]();
-      c.element && c.element[eventName] && c.element[eventName]();
-      c.element.dom && c.element.dom[eventName] && c.element.dom[eventName]();
-      c.fireEvent(eventName);
-    }, eventName);
-    this._completedAction(eventName.toUpperCase());
-    return this;
+  protected _action(eventName: string): ValuePromise {
+    return createValuePromise(async () => {
+      eventName = eventName.toLowerCase();
+      await this.eval((c, eventName) => {
+        c[eventName] && c[eventName]();
+        c.element && c.element[eventName] && c.element[eventName]();
+        c.element.dom && c.element.dom[eventName] && c.element.dom[eventName]();
+        c.fireEvent(eventName);
+      }, eventName);
+      this._completedAction(eventName.toUpperCase());
+      return this;
+    });
   }
 
   protected async _getClassName(): Promise<string> {

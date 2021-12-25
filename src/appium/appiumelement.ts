@@ -21,6 +21,7 @@ import {
   findOne,
   wrapAsValue,
   applyOffsetAndLimit,
+  createValuePromise,
 } from "../helpers";
 import { appiumFindByUiAutomator } from "./appium-helpers";
 
@@ -60,10 +61,12 @@ export class AppiumElement extends DOMElement implements iValue {
     this._elementId = elementId || "";
   }
 
-  public async click(opts: PointerClick): Promise<iValue> {
+  public click(opts: PointerClick): ValuePromise {
     if (opts.count == 1) {
-      await this.session.post(`element/${this._elementId}/click`, {});
-      return this;
+      return createValuePromise(async () => {
+        await this.session.post(`element/${this._elementId}/click`, {});
+        return this;
+      });
     }
     return this.tap(opts);
   }
@@ -73,7 +76,7 @@ export class AppiumElement extends DOMElement implements iValue {
     a?: string | RegExp | FindOptions,
     b?: FindOptions
   ): ValuePromise {
-    return ValuePromise.execute(async () => {
+    return createValuePromise(async () => {
       const params = getFindParams(a, b);
       if (params.matches) {
         throw "Appium does not support finding element by RegEx";
@@ -175,25 +178,31 @@ export class AppiumElement extends DOMElement implements iValue {
 
   protected;
 
-  public async type(input: string): Promise<iValue> {
-    const res = await this.session.post(`element/${this._elementId}/value`, {
-      text: input,
+  public type(input: string): ValuePromise {
+    return createValuePromise(async () => {
+      const res = await this.session.post(`element/${this._elementId}/value`, {
+        text: input,
+      });
+      if (res.jsonRoot.value?.error) {
+        throw "Element cannot be typed into. Did you choose the correct element?";
+      }
+      return this;
     });
-    if (res.jsonRoot.value?.error) {
-      throw "Element cannot be typed into. Did you choose the correct element?";
-    }
-    return this;
   }
 
-  public async clear(): Promise<iValue> {
-    await this.session.post(`element/${this._elementId}/clear`, {});
-    return this;
+  public clear(): ValuePromise {
+    return createValuePromise(async () => {
+      await this.session.post(`element/${this._elementId}/clear`, {});
+      return this;
+    });
   }
 
-  public async clearThenType(input: string): Promise<iValue> {
-    await this.clear();
-    await this.type(input);
-    return this;
+  public clearThenType(input: string): ValuePromise {
+    return createValuePromise(async () => {
+      await this.clear();
+      await this.type(input);
+      return this;
+    });
   }
 
   public async isVisible(): Promise<boolean> {
@@ -238,86 +247,90 @@ export class AppiumElement extends DOMElement implements iValue {
     return bounds;
   }
 
-  public async gesture(type: GestureType, opts: GestureOpts): Promise<iValue> {
-    // Get bounds
-    const bounds = await this.getBounds();
-    if (!bounds) throw "Error: element bounds not acquired";
-    // Defaults
-    if (!opts.amount) {
-      opts.amount = [bounds.width / 2, bounds.height / 2];
-    }
-    // Start position
-    const start: { pointer1: PointerPoint; pointer2: PointerPoint } = {
-      pointer1:
-        type == "stretch"
-          ? [bounds.middle.x - 10, bounds.middle.y - 10]
-          : [bounds.left, bounds.top],
-      pointer2:
-        type == "stretch"
-          ? [bounds.middle.x + 10, bounds.middle.y + 10]
-          : [bounds.right, bounds.bottom],
-    };
-    // End position
-    const end: { pointer1: PointerPoint; pointer2: PointerPoint } = {
-      pointer1:
-        type == "stretch"
-          ? [
-              start.pointer1[0] - opts.amount[0],
-              start.pointer1[1] - opts.amount[1],
-            ]
-          : [
-              start.pointer1[0] + opts.amount[0],
-              start.pointer1[1] + opts.amount[1],
-            ],
-      pointer2:
-        type == "stretch"
-          ? [
-              start.pointer2[0] + opts.amount[0],
-              start.pointer2[1] + opts.amount[1],
-            ]
-          : [
-              start.pointer2[0] - opts.amount[0],
-              start.pointer2[1] - opts.amount[1],
-            ],
-    };
-    await this.session.movePointer(
-      {
-        type: "touch",
-        duration: opts.duration || 500,
-        start: start.pointer1,
-        end: end.pointer1,
-      },
-      {
-        type: "touch",
-        duration: opts.duration || 500,
-        start: start.pointer2,
-        end: end.pointer2,
+  public gesture(type: GestureType, opts: GestureOpts): ValuePromise {
+    return createValuePromise(async () => {
+      // Get bounds
+      const bounds = await this.getBounds();
+      if (!bounds) throw "Error: element bounds not acquired";
+      // Defaults
+      if (!opts.amount) {
+        opts.amount = [bounds.width / 2, bounds.height / 2];
       }
-    );
-    return this;
+      // Start position
+      const start: { pointer1: PointerPoint; pointer2: PointerPoint } = {
+        pointer1:
+          type == "stretch"
+            ? [bounds.middle.x - 10, bounds.middle.y - 10]
+            : [bounds.left, bounds.top],
+        pointer2:
+          type == "stretch"
+            ? [bounds.middle.x + 10, bounds.middle.y + 10]
+            : [bounds.right, bounds.bottom],
+      };
+      // End position
+      const end: { pointer1: PointerPoint; pointer2: PointerPoint } = {
+        pointer1:
+          type == "stretch"
+            ? [
+                start.pointer1[0] - opts.amount[0],
+                start.pointer1[1] - opts.amount[1],
+              ]
+            : [
+                start.pointer1[0] + opts.amount[0],
+                start.pointer1[1] + opts.amount[1],
+              ],
+        pointer2:
+          type == "stretch"
+            ? [
+                start.pointer2[0] + opts.amount[0],
+                start.pointer2[1] + opts.amount[1],
+              ]
+            : [
+                start.pointer2[0] - opts.amount[0],
+                start.pointer2[1] - opts.amount[1],
+              ],
+      };
+      await this.session.movePointer(
+        {
+          type: "touch",
+          duration: opts.duration || 500,
+          start: start.pointer1,
+          end: end.pointer1,
+        },
+        {
+          type: "touch",
+          duration: opts.duration || 500,
+          start: start.pointer2,
+          end: end.pointer2,
+        }
+      );
+      return this;
+    });
   }
 
-  public async tap(opts: PointerClick): Promise<iValue> {
-    const bounds = await this.getBounds();
-    if (!bounds) throw "Error: element bounds not acquired";
-    // Set defaults
-    const duration = opts.duration || 200;
-    const count = opts.count || 1;
-    const delay = opts.delay || 200;
-    const type = opts.type || "touch";
-    // Handle multiple
-    for (let i = 0; i < count; i++) {
-      await this.session.movePointer({
-        type,
-        duration,
-        start: [bounds.middle.x, bounds.middle.y],
-      });
-      await this.context.pause(delay);
-    }
-    return this;
+  public tap(opts: PointerClick): ValuePromise {
+    return createValuePromise(async () => {
+      const bounds = await this.getBounds();
+      if (!bounds) throw "Error: element bounds not acquired";
+      // Set defaults
+      const duration = opts.duration || 200;
+      const count = opts.count || 1;
+      const delay = opts.delay || 200;
+      const type = opts.type || "touch";
+      // Handle multiple
+      for (let i = 0; i < count; i++) {
+        await this.session.movePointer({
+          type,
+          duration,
+          start: [bounds.middle.x, bounds.middle.y],
+        });
+        await this.context.pause(delay);
+      }
+      return this;
+    });
   }
 
-  public async longpress(opts: PointerClick): Promise<iValue> {
+  public longpress(opts: PointerClick): ValuePromise {
     return this.tap({
       type: opts.type || "touch",
       duration: opts.duration || 2000,

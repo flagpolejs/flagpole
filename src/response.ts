@@ -294,31 +294,31 @@ export abstract class ProtoResponse implements iResponse {
     return this.context.pause(1);
   }
 
-  public async waitForHidden(..._args: any[]): Promise<iValue> {
+  public waitForHidden(..._args: any[]): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support waitForHidden.`
     );
   }
 
-  public async waitForVisible(..._args: any[]): Promise<iValue> {
+  public waitForVisible(..._args: any[]): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support waitForVisible.`
     );
   }
 
-  public async waitForExists(..._args: any[]): Promise<iValue> {
+  public waitForExists(..._args: any[]): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support waitForExists.`
     );
   }
 
-  public async waitForNotExists(..._args: any[]): Promise<iValue> {
+  public waitForNotExists(..._args: any[]): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support waitForNotExists.`
     );
   }
 
-  public async waitForHavingText(..._args: any[]): Promise<iValue> {
+  public waitForHavingText(..._args: any[]): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support waitForHavingText.`
     );
@@ -356,13 +356,13 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public async waitForXPath(xPath: string): Promise<iValue> {
+  public waitForXPath(xPath: string): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support waitForXPath.`
     );
   }
 
-  public async findXPath(xPath: string): Promise<iValue> {
+  public findXPath(xPath: string): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support findXPath.`
     );
@@ -374,10 +374,10 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public async findHavingText(
+  public findHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): Promise<iValue> {
+  ): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support findHavingText.`
     );
@@ -392,10 +392,10 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public async selectOption(
+  public selectOption(
     selector: string,
     value: string | string[]
-  ): Promise<void> {
+  ): ValuePromise {
     throw new Error(
       `This scenario type (${this.responseTypeName}) does not support selectOption.`
     );
@@ -425,34 +425,36 @@ export abstract class ProtoResponse implements iResponse {
    *
    * @param selector
    */
-  public click(selector: string, opts?: FindOptions): Promise<iValue>;
+  public click(selector: string, opts?: FindOptions): ValuePromise;
   public click(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): Promise<iValue>;
+  ): ValuePromise;
   public click(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): Promise<iValue>;
-  public async click(
+  ): ValuePromise;
+  public click(
     selector: string,
     a?: FindOptions | string | RegExp,
     b?: FindOptions
-  ): Promise<iValue> {
-    const contains = typeof a == "string" ? a : undefined;
-    const matches = a instanceof RegExp ? a : undefined;
-    const opts = (b || a || {}) as FindOptions;
-    const element = contains
-      ? await this.find(selector, contains, opts)
-      : matches
-      ? await this.find(selector, matches, opts)
-      : await this.find(selector, opts);
-    if (!(await element.exists()).isNull()) {
-      return element.click();
-    }
-    return element;
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const contains = typeof a == "string" ? a : undefined;
+      const matches = a instanceof RegExp ? a : undefined;
+      const opts = (b || a || {}) as FindOptions;
+      const element = contains
+        ? await this.find(selector, contains, opts)
+        : matches
+        ? await this.find(selector, matches, opts)
+        : await this.find(selector, opts);
+      if (!(await element.exists()).isNull()) {
+        return element.click();
+      }
+      return element;
+    });
   }
 
   public serialize(): object {

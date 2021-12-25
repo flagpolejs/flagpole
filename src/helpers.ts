@@ -7,6 +7,14 @@ import {
 } from "./interfaces";
 import { Value } from "./value";
 import { toType, asyncFilter } from "./util";
+import { ValuePromise } from "./value-promise";
+
+type ValuePromiseCallback = () => Promise<iValue>;
+
+export function createValuePromise(a: iValue | ValuePromiseCallback) {
+  if (a instanceof Function) return ValuePromise.create(a());
+  return ValuePromise.create(a);
+}
 
 export function wrapAsValue(
   context: iAssertionContext,

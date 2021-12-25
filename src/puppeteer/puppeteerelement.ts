@@ -8,6 +8,8 @@ import {
   SerializableOrJSHandle,
 } from "puppeteer-core";
 import { DOMElement } from "../html/domelement";
+import { ValuePromise } from "../value-promise";
+import { createValuePromise } from "../helpers";
 
 export abstract class PuppeteerElement extends DOMElement implements iValue {
   protected abstract _input: ElementHandle | JSHandle;
@@ -33,54 +35,56 @@ export abstract class PuppeteerElement extends DOMElement implements iValue {
     return String(this.path);
   }
 
-  public async clearThenType(
-    textToType: string,
-    opts: any = {}
-  ): Promise<iValue> {
-    await this.clear();
-    await this.type(textToType, opts);
-    return this;
+  public clearThenType(textToType: string, opts: any = {}): ValuePromise {
+    return createValuePromise(async () => {
+      await this.clear();
+      await this.type(textToType, opts);
+      return this;
+    });
   }
 
   public async eval(js: string): Promise<any> {
     return this._eval(js);
   }
 
-  public async waitForFunction(
+  public waitForFunction(
     js: EvaluateFn<any>,
     timeout: number,
     ...args: SerializableOrJSHandle[]
-  ): Promise<iValue>;
-  public async waitForFunction(
+  ): ValuePromise;
+  public waitForFunction(
     js: EvaluateFn<any>,
     opts?: PageFnOptions,
     ...args: SerializableOrJSHandle[]
-  ): Promise<iValue>;
-  public async waitForFunction(
+  ): ValuePromise;
+  public waitForFunction(
     js: EvaluateFn<any>,
     a?: PageFnOptions | number,
     ...args: SerializableOrJSHandle[]
-  ): Promise<iValue> {
-    const opts: PageFnOptions = typeof a == "number" ? { timeout: a } : a || {};
-    try {
-      await this._page.waitForFunction.apply(this._page, [
-        js,
-        opts,
-        ...[this.$, ...args],
-      ]);
-      this._completedAction("WAIT", this.name);
-    } catch {
-      this._failedAction("WAIT", this.name);
-    }
-    return this;
+  ): ValuePromise {
+    return createValuePromise(async () => {
+      const opts: PageFnOptions =
+        typeof a == "number" ? { timeout: a } : a || {};
+      try {
+        await this._page.waitForFunction.apply(this._page, [
+          js,
+          opts,
+          ...[this.$, ...args],
+        ]);
+        this._completedAction("WAIT", this.name);
+      } catch {
+        this._failedAction("WAIT", this.name);
+      }
+      return this;
+    });
   }
 
-  public async waitForHidden(timeout?: number): Promise<iValue> {
-    return this;
+  public waitForHidden(timeout?: number): ValuePromise {
+    return createValuePromise(this);
   }
 
-  public async waitForVisible(timeout?: number): Promise<iValue> {
-    return this;
+  public waitForVisible(timeout?: number): ValuePromise {
+    return createValuePromise(this);
   }
 
   protected async _getSourceCode(): Promise<string> {
@@ -96,14 +100,20 @@ export abstract class PuppeteerElement extends DOMElement implements iValue {
     return (await this._input.getProperty(key)).jsonValue();
   }
 
-  protected async _waitForIt(fn: EvaluateFn, verb: string, timeout?: number) {
-    try {
-      await this._waitForFunction(fn, timeout);
-      this._completedAction(verb.toUpperCase(), this.name);
-    } catch (e) {
-      this._failedAction(verb.toUpperCase(), this.name);
-    }
-    return this;
+  protected _waitForIt(
+    fn: EvaluateFn,
+    verb: string,
+    timeout?: number
+  ): ValuePromise {
+    return createValuePromise(async () => {
+      try {
+        await this._waitForFunction(fn, timeout);
+        this._completedAction(verb.toUpperCase(), this.name);
+      } catch (e) {
+        this._failedAction(verb.toUpperCase(), this.name);
+      }
+      return this;
+    });
   }
 
   protected async _waitForFunction(fn: EvaluateFn, timeout?: number) {

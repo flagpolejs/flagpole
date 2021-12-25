@@ -12,6 +12,7 @@ import { isPuppeteer } from "../response";
 import { getMessageAndCallbackFromOverloading } from "../util";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { createValuePromise } from "../helpers";
 
 export abstract class DOMElement extends Value {
   public get name(): string {
@@ -71,41 +72,49 @@ export abstract class DOMElement extends Value {
   /**
    * Get all class names for element
    */
-  public async getClassName(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._getClassName(),
-      `Class Name of ${this.name}`
-    );
+  public getClassName(): ValuePromise {
+    return createValuePromise(async () => {
+      return this._wrapAsValue(
+        await this._getClassName(),
+        `Class Name of ${this.name}`
+      );
+    });
   }
 
   /**
    * Get element's innerText
    */
-  public async getInnerText(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._getInnerText(),
-      `Inner Text of ${this.name}`
-    );
+  public getInnerText(): ValuePromise {
+    return createValuePromise(async () => {
+      return this._wrapAsValue(
+        await this._getInnerText(),
+        `Inner Text of ${this.name}`
+      );
+    });
   }
 
   /**
    * Get element's innerHtml which will not include the element itself, only its contents
    */
-  public async getInnerHtml(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._getInnerHtml(),
-      `Inner Html of ${this.name}`
-    );
+  public getInnerHtml(): ValuePromise {
+    return createValuePromise(async () => {
+      return this._wrapAsValue(
+        await this._getInnerHtml(),
+        `Inner Html of ${this.name}`
+      );
+    });
   }
 
   /**
    * Get the HTML of the element and all of its contents
    */
-  public async getOuterHtml(): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._getOuterHtml(),
-      `Outer Html of ${this.name}`
-    );
+  public getOuterHtml(): ValuePromise {
+    return createValuePromise(async () => {
+      return this._wrapAsValue(
+        await this._getOuterHtml(),
+        `Outer Html of ${this.name}`
+      );
+    });
   }
 
   /**
@@ -113,54 +122,64 @@ export abstract class DOMElement extends Value {
    *
    * @param key
    */
-  public async getAttribute(key: string): Promise<iValue> {
-    const name: string = `${this.name} -> ${key}`;
-    const attr: string | null = await this._getAttribute(key);
-    return this._wrapAsValue(attr, name, this, `${key}="${attr}"`);
+  public getAttribute(key: string): ValuePromise {
+    return createValuePromise(async () => {
+      const name: string = `${this.name} -> ${key}`;
+      const attr: string | null = await this._getAttribute(key);
+      return this._wrapAsValue(attr, name, this, `${key}="${attr}"`);
+    });
   }
 
-  public async getStyleProperty(key: string): Promise<iValue> {
-    const name: string = `${this.name} -> style[${key}]`;
-    const style: string | null = await this._getAttribute("style");
-    let attr: null | string = null;
-    if (style) {
-      const properties = style.split(";").map((value) => {
-        return value.trim();
-      });
-      properties.some((property) => {
-        if (new RegExp(`^{$key}:`).test(property)) {
-          attr = property.substring(property.indexOf(":") + 1);
-          return true;
-        }
-        return false;
-      });
-    }
-    return this._wrapAsValue(attr, name, this);
+  public getStyleProperty(key: string): ValuePromise {
+    return createValuePromise(async () => {
+      const name: string = `${this.name} -> style[${key}]`;
+      const style: string | null = await this._getAttribute("style");
+      let attr: null | string = null;
+      if (style) {
+        const properties = style.split(";").map((value) => {
+          return value.trim();
+        });
+        properties.some((property) => {
+          if (new RegExp(`^{$key}:`).test(property)) {
+            attr = property.substring(property.indexOf(":") + 1);
+            return true;
+          }
+          return false;
+        });
+      }
+      return this._wrapAsValue(attr, name, this);
+    });
   }
 
   /**
    * Get the property with this name in the element, or null if it doesn't exist
    * @param key
    */
-  public async getProperty(key: string): Promise<iValue> {
-    return this._wrapAsValue(
-      await this._getProperty(key),
-      `${key} of ${this.name}`
-    );
+  public getProperty(key: string): ValuePromise {
+    return createValuePromise(async () => {
+      return this._wrapAsValue(
+        await this._getProperty(key),
+        `${key} of ${this.name}`
+      );
+    });
   }
 
   /**
    * Get the value of this element, such as the value of an input field
    */
-  public async getValue(): Promise<iValue> {
-    return this._wrapAsValue(await this._getValue(), `Value of ${this.name}`);
+  public getValue(): ValuePromise {
+    return createValuePromise(async () =>
+      this._wrapAsValue(await this._getValue(), `Value of ${this.name}`)
+    );
   }
 
   /**
    * Get the text content within the element
    */
-  public async getText(): Promise<iValue> {
-    return this._wrapAsValue(await this._getText(), `Text of ${this.name}`);
+  public getText(): ValuePromise {
+    return createValuePromise(async () =>
+      this._wrapAsValue(await this._getText(), `Text of ${this.name}`)
+    );
   }
 
   /**

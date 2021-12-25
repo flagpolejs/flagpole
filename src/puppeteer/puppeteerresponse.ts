@@ -12,8 +12,6 @@ import { DOMResponse } from "../html/domresponse";
 import { toType } from "../util";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
-import { BrowserElement } from "./browserelement";
-import { text } from "cheerio/lib/api/manipulation";
 
 const DEFAULT_WAITFOR_TIMEOUT = 30000;
 

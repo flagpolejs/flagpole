@@ -16,6 +16,7 @@ import {
   findOne,
   getFindName,
   FindParams,
+  createValuePromise,
 } from "../helpers";
 import { ElementHandle, JSHandle, EvaluateFn } from "puppeteer-core";
 import { BrowserElement } from "./browserelement";
@@ -60,20 +61,22 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     });
   }
 
-  public async findXPath(xPath: string): Promise<iValue> {
-    if (!this.page) {
-      throw "Page must be defined.";
-    }
-    const elements = await this.page.$x(xPath);
-    if (elements.length > 0) {
-      return await ExtJsComponent.create(
-        elements[0],
-        this.context,
-        xPath,
-        xPath
-      );
-    }
-    return wrapAsValue(this.context, null, xPath);
+  public findXPath(xPath: string): ValuePromise {
+    return ValuePromise.execute(async () => {
+      if (!this.page) {
+        throw "Page must be defined.";
+      }
+      const elements = await this.page.$x(xPath);
+      if (elements.length > 0) {
+        return await ExtJsComponent.create(
+          elements[0],
+          this.context,
+          xPath,
+          xPath
+        );
+      }
+      return wrapAsValue(this.context, null, xPath);
+    });
   }
 
   public async findAllXPath(xPath: string): Promise<iValue[]> {
@@ -97,21 +100,23 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     return puppeteerElements;
   }
 
-  public async waitForExists(
+  public waitForExists(
     path: string,
     a?: number | string | RegExp,
     b?: number
-  ): Promise<iValue> {
-    if (this.page === null) {
-      throw "Could not find browser page object.";
-    }
-    const ref = await this.page.waitForFunction(
-      `Ext.ComponentQuery.query("${path}")`,
-      {
-        timeout: this.getTimeoutFromOverload(a, b),
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      if (this.page === null) {
+        throw "Could not find browser page object.";
       }
-    );
-    return await ExtJsComponent.create(ref, this.context, `${path}[0]`, path);
+      const ref = await this.page.waitForFunction(
+        `Ext.ComponentQuery.query("${path}")`,
+        {
+          timeout: this.getTimeoutFromOverload(a, b),
+        }
+      );
+      return await ExtJsComponent.create(ref, this.context, `${path}[0]`, path);
+    });
   }
 
   public type(
@@ -236,14 +241,17 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     );
   }
 
-  public async selectOption(
+  public selectOption(
     selector: string,
     value: string | string[]
-  ): Promise<void> {
-    const component = await this.find(selector);
-    if (!component.isNull()) {
-      component.selectOption(value);
-    }
+  ): ValuePromise {
+    return createValuePromise(async () => {
+      const component = await this.find(selector);
+      if (!component.isNull()) {
+        component.selectOption(value);
+      }
+      return component;
+    });
   }
 
   private async _getComponentOrElementFromHandle(

@@ -6,10 +6,11 @@ import {
   ScreenshotOpts,
   KeyValue,
 } from "../interfaces";
-import { ElementHandle, BoxModel, JSHandle, Page } from "puppeteer-core";
+import { ElementHandle, BoxModel, JSHandle } from "puppeteer-core";
 import { asyncForEach, toType, toArray, asyncMap } from "../util";
 import csstoxpath from "csstoxpath";
 import { ValuePromise } from "../value-promise";
+import { createValuePromise } from "../helpers";
 
 export class BrowserElement extends PuppeteerElement implements iValue {
   protected _input: ElementHandle;
@@ -84,58 +85,72 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     );
   }
 
-  public async getAncestorOrSelf(selector: string): Promise<iValue> {
-    return this._elementHandlesToFirstValue(
-      await this._xQuery("ancestor-or-self::", selector, "[1]"),
-      `Ansestor or self ${selector} of ${this.name}`,
-      `ancestor-or-self::${selector}[1]`
-    );
+  public getAncestorOrSelf(selector: string): ValuePromise {
+    return createValuePromise(async () => {
+      return this._elementHandlesToFirstValue(
+        await this._xQuery("ancestor-or-self::", selector, "[1]"),
+        `Ansestor or self ${selector} of ${this.name}`,
+        `ancestor-or-self::${selector}[1]`
+      );
+    });
   }
 
-  public async getFirstChild(selector?: string): Promise<iValue> {
-    return this._elementHandlesToFirstValue(
-      await this._xQuery("child::", selector, "[1]"),
-      `Child ${selector} of ${this.name}`,
-      `child::${selector}[1]`
-    );
+  public getFirstChild(selector?: string): ValuePromise {
+    return createValuePromise(async () => {
+      return this._elementHandlesToFirstValue(
+        await this._xQuery("child::", selector, "[1]"),
+        `Child ${selector} of ${this.name}`,
+        `child::${selector}[1]`
+      );
+    });
   }
 
-  public async getLastChild(selector?: string): Promise<iValue> {
-    return this._elementHandlesToFirstValue(
-      await this._xQuery("child::", selector, "[last()]"),
-      `Last child ${selector} of ${this.name}`,
-      `child::${selector}[last()]`
-    );
+  public getLastChild(selector?: string): ValuePromise {
+    return createValuePromise(async () => {
+      return this._elementHandlesToFirstValue(
+        await this._xQuery("child::", selector, "[last()]"),
+        `Last child ${selector} of ${this.name}`,
+        `child::${selector}[last()]`
+      );
+    });
   }
 
-  public async getFirstSibling(selector?: string): Promise<iValue> {
-    const siblings = await this.getSiblings(selector);
-    return siblings[0];
+  public getFirstSibling(selector?: string): ValuePromise {
+    return createValuePromise(async () => {
+      const siblings = await this.getSiblings(selector);
+      return siblings[0];
+    });
   }
 
-  public async getLastSibling(selector?: string): Promise<iValue> {
-    const siblings = await this.getSiblings(selector);
-    return siblings[siblings.length - 1];
+  public getLastSibling(selector?: string): ValuePromise {
+    return createValuePromise(async () => {
+      const siblings = await this.getSiblings(selector);
+      return siblings[siblings.length - 1];
+    });
   }
 
-  public async getChildOrSelf(selector?: string): Promise<iValue> {
-    const self = await this._xQuery("self::", selector);
-    const elements = self.length
-      ? self
-      : await this._xQuery("child::", selector);
-    return this._elementHandlesToFirstValue(
-      elements,
-      `Child or self ${selector} of ${this.name}`,
-      `self or child::${selector}[0]`
-    );
+  public getChildOrSelf(selector?: string): ValuePromise {
+    return createValuePromise(async () => {
+      const self = await this._xQuery("self::", selector);
+      const elements = self.length
+        ? self
+        : await this._xQuery("child::", selector);
+      return this._elementHandlesToFirstValue(
+        elements,
+        `Child or self ${selector} of ${this.name}`,
+        `self or child::${selector}[0]`
+      );
+    });
   }
 
-  public async getDescendantOrSelf(selector?: string): Promise<iValue> {
-    return this._elementHandlesToFirstValue(
-      await this._xQuery("descendant-or-self::", selector),
-      `Descendant or self ${selector} of ${this.name}`,
-      `descendant-or-self::${selector}[0]`
-    );
+  public getDescendantOrSelf(selector?: string): ValuePromise {
+    return createValuePromise(async () => {
+      return this._elementHandlesToFirstValue(
+        await this._xQuery("descendant-or-self::", selector),
+        `Descendant or self ${selector} of ${this.name}`,
+        `descendant-or-self::${selector}[0]`
+      );
+    });
   }
 
   public async getDescendants(selector?: string): Promise<iValue[]> {
@@ -146,13 +161,18 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     );
   }
 
-  public async getAncestor(selector: string = "*"): Promise<iValue> {
-    const closest: ElementHandle[] = await this._xQuery("ancestor::", selector);
-    const name: string = `Ancestor ${selector} of ${this.name}`;
-    const path: string = `${this.path}[ancestor::${selector}]`;
-    return closest.length > 0
-      ? BrowserElement.create(closest[0], this._context, name, path)
-      : this._wrapAsValue(null, name, this);
+  public getAncestor(selector: string = "*"): ValuePromise {
+    return createValuePromise(async () => {
+      const closest: ElementHandle[] = await this._xQuery(
+        "ancestor::",
+        selector
+      );
+      const name: string = `Ancestor ${selector} of ${this.name}`;
+      const path: string = `${this.path}[ancestor::${selector}]`;
+      return closest.length > 0
+        ? BrowserElement.create(closest[0], this._context, name, path)
+        : this._wrapAsValue(null, name, this);
+    });
   }
 
   public async getChildren(selector: string = "*"): Promise<iValue[]> {
@@ -166,14 +186,16 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     return out;
   }
 
-  public async getParent(): Promise<iValue> {
-    const parents: ElementHandle[] = await this.$.$x("..");
-    const name: string = `Parent of ${this.name}`;
-    const path: string = `${this.path}[..]`;
-    if (parents.length > 0) {
-      return BrowserElement.create(parents[0], this._context, name, path);
-    }
-    return this._wrapAsValue(null, name, this);
+  public getParent(): ValuePromise {
+    return createValuePromise(async () => {
+      const parents: ElementHandle[] = await this.$.$x("..");
+      const name: string = `Parent of ${this.name}`;
+      const path: string = `${this.path}[..]`;
+      if (parents.length > 0) {
+        return BrowserElement.create(parents[0], this._context, name, path);
+      }
+      return this._wrapAsValue(null, name, this);
+    });
   }
 
   public async getSiblings(selector: string = "*"): Promise<iValue[]> {
@@ -199,17 +221,19 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     return siblings;
   }
 
-  public async getPreviousSibling(selector: string = "*"): Promise<iValue> {
-    const siblings: ElementHandle[] = await this._xQuery(
-      "preceding-sibling::",
-      selector
-    );
-    const name: string = `Previous Sibling of ${this.name}`;
-    const path: string = `${this.path}[preceding-sibling::${selector}][0]`;
-    if (siblings.length > 0) {
-      return BrowserElement.create(siblings[0], this._context, name, path);
-    }
-    return this._wrapAsValue(null, name, this);
+  public getPreviousSibling(selector: string = "*"): ValuePromise {
+    return createValuePromise(async () => {
+      const siblings: ElementHandle[] = await this._xQuery(
+        "preceding-sibling::",
+        selector
+      );
+      const name: string = `Previous Sibling of ${this.name}`;
+      const path: string = `${this.path}[preceding-sibling::${selector}][0]`;
+      if (siblings.length > 0) {
+        return BrowserElement.create(siblings[0], this._context, name, path);
+      }
+      return this._wrapAsValue(null, name, this);
+    });
   }
 
   public async getPreviousSiblings(selector: string = "*"): Promise<iValue[]> {
@@ -231,19 +255,19 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     return siblings;
   }
 
-  public async getNextSibling(
-    selector: string = "*"
-  ): Promise<BrowserElement | iValue> {
-    const siblings: ElementHandle[] = await this._xQuery(
-      "following-sibling::",
-      selector
-    );
-    const name: string = `Next Sibling of ${this.name}`;
-    const path: string = `${this.path}[following-sibling::${selector}][0]`;
-    if (siblings.length > 0) {
-      return BrowserElement.create(siblings[0], this._context, name, path);
-    }
-    return this._wrapAsValue(null, name, this);
+  public getNextSibling(selector: string = "*"): ValuePromise {
+    return createValuePromise(async () => {
+      const siblings: ElementHandle[] = await this._xQuery(
+        "following-sibling::",
+        selector
+      );
+      const name: string = `Next Sibling of ${this.name}`;
+      const path: string = `${this.path}[following-sibling::${selector}][0]`;
+      if (siblings.length > 0) {
+        return BrowserElement.create(siblings[0], this._context, name, path);
+      }
+      return this._wrapAsValue(null, name, this);
+    });
   }
 
   public async getNextSiblings(selector: string = "*"): Promise<iValue[]> {
@@ -295,151 +319,168 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     return null;
   }
 
-  public async focus(): Promise<iValue> {
-    await this._input.focus();
-    this._completedAction("FOCUS");
-    return this;
+  public focus(): ValuePromise {
+    return createValuePromise(async () => {
+      await this._input.focus();
+      this._completedAction("FOCUS");
+      return this;
+    });
   }
 
-  public async blur(): Promise<iValue> {
-    await this._input.evaluate((node) => node.parentElement?.focus());
-    this._completedAction("BLUR");
-    return this;
+  public blur(): ValuePromise {
+    return createValuePromise(async () => {
+      await this._input.evaluate((node) => node.parentElement?.focus());
+      this._completedAction("BLUR");
+      return this;
+    });
   }
 
-  public async hover(): Promise<iValue> {
-    await this._input.hover();
-    this._completedAction("HOVER");
-    return this;
+  public hover(): ValuePromise {
+    return createValuePromise(async () => {
+      await this._input.hover();
+      this._completedAction("HOVER");
+      return this;
+    });
   }
 
-  public async tap(): Promise<iValue> {
-    await this._input.tap();
-    this._completedAction("TAP");
-    return this;
+  public tap(): ValuePromise {
+    return createValuePromise(async () => {
+      await this._input.tap();
+      this._completedAction("TAP");
+      return this;
+    });
   }
 
-  public async press(key: string, opts?: any): Promise<iValue> {
-    await this._input.press(key, opts || {});
-    this._completedAction("PRESS", key);
-    return this;
+  public press(key: string, opts?: any): ValuePromise {
+    return createValuePromise(async () => {
+      await this._input.press(key, opts || {});
+      this._completedAction("PRESS", key);
+      return this;
+    });
   }
 
-  public async type(textToType: string, opts: any = {}): Promise<iValue> {
-    await this._input.type(textToType, opts);
-    this._completedAction(
-      "TYPE",
-      (await this._isPasswordField())
-        ? textToType.replace(/./g, "*")
-        : textToType
-    );
-    return this;
+  public type(textToType: string, opts: any = {}): ValuePromise {
+    return createValuePromise(async () => {
+      await this._input.type(textToType, opts);
+      this._completedAction(
+        "TYPE",
+        (await this._isPasswordField())
+          ? textToType.replace(/./g, "*")
+          : textToType
+      );
+      return this;
+    });
   }
 
-  public async clear(): Promise<iValue> {
-    await this._input.click({ clickCount: 3 });
-    await this._page.keyboard.press("Backspace");
-    this._completedAction("CLEAR");
-    return this;
+  public clear(): ValuePromise {
+    return createValuePromise(async () => {
+      await this._input.click({ clickCount: 3 });
+      await this._page.keyboard.press("Backspace");
+      this._completedAction("CLEAR");
+      return this;
+    });
   }
 
-  public async fillForm(
-    attributeName: string,
-    formData: KeyValue
-  ): Promise<iValue>;
-  public async fillForm(formData: KeyValue): Promise<iValue>;
-  public async fillForm(a: string | KeyValue, b?: KeyValue): Promise<iValue> {
-    const isForm: boolean = await this._isFormTag();
-    if (!isForm) {
-      throw new Error("This is not a form element.");
-    }
-    const attributeName: string = typeof a === "string" ? a : "name";
-    const formData: KeyValue = (typeof a === "string" ? b : a) || {};
-    for (const name in formData) {
-      const value: any = formData[name];
-      const selector: string = `${this._path} [${attributeName}="${name}"]`;
-      const inputs: ElementHandle[] = await this._page.$$(selector);
-      if (inputs.length == 0) {
-        this.context.logOptionalFailure(
-          `Could not set form field ${name} to ${value}, because the field did not exist.`,
-          selector
-        );
-      } else {
-        const input: ElementHandle = inputs[0];
-        const tagName: string = String(
-          await (await input.getProperty("tagName")).jsonValue()
-        ).toLowerCase();
-        const inputType: string = String(
-          await (await input.getProperty("type")).jsonValue()
-        ).toLowerCase();
-        // Some sites need you to focus on the element first
-        await this._page.focus(selector);
-        // Dropdowns
-        if (tagName == "select") {
-          await this._page.select(selector, value);
-        }
-        // Input boxes
-        else if (tagName == "input") {
-          // Radio or checkbox we need to click on the items
-          if (inputType == "radio" || inputType == "checkbox") {
-            // Turn it into an array, to support multiple checked boxes
-            const multiValues: any[] =
-              toType(value) == "array" ? value : [value];
-            // Loop through each checkbox/radio element with this name
-            for (let i = 0; i < inputs.length; i++) {
-              const checkbox: ElementHandle = inputs[i];
-              const isChecked: boolean = !!(await (
-                await checkbox.getProperty("checked")
-              ).jsonValue());
-              const checkboxValue: string = String(
-                await (await checkbox.getProperty("value")).jsonValue()
-              );
-              // Toggle it by clicking
-              if (
-                // This is one of our values, and it's not checked yet
-                (multiValues.indexOf(checkboxValue) >= 0 && !isChecked) ||
-                // This is not one of our values, but it is checked
-                (multiValues.indexOf(checkboxValue) < 0 && isChecked)
-              ) {
-                await checkbox.click();
+  public fillForm(attributeName: string, formData: KeyValue): ValuePromise;
+  public fillForm(formData: KeyValue): ValuePromise;
+  public fillForm(a: string | KeyValue, b?: KeyValue): ValuePromise {
+    return createValuePromise(async () => {
+      const isForm: boolean = await this._isFormTag();
+      if (!isForm) {
+        throw new Error("This is not a form element.");
+      }
+      const attributeName: string = typeof a === "string" ? a : "name";
+      const formData: KeyValue = (typeof a === "string" ? b : a) || {};
+      for (const name in formData) {
+        const value: any = formData[name];
+        const selector: string = `${this._path} [${attributeName}="${name}"]`;
+        const inputs: ElementHandle[] = await this._page.$$(selector);
+        if (inputs.length == 0) {
+          this.context.logOptionalFailure(
+            `Could not set form field ${name} to ${value}, because the field did not exist.`,
+            selector
+          );
+        } else {
+          const input: ElementHandle = inputs[0];
+          const tagName: string = String(
+            await (await input.getProperty("tagName")).jsonValue()
+          ).toLowerCase();
+          const inputType: string = String(
+            await (await input.getProperty("type")).jsonValue()
+          ).toLowerCase();
+          // Some sites need you to focus on the element first
+          await this._page.focus(selector);
+          // Dropdowns
+          if (tagName == "select") {
+            await this._page.select(selector, value);
+          }
+          // Input boxes
+          else if (tagName == "input") {
+            // Radio or checkbox we need to click on the items
+            if (inputType == "radio" || inputType == "checkbox") {
+              // Turn it into an array, to support multiple checked boxes
+              const multiValues: any[] =
+                toType(value) == "array" ? value : [value];
+              // Loop through each checkbox/radio element with this name
+              for (let i = 0; i < inputs.length; i++) {
+                const checkbox: ElementHandle = inputs[i];
+                const isChecked: boolean = !!(await (
+                  await checkbox.getProperty("checked")
+                ).jsonValue());
+                const checkboxValue: string = String(
+                  await (await checkbox.getProperty("value")).jsonValue()
+                );
+                // Toggle it by clicking
+                if (
+                  // This is one of our values, and it's not checked yet
+                  (multiValues.indexOf(checkboxValue) >= 0 && !isChecked) ||
+                  // This is not one of our values, but it is checked
+                  (multiValues.indexOf(checkboxValue) < 0 && isChecked)
+                ) {
+                  await checkbox.click();
+                }
               }
+            } else if (
+              inputType == "button" ||
+              inputType == "submit" ||
+              inputType == "reset"
+            ) {
+              // Do nothing for now (maybe should click??)
+            } else {
+              await this._context.clearThenType(selector, value);
             }
-          } else if (
-            inputType == "button" ||
-            inputType == "submit" ||
-            inputType == "reset"
-          ) {
+          }
+          // Button elements
+          else if (tagName == "button") {
             // Do nothing for now (maybe should click??)
-          } else {
-            await this._context.clearThenType(selector, value);
           }
         }
-        // Button elements
-        else if (tagName == "button") {
-          // Do nothing for now (maybe should click??)
-        }
+        this._completedAction("FILL");
       }
-      this._completedAction("FILL");
-    }
-    return this;
+      return this;
+    });
   }
 
-  public async submit(): Promise<iValue> {
-    if (!this._isFormTag()) {
-      throw new Error("You can only use .submit() with a form element.");
-    }
-    if (this._context.page === null) {
-      throw new Error("Page was null");
-    }
-    await this._context.page.evaluate((form) => form.submit(), this.$);
-    this._completedAction("SUBMIT");
-    return this;
+  public submit(): ValuePromise {
+    return createValuePromise(async () => {
+      if (!this._isFormTag()) {
+        throw new Error("You can only use .submit() with a form element.");
+      }
+      if (this._context.page === null) {
+        throw new Error("Page was null");
+      }
+      await this._context.page.evaluate((form) => form.submit(), this.$);
+      this._completedAction("SUBMIT");
+      return this;
+    });
   }
 
-  public async click(): Promise<iValue> {
-    this._completedAction("CLICK");
-    await this.$.click();
-    return this;
+  public click(): ValuePromise {
+    return createValuePromise(async () => {
+      this._completedAction("CLICK");
+      await this.$.click();
+      return this;
+    });
   }
 
   public screenshot(): Promise<Buffer>;
@@ -462,26 +503,34 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     });
   }
 
-  public async selectOption(valuesToSelect: string | string[]): Promise<void> {
-    valuesToSelect = toArray<string>(valuesToSelect);
-    this._completedAction("SELECT", valuesToSelect.join(", "));
-    const valuesSelected = await this.$.select.apply(this.$, valuesToSelect);
-    this._context
-      .assert(
-        `Select values on ${this.name}`,
-        valuesToSelect.length == valuesSelected.length
-      )
-      .equals(true);
+  public selectOption(valuesToSelect: string | string[]): ValuePromise {
+    return createValuePromise(async () => {
+      valuesToSelect = toArray<string>(valuesToSelect);
+      this._completedAction("SELECT", valuesToSelect.join(", "));
+      const valuesSelected = await this.$.select.apply(this.$, valuesToSelect);
+      this._context
+        .assert(
+          `Select values on ${this.name}`,
+          valuesToSelect.length == valuesSelected.length
+        )
+        .equals(true);
+      return this;
+    });
   }
 
-  public async pressEnter(): Promise<iValue> {
-    await this.$.press("Enter");
-    this._completedAction("ENTER");
-    return this;
+  public pressEnter(): ValuePromise {
+    return createValuePromise(async () => {
+      await this.$.press("Enter");
+      this._completedAction("ENTER");
+      return this;
+    });
   }
 
-  public async scrollTo(): Promise<void> {
-    await this.$.evaluate((e) => e.scrollIntoView());
+  public scrollTo(): ValuePromise {
+    return createValuePromise(async () => {
+      await this.$.evaluate((e) => e.scrollIntoView());
+      return this;
+    });
   }
 
   public async isHidden(): Promise<boolean> {
@@ -551,14 +600,16 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     return (await this.getAttribute("type")).$ == "password";
   }
 
-  protected async _elementHandlesToFirstValue(
+  protected _elementHandlesToFirstValue(
     elements: ElementHandle[],
     name: string,
     path: string
-  ): Promise<iValue> {
-    return elements.length > 0
-      ? await BrowserElement.create(elements[0], this._context, name, path)
-      : this._wrapAsValue(null, name, path);
+  ): ValuePromise {
+    return createValuePromise(async () => {
+      return elements.length > 0
+        ? await BrowserElement.create(elements[0], this._context, name, path)
+        : this._wrapAsValue(null, name, path);
+    });
   }
 
   protected async _elementHandlesToValueArray(

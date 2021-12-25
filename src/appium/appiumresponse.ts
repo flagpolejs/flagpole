@@ -37,6 +37,7 @@ import {
 } from "./appium-helpers";
 import { AppiumElement } from "./appiumelement";
 import { toType } from "../util";
+import { _ } from "ajv";
 
 interface AppiumPointerAction {
   type: "pointer";
@@ -374,100 +375,99 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     };
   }
 
-  public async waitForExists(
-    selector: string,
-    timeout?: number
-  ): Promise<iValue>;
-  public async waitForExists(
+  public waitForExists(selector: string, timeout?: number): ValuePromise;
+  public waitForExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): Promise<iValue>;
-  public async waitForExists(
+  ): ValuePromise;
+  public waitForExists(
     selector: string,
     a?: number | string | RegExp,
     b?: number
-  ): Promise<iValue> {
-    const timeout =
-      typeof a === "number" ? a : typeof b === "number" ? b : 30000;
-    let timedOut = false;
-    let elementCheckStr = "";
-    let element: any = {};
-    setTimeout(() => (timedOut = true), timeout);
-    while (!elementCheckStr) {
-      if (timedOut) throw "Timed out";
-      if (typeof a === "string") {
-        element = await this.find(selector, a);
+  ): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const timeout =
+        typeof a === "number" ? a : typeof b === "number" ? b : 30000;
+      let timedOut = false;
+      let elementCheckStr = "";
+      let element: any = {};
+      setTimeout(() => (timedOut = true), timeout);
+      while (!elementCheckStr) {
+        if (timedOut) throw "Timed out";
+        if (typeof a === "string") {
+          element = await this.find(selector, a);
+          elementCheckStr = element.$;
+        } else if (toType(a) === "regexp") {
+          throw "Appium does not support finding element by RegEx";
+        } else {
+          element = await this.find(selector);
+          elementCheckStr = element.$;
+        }
+        await delay(10);
+      }
+      return element;
+    });
+  }
+
+  public waitForXPath(xPath: string, timeout?: number): ValuePromise {
+    return ValuePromise.execute(async () => {
+      let timedOut = false;
+      let elementCheckStr = "";
+      let element: any = {};
+      setTimeout(() => (timedOut = true), timeout || 30000);
+      while (!elementCheckStr) {
+        if (timedOut) throw "Timed out";
+        element = await this.find(xPath);
         elementCheckStr = element.$;
-      } else if (toType(a) === "regexp") {
-        throw "Appium does not support finding element by RegEx";
-      } else {
+        await delay(10);
+      }
+      return element;
+    });
+  }
+
+  public waitForVisible(selector: string, timeout?: number): ValuePromise {
+    return ValuePromise.execute(async () => {
+      let timedOut = false;
+      let elementCheckStr = "";
+      let element: any = {};
+      let isVisible: Boolean = false;
+      setTimeout(() => (timedOut = true), timeout || 30000);
+      while (!elementCheckStr) {
+        if (timedOut) return wrapAsValue(this.context, null, selector);
         element = await this.find(selector);
         elementCheckStr = element.$;
+        await delay(10);
       }
-      await delay(10);
-    }
-    return element;
+      while (!isVisible) {
+        if (timedOut) return wrapAsValue(this.context, null, selector);
+        isVisible = await this.isVisible(element);
+        await delay(10);
+      }
+      return element;
+    });
   }
 
-  public async waitForXPath(xPath: string, timeout?: number): Promise<iValue> {
-    let timedOut = false;
-    let elementCheckStr = "";
-    let element: any = {};
-    setTimeout(() => (timedOut = true), timeout || 30000);
-    while (!elementCheckStr) {
-      if (timedOut) throw "Timed out";
-      element = await this.find(xPath);
-      elementCheckStr = element.$;
-      await delay(10);
-    }
-    return element;
-  }
-
-  public async waitForVisible(
-    selector: string,
-    timeout?: number
-  ): Promise<iValue> {
-    let timedOut = false;
-    let elementCheckStr = "";
-    let element: any = {};
-    let isVisible: Boolean = false;
-    setTimeout(() => (timedOut = true), timeout || 30000);
-    while (!elementCheckStr) {
-      if (timedOut) return wrapAsValue(this.context, null, selector);
-      element = await this.find(selector);
-      elementCheckStr = element.$;
-      await delay(10);
-    }
-    while (!isVisible) {
-      if (timedOut) return wrapAsValue(this.context, null, selector);
-      isVisible = await this.isVisible(element);
-      await delay(10);
-    }
-    return element;
-  }
-
-  public async waitForHidden(
-    selector: string,
-    timeout?: number
-  ): Promise<iValue> {
-    let timedOut = false;
-    let elementCheckStr = "";
-    let element: any = {};
-    let isVisible: Boolean = true;
-    setTimeout(() => (timedOut = true), timeout || 30000);
-    while (!elementCheckStr) {
-      if (timedOut) return wrapAsValue(this.context, null, selector);
-      element = (await this.find(selector)) as AppiumElement;
-      elementCheckStr = element.$;
-      await delay(10);
-    }
-    while (isVisible) {
-      if (timedOut) return wrapAsValue(this.context, null, selector);
-      isVisible = await this.isVisible(element);
-      await delay(10);
-    }
-    return element;
+  public waitForHidden(selector: string, timeout?: number): ValuePromise {
+    return ValuePromise.execute(async () => {
+      let timedOut = false;
+      let elementCheckStr = "";
+      let element: any = {};
+      let isVisible: Boolean = true;
+      setTimeout(() => (timedOut = true), timeout || 30000);
+      while (!elementCheckStr) {
+        if (timedOut) return wrapAsValue(this.context, null, selector);
+        element = (await this.find(selector)) as AppiumElement;
+        elementCheckStr = element.$;
+        await delay(10);
+      }
+      while (isVisible) {
+        if (timedOut) return wrapAsValue(this.context, null, selector);
+        isVisible = await this.isVisible(element);
+        await delay(10);
+      }
+      return element;
+    });
   }
 
   public async isVisible(element: iValue): Promise<boolean> {
