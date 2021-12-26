@@ -788,11 +788,6 @@ export interface iSuite {
   verifySslCert(verify: boolean): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
-  scenario(
-    title: string,
-    type: "browser" | "extjs",
-    opts?: BrowserOptions
-  ): iScenario;
   scenario(title: string, type?: ScenarioType, opts?: KeyValue): iScenario;
   json(title: string): iScenario;
   image(title: string): iScenario;
@@ -813,8 +808,8 @@ export interface iSuite {
   mapScenarios(key: string, mapper: ScenarioMapper): Promise<iScenario[]>;
   mapScenarios(arr: any[], mapper: ScenarioMapper): Promise<iScenario[]>;
   push(key: string, value: any): iSuite;
-  set<T = any>(key: string, value: any): iSuite;
-  get<T = any>(key: string): T;
+  set<T>(key: string, value: T): iSuite;
+  get<T>(key: string): T;
   template(
     templateOptions: ScenarioInitOptions
   ): (title: string, scenarioOptions: ScenarioInitOptions) => iScenario;
