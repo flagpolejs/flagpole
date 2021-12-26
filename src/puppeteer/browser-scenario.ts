@@ -3,11 +3,12 @@ import { fetchWithNeedle } from "../adapters/needle";
 import { ProtoScenario } from "../scenario";
 import { beforeScenarioRequestStarted } from "../decorators/internal";
 import { ScenarioDisposition } from "../enums";
-import { iBrowserControlResponse } from "./browser-control";
+import { iBrowserControlResponse, BrowserControl } from "./browser-control";
 import * as puppeteer from "puppeteer-core";
 import { AssertionFailOptional } from "../logging/assertion-result";
-import { BrowserControl, FlagpoleExecution, HttpResponse, iResponse } from "..";
-import { KeyValue } from "../interfaces";
+import { FlagpoleExecution } from "../flagpole-execution";
+import { KeyValue, iResponse, BrowserOptions } from "../interfaces";
+import { HttpResponse } from "../http-response";
 import { runAsync } from "../util";
 import { Browser, Page } from "puppeteer-core";
 
@@ -19,6 +20,14 @@ export class BrowserScenario extends ProtoScenario {
   protected getRequestAdapter() {
     return fetchWithNeedle;
   }
+
+  protected _defaultBrowserOptions: BrowserOptions = {
+    headless: true,
+    recordConsole: true,
+    outputConsole: false,
+  };
+
+  protected _browserControl: BrowserControl | null = null;
 
   public get browserControl(): BrowserControl | null {
     if (this._browserControl === null) {

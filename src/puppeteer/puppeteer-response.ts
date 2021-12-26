@@ -27,13 +27,6 @@ export abstract class PuppeteerResponse
     this.scenario = scenario;
   }
 
-  /**
-   * Is this a browser based test
-   */
-  public get isBrowser(): boolean {
-    return true;
-  }
-
   public get browserControl(): BrowserControl | null {
     return this.scenario.browserControl;
   }

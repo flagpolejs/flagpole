@@ -385,7 +385,6 @@ export interface iResponse {
   cookies: iValue;
   trailers: iValue;
   method: iValue;
-  isBrowser: boolean;
   readonly scenario: iScenario;
   init(res: HttpResponse): void;
   navigate(req: iHttpRequest): Promise<void>;

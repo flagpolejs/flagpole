@@ -16,17 +16,13 @@ import {
   iValue,
   HttpResponseOptions,
   WebhookServer,
-  BrowserOptions,
   HttpRequestOptions,
   HttpProxy,
   HttpAuth,
   HttpTimeout,
   HttpMethodVerb,
-  CONTENT_TYPE_SOAP,
-  CONTENT_TYPE_JSON,
   HttpRequestFetch,
 } from "./interfaces";
-import { BrowserControl } from "./puppeteer/browser-control";
 import {
   AssertionResult,
   AssertionPass,
@@ -285,23 +281,7 @@ export abstract class ProtoScenario implements iScenario {
   protected _ignoreAssertion: boolean = false;
   protected _request: HttpRequest;
   protected _mockResponseOptions: HttpResponseOptions | null = null;
-  protected _browserControl: BrowserControl | null = null;
   protected _response: iResponse;
-  protected _defaultBrowserOptions: BrowserOptions = {
-    headless: true,
-    recordConsole: true,
-    outputConsole: false,
-  };
-  protected _defaultMethodByType: { [type in ScenarioType]?: HttpMethodVerb } =
-    {
-      soap: "post",
-    };
-  protected _defaultContentTypeByType: {
-    [type in ScenarioType]?: string;
-  } = {
-    soap: CONTENT_TYPE_SOAP,
-    json: CONTENT_TYPE_JSON,
-  };
   protected _aliasedData: any = {};
   protected _requestPromise: Promise<iScenario>;
   protected _requestResolve: Function = () => {};
@@ -334,13 +314,9 @@ export abstract class ProtoScenario implements iScenario {
   }
 
   protected _getDefaultRequestOptions(): HttpRequestOptions {
-    const headers: KeyValue = {};
-    if (this._defaultContentTypeByType[this.type]) {
-      headers["Content-Type"] = this._defaultContentTypeByType[this.type];
-    }
     return {
-      method: this._defaultMethodByType[this.type] || "get",
-      headers,
+      method: "get",
+      headers: {},
     };
   }
 

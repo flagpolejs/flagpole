@@ -55,13 +55,6 @@ export abstract class ProtoResponse implements iResponse {
   ): Promise<iValue[]>;
   abstract eval(callback: any, ...args: any[]): Promise<any>;
 
-  /**
-   * Is this a browser based test
-   */
-  public get isBrowser(): boolean {
-    return false;
-  }
-
   public get httpResponse(): HttpResponse {
     return this._httpResponse;
   }
