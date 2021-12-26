@@ -1,6 +1,4 @@
-import { BrowserControl } from "./puppeteer/browser-control";
 import {
-  Page,
   EvaluateFn,
   SerializableOrJSHandle,
   PageFnOptions,
@@ -77,8 +75,6 @@ const getParamsFromExists = (
 };
 
 export class AssertionContext implements iAssertionContext {
-  protected _scenario: iScenario;
-  protected _response: iResponse;
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
 
@@ -88,19 +84,11 @@ export class AssertionContext implements iAssertionContext {
   public result: any;
 
   public get request(): iHttpRequest {
-    return this._scenario.request;
-  }
-
-  public get response(): iResponse {
-    return this._response;
-  }
-
-  public get scenario(): iScenario {
-    return this._scenario;
+    return this.scenario.request;
   }
 
   public get suite(): iSuite {
-    return this._scenario.suite;
+    return this.scenario.suite;
   }
 
   public get executionOptions(): FlagpoleExecution {
@@ -135,10 +123,10 @@ export class AssertionContext implements iAssertionContext {
     return this.response.currentUrl;
   }
 
-  constructor(scenario: iScenario, response: iResponse) {
-    this._scenario = scenario;
-    this._response = response;
-  }
+  constructor(
+    public readonly scenario: iScenario,
+    public readonly response: iResponse
+  ) {}
 
   /**
    * Make a comment in the scenario output
@@ -146,7 +134,7 @@ export class AssertionContext implements iAssertionContext {
    * @param input
    */
   public comment(input: any): iAssertionContext {
-    this._scenario.comment(input);
+    this.scenario.comment(input);
     return this;
   }
 
@@ -611,18 +599,18 @@ export class AssertionContext implements iAssertionContext {
   }
 
   public push(key: string, value: any): iAssertionContext {
-    this._scenario.push(key, value);
+    this.scenario.push(key, value);
     return this;
   }
 
   public set(aliasName: string, value: any): iAssertionContext {
-    this._scenario.set(aliasName, value);
+    this.scenario.set(aliasName, value);
 
     return this;
   }
 
   public get<T = any>(aliasName: string): T {
-    return this._scenario.get<T>(aliasName);
+    return this.scenario.get<T>(aliasName);
   }
 
   public async scrollTo(point: OptionalXY): Promise<iAssertionContext> {

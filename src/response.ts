@@ -19,8 +19,6 @@ import { wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
 
 export abstract class ProtoResponse implements iResponse {
-  public readonly scenario: iScenario;
-
   protected _currentUrl: string | null = null;
   protected _httpResponse: HttpResponse = HttpResponse.createEmpty();
 
@@ -189,8 +187,7 @@ export abstract class ProtoResponse implements iResponse {
     return new AssertionContext(this.scenario, this);
   }
 
-  constructor(scenario: iScenario) {
-    this.scenario = scenario;
+  constructor(public readonly scenario: iScenario) {
     this._currentUrl = scenario.finalUrl;
   }
 

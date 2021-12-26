@@ -380,14 +380,10 @@ export class Value implements iValue {
 
   public open(scenario: iScenario): iScenario;
   public open(title: string, type?: ScenarioConstructor): iScenario;
-  public open(
-    a: string | iScenario,
-    b?: ScenarioConstructor,
-    c?: iNextCallback
-  ): iScenario {
+  public open(a: string | iScenario, type?: ScenarioConstructor): iScenario {
     const scenario =
       typeof a == "string"
-        ? this.context.suite.scenario(a, b || this.context.scenario.type)
+        ? this.context.suite.scenario(a, type || this.context.scenario.type)
         : a;
     runAsync(async () => {
       const link = await this.getLink();
