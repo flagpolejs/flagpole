@@ -1,6 +1,6 @@
 import { Command } from "../command";
 import { Cli } from "../cli";
-import { FlagpoleExecution } from "../../flagpoleexecution";
+import { FlagpoleExecution } from "../../flagpole-execution";
 import prompts = require("prompts");
 import {
   promptTextName,
@@ -14,7 +14,7 @@ import {
   iConfigOpts,
   FlagpoleConfig,
   iEnvCollection,
-} from "../../flagpoleconfig";
+} from "../../flagpole-config";
 import * as fs from "fs-extra";
 
 export default class Init extends Command {

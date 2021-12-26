@@ -1,5 +1,5 @@
-import { LogItem } from "./logitem";
-import { SubheadingLine, SectionHeadingLine } from "./consoleline";
+import { LogItem } from "./log-item";
+import { SubheadingLine, SectionHeadingLine } from "./console-line";
 import { LineType } from "../enums";
 import { iConsoleLine } from "../interfaces";
 

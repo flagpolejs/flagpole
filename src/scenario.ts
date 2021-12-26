@@ -30,7 +30,7 @@ import * as puppeteer from "puppeteer-core";
 import {
   BrowserControl,
   iBrowserControlResponse,
-} from "./puppeteer/browsercontrol";
+} from "./puppeteer/browser-control";
 import { getRequestAdapter, createResponse } from "./scenario-type-map";
 import {
   AssertionResult,
@@ -38,16 +38,16 @@ import {
   AssertionFail,
   AssertionFailWarning,
   AssertionFailOptional,
-} from "./logging/assertionresult";
-import { HttpResponse } from "./httpresponse";
-import { ResourceResponse } from "./resourceresponse";
+} from "./logging/assertion-result";
+import { HttpResponse } from "./http-response";
+import { ResourceResponse } from "./resource-response";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
-import { LogCollection } from "./logging/logcollection";
-import { HttpRequest, HttpMethodVerbAllowedValues } from "./httprequest";
-import { FlagpoleExecution } from "./flagpoleexecution";
+import { LogCollection } from "./logging/log-collection";
+import { HttpRequest, HttpMethodVerbAllowedValues } from "./http-request";
+import { FlagpoleExecution } from "./flagpole-execution";
 import { toType, asyncForEach, runAsync, getFunctionArgs } from "./util";
-import { AssertionContext } from "./assertioncontext";
+import { AssertionContext } from "./assertion-context";
 import * as bluebird from "bluebird";
 import { Browser } from "puppeteer-core";
 import minikin, { Response } from "minikin";
@@ -62,7 +62,7 @@ import {
 } from "./decorators/internal";
 import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
-import { AppiumResponse } from "./appium/appiumresponse";
+import { AppiumResponse } from "./appium/appium-response";
 import { _ } from "ajv";
 
 enum ScenarioRequestType {

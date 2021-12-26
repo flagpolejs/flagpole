@@ -1,5 +1,5 @@
 import { iScenario } from "../interfaces";
-import { AssertionFail } from "../logging/assertionresult";
+import { AssertionFail } from "../logging/assertion-result";
 import { ValuePromise } from "../value-promise";
 
 function cast<T>(val: any): T {

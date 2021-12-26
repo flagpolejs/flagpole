@@ -1,4 +1,4 @@
-import { HttpResponse } from "../httpresponse";
+import { HttpResponse } from "../http-response";
 import {
   HttpRequestFetch,
   iHttpRequest,
@@ -8,7 +8,7 @@ import {
   CONTENT_TYPE_FORM_MULTIPART,
 } from "../interfaces";
 import needle = require("needle");
-import { FlagpoleExecution } from "../flagpoleexecution";
+import { FlagpoleExecution } from "../flagpole-execution";
 
 export const getNeedleOptions = (
   request: iHttpRequest

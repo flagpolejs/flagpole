@@ -25,7 +25,7 @@ import {
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
-} from "./logging/assertionresult";
+} from "./logging/assertion-result";
 import { Link } from "./link";
 import * as fs from "fs";
 import {
@@ -35,8 +35,8 @@ import {
 } from "puppeteer-core";
 import { ValuePromise } from "./value-promise";
 import { ScenarioType } from "./scenario-types";
-import { HttpResponse } from "./httpresponse";
-import { HttpRequest } from "./httprequest";
+import { HttpResponse } from "./http-response";
+import { HttpRequest } from "./http-request";
 import { jpathSearch } from "./json/jpath";
 import {
   SyncIteratorBoolCallback,
@@ -44,7 +44,6 @@ import {
   SyncMapperCallback,
   SyncReducerCallback,
 } from "./interfaces/iterator-callbacks";
-import { createValuePromise } from "./helpers";
 
 export class Value implements iValue {
   protected _input: any;
@@ -360,7 +359,7 @@ export class Value implements iValue {
   */
 
   public getProperty(key: string): ValuePromise {
-    return createValuePromise(async () => {
+    return ValuePromise.execute(async () => {
       return this._wrapAsValue(
         this._input[key],
         `${this.name} property of ${key}`
@@ -370,12 +369,12 @@ export class Value implements iValue {
 
   public click(opts: PointerClick): ValuePromise {
     this._context.logFailure(`Element could not be clicked on: ${this.name}`);
-    return createValuePromise(this);
+    return ValuePromise.wrap(this);
   }
 
   public submit(): ValuePromise {
     this._context.logFailure(`Element could not be submitted on: ${this.name}`);
-    return createValuePromise(this);
+    return ValuePromise.wrap(this);
   }
 
   public open(message: string): iScenario;
@@ -442,7 +441,7 @@ export class Value implements iValue {
   }
 
   public getUrl(): ValuePromise {
-    return createValuePromise(async () => {
+    return ValuePromise.execute(async () => {
       const url = await (async () => {
         if (this.isString()) {
           return this.toString();
@@ -475,11 +474,11 @@ export class Value implements iValue {
   public fillForm(attributeName: string, formData: KeyValue): ValuePromise;
   public fillForm(formData: KeyValue): ValuePromise;
   public fillForm(a: string | KeyValue, b?: KeyValue): ValuePromise {
-    return createValuePromise(this);
+    return ValuePromise.wrap(this);
   }
 
   public exists(selector?: string): ValuePromise {
-    return createValuePromise(async () => {
+    return ValuePromise.execute(async () => {
       if (selector === undefined) {
         this.isNullOrUndefined()
           ? this._failedAction("EXISTS", `${this.name}`)
@@ -496,7 +495,7 @@ export class Value implements iValue {
   }
 
   public find(selector: string): ValuePromise {
-    return ValuePromise.create(this.item(selector));
+    return ValuePromise.wrap(this.item(selector));
   }
 
   public async findAll(selector: string): Promise<iValue[]> {
@@ -504,7 +503,7 @@ export class Value implements iValue {
   }
 
   public getClassName(): ValuePromise {
-    return createValuePromise(this._wrapAsValue(null, `${this.name} Class`));
+    return ValuePromise.wrap(this._wrapAsValue(null, `${this.name} Class`));
   }
 
   public async hasClassName(name?: string | RegExp): Promise<boolean> {
@@ -523,7 +522,7 @@ export class Value implements iValue {
   }
 
   public getTag(): ValuePromise {
-    return createValuePromise(
+    return ValuePromise.wrap(
       this._wrapAsValue(this.tagName, `Tag Name of ${this.name}`)
     );
   }
@@ -537,19 +536,19 @@ export class Value implements iValue {
   }
 
   public getInnerText(): ValuePromise {
-    return createValuePromise(
+    return ValuePromise.wrap(
       this._wrapAsValue(this.toString(), `Inner Text of ${this.name}`)
     );
   }
 
   public getInnerHtml(): ValuePromise {
-    return createValuePromise(
+    return ValuePromise.wrap(
       this._wrapAsValue(null, `Inner HTML of ${this.name}`)
     );
   }
 
   public getOuterHtml(): ValuePromise {
-    return createValuePromise(
+    return ValuePromise.wrap(
       this._wrapAsValue(null, `Outer HTML of ${this.name}`)
     );
   }
@@ -575,15 +574,15 @@ export class Value implements iValue {
   }
 
   public getStyleProperty(key: string): ValuePromise {
-    return createValuePromise(this._wrapAsValue(null, `Style of ${key}`));
+    return ValuePromise.wrap(this._wrapAsValue(null, `Style of ${key}`));
   }
 
   public getValue(): ValuePromise {
-    return createValuePromise(this);
+    return ValuePromise.wrap(this);
   }
 
   public scrollTo(): ValuePromise {
-    return createValuePromise(this);
+    return ValuePromise.wrap(this);
   }
 
   public async hasText(text?: string): Promise<boolean> {
@@ -592,7 +591,7 @@ export class Value implements iValue {
   }
 
   public getText(): ValuePromise {
-    return createValuePromise(
+    return ValuePromise.wrap(
       this._wrapAsValue(this.toString(), this.name, this.parent, this.highlight)
     );
   }
@@ -799,15 +798,15 @@ export class Value implements iValue {
     opts?: PageFnOptions | number,
     ...args: SerializableOrJSHandle[]
   ): ValuePromise {
-    return createValuePromise(this);
+    return ValuePromise.wrap(this);
   }
 
   public waitForHidden(): ValuePromise {
-    return createValuePromise(this);
+    return ValuePromise.wrap(this);
   }
 
   public waitForVisible(): ValuePromise {
-    return createValuePromise(this);
+    return ValuePromise.wrap(this);
   }
 
   public setValue(text: string): ValuePromise {
@@ -1071,6 +1070,6 @@ export class Value implements iValue {
     parent?: any,
     highlight?: string
   ): ValuePromise {
-    return createValuePromise(this._wrapAsValue(data, name, parent, highlight));
+    return ValuePromise.wrap(this._wrapAsValue(data, name, parent, highlight));
   }
 }

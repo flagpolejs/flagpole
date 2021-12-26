@@ -12,9 +12,9 @@ import {
   GestureOpts,
   GestureType,
 } from "./interfaces";
-import { HttpResponse } from "./httpresponse";
-import { HttpRequest } from "./httprequest";
-import { AssertionContext } from "./assertioncontext";
+import { HttpResponse } from "./http-response";
+import { HttpRequest } from "./http-request";
+import { AssertionContext } from "./assertion-context";
 import { wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
 import { ScenarioType } from "./scenario-types";

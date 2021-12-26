@@ -1,5 +1,5 @@
 import { Command, CliCommandOption } from "../command";
-import { FlagpoleExecution } from "../../flagpoleexecution";
+import { FlagpoleExecution } from "../../flagpole-execution";
 import prompts = require("prompts");
 import {
   promptSelect,

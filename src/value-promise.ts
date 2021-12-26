@@ -18,16 +18,16 @@ function assertionMethod(
   };
 }
 
-export class ValuePromise
-  extends Promise<iValue>
-  implements PromiseLike<iValue>
+export class ValuePromise<T extends iValue = iValue>
+  extends Promise<T>
+  implements PromiseLike<T>
 {
-  public static execute(func: () => Promise<iValue>) {
-    return ValuePromise.create(func());
+  public static execute<T extends iValue>(callback: () => Promise<T>) {
+    return ValuePromise.wrap<T>(callback());
   }
 
-  public static create(value: iValue | Promise<iValue>) {
-    return new ValuePromise(async (resolve, reject) => {
+  public static wrap<T extends iValue>(value: T | Promise<T>) {
+    return new ValuePromise<T>(async (resolve, reject) => {
       try {
         resolve(await value);
       } catch (ex) {
@@ -38,7 +38,7 @@ export class ValuePromise
 
   private constructor(
     executor: (
-      resolve: (value?: iValue | PromiseLike<iValue>) => void,
+      resolve: (value?: T | PromiseLike<T>) => void,
       reject: (reason?: any) => void
     ) => void
   ) {

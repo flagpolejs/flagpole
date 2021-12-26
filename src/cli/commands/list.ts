@@ -1,6 +1,6 @@
 import { Command } from "../command";
 import { Cli } from "../cli";
-import { FlagpoleExecution } from "../../flagpoleexecution";
+import { FlagpoleExecution } from "../../flagpole-execution";
 
 export default class List extends Command {
   public commandString = "list [type]";

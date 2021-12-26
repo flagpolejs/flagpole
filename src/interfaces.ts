@@ -1,4 +1,4 @@
-import { BrowserControl } from "./puppeteer/browsercontrol";
+import { BrowserControl } from "./puppeteer/browser-control";
 import {
   Page,
   EvaluateFn,
@@ -11,8 +11,8 @@ import {
   LineType,
   ScenarioDisposition,
 } from "./enums";
-import { HttpResponse } from "./httpresponse";
-import { FlagpoleExecution } from "./flagpoleexecution";
+import { HttpResponse } from "./http-response";
+import { FlagpoleExecution } from "./flagpole-execution";
 import { Link } from "./link";
 import { ServerOptions } from "https";
 import { Server } from "minikin";
@@ -619,64 +619,76 @@ export interface iAssertionContext {
   push(aliasName: string, value: any): iAssertionContext;
   set(aliasName: string, value: any): iAssertionContext;
   get<T = any>(aliasName: string): T;
-  exists(selector: string | string[], opts?: FindOptions): ValuePromise;
-  exists(
+  exists<T extends iValue>(
+    selector: string | string[],
+    opts?: FindOptions
+  ): ValuePromise<T>;
+  exists<T extends iValue>(
     selector: string | string[],
     contains: string,
     opts?: FindOptions
-  ): ValuePromise;
-  exists(
+  ): ValuePromise<T>;
+  exists<T extends iValue>(
     selector: string | string[],
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise;
-  existsAll(selector: string | string[], opts?: FindOptions): Promise<iValue[]>;
-  existsAll(
+  ): ValuePromise<T>;
+  existsAll<T extends iValue>(
+    selector: string | string[],
+    opts?: FindOptions
+  ): Promise<T[]>;
+  existsAll<T extends iValue>(
     selector: string | string[],
     contains: string,
     opts?: FindOptions
-  ): Promise<iValue[]>;
-  existsAll(
+  ): Promise<T[]>;
+  existsAll<T extends iValue>(
     selector: string | string[],
     matches: RegExp,
     opts?: FindOptions
-  ): Promise<iValue[]>;
-  existsAny(selectors: string[], opts?: FindOptions): Promise<iValue[]>;
-  existsAny(
+  ): Promise<T[]>;
+  existsAny<T extends iValue>(
+    selectors: string[],
+    opts?: FindOptions
+  ): Promise<T[]>;
+  existsAny<T extends iValue>(
     selector: string[],
     contains: string,
     opts?: FindOptions
-  ): Promise<iValue[]>;
-  existsAny(
+  ): Promise<T[]>;
+  existsAny<T extends iValue>(
     selector: string[],
     matches: RegExp,
     opts?: FindOptions
-  ): Promise<iValue[]>;
-  find(selector: string | string[], opts?: FindOptions): ValuePromise;
-  find(
+  ): Promise<T[]>;
+  find<T extends iValue>(
+    selector: string | string[],
+    opts?: FindOptions
+  ): ValuePromise<T>;
+  find<T extends iValue>(
     selector: string | string[],
     contains: string,
     opts?: FindOptions
-  ): ValuePromise;
-  find(
+  ): ValuePromise<T>;
+  find<T extends iValue>(
     selector: string | string[],
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise;
-  findAll(
+  ): ValuePromise<T>;
+  findAll<T extends iValue>(
     selector: string | string[],
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
-  findAll(
+  ): Promise<T[]>;
+  findAll<T extends iValue>(
     selector: string | string[],
     contains: string,
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
-  findAll(
+  ): Promise<T[]>;
+  findAll<T extends iValue>(
     selector: string | string[],
     matches: RegExp,
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
+  ): Promise<T[]>;
   findXPath(xPath: string): ValuePromise;
   findAllXPath(xPath: string): Promise<iValue[]>;
   click(selector: string, opts?: FindOptions): ValuePromise;

@@ -1,6 +1,6 @@
 import { Scenario } from "./scenario";
 import { URL } from "url";
-import { FlagpoleReport } from "./logging/flagpolereport";
+import { FlagpoleReport } from "./logging/flagpole-report";
 import {
   iSuite,
   iScenario,
@@ -14,8 +14,8 @@ import {
   DeviceProperties,
 } from "./interfaces";
 import { exitProcess, toType } from "./util";
-import { FlagpoleExecution } from "./flagpoleexecution";
-import { SuiteTaskManager } from "./suitetaskmanager";
+import { FlagpoleExecution } from "./flagpole-execution";
+import { SuiteTaskManager } from "./suite-task-manager";
 import { ScenarioType } from "./scenario-types";
 import { FfprobeOptions } from "media-probe";
 import { MediaStreamValidatorOpts } from "media-stream-validator";

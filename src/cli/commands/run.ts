@@ -1,13 +1,13 @@
 import { Command, CliCommandOption } from "../command";
 import { Cli } from "../cli";
 import { tsc } from "./build";
-import { SuiteConfig } from "../../flagpoleconfig";
+import { SuiteConfig } from "../../flagpole-config";
 import prompts = require("prompts");
 import { promptSelect, stringArrayToPromptChoices } from "../cli-helper";
-import { FlagpoleExecution } from "../../flagpoleexecution";
+import { FlagpoleExecution } from "../../flagpole-execution";
 import commander = require("commander");
 import Ansi from "cli-ansi";
-import { TestRunner } from "../testrunner";
+import { TestRunner } from "../test-runner";
 import { lineToVerbosity } from "../../logging/verbosity";
 
 export default class Run extends Command {

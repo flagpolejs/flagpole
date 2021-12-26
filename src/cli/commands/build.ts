@@ -1,6 +1,6 @@
 import { Command } from "../command";
 import { Cli } from "../cli";
-import { FlagpoleExecution } from "../../flagpoleexecution";
+import { FlagpoleExecution } from "../../flagpole-execution";
 import { execSync } from "child_process";
 import prompts = require("prompts");
 import { promptTextPath, printSubheader, printLine } from "../cli-helper";

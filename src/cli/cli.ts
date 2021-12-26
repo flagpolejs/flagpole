@@ -1,5 +1,5 @@
-import { FlagpoleExecution } from "../flagpoleexecution";
-import { iSuiteOpts, iScenarioOpts, SuiteConfig } from "../flagpoleconfig";
+import { FlagpoleExecution } from "../flagpole-execution";
+import { iSuiteOpts, iScenarioOpts, SuiteConfig } from "../flagpole-config";
 import * as fs from "fs-extra";
 import { printSubheader } from "./cli-helper";
 import Ansi from "cli-ansi";

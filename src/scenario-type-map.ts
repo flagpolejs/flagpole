@@ -1,25 +1,27 @@
-import { HtmlResponse } from "./html/htmlresponse";
-import { ResourceResponse } from "./resourceresponse";
-import { BrowserResponse } from "./puppeteer/browserresponse";
-import { ImageResponse } from "./imageresponse";
-import { JsonResponse } from "./json/jsonresponse";
-import { ExtJSResponse } from "./puppeteer/extjsresponse";
+import { HtmlResponse } from "./html/html-response";
+import { ResourceResponse } from "./resource-response";
+import { BrowserResponse } from "./puppeteer/browser-response";
+import { ImageResponse } from "./visual/image-response";
+import { JsonResponse } from "./json/json-response";
+import { ExtJSResponse } from "./puppeteer/extjs-response";
 import { HttpRequestFetch, iResponse, iScenario } from "./interfaces";
-import { XmlResponse } from "./xml/xmlresponse";
-import { RssResponse } from "./xml/rssresponse";
-import { AtomResponse } from "./xml/atomresponse";
-import { HeadersResponse } from "./headersresponse";
-import { HLSResponse } from "./media/hlsresponse";
-import { FfprobeResponse } from "./media/ffproberesponse";
-import { MediaStreamValidatorResponse } from "./media/mediastreamvalidatorresponse";
+import { XmlResponse } from "./xml/xml-response";
+import { RssResponse } from "./xml/rss-response";
+import { AtomResponse } from "./xml/atom-response";
+import { HeadersResponse } from "./headers-response";
+import { HLSResponse } from "./media/hls-response";
+import { FfprobeResponse } from "./media/ffprobe-response";
+import { MediaStreamValidatorResponse } from "./media/media-stream-validator-response";
 import { fetchWithNeedle } from "./adapters/needle";
 import { fetchWithFfprobe } from "./adapters/ffprobe";
-import { fetchWithMediaStreamValidator } from "./adapters/mediastreamvalidator";
+import { fetchWithMediaStreamValidator } from "./adapters/media-stream-validator";
 import { fetchImageWithNeedle } from "./adapters/image";
-import { SoapResponse } from "./xml/soapresponse";
-import { AppiumResponse } from "./appium/appiumresponse";
+import { SoapResponse } from "./xml/soap-response";
+import { AppiumResponse } from "./appium/appium-response";
 
-const typeToClassMap: { [type: string]: any } = {
+type ClassDef = new (...args: any[]) => any;
+
+const typeToClassMap: { [type: string]: ClassDef } = {
   html: HtmlResponse,
   browser: BrowserResponse,
   extjs: ExtJSResponse,
@@ -53,9 +55,11 @@ const typeToFetchAdapter: { [type: string]: HttpRequestFetch } = {
   appium: fetchWithNeedle,
 };
 
+export const getResponseClass = (scenario: iScenario): ClassDef =>
+  typeToClassMap[scenario.responseType] || ResourceResponse;
+
 export function createResponse(scenario: iScenario): iResponse {
-  const className: any =
-    typeToClassMap[scenario.responseType] || ResourceResponse;
+  const className = getResponseClass(scenario);
   return new className(scenario);
 }
 

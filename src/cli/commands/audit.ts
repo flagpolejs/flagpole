@@ -1,6 +1,6 @@
 import { Command } from "../command";
 import { Cli } from "../cli";
-import { FlagpoleExecution } from "../../flagpoleexecution";
+import { FlagpoleExecution } from "../../flagpole-execution";
 import { findJsFilesInTestFolder } from "../cli-helper";
 
 export default class Audit extends Command {

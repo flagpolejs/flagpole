@@ -1,4 +1,5 @@
 import flagpole from "../../dist/index";
+import { BrowserElement } from "../../dist/puppeteer/browserelement";
 const masterManifestUrl = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
 
 flagpole("HLS Testing Demo", async (suite) => {

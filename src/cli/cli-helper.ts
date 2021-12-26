@@ -1,5 +1,5 @@
 import prompts = require("prompts");
-import { FlagpoleExecution } from "../flagpoleexecution";
+import { FlagpoleExecution } from "../flagpole-execution";
 import * as fs from "fs-extra";
 import { sep } from "path";
 import Ansi from "cli-ansi";

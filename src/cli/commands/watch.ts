@@ -1,5 +1,5 @@
 import { Command } from "../command";
-import { FlagpoleExecution } from "../../flagpoleexecution";
+import { FlagpoleExecution } from "../../flagpole-execution";
 import * as fs from "fs-extra";
 import * as path from "path";
 import crypto = require("crypto");

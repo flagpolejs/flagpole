@@ -1,21 +1,21 @@
 import { Assertion } from "./assertion";
-import { AssertionContext } from "./assertioncontext";
-import { AssertionResult } from "./logging/assertionresult";
-import { BrowserControl } from "./puppeteer/browsercontrol";
-import { BrowserResponse } from "./puppeteer/browserresponse";
-import { DOMElement } from "./html/domelement";
-import { ExtJSResponse } from "./puppeteer/extjsresponse";
-import { HtmlResponse } from "./html/htmlresponse";
-import { HttpResponse } from "./httpresponse";
-import { ImageResponse } from "./imageresponse";
-import { JsonResponse } from "./json/jsonresponse";
-import { ResourceResponse } from "./resourceresponse";
+import { AssertionContext } from "./assertion-context";
+import { AssertionResult } from "./logging/assertion-result";
+import { BrowserControl } from "./puppeteer/browser-control";
+import { BrowserResponse } from "./puppeteer/browser-response";
+import { DOMElement } from "./html/dom-element";
+import { ExtJSResponse } from "./puppeteer/extjs-response";
+import { HtmlResponse } from "./html/html-response";
+import { HttpResponse } from "./http-response";
+import { ImageResponse } from "./visual/image-response";
+import { JsonResponse } from "./json/json-response";
+import { ResourceResponse } from "./resource-response";
 import { ProtoResponse } from "./response";
 import { Scenario } from "./scenario";
 import { Suite } from "./suite";
 import { Value } from "./value";
-import { HLSResponse } from "./media/hlsresponse";
-import { HeadersResponse } from "./headersresponse";
+import { HLSResponse } from "./media/hls-response";
+import { HeadersResponse } from "./headers-response";
 import { Flagpole } from "./flagpole";
 import {
   iResponse,
@@ -25,10 +25,10 @@ import {
   BrowserOptions,
   HttpAuth,
 } from "./interfaces";
-import { HttpRequest } from "./httprequest";
-import { FlagpoleExecution } from "./flagpoleexecution";
+import { HttpRequest } from "./http-request";
+import { FlagpoleExecution } from "./flagpole-execution";
 import { ScenarioType } from "./scenario-types";
-import { AppiumResponse } from "./appium/appiumresponse";
+import { AppiumResponse } from "./appium/appium-response";
 
 // Aliases
 const fp = Flagpole;

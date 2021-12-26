@@ -1,4 +1,4 @@
-import { HttpResponse } from "../httpresponse";
+import { HttpResponse } from "../http-response";
 import { ffprobe, FfprobeOptions } from "media-probe";
 import { HttpRequestFetch, iHttpRequest } from "../interfaces";
 

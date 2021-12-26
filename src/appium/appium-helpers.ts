@@ -1,4 +1,4 @@
-import { HttpRequest } from "../httprequest";
+import { HttpRequest } from "../http-request";
 import { Scenario } from "../scenario";
 import {
   HttpRequestOptions,
@@ -9,7 +9,7 @@ import {
   DeviceProperties,
 } from "../interfaces";
 import { applyOffsetAndLimit, delay, wrapAsValue } from "../helpers";
-import { AppiumResponse } from "./appiumresponse";
+import { AppiumResponse } from "./appium-response";
 import { JsonDoc } from "../json/jpath";
 
 const DEFAULT_APPIUM_PORT = 4723;

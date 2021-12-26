@@ -1,5 +1,5 @@
 import commander = require("commander");
-import { FlagpoleExecution } from "../flagpoleexecution";
+import { FlagpoleExecution } from "../flagpole-execution";
 
 export interface iCliCommandOption {
   flags: string;

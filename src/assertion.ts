@@ -1,5 +1,5 @@
 import { Value } from "./value";
-import { getSchema, writeSchema } from "./assertionschema";
+import { getSchema, writeSchema } from "./assertion-schema";
 import {
   iAssertionContext,
   iAssertion,
@@ -29,8 +29,8 @@ import {
   validateSchema,
   asyncCount,
 } from "./util";
-import { HttpResponse } from "./httpresponse";
-import { ImageCompare } from "./imagecompare";
+import { HttpResponse } from "./http-response";
+import { ImageCompare } from "./visual/image-compare";
 import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { AssertionIs } from "./assertion-is";
 import { Schema } from "ajv";

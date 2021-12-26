@@ -5,9 +5,9 @@ import {
   promptSelect,
   promptConfirm,
 } from "../cli-helper";
-import { FlagpoleExecution } from "../../flagpoleexecution";
+import { FlagpoleExecution } from "../../flagpole-execution";
 import prompts = require("prompts");
-import { SuiteConfig } from "../../flagpoleconfig";
+import { SuiteConfig } from "../../flagpole-config";
 import * as fs from "fs-extra";
 
 export default class Rm extends Command {
