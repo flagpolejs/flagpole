@@ -625,7 +625,7 @@ export class Value implements iValue {
   public async screenshot(): Promise<Buffer> {
     throw new Error(
       `This value type (${this.toType()}) or scenario type (${
-        this._context.scenario.responseType
+        this._context.scenario.type
       }) does not support screenshots.`
     );
   }

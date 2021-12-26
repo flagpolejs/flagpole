@@ -195,16 +195,11 @@ export abstract class DOMElement extends Value {
     b?: Function
   ): Promise<void | iScenario> {
     const overloaded = getMessageAndCallbackFromOverloading(a, b, this._path);
-    const scenario = this._createSubScenario(overloaded);
+    const scenario = await this._createSubScenario(overloaded);
     this._completedAction("LOAD");
     const link: Link = await this.getLink();
     // If this is a lmabda scenario, define the response type and options
     if (overloaded.scenario === undefined) {
-      const scenarioType: ScenarioType = await this._getLambdaScenarioType();
-      scenario.setResponseType(
-        scenarioType,
-        this._getLambdaScenarioOpts(scenarioType)
-      );
       scenario.next(overloaded.callback);
     }
     // If no message was provided, set a default one
@@ -279,7 +274,7 @@ export abstract class DOMElement extends Value {
   protected async _getLambdaScenarioType(): Promise<ScenarioType> {
     if ((await this._isFormTag()) || (await this._isClickable())) {
       // If we are loading an html page, stay in our current mode
-      return this._context.scenario.responseType;
+      return this._context.scenario.type;
     } else if (await this._isImageTag()) {
       return "image";
     } else {
@@ -298,17 +293,13 @@ export abstract class DOMElement extends Value {
       : {};
   }
 
-  protected _createSubScenario(
-    overloaded: iMessageAndCallback,
-    defaultResponseType: ScenarioType = "resource",
-    defaultOpts: any = {}
-  ): iScenario {
+  protected async _createSubScenario(
+    overloaded: iMessageAndCallback
+  ): Promise<iScenario> {
+    const scenarioType = await this._getLambdaScenarioType();
+    const opts = this._getLambdaScenarioOpts(scenarioType);
     return overloaded.scenario === undefined
-      ? this._context.suite.scenario(
-          overloaded.message,
-          defaultResponseType,
-          defaultOpts
-        )
+      ? this._context.suite.scenario(overloaded.message, scenarioType, opts)
       : overloaded.scenario;
   }
 

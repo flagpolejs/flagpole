@@ -56,7 +56,7 @@ const typeToFetchAdapter: { [type: string]: HttpRequestFetch } = {
 };
 
 export const getResponseClass = (scenario: iScenario): ClassDef =>
-  typeToClassMap[scenario.responseType] || ResourceResponse;
+  typeToClassMap[scenario.type] || ResourceResponse;
 
 export function createResponse(scenario: iScenario): iResponse {
   const className = getResponseClass(scenario);
@@ -64,5 +64,5 @@ export function createResponse(scenario: iScenario): iResponse {
 }
 
 export const getRequestAdapter = (scenario: iScenario): HttpRequestFetch => {
-  return typeToFetchAdapter[scenario.responseType];
+  return typeToFetchAdapter[scenario.type];
 };

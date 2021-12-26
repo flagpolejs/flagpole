@@ -24,7 +24,6 @@ import {
   HttpMethodVerb,
   CONTENT_TYPE_SOAP,
   CONTENT_TYPE_JSON,
-  DeviceProperties,
 } from "./interfaces";
 import * as puppeteer from "puppeteer-core";
 import {
@@ -62,7 +61,6 @@ import {
 } from "./decorators/internal";
 import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
-import { AppiumResponse } from "./appium/appium-response";
 import { _ } from "ajv";
 
 enum ScenarioRequestType {
@@ -76,23 +74,6 @@ enum ScenarioRequestType {
  * A scenario contains tests that run against one request
  */
 export class Scenario implements iScenario {
-  public readonly suite: iSuite;
-
-  public get responseType(): ScenarioType {
-    return this._responseType;
-  }
-
-  public get title(): string {
-    return this._title;
-  }
-
-  public set title(newTitle: string) {
-    if (this.hasExecuted) {
-      throw "Can not change the scenario's title after execution has started.";
-    }
-    this._title = newTitle;
-  }
-
   /**
    * Length of time in milliseconds from initialization to completion
    */
@@ -302,7 +283,6 @@ export class Scenario implements iScenario {
     });
   }
 
-  protected _title: string;
   protected _log: LogCollection = new LogCollection();
   protected _subscribers: ScenarioStatusCallback[] = [];
   protected _nextCallbacks: iNextCallback[] = [];
@@ -319,7 +299,6 @@ export class Scenario implements iScenario {
   protected _timeRequestLoaded: number | null = null;
   protected _timeScenarioFinished: number | null = null;
   protected _requestType: ScenarioRequestType = ScenarioRequestType.httpRequest;
-  protected _responseType: ScenarioType = "html";
   protected _redirectChain: string[] = [];
   protected _finalUrl: string | null = null;
   protected _waitToExecute: boolean = false;
@@ -354,19 +333,14 @@ export class Scenario implements iScenario {
   protected _webhookPromise: Promise<WebhookServer>;
   protected _webhookResolver: Function = () => {};
 
-  public static create(
-    suite: iSuite,
-    title: string,
-    type: ScenarioType,
-    opts: any
-  ): iScenario {
-    return new Scenario(suite, title).setResponseType(type, opts);
-  }
-
-  protected constructor(suite: iSuite, title: string) {
-    this.suite = suite;
+  public constructor(
+    public readonly suite: iSuite,
+    public readonly title: string,
+    opts: any,
+    public readonly type: ScenarioType
+  ) {
+    this.setOpts(opts);
     this._request = new HttpRequest(this._getDefaultRequestOptions());
-    this._title = title;
     this._response = new ResourceResponse(this);
     this._requestPromise = new Promise((resolve) => {
       this._requestResolve = resolve;
@@ -381,12 +355,11 @@ export class Scenario implements iScenario {
 
   protected _getDefaultRequestOptions(): HttpRequestOptions {
     const headers: KeyValue = {};
-    if (this._defaultContentTypeByType[this._responseType]) {
-      headers["Content-Type"] =
-        this._defaultContentTypeByType[this._responseType];
+    if (this._defaultContentTypeByType[this.type]) {
+      headers["Content-Type"] = this._defaultContentTypeByType[this.type];
     }
     return {
-      method: this._defaultMethodByType[this._responseType] || "get",
+      method: this._defaultMethodByType[this.type] || "get",
       headers,
     };
   }
@@ -973,10 +946,9 @@ export class Scenario implements iScenario {
    * @param opts
    */
   @beforeScenarioExecuted
-  public setResponseType(type: ScenarioType, opts: any = {}): iScenario {
+  private setOpts(opts: any = {}): iScenario {
     // Merge passed in opts with default opts
-    this._responseType = type;
-    if (["browser", "extjs"].includes(type)) {
+    if (["browser", "extjs"].includes(this.type)) {
       // Overrides from command line
       const overrides: any = {};
       if (FlagpoleExecution.global.headless !== undefined) {
@@ -990,7 +962,7 @@ export class Scenario implements iScenario {
           ...overrides, // What was in the command line
         },
       });
-    } else if (type == "appium") {
+    } else if (this.type == "appium") {
       this.open("POST /wd/hub/session", {
         data: {
           capabilities: {
@@ -1007,7 +979,7 @@ export class Scenario implements iScenario {
           ...this._getDefaultRequestOptions(),
           ...opts,
         })
-        .setType(this._responseType);
+        .setType(this.type);
     }
     this._response = createResponse(this);
     return this;
@@ -1303,12 +1275,12 @@ export class Scenario implements iScenario {
       throw "Can not execute request with null URL.";
     }
     this.url = this.buildUrl().href;
-    if (this._responseType == "headers") {
+    if (this.type == "headers") {
       this.setMethod("head");
     }
     this._markRequestAsStarted();
     this._finalUrl = this._request.uri;
-    if (["extjs", "browser"].includes(this._responseType)) {
+    if (["extjs", "browser"].includes(this.type)) {
       this._executeBrowserRequest();
     } else {
       this._executeDefaultRequest();

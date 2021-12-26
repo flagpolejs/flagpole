@@ -819,7 +819,7 @@ export interface iSuite {
 export interface iScenario {
   opts: any;
   suite: iSuite;
-  responseType: ScenarioType;
+  type: ScenarioType;
   title: string;
   totalDuration: number | null;
   executionDuration: number | null;
@@ -920,7 +920,6 @@ export interface iScenario {
   webhook(port: number, opts: ServerOptions): iScenario;
   webhook(opts: ServerOptions): iScenario;
   server(): Promise<WebhookServer>;
-  setResponseType(type: ScenarioType, opts?: KeyValue): iScenario;
   promise(): Promise<iScenario>;
   waitForFinished(): Promise<iScenario>;
   waitForResponse(): Promise<iScenario>;

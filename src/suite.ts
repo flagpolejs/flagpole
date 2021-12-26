@@ -253,7 +253,7 @@ export class Suite implements iSuite {
     type: ScenarioType = "html",
     opts?: any
   ): iScenario {
-    const scenario: iScenario = Scenario.create(this, title, type, opts);
+    const scenario: iScenario = new Scenario(this, title, type, opts);
     // Some local tests fail with SSL verify on, so may have been disabled on this suite
     scenario.verifyCert(this._verifySslCert);
     // Should we hold off on executing?
@@ -272,7 +272,7 @@ export class Suite implements iSuite {
   public import(originalScenario: iScenario) {
     const scenario: iScenario = this.scenario(
       originalScenario.title,
-      originalScenario.responseType,
+      originalScenario.type,
       originalScenario.opts
     ).open(originalScenario.buildUrl().href);
     originalScenario.nextCallbacks.forEach((next) => {
