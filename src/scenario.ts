@@ -336,12 +336,9 @@ export class Scenario implements iScenario {
   public constructor(
     public readonly suite: iSuite,
     public readonly title: string,
-    opts: any,
+    opts: { [key: string]: any },
     public readonly type: ScenarioType
   ) {
-    this.setOpts(opts);
-    this._request = new HttpRequest(this._getDefaultRequestOptions());
-    this._response = new ResourceResponse(this);
     this._requestPromise = new Promise((resolve) => {
       this._requestResolve = resolve;
     });
@@ -351,6 +348,8 @@ export class Scenario implements iScenario {
     this._webhookPromise = new Promise((resolve) => {
       this._webhookResolver = resolve;
     });
+    this._request = new HttpRequest(this._getRequestOptions(opts), this.type);
+    this._response = createResponse(this);
   }
 
   protected _getDefaultRequestOptions(): HttpRequestOptions {
@@ -361,6 +360,37 @@ export class Scenario implements iScenario {
     return {
       method: this._defaultMethodByType[this.type] || "get",
       headers,
+    };
+  }
+
+  private _getRequestOptions(opts: { [key: string]: any } = {}): {
+    [key: string]: any;
+  } {
+    if (["browser", "extjs"].includes(this.type)) {
+      opts.browserOptions = {
+        ...this._defaultBrowserOptions,
+        ...opts.browserOptions,
+      };
+      if (FlagpoleExecution.global.headless !== undefined) {
+        opts.browserOptions.headless = FlagpoleExecution.global.headless;
+      }
+      return opts;
+    }
+    if (this.type == "appium") {
+      this.open("POST /wd/hub/session", {
+        data: {
+          capabilities: {
+            alwaysMatch: {
+              ...opts.capabilities,
+            },
+          },
+          devProperties: { ...opts.devProperties },
+        },
+      });
+    }
+    return {
+      ...this._getDefaultRequestOptions(),
+      ...opts,
     };
   }
 
@@ -937,52 +967,6 @@ export class Scenario implements iScenario {
    */
   public server(): Promise<WebhookServer> {
     return this._webhookPromise;
-  }
-
-  /**
-   * Set the type of response this scenario is and the options
-   *
-   * @param type
-   * @param opts
-   */
-  @beforeScenarioExecuted
-  private setOpts(opts: any = {}): iScenario {
-    // Merge passed in opts with default opts
-    if (["browser", "extjs"].includes(this.type)) {
-      // Overrides from command line
-      const overrides: any = {};
-      if (FlagpoleExecution.global.headless !== undefined) {
-        overrides.headless = FlagpoleExecution.global.headless;
-      }
-      // Set browser options
-      this._request.setOptions({
-        browserOptions: {
-          ...this._defaultBrowserOptions, // Flagpole defaults
-          ...opts, // What was in the code
-          ...overrides, // What was in the command line
-        },
-      });
-    } else if (this.type == "appium") {
-      this.open("POST /wd/hub/session", {
-        data: {
-          capabilities: {
-            alwaysMatch: {
-              ...opts.capabilities,
-            },
-          },
-          devProperties: { ...opts.devProperties },
-        },
-      });
-    } else {
-      this._request
-        .setOptions({
-          ...this._getDefaultRequestOptions(),
-          ...opts,
-        })
-        .setType(this.type);
-    }
-    this._response = createResponse(this);
-    return this;
   }
 
   public waitForFinished(): Promise<iScenario> {

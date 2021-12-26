@@ -13,7 +13,6 @@ import {
   CONTENT_TYPE_FORM_MULTIPART,
   CONTENT_TYPE_FORM,
   HttpRequestFetch,
-  CONTENT_TYPE_SOAP,
 } from "./interfaces";
 import { HttpResponse } from "./http-response";
 import tunnel = require("tunnel");
@@ -34,11 +33,6 @@ export const HttpMethodVerbAllowedValues = [
 ];
 
 export class HttpRequest implements iHttpRequest {
-  static createEmpty() {
-    const r = new HttpRequest({});
-    return r;
-  }
-
   private _uri: string | null = null;
   private _method: HttpMethodVerb = "get";
   private _headers: KeyValue = {};
@@ -52,7 +46,7 @@ export class HttpRequest implements iHttpRequest {
   private _data: HttpData;
   private _fetched: boolean = false;
   private _browser: BrowserOptions = {};
-  private _type: ScenarioType = "resource";
+  private _type: ScenarioType;
   private _outputFile?: string;
 
   public get uri(): string | null {
@@ -235,12 +229,9 @@ export class HttpRequest implements iHttpRequest {
     };
   }
 
-  constructor(opts: HttpRequestOptions) {
-    this.setOptions(opts);
-  }
-
-  public setType(type: ScenarioType) {
+  constructor(opts: HttpRequestOptions, type: ScenarioType = "resource") {
     this._type = type;
+    this.setOptions(opts);
   }
 
   /**

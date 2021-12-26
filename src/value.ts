@@ -773,13 +773,16 @@ export class Value implements iValue {
       }
       return { encoding: "utf8" };
     })();
-    const request = new HttpRequest({
-      ...{
-        uri: link.getUri(),
-        method: "get",
+    const request = new HttpRequest(
+      {
+        ...{
+          uri: link.getUri(),
+          method: "get",
+        },
+        ...opts,
       },
-      ...opts,
-    });
+      "resource"
+    );
     const resp = await request.fetch();
     const file: string | Buffer = resp.headers["content-type"].startsWith(
       "image"

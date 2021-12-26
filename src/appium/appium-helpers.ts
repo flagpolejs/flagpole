@@ -36,13 +36,16 @@ export const sendAppiumRequest = async (
   opts: HttpRequestOptions
 ) => {
   const urlPrefix = getUrlPrefix(scenario);
-  const req = new HttpRequest({
-    ...opts,
-    ...{
-      headers: { "Content-Type": "application/json" },
-      uri: `${urlPrefix}${path}`,
+  const req = new HttpRequest(
+    {
+      ...opts,
+      ...{
+        headers: { "Content-Type": "application/json" },
+        uri: `${urlPrefix}${path}`,
+      },
     },
-  });
+    "appium"
+  );
   const res = await req.fetch();
   const doc = new JsonDoc(JSON.parse(res.body));
   return doc;

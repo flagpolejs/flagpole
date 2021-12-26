@@ -253,7 +253,7 @@ export class Suite implements iSuite {
     type: ScenarioType = "html",
     opts?: any
   ): iScenario {
-    const scenario: iScenario = new Scenario(this, title, type, opts);
+    const scenario: iScenario = new Scenario(this, title, opts, type);
     // Some local tests fail with SSL verify on, so may have been disabled on this suite
     scenario.verifyCert(this._verifySslCert);
     // Should we hold off on executing?
