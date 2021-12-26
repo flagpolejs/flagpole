@@ -1,36 +1,34 @@
-import flagpole from "../../dist/index";
-import { BrowserElement } from "../../dist/puppeteer/browserelement";
+import flagpole, { HlsScenario } from "../../dist/index";
 const masterManifestUrl = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
 
 flagpole("HLS Testing Demo", async (suite) => {
-  suite
-    .scenario("Test Big Buck Bunny", "hls")
-    .open(masterManifestUrl)
-    .next(async (context) => {
-      await context.find("type").equals("master");
-      const variants = await context.exists("variants");
-      context.assert(variants).length.equals(5);
-      const resolutionLadder = [
-        "1280x720",
-        "320x184",
-        "512x288",
-        "848x480",
-        "1920x1080",
-      ];
-      resolutionLadder.forEach((resolution, i) => {
-        variants
-          .nth(i)
-          .find("streamInf.resolution")
-          .rename(`Resolution of Variant ${i + 1}`)
-          .equals(resolution);
-      });
-      const variantUris = await context.find("variants[*].uri");
-      variantUris.each((uri, i) => {
-        variantTemplate(`Validate Variant ${i + 1}`, {
-          url: new URL(uri, masterManifestUrl).toString(),
-        });
+  const scenario = suite.scenario("Test Big Buck Bunny", HlsScenario);
+
+  scenario.open(masterManifestUrl).next(async (context) => {
+    await context.find("type").equals("master");
+    const variants = await context.exists("variants");
+    context.assert(variants).length.equals(5);
+    const resolutionLadder = [
+      "1280x720",
+      "320x184",
+      "512x288",
+      "848x480",
+      "1920x1080",
+    ];
+    resolutionLadder.forEach((resolution, i) => {
+      variants
+        .nth(i)
+        .find("streamInf.resolution")
+        .rename(`Resolution of Variant ${i + 1}`)
+        .equals(resolution);
+    });
+    const variantUris = await context.find("variants[*].uri");
+    variantUris.each((uri, i) => {
+      variantTemplate(`Validate Variant ${i + 1}`, {
+        url: new URL(uri, masterManifestUrl).toString(),
       });
     });
+  });
 
   const variantTemplate = suite.template({
     type: "hls",

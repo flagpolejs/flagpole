@@ -14,6 +14,7 @@ import { ProtoResponse } from "./response";
 import { Suite } from "./suite";
 import { Value } from "./value";
 import { HLSResponse } from "./media/hls-response";
+import { HlsScenario } from "./media/hls-scenario";
 import { HeadersResponse } from "./headers/headers-response";
 import { Flagpole } from "./flagpole";
 import {
@@ -66,4 +67,5 @@ export {
   iSuite,
   fp,
   execution,
+  HlsScenario,
 };

@@ -783,13 +783,16 @@ export interface iSuite {
   verifySslCert(verify: boolean): iSuite;
   wait(bool?: boolean): iSuite;
   print(exitAfterPrint?: boolean): void;
-  scenario(title: string, type?: ScenarioType, opts?: KeyValue): iScenario;
-  json(title: string): iScenario;
-  image(title: string): iScenario;
-  html(title: string): iScenario;
-  resource(title: string): iScenario;
-  browser(title: string, opts?: BrowserOptions): iScenario;
-  extjs(title: string, opts?: BrowserOptions): iScenario;
+  scenario<T extends iScenario>(
+    title: string,
+    type: ClassConstructor<T>,
+    opts?: KeyValue
+  ): T;
+  scenario<T extends iScenario>(
+    title: string,
+    type: ScenarioType,
+    opts?: KeyValue
+  ): T;
   base(url: string | KeyValue): iSuite;
   execute(): iSuite;
   beforeAll(callback: SuiteCallback): iSuite;

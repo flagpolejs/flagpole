@@ -10,6 +10,7 @@ import {
   ScenarioMapper,
   BrowserOptions,
   ScenarioInitOptions,
+  ClassConstructor,
 } from "./interfaces";
 import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpole-execution";
@@ -222,48 +223,19 @@ export class Suite implements iSuite {
     });
   }
 
-  /**
-   * Create a new scenario for this suite
-   *
-   * @param {string} title
-   * @param {[string]} tags
-   * @returns {Scenario}
-   * @constructor
-   */
-  public scenario(
+  public scenario<T extends iScenario>(
     title: string,
-    type: "browser" | "extjs",
-    opts?: BrowserOptions
-  ): iScenario;
-  public scenario(
-    title: string,
-    type: "ffprobe",
-    opts?: FfprobeOptions
-  ): iScenario;
-  public scenario(
-    title: string,
-    type: "mediastreamvalidator",
-    opts?: MediaStreamValidatorOpts
-  ): iScenario;
-  public scenario(title: string, type: "appium", opts: KeyValue): iScenario;
-  public scenario(
-    title: string,
-    type?: ScenarioType,
-    opts?: KeyValue
-  ): iScenario;
-  public scenario(
-    title: string,
-    type: ScenarioType,
+    type: ScenarioType | ClassConstructor<T>,
     opts: KeyValue = {}
-  ): iScenario {
-    const scenario: iScenario = createScenario(this, title, type, opts);
+  ): T {
+    const scenario: iScenario = createScenario<T>(this, title, type, opts);
     // Some local tests fail with SSL verify on, so may have been disabled on this suite
     scenario.verifyCert(this._verifySslCert);
     // Should we hold off on executing?
     this._waitToExecute && scenario.wait();
     // Add this to our collection of scenarios
     this._taskManager.registerScenario(scenario);
-    return scenario;
+    return scenario as T;
   }
 
   /**
@@ -282,60 +254,6 @@ export class Suite implements iSuite {
       scenario.next(next.message, next.callback);
     });
     return scenario;
-  }
-
-  /**
-   * Create a new JSON/REST API Scenario
-   *
-   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
-   */
-  public json(title: string): iScenario {
-    return this.scenario(title, "json");
-  }
-
-  /**
-   * Create a new Image Scenario
-   *
-   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
-   */
-  public image(title: string): iScenario {
-    return this.scenario(title, "image");
-  }
-
-  /**
-   * Create a new HTML/DOM Scenario
-   *
-   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
-   */
-  public html(title: string): iScenario {
-    return this.scenario(title, "html");
-  }
-
-  /**
-   * Create a generic resource scenario
-   *
-   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
-   */
-  public resource(title: string): iScenario {
-    return this.scenario(title, "resource");
-  }
-
-  /**
-   * Create a Browser/Puppeteer Scenario
-   *
-   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
-   */
-  public browser(title: string, opts: BrowserOptions = {}): iScenario {
-    return this.scenario(title, "browser", opts);
-  }
-
-  /**
-   * Create an ExtJS Scenario
-   *
-   * @deprecated Deprecated in 2.4, you should use the `scenario` method instead
-   */
-  public extjs(title: string, opts: BrowserOptions = {}): iScenario {
-    return this.scenario(title, "extjs", opts);
   }
 
   /**

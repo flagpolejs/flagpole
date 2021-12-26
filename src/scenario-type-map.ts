@@ -36,9 +36,14 @@ export const ScenarioTypeMap: {
   appium: AppiumScenario,
 };
 
-export const createScenario = (
+export const createScenario = <T extends iScenario>(
   suite: iSuite,
   title: string,
-  type: ScenarioType,
+  type: ScenarioType | ClassConstructor<T>,
   opts: KeyValue
-): iScenario => new ScenarioTypeMap[type](suite, title, type, opts);
+): T => {
+  if (typeof type == "string") {
+    return new ScenarioTypeMap[type](suite, title, type, opts) as T;
+  }
+  return new type(suite, title, type, opts);
+};
