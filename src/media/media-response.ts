@@ -37,7 +37,7 @@ export abstract class MediaResponse extends ProtoResponse implements iResponse {
   protected _assertMimeType() {
     this.context
       .assert(
-        `MIME Type matches expected value for ${this.responseType}`,
+        `MIME Type matches expected value for this type of scenario`,
         this.header("Content-Type")
       )
       .matches(this._mimePattern);

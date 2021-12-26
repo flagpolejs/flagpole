@@ -17,11 +17,6 @@ import { HttpRequest } from "./http-request";
 import { AssertionContext } from "./assertion-context";
 import { wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
-import { ScenarioType } from "./scenario-types";
-
-export function isPuppeteer(type: ScenarioType): boolean {
-  return ["browser", "extjs"].indexOf(type) >= 0;
-}
 
 export abstract class ProtoResponse implements iResponse {
   public readonly scenario: iScenario;
@@ -29,7 +24,6 @@ export abstract class ProtoResponse implements iResponse {
   protected _currentUrl: string | null = null;
   protected _httpResponse: HttpResponse = HttpResponse.createEmpty();
 
-  abstract get responseType(): ScenarioType;
   abstract get responseTypeName(): string;
   abstract find(selector: string, opts?: FindOptions): ValuePromise;
   abstract find(

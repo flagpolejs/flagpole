@@ -32,6 +32,7 @@ import {
 export type ClassConstructor<T> = {
   new (...args: any[]): T;
 };
+export type ScenarioConstructor = ClassConstructor<iScenario>;
 
 export type CompareCallback = (a: any, b: any) => number;
 
@@ -265,12 +266,8 @@ export interface iValue {
   // DOM Elements only
   click(opts?: PointerClick): ValuePromise;
   submit(): ValuePromise;
-  open(message: string): iScenario;
-  open(message: string, type: ScenarioType): iScenario;
-  open(message: string, type: ScenarioType, callback: iNextCallback): iScenario;
-  open(message: string, callback: iNextCallback): iScenario;
-  open(callback: iNextCallback): iScenario;
   open(scenario: iScenario): iScenario;
+  open(title: string, type?: ScenarioConstructor): iScenario;
   fillForm(attribute: string, formData: KeyValue): ValuePromise;
   fillForm(formData: KeyValue): ValuePromise;
   getInnerText(): ValuePromise;
@@ -369,7 +366,6 @@ export interface iValue {
  * Responses may be HTML or JSON, so this interface let's us know how to handle either
  */
 export interface iResponse {
-  responseType: ScenarioType;
   responseTypeName: string;
   statusCode: iValue;
   statusMessage: iValue;
@@ -816,7 +812,7 @@ export interface iSuite {
 export interface iScenario {
   suite: iSuite;
   title: string;
-  type: ClassConstructor<iScenario>;
+  type: ScenarioConstructor;
   opts: KeyValue;
   totalDuration: number | null;
   executionDuration: number | null;

@@ -9,10 +9,8 @@ import {
   ClassConstructor,
 } from "../interfaces";
 import { Link } from "../link";
-import { isPuppeteer } from "../response";
 import { getMessageAndCallbackFromOverloading } from "../util";
 import { ValuePromise } from "../value-promise";
-import { ScenarioType } from "../scenario-types";
 import { ImageScenario } from "../visual/image-scenario";
 import { ResourceScenario } from "../resource/resource-scenario";
 

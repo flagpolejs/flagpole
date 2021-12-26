@@ -10,6 +10,7 @@ import {
   GestureType,
   GestureOpts,
   PointerClick,
+  ScenarioConstructor,
 } from "./interfaces";
 import {
   toType,
@@ -377,39 +378,17 @@ export class Value implements iValue {
     return ValuePromise.wrap(this);
   }
 
-  public open(message: string): iScenario;
-  public open(message: string, type: ScenarioType): iScenario;
-  public open(
-    message: string,
-    type: ScenarioType,
-    callback: iNextCallback
-  ): iScenario;
-  public open(message: string, callback: iNextCallback): iScenario;
-  public open(callback: iNextCallback): iScenario;
   public open(scenario: iScenario): iScenario;
+  public open(title: string, type?: ScenarioConstructor): iScenario;
   public open(
-    a?: string | iScenario | iNextCallback,
-    b?: ScenarioType | iNextCallback,
+    a: string | iScenario,
+    b?: ScenarioConstructor,
     c?: iNextCallback
   ): iScenario {
-    const message = typeof a == "string" ? a : `Open ${this.name}`;
-    const responseType =
-      typeof b == "string" ? b : this.context.response.responseType;
-    const callback: iNextCallback = (() => {
-      return typeof c == "function"
-        ? c
-        : typeof b == "function"
-        ? b
-        : typeof a == "function"
-        ? a
-        : () => {};
-    })();
-    const scenario: iScenario = (() => {
-      return toType(a) == "scenario"
-        ? (a as iScenario)
-        : this.context.suite.scenario(message, responseType);
-    })();
-    scenario.next(callback);
+    const scenario =
+      typeof a == "string"
+        ? this.context.suite.scenario(a, b || this.context.scenario.type)
+        : a;
     runAsync(async () => {
       const link = await this.getLink();
       if (link.isNavigation()) {

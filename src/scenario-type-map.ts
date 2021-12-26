@@ -1,4 +1,10 @@
-import { ClassConstructor, iScenario, iSuite, KeyValue } from "./interfaces";
+import {
+  ClassConstructor,
+  iScenario,
+  iSuite,
+  KeyValue,
+  ScenarioConstructor,
+} from "./interfaces";
 import { AppiumScenario } from "./appium/appium-scenario";
 import { JsonScenario } from "./json/json-scenario";
 import { BrowserScenario } from "./puppeteer/browser-scenario";
@@ -17,7 +23,7 @@ import { MediaStreamValidatorScenario } from "./media/media-stream-validator-sce
 import { ScenarioType } from "./scenario-types";
 
 export const ScenarioTypeMap: {
-  [type in ScenarioType]: ClassConstructor<iScenario>;
+  [type in ScenarioType]: ScenarioConstructor;
 } = {
   html: HtmlScenario,
   browser: BrowserScenario,
