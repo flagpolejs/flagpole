@@ -19,7 +19,6 @@ import tunnel = require("tunnel");
 import * as http from "http";
 import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
-import { ScenarioType } from "./scenario-types";
 import { fetchWithNeedle } from "./adapters/needle";
 
 export const HttpMethodVerbAllowedValues = [
@@ -46,7 +45,6 @@ export class HttpRequest implements iHttpRequest {
   private _data: HttpData;
   private _fetched: boolean = false;
   private _browser: BrowserOptions = {};
-  private _type: ScenarioType;
   private _outputFile?: string;
 
   public get uri(): string | null {
@@ -66,19 +64,6 @@ export class HttpRequest implements iHttpRequest {
   public set method(value: HttpMethodVerb) {
     if (!this.isImmutable) {
       this._method = value;
-    }
-  }
-
-  public get type(): ScenarioType {
-    return this._type;
-  }
-
-  public set type(value: ScenarioType) {
-    if (!this.isImmutable) {
-      this._type = value;
-      if (value === "json") {
-        this.headers["Content-Type"] = CONTENT_TYPE_JSON;
-      }
     }
   }
 
@@ -225,12 +210,10 @@ export class HttpRequest implements iHttpRequest {
       authType: this._authType,
       outputFile: this._outputFile,
       data: this._data,
-      type: this._type,
     };
   }
 
-  constructor(opts: HttpRequestOptions, type: ScenarioType = "resource") {
-    this._type = type;
+  constructor(opts: HttpRequestOptions) {
     this.setOptions(opts);
   }
 
@@ -241,7 +224,6 @@ export class HttpRequest implements iHttpRequest {
    */
   public setOptions(opts: HttpRequestOptions): HttpRequest {
     if (!this.isImmutable) {
-      this._type = opts.type || this._type;
       this._uri = opts.uri || this._uri;
       this._method = opts.method || this._method;
       this._headers = opts.headers || this._headers;

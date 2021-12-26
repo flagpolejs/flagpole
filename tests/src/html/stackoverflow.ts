@@ -5,7 +5,7 @@ flagpole("Stack Overflow")
   .finally(function (suite) {
     suite.print();
   })
-  .html("Homepage")
+  .scenario("Homepage", "html")
   .open("/")
   .next("Check basic parameters", async function (context) {
     context.assert(context.response.statusCode).equals(200);

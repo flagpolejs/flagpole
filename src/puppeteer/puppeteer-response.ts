@@ -13,6 +13,7 @@ import { toType } from "../util";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { BrowserScenario } from "./browser-scenario";
+import { ExtJsScenario } from "./extjs-scenario";
 
 const DEFAULT_WAITFOR_TIMEOUT = 30000;
 
@@ -20,9 +21,7 @@ export abstract class PuppeteerResponse
   extends DOMResponse
   implements iResponse
 {
-  public scenario: BrowserScenario;
-
-  constructor(scenario: BrowserScenario) {
+  constructor(public readonly scenario: BrowserScenario | ExtJsScenario) {
     super(scenario);
     this.scenario = scenario;
   }

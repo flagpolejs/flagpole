@@ -18,7 +18,7 @@ const inputValues = {
 };
 
 suite
-  .extjs("My First ExtJS Scenario", browserOpts)
+  .scenario("My First ExtJS Scenario", "extjs", browserOpts)
   .open("/coworkee/")
   .next("Login", async (context) => {
     const textFields = await context.findAll("textfield");

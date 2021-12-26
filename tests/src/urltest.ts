@@ -9,7 +9,7 @@ const suite = Flagpole.Suite("Example test suite for blog post")
   .finally((suite) => suite.print());
 
 suite
-  .html("Homepage Loads")
+  .scenario("Homepage Loads", "html")
   .open("/")
   .next(async (context) => {
     // selectors are obfuscated, cannot guarantee articel in this example
@@ -23,7 +23,9 @@ suite
     articleScenario.open(url.toString());
   });
 
-const articleScenario = suite.html("Test Article").next(async (context) => {
-  // assert that anything exists
-  await context.exists("div");
-});
+const articleScenario = suite
+  .scenario("Test Article", "html")
+  .next(async (context) => {
+    // assert that anything exists
+    await context.exists("div");
+  });

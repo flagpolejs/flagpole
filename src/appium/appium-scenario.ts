@@ -4,13 +4,8 @@ import { ProtoScenario } from "../scenario";
 import { KeyValue } from "../interfaces";
 
 export class AppiumScenario extends ProtoScenario {
-  protected createResponse() {
-    return new AppiumResponse(this);
-  }
-
-  protected getRequestAdapter() {
-    return fetchWithNeedle;
-  }
+  public readonly requestAdapter = fetchWithNeedle;
+  public readonly response = new AppiumResponse(this);
 
   protected _getRequestOptions(opts: KeyValue = {}): KeyValue {
     this.open("POST /wd/hub/session", {

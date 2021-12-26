@@ -4,7 +4,7 @@ const baseDomain = "https://www.debian.org";
 const suite = Flagpole.suite("Basic Smoke Test of Site").base(baseDomain);
 
 suite
-  .html("Cheerio test of Debian Logo")
+  .scenario("Cheerio test of Debian Logo", "html")
   .open("/")
   .next("Logo", async (context) => {
     const logo = await context.exists("img[alt=Debian]");
@@ -16,7 +16,7 @@ suite
   });
 
 suite
-  .browser("Puppeteer test of Debian screenshot", {
+  .scenario("Puppeteer test of Debian screenshot", "browser", {
     headless: false,
   })
   .open("/")

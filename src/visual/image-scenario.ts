@@ -3,11 +3,6 @@ import { ProtoScenario } from "../scenario";
 import { fetchImageWithNeedle } from "../adapters/image";
 
 export class ImageScenario extends ProtoScenario {
-  protected createResponse() {
-    return new ImageResponse(this);
-  }
-
-  protected getRequestAdapter() {
-    return fetchImageWithNeedle;
-  }
+  public readonly requestAdapter = fetchImageWithNeedle;
+  public readonly response = new ImageResponse(this);
 }

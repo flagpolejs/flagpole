@@ -16,7 +16,7 @@ const paths = {
 const address = "2180 W State Rd 434, Longwood, FL 32779";
 
 suite
-  .browser("Start on homepage and find local restaurants", {
+  .scenario("Start on homepage and find local restaurants", "browser", {
     headless: false,
   })
   .open("/")

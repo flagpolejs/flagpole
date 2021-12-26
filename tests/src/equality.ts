@@ -3,7 +3,7 @@ import flagpole from "../../dist/index";
 const suite = flagpole("Equals");
 
 suite
-  .resource("Test string, object, and array equality")
+  .scenario("Test string, object, and array equality", "resource")
   .mock()
   .next((context) => {
     context.assert("OK").equals("OK");

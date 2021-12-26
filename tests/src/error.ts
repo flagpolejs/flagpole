@@ -3,7 +3,7 @@ import { Flagpole } from "../../dist/index.js";
 const suite = Flagpole.Suite("Test NPM").base("https://www.npmjs.com");
 
 suite
-  .html("Load front page of NPM")
+  .scenario("Load front page of NPM", "html")
   .open("/")
   .next(async (context) => {
     const link = await context.find("a#nav-docs-link");

@@ -3,7 +3,7 @@ import flagpole from "../../dist/index";
 const suite = flagpole("Chaining Assertions");
 
 suite
-  .json("With undefined and assertion titles")
+  .scenario("With undefined and assertion titles", "json")
   .open("https://reqres.in/api/users?page=1")
   .next(async (context) => {
     context

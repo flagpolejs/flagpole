@@ -7,19 +7,14 @@ import { iBrowserControlResponse, BrowserControl } from "./browser-control";
 import * as puppeteer from "puppeteer-core";
 import { AssertionFailOptional } from "../logging/assertion-result";
 import { FlagpoleExecution } from "../flagpole-execution";
-import { KeyValue, iResponse, BrowserOptions } from "../interfaces";
+import { KeyValue, BrowserOptions } from "../interfaces";
 import { HttpResponse } from "../http-response";
 import { runAsync } from "../util";
 import { Browser, Page } from "puppeteer-core";
 
 export class BrowserScenario extends ProtoScenario {
-  protected createResponse(): iResponse {
-    return new BrowserResponse(this);
-  }
-
-  protected getRequestAdapter() {
-    return fetchWithNeedle;
-  }
+  public readonly requestAdapter = fetchWithNeedle;
+  public readonly response = new BrowserResponse(this);
 
   protected _defaultBrowserOptions: BrowserOptions = {
     headless: true,
@@ -51,7 +46,7 @@ export class BrowserScenario extends ProtoScenario {
     }
     this.url = this.buildUrl().href;
     this._markRequestAsStarted();
-    this._finalUrl = this._request.uri;
+    this._finalUrl = this.request.uri;
     this._executeBrowserRequest();
   }
 
@@ -79,7 +74,7 @@ export class BrowserScenario extends ProtoScenario {
       }, 1000);
     };
     this.browserControl
-      .open(this._request)
+      .open(this.request)
       .then((next: iBrowserControlResponse) => {
         const puppeteerResponse: puppeteer.Response = next.response;
         if (puppeteerResponse !== null) {
@@ -119,7 +114,7 @@ export class BrowserScenario extends ProtoScenario {
           );
         } else {
           this._markScenarioCompleted(
-            `Failed to load ${this._request.uri}`,
+            `Failed to load ${this.request.uri}`,
             null,
             ScenarioDisposition.aborted
           );
@@ -128,7 +123,7 @@ export class BrowserScenario extends ProtoScenario {
       })
       .catch((err) =>
         this._markScenarioCompleted(
-          `Failed to load ${this._request.uri}`,
+          `Failed to load ${this.request.uri}`,
           err,
           ScenarioDisposition.aborted
         )

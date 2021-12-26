@@ -4,7 +4,7 @@ flagpole("Test Google", (suite) => {
   suite.base("http://www.google.com");
 
   const homepage = suite
-    .html("Homepage")
+    .scenario("Homepage", "html")
     .open("/")
     .next("Test basic HTTP headers", async (context) => {
       context.assert(context.response.statusCode).equals(200);

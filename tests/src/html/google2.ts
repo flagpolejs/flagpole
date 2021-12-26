@@ -5,7 +5,7 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
   suite.base("https://www.google.com").finally((suite) => suite.print());
 
   suite
-    .html("Homepage Loads")
+    .scenario("Homepage Loads", "html")
     .open("/")
     .next("Test the basic headers", (ctx) => {
       ctx.assert("Status is 200", ctx.response.statusCode).equals(200);
@@ -25,7 +25,7 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
     });
 
   const resultsScenatio = suite
-    .html("Results Page Loads")
+    .scenario("Results Page Loads", "html")
     .next("Test the basic headers", (ctx) => {
       ctx.assert("Status is 200", ctx.response.statusCode).equals(200);
     })

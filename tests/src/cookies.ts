@@ -5,7 +5,7 @@ const suite = Flagpole.suite("setCookie method").base(
 );
 
 suite
-  .browser("Homepage Loads")
+  .scenario("Homepage Loads", "browser")
   .before(async (context) => {
     await context.setCookie("foo", "bar");
   })

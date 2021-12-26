@@ -6,12 +6,15 @@ import {
   iMessageAndCallback,
   FindOptions,
   FindAllOptions,
+  ClassConstructor,
 } from "../interfaces";
 import { Link } from "../link";
 import { isPuppeteer } from "../response";
 import { getMessageAndCallbackFromOverloading } from "../util";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { ImageScenario } from "../visual/image-scenario";
+import { ResourceScenario } from "../resource/resource-scenario";
 
 export abstract class DOMElement extends Value {
   public get name(): string {
@@ -271,33 +274,24 @@ export abstract class DOMElement extends Value {
     return (await this._isLinkTag()) || (await this._isButtonTag());
   }
 
-  protected async _getLambdaScenarioType(): Promise<ScenarioType> {
+  protected async _getLambdaScenarioType(): Promise<
+    ClassConstructor<iScenario>
+  > {
     if ((await this._isFormTag()) || (await this._isClickable())) {
       // If we are loading an html page, stay in our current mode
       return this._context.scenario.type;
     } else if (await this._isImageTag()) {
-      return "image";
+      return ImageScenario;
     } else {
-      return "resource";
+      return ResourceScenario;
     }
-  }
-
-  protected _getLambdaScenarioOpts(newScenarioType: ScenarioType): any {
-    const newScenarioIsBrowser: boolean = isPuppeteer(newScenarioType);
-    const curScenarioIsBrowser: boolean = isPuppeteer(
-      this._context.response.responseType
-    );
-    // Carry over the opts, unless we change from non-browser to browser (or vice versa)
-    return newScenarioIsBrowser == curScenarioIsBrowser
-      ? this._context.scenario.request.options
-      : {};
   }
 
   protected async _createSubScenario(
     overloaded: iMessageAndCallback
   ): Promise<iScenario> {
     const scenarioType = await this._getLambdaScenarioType();
-    const opts = this._getLambdaScenarioOpts(scenarioType);
+    const opts = this.context.scenario.request.options;
     return overloaded.scenario === undefined
       ? this._context.suite.scenario(overloaded.message, scenarioType, opts)
       : overloaded.scenario;

@@ -4,13 +4,8 @@ import { ProtoScenario } from "../scenario";
 import { CONTENT_TYPE_JSON, HttpRequestOptions, KeyValue } from "../interfaces";
 
 export class JsonScenario extends ProtoScenario {
-  protected createResponse() {
-    return new JsonResponse(this);
-  }
-
-  protected getRequestAdapter() {
-    return fetchWithNeedle;
-  }
+  public readonly requestAdapter = fetchWithNeedle;
+  public readonly response = new JsonResponse(this);
 
   protected _getDefaultRequestOptions(): HttpRequestOptions {
     const headers: KeyValue = {};

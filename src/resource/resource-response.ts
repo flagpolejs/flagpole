@@ -1,8 +1,8 @@
-import { ProtoResponse } from "./response";
-import { iResponse, iValue } from "./interfaces";
-import { HttpResponse } from "./http-response";
-import { ValuePromise } from "./value-promise";
-import { ScenarioType } from "./scenario-types";
+import { ProtoResponse } from "../response";
+import { iResponse, iValue } from "../interfaces";
+import { HttpResponse } from "../http-response";
+import { ValuePromise } from "../value-promise";
+import { ScenarioType } from "../scenario-types";
 
 export class ResourceResponse extends ProtoResponse implements iResponse {
   public get responseType(): ScenarioType {

@@ -624,9 +624,7 @@ export class Value implements iValue {
 
   public async screenshot(): Promise<Buffer> {
     throw new Error(
-      `This value type (${this.toType()}) or scenario type (${
-        this._context.scenario.type
-      }) does not support screenshots.`
+      `This value type (${this.toType()}) or scenario type does not support screenshots.`
     );
   }
 
@@ -773,16 +771,13 @@ export class Value implements iValue {
       }
       return { encoding: "utf8" };
     })();
-    const request = new HttpRequest(
-      {
-        ...{
-          uri: link.getUri(),
-          method: "get",
-        },
-        ...opts,
+    const request = new HttpRequest({
+      ...{
+        uri: link.getUri(),
+        method: "get",
       },
-      "resource"
-    );
+      ...opts,
+    });
     const resp = await request.fetch();
     const file: string | Buffer = resp.headers["content-type"].startsWith(
       "image"

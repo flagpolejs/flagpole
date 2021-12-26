@@ -4,4 +4,4 @@ const suite = flagpole("No .next will dangle");
 
 suite.maxSuiteDuration = 3000;
 
-suite.html("Homepage Loads").open("https://dribbble.com/");
+suite.scenario("Homepage Loads", "html").open("https://dribbble.com/");

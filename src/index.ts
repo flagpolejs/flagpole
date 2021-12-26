@@ -9,7 +9,7 @@ import { HtmlResponse } from "./html/html-response";
 import { HttpResponse } from "./http-response";
 import { ImageResponse } from "./visual/image-response";
 import { JsonResponse } from "./json/json-response";
-import { ResourceResponse } from "./resource-response";
+import { ResourceResponse } from "./resource/resource-response";
 import { ProtoResponse } from "./response";
 import { Suite } from "./suite";
 import { Value } from "./value";

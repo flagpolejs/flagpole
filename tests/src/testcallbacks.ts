@@ -34,7 +34,7 @@ const suite = Flagpole.suite("Test order of callbacks")
   });
 
 suite
-  .html("Main Page")
+  .scenario("Main Page", "html")
   .open("/")
   .before(() => {
     console.log("Before First Scenario");
@@ -59,7 +59,7 @@ suite
   });
 
 suite
-  .html("IP Lookup")
+  .scenario("IP Lookup", "html")
   .open("/ip-address-lookup/")
   .before(() => {
     console.log("Before Second Scenario");
@@ -84,7 +84,7 @@ suite
   });
 
 suite
-  .html("Change IP")
+  .scenario("Change IP", "html")
   .open("/how-to-change-your-ip-address/")
   .before(() => {
     console.log("Before Third Scenario");

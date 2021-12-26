@@ -12,7 +12,7 @@ import { SoapScenario } from "./xml/soap-scenario";
 import { HeadersScenario } from "./headers/headers-scenario";
 import { HlsScenario } from "./media/hls-scenario";
 import { FfprobeScenario } from "./media/ffprobe-scenario";
-import { ResourceScenario } from "./resource-scenario";
+import { ResourceScenario } from "./resource/resource-scenario";
 import { MediaStreamValidatorScenario } from "./media/media-stream-validator-scenario";
 import { ScenarioType } from "./scenario-types";
 
@@ -42,8 +42,6 @@ export const createScenario = <T extends iScenario>(
   type: ScenarioType | ClassConstructor<T>,
   opts: KeyValue
 ): T => {
-  if (typeof type == "string") {
-    return new ScenarioTypeMap[type](suite, title, type, opts) as T;
-  }
-  return new type(suite, title, type, opts);
+  const ctor = typeof type == "string" ? ScenarioTypeMap[type] : type;
+  return new ctor(suite, title, ctor, opts) as T;
 };

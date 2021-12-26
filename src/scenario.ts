@@ -22,6 +22,7 @@ import {
   HttpTimeout,
   HttpMethodVerb,
   HttpRequestFetch,
+  ClassConstructor,
 } from "./interfaces";
 import {
   AssertionResult,
@@ -132,7 +133,7 @@ export abstract class ProtoScenario implements iScenario {
   }
 
   public get opts(): any {
-    return this._request.options;
+    return this.request.options;
   }
 
   /**
@@ -192,7 +193,7 @@ export abstract class ProtoScenario implements iScenario {
    * Get the url
    */
   public get url(): string | null {
-    return this._request.uri;
+    return this.request.uri;
   }
 
   public set url(value: string | null) {
@@ -214,7 +215,7 @@ export abstract class ProtoScenario implements iScenario {
         this.wait();
       }
     }
-    this._request.uri = value;
+    this.request.uri = value;
   }
 
   /**
@@ -236,13 +237,6 @@ export abstract class ProtoScenario implements iScenario {
    */
   public get redirectChain(): string[] {
     return this._redirectChain;
-  }
-
-  /**
-   * Retrieve the options that itialized the request in this scenario
-   */
-  public get request(): HttpRequest {
-    return this._request;
   }
 
   public get nextCallbacks(): Array<{
@@ -279,9 +273,7 @@ export abstract class ProtoScenario implements iScenario {
   protected _waitTime: number = 0;
   protected _flipAssertion: boolean = false;
   protected _ignoreAssertion: boolean = false;
-  protected _request: HttpRequest;
   protected _mockResponseOptions: HttpResponseOptions | null = null;
-  protected _response: iResponse;
   protected _aliasedData: any = {};
   protected _requestPromise: Promise<iScenario>;
   protected _requestResolve: Function = () => {};
@@ -291,14 +283,15 @@ export abstract class ProtoScenario implements iScenario {
   protected _webhookPromise: Promise<WebhookServer>;
   protected _webhookResolver: Function = () => {};
 
-  protected abstract createResponse(): iResponse;
-  protected abstract getRequestAdapter(): HttpRequestFetch;
+  public abstract readonly requestAdapter: HttpRequestFetch;
+  public abstract readonly response: iResponse;
+  public readonly request: HttpRequest;
 
   public constructor(
     public readonly suite: iSuite,
     public readonly title: string,
-    public readonly type: ScenarioType,
-    opts: { [key: string]: any }
+    public readonly type: ClassConstructor<iScenario>,
+    opts: KeyValue
   ) {
     this._requestPromise = new Promise((resolve) => {
       this._requestResolve = resolve;
@@ -309,8 +302,7 @@ export abstract class ProtoScenario implements iScenario {
     this._webhookPromise = new Promise((resolve) => {
       this._webhookResolver = resolve;
     });
-    this._request = new HttpRequest(this._getRequestOptions(opts), this.type);
-    this._response = this.createResponse();
+    this.request = new HttpRequest(this._getRequestOptions(opts));
   }
 
   protected _getDefaultRequestOptions(): HttpRequestOptions {
@@ -384,7 +376,7 @@ export abstract class ProtoScenario implements iScenario {
    * Set body to submit as raw string
    */
   public setRawBody(str: string): iScenario {
-    this._request.data = str;
+    this.request.data = str;
     return this;
   }
 
@@ -392,12 +384,12 @@ export abstract class ProtoScenario implements iScenario {
    * Make sure the web page has valid SSL certificate
    */
   public verifyCert(verify: boolean): iScenario {
-    this._request.verifyCert = verify;
+    this.request.verifyCert = verify;
     return this;
   }
 
   public setProxy(proxy: HttpProxy): iScenario {
-    this._request.proxy = proxy;
+    this.request.proxy = proxy;
     return this;
   }
 
@@ -407,7 +399,7 @@ export abstract class ProtoScenario implements iScenario {
   public setTimeout(n: number): iScenario;
   public setTimeout(timeouts: HttpTimeout): iScenario;
   public setTimeout(timeout: HttpTimeout | number): iScenario {
-    this._request.timeout =
+    this.request.timeout =
       typeof timeout === "number"
         ? {
             open: timeout,
@@ -427,7 +419,7 @@ export abstract class ProtoScenario implements iScenario {
     form: KeyValue | FormData,
     isMultipart?: boolean
   ): iScenario {
-    this._request.setFormData(form, isMultipart);
+    this.request.setFormData(form, isMultipart);
     return this;
   }
 
@@ -437,7 +429,7 @@ export abstract class ProtoScenario implements iScenario {
    * @param n
    */
   public setMaxRedirects(n: number): iScenario {
-    this._request.maxRedirects = n;
+    this.request.maxRedirects = n;
     return this;
   }
 
@@ -447,8 +439,8 @@ export abstract class ProtoScenario implements iScenario {
    * @param authorization
    */
   public setBasicAuth(auth: HttpAuth): iScenario {
-    this._request.auth = auth;
-    this._request.authType = "basic";
+    this.request.auth = auth;
+    this.request.authType = "basic";
     return this;
   }
 
@@ -458,8 +450,8 @@ export abstract class ProtoScenario implements iScenario {
    * @param authorization
    */
   public setDigestAuth(auth: HttpAuth): iScenario {
-    this._request.auth = auth;
-    this._request.authType = "digest";
+    this.request.auth = auth;
+    this.request.authType = "digest";
     return this;
   }
 
@@ -481,7 +473,7 @@ export abstract class ProtoScenario implements iScenario {
    * @param opts
    */
   public setCookie(key: string, value: string): iScenario {
-    this._request.setCookie(key, value);
+    this.request.setCookie(key, value);
     return this;
   }
 
@@ -504,7 +496,7 @@ export abstract class ProtoScenario implements iScenario {
    * @param headers
    */
   public setHeaders(headers: KeyValue): iScenario {
-    this._request.headers = { ...this._request.headers, ...headers };
+    this.request.headers = { ...this.request.headers, ...headers };
     return this;
   }
 
@@ -515,7 +507,7 @@ export abstract class ProtoScenario implements iScenario {
    * @param value
    */
   public setHeader(key: string, value: any): iScenario {
-    this._request.setHeader(key, value);
+    this.request.setHeader(key, value);
     return this;
   }
 
@@ -525,7 +517,7 @@ export abstract class ProtoScenario implements iScenario {
    * @param {string} method
    */
   public setMethod(method: HttpMethodVerb): iScenario {
-    this._request.method = method;
+    this.request.method = method;
     return this;
   }
 
@@ -621,7 +613,7 @@ export abstract class ProtoScenario implements iScenario {
     }
     // Merge in options
     if (opts) {
-      this._request.setOptions(opts);
+      this.request.setOptions(opts);
     }
     this._requestType = ScenarioRequestType.httpRequest;
     // Handle overloading
@@ -1019,12 +1011,12 @@ export abstract class ProtoScenario implements iScenario {
    */
   protected async _processResponse(httpResponse: HttpResponse) {
     httpResponse = await this._pipeResponses(httpResponse);
-    this._response.init(httpResponse);
+    this.response.init(httpResponse);
     this._timeRequestLoaded = Date.now();
     this._requestResolve(this);
     this.result(
       new AssertionPass(
-        `Loaded ${this._response.responseTypeName} ${
+        `Loaded ${this.response.responseTypeName} ${
           this.url ? this.url : "[manual input]"
         }`
       )
@@ -1036,7 +1028,7 @@ export abstract class ProtoScenario implements iScenario {
       .mapSeries(this._nextCallbacks, (_then, index) => {
         const context: iAssertionContext = new AssertionContext(
           this,
-          this._response
+          this.response
         );
         const comment: string | null = this._nextMessages[index];
         if (comment !== null) {
@@ -1089,7 +1081,7 @@ export abstract class ProtoScenario implements iScenario {
    * Start a regular request scenario
    */
   private _executeDefaultRequest() {
-    this._request
+    this.request
       .fetch(
         {
           redirect: (url: string) => {
@@ -1097,14 +1089,14 @@ export abstract class ProtoScenario implements iScenario {
             this._redirectChain.push(url);
           },
         },
-        this.getRequestAdapter()
+        this.requestAdapter
       )
       .then((response) => {
         this._processResponse(response);
       })
       .catch((err) => {
         this._markScenarioCompleted(
-          `Failed to load ${this._request.uri}`,
+          `Failed to load ${this.request.uri}`,
           err,
           ScenarioDisposition.aborted
         );
@@ -1125,7 +1117,7 @@ export abstract class ProtoScenario implements iScenario {
     }
     this.url = this.buildUrl().href;
     this._markRequestAsStarted();
-    this._finalUrl = this._request.uri;
+    this._finalUrl = this.request.uri;
     this._executeDefaultRequest();
   }
 

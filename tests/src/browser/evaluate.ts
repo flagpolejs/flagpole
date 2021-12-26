@@ -12,7 +12,7 @@ const browserOpts = {
 };
 
 suite
-  .browser("Test evaluate method", browserOpts)
+  .scenario("Test evaluate method", "browser", browserOpts)
   .open("/")
   .next(async (context) => {
     const simple = await context.eval(() => {

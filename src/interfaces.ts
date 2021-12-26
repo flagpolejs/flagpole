@@ -814,10 +814,10 @@ export interface iSuite {
 }
 
 export interface iScenario {
-  opts: any;
   suite: iSuite;
-  type: ScenarioType;
   title: string;
+  type: ClassConstructor<iScenario>;
+  opts: KeyValue;
   totalDuration: number | null;
   executionDuration: number | null;
   requestDuration: number | null;
@@ -1057,7 +1057,6 @@ export type HttpRequestOptions = {
   outputFile?: string;
   proxy?: HttpProxy;
   timeout?: HttpTimeout | number;
-  type?: ScenarioType;
   uri?: string | null;
   /**
    * For https, should we reject unauthorized certs?
@@ -1079,7 +1078,6 @@ export interface iHttpRequest {
   authType?: HttpAuthType;
   data: HttpData;
   browser: BrowserOptions;
-  type: ScenarioType;
   outputFile?: string;
   options: HttpRequestOptions;
   proxyAgent?: http.Agent;

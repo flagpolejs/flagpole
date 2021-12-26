@@ -3,11 +3,6 @@ import { FfprobeResponse } from "./ffprobe-response";
 import { fetchWithFfprobe } from "../adapters/ffprobe";
 
 export class FfprobeScenario extends ProtoScenario {
-  protected createResponse() {
-    return new FfprobeResponse(this);
-  }
-
-  protected getRequestAdapter() {
-    return fetchWithFfprobe;
-  }
+  public readonly requestAdapter = fetchWithFfprobe;
+  public readonly response = new FfprobeResponse(this);
 }

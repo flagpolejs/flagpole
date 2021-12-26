@@ -3,13 +3,8 @@ import { fetchWithNeedle } from "../adapters/needle";
 import { ProtoScenario } from "../scenario";
 
 export class HeadersScenario extends ProtoScenario {
-  protected createResponse() {
-    return new HeadersResponse(this);
-  }
-
-  protected getRequestAdapter() {
-    return fetchWithNeedle;
-  }
+  public readonly requestAdapter = fetchWithNeedle;
+  public readonly response = new HeadersResponse(this);
 
   protected _executeHttpRequest() {
     this.setMethod("head");

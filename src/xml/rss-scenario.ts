@@ -3,11 +3,6 @@ import { ProtoScenario } from "../scenario";
 import { RssResponse } from "./rss-response";
 
 export class RssScenario extends ProtoScenario {
-  protected createResponse() {
-    return new RssResponse(this);
-  }
-
-  protected getRequestAdapter() {
-    return fetchWithNeedle;
-  }
+  public readonly requestAdapter = fetchWithNeedle;
+  public readonly response = new RssResponse(this);
 }

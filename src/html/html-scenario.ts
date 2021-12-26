@@ -3,11 +3,6 @@ import { ProtoScenario } from "../scenario";
 import { HtmlResponse } from "./html-response";
 
 export class HtmlScenario extends ProtoScenario {
-  protected createResponse() {
-    return new HtmlResponse(this);
-  }
-
-  protected getRequestAdapter() {
-    return fetchWithNeedle;
-  }
+  public readonly requestAdapter = fetchWithNeedle;
+  public readonly response = new HtmlResponse(this);
 }

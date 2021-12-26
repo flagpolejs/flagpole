@@ -8,7 +8,6 @@ import {
   ScenarioCallback,
   KeyValue,
   ScenarioMapper,
-  BrowserOptions,
   ScenarioInitOptions,
   ClassConstructor,
 } from "./interfaces";
@@ -16,8 +15,6 @@ import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpole-execution";
 import { SuiteTaskManager } from "./suite-task-manager";
 import { ScenarioType } from "./scenario-types";
-import { FfprobeOptions } from "media-probe";
-import { MediaStreamValidatorOpts } from "media-stream-validator";
 import { createScenario } from "./scenario-type-map";
 
 type BaseDomainCallback = (suite: iSuite) => string;
