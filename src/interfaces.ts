@@ -31,6 +31,10 @@ import {
   SyncReducerCallback,
 } from "./interfaces/iterator-callbacks";
 
+export type ClassConstructor<T> = {
+  new (...args: any[]): T;
+};
+
 export type CompareCallback = (a: any, b: any) => number;
 
 export interface ScreenshotOpts {
@@ -789,7 +793,7 @@ export interface iSuite {
     type: "browser" | "extjs",
     opts?: BrowserOptions
   ): iScenario;
-  scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
+  scenario(title: string, type?: ScenarioType, opts?: KeyValue): iScenario;
   json(title: string): iScenario;
   image(title: string): iScenario;
   html(title: string): iScenario;
@@ -926,6 +930,7 @@ export interface iScenario {
   waitFor(thatScenario: iScenario): iScenario;
   repeat(): iScenario;
   repeat(count: number): iScenario[];
+  go();
 }
 
 export interface iMessageAndCallback {

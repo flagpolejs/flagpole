@@ -1,4 +1,3 @@
-import { Scenario } from "./scenario";
 import { URL } from "url";
 import { FlagpoleReport } from "./logging/flagpole-report";
 import {
@@ -11,7 +10,6 @@ import {
   ScenarioMapper,
   BrowserOptions,
   ScenarioInitOptions,
-  DeviceProperties,
 } from "./interfaces";
 import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpole-execution";
@@ -19,6 +17,7 @@ import { SuiteTaskManager } from "./suite-task-manager";
 import { ScenarioType } from "./scenario-types";
 import { FfprobeOptions } from "media-probe";
 import { MediaStreamValidatorOpts } from "media-stream-validator";
+import { createScenario } from "./scenario-type-map";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 
@@ -246,14 +245,18 @@ export class Suite implements iSuite {
     type: "mediastreamvalidator",
     opts?: MediaStreamValidatorOpts
   ): iScenario;
-  public scenario(title: string, type: "appium", opts: any): iScenario;
-  public scenario(title: string, type?: ScenarioType, opts?: any): iScenario;
+  public scenario(title: string, type: "appium", opts: KeyValue): iScenario;
   public scenario(
     title: string,
-    type: ScenarioType = "html",
-    opts?: any
+    type?: ScenarioType,
+    opts?: KeyValue
+  ): iScenario;
+  public scenario(
+    title: string,
+    type: ScenarioType,
+    opts: KeyValue = {}
   ): iScenario {
-    const scenario: iScenario = new Scenario(this, title, opts, type);
+    const scenario: iScenario = createScenario(this, title, type, opts);
     // Some local tests fail with SSL verify on, so may have been disabled on this suite
     scenario.verifyCert(this._verifySslCert);
     // Should we hold off on executing?

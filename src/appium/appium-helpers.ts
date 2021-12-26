@@ -1,5 +1,4 @@
 import { HttpRequest } from "../http-request";
-import { Scenario } from "../scenario";
 import {
   HttpRequestOptions,
   iScenario,
@@ -71,7 +70,7 @@ const getAppiumSession = async (scenario: iScenario) => {
  * @param {any} opts - Appium session settings, called "capabilities"
  * @return {Promise<string>} sessionId to route all other HTTP requests
  * */
-const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
+const createAppiumSession = async (scenario: iScenario, opts: any = {}) => {
   const json = await sendAppiumRequest(scenario, "/session", {
     method: "post",
     data: {
@@ -90,7 +89,7 @@ const createAppiumSession = async (scenario: Scenario, opts: any = {}) => {
  * @param {any} opts - Appium session settings, called "capabilities"
  * @return {Promise<Scenario>} Initial scenario with alias set
  * */
-export const appiumSessionCreate = (scenario: Scenario, opts: any = {}) => {
+export const appiumSessionCreate = (scenario: iScenario, opts: any = {}) => {
   return async () => {
     scenario.set("capabilities", opts);
     const newSessionId = await createAppiumSession(scenario, opts);

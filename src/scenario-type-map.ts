@@ -1,68 +1,44 @@
-import { HtmlResponse } from "./html/html-response";
-import { ResourceResponse } from "./resource-response";
-import { BrowserResponse } from "./puppeteer/browser-response";
-import { ImageResponse } from "./visual/image-response";
-import { JsonResponse } from "./json/json-response";
-import { ExtJSResponse } from "./puppeteer/extjs-response";
-import { HttpRequestFetch, iResponse, iScenario } from "./interfaces";
-import { XmlResponse } from "./xml/xml-response";
-import { RssResponse } from "./xml/rss-response";
-import { AtomResponse } from "./xml/atom-response";
-import { HeadersResponse } from "./headers-response";
-import { HLSResponse } from "./media/hls-response";
-import { FfprobeResponse } from "./media/ffprobe-response";
-import { MediaStreamValidatorResponse } from "./media/media-stream-validator-response";
-import { fetchWithNeedle } from "./adapters/needle";
-import { fetchWithFfprobe } from "./adapters/ffprobe";
-import { fetchWithMediaStreamValidator } from "./adapters/media-stream-validator";
-import { fetchImageWithNeedle } from "./adapters/image";
-import { SoapResponse } from "./xml/soap-response";
-import { AppiumResponse } from "./appium/appium-response";
+import { ClassConstructor, iScenario, iSuite, KeyValue } from "./interfaces";
+import { AppiumScenario } from "./appium/appium-scenario";
+import { JsonScenario } from "./json/json-scenario";
+import { BrowserScenario } from "./puppeteer/browser-scenario";
+import { ExtJsScenario } from "./puppeteer/extjs-scenario";
+import { HtmlScenario } from "./html/html-scenario";
+import { ImageScenario } from "./visual/image-scenario";
+import { XmlScenario } from "./xml/xml-scenario";
+import { RssScenario } from "./xml/rss-scenario";
+import { AtomScenario } from "./xml/atom-scenario";
+import { SoapScenario } from "./xml/soap-scenario";
+import { HeadersScenario } from "./headers/headers-scenario";
+import { HlsScenario } from "./media/hls-scenario";
+import { FfprobeScenario } from "./media/ffprobe-scenario";
+import { ResourceScenario } from "./resource-scenario";
+import { MediaStreamValidatorScenario } from "./media/media-stream-validator-scenario";
+import { ScenarioType } from "./scenario-types";
 
-type ClassDef = new (...args: any[]) => any;
-
-const typeToClassMap: { [type: string]: ClassDef } = {
-  html: HtmlResponse,
-  browser: BrowserResponse,
-  extjs: ExtJSResponse,
-  image: ImageResponse,
-  json: JsonResponse,
-  xml: XmlResponse,
-  rss: RssResponse,
-  atom: AtomResponse,
-  soap: SoapResponse,
-  headers: HeadersResponse,
-  hls: HLSResponse,
-  ffprobe: FfprobeResponse,
-  resource: ResourceResponse,
-  mediastreamvalidator: MediaStreamValidatorResponse,
-  appium: AppiumResponse,
+export const ScenarioTypeMap: {
+  [type in ScenarioType]: ClassConstructor<iScenario>;
+} = {
+  html: HtmlScenario,
+  browser: BrowserScenario,
+  extjs: ExtJsScenario,
+  image: ImageScenario,
+  json: JsonScenario,
+  xml: XmlScenario,
+  rss: RssScenario,
+  atom: AtomScenario,
+  soap: SoapScenario,
+  headers: HeadersScenario,
+  hls: HlsScenario,
+  ffprobe: FfprobeScenario,
+  resource: ResourceScenario,
+  mediastreamvalidator: MediaStreamValidatorScenario,
+  appium: AppiumScenario,
 };
 
-const typeToFetchAdapter: { [type: string]: HttpRequestFetch } = {
-  html: fetchWithNeedle,
-  json: fetchWithNeedle,
-  xml: fetchWithNeedle,
-  rss: fetchWithNeedle,
-  atom: fetchWithNeedle,
-  soap: fetchWithNeedle,
-  headers: fetchWithNeedle,
-  hls: fetchWithNeedle,
-  resource: fetchWithNeedle,
-  ffprobe: fetchWithFfprobe,
-  mediastreamvalidator: fetchWithMediaStreamValidator,
-  image: fetchImageWithNeedle,
-  appium: fetchWithNeedle,
-};
-
-export const getResponseClass = (scenario: iScenario): ClassDef =>
-  typeToClassMap[scenario.type] || ResourceResponse;
-
-export function createResponse(scenario: iScenario): iResponse {
-  const className = getResponseClass(scenario);
-  return new className(scenario);
-}
-
-export const getRequestAdapter = (scenario: iScenario): HttpRequestFetch => {
-  return typeToFetchAdapter[scenario.type];
-};
+export const createScenario = (
+  suite: iSuite,
+  title: string,
+  type: ScenarioType,
+  opts: KeyValue
+): iScenario => new ScenarioTypeMap[type](suite, title, type, opts);

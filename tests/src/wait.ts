@@ -1,33 +1,19 @@
-import { fp, Suite } from "../../dist/index";
+import flagpole from "../../dist/index";
 
-fp.suite("Test different wait methods", (suite) => {
-  suite
-    .base("https://orlando.craigslist.org/")
-    .success(() => {
-      console.log("Success");
-    })
-    .failure(() => {
-      console.log("failure");
-    })
-    .afterEach(() => {
-      console.log("After Each");
-    })
-    .afterAll(() => {
-      console.log("After All");
-    })
-    .finally(() => {
-      console.log("Suite Finally");
-    });
+flagpole("Test Waits", (suite) => {
+  suite.base("https://orlando.craigslist.org/");
+
   const homepage = suite
-    .html("Homepage Loads")
+    .scenario("Homepage Loads", "html")
     .open("/")
     .next(async (context) => {
       const communityLink = await context.exists("div.community h3 a");
-      communityLink.open(community);
+      const url = await communityLink.getUrl();
+      community.open(url.toString());
     });
+
   const community = suite
-    .html("Community Category Loads")
-    .waitFor(homepage)
+    .scenario("Community Category Loads", "html")
     .next(async (context) => {
       const results = await context.findAll("#sortable-results ul.rows li");
       context.assert(results).length.greaterThan(0);

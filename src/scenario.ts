@@ -24,22 +24,16 @@ import {
   HttpMethodVerb,
   CONTENT_TYPE_SOAP,
   CONTENT_TYPE_JSON,
+  HttpRequestFetch,
 } from "./interfaces";
-import * as puppeteer from "puppeteer-core";
-import {
-  BrowserControl,
-  iBrowserControlResponse,
-} from "./puppeteer/browser-control";
-import { getRequestAdapter, createResponse } from "./scenario-type-map";
+import { BrowserControl } from "./puppeteer/browser-control";
 import {
   AssertionResult,
   AssertionPass,
   AssertionFail,
   AssertionFailWarning,
-  AssertionFailOptional,
 } from "./logging/assertion-result";
 import { HttpResponse } from "./http-response";
-import { ResourceResponse } from "./resource-response";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/log-collection";
@@ -70,10 +64,7 @@ enum ScenarioRequestType {
   webhook = "webhook",
 }
 
-/**
- * A scenario contains tests that run against one request
- */
-export class Scenario implements iScenario {
+export abstract class ProtoScenario implements iScenario {
   /**
    * Length of time in milliseconds from initialization to completion
    */
@@ -333,11 +324,14 @@ export class Scenario implements iScenario {
   protected _webhookPromise: Promise<WebhookServer>;
   protected _webhookResolver: Function = () => {};
 
+  protected abstract createResponse(): iResponse;
+  protected abstract getRequestAdapter(): HttpRequestFetch;
+
   public constructor(
     public readonly suite: iSuite,
     public readonly title: string,
-    opts: { [key: string]: any },
-    public readonly type: ScenarioType
+    public readonly type: ScenarioType,
+    opts: { [key: string]: any }
   ) {
     this._requestPromise = new Promise((resolve) => {
       this._requestResolve = resolve;
@@ -349,7 +343,7 @@ export class Scenario implements iScenario {
       this._webhookResolver = resolve;
     });
     this._request = new HttpRequest(this._getRequestOptions(opts), this.type);
-    this._response = createResponse(this);
+    this._response = this.createResponse();
   }
 
   protected _getDefaultRequestOptions(): HttpRequestOptions {
@@ -363,31 +357,7 @@ export class Scenario implements iScenario {
     };
   }
 
-  private _getRequestOptions(opts: { [key: string]: any } = {}): {
-    [key: string]: any;
-  } {
-    if (["browser", "extjs"].includes(this.type)) {
-      opts.browserOptions = {
-        ...this._defaultBrowserOptions,
-        ...opts.browserOptions,
-      };
-      if (FlagpoleExecution.global.headless !== undefined) {
-        opts.browserOptions.headless = FlagpoleExecution.global.headless;
-      }
-      return opts;
-    }
-    if (this.type == "appium") {
-      this.open("POST /wd/hub/session", {
-        data: {
-          capabilities: {
-            alwaysMatch: {
-              ...opts.capabilities,
-            },
-          },
-          devProperties: { ...opts.devProperties },
-        },
-      });
-    }
+  protected _getRequestOptions(opts: KeyValue = {}): KeyValue {
     return {
       ...this._getDefaultRequestOptions(),
       ...opts,
@@ -1153,74 +1123,6 @@ export class Scenario implements iScenario {
   }
 
   /**
-   * Start a browser scenario
-   */
-  private _executeBrowserRequest() {
-    if (!this.browserControl) {
-      throw "Not a browser scenario";
-    }
-    const handleError = (message: string, e: any) => {
-      setTimeout(() => {
-        this._markScenarioCompleted(message, e, ScenarioDisposition.aborted);
-      }, 1000);
-    };
-    this.browserControl
-      .open(this._request)
-      .then((next: iBrowserControlResponse) => {
-        const puppeteerResponse: puppeteer.Response = next.response;
-        if (puppeteerResponse !== null) {
-          this._finalUrl = puppeteerResponse.url();
-          // Loop through the redirects to populate our array
-          puppeteerResponse
-            .request()
-            .redirectChain()
-            .forEach((req) => {
-              this._redirectChain.push(req.url());
-            });
-          // Handle errors
-          this.browser?.on("disconnected", (e) =>
-            handleError("Puppeteer instance unexpectedly closed.", e)
-          );
-          this.browserControl?.page?.on("close", (e) =>
-            handleError("Puppeteer closed unexpectedly.", e)
-          );
-          this.browserControl?.page?.on("error", (e) =>
-            handleError("Puppeteer got an unexpected error.", e)
-          );
-          this.browserControl?.page?.on("pageerror", (e) =>
-            this._pushToLog(
-              new AssertionFailOptional(
-                "Puppeteer got an unexpected page error.",
-                e
-              )
-            )
-          );
-          // Finishing processing the response
-          this._processResponse(
-            HttpResponse.fromPuppeteer(
-              puppeteerResponse,
-              next.body,
-              next.cookies
-            )
-          );
-        } else {
-          this._markScenarioCompleted(
-            `Failed to load ${this._request.uri}`,
-            null,
-            ScenarioDisposition.aborted
-          );
-        }
-        return;
-      })
-      .catch((err) =>
-        this._markScenarioCompleted(
-          `Failed to load ${this._request.uri}`,
-          err,
-          ScenarioDisposition.aborted
-        )
-      );
-  }
-  /**
    * Start a regular request scenario
    */
   private _executeDefaultRequest() {
@@ -1232,7 +1134,7 @@ export class Scenario implements iScenario {
             this._redirectChain.push(url);
           },
         },
-        getRequestAdapter(this)
+        this.getRequestAdapter()
       )
       .then((response) => {
         this._processResponse(response);
@@ -1246,7 +1148,7 @@ export class Scenario implements iScenario {
       });
   }
 
-  private _markRequestAsStarted() {
+  protected _markRequestAsStarted() {
     this._timeRequestStarted = Date.now();
   }
 
@@ -1259,16 +1161,9 @@ export class Scenario implements iScenario {
       throw "Can not execute request with null URL.";
     }
     this.url = this.buildUrl().href;
-    if (this.type == "headers") {
-      this.setMethod("head");
-    }
     this._markRequestAsStarted();
     this._finalUrl = this._request.uri;
-    if (["extjs", "browser"].includes(this.type)) {
-      this._executeBrowserRequest();
-    } else {
-      this._executeDefaultRequest();
-    }
+    this._executeDefaultRequest();
   }
 
   /**

@@ -11,11 +11,10 @@ import { ImageResponse } from "./visual/image-response";
 import { JsonResponse } from "./json/json-response";
 import { ResourceResponse } from "./resource-response";
 import { ProtoResponse } from "./response";
-import { Scenario } from "./scenario";
 import { Suite } from "./suite";
 import { Value } from "./value";
 import { HLSResponse } from "./media/hls-response";
-import { HeadersResponse } from "./headers-response";
+import { HeadersResponse } from "./headers/headers-response";
 import { Flagpole } from "./flagpole";
 import {
   iResponse,
@@ -40,7 +39,6 @@ export {
   Flagpole,
   FlagpoleExecution,
   Suite,
-  Scenario,
   Assertion,
   AssertionContext,
   AssertionResult,
