@@ -9,16 +9,18 @@ import {
 } from "puppeteer-core";
 import { DOMElement } from "../html/dom-element";
 import { ValuePromise } from "../value-promise";
+import { BrowserScenario } from "./browser-scenario";
 
 export abstract class PuppeteerElement extends DOMElement implements iValue {
   protected abstract _input: ElementHandle | JSHandle;
   public abstract get $(): ElementHandle | JSHandle;
 
   protected get _page(): Page {
-    if (this.context.page === null) {
+    const scenario = this.context.scenario as BrowserScenario;
+    if (scenario.page === null) {
       throw "Puppeteer page object was not found.";
     }
-    return this.context.page;
+    return scenario.page;
   }
 
   protected constructor(

@@ -17,7 +17,7 @@ import {
   wrapAsValue,
   getFindName,
 } from "../helpers";
-import { BrowserElement } from "./browse-relement";
+import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 

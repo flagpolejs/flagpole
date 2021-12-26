@@ -18,10 +18,11 @@ import {
   FindParams,
 } from "../helpers";
 import { ElementHandle, JSHandle, EvaluateFn } from "puppeteer-core";
-import { BrowserElement } from "./browse-relement";
+import { BrowserElement } from "./browser-element";
 import { query, jsHandleArrayToHandles } from "./extjs-helper";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { ExtJsScenario } from "./extjs-scenario";
 
 declare type globalThis = {
   Ext: any;
@@ -36,16 +37,16 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     return "extjs";
   }
 
-  constructor(scenario: iScenario) {
+  constructor(scenario: ExtJsScenario) {
     super(scenario);
     // Before this scenario starts to run
     scenario.before(() => {
       scenario.nextPrepend(async (context) => {
-        if (context.page === null) {
+        if (scenario.page === null) {
           context.logFailure("Browser page not found");
           return;
         }
-        await context.page.waitForFunction(
+        await scenario.page.waitForFunction(
           // @ts-ignore
           () => !!Ext && !!Ext.ComponentQuery
         );
@@ -55,7 +56,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
             isExtReady = true;
           });
         `);
-        await context.page.waitForFunction("isExtReady");
+        await scenario.page.waitForFunction("isExtReady");
       });
     });
   }
@@ -84,8 +85,8 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     }
     const response: iResponse = this;
     const puppeteerElements: PuppeteerElement[] = [];
-    if (this.context.page !== null) {
-      const elements = await this.context.page.$x(xPath);
+    if (this.scenario.page !== null) {
+      const elements = await this.scenario.page.$x(xPath);
       await asyncForEach(elements, async (el, i) => {
         const element = await ExtJsComponent.create(
           el,

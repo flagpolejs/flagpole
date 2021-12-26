@@ -10,6 +10,7 @@ import { ElementHandle, BoxModel, JSHandle } from "puppeteer-core";
 import { asyncForEach, toType, toArray, asyncMap } from "../util";
 import csstoxpath from "csstoxpath";
 import { ValuePromise } from "../value-promise";
+import { BrowserScenario } from "./browser-scenario";
 
 export class BrowserElement extends PuppeteerElement implements iValue {
   protected _input: ElementHandle;
@@ -465,10 +466,11 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       if (!this._isFormTag()) {
         throw new Error("You can only use .submit() with a form element.");
       }
-      if (this._context.page === null) {
+      const scenario = this._context.scenario as BrowserScenario;
+      if (scenario.page === null) {
         throw new Error("Page was null");
       }
-      await this._context.page.evaluate((form) => form.submit(), this.$);
+      await scenario.page.evaluate((form) => form.submit(), this.$);
       this._completedAction("SUBMIT");
       return this;
     });

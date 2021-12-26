@@ -1,6 +1,4 @@
-import { BrowserControl } from "./puppeteer/browser-control";
 import {
-  Page,
   EvaluateFn,
   SerializableOrJSHandle,
   PageFnOptions,
@@ -610,9 +608,7 @@ export interface iAssertionContext {
   response: iResponse;
   scenario: iScenario;
   suite: iSuite;
-  browserControl: BrowserControl | null;
   executionOptions: FlagpoleExecution;
-  page: Page | null;
   incompleteAssertions: iAssertion[];
   assertionsResolved: Promise<(iAssertionResult | null)[]>;
   subScenariosResolved: Promise<any[]>;
@@ -835,7 +831,6 @@ export interface iScenario {
   redirectCount: number;
   redirectChain: string[];
   request: iHttpRequest;
-  browserControl: BrowserControl | null;
   hasAborted: boolean;
   hasBeenCancelled: boolean;
   hasBeenSkipped: boolean;

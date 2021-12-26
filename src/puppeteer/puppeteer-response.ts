@@ -12,6 +12,7 @@ import { DOMResponse } from "../html/dom-response";
 import { toType } from "../util";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
+import { BrowserScenario } from "./browser-scenario";
 
 const DEFAULT_WAITFOR_TIMEOUT = 30000;
 
@@ -19,6 +20,13 @@ export abstract class PuppeteerResponse
   extends DOMResponse
   implements iResponse
 {
+  public scenario: BrowserScenario;
+
+  constructor(scenario: BrowserScenario) {
+    super(scenario);
+    this.scenario = scenario;
+  }
+
   /**
    * Is this a browser based test
    */
@@ -43,7 +51,7 @@ export abstract class PuppeteerResponse
   }
 
   public get currentUrl(): iValue {
-    const page = this.context.page;
+    const page = this.scenario.page;
     let url: string | null = null;
     if (page) {
       url = page.url();

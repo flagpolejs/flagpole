@@ -6,8 +6,10 @@ import { ScenarioDisposition } from "../enums";
 import { iBrowserControlResponse } from "./browser-control";
 import * as puppeteer from "puppeteer-core";
 import { AssertionFailOptional } from "../logging/assertion-result";
-import { FlagpoleExecution, HttpResponse, iResponse } from "..";
+import { BrowserControl, FlagpoleExecution, HttpResponse, iResponse } from "..";
 import { KeyValue } from "../interfaces";
+import { runAsync } from "../util";
+import { Browser, Page } from "puppeteer-core";
 
 export class BrowserScenario extends ProtoScenario {
   protected createResponse(): iResponse {
@@ -16,6 +18,21 @@ export class BrowserScenario extends ProtoScenario {
 
   protected getRequestAdapter() {
     return fetchWithNeedle;
+  }
+
+  public get browserControl(): BrowserControl | null {
+    if (this._browserControl === null) {
+      this._browserControl = new BrowserControl();
+    }
+    return this._browserControl;
+  }
+
+  public get browser(): Browser | null {
+    return this._browserControl?.browser || null;
+  }
+
+  public get page(): Page | null {
+    return this.browserControl !== null ? this.browserControl.page : null;
   }
 
   @beforeScenarioRequestStarted
@@ -107,5 +124,22 @@ export class BrowserScenario extends ProtoScenario {
           ScenarioDisposition.aborted
         )
       );
+  }
+
+  protected async _markScenarioCompleted(
+    message: string | null = null,
+    details: string | null = null,
+    disposition: ScenarioDisposition = ScenarioDisposition.completed
+  ): Promise<BrowserScenario> {
+    // Only run this once
+    if (!this.hasFinished) {
+      super._markScenarioCompleted(message, details, disposition);
+      // Close the browser window
+      // Important! Don't close right away, some things may need to finish that were async
+      runAsync(() => {
+        this.browserControl?.close();
+      }, 100);
+    }
+    return this;
   }
 }

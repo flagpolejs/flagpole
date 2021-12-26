@@ -103,16 +103,8 @@ export class AssertionContext implements iAssertionContext {
     return this._scenario.suite;
   }
 
-  public get browserControl(): BrowserControl | null {
-    return this.response.isBrowser ? this._scenario.browserControl : null;
-  }
-
   public get executionOptions(): FlagpoleExecution {
     return FlagpoleExecution.global;
-  }
-
-  public get page(): Page | null {
-    return this.browserControl !== null ? this.browserControl.page : null;
   }
 
   public get incompleteAssertions(): Assertion[] {

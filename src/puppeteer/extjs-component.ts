@@ -10,7 +10,7 @@ import { toArray, asyncMap } from "../util";
 import { ExtJSResponse } from "./extjs-response";
 import * as ext from "./extjs-helper";
 import { wrapAsValue } from "../helpers";
-import { BrowserElement } from "./browse-relement";
+import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
 
 const visible: EvaluateFn = (c) => c.isVisible(true);

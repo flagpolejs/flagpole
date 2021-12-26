@@ -38,11 +38,9 @@ import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/log-collection";
 import { HttpRequest, HttpMethodVerbAllowedValues } from "./http-request";
-import { FlagpoleExecution } from "./flagpole-execution";
 import { toType, asyncForEach, runAsync, getFunctionArgs } from "./util";
 import { AssertionContext } from "./assertion-context";
 import * as bluebird from "bluebird";
-import { Browser } from "puppeteer-core";
 import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
 import { wrapAsValue } from "./helpers";
@@ -165,17 +163,6 @@ export abstract class ProtoScenario implements iScenario {
    */
   public get hasFinished(): boolean {
     return this.hasExecuted && this._timeScenarioFinished !== null;
-  }
-
-  public get browserControl(): BrowserControl | null {
-    if (this._response.isBrowser && this._browserControl === null) {
-      this._browserControl = new BrowserControl();
-    }
-    return this._browserControl;
-  }
-
-  public get browser(): Browser | null {
-    return this._browserControl?.browser || null;
   }
 
   /**
@@ -1255,11 +1242,6 @@ export abstract class ProtoScenario implements iScenario {
         : await this._fireFailure(details || message || disposition);
       // Finally
       await this._fireFinally();
-      // Close the browser window
-      // Important! Don't close right away, some things may need to finish that were async
-      runAsync(() => {
-        this.browserControl?.close();
-      }, 100);
     }
     return this;
   }
