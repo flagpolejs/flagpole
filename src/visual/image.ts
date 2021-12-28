@@ -1,7 +1,7 @@
 import { HttpResponse } from "../http-response";
 import { HttpRequestFetch, iHttpRequest, KeyValue } from "../interfaces";
 import needle = require("needle");
-import { getNeedleOptions } from "./needle";
+import { getNeedleOptions } from "../needle";
 import { ImageProbe } from "@zerodeps/image-probe";
 
 export interface probeImageResponse {

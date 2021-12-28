@@ -1,5 +1,5 @@
 import { JsonResponse } from "./json-response";
-import { fetchWithNeedle } from "../adapters/needle";
+import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
 import { CONTENT_TYPE_JSON, HttpRequestOptions, KeyValue } from "../interfaces";
 

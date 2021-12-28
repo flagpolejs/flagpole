@@ -1,4 +1,4 @@
-import { fetchWithNeedle } from "../adapters/needle";
+import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
 import { RssResponse } from "./rss-response";
 

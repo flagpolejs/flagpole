@@ -1,10 +1,8 @@
-import * as fs from "fs";
-import * as puppeteer from "puppeteer-core";
 import { NeedleResponse } from "needle";
 import { KeyValue, HttpResponseOptions, iHttpRequest } from "./interfaces";
 import { readFile } from "fs-extra";
 import { FfprobeData } from "media-probe";
-import { probeImageResponse } from "./adapters/image";
+import { probeImageResponse } from "./visual/image";
 
 export interface ffprobeResponse {
   headers: KeyValue;
@@ -13,6 +11,7 @@ export interface ffprobeResponse {
   length: number;
   probeData: FfprobeData;
 }
+
 export class HttpResponse {
   public body: string = "";
   public json: any = null;
@@ -60,21 +59,6 @@ export class HttpResponse {
     r.trailers = <KeyValue>response.trailers;
     r.method = response.method || "get";
     r.url = response.url || "";
-    return r;
-  }
-
-  static fromPuppeteer(
-    response: puppeteer.Response,
-    body: string,
-    cookies?: KeyValue
-  ): HttpResponse {
-    const r = new HttpResponse();
-    r.statusCode = response.status();
-    r.statusMessage = response.statusText();
-    r.headers = response.headers();
-    r.body = body;
-    r.cookies = cookies || {};
-    r.url = response.url();
     return r;
   }
 

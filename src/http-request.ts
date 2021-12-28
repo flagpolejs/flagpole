@@ -19,7 +19,7 @@ import tunnel = require("tunnel");
 import * as http from "http";
 import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
-import { fetchWithNeedle } from "./adapters/needle";
+import { fetchWithNeedle } from "./needle";
 
 export const HttpMethodVerbAllowedValues = [
   "get",

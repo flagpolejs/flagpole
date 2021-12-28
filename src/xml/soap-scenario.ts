@@ -1,4 +1,4 @@
-import { fetchWithNeedle } from "../adapters/needle";
+import { fetchWithNeedle } from "../needle";
 import { CONTENT_TYPE_SOAP, HttpRequestOptions, KeyValue } from "../interfaces";
 import { ProtoScenario } from "../scenario";
 import { SoapResponse } from "./soap-response";

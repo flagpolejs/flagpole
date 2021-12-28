@@ -1,5 +1,5 @@
 import { HeadersResponse } from "./headers-response";
-import { fetchWithNeedle } from "../adapters/needle";
+import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
 
 export class HeadersScenario extends ProtoScenario {

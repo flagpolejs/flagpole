@@ -1,6 +1,6 @@
 import { ProtoScenario } from "../scenario";
 import { HLSResponse } from "..";
-import { fetchWithNeedle } from "../adapters/needle";
+import { fetchWithNeedle } from "../needle";
 
 export class HlsScenario extends ProtoScenario {
   public readonly requestAdapter = fetchWithNeedle;

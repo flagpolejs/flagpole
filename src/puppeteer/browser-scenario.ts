@@ -1,5 +1,5 @@
 import { BrowserResponse } from "./browser-response";
-import { fetchWithNeedle } from "../adapters/needle";
+import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
 import { beforeScenarioRequestStarted } from "../decorators/internal";
 import { ScenarioDisposition } from "../enums";
@@ -76,11 +76,11 @@ export class BrowserScenario extends ProtoScenario {
     this.browserControl
       .open(this.request)
       .then((next: iBrowserControlResponse) => {
-        const puppeteerResponse: puppeteer.Response = next.response;
-        if (puppeteerResponse !== null) {
-          this._finalUrl = puppeteerResponse.url();
+        const response: puppeteer.Response = next.response;
+        if (response !== null) {
+          this._finalUrl = response.url();
           // Loop through the redirects to populate our array
-          puppeteerResponse
+          response
             .request()
             .redirectChain()
             .forEach((req) => {
@@ -106,11 +106,12 @@ export class BrowserScenario extends ProtoScenario {
           );
           // Finishing processing the response
           this._processResponse(
-            HttpResponse.fromPuppeteer(
-              puppeteerResponse,
-              next.body,
-              next.cookies
-            )
+            HttpResponse.fromOpts({
+              status: [response.status(), response.statusText()],
+              headers: response.headers(),
+              body: next.body,
+              cookies: next.cookies || {},
+            })
           );
         } else {
           this._markScenarioCompleted(

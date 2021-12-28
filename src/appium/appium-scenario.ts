@@ -1,5 +1,5 @@
 import { AppiumResponse } from "./appium-response";
-import { fetchWithNeedle } from "../adapters/needle";
+import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
 import { KeyValue } from "../interfaces";
 
