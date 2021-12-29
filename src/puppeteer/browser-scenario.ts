@@ -7,10 +7,11 @@ import { iBrowserControlResponse, BrowserControl } from "./browser-control";
 import * as puppeteer from "puppeteer-core";
 import { AssertionFailOptional } from "../logging/assertion-result";
 import { FlagpoleExecution } from "../flagpole-execution";
-import { KeyValue, BrowserOptions } from "../interfaces";
+import { KeyValue } from "../interfaces";
 import { HttpResponse } from "../http-response";
 import { runAsync } from "../util";
 import { Browser, Page } from "puppeteer-core";
+import { BrowserOptions } from "./browser-opts";
 
 export class BrowserScenario extends ProtoScenario {
   public readonly requestAdapter = fetchWithNeedle;

@@ -3,6 +3,7 @@ import { AssertionContext } from "./assertion-context";
 import { AssertionResult } from "./logging/assertion-result";
 import { BrowserControl } from "./puppeteer/browser-control";
 import { BrowserResponse } from "./puppeteer/browser-response";
+import { BrowserOptions } from "./puppeteer/browser-opts";
 import { DOMElement } from "./html/dom-element";
 import { ExtJSResponse } from "./puppeteer/extjs-response";
 import { HtmlResponse } from "./html/html-response";
@@ -19,14 +20,7 @@ import { HLSResponse } from "./media/hls-response";
 import { HlsScenario } from "./media/hls-scenario";
 import { HeadersResponse } from "./headers/headers-response";
 import { Flagpole } from "./flagpole";
-import {
-  iResponse,
-  iValue,
-  iScenario,
-  iSuite,
-  BrowserOptions,
-  HttpAuth,
-} from "./interfaces";
+import { iResponse, iValue, iScenario, iSuite, HttpAuth } from "./interfaces";
 import { HttpRequest } from "./http-request";
 import { FlagpoleExecution } from "./flagpole-execution";
 import { ScenarioType } from "./scenario-types";

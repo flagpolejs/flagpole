@@ -1,6 +1,5 @@
 import {
   KeyValue,
-  BrowserOptions,
   iHttpRequest,
   HttpData,
   HttpAuthType,
@@ -44,7 +43,7 @@ export class HttpRequest implements iHttpRequest {
   private _authType: HttpAuthType | undefined;
   private _data: HttpData;
   private _fetched: boolean = false;
-  private _browser: BrowserOptions = {};
+  private _customOpts: KeyValue = {};
   private _outputFile?: string;
 
   public get uri(): string | null {
@@ -157,13 +156,13 @@ export class HttpRequest implements iHttpRequest {
     }
   }
 
-  public get browser(): BrowserOptions {
-    return this._browser;
+  public get customOpts(): KeyValue {
+    return this._customOpts;
   }
 
-  public set browser(value: BrowserOptions) {
+  public set customOpts(value: KeyValue) {
     if (!this.isImmutable) {
-      this._browser = value;
+      this._customOpts = value;
     }
   }
 
@@ -249,7 +248,7 @@ export class HttpRequest implements iHttpRequest {
         return opts.timeout;
       })();
       this._auth = opts.auth || this._auth;
-      this._browser = opts.browserOptions || this._browser;
+      this._customOpts = opts.customOpts || this._customOpts;
       this._data = opts.data || this._data;
       this._outputFile = opts.outputFile || this._outputFile;
     }

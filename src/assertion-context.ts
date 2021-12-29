@@ -1,8 +1,3 @@
-import {
-  EvaluateFn,
-  SerializableOrJSHandle,
-  PageFnOptions,
-} from "puppeteer-core";
 import { Assertion } from "./assertion";
 import {
   iResponse,
@@ -21,6 +16,8 @@ import {
   PointerMove,
   GestureOpts,
   GestureType,
+  KeyValue,
+  JsFunction,
 } from "./interfaces";
 import {
   AssertionActionCompleted,
@@ -224,17 +221,14 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param callback
    */
-  public async eval(
-    js: EvaluateFn<any>,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<any> {
+  public async eval(js: JsFunction, ...args: any[]): Promise<any> {
     return await this.response.eval.apply(this, [js, ...args]);
   }
 
   public async waitForFunction(
-    js: EvaluateFn<any>,
-    opts?: PageFnOptions,
-    ...args: SerializableOrJSHandle[]
+    js: JsFunction,
+    opts?: KeyValue,
+    ...args: any[]
   ): Promise<void> {
     await this.response.waitForFunction.apply(this.response, [
       js,

@@ -1,9 +1,4 @@
 import {
-  EvaluateFn,
-  SerializableOrJSHandle,
-  PageFnOptions,
-} from "puppeteer-core";
-import {
   SuiteStatusEvent,
   ScenarioStatusEvent,
   LineType,
@@ -17,7 +12,6 @@ import { Server } from "minikin";
 import validator from "validator";
 import { ValuePromise } from "./value-promise";
 import { ScenarioType } from "./scenario-types";
-import { LaunchOptions } from "puppeteer-core";
 import * as http from "http";
 import { ErrorObject, Schema } from "ajv";
 import {
@@ -28,6 +22,8 @@ import {
   SyncMapperCallback,
   SyncReducerCallback,
 } from "./interfaces/iterator-callbacks";
+
+export type JsFunction = string | (() => any);
 
 export type ClassConstructor<T> = {
   new (...args: any[]): T;
@@ -310,19 +306,14 @@ export interface iValue {
   clearThenType(textToType: string, opts?: any): ValuePromise;
   type(textToType: string, opts?: any): ValuePromise;
   clear(): ValuePromise;
-  eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
+  eval(js: JsFunction, ...args: any[]): Promise<any>;
   selectOption(value: string | string[]): ValuePromise;
   pressEnter(): ValuePromise;
   scrollTo(): ValuePromise;
   waitForFunction(
-    js: EvaluateFn<any>,
-    timeout: number,
-    ...args: SerializableOrJSHandle[]
-  ): ValuePromise;
-  waitForFunction(
-    js: EvaluateFn<any>,
-    opts?: PageFnOptions,
-    ...args: SerializableOrJSHandle[]
+    js: JsFunction,
+    opts?: KeyValue,
+    ...args: any[]
   ): ValuePromise;
   waitForHidden(timeout?: number): ValuePromise;
   waitForVisible(timeout?: number): ValuePromise;
@@ -404,7 +395,7 @@ export interface iResponse {
   header(key?: string): iValue;
   cookie(key?: string): iValue;
   absolutizeUri(uri: string): string;
-  eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
+  eval(js: JsFunction, ...args: any[]): Promise<any>;
   waitForNavigation(
     timeout?: number,
     waitFor?: string | string[]
@@ -413,9 +404,9 @@ export interface iResponse {
   waitForNetworkIdle(timeout?: number): Promise<void>;
   waitForReady(timeout?: number): Promise<void>;
   waitForFunction(
-    js: EvaluateFn<any>,
-    opts?: PageFnOptions,
-    ...args: SerializableOrJSHandle[]
+    js: JsFunction,
+    opts?: KeyValue,
+    ...args: any[]
   ): Promise<void>;
   waitForHidden(selector: string, timeout?: number): ValuePromise;
   waitForVisible(selector: string, timeout?: number): ValuePromise;
@@ -582,14 +573,8 @@ export interface iAssertion {
   hasClassName(value?: string | RegExp): Promise<iAssertion>;
   hasText(text?: string | RegExp): Promise<iAssertion>;
   hasTag(tagName?: string | RegExp): Promise<iAssertion>;
-  eval(
-    js: EvaluateFn<any>,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<iAssertion>;
-  evalEvery(
-    js: EvaluateFn<any>,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<iAssertion>;
+  eval(js: JsFunction, ...args: any[]): Promise<iAssertion>;
+  evalEvery(js: JsFunction, ...args: any[]): Promise<iAssertion>;
   execute(
     bool: boolean,
     actualValue: any,
@@ -694,11 +679,11 @@ export interface iAssertionContext {
   clear(selector: string): ValuePromise;
   clearThenType(selector: string, textToType: string, opts?: any): ValuePromise;
   selectOption(selector: string, value: string | string[]): Promise<void>;
-  eval(js: EvaluateFn<any>, ...args: SerializableOrJSHandle[]): Promise<any>;
+  eval(js: JsFunction, ...args: any[]): Promise<any>;
   waitForFunction(
-    js: EvaluateFn<any>,
+    js: JsFunction,
     opts?: { polling?: string | number; timeout?: number },
-    ...args: SerializableOrJSHandle[]
+    ...args: any[]
   ): Promise<void>;
   waitForReady(timeout?: number): Promise<void>;
   waitForLoad(timeout?: number): Promise<void>;
@@ -968,38 +953,6 @@ export interface WebhookServer {
   server: Server;
 }
 
-export interface BrowserOptions extends LaunchOptions {
-  width?: number;
-  height?: number;
-  recordConsole?: boolean;
-  outputConsole?: boolean;
-  product?: "chrome" | "firefox";
-  ignoreHTTPSErrors?: boolean;
-  headless?: boolean;
-  executablePath?: string;
-  slowMo?: number;
-  args?: string[];
-  ignoreDefaultArgs?: boolean | string[];
-  timeout?: number;
-  devtools?: boolean;
-  defaultViewport?: {
-    width?: number;
-    height?: number;
-    deviceScaleFactor?: number;
-    isMobile?: boolean;
-    hasTouch?: boolean;
-    isLandscape?: boolean;
-  };
-  handleSIGINT?: boolean;
-  handleSIGTERM?: boolean;
-  handleSIGHUP?: boolean;
-  dumpio?: boolean;
-  userDataDir?: string;
-  env?: { [key: string]: any };
-  pipe?: boolean;
-  extraPrefsFirefox?: any;
-}
-
 export type HttpRequestFetch = (
   request: iHttpRequest,
   opts?: KeyValue
@@ -1042,7 +995,7 @@ export type HttpData =
   | undefined;
 
 export type HttpRequestOptions = {
-  browserOptions?: BrowserOptions;
+  customOpts?: KeyValue;
   auth?: HttpAuth;
   authType?: HttpAuthType;
   data?: HttpData;
@@ -1054,9 +1007,6 @@ export type HttpRequestOptions = {
   proxy?: HttpProxy;
   timeout?: HttpTimeout | number;
   uri?: string | null;
-  /**
-   * For https, should we reject unauthorized certs?
-   */
   verifyCert?: boolean;
   cacheKey?: string;
 };
@@ -1073,7 +1023,7 @@ export interface iHttpRequest {
   auth: HttpAuth | undefined;
   authType?: HttpAuthType;
   data: HttpData;
-  browser: BrowserOptions;
+  customOpts?: KeyValue;
   outputFile?: string;
   options: HttpRequestOptions;
   proxyAgent?: http.Agent;

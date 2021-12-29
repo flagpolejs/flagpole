@@ -4,13 +4,13 @@ import {
   iScenario,
   KeyValue,
   iBounds,
-  iNextCallback,
   iAssertionIs,
   HttpRequestOptions,
   GestureType,
   GestureOpts,
   PointerClick,
   ScenarioConstructor,
+  JsFunction,
 } from "./interfaces";
 import {
   toType,
@@ -29,13 +29,7 @@ import {
 } from "./logging/assertion-result";
 import { Link } from "./link";
 import * as fs from "fs";
-import {
-  EvaluateFn,
-  PageFnOptions,
-  SerializableOrJSHandle,
-} from "puppeteer-core";
 import { ValuePromise } from "./value-promise";
-import { ScenarioType } from "./scenario-types";
 import { HttpResponse } from "./http-response";
 import { HttpRequest } from "./http-request";
 import { jpathSearch } from "./json/jpath";
@@ -766,20 +760,16 @@ export class Value implements iValue {
     return resp;
   }
 
-  public waitForFunction(
-    js: EvaluateFn<any>,
-    opts?: PageFnOptions | number,
-    ...args: SerializableOrJSHandle[]
-  ): ValuePromise {
-    return ValuePromise.wrap(this);
+  public waitForFunction(js: JsFunction): ValuePromise {
+    throw `waitForFunction() is not supported by this type of scenario`;
   }
 
   public waitForHidden(): ValuePromise {
-    return ValuePromise.wrap(this);
+    throw `waitForHidden() is not supported by this type of scenario`;
   }
 
   public waitForVisible(): ValuePromise {
-    return ValuePromise.wrap(this);
+    throw `waitForVisible() is not supported by this type of scenario`;
   }
 
   public setValue(text: string): ValuePromise {

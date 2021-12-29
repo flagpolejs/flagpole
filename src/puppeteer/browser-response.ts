@@ -9,7 +9,7 @@ import {
 } from "../interfaces";
 import { ElementHandle } from "puppeteer-core";
 import { PuppeteerResponse } from "./puppeteer-response";
-import { asyncForEach, toArray, asyncMap } from "../util";
+import { asyncForEach, asyncMap } from "../util";
 import {
   getFindParams,
   filterFind,
