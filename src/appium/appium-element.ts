@@ -410,9 +410,10 @@ export class AppiumElement extends DOMElement implements iValue {
         ", "
       )}`;
     }
-    return await this.session.get(
+    const res = await this.session.get(
       `element/${this._elementId}/attribute/${key}`
     );
+    return res.jsonRoot.value;
   }
 
   public async screenshot(): Promise<Buffer>;
