@@ -1,13 +1,19 @@
 import { AppiumResponse } from "./appium-response";
 import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
-import { KeyValue } from "../interfaces";
+import { KeyValue, iSuite, ClassConstructor, iScenario } from "../interfaces";
 
 export class AppiumScenario extends ProtoScenario {
   public readonly requestAdapter = fetchWithNeedle;
   public readonly response = new AppiumResponse(this);
 
-  protected _getRequestOptions(opts: KeyValue = {}): KeyValue {
+  public constructor(
+    public readonly suite: iSuite,
+    public readonly title: string,
+    public readonly type: ClassConstructor<iScenario>,
+    opts: KeyValue
+  ) {
+    super(suite, title, type, opts);
     this.open("POST /wd/hub/session", {
       data: {
         capabilities: {
@@ -18,6 +24,5 @@ export class AppiumScenario extends ProtoScenario {
         devProperties: { ...opts.devProperties },
       },
     });
-    return super._getRequestOptions(opts);
   }
 }
