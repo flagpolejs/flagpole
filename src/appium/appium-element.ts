@@ -60,8 +60,8 @@ export class AppiumElement extends DOMElement implements iValue {
     this._elementId = elementId || "";
   }
 
-  public click(opts: PointerClick): ValuePromise {
-    if (opts.count == 1) {
+  public click(opts?: PointerClick): ValuePromise {
+    if (!opts) {
       return ValuePromise.execute(async () => {
         await this.session.post(`element/${this._elementId}/click`, {});
         return this;
