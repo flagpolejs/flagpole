@@ -5,6 +5,16 @@ import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { JsonResponse } from "../json/json-response";
 import { ScenarioType } from "../scenario-types";
+import { KeyValue } from "../interfaces/generic-types";
+import { FfprobeData } from "media-probe";
+
+export interface ffprobeResponse {
+  headers: KeyValue;
+  statusCode: number;
+  url: string;
+  length: number;
+  probeData: FfprobeData;
+}
 
 export class FfprobeResponse
   extends JsonResponse

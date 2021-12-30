@@ -20,7 +20,7 @@ import { HttpResponse } from "./http-response";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/log-collection";
-import { HttpRequest, HttpMethodVerbAllowedValues } from "./http-request";
+import { HttpRequest } from "./http-request";
 import { toType, asyncForEach, runAsync, getFunctionArgs } from "./util";
 import { AssertionContext } from "./assertion-context";
 import * as bluebird from "bluebird";
@@ -45,6 +45,7 @@ import { WebhookServer } from "./interfaces/webhook";
 import {
   HttpAuth,
   HttpMethodVerb,
+  HttpMethodVerbArray,
   HttpProxy,
   HttpRequestFetch,
   HttpRequestOptions,
@@ -207,8 +208,8 @@ export abstract class ProtoScenario implements iScenario {
       const match = /([A-Z]+) (.*)/.exec(value);
       if (match !== null) {
         const verb: string = match[1].toLowerCase();
-        if (HttpMethodVerbAllowedValues.includes(verb)) {
-          this.setMethod(<HttpMethodVerb>verb);
+        if (HttpMethodVerbArray.includes(verb as HttpMethodVerb)) {
+          this.setMethod(verb as HttpMethodVerb);
         }
         value = match[2];
       }

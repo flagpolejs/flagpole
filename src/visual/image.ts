@@ -20,6 +20,30 @@ export type probeImageData = {
   mimeType: string;
 };
 
+function fromProbeImage(
+  response: probeImageResponse,
+  cookies?: KeyValue
+): HttpResponse {
+  const json = {
+    ...response.imageData,
+    ...{
+      length: response.length,
+      url: response.url,
+      mime: response.imageData.mimeType,
+    },
+  };
+  return HttpResponse.fromOpts(
+    {
+      headers: response.headers,
+      status: [response.statusCode, ""],
+      body: JSON.stringify(json),
+      cookies: cookies || {},
+      url: response.url,
+    },
+    json
+  );
+}
+
 export const fetchImageWithNeedle: HttpRequestFetch = (
   request: iHttpRequest,
   opts?: KeyValue
@@ -68,7 +92,7 @@ export const fetchImageWithNeedle: HttpRequestFetch = (
           stream.destroy();
         } catch {}
         // Set the response
-        resolve(HttpResponse.fromProbeImage(response));
+        resolve(fromProbeImage(response));
       });
   });
 };

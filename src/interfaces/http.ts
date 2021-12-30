@@ -2,14 +2,16 @@ import { KeyValue } from "./generic-types";
 import * as http from "http";
 import { HttpResponse } from "../http-response";
 
-export type HttpMethodVerb =
-  | "get"
-  | "head"
-  | "delete"
-  | "patch"
-  | "post"
-  | "put"
-  | "options";
+export const HttpMethodVerbArray = [
+  "get",
+  "head",
+  "delete",
+  "patch",
+  "post",
+  "put",
+  "options",
+] as const;
+export type HttpMethodVerb = typeof HttpMethodVerbArray[number];
 
 export type HttpAuthType = "basic" | "digest" | "auto";
 

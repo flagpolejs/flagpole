@@ -8,7 +8,7 @@ export function wrapAsValue(
   data: any,
   name: string,
   source?: any
-): iValue {
+) {
   return new Value(data, context, name, source);
 }
 

@@ -21,16 +21,6 @@ import {
   CONTENT_TYPE_JSON,
 } from "./interfaces/constants";
 
-export const HttpMethodVerbAllowedValues = [
-  "get",
-  "head",
-  "delete",
-  "patch",
-  "post",
-  "put",
-  "options",
-];
-
 export class HttpRequest implements iHttpRequest {
   private _uri: string | null = null;
   private _method: HttpMethodVerb = "get";
