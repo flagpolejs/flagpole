@@ -1,6 +1,6 @@
-import { iConsoleLine, iLogItem } from "../interfaces";
-import { LineType } from "../enums";
+import { iConsoleLine, LineType } from "../interfaces/iconsole-log";
 import { CustomLine } from "./console-line";
+import { iLogItem } from "../interfaces/ilog-item";
 
 export abstract class LogItem implements iLogItem {
   public abstract readonly type: LineType;

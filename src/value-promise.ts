@@ -1,6 +1,8 @@
 import { cast } from "./util";
 import { AssertionPromise } from "./assertion-promise";
-import { iAssertion, iAssertionIs, iValue } from "./interfaces";
+import { iAssertionContext, iValue } from "./interfaces/general";
+import { iAssertionIs } from "./interfaces/iassertion-is";
+import { iAssertion } from "./interfaces/iassertion";
 
 function assertionMethod(
   target: Object,

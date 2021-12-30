@@ -1,16 +1,13 @@
 import { PuppeteerElement } from "./puppeteer-element";
-import {
-  iValue,
-  iAssertionContext,
-  iBounds,
-  ScreenshotOpts,
-  KeyValue,
-} from "../interfaces";
+import { iValue, iAssertionContext } from "../interfaces/general";
 import { ElementHandle, BoxModel, JSHandle } from "puppeteer-core";
 import { asyncForEach, toType, toArray, asyncMap } from "../util";
 import csstoxpath from "csstoxpath";
 import { ValuePromise } from "../value-promise";
 import { BrowserScenario } from "./browser-scenario";
+import { iBounds } from "../interfaces/ibounds";
+import { KeyValue } from "../interfaces/generic-types";
+import { ScreenshotOpts } from "../interfaces/screenshot";
 
 export class BrowserElement extends PuppeteerElement implements iValue {
   protected _input: ElementHandle;

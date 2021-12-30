@@ -1,5 +1,5 @@
 import { cast } from "./util";
-import { iAssertion } from "./interfaces";
+import { iAssertion } from "./interfaces/iassertion";
 
 function assertionMethod(
   target: Object,

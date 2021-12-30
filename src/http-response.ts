@@ -1,16 +1,7 @@
 import { NeedleResponse } from "needle";
-import { KeyValue, HttpResponseOptions, iHttpRequest } from "./interfaces";
 import { readFile } from "fs-extra";
-import { FfprobeData } from "media-probe";
-import { probeImageResponse } from "./visual/image";
-
-export interface ffprobeResponse {
-  headers: KeyValue;
-  statusCode: number;
-  url: string;
-  length: number;
-  probeData: FfprobeData;
-}
+import { KeyValue } from "./interfaces/generic-types";
+import { HttpResponseOptions, iHttpRequest } from "./interfaces/http";
 
 export class HttpResponse {
   public body: string = "";
@@ -72,27 +63,6 @@ export class HttpResponse {
     return r;
   }
 
-  static fromProbeImage(
-    response: probeImageResponse,
-    cookies?: KeyValue
-  ): HttpResponse {
-    const r = new HttpResponse();
-    r.headers = response.headers;
-    r.statusCode = response.statusCode;
-    r.json = {
-      ...response.imageData,
-      ...{
-        length: response.length,
-        url: response.url,
-        mime: response.imageData.mimeType,
-      },
-    };
-    r.body = "";
-    r.cookies = cookies || {};
-    r.url = response.url;
-    return r;
-  }
-
   static fromLocalFile(relativePath: string): Promise<HttpResponse> {
     const path: string = __dirname + "/" + relativePath;
     return new Promise((resolve, reject) => {
@@ -115,7 +85,9 @@ export class HttpResponse {
     });
   }
 
-  static fromOpts(opts: HttpResponseOptions): HttpResponse {
-    return new HttpResponse(opts);
+  static fromOpts(opts: HttpResponseOptions, json?: any): HttpResponse {
+    const response = new HttpResponse(opts);
+    if (json) response.json = json;
+    return response;
   }
 }

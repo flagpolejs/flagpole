@@ -1,10 +1,5 @@
-import {
-  iAssertionContext,
-  iValue,
-  iResponse,
-  FindAllOptions,
-  FindOptions,
-} from "./interfaces";
+import { iAssertionContext, iValue, iResponse } from "./interfaces/general";
+import { FindAllOptions, FindOptions } from "./interfaces/find-options";
 import { Value } from "./value";
 import { toType, asyncFilter } from "./util";
 
@@ -13,7 +8,7 @@ export function wrapAsValue(
   data: any,
   name: string,
   source?: any
-): iValue {
+) {
   return new Value(data, context, name, source);
 }
 

@@ -1,8 +1,9 @@
 import { HttpResponse } from "../http-response";
-import { HttpRequestFetch, iHttpRequest, KeyValue } from "../interfaces";
+import { HttpRequestFetch, iHttpRequest } from "../interfaces/http";
 import needle = require("needle");
 import { getNeedleOptions } from "../needle";
 import { ImageProbe } from "@zerodeps/image-probe";
+import { KeyValue } from "../interfaces/generic-types";
 
 export interface probeImageResponse {
   headers: KeyValue;
@@ -18,6 +19,30 @@ export type probeImageData = {
   type: string;
   mimeType: string;
 };
+
+function fromProbeImage(
+  response: probeImageResponse,
+  cookies?: KeyValue
+): HttpResponse {
+  const json = {
+    ...response.imageData,
+    ...{
+      length: response.length,
+      url: response.url,
+      mime: response.imageData.mimeType,
+    },
+  };
+  return HttpResponse.fromOpts(
+    {
+      headers: response.headers,
+      status: [response.statusCode, ""],
+      body: JSON.stringify(json),
+      cookies: cookies || {},
+      url: response.url,
+    },
+    json
+  );
+}
 
 export const fetchImageWithNeedle: HttpRequestFetch = (
   request: iHttpRequest,
@@ -67,7 +92,7 @@ export const fetchImageWithNeedle: HttpRequestFetch = (
           stream.destroy();
         } catch {}
         // Set the response
-        resolve(HttpResponse.fromProbeImage(response));
+        resolve(fromProbeImage(response));
       });
   });
 };

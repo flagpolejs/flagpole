@@ -1,8 +1,3 @@
-import {
-  EvaluateFn,
-  SerializableOrJSHandle,
-  PageFnOptions,
-} from "puppeteer-core";
 import { Assertion } from "./assertion";
 import {
   iResponse,
@@ -10,18 +5,7 @@ import {
   iAssertionContext,
   iScenario,
   iSuite,
-  iAssertionResult,
-  ScreenshotOpts,
-  iAssertion,
-  FindOptions,
-  FindAllOptions,
-  OptionalXY,
-  iHttpRequest,
-  ScreenProperties,
-  PointerMove,
-  GestureOpts,
-  GestureType,
-} from "./interfaces";
+} from "./interfaces/general";
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
@@ -47,6 +31,15 @@ import { FlagpoleExecution } from "./flagpole-execution";
 import { getFindParams, getFindName, wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
 import { IteratorBoolCallback } from "./interfaces/iterator-callbacks";
+import { FindAllOptions, FindOptions } from "./interfaces/find-options";
+import { iHttpRequest } from "./interfaces/http";
+import { iAssertionResult } from "./interfaces/iassertion-result";
+import { iAssertion } from "./interfaces/iassertion";
+import { JsFunction, KeyValue, OptionalXY } from "./interfaces/generic-types";
+import { ScreenshotOpts } from "./interfaces/screenshot";
+import { GestureOpts, GestureType } from "./interfaces/gesture";
+import { PointerMove } from "./interfaces/pointer";
+import { ScreenProperties } from "./interfaces/screen-properties";
 
 const getParamsFromExists = (
   a: string,
@@ -224,17 +217,14 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param callback
    */
-  public async eval(
-    js: EvaluateFn<any>,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<any> {
+  public async eval(js: JsFunction, ...args: any[]): Promise<any> {
     return await this.response.eval.apply(this, [js, ...args]);
   }
 
   public async waitForFunction(
-    js: EvaluateFn<any>,
-    opts?: PageFnOptions,
-    ...args: SerializableOrJSHandle[]
+    js: JsFunction,
+    opts?: KeyValue,
+    ...args: any[]
   ): Promise<void> {
     await this.response.waitForFunction.apply(this.response, [
       js,

@@ -6,10 +6,12 @@ import {
   FailLine,
 } from "./console-line";
 import { LogComment } from "./comment";
-import { iConsoleLine, iLogItem, iScenario, iSuite } from "../interfaces";
+import { iScenario, iSuite } from "../interfaces/general";
 import { asyncForEach } from "../util";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { lineToVerbosity } from "./verbosity";
+import { iConsoleLine } from "../interfaces/iconsole-log";
+import { iLogItem } from "../interfaces/ilog-item";
 
 export class FlagpoleReport {
   public readonly suite: iSuite;

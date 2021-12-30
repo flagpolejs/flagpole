@@ -6,16 +6,15 @@ import {
   SuiteStatusCallback,
   SuiteCallback,
   ScenarioCallback,
-  KeyValue,
   ScenarioMapper,
   ScenarioInitOptions,
-  ClassConstructor,
-} from "./interfaces";
+} from "./interfaces/general";
 import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpole-execution";
 import { SuiteTaskManager } from "./suite-task-manager";
 import { ScenarioType } from "./scenario-types";
 import { createScenario } from "./scenario-type-map";
+import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 
@@ -441,13 +440,15 @@ export class Suite implements iSuite {
     return this._aliasedData[key];
   }
 
-  public template(templateOptions: ScenarioInitOptions) {
-    return (title: string, scenarioOptions: ScenarioInitOptions): iScenario => {
-      const opts: ScenarioInitOptions = {
+  public template<T extends iScenario>(
+    templateOptions: ScenarioInitOptions<T>
+  ): (title: string, scenarioOptions: ScenarioInitOptions<T>) => T {
+    return (title: string, scenarioOptions: ScenarioInitOptions<T>): T => {
+      const opts: ScenarioInitOptions<T> = {
         ...templateOptions,
         ...scenarioOptions,
       };
-      const scenario = this.scenario(title, opts.type || "json", opts.opts);
+      const scenario = this.scenario(title, opts.type, opts.opts);
       if (opts.digestAuth) scenario.setDigestAuth(opts.digestAuth);
       if (opts.basicAuth) scenario.setBasicAuth(opts.basicAuth);
       if (opts.bearerToken) scenario.setBearerToken(opts.bearerToken);

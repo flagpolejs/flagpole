@@ -1,5 +1,7 @@
+import { CONTENT_TYPE_SOAP } from "../interfaces/constants";
+import { KeyValue } from "../interfaces/generic-types";
+import { HttpRequestOptions } from "../interfaces/http";
 import { fetchWithNeedle } from "../needle";
-import { CONTENT_TYPE_SOAP, HttpRequestOptions, KeyValue } from "../interfaces";
 import { ProtoScenario } from "../scenario";
 import { SoapResponse } from "./soap-response";
 

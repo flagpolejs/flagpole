@@ -1,7 +1,8 @@
 import { AppiumResponse } from "./appium-response";
 import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
-import { KeyValue, iSuite, ClassConstructor, iScenario } from "../interfaces";
+import { KeyValue, ClassConstructor } from "../interfaces/generic-types";
+import { iSuite, iScenario } from "../interfaces/general.ts";
 
 export class AppiumScenario extends ProtoScenario {
   public readonly requestAdapter = fetchWithNeedle;

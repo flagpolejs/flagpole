@@ -1,15 +1,12 @@
 import { HttpRequest } from "../http-request";
-import {
-  HttpRequestOptions,
-  iScenario,
-  iValue,
-  FindAllOptions,
-  AppiumElementIdResponse,
-  DeviceProperties,
-} from "../interfaces";
+import { iScenario, iValue } from "../interfaces/general";
 import { applyOffsetAndLimit, delay, wrapAsValue } from "../helpers";
 import { AppiumResponse } from "./appium-response";
 import { JsonDoc } from "../json/jpath";
+import { HttpRequestOptions } from "../interfaces/http";
+import { FindAllOptions } from "../interfaces/find-options";
+import { AppiumElementIdResponse } from "./appium-types";
+import { DeviceProperties } from "../interfaces/device-properties";
 
 const DEFAULT_APPIUM_PORT = 4723;
 

@@ -1,5 +1,5 @@
 import { ProtoResponse } from "../response";
-import { iResponse, iValue } from "../interfaces";
+import { iResponse, iValue } from "../interfaces/general";
 import { URL } from "url";
 import { HttpResponse } from "../http-response";
 import { Value } from "../value";

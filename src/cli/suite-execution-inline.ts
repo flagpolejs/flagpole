@@ -6,7 +6,7 @@ import {
 } from "./suite-execution";
 import { SuiteConfig } from "../flagpole-config";
 import { FlagpoleReport } from "../logging/flagpole-report";
-import { iSuite } from "../interfaces";
+import { iSuite } from "../interfaces/general";
 import { asyncForEach } from "../util";
 import { Flagpole } from "../flagpole";
 

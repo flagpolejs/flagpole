@@ -1,7 +1,9 @@
 import { JsonResponse } from "./json-response";
 import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
-import { CONTENT_TYPE_JSON, HttpRequestOptions, KeyValue } from "../interfaces";
+import { KeyValue } from "../interfaces/generic-types";
+import { HttpRequestOptions } from "../interfaces/http";
+import { CONTENT_TYPE_JSON } from "../interfaces/constants";
 
 export class JsonScenario extends ProtoScenario {
   public readonly requestAdapter = fetchWithNeedle;

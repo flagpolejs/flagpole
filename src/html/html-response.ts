@@ -1,17 +1,12 @@
 import { HTMLElement } from "./html-element";
 import { HttpResponse } from "../http-response";
 import { DOMResponse } from "./dom-response";
-import {
-  iResponse,
-  iValue,
-  FindAllOptions,
-  FindOptions,
-  iScenario,
-} from "../interfaces";
+import { iResponse, iValue } from "../interfaces/general";
 import * as cheerio from "cheerio";
 import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 
 export class HtmlResponse extends DOMResponse implements iResponse {
   private _cheerio: cheerio.Root | null = null;

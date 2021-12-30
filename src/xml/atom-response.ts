@@ -1,7 +1,6 @@
 import { HttpResponse } from "../http-response";
-import { iResponse } from "../interfaces";
+import { iResponse } from "../interfaces/general";
 import { XmlResponse } from "./xml-response";
-import * as cheerio from "cheerio";
 import { ScenarioType } from "../scenario-types";
 
 const validMimeTypes = ["application/atom+xml", "text/xml", "text/atom+xml"];

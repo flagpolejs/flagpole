@@ -2,16 +2,8 @@ import {
   iAssertionContext,
   iValue,
   iScenario,
-  KeyValue,
-  iBounds,
-  iNextCallback,
-  iAssertionIs,
-  HttpRequestOptions,
-  GestureType,
-  GestureOpts,
-  PointerClick,
   ScenarioConstructor,
-} from "./interfaces";
+} from "./interfaces/general";
 import {
   toType,
   isNullOrUndefined,
@@ -29,13 +21,7 @@ import {
 } from "./logging/assertion-result";
 import { Link } from "./link";
 import * as fs from "fs";
-import {
-  EvaluateFn,
-  PageFnOptions,
-  SerializableOrJSHandle,
-} from "puppeteer-core";
 import { ValuePromise } from "./value-promise";
-import { ScenarioType } from "./scenario-types";
 import { HttpResponse } from "./http-response";
 import { HttpRequest } from "./http-request";
 import { jpathSearch } from "./json/jpath";
@@ -45,6 +31,12 @@ import {
   SyncMapperCallback,
   SyncReducerCallback,
 } from "./interfaces/iterator-callbacks";
+import { iAssertionIs } from "./interfaces/iassertion-is";
+import { PointerClick } from "./interfaces/pointer";
+import { JsFunction, KeyValue } from "./interfaces/generic-types";
+import { iBounds } from "./interfaces/ibounds";
+import { HttpRequestOptions } from "./interfaces/http";
+import { GestureOpts, GestureType } from "./interfaces/gesture";
 
 export class Value implements iValue {
   protected _input: any;
@@ -412,7 +404,10 @@ export class Value implements iValue {
 
   public async getLink(): Promise<Link> {
     const src = await this.getUrl();
-    return new Link(src.isString() ? src.toString() : "", this._context);
+    return new Link(
+      src.isString() ? src.toString() : "",
+      this._context.scenario.buildUrl()
+    );
   }
 
   public getUrl(): ValuePromise {
@@ -766,20 +761,16 @@ export class Value implements iValue {
     return resp;
   }
 
-  public waitForFunction(
-    js: EvaluateFn<any>,
-    opts?: PageFnOptions | number,
-    ...args: SerializableOrJSHandle[]
-  ): ValuePromise {
-    return ValuePromise.wrap(this);
+  public waitForFunction(js: JsFunction): ValuePromise {
+    throw `waitForFunction() is not supported by this type of scenario`;
   }
 
   public waitForHidden(): ValuePromise {
-    return ValuePromise.wrap(this);
+    throw `waitForHidden() is not supported by this type of scenario`;
   }
 
   public waitForVisible(): ValuePromise {
-    return ValuePromise.wrap(this);
+    throw `waitForVisible() is not supported by this type of scenario`;
   }
 
   public setValue(text: string): ValuePromise {

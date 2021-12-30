@@ -2,20 +2,7 @@ import { promises } from "fs";
 import * as Jimp from "jimp";
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http-response";
-import {
-  iResponse,
-  iValue,
-  FindOptions,
-  FindAllOptions,
-  ScreenshotOpts,
-  ScreenProperties,
-  PointerMove,
-  PointerType,
-  PointerPoint,
-  GestureType,
-  GestureOpts,
-  DeviceProperties,
-} from "../interfaces";
+import { iResponse, iValue } from "../interfaces/general";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import {
@@ -38,6 +25,12 @@ import {
 import { AppiumElement } from "./appium-element";
 import { toType } from "../util";
 import { _ } from "ajv";
+import { PointerMove, PointerPoint, PointerType } from "../interfaces/pointer";
+import { FindAllOptions, FindOptions } from "../interfaces/find-options";
+import { GestureOpts, GestureType } from "../interfaces/gesture";
+import { ScreenProperties } from "../interfaces/screen-properties";
+import { DeviceProperties } from "../interfaces/device-properties";
+import { ScreenshotOpts } from "../interfaces/screenshot";
 
 interface AppiumPointerAction {
   type: "pointer";

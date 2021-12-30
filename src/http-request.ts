@@ -1,35 +1,25 @@
 import {
-  KeyValue,
-  BrowserOptions,
   iHttpRequest,
   HttpData,
-  HttpAuthType,
   HttpAuth,
   HttpTimeout,
   HttpProxy,
-  HttpMethodVerb,
   HttpRequestOptions,
-  CONTENT_TYPE_JSON,
-  CONTENT_TYPE_FORM_MULTIPART,
-  CONTENT_TYPE_FORM,
   HttpRequestFetch,
-} from "./interfaces";
+} from "./interfaces/http";
 import { HttpResponse } from "./http-response";
 import tunnel = require("tunnel");
 import * as http from "http";
 import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
 import { fetchWithNeedle } from "./needle";
-
-export const HttpMethodVerbAllowedValues = [
-  "get",
-  "head",
-  "delete",
-  "patch",
-  "post",
-  "put",
-  "options",
-];
+import { HttpAuthType, HttpMethodVerb } from "./interfaces/http";
+import { KeyValue } from "./interfaces/generic-types";
+import {
+  CONTENT_TYPE_FORM,
+  CONTENT_TYPE_FORM_MULTIPART,
+  CONTENT_TYPE_JSON,
+} from "./interfaces/constants";
 
 export class HttpRequest implements iHttpRequest {
   private _uri: string | null = null;
@@ -44,7 +34,7 @@ export class HttpRequest implements iHttpRequest {
   private _authType: HttpAuthType | undefined;
   private _data: HttpData;
   private _fetched: boolean = false;
-  private _browser: BrowserOptions = {};
+  private _customOpts: KeyValue = {};
   private _outputFile?: string;
 
   public get uri(): string | null {
@@ -157,13 +147,13 @@ export class HttpRequest implements iHttpRequest {
     }
   }
 
-  public get browser(): BrowserOptions {
-    return this._browser;
+  public get customOpts(): KeyValue {
+    return this._customOpts;
   }
 
-  public set browser(value: BrowserOptions) {
+  public set customOpts(value: KeyValue) {
     if (!this.isImmutable) {
-      this._browser = value;
+      this._customOpts = value;
     }
   }
 
@@ -249,7 +239,7 @@ export class HttpRequest implements iHttpRequest {
         return opts.timeout;
       })();
       this._auth = opts.auth || this._auth;
-      this._browser = opts.browserOptions || this._browser;
+      this._customOpts = opts.customOpts || this._customOpts;
       this._data = opts.data || this._data;
       this._outputFile = opts.outputFile || this._outputFile;
     }
@@ -330,7 +320,7 @@ export class HttpRequest implements iHttpRequest {
     if (this._uri === null) {
       throw new Error("Invalid URI");
     }
-    fetchMethod = fetchMethod || fetchWithNeedle;
-    return fetchMethod(this, opts);
+    if (fetchMethod) return fetchMethod(this, opts);
+    return fetchWithNeedle(this, opts);
   }
 }

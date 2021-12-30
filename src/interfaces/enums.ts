@@ -25,19 +25,3 @@ export enum SuiteStatusEvent {
   afterAllExecute = "afterAllExecute",
   finished = "finished",
 }
-
-export enum LineType {
-  resultPass = "resultPass",
-  resultFailure = "resultFailure",
-  resultFailureDetails = "resultFailureDetails",
-  resultFailureSource = "resultFailureSource",
-  resultOptionalFailure = "resultOptionalFailure",
-  comment = "comment",
-  detail = "detail",
-  h1 = "h1",
-  h2 = "h2",
-  h3 = "h3",
-  decoration = "decoration",
-  debugInfo = "debugInfo",
-  summaryData = "summaryData",
-}

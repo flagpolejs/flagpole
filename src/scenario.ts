@@ -1,29 +1,15 @@
-import { ScenarioStatusEvent, ScenarioDisposition } from "./enums";
+import { ScenarioStatusEvent, ScenarioDisposition } from "./interfaces/enums";
 import {
-  iAssertion,
   iAssertionContext,
-  iLogItem,
   iResponse,
   iScenario,
   iSuite,
   iNextCallback,
-  KeyValue,
-  ResponsePipe,
   ScenarioCallback,
   ScenarioStatusCallback,
   ScenarioCallbackAndMessage,
-  ResponsePipeCallbackAndMessage,
   iValue,
-  HttpResponseOptions,
-  WebhookServer,
-  HttpRequestOptions,
-  HttpProxy,
-  HttpAuth,
-  HttpTimeout,
-  HttpMethodVerb,
-  HttpRequestFetch,
-  ClassConstructor,
-} from "./interfaces";
+} from "./interfaces/general";
 import {
   AssertionResult,
   AssertionPass,
@@ -34,7 +20,7 @@ import { HttpResponse } from "./http-response";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/log-collection";
-import { HttpRequest, HttpMethodVerbAllowedValues } from "./http-request";
+import { HttpRequest } from "./http-request";
 import { toType, asyncForEach, runAsync, getFunctionArgs } from "./util";
 import { AssertionContext } from "./assertion-context";
 import * as bluebird from "bluebird";
@@ -48,9 +34,26 @@ import {
   afterScenarioExecuted,
   beforeScenarioRequestStarted,
 } from "./decorators/internal";
-import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
 import { _ } from "ajv";
+import { iLogItem } from "./interfaces/ilog-item";
+import {
+  ResponsePipe,
+  ResponsePipeCallbackAndMessage,
+} from "./interfaces/response-pipe";
+import { WebhookServer } from "./interfaces/webhook";
+import {
+  HttpAuth,
+  HttpMethodVerb,
+  HttpMethodVerbArray,
+  HttpProxy,
+  HttpRequestFetch,
+  HttpRequestOptions,
+  HttpResponseOptions,
+  HttpTimeout,
+} from "./interfaces/http";
+import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
+import { iAssertion } from "./interfaces/iassertion";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -205,8 +208,8 @@ export abstract class ProtoScenario implements iScenario {
       const match = /([A-Z]+) (.*)/.exec(value);
       if (match !== null) {
         const verb: string = match[1].toLowerCase();
-        if (HttpMethodVerbAllowedValues.includes(verb)) {
-          this.setMethod(<HttpMethodVerb>verb);
+        if (HttpMethodVerbArray.includes(verb as HttpMethodVerb)) {
+          this.setMethod(verb as HttpMethodVerb);
         }
         value = match[2];
       }

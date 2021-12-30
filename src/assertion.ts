@@ -1,15 +1,6 @@
 import { Value } from "./value";
 import { getSchema, writeSchema } from "./assertion-schema";
 import {
-  iAssertionContext,
-  iAssertion,
-  iAssertionResult,
-  iValue,
-  iAssertionIs,
-  CompareCallback,
-  AssertSchemaType,
-} from "./interfaces";
-import {
   toType,
   isNullOrUndefined,
   asyncEvery,
@@ -27,11 +18,9 @@ import {
   asyncFind,
   asyncFindNot,
   validateSchema,
-  asyncCount,
 } from "./util";
 import { HttpResponse } from "./http-response";
 import { ImageCompare } from "./visual/image-compare";
-import { EvaluateFn, SerializableOrJSHandle } from "puppeteer-core";
 import { AssertionIs } from "./assertion-is";
 import { Schema } from "ajv";
 import generateJsonSchema from "@flagpolejs/json-to-jsonschema";
@@ -39,6 +28,13 @@ import {
   IteratorBoolCallback,
   IteratorCallback,
 } from "./interfaces/iterator-callbacks";
+import { iAssertion } from "./interfaces/iassertion";
+import { iAssertionIs } from "./interfaces/iassertion-is";
+import { iValue } from ".";
+import { iAssertionResult } from "./interfaces/iassertion-result";
+import { iAssertionContext } from "./interfaces/general";
+import { CompareCallback, JsFunction } from "./interfaces/generic-types";
+import { AssertSchemaType } from "./interfaces/schema";
 
 export class Assertion implements iAssertion {
   public get value(): any {
@@ -663,10 +659,7 @@ export class Assertion implements iAssertion {
     return this.execute(result, which);
   }
 
-  public async eval(
-    js: EvaluateFn<any>,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<iAssertion> {
+  public async eval(js: JsFunction, ...args: any[]): Promise<iAssertion> {
     const result = await this.context.eval.apply(undefined, [
       js,
       this.value,
@@ -679,10 +672,7 @@ export class Assertion implements iAssertion {
     return this.execute(!!result, result);
   }
 
-  public async evalEvery(
-    js: EvaluateFn<any>,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<iAssertion> {
+  public async evalEvery(js: JsFunction, ...args: any[]): Promise<iAssertion> {
     this._mustBeArray(this.value);
     this.setDefaultMessages(
       `Every function evaluates false`,

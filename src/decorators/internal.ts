@@ -1,4 +1,4 @@
-import { iScenario } from "../interfaces";
+import { iScenario } from "../interfaces/general";
 import { AssertionFail } from "../logging/assertion-result";
 import { ValuePromise } from "../value-promise";
 

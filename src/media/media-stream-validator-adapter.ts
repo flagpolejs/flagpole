@@ -3,7 +3,7 @@ import {
   mediaStreamValidator,
   MediaStreamValidatorOpts,
 } from "media-stream-validator";
-import { HttpRequestFetch, iHttpRequest } from "../interfaces";
+import { HttpRequestFetch, iHttpRequest } from "../interfaces/http";
 
 export const fetchWithMediaStreamValidator: HttpRequestFetch = (
   request: iHttpRequest,

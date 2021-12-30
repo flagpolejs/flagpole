@@ -1,6 +1,6 @@
 import { HttpResponse } from "../http-response";
 import { ffprobe, FfprobeOptions } from "media-probe";
-import { HttpRequestFetch, iHttpRequest } from "../interfaces";
+import { HttpRequestFetch, iHttpRequest } from "../interfaces/http";
 
 export const fetchWithFfprobe: HttpRequestFetch = (
   request: iHttpRequest,

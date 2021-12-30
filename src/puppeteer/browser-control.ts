@@ -1,7 +1,8 @@
 import * as puppeteer from "puppeteer-core";
 import { Page, Browser, Response, SetCookie } from "puppeteer-core";
 import { HttpRequest } from "../http-request";
-import { BrowserOptions, KeyValue } from "../interfaces";
+import { KeyValue } from "../interfaces/generic-types";
+import { BrowserOptions } from "./browser-opts";
 
 export type BrowserConsoleMessage = {
   type: string;
@@ -48,7 +49,7 @@ export class BrowserControl {
   }
 
   public get browserOpts(): BrowserOptions {
-    return this._request.browser;
+    return this._request.customOpts;
   }
 
   private get _dynamicPuppeteer(): Promise<typeof puppeteer> {

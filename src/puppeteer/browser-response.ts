@@ -1,15 +1,13 @@
+import { iResponse, iValue } from "../interfaces/general";
+import { FindOptions, FindAllOptions } from "../interfaces/find-options";
 import {
-  iResponse,
-  iValue,
-  FindOptions,
-  FindAllOptions,
   PointerMove,
   PointerButton,
   PointerDisposition,
-} from "../interfaces";
+} from "../interfaces/pointer";
 import { ElementHandle } from "puppeteer-core";
 import { PuppeteerResponse } from "./puppeteer-response";
-import { asyncForEach, toArray, asyncMap } from "../util";
+import { asyncForEach, asyncMap } from "../util";
 import {
   getFindParams,
   filterFind,

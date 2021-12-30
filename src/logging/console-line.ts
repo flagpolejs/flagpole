@@ -1,7 +1,6 @@
 import { oneLine } from "common-tags";
 import Ansi, { FG_MAGENTA, FG_GREEN, FG_YELLOW } from "cli-ansi";
-import { iConsoleLine } from "../interfaces";
-import { LineType } from "../enums";
+import { iConsoleLine, LineType } from "../interfaces/iconsole-log";
 
 export abstract class ConsoleLine implements iConsoleLine {
   public timestamp: Date;

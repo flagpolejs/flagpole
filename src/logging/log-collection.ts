@@ -1,4 +1,4 @@
-import { iLogItem } from "../interfaces";
+import { iLogItem } from "../interfaces/ilog-item";
 
 export class LogCollection {
   protected _logItems: iLogItem[] = [];

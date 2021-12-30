@@ -1,17 +1,13 @@
 import { DOMElement } from "./dom-element";
 import { Link } from "../link";
-import {
-  iAssertionContext,
-  iValue,
-  KeyValue,
-  FindOptions,
-  FindAllOptions,
-  HttpMethodVerb,
-} from "../interfaces";
+import { iAssertionContext, iValue } from "../interfaces/general";
 import { asyncForEach } from "../util";
 import { getFindParams, filterFind } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { HttpRequest } from "../http-request";
+import { FindAllOptions, FindOptions } from "../interfaces/find-options";
+import { KeyValue } from "../interfaces/generic-types";
+import { HttpMethodVerb } from "../interfaces/http";
 
 let $: cheerio.Root;
 

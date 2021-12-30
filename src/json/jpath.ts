@@ -1,5 +1,5 @@
 import * as jmespath from "jmespath";
-import { iResponse, iValue } from "../interfaces";
+import { iResponse, iValue } from "../interfaces/general";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 

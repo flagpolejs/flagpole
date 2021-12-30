@@ -1,10 +1,11 @@
 import { HttpResponse } from "../http-response";
-import { FindAllOptions, FindOptions, iResponse } from "../interfaces";
+import { iResponse } from "../interfaces/general";
 import { HtmlResponse } from "../html/html-response";
 import * as cheerio from "cheerio";
 import { ScenarioType } from "../scenario-types";
 import { ValuePromise } from "../value-promise";
 import { iValue } from "..";
+import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 
 export class XmlResponse extends HtmlResponse implements iResponse {
   public get responseTypeName(): string {

@@ -1,18 +1,12 @@
 import { URL } from "url";
-import { iAssertionContext } from "./interfaces";
 import { toType } from "./util";
 
 const isValidDataUrl = require("valid-data-url");
 
 export class Link {
-  protected _context: iAssertionContext;
-  protected _uri: string;
   protected _qs: any;
 
-  constructor(uri: string, context: iAssertionContext) {
-    this._uri = uri;
-    this._context = context;
-  }
+  constructor(protected uri: string, protected baseUrl: URL) {}
 
   /**
    * Get full URL including host, optionally add query string
@@ -20,8 +14,7 @@ export class Link {
    * @param queryString
    */
   public getUri(): string {
-    const baseUrl: URL = this._context.scenario.buildUrl();
-    const thisUrl: URL = new URL(this._uri, baseUrl.href);
+    const thisUrl: URL = new URL(this.uri, this.baseUrl.href);
     if (typeof this._qs != "undefined") {
       const type: string = toType(this._qs);
       if (type == "object") {
@@ -42,43 +35,43 @@ export class Link {
   }
 
   public isValidDataUri(): boolean {
-    return isValidDataUrl(this._uri);
+    return isValidDataUrl(this.uri);
   }
 
   public isData(): boolean {
-    return /^data:/.test(this._uri);
+    return /^data:/.test(this.uri);
   }
 
   public isAnchor(): boolean {
-    return /^#/.test(this._uri);
+    return /^#/.test(this.uri);
   }
 
   public isEmail(): boolean {
-    return /^mailto:/.test(this._uri);
+    return /^mailto:/.test(this.uri);
   }
 
   public isPhone(): boolean {
-    return /^(tel|callto|wtai):/.test(this._uri);
+    return /^(tel|callto|wtai):/.test(this.uri);
   }
 
   public isTextMessage(): boolean {
-    return /^(sms|mms):/.test(this._uri);
+    return /^(sms|mms):/.test(this.uri);
   }
 
   public isGeo(): boolean {
-    return /^(geo|geopoint):/.test(this._uri);
+    return /^(geo|geopoint):/.test(this.uri);
   }
 
   public isScript(): boolean {
-    return /^(javascript):/.test(this._uri);
+    return /^(javascript):/.test(this.uri);
   }
 
   public isAppStore(): boolean {
-    return /^(market|itms|itms-apps):/.test(this._uri);
+    return /^(market|itms|itms-apps):/.test(this.uri);
   }
 
   public isFtp(): boolean {
-    return /^(ftp):/.test(this._uri);
+    return /^(ftp):/.test(this.uri);
   }
 
   /*
@@ -91,12 +84,12 @@ export class Link {
 
   public isNavigation(): boolean {
     return (
-      this._uri.length > 0 &&
+      this.uri.length > 0 &&
       !this.isAnchor() &&
-      (/^\?/.test(this._uri) || // Starts with a question mark
-        /^https?:\/\//i.test(this._uri) || // Starts with http:// or https://
-        /^\//i.test(this._uri) || // Starts with as slash
-        !/^[a-z]+:\/\//i.test(this._uri)) // Not any other weird protocol
+      (/^\?/.test(this.uri) || // Starts with a question mark
+        /^https?:\/\//i.test(this.uri) || // Starts with http:// or https://
+        /^\//i.test(this.uri) || // Starts with as slash
+        !/^[a-z]+:\/\//i.test(this.uri)) // Not any other weird protocol
     );
   }
 }

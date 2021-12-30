@@ -6,7 +6,7 @@ import {
   ScenarioCallback,
   SuiteCallbackAndMessage,
   ScenarioCallbackAndMessage,
-} from "./interfaces";
+} from "./interfaces/general";
 import * as bluebird from "bluebird";
 import { runAsync } from "./util";
 
