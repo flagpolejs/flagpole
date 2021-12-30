@@ -1,5 +1,5 @@
 import { ProtoResponse } from "../response";
-import { iResponse, iValue } from "../interfaces";
+import { iResponse, iValue } from "../interfaces/general";
 import { HttpResponse } from "../http-response";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";

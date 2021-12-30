@@ -1,16 +1,6 @@
 import { Value } from "./value";
 import { getSchema, writeSchema } from "./assertion-schema";
 import {
-  iAssertionContext,
-  iAssertion,
-  iAssertionResult,
-  iValue,
-  iAssertionIs,
-  CompareCallback,
-  AssertSchemaType,
-  JsFunction,
-} from "./interfaces";
-import {
   toType,
   isNullOrUndefined,
   asyncEvery,
@@ -38,6 +28,13 @@ import {
   IteratorBoolCallback,
   IteratorCallback,
 } from "./interfaces/iterator-callbacks";
+import { iAssertion } from "./interfaces/iassertion";
+import { iAssertionIs } from "./interfaces/iassertion-is";
+import { iValue } from ".";
+import { iAssertionResult } from "./interfaces/iassertion-result";
+import { iAssertionContext } from "./interfaces/general";
+import { CompareCallback, JsFunction } from "./interfaces/generic-types";
+import { AssertSchemaType } from "./interfaces/schema";
 
 export class Assertion implements iAssertion {
   public get value(): any {

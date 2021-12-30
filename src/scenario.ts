@@ -1,29 +1,15 @@
-import { ScenarioStatusEvent, ScenarioDisposition } from "./enums";
+import { ScenarioStatusEvent, ScenarioDisposition } from "./interfaces/enums";
 import {
-  iAssertion,
   iAssertionContext,
-  iLogItem,
   iResponse,
   iScenario,
   iSuite,
   iNextCallback,
-  KeyValue,
-  ResponsePipe,
   ScenarioCallback,
   ScenarioStatusCallback,
   ScenarioCallbackAndMessage,
-  ResponsePipeCallbackAndMessage,
   iValue,
-  HttpResponseOptions,
-  WebhookServer,
-  HttpRequestOptions,
-  HttpProxy,
-  HttpAuth,
-  HttpTimeout,
-  HttpMethodVerb,
-  HttpRequestFetch,
-  ClassConstructor,
-} from "./interfaces";
+} from "./interfaces/general";
 import {
   AssertionResult,
   AssertionPass,
@@ -48,9 +34,25 @@ import {
   afterScenarioExecuted,
   beforeScenarioRequestStarted,
 } from "./decorators/internal";
-import { ScenarioType } from "./scenario-types";
 import { JsonDoc } from "./json/jpath";
 import { _ } from "ajv";
+import { iLogItem } from "./interfaces/ilog-item";
+import {
+  ResponsePipe,
+  ResponsePipeCallbackAndMessage,
+} from "./interfaces/response-pipe";
+import { WebhookServer } from "./interfaces/webhook";
+import {
+  HttpAuth,
+  HttpMethodVerb,
+  HttpProxy,
+  HttpRequestFetch,
+  HttpRequestOptions,
+  HttpResponseOptions,
+  HttpTimeout,
+} from "./interfaces/http";
+import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
+import { iAssertion } from "./interfaces/iassertion";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",

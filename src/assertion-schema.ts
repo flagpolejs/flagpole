@@ -7,7 +7,7 @@ import {
   ensureFileSync,
 } from "fs-extra";
 import { resolve } from "path";
-import { AssertSchemaType } from "./interfaces";
+import { AssertSchemaType } from "./interfaces/schema";
 import { Schema } from "ajv";
 import generateJtd from "@flagpolejs/json-to-jtd";
 import generateJsonSchema from "@flagpolejs/json-to-jsonschema";

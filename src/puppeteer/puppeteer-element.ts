@@ -1,4 +1,4 @@
-import { iValue, iAssertionContext } from "../interfaces";
+import { iValue, iAssertionContext } from "../interfaces/general";
 import {
   JSHandle,
   ElementHandle,

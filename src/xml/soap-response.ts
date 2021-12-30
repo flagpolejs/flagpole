@@ -1,5 +1,5 @@
 import { HttpResponse } from "../http-response";
-import { iResponse } from "../interfaces";
+import { iResponse } from "../interfaces/general";
 import { XmlResponse } from "./xml-response";
 import { ScenarioType } from "../scenario-types";
 

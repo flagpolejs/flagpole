@@ -1,11 +1,6 @@
 import { ExtJsComponent } from "./extjs-component";
-import {
-  iResponse,
-  iScenario,
-  FindOptions,
-  FindAllOptions,
-  iValue,
-} from "../interfaces";
+import { iResponse, iValue } from "../interfaces/general";
+import { FindOptions, FindAllOptions } from "../interfaces/find-options";
 import { PuppeteerResponse } from "./puppeteer-response";
 import { PuppeteerElement } from "./puppeteer-element";
 import { asyncForEach, asyncMap } from "../util";

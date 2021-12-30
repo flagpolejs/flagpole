@@ -1,19 +1,14 @@
 import {
   SuiteStatusEvent,
   ScenarioStatusEvent,
-  LineType,
   ScenarioDisposition,
 } from "./enums";
-import { HttpResponse } from "./http-response";
-import { FlagpoleExecution } from "./flagpole-execution";
-import { Link } from "./link";
+import { HttpResponse } from "../http-response";
+import { FlagpoleExecution } from "../flagpole-execution";
+import { Link } from "../link";
 import { ServerOptions } from "https";
-import { Server } from "minikin";
-import validator from "validator";
-import { ValuePromise } from "./value-promise";
-import { ScenarioType } from "./scenario-types";
-import * as http from "http";
-import { ErrorObject, Schema } from "ajv";
+import { ValuePromise } from "../value-promise";
+import { ScenarioType } from "../scenario-types";
 import {
   IteratorBoolCallback,
   IteratorCallback,
@@ -21,52 +16,40 @@ import {
   SyncIteratorCallback,
   SyncMapperCallback,
   SyncReducerCallback,
-} from "./interfaces/iterator-callbacks";
+} from "./iterator-callbacks";
+import {
+  ClassConstructor,
+  JsFunction,
+  KeyValue,
+  OptionalXY,
+} from "./generic-types";
+import { iAssertionIs } from "./iassertion-is";
+import { iAssertion } from "./iassertion";
+import { PointerClick, PointerMove } from "./pointer";
+import { GestureOpts, GestureType } from "./gesture";
+import { ScreenProperties } from "./screen-properties";
+import { iBounds } from "./ibounds";
+import {
+  HttpAuth,
+  HttpMethodVerb,
+  HttpProxy,
+  HttpRequestOptions,
+  HttpResponseOptions,
+  HttpTimeout,
+  iHttpRequest,
+} from "./http";
+import { WebhookServer } from "./webhook";
+import { ScreenshotOpts } from "./screenshot";
+import { FindAllOptions, FindOptions } from "./find-options";
+import { iAssertionResult } from "./iassertion-result";
+import { iLogItem } from "./ilog-item";
+import { ResponsePipe } from "./response-pipe";
 
-export type JsFunction = string | (() => any);
-
-export type ClassConstructor<T> = {
-  new (...args: any[]): T;
-};
 export type ScenarioConstructor = ClassConstructor<iScenario>;
-
-export type CompareCallback = (a: any, b: any) => number;
-
-export interface ScreenshotOpts {
-  path?: string;
-  fullPage?: boolean;
-  clip?: { x: number; y: number; width: number; height: number };
-  omitBackground?: boolean;
-}
 
 export interface iNextCallback {
   (context: iAssertionContext, ...args: any[]): Promise<any> | void;
 }
-
-export interface iCallbackAndMessage {
-  message: string;
-  callback: Function;
-}
-
-export interface FindOptions {
-  findBy?: "text" | "value" | "html";
-  offset?: number;
-}
-
-export interface FindAllOptions extends FindOptions {
-  limit?: number;
-}
-
-export type ResponseSyncPipe = (resp: HttpResponse) => void | HttpResponse;
-export type ResponseAsyncPipe = (
-  resp: HttpResponse
-) => Promise<void | HttpResponse>;
-export type ResponsePipe = ResponseSyncPipe | ResponseAsyncPipe;
-export type ResponsePipeCallbackAndMessage = {
-  message: string;
-  callback: ResponsePipe;
-};
-export type OptionalXY = { x?: number; y?: number };
 
 export type ScenarioStatusCallback = (
   scenario: iScenario,
@@ -76,36 +59,6 @@ export type SuiteStatusCallback = (
   suite: iSuite,
   statusEvent: SuiteStatusEvent
 ) => any;
-
-export type PointerButton = "default" | "left" | "right" | "middle";
-export type PointerDisposition = "down" | "up";
-export type PointerType = "default" | "mouse" | "pen" | "touch";
-export type PointerPoint = [x: number, y: number];
-export type PointerClick = {
-  duration?: number;
-  count?: number;
-  delay?: number;
-  type?: PointerType;
-};
-
-export interface PointerMove {
-  start: PointerPoint;
-  end?: PointerPoint;
-  duration?: number;
-  type?: PointerType;
-  disposition?: {
-    start: PointerDisposition;
-    end: PointerDisposition;
-  };
-  button?: PointerButton;
-}
-
-export type GestureType = "pinch" | "stretch";
-export interface GestureOpts {
-  start?: PointerPoint;
-  duration?: number;
-  amount?: PointerPoint;
-}
 
 export type SuiteAsyncCallback = (suite: iSuite) => Promise<void>;
 export type SuiteSyncCallback = (suite: iSuite) => void;
@@ -132,48 +85,6 @@ export type ScenarioMapper = (
   arr: any[],
   suite: iSuite
 ) => iScenario;
-
-export interface iConsoleLine {
-  timestamp: Date;
-  fg: [number, number, number];
-  message: string;
-  type: LineType;
-  toConsoleString(): string;
-  toString(): string;
-}
-
-export interface iLogItem {
-  type: LineType;
-  className: string;
-  message: string;
-  passed: boolean;
-  failed: boolean;
-  isOptional: boolean;
-  timestamp: Date;
-  toConsole(): iConsoleLine[];
-  toJson(): any;
-  toCsv(): string;
-  toPsv(): string;
-  toTsv(): string;
-  toHtml(): string;
-}
-
-export interface iAssertionResult {
-  className: string;
-  toConsole(): iConsoleLine[];
-  type: LineType;
-  message: string;
-  passed: boolean;
-  failed: boolean;
-  isOptional: boolean;
-  timestamp: Date;
-  toConsole(): iConsoleLine[];
-  toJson(): any;
-  toCsv(): string;
-  toPsv(): string;
-  toTsv(): string;
-  toHtml(): string;
-}
 
 export interface iValue {
   $: any;
@@ -449,139 +360,6 @@ export interface iResponse {
   getSource(): ValuePromise;
 }
 
-export interface iAssertionIs {
-  not: iAssertionIs;
-  optional: iAssertionIs;
-  email(): iAssertion;
-  alpha(): iAssertion;
-  alphaNumeric(): iAssertion;
-  ascii(): iAssertion;
-  creditCard(): iAssertion;
-  currency(): iAssertion;
-  decimal(): iAssertion;
-  float(): iAssertion;
-  ip(): iAssertion;
-  integer(): iAssertion;
-  json(): iAssertion;
-  jwt(): iAssertion;
-  numeric(): iAssertion;
-  postalCode(locale?: validator.PostalCodeLocale): iAssertion;
-  url(): iAssertion;
-  mobilePhone(locale?: validator.MobilePhoneLocale): iAssertion;
-  boolean(): iAssertion;
-  base32(): iAssertion;
-  base64(): iAssertion;
-  beforeDate(date?: string): iAssertion;
-  afterDate(date?: string): iAssertion;
-  sameOrAfterDate(date?: string): iAssertion;
-  sameOrBeforeDate(date?: string): iAssertion;
-  dataUri(): iAssertion;
-  empty(): iAssertion;
-  fqdn(): iAssertion;
-  hash(): iAssertion;
-  hexColor(): iAssertion;
-  hexadecimal(): iAssertion;
-  in(values: any[]): iAssertion;
-  latLong(): iAssertion;
-  lowercase(): iAssertion;
-  md5(): iAssertion;
-  mimeType(): iAssertion;
-  octal(): iAssertion;
-  port(): iAssertion;
-  rgbColor(): iAssertion;
-  slug(): iAssertion;
-  uuid(): iAssertion;
-  uppercase(): iAssertion;
-  date(): iAssertion;
-  null(): iAssertion;
-  undefined(): iAssertion;
-  string(): iAssertion;
-  array(): iAssertion;
-  object(): iAssertion;
-  number(): iAssertion;
-  regionCode(countries?: ("US" | "CA")[]): iAssertion;
-  countryCode(format: "iso-alpha-2" | "iso-alpha-3"): iAssertion;
-  timezone(): iAssertion;
-}
-
-export interface iAssertion {
-  value: any;
-  text: string;
-  subject: string;
-  and: iAssertion;
-  type: iAssertion;
-  length: iAssertion;
-  trim: iAssertion;
-  keys: iAssertion;
-  values: iAssertion;
-  not: iAssertion;
-  optional: iAssertion;
-  result: Promise<any>;
-  assertionMade: boolean;
-  name: string;
-  passed: boolean | null;
-  isFinalized: boolean;
-  is: iAssertionIs;
-  sort(compareFunc?: CompareCallback): iAssertion;
-  setDefaultMessages(notMessage: string, standardMessage: string): iAssertion;
-  setDefaultMessage(message: string): iAssertion;
-  setDefaultNotMessage(message: string): iAssertion;
-  as(aliasName: string): iAssertion;
-  exactly(value: any): iAssertion;
-  equals(value: any): iAssertion;
-  like(value: any): iAssertion;
-  greaterThan(value: any): iAssertion;
-  greaterThanOrEquals(value: any): iAssertion;
-  lessThan(value: any): iAssertion;
-  lessThanOrEquals(value: any): iAssertion;
-  between(min: any, max: any): iAssertion;
-  matches(pattern: string | RegExp): iAssertion;
-  contains(value: any): iAssertion;
-  startsWith(value: any): iAssertion;
-  endsWith(value: any): iAssertion;
-  in(values: any[]): iAssertion;
-  includes(value: any): iAssertion;
-  exists(): iAssertion;
-  hidden(): Promise<iAssertion>;
-  visible(): Promise<iAssertion>;
-  resolves(continueOnReject?: boolean): Promise<iAssertion>;
-  rejects(continueOnReject?: boolean): Promise<any>;
-  pluck(property: string): iAssertion;
-  nth(index: number): iAssertion;
-  map(callback: IteratorCallback): Promise<iAssertion>;
-  every(callback: IteratorBoolCallback): Promise<iAssertion>;
-  everySync(callback: IteratorBoolCallback): iAssertion;
-  some(callback: IteratorBoolCallback): Promise<iAssertion>;
-  none(callback: IteratorBoolCallback): Promise<iAssertion>;
-  assert(a: any, b?: any): iAssertion;
-  comment(input: any): iAssertion;
-  schema(schemaName: string, useJsonSchema: boolean): Promise<iAssertion>;
-  schema(
-    schemaName: string,
-    schemaType?: AssertSchemaType
-  ): Promise<iAssertion>;
-  schema(schema: Schema, schemaType?: AssertSchemaType): Promise<iAssertion>;
-  looksLike(imageData: Buffer): iAssertion;
-  looksLike(imageLocalPath: string): iAssertion;
-  looksLike(imageData: Buffer, threshold: number): iAssertion;
-  looksLike(imageLocalPath: string, threshold: number): iAssertion;
-  looksLike(imageData: Buffer, thresholdPercent: string): iAssertion;
-  looksLike(imageLocalPath: string, thresholdPercent: string): iAssertion;
-  hasValue(value?: any): Promise<iAssertion>;
-  hasProperty(key: string, value?: any): Promise<iAssertion>;
-  hasAttribute(key: string, value?: string | RegExp): Promise<iAssertion>;
-  hasClassName(value?: string | RegExp): Promise<iAssertion>;
-  hasText(text?: string | RegExp): Promise<iAssertion>;
-  hasTag(tagName?: string | RegExp): Promise<iAssertion>;
-  eval(js: JsFunction, ...args: any[]): Promise<iAssertion>;
-  evalEvery(js: JsFunction, ...args: any[]): Promise<iAssertion>;
-  execute(
-    bool: boolean,
-    actualValue: any,
-    highlightText?: string | null
-  ): iAssertion;
-}
-
 export interface iAssertionContext {
   result: any;
   request: iHttpRequest;
@@ -789,9 +567,9 @@ export interface iSuite {
   push(key: string, value: any): iSuite;
   set<T>(key: string, value: T): iSuite;
   get<T>(key: string): T;
-  template(
-    templateOptions: ScenarioInitOptions
-  ): (title: string, scenarioOptions: ScenarioInitOptions) => iScenario;
+  template<T extends iScenario>(
+    templateOptions: ScenarioInitOptions<T>
+  ): (title: string, scenarioOptions: ScenarioInitOptions<T>) => T;
 }
 
 export interface iScenario {
@@ -903,7 +681,7 @@ export interface iScenario {
   waitFor(thatScenario: iScenario): iScenario;
   repeat(): iScenario;
   repeat(count: number): iScenario[];
-  go();
+  go(): void;
 }
 
 export interface iMessageAndCallback {
@@ -913,130 +691,8 @@ export interface iMessageAndCallback {
   scenario?: iScenario;
 }
 
-export interface iBounds {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  left: number;
-  right: number;
-  top: number;
-  bottom: number;
-  middle: { x: number; y: number };
-  points: { x: number; y: number }[];
-}
-
-export type KeyValue = {
-  [key: string]: any;
-};
-
-export type AssertSchemaType = "JsonSchema" | "JTD";
-
-export type AjvErrors =
-  | ErrorObject<string, Record<string, any>, unknown>[]
-  | null
-  | undefined;
-
-export interface HttpResponseOptions {
-  body?: any;
-  status?: [number, string];
-  headers?: KeyValue;
-  cookies?: KeyValue;
-  trailers?: KeyValue;
-  method?: string;
-  url?: string;
-}
-
-export interface WebhookServer {
-  port: number;
-  opts: ServerOptions;
-  server: Server;
-}
-
-export type HttpRequestFetch = (
-  request: iHttpRequest,
-  opts?: KeyValue
-) => Promise<HttpResponse>;
-
-export type HttpMethodVerb =
-  | "get"
-  | "head"
-  | "delete"
-  | "patch"
-  | "post"
-  | "put"
-  | "options";
-
-export type HttpAuthType = "basic" | "digest" | "auto";
-
-export type HttpAuth = {
-  username: string;
-  password: string;
-};
-
-export type HttpTimeout = {
-  read?: number;
-  open?: number;
-  response?: number;
-};
-
-export type HttpProxy = {
-  host: string;
-  port: number;
-  auth: HttpAuth;
-};
-
-export type HttpData =
-  | Buffer
-  | KeyValue
-  | NodeJS.ReadableStream
-  | string
-  | null
-  | undefined;
-
-export type HttpRequestOptions = {
-  customOpts?: KeyValue;
-  auth?: HttpAuth;
-  authType?: HttpAuthType;
-  data?: HttpData;
-  cookies?: KeyValue;
-  headers?: KeyValue;
-  maxRedirects?: number;
-  method?: HttpMethodVerb;
-  outputFile?: string;
-  proxy?: HttpProxy;
-  timeout?: HttpTimeout | number;
-  uri?: string | null;
-  verifyCert?: boolean;
-  cacheKey?: string;
-};
-
-export interface iHttpRequest {
-  uri: string | null;
-  method: HttpMethodVerb;
-  headers: KeyValue;
-  cookies: KeyValue;
-  verifyCert: boolean;
-  proxy: HttpProxy | undefined;
-  timeout: HttpTimeout;
-  maxRedirects: number;
-  auth: HttpAuth | undefined;
-  authType?: HttpAuthType;
-  data: HttpData;
-  customOpts?: KeyValue;
-  outputFile?: string;
-  options: HttpRequestOptions;
-  proxyAgent?: http.Agent;
-}
-
-export const CONTENT_TYPE_JSON = "application/json";
-export const CONTENT_TYPE_SOAP = "application/soap+xml";
-export const CONTENT_TYPE_FORM_MULTIPART = "multipart/form-data";
-export const CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
-export const ENCODING_GZIP = "gzip,deflate";
-
-export interface ScenarioInitOptions {
-  type?: ScenarioType;
+export interface ScenarioInitOptions<T extends iScenario> {
+  type: ClassConstructor<T> | ScenarioType;
   bearerToken?: string;
   url?: string;
   httpRequestOpts?: HttpRequestOptions;
@@ -1055,33 +711,5 @@ export interface ScenarioInitOptions {
   set?: KeyValue;
   statusCode?: number;
   maxLoadTime?: number;
-  opts?: any;
-}
-
-export type AppiumElementIdResponse = {
-  [0]: string;
-  ELEMENT: string;
-};
-
-export type ScreenProperties = {
-  angle: string | number;
-  dimensions: {
-    height: number;
-    width: number;
-  };
-  orientation: string;
-};
-
-export interface DeviceProperties {
-  network?: {
-    airplaneMode?: boolean;
-    locationServices?: boolean;
-    wifi?: boolean;
-    mobileData?: boolean;
-  };
-  location?: {
-    latitude: number;
-    longitude: number;
-    altitude?: number;
-  };
+  opts?: KeyValue;
 }

@@ -1,7 +1,7 @@
 import { AppiumResponse } from "./appium-response";
 import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
-import { KeyValue } from "../interfaces";
+import { KeyValue } from "../interfaces/generic-types";
 
 export class AppiumScenario extends ProtoScenario {
   public readonly requestAdapter = fetchWithNeedle;

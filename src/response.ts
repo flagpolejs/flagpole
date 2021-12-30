@@ -4,19 +4,17 @@ import {
   iResponse,
   iScenario,
   iAssertionContext,
-  FindOptions,
-  FindAllOptions,
-  OptionalXY,
-  ScreenProperties,
-  PointerMove,
-  GestureOpts,
-  GestureType,
-} from "./interfaces";
+} from "./interfaces/general";
 import { HttpResponse } from "./http-response";
 import { HttpRequest } from "./http-request";
 import { AssertionContext } from "./assertion-context";
 import { wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
+import { FindAllOptions, FindOptions } from "./interfaces/find-options";
+import { PointerMove } from "./interfaces/pointer";
+import { GestureOpts, GestureType } from "./interfaces/gesture";
+import { OptionalXY } from "./interfaces/generic-types";
+import { ScreenProperties } from "./interfaces/screen-properties";
 
 export abstract class ProtoResponse implements iResponse {
   protected _currentUrl: string | null = null;

@@ -1,7 +1,6 @@
 import { LogItem } from "./log-item";
 import { SubheadingLine, SectionHeadingLine } from "./console-line";
-import { LineType } from "../enums";
-import { iConsoleLine } from "../interfaces";
+import { iConsoleLine, LineType } from "../interfaces/iconsole-log";
 
 export class LogSuiteHeading extends LogItem {
   public readonly type: LineType = LineType.h1;

@@ -1,4 +1,4 @@
-import { iAssertionContext, iValue } from "../interfaces";
+import { iAssertionContext, iValue } from "../interfaces/general";
 import { PuppeteerElement } from "./puppeteer-element";
 import {
   JSHandle,

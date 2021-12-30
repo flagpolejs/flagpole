@@ -1,4 +1,4 @@
-import { iResponse, iValue } from "../interfaces";
+import { iResponse, iValue } from "../interfaces/general";
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http-response";
 import { ValuePromise } from "../value-promise";

@@ -1,10 +1,8 @@
-import { iLogItem, iConsoleLine, iAssertionResult } from "../interfaces";
-import { LineType } from "../enums";
+import { iLogItem } from "../interfaces/ilog-item";
 import {
   PassLine,
   OptionalFailLine,
   FailLine,
-  DetailLine,
   SourceCodeBlock,
   WarningLine,
   ActionCompletedLine,
@@ -13,6 +11,8 @@ import {
 } from "./console-line";
 import { LogItem } from "./log-item";
 import { isNullOrUndefined, toType } from "../util";
+import { iAssertionResult } from "../interfaces/iassertion-result";
+import { iConsoleLine, LineType } from "../interfaces/iconsole-log";
 
 export abstract class AssertionResult
   extends LogItem

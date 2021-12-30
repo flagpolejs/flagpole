@@ -6,7 +6,7 @@ import {
   SerializableOrJSHandle,
   PageFnOptions,
 } from "puppeteer-core";
-import { iResponse, ScreenshotOpts, iValue, iHttpRequest } from "../interfaces";
+import { iResponse, iValue } from "../interfaces/general";
 import { BrowserControl } from "./browser-control";
 import { DOMResponse } from "../html/dom-response";
 import { toType } from "../util";
@@ -14,6 +14,8 @@ import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { BrowserScenario } from "./browser-scenario";
 import { ExtJsScenario } from "./extjs-scenario";
+import { ScreenshotOpts } from "../interfaces/screenshot";
+import { iHttpRequest } from "../interfaces/http";
 
 const DEFAULT_WAITFOR_TIMEOUT = 30000;
 

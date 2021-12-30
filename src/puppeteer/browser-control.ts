@@ -1,7 +1,7 @@
 import * as puppeteer from "puppeteer-core";
 import { Page, Browser, Response, SetCookie } from "puppeteer-core";
 import { HttpRequest } from "../http-request";
-import { KeyValue } from "../interfaces";
+import { KeyValue } from "../interfaces/generic-types";
 import { BrowserOptions } from "./browser-opts";
 
 export type BrowserConsoleMessage = {

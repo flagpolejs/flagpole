@@ -1,11 +1,12 @@
-import { iAssertion, iAssertionIs } from "./interfaces";
+import { iAssertion } from "./interfaces/iassertion";
+import { iAssertionIs } from "./interfaces/iassertion-is";
 import validator from "validator";
 import {
   canadaProvinceCodes,
   countryCodes2,
   countryCodes3,
   usStateCodes,
-} from "./constants";
+} from "./interfaces/region-abbreviations";
 
 export class AssertionIs implements iAssertionIs {
   public get not(): AssertionIs {

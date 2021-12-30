@@ -1,15 +1,4 @@
-import {
-  iValue,
-  iAssertionContext,
-  iBounds,
-  GestureOpts,
-  GestureType,
-  PointerPoint,
-  PointerClick,
-  FindOptions,
-  FindAllOptions,
-  ScreenshotOpts,
-} from "../interfaces";
+import { iValue, iAssertionContext } from "../interfaces/general";
 import { promises } from "fs";
 import * as Jimp from "jimp";
 import { DOMElement } from "../html/dom-element";
@@ -23,6 +12,11 @@ import {
   applyOffsetAndLimit,
 } from "../helpers";
 import { appiumFindByUiAutomator } from "./appium-helpers";
+import { PointerClick, PointerPoint } from "../interfaces/pointer";
+import { FindAllOptions, FindOptions } from "../interfaces/find-options";
+import { iBounds } from "../interfaces/ibounds";
+import { GestureOpts, GestureType } from "../interfaces/gesture";
+import { ScreenshotOpts } from "../interfaces/screenshot";
 
 const fs = promises;
 

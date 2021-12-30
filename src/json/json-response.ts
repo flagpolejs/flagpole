@@ -1,6 +1,6 @@
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http-response";
-import { iResponse, iValue } from "../interfaces";
+import { iResponse, iValue } from "../interfaces/general";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "./jpath";

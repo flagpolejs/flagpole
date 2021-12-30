@@ -4,15 +4,14 @@ import {
   iAssertionContext,
   iScenario,
   iMessageAndCallback,
-  FindOptions,
-  FindAllOptions,
-  ClassConstructor,
-} from "../interfaces";
+} from "../interfaces/general";
 import { Link } from "../link";
 import { getMessageAndCallbackFromOverloading } from "../util";
 import { ValuePromise } from "../value-promise";
 import { ImageScenario } from "../visual/image-scenario";
 import { ResourceScenario } from "../resource/resource-scenario";
+import { FindAllOptions, FindOptions } from "../interfaces/find-options";
+import { ClassConstructor } from "../interfaces/generic-types";
 
 export abstract class DOMElement extends Value {
   public get name(): string {

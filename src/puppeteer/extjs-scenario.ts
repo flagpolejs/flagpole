@@ -1,12 +1,12 @@
 import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
 import { beforeScenarioRequestStarted } from "../decorators/internal";
-import { ScenarioDisposition } from "../enums";
+import { ScenarioDisposition } from "../interfaces/enums";
 import { iBrowserControlResponse, BrowserControl } from "./browser-control";
 import * as puppeteer from "puppeteer-core";
 import { AssertionFailOptional } from "../logging/assertion-result";
 import { FlagpoleExecution } from "../flagpole-execution";
-import { KeyValue } from "../interfaces";
+import { KeyValue } from "../interfaces/generic-types";
 import { HttpResponse } from "../http-response";
 import { runAsync } from "../util";
 import { Browser, Page } from "puppeteer-core";

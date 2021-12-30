@@ -1,8 +1,9 @@
 import { NeedleResponse } from "needle";
-import { KeyValue, HttpResponseOptions, iHttpRequest } from "./interfaces";
 import { readFile } from "fs-extra";
 import { FfprobeData } from "media-probe";
 import { probeImageResponse } from "./visual/image";
+import { KeyValue } from "./interfaces/generic-types";
+import { HttpResponseOptions, iHttpRequest } from "./interfaces/http";
 
 export interface ffprobeResponse {
   headers: KeyValue;

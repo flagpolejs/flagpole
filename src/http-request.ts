@@ -1,24 +1,25 @@
 import {
-  KeyValue,
   iHttpRequest,
   HttpData,
-  HttpAuthType,
   HttpAuth,
   HttpTimeout,
   HttpProxy,
-  HttpMethodVerb,
   HttpRequestOptions,
-  CONTENT_TYPE_JSON,
-  CONTENT_TYPE_FORM_MULTIPART,
-  CONTENT_TYPE_FORM,
   HttpRequestFetch,
-} from "./interfaces";
+} from "./interfaces/http";
 import { HttpResponse } from "./http-response";
 import tunnel = require("tunnel");
 import * as http from "http";
 import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
 import { fetchWithNeedle } from "./needle";
+import { HttpAuthType, HttpMethodVerb } from "./interfaces/http";
+import { KeyValue } from "./interfaces/generic-types";
+import {
+  CONTENT_TYPE_FORM,
+  CONTENT_TYPE_FORM_MULTIPART,
+  CONTENT_TYPE_JSON,
+} from "./interfaces/constants";
 
 export const HttpMethodVerbAllowedValues = [
   "get",
@@ -329,7 +330,7 @@ export class HttpRequest implements iHttpRequest {
     if (this._uri === null) {
       throw new Error("Invalid URI");
     }
-    fetchMethod = fetchMethod || fetchWithNeedle;
-    return fetchMethod(this, opts);
+    if (fetchMethod) return fetchMethod(this, opts);
+    return fetchWithNeedle(this, opts);
   }
 }
