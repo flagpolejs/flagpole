@@ -489,8 +489,11 @@ Get the attribute of the element with this key and return its value. If it is no
 const src = await img.getAttribute("src");
 ```
 
-This also works with Appium testing. Valid attributes for Appium elements are:
-checkable, checked, class, className, clickable, content-desc, contentDescription, enabled, focusable, focused, long-clickable, longClickable, package, password, resource-id, resourceId, scrollable, selection-start, selection-end, selected, text, name, bounds, displayed, contentSize
+This also works with Appium testing.  
+Valid attributes for Android Appium elements are:  
+checkable, checked, class, className, clickable, content-desc, contentDescription, enabled, focusable, focused, long-clickable, longClickable, package, password, resource-id, resourceId, scrollable, selection-start, selection-end, selected, text, name, bounds, displayed, contentSize  
+Valid attributes for iOS Appium elements are:  
+accessibilityContainer, accessible, enabled, frame, index, label, name, rect, selected, type, value, visible, wdAccessibilityContainer, wdAccessible, wdEnabled, wdFrame, wdIndex, wdLabel, wdName, wdRect, wdSelected, wdType, wdUID, wdValue, wdVisible"
 
 ### getBounds(boxType?: string): Promise\<iBounds | null\>;
 
