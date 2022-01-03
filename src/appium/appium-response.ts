@@ -68,14 +68,14 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     });
   }
 
-  protected get _isAndroid(): boolean {
+  public get isAndroid(): boolean {
     return (
       this.capabilities?.automationName?.toLowerCase() === "uiautomator2" ||
       this.capabilities?.automationName?.toLowerCase() === "espresso"
     );
   }
 
-  protected get _isIos(): boolean {
+  public get isIos(): boolean {
     return this.capabilities?.automationName?.toLowerCase() === "xcuitest";
   }
 
@@ -186,7 +186,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
           using: "text",
           value: params.contains,
         });
-      } else if (this._isIos) {
+      } else if (this.isIos) {
         res = await this.post("elements", {
           using: "-ios predicate string",
           value: `label == "${params.contains}"`,
@@ -481,11 +481,11 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   // Uses deprecated JSONWP call
   public async isAppInstalled(bundleId: string): Promise<boolean> {
     let res = new JsonDoc("");
-    if (this._isAndroid) {
+    if (this.isAndroid) {
       res = await this.post("appium/device/app_installed", {
         bundleId: bundleId,
       });
-    } else if (this._isIos) {
+    } else if (this.isIos) {
       res = await this.post("execute", {
         script: "mobile: isAppInstalled",
         args: [
@@ -531,7 +531,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       altitude: location.altitude,
     };
     // Android
-    if (this._isAndroid) {
+    if (this.isAndroid) {
       const wifiState: number = await sendAdbCommand(
         this.sessionId,
         this.context.scenario,
@@ -564,7 +564,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         airplaneMode: airplaneModeState == 0 ? false : true,
       };
       // iOS
-    } else if (this._isIos) {
+    } else if (this.isIos) {
       const wifiState = await this._siriQueryAndResponse("Wi-Fi");
       const dataState = await this._siriQueryAndResponse("Cellular Data");
       const locationSvcsState = await this._siriQueryAndResponse(
@@ -644,7 +644,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     app: string,
     timeout?: number
   ): Promise<void | boolean> {
-    if (this._isAndroid) {
+    if (this.isAndroid) {
       if (timeout) {
         await this.post("appium/device/terminate_app", {
           appId: app,
@@ -658,7 +658,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
         });
       }
       // This call is not deprecated
-    } else if (this._isIos) {
+    } else if (this.isIos) {
       const res = await this.post("execute", {
         script: "mobile: terminateApp",
         args: [{ bundleId: app }],
@@ -731,10 +731,10 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     args?: string[],
     environment?: any
   ): Promise<void> {
-    if (this._isAndroid) {
+    if (this.isAndroid) {
       await this.post("appium/app/launch", {});
       // This call is not deprecated
-    } else if (this._isIos) {
+    } else if (this.isIos) {
       if (!app) throw "App bundleId required for launching an iOS app";
 
       await this.post("execute", {
