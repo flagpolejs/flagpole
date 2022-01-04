@@ -371,7 +371,7 @@ export class AppiumElement extends DOMElement implements iValue {
   }
 
   protected async _getAttribute(key: string): Promise<string | null> {
-    const possibleAttributes = [
+    const possibleAttributesAndroid = [
       "checkable",
       "checked",
       "class",
@@ -399,8 +399,40 @@ export class AppiumElement extends DOMElement implements iValue {
       "contentSize",
     ];
 
-    if (!possibleAttributes.includes(key)) {
-      throw `Invalid attribute: must be one of ${possibleAttributes.join(
+    const possibleAttributesIos = [
+      "accessibilityContainer",
+      "accessible",
+      "enabled",
+      "frame",
+      "index",
+      "label",
+      "name",
+      "rect",
+      "selected",
+      "type",
+      "value",
+      "visible",
+      "wdAccessibilityContainer",
+      "wdAccessible",
+      "wdEnabled",
+      "wdFrame",
+      "wdIndex",
+      "wdLabel",
+      "wdName",
+      "wdRect",
+      "wdSelected",
+      "wdType",
+      "wdUID",
+      "wdValue",
+      "wdVisible",
+    ];
+
+    if (this.session.isAndroid && !possibleAttributesAndroid.includes(key)) {
+      throw `Invalid attribute: must be one of ${possibleAttributesAndroid.join(
+        ", "
+      )}`;
+    } else if (this.session.isIos && !possibleAttributesIos.includes(key)) {
+      throw `Invalid attribute: must be one of ${possibleAttributesIos.join(
         ", "
       )}`;
     }
