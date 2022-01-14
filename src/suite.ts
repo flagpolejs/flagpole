@@ -8,6 +8,7 @@ import {
   ScenarioCallback,
   ScenarioMapper,
   ScenarioInitOptions,
+  ScenarioTemplateInitOptions,
 } from "./interfaces/general";
 import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpole-execution";
@@ -442,8 +443,11 @@ export class Suite implements iSuite {
 
   public template<T extends iScenario>(
     templateOptions: ScenarioInitOptions<T>
-  ): (title: string, scenarioOptions: ScenarioInitOptions<T>) => T {
-    return (title: string, scenarioOptions: ScenarioInitOptions<T>): T => {
+  ): (title: string, scenarioOptions: ScenarioTemplateInitOptions<T>) => T {
+    return (
+      title: string,
+      scenarioOptions: ScenarioTemplateInitOptions<T>
+    ): T => {
       const opts: ScenarioInitOptions<T> = {
         ...templateOptions,
         ...scenarioOptions,

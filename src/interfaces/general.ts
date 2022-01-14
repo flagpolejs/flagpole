@@ -713,3 +713,8 @@ export interface ScenarioInitOptions<T extends iScenario> {
   maxLoadTime?: number;
   opts?: KeyValue;
 }
+
+export type ScenarioTemplateInitOptions<T extends iScenario> = Omit<
+  ScenarioInitOptions<T>,
+  "type"
+>;
