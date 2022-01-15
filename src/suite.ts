@@ -127,7 +127,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public subscribe(callback: SuiteStatusCallback): iSuite {
+  public subscribe(callback: SuiteStatusCallback): this {
     this._taskManager.subscribe(callback);
     return this;
   }
@@ -136,7 +136,7 @@ export class Suite implements iSuite {
    * Turn on or off SSL verification for any new scenarios added to suite
    */
   public verifyCert = this.verifySslCert;
-  public verifySslCert(verify: boolean): Suite {
+  public verifySslCert(verify: boolean): this {
     this._verifySslCert = verify;
     return this;
   }
@@ -147,7 +147,7 @@ export class Suite implements iSuite {
    * @param {boolean} bool
    * @returns {Suite}
    */
-  public wait(bool: boolean = true): Suite {
+  public wait(bool: boolean = true): this {
     this._waitToExecute = bool;
     return this;
   }
@@ -158,7 +158,7 @@ export class Suite implements iSuite {
    * @deprecated
    * @param maxExecutions
    */
-  public setConcurrencyLimit(maxExecutions: number): iSuite {
+  public setConcurrencyLimit(maxExecutions: number): this {
     this._taskManager.concurrencyLimit = maxExecutions;
     return this;
   }
@@ -178,7 +178,7 @@ export class Suite implements iSuite {
    * @deprecated
    * @returns
    */
-  public setMaxScenarioDuration(timeout: number): iSuite {
+  public setMaxScenarioDuration(timeout: number): this {
     this._taskManager.maxScenarioDuration = timeout;
     return this;
   }
@@ -197,7 +197,7 @@ export class Suite implements iSuite {
    * @param timeout
    * @returns
    */
-  public setMaxSuiteDuration(timeout: number): iSuite {
+  public setMaxSuiteDuration(timeout: number): this {
     this._taskManager.maxSuiteDuration = timeout;
     return this;
   }
@@ -262,10 +262,10 @@ export class Suite implements iSuite {
    * @param {string | {}} url
    * @returns {Suite}
    */
-  public base(url: string): Suite;
-  public base(basePathsByEnvironment: {}): Suite;
-  public base(callback: SuiteCallback): Suite;
-  public base(url: string | KeyValue | BaseDomainCallback): Suite {
+  public base(url: string): this;
+  public base(basePathsByEnvironment: {}): this;
+  public base(callback: SuiteCallback): this;
+  public base(url: string | KeyValue | BaseDomainCallback): this {
     let baseUrl: string = "";
     if (typeof url == "string") {
       baseUrl = url;
@@ -292,7 +292,7 @@ export class Suite implements iSuite {
    *
    * @returns {Suite}
    */
-  public execute(): Suite {
+  public execute(): this {
     if (this.hasExecuted) {
       throw new Error(`Suite already executed.`);
     }
@@ -307,7 +307,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public beforeAll(callback: SuiteCallback, prepend: boolean = false): Suite {
+  public beforeAll(callback: SuiteCallback, prepend: boolean = false): this {
     this._taskManager.beforeAll(callback, prepend);
     return this;
   }
@@ -320,7 +320,7 @@ export class Suite implements iSuite {
   public beforeEach(
     callback: ScenarioCallback,
     prepend: boolean = false
-  ): Suite {
+  ): this {
     this._taskManager.beforeEach(callback, prepend);
     return this;
   }
@@ -330,10 +330,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public afterEach(
-    callback: ScenarioCallback,
-    prepend: boolean = false
-  ): Suite {
+  public afterEach(callback: ScenarioCallback, prepend: boolean = false): this {
     this._taskManager.afterEach(callback, prepend);
     return this;
   }
@@ -343,7 +340,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public afterAll(callback: SuiteCallback, prepend: boolean = false): Suite {
+  public afterAll(callback: SuiteCallback, prepend: boolean = false): this {
     this._taskManager.afterAll(callback, prepend);
     return this;
   }
@@ -353,7 +350,7 @@ export class Suite implements iSuite {
    *
    * @param callback
    */
-  public success(callback: SuiteCallback, prepend: boolean = false): Suite {
+  public success(callback: SuiteCallback, prepend: boolean = false): this {
     this._taskManager.success(callback, prepend);
     return this;
   }
@@ -361,7 +358,7 @@ export class Suite implements iSuite {
   /**
    * This callback runs once the suite is done, if it failed
    */
-  public failure(callback: SuiteCallback, prepend: boolean = false): Suite {
+  public failure(callback: SuiteCallback, prepend: boolean = false): this {
     this._taskManager.failure(callback, prepend);
     return this;
   }
@@ -370,7 +367,7 @@ export class Suite implements iSuite {
    * This callback will run once everything else is completed, whether pass or fail
    * prepend these callbacks so that the taskManager.finally runs last
    */
-  public finally(callback: SuiteCallback, prepend: boolean = true): Suite {
+  public finally(callback: SuiteCallback, prepend: boolean = true): this {
     this._taskManager.finally(callback, prepend);
     return this;
   }
@@ -416,7 +413,7 @@ export class Suite implements iSuite {
    * @param value
    * @returns
    */
-  public push(key: string, value: any): iSuite {
+  public push(key: string, value: any): this {
     this._getArray(key).push(value);
     return this;
   }
@@ -428,7 +425,7 @@ export class Suite implements iSuite {
    * @param value
    * @returns
    */
-  public set<T = any>(key: string, value: T): iSuite {
+  public set<T = any>(key: string, value: T): this {
     this._aliasedData[key] = value;
     return this;
   }

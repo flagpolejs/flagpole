@@ -4,7 +4,6 @@ import { iValue } from "../interfaces/ivalue";
 import * as cheerio from "cheerio";
 import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
 import { ValuePromise } from "../value-promise";
-import { ScenarioType } from "../scenario-types";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { iResponse } from "../interfaces/iresponse";
 import { ProtoResponse } from "../response";

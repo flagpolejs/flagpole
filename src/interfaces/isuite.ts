@@ -23,7 +23,7 @@ export type SuiteCallbackAndMessage = {
 };
 
 export interface iSuite {
-  scenarios: Array<iScenario>;
+  scenarios: iScenario[];
   baseUrl: URL | null;
   failCount: number;
   hasPassed: boolean;
@@ -39,10 +39,10 @@ export interface iSuite {
   finished: Promise<void>;
   executionOptions: FlagpoleExecution;
   import(scenario: iScenario): iScenario;
-  subscribe(callback: SuiteStatusCallback): iSuite;
-  verifyCert(verify: boolean): iSuite;
-  verifySslCert(verify: boolean): iSuite;
-  wait(bool?: boolean): iSuite;
+  subscribe(callback: SuiteStatusCallback): this;
+  verifyCert(verify: boolean): this;
+  verifySslCert(verify: boolean): this;
+  wait(bool?: boolean): this;
   print(exitAfterPrint?: boolean): void;
   scenario<T extends iScenario>(
     title: string,
@@ -54,20 +54,20 @@ export interface iSuite {
     type: ScenarioType,
     opts?: KeyValue
   ): T;
-  base(url: string | KeyValue): iSuite;
-  execute(): iSuite;
-  beforeAll(callback: SuiteCallback): iSuite;
-  beforeEach(callback: ScenarioCallback): iSuite;
-  afterEach(callback: ScenarioCallback): iSuite;
-  afterAll(callback: SuiteCallback): iSuite;
-  success(callback: SuiteCallback): iSuite;
-  failure(callback: SuiteCallback): iSuite;
-  finally(callback: SuiteCallback): iSuite;
+  base(url: string | KeyValue): this;
+  execute(): this;
+  beforeAll(callback: SuiteCallback): this;
+  beforeEach(callback: ScenarioCallback): this;
+  afterEach(callback: ScenarioCallback): this;
+  afterAll(callback: SuiteCallback): this;
+  success(callback: SuiteCallback): this;
+  failure(callback: SuiteCallback): this;
+  finally(callback: SuiteCallback): this;
   promise(): Promise<iSuite>;
   mapScenarios(key: string, mapper: ScenarioMapper): Promise<iScenario[]>;
   mapScenarios(arr: any[], mapper: ScenarioMapper): Promise<iScenario[]>;
-  push(key: string, value: any): iSuite;
-  set<T>(key: string, value: T): iSuite;
+  push(key: string, value: any): this;
+  set<T>(key: string, value: T): this;
   get<T>(key: string): T;
   template<T extends iScenario>(
     templateOptions: ScenarioInitOptions<T>

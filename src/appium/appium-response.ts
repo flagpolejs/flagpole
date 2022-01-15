@@ -4,7 +4,6 @@ import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http-response";
 import { iValue } from "../interfaces/ivalue";
 import { ValuePromise } from "../value-promise";
-import { ScenarioType } from "../scenario-types";
 import {
   wrapAsValue,
   getFindParams,

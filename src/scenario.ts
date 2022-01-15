@@ -297,9 +297,9 @@ export abstract class ProtoScenario implements iScenario {
   protected _ignoreAssertion: boolean = false;
   protected _mockResponseOptions: HttpResponseOptions | null = null;
   protected _aliasedData: any = {};
-  protected _requestPromise: Promise<iScenario>;
+  protected _requestPromise: Promise<this>;
   protected _requestResolve: Function = () => {};
-  protected _finishedPromise: Promise<iScenario>;
+  protected _finishedPromise: Promise<this>;
   protected _finishedResolve: Function = () => {};
   protected _disposition: ScenarioDisposition = ScenarioDisposition.pending;
   protected _webhookPromise: Promise<WebhookServer>;
@@ -335,12 +335,12 @@ export abstract class ProtoScenario implements iScenario {
     return this._aliasedData[key];
   }
 
-  public push(key: string, value: any): iScenario {
+  public push(key: string, value: any): this {
     this._getArray(key).push(value);
     return this;
   }
 
-  public set(aliasName: string, value: any): iScenario {
+  public set(aliasName: string, value: any): this {
     this._aliasedData[aliasName] = value;
     return this;
   }
@@ -361,7 +361,7 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param callback
    */
-  public subscribe(callback: ScenarioStatusCallback): iScenario {
+  public subscribe(callback: ScenarioStatusCallback): this {
     this._subscribers.push(callback);
     return this;
   }
@@ -371,7 +371,7 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param jsonObject
    */
-  public setJsonBody(json: KeyValue): iScenario {
+  public setJsonBody(json: KeyValue): this {
     this.request.setJsonData(json);
     return this;
   }
@@ -379,7 +379,7 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * Set body to submit as raw string
    */
-  public setRawBody(str: string): iScenario {
+  public setRawBody(str: string): this {
     this.request.data = str;
     return this;
   }
@@ -387,12 +387,12 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * Make sure the web page has valid SSL certificate
    */
-  public verifyCert(verify: boolean): iScenario {
+  public verifyCert(verify: boolean): this {
     this.request.verifyCert = verify;
     return this;
   }
 
-  public setProxy(proxy: HttpProxy): iScenario {
+  public setProxy(proxy: HttpProxy): this {
     this.request.proxy = proxy;
     return this;
   }
@@ -400,9 +400,9 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * Set the timeout for how long the request should wait for a response
    */
-  public setTimeout(n: number): iScenario;
-  public setTimeout(timeouts: HttpTimeout): iScenario;
-  public setTimeout(timeout: HttpTimeout | number): iScenario {
+  public setTimeout(n: number): this;
+  public setTimeout(timeouts: HttpTimeout): this;
+  public setTimeout(timeout: HttpTimeout | number): this {
     this.request.timeout =
       typeof timeout === "number"
         ? {
@@ -417,12 +417,9 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param form
    */
-  public setFormData(form: FormData): iScenario;
-  public setFormData(form: KeyValue, isMultipart?: boolean): iScenario;
-  public setFormData(
-    form: KeyValue | FormData,
-    isMultipart?: boolean
-  ): iScenario {
+  public setFormData(form: FormData): this;
+  public setFormData(form: KeyValue, isMultipart?: boolean): this;
+  public setFormData(form: KeyValue | FormData, isMultipart?: boolean): this {
     this.request.setFormData(form, isMultipart);
     return this;
   }
@@ -432,7 +429,7 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param n
    */
-  public setMaxRedirects(n: number): iScenario {
+  public setMaxRedirects(n: number): this {
     this.request.maxRedirects = n;
     return this;
   }
@@ -442,7 +439,7 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param authorization
    */
-  public setBasicAuth(auth: HttpAuth): iScenario {
+  public setBasicAuth(auth: HttpAuth): this {
     this.request.auth = auth;
     this.request.authType = "basic";
     return this;
@@ -453,7 +450,7 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param authorization
    */
-  public setDigestAuth(auth: HttpAuth): iScenario {
+  public setDigestAuth(auth: HttpAuth): this {
     this.request.auth = auth;
     this.request.authType = "digest";
     return this;
@@ -464,7 +461,7 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param {string} token
    */
-  public setBearerToken(token: string): iScenario {
+  public setBearerToken(token: string): this {
     this.setHeader("Authorization", `Bearer ${token}`);
     return this;
   }
@@ -476,7 +473,7 @@ export abstract class ProtoScenario implements iScenario {
    * @param value
    * @param opts
    */
-  public setCookie(key: string, value: string): iScenario {
+  public setCookie(key: string, value: string): this {
     this.request.setCookie(key, value);
     return this;
   }
@@ -487,7 +484,7 @@ export abstract class ProtoScenario implements iScenario {
    * @param cookies
    * @returns
    */
-  public setCookies(cookies: KeyValue): iScenario {
+  public setCookies(cookies: KeyValue): this {
     Object.keys((key: string) => {
       this.setCookie(key, cookies[key]);
     });
@@ -499,7 +496,7 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param headers
    */
-  public setHeaders(headers: KeyValue): iScenario {
+  public setHeaders(headers: KeyValue): this {
     this.request.headers = { ...this.request.headers, ...headers };
     return this;
   }
@@ -510,7 +507,7 @@ export abstract class ProtoScenario implements iScenario {
    * @param {string} key
    * @param value
    */
-  public setHeader(key: string, value: any): iScenario {
+  public setHeader(key: string, value: any): this {
     this.request.setHeader(key, value);
     return this;
   }
@@ -520,7 +517,7 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param {string} method
    */
-  public setMethod(method: HttpMethodVerb): iScenario {
+  public setMethod(method: HttpMethodVerb): this {
     this.request.method = method;
     return this;
   }
@@ -530,7 +527,7 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param bool
    */
-  public wait(bool: boolean = true): iScenario {
+  public wait(bool: boolean = true): this {
     // Was waiting but not anymore
     if (this._waitToExecute && !bool) {
       this._waitTime = Date.now() - this._timeScenarioInitialized;
@@ -540,7 +537,7 @@ export abstract class ProtoScenario implements iScenario {
     return this;
   }
 
-  public waitFor(thatScenario: iScenario): iScenario {
+  public waitFor(thatScenario: iScenario): this {
     if (this === thatScenario) {
       throw new Error("Scenario can't wait for itself");
     }
@@ -559,7 +556,7 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * Add a neutral line to the output
    */
-  public comment(input: any): iScenario {
+  public comment(input: any): this {
     const type = toType(input);
     const message: string =
       type === "string"
@@ -573,14 +570,14 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * Push in a new passing assertion
    */
-  public result(result: AssertionResult): iScenario {
+  public result(result: AssertionResult): this {
     return this._pushToLog(result);
   }
 
   /**
    * Ignore assertions until further notice. This is created to prevent automatic assertions from firing.
    */
-  public ignore(assertions: boolean | Function = true): iScenario {
+  public ignore(assertions: boolean | Function = true): this {
     if (typeof assertions == "boolean") {
       this._ignoreAssertion = assertions;
     } else if (typeof assertions == "function") {
@@ -596,7 +593,7 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param milliseconds
    */
-  public pause(milliseconds: number): iScenario {
+  public pause(milliseconds: number): this {
     this.next((context: iAssertionContext) => {
       context.comment(`Pause for ${milliseconds}ms`);
       return context.pause(milliseconds);
@@ -609,9 +606,9 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param {string} url
    */
-  public open(url: string, opts?: HttpRequestOptions): iScenario;
-  public open(link: iValue, opts?: HttpRequestOptions): iScenario;
-  public open(a: string | iValue, opts?: HttpRequestOptions): iScenario {
+  public open(url: string, opts?: HttpRequestOptions): this;
+  public open(link: iValue, opts?: HttpRequestOptions): this;
+  public open(a: string | iValue, opts?: HttpRequestOptions): this {
     if (this.hasExecuted) {
       throw `Can call open after scenario has executed`;
     }
@@ -636,14 +633,14 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * Set the callback for the assertions to run after the request has a response
    */
-  public next(responseValues: { [key: string]: any }): iScenario;
-  public next(message: string, callback: iNextCallback): iScenario;
-  public next(callback: iNextCallback): iScenario;
-  public next(...callbacks: iNextCallback[]): iScenario;
+  public next(callback: iNextCallback): this;
+  public next(message: string, callback: iNextCallback): this;
+  public next(...callbacks: iNextCallback[]): this;
+  public next(responseValues: { [key: string]: any }): this;
   public next(
     a: iNextCallback | iNextCallback[] | string | { [key: string]: any },
     b?: iNextCallback | { [key: string]: any }
-  ): iScenario {
+  ): this {
     if (Array.isArray(a)) {
       a.forEach((callback) => {
         this._next(callback, null, true);
@@ -657,9 +654,9 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * Insert this as the first next
    */
-  public nextPrepend(message: string, callback: iNextCallback): iScenario;
-  public nextPrepend(callback: iNextCallback): iScenario;
-  public nextPrepend(a: iNextCallback | string, b?: iNextCallback): iScenario {
+  public nextPrepend(message: string, callback: iNextCallback): this;
+  public nextPrepend(callback: iNextCallback): this;
+  public nextPrepend(a: iNextCallback | string, b?: iNextCallback): this {
     return this._next(a, b, false);
   }
 
@@ -667,7 +664,7 @@ export abstract class ProtoScenario implements iScenario {
    * Skip this scenario completely and mark it done
    */
   @beforeScenarioExecuted
-  public async skip(message?: string): Promise<iScenario> {
+  public async skip(message?: string): Promise<this> {
     await this._fireBefore();
     this._publish(ScenarioStatusEvent.executionProgress);
     this.comment(`Skipped ${message ? ": " + message : ""}`);
@@ -675,13 +672,13 @@ export abstract class ProtoScenario implements iScenario {
     return this;
   }
 
-  public async cancelOrAbort(message?: string): Promise<iScenario> {
+  public async cancelOrAbort(message?: string): Promise<this> {
     return this.hasExecuted ? this.abort(message) : this.cancel(message);
   }
 
   @afterScenarioExecuted
   @beforeScenarioFinished
-  public async abort(message?: string): Promise<iScenario> {
+  public async abort(message?: string): Promise<this> {
     this._markScenarioCompleted(
       `Aborted ${message ? ": " + message : ""}`,
       null,
@@ -691,7 +688,7 @@ export abstract class ProtoScenario implements iScenario {
   }
 
   @beforeScenarioExecuted
-  public async cancel(message?: string): Promise<iScenario> {
+  public async cancel(message?: string): Promise<this> {
     await this._fireBefore();
     this._publish(ScenarioStatusEvent.executionProgress);
     this._markScenarioCompleted(
@@ -705,10 +702,10 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * Prepare this scenario to execute
    */
-  public async execute(): Promise<iScenario>;
+  public async execute(): Promise<this>;
   public async execute(params: {
     [key: string]: string | number;
-  }): Promise<iScenario>;
+  }): Promise<this>;
 
   @beforeScenarioExecuted
   public async execute(pathParams?: {
@@ -749,13 +746,13 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param callback
    */
-  public success(callback: ScenarioCallback): iScenario;
-  public success(message: string, callback: ScenarioCallback): iScenario;
-  public success(...callbacks: ScenarioCallback[]): iScenario;
+  public success(callback: ScenarioCallback): this;
+  public success(message: string, callback: ScenarioCallback): this;
+  public success(...callbacks: ScenarioCallback[]): this;
   public success(
     a: string | ScenarioCallback | ScenarioCallback[],
     b?: ScenarioCallback
-  ): iScenario {
+  ): this {
     return this._pushCallbacks("success", "_successCallbacks", a, b);
   }
 
@@ -764,13 +761,13 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param callback
    */
-  public failure(callback: ScenarioCallback): iScenario;
-  public failure(message: string, callback: ScenarioCallback): iScenario;
-  public failure(...callbacks: ScenarioCallback[]): iScenario;
+  public failure(callback: ScenarioCallback): this;
+  public failure(message: string, callback: ScenarioCallback): this;
+  public failure(...callbacks: ScenarioCallback[]): this;
   public failure(
     a: string | ScenarioCallback | ScenarioCallback[],
     b?: ScenarioCallback
-  ): iScenario {
+  ): this {
     return this._pushCallbacks("failure", "_failureCallbacks", a, b);
   }
 
@@ -779,13 +776,13 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param callback
    */
-  public pipe(callback: ResponsePipe): iScenario;
-  public pipe(...callbacks: ResponsePipe[]): iScenario;
-  public pipe(message: string, callback: ResponsePipe): iScenario;
+  public pipe(callback: ResponsePipe): this;
+  public pipe(...callbacks: ResponsePipe[]): this;
+  public pipe(message: string, callback: ResponsePipe): this;
   public pipe(
     a: string | ResponsePipe | ResponsePipe[],
     b?: ResponsePipe
-  ): iScenario {
+  ): this {
     return this._pushCallbacks("pipe", "_pipeCallbacks", a, b);
   }
 
@@ -794,26 +791,26 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param callback
    */
-  public before(callback: ScenarioCallback): iScenario;
-  public before(...callbacks: ScenarioCallback[]): iScenario;
-  public before(message: string, callback: ScenarioCallback): iScenario;
+  public before(callback: ScenarioCallback): this;
+  public before(...callbacks: ScenarioCallback[]): this;
+  public before(message: string, callback: ScenarioCallback): this;
   public before(
     a: string | ScenarioCallback | ScenarioCallback[],
     b?: ScenarioCallback
-  ): iScenario {
+  ): this {
     return this._pushCallbacks("before", "_beforeCallbacks", a, b);
   }
 
   /**
    * callback just after the scenario completes
    */
-  public after(callback: ScenarioCallback): iScenario;
-  public after(...callbacks: ScenarioCallback[]): iScenario;
-  public after(message: string, callback: ScenarioCallback): iScenario;
+  public after(callback: ScenarioCallback): this;
+  public after(...callbacks: ScenarioCallback[]): this;
+  public after(message: string, callback: ScenarioCallback): this;
   public after(
     a: string | ScenarioCallback | ScenarioCallback[],
     b?: ScenarioCallback
-  ): iScenario {
+  ): this {
     return this._pushCallbacks("after", "_afterCallbacks", a, b);
   }
 
@@ -822,23 +819,23 @@ export abstract class ProtoScenario implements iScenario {
    *
    * @param callback
    */
-  public finally(callback: ScenarioCallback): iScenario;
-  public finally(...callbacks: ScenarioCallback[]): iScenario;
-  public finally(message: string, callback: ScenarioCallback): iScenario;
+  public finally(callback: ScenarioCallback): this;
+  public finally(...callbacks: ScenarioCallback[]): this;
+  public finally(message: string, callback: ScenarioCallback): this;
   public finally(
     a: string | ScenarioCallback | ScenarioCallback[],
     b?: ScenarioCallback
-  ): iScenario {
+  ): this {
     return this._pushCallbacks("finally", "_finallyCallbacks", a, b);
   }
 
-  public mock(opts: HttpResponseOptions | string = ""): iScenario {
+  public mock(opts: HttpResponseOptions | string = ""): this {
     this._requestType = ScenarioRequestType.manual;
     this._mockResponseOptions = typeof opts == "string" ? { body: opts } : opts;
     return this;
   }
 
-  public local(localPath: string): iScenario {
+  public local(localPath: string): this {
     this._requestType = ScenarioRequestType.localFile;
     this.url = localPath;
     return this;
@@ -848,7 +845,7 @@ export abstract class ProtoScenario implements iScenario {
     a?: string | number | ServerOptions,
     b?: number | ServerOptions,
     c?: ServerOptions
-  ): iScenario {
+  ): this {
     const route = typeof a == "string" ? a : "*";
     const port =
       typeof a == "number" ? a : typeof b == "number" ? b : undefined;
@@ -898,11 +895,11 @@ export abstract class ProtoScenario implements iScenario {
     return this._webhookPromise;
   }
 
-  public waitForFinished(): Promise<iScenario> {
+  public waitForFinished(): Promise<this> {
     return this._finishedPromise;
   }
 
-  public waitForResponse(): Promise<iScenario> {
+  public waitForResponse(): Promise<this> {
     return this._requestPromise;
   }
 
@@ -962,7 +959,7 @@ export abstract class ProtoScenario implements iScenario {
       | ResponsePipe
       | ResponsePipe[],
     b?: ScenarioCallback | ResponsePipe
-  ): iScenario {
+  ): this {
     if (this.hasFinished) {
       throw `Can not add ${name} callbacks after execution has finished.`;
     }
@@ -986,7 +983,7 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * Clear out any previous settings
    */
-  protected _reset(): iScenario {
+  protected _reset(): this {
     this._flipAssertion = false;
     return this;
   }
@@ -1338,7 +1335,7 @@ export abstract class ProtoScenario implements iScenario {
     a: iNextCallback | string | { [key: string]: any },
     b?: iNextCallback | { [key: string]: any } | null,
     append: boolean = true
-  ): iScenario {
+  ): this {
     const callback: iNextCallback = <iNextCallback>(
       this._getCallbackOverload(a, b)
     );
@@ -1365,7 +1362,7 @@ export abstract class ProtoScenario implements iScenario {
     });
   }
 
-  protected _pushToLog(logItem: iLogItem): iScenario {
+  protected _pushToLog(logItem: iLogItem): this {
     this._log.add(logItem);
     return this;
   }
