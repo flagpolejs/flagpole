@@ -41,7 +41,10 @@ export abstract class ProtoResponse implements iResponse {
     matches: RegExp,
     opts?: FindAllOptions
   ): Promise<iValue[]>;
-  abstract eval(callback: any, ...args: any[]): Promise<any>;
+
+  public async eval(callback: any, ...args: any[]): Promise<any> {
+    throw "This type of scenario does not suport eval.";
+  }
 
   public get httpResponse(): HttpResponse {
     return this._httpResponse;
