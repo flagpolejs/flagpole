@@ -80,7 +80,9 @@ export interface iHttpRequest {
 }
 
 export interface HttpResponseOptions {
-  body?: any;
+  body?: string;
+  jsonBody?: any;
+  rawBody?: any;
   status?: [number, string];
   headers?: KeyValue;
   cookies?: KeyValue;
@@ -91,7 +93,9 @@ export interface HttpResponseOptions {
 
 export interface iHttpResponse {
   body: string;
-  json: any;
+  jsonBody: any;
+  rawBody: any;
+  status: [statusCode: number, statusMessage: string];
   statusCode: number;
   statusMessage: string;
   headers: KeyValue;

@@ -6,7 +6,7 @@ import {
   AssertionFail,
   AssertionFailWarning,
 } from "./logging/assertion-result";
-import { HttpResponse } from "./http-response";
+import { HttpResponse, parseResponseFromLocalFile } from "./http-response";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/log-collection";
@@ -40,6 +40,7 @@ import {
   HttpRequestOptions,
   HttpResponseOptions,
   HttpTimeout,
+  iHttpResponse,
 } from "./interfaces/http";
 import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
 import { iAssertion } from "./interfaces/iassertion";
@@ -986,8 +987,8 @@ export abstract class ProtoScenario implements iScenario {
    * @param httpResponse
    */
   protected async _pipeResponses(
-    httpResponse: HttpResponse
-  ): Promise<HttpResponse> {
+    httpResponse: iHttpResponse
+  ): Promise<iHttpResponse> {
     await bluebird.mapSeries(this._pipeCallbacks, async (cb) => {
       cb.message && this.comment(cb.message);
       const result = await cb.callback(httpResponse);
@@ -1002,7 +1003,7 @@ export abstract class ProtoScenario implements iScenario {
    * Handle the normalized response once the request comes back
    * This will loop through each next
    */
-  protected async _processResponse(httpResponse: HttpResponse) {
+  protected async _processResponse(httpResponse: iHttpResponse) {
     httpResponse = await this._pipeResponses(httpResponse);
     this.response.init(httpResponse);
     this._timeRequestLoaded = Date.now();
@@ -1120,7 +1121,7 @@ export abstract class ProtoScenario implements iScenario {
       throw "Can not execute request with null URL.";
     }
     this._markRequestAsStarted();
-    HttpResponse.fromLocalFile(this.url)
+    parseResponseFromLocalFile(this.url)
       .then((res: HttpResponse) => {
         this._processResponse(res);
       })
@@ -1143,7 +1144,7 @@ export abstract class ProtoScenario implements iScenario {
     }
     this._markRequestAsStarted();
     try {
-      const response = HttpResponse.fromOpts(this._mockResponseOptions);
+      const response = new HttpResponse(this._mockResponseOptions);
       this._processResponse(response);
     } catch (err) {
       this._markScenarioCompleted(

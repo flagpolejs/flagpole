@@ -46,7 +46,7 @@ export class ImageResponse extends ProtoResponse implements iResponse {
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
-    this.imageProperties = httpResponse.json as ImageProperties;
+    this.imageProperties = httpResponse.jsonBody as ImageProperties;
     this.context
       .assert(
         "MIME Type matches expected value for an image",

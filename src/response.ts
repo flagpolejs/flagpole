@@ -1,6 +1,6 @@
 import { URL } from "url";
 import { iValue } from "./interfaces/ivalue";
-import { HttpResponse } from "./http-response";
+import { createEmptyResponse } from "./http-response";
 import { HttpRequest } from "./http-request";
 import { AssertionContext } from "./assertion-context";
 import { wrapAsValue } from "./helpers";
@@ -13,10 +13,11 @@ import { ScreenProperties } from "./interfaces/screen-properties";
 import { iAssertionContext } from "./interfaces/iassertioncontext";
 import { iScenario } from "./interfaces/iscenario";
 import { iResponse } from "./interfaces/iresponse";
+import { iHttpResponse } from "./interfaces/http";
 
 export abstract class ProtoResponse implements iResponse {
   protected _currentUrl: string | null = null;
-  protected _httpResponse: HttpResponse = HttpResponse.createEmpty();
+  protected _httpResponse: iHttpResponse = createEmptyResponse();
 
   abstract responseTypeName: string;
   abstract find(selector: string, opts?: FindOptions): ValuePromise;
@@ -46,7 +47,7 @@ export abstract class ProtoResponse implements iResponse {
     throw "This type of scenario does not suport eval.";
   }
 
-  public get httpResponse(): HttpResponse {
+  public get httpResponse(): iHttpResponse {
     return this._httpResponse;
   }
 
@@ -190,7 +191,7 @@ export abstract class ProtoResponse implements iResponse {
     this._currentUrl = scenario.finalUrl;
   }
 
-  public init(res: HttpResponse) {
+  public init(res: iHttpResponse) {
     this._httpResponse = res;
   }
 

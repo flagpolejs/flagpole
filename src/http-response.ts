@@ -1,97 +1,118 @@
 import { NeedleResponse } from "needle";
 import { readFile } from "fs-extra";
 import { KeyValue } from "./interfaces/generic-types";
-import {
-  HttpResponseOptions,
-  iHttpRequest,
-  iHttpResponse,
-} from "./interfaces/http";
+import { HttpResponseOptions, iHttpResponse } from "./interfaces/http";
+import { CONTENT_TYPE_JSON } from "./interfaces/constants";
 
-export class HttpResponse implements iHttpResponse {
-  public body: string = "";
-  public json: any = null;
-  public statusCode: number = 0;
-  public statusMessage: string = "";
-  public headers: KeyValue = {};
-  public cookies: KeyValue = {};
-  public trailers: KeyValue = {};
-  public url: string = "";
-  public method: string = "";
+export const parseResponseFromLocalFile = async (
+  relativePath: string
+): Promise<HttpResponse> => {
+  const path: string = `${__dirname}/${relativePath}`;
+  const data = await readFile(path);
+  return new HttpResponse({
+    body: data.toString(),
+  });
+};
 
-  private constructor(opts?: HttpResponseOptions) {
-    if (opts) {
-      this.body =
-        typeof opts.body == "string" ? opts.body : JSON.stringify(opts.body);
-      this.statusCode = opts.status ? opts.status[0] : 200;
-      this.statusMessage = opts.status ? opts.status[1] : "OK";
-      this.headers = opts.headers || {};
-      this.cookies = opts.cookies || {};
-      this.trailers = opts.trailers || {};
-      this.url = opts.url || "";
-      this.method = opts.method || "";
-    }
-  }
-
-  static createEmpty() {
-    const r = new HttpResponse();
-    return r;
-  }
-
-  static fromNeedle(response: NeedleResponse): HttpResponse {
-    const r = new HttpResponse();
-    r.statusCode = response.statusCode || 0;
-    r.statusMessage = response.statusMessage || "";
-    r.headers = <KeyValue>response.headers;
-    r.body =
+export const parseResponseFromNeedle = (response: NeedleResponse) =>
+  new HttpResponse({
+    status: [response.statusCode || 0, response.statusMessage || ""],
+    headers: <KeyValue>response.headers,
+    body:
       typeof response.body === "string" ||
       response.headers["content-type"]?.includes("image")
         ? response.body
-        : response.body.toString("utf8");
-    r.json = response.headers["content-type"]?.includes("json")
-      ? JSON.parse(r.body)
-      : null;
-    r.cookies = response.cookies ? <KeyValue>response.cookies : {};
-    r.trailers = <KeyValue>response.trailers;
-    r.method = response.method || "get";
-    r.url = response.url || "";
-    return r;
+        : response.body.toString("utf8"),
+    cookies: response.cookies ? <KeyValue>response.cookies : {},
+    trailers: <KeyValue>response.trailers,
+    method: response.method || "get",
+    url: response.url || "",
+    rawBody: response.raw,
+  });
+
+export const parseResponsefromJsonData = (jsonBody: any): HttpResponse =>
+  new HttpResponse({
+    headers: {
+      "content-type": CONTENT_TYPE_JSON,
+    },
+    jsonBody,
+  });
+
+export const createEmptyResponse = () =>
+  new HttpResponse({
+    body: "",
+  });
+
+export const parseResponseFromString = (body: string) =>
+  new HttpResponse({
+    body,
+  });
+
+export class HttpResponse implements iHttpResponse {
+  public get method(): string {
+    return this.opts.method || "get";
   }
 
-  static fromJsonData(request: iHttpRequest, data: any): HttpResponse {
-    const r = new HttpResponse();
-    r.headers = {};
-    r.statusCode = 200;
-    r.body = "";
-    r.json = data;
-    r.url = request.uri || "";
-    return r;
+  public get url(): string {
+    return this.opts.url || "/";
   }
 
-  static fromLocalFile(relativePath: string): Promise<HttpResponse> {
-    const path: string = __dirname + "/" + relativePath;
-    return new Promise((resolve, reject) => {
-      readFile(path, (err, data) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(
-          new HttpResponse({
-            body: data.toString(),
-          })
-        );
-      });
-    });
+  public get headers(): KeyValue {
+    return this.opts.headers || {};
   }
 
-  static fromString(content: string): HttpResponse {
-    return new HttpResponse({
-      body: content,
-    });
+  public get trailers(): KeyValue {
+    return this.opts.trailers || {};
   }
 
-  static fromOpts(opts: HttpResponseOptions, json?: any): HttpResponse {
-    const response = new HttpResponse(opts);
-    if (json) response.json = json;
-    return response;
+  public get cookies(): KeyValue {
+    return this.opts.cookies || {};
   }
+
+  public get statusCode(): number {
+    return this.opts.status ? this.opts.status[0] : 200;
+  }
+
+  public get statusMessage(): string {
+    return this.opts.status ? this.opts.status[1] : "OK";
+  }
+
+  public get status(): [statusCode: number, statusMessage: string] {
+    return this.opts.status || [200, "OK"];
+  }
+
+  public get body(): string {
+    return this.opts.body !== undefined
+      ? this.opts.body
+      : this.opts.rawBody !== undefined
+      ? String(this.opts.rawBody)
+      : this.opts.jsonBody !== undefined
+      ? JSON.stringify(this.opts.jsonBody)
+      : "";
+  }
+
+  public get rawBody(): any {
+    return this.opts.rawBody !== undefined
+      ? this.opts.rawBody
+      : this.opts.body !== undefined
+      ? this.opts.body
+      : this.opts.jsonBody !== undefined
+      ? JSON.stringify(this.opts.jsonBody)
+      : "";
+  }
+
+  public get jsonBody(): any {
+    try {
+      if (this.opts.jsonBody !== undefined) return this.opts.jsonBody;
+      return this.opts.body != undefined
+        ? JSON.parse(this.opts.body)
+        : this.opts.rawBody != undefined
+        ? JSON.parse(this.opts.rawBody)
+        : null;
+    } catch (ex) {
+      return null;
+    }
+  }
+
+  public constructor(private opts: HttpResponseOptions) {}
 }

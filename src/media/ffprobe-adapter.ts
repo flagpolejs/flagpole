@@ -1,4 +1,4 @@
-import { HttpResponse } from "../http-response";
+import { HttpResponse, parseResponsefromJsonData } from "../http-response";
 import { ffprobe, FfprobeOptions } from "media-probe";
 import { HttpAdapter, iHttpRequest } from "../interfaces/http";
 
@@ -12,7 +12,7 @@ export const fetchWithFfprobe: HttpAdapter = (
     }
     try {
       ffprobe(request.uri, opts).then((data) => {
-        resolve(HttpResponse.fromJsonData(request, data));
+        resolve(parseResponsefromJsonData(data));
       });
     } catch (err) {
       reject(err);

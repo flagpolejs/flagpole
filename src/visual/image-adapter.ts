@@ -20,10 +20,10 @@ export type probeImageData = {
   mimeType: string;
 };
 
-function fromProbeImage(
+const fromProbeImage = (
   response: probeImageResponse,
   cookies?: KeyValue
-): HttpResponse {
+): HttpResponse => {
   const json = {
     ...response.imageData,
     ...{
@@ -32,17 +32,14 @@ function fromProbeImage(
       mime: response.imageData.mimeType,
     },
   };
-  return HttpResponse.fromOpts(
-    {
-      headers: response.headers,
-      status: [response.statusCode, ""],
-      body: JSON.stringify(json),
-      cookies: cookies || {},
-      url: response.url,
-    },
-    json
-  );
-}
+  return new HttpResponse({
+    headers: response.headers,
+    status: [response.statusCode, ""],
+    jsonBody: json,
+    cookies: cookies || {},
+    url: response.url,
+  });
+};
 
 export const fetchImageWithNeedle: HttpAdapter = (
   request: iHttpRequest,

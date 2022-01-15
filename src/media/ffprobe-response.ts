@@ -31,7 +31,7 @@ export class FfprobeResponse
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
     try {
-      this.jsonDoc = new JsonDoc(httpResponse.json);
+      this.jsonDoc = new JsonDoc(httpResponse.jsonBody);
     } catch (ex) {
       this.context.logFailure("Error parsing ffprobe output.", ex);
     }

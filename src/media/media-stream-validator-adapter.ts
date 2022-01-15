@@ -1,4 +1,4 @@
-import { HttpResponse } from "../http-response";
+import { HttpResponse, parseResponsefromJsonData } from "../http-response";
 import {
   mediaStreamValidator,
   MediaStreamValidatorOpts,
@@ -15,7 +15,7 @@ export const fetchWithMediaStreamValidator: HttpAdapter = (
     }
     try {
       mediaStreamValidator(request.uri, opts).then((data) => {
-        resolve(HttpResponse.fromJsonData(request, data));
+        resolve(parseResponsefromJsonData(data));
       });
     } catch (err) {
       reject(err);

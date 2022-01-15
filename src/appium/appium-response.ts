@@ -60,8 +60,8 @@ export class AppiumResponse extends ProtoResponse {
 
   public init(res: HttpResponse) {
     super.init(res);
-    this._sessionId = res.json.value.sessionId;
-    this._capabilities = res.json.value.capabilities;
+    this._sessionId = res.jsonBody.value.sessionId;
+    this._capabilities = res.jsonBody.value.capabilities;
     this.scenario.nextPrepend(async () => {
       await this.setDeviceProperties(
         this.scenario.opts.data.devProperties || {}

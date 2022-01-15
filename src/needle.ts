@@ -1,4 +1,4 @@
-import { HttpResponse } from "./http-response";
+import { HttpResponse, parseResponseFromNeedle } from "./http-response";
 import needle = require("needle");
 import { FlagpoleExecution } from "./flagpole-execution";
 import { HttpAdapter, iHttpRequest } from "./interfaces/http";
@@ -54,7 +54,7 @@ export const fetchWithNeedle: HttpAdapter = (
       getNeedleOptions(request),
       (err, resp) => {
         if (!err && resp) {
-          const response = HttpResponse.fromNeedle(resp);
+          const response = parseResponseFromNeedle(resp);
           if (request.options.cacheKey) {
             FlagpoleExecution.global.setCache(
               request.options.cacheKey,

@@ -1,9 +1,9 @@
-import { HttpResponse } from "..";
+import { iHttpResponse } from "./http";
 
-export type ResponseSyncPipe = (resp: HttpResponse) => void | HttpResponse;
+export type ResponseSyncPipe = (resp: iHttpResponse) => void | iHttpResponse;
 export type ResponseAsyncPipe = (
-  resp: HttpResponse
-) => Promise<void | HttpResponse>;
+  resp: iHttpResponse
+) => Promise<void | iHttpResponse>;
 export type ResponsePipe = ResponseSyncPipe | ResponseAsyncPipe;
 export type ResponsePipeCallbackAndMessage = {
   message: string;

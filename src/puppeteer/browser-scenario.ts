@@ -106,7 +106,7 @@ export class BrowserScenario extends ProtoScenario {
           );
           // Finishing processing the response
           this._processResponse(
-            HttpResponse.fromOpts({
+            new HttpResponse({
               status: [response.status(), response.statusText()],
               headers: response.headers(),
               body: next.body,

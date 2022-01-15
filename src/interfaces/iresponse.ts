@@ -1,8 +1,8 @@
-import { HttpResponse, ValuePromise } from "..";
+import { ValuePromise } from "../value-promise";
 import { FindAllOptions, FindOptions } from "./find-options";
 import { JsFunction, KeyValue, OptionalXY } from "./generic-types";
 import { GestureOpts, GestureType } from "./gesture";
-import { iHttpRequest } from "./http";
+import { iHttpRequest, iHttpResponse } from "./http";
 import { iAssertionContext } from "./iassertioncontext";
 import { iValue } from "./ivalue";
 import { PointerMove } from "./pointer";
@@ -25,7 +25,7 @@ export interface iResponse {
   cookies: iValue;
   trailers: iValue;
   method: iValue;
-  init(res: HttpResponse): void;
+  init(res: iHttpResponse): void;
   navigate(req: iHttpRequest): Promise<void>;
   getRoot(): any;
   find(path: string, opts?: FindOptions): ValuePromise;

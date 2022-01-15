@@ -6,8 +6,8 @@ import {
   HttpProxy,
   HttpRequestOptions,
   HttpAdapter,
+  iHttpResponse,
 } from "./interfaces/http";
-import { HttpResponse } from "./http-response";
 import tunnel = require("tunnel");
 import * as http from "http";
 import * as FormData from "form-data";
@@ -312,7 +312,7 @@ export class HttpRequest implements iHttpRequest {
   public fetch(
     opts: KeyValue = {},
     fetchMethod?: HttpAdapter
-  ): Promise<HttpResponse> {
+  ): Promise<iHttpResponse> {
     if (this._fetched) {
       throw new Error("This request was already fetched.");
     }
