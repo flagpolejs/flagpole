@@ -1,4 +1,4 @@
-import { iValue, iAssertionContext } from "../interfaces/general";
+import { iValue } from "../interfaces/ivalue";
 import {
   JSHandle,
   ElementHandle,
@@ -10,6 +10,7 @@ import {
 import { DOMElement } from "../html/dom-element";
 import { ValuePromise } from "../value-promise";
 import { BrowserScenario } from "./browser-scenario";
+import { iAssertionContext } from "../interfaces/iassertioncontext";
 
 export abstract class PuppeteerElement extends DOMElement implements iValue {
   protected abstract _input: ElementHandle | JSHandle;

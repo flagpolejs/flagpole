@@ -1,14 +1,16 @@
 import {
   iSuite,
-  iScenario,
   SuiteStatusCallback,
   SuiteCallback,
-  ScenarioCallback,
   SuiteCallbackAndMessage,
-  ScenarioCallbackAndMessage,
-} from "./interfaces/general";
+} from "./interfaces/isuite";
 import * as bluebird from "bluebird";
 import { runAsync } from "./util";
+import {
+  iScenario,
+  ScenarioCallback,
+  ScenarioCallbackAndMessage,
+} from "./interfaces/iscenario";
 
 type WhichCallback =
   | "beforeAll"

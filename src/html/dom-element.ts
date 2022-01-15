@@ -1,10 +1,7 @@
 import { Value } from "../value";
-import {
-  iValue,
-  iAssertionContext,
-  iScenario,
-  iMessageAndCallback,
-} from "../interfaces/general";
+import { iValue } from "../interfaces/ivalue";
+import { iAssertionContext } from "../interfaces/iassertioncontext";
+import { iScenario } from "../interfaces/iscenario";
 import { Link } from "../link";
 import { getMessageAndCallbackFromOverloading } from "../util";
 import { ValuePromise } from "../value-promise";
@@ -12,6 +9,7 @@ import { ImageScenario } from "../visual/image-scenario";
 import { ResourceScenario } from "../resource/resource-scenario";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { ClassConstructor } from "../interfaces/generic-types";
+import { iMessageAndCallback } from "../interfaces/imessage-and-callback";
 
 export abstract class DOMElement extends Value {
   public get name(): string {

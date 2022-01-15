@@ -6,9 +6,8 @@ import {
   SerializableOrJSHandle,
   PageFnOptions,
 } from "puppeteer-core";
-import { iResponse, iValue } from "../interfaces/general";
+import { iResponse } from "../interfaces/iresponse";
 import { BrowserControl } from "./browser-control";
-import { DOMResponse } from "../html/dom-response";
 import { toType } from "../util";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
@@ -16,11 +15,13 @@ import { BrowserScenario } from "./browser-scenario";
 import { ExtJsScenario } from "./extjs-scenario";
 import { ScreenshotOpts } from "../interfaces/screenshot";
 import { iHttpRequest } from "../interfaces/http";
+import { iValue } from "../interfaces/ivalue";
+import { ProtoResponse } from "../response";
 
 const DEFAULT_WAITFOR_TIMEOUT = 30000;
 
 export abstract class PuppeteerResponse
-  extends DOMResponse
+  extends ProtoResponse
   implements iResponse
 {
   constructor(public readonly scenario: BrowserScenario | ExtJsScenario) {

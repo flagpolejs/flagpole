@@ -1,4 +1,4 @@
-import { iValue, iAssertionContext } from "../interfaces/general";
+import { iValue } from "../interfaces/ivalue";
 import { promises } from "fs";
 import * as Jimp from "jimp";
 import { DOMElement } from "../html/dom-element";
@@ -17,6 +17,7 @@ import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { iBounds } from "../interfaces/ibounds";
 import { GestureOpts, GestureType } from "../interfaces/gesture";
 import { ScreenshotOpts } from "../interfaces/screenshot";
+import { iAssertionContext } from "../interfaces/iassertioncontext";
 
 const fs = promises;
 

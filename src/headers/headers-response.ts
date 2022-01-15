@@ -1,7 +1,9 @@
 import { ProtoResponse } from "../response";
-import { iResponse, iValue } from "../interfaces/general";
+import { iValue } from "../interfaces/ivalue";
 import { HttpResponse } from "../http-response";
 import { ValuePromise } from "../value-promise";
+import { iResponse } from "../interfaces/iresponse";
+import { HeadersScenario } from "./headers-scenario";
 
 export class HeadersResponse extends ProtoResponse implements iResponse {
   public get responseTypeName(): string {

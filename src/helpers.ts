@@ -1,7 +1,8 @@
-import { iAssertionContext, iValue, iResponse } from "./interfaces/general";
+import { iAssertionContext } from "./interfaces/iassertioncontext";
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
 import { Value } from "./value";
 import { toType, asyncFilter } from "./util";
+import { iResponse, iValue } from ".";
 
 export function wrapAsValue(
   context: iAssertionContext,

@@ -2,7 +2,7 @@ import { promises } from "fs";
 import * as Jimp from "jimp";
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http-response";
-import { iResponse, iValue } from "../interfaces/general";
+import { iValue } from "../interfaces/ivalue";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import {
@@ -31,6 +31,7 @@ import { GestureOpts, GestureType } from "../interfaces/gesture";
 import { ScreenProperties } from "../interfaces/screen-properties";
 import { DeviceProperties } from "../interfaces/device-properties";
 import { ScreenshotOpts } from "../interfaces/screenshot";
+import { AppiumScenario } from "./appium-scenario";
 
 interface AppiumPointerAction {
   type: "pointer";
@@ -49,10 +50,14 @@ interface AppiumPointerAction {
 }
 const fs = promises;
 
-export class AppiumResponse extends ProtoResponse implements iResponse {
+export class AppiumResponse extends ProtoResponse {
   protected _sessionId?: string;
   protected _geolocation?: any;
   protected _capabilities?: any;
+
+  constructor(public readonly scenario: AppiumScenario) {
+    super(scenario);
+  }
 
   public init(res: HttpResponse) {
     super.init(res);
@@ -64,7 +69,10 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       );
     });
     this.scenario.after(async (scenario) => {
-      await appiumSessionDestroy(scenario, String(this._sessionId));
+      await appiumSessionDestroy(
+        scenario as AppiumScenario,
+        String(this._sessionId)
+      );
     });
   }
 
@@ -219,7 +227,9 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     await this.post("appium/device/hide_keyboard", {});
   }
 
-  public async movePointer(...pointers: PointerMove[]): Promise<iResponse> {
+  public async movePointer(
+    ...pointers: PointerMove[]
+  ): Promise<AppiumResponse> {
     if (!pointers.length) return this;
     const actions: AppiumPointerAction[] = [];
     pointers.forEach((pointer, i) => {
@@ -281,7 +291,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   public async gesture(
     type: GestureType,
     opts: GestureOpts
-  ): Promise<iResponse> {
+  ): Promise<AppiumResponse> {
     // Must specify amount when not gesturing on a specific element
     if (!opts.amount) {
       throw "Error: must specify amount of pixels to gesture";
@@ -332,7 +342,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       }
     );
 
-    return this.context.response;
+    return this;
   }
 
   public async rotateScreen(
@@ -471,11 +481,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   public async setDeviceProperties(
     devProperties: DeviceProperties
   ): Promise<void> {
-    await setDevProperties(
-      this.sessionId,
-      this.context.scenario,
-      devProperties
-    );
+    await setDevProperties(this.sessionId, this.scenario, devProperties);
   }
 
   // Uses deprecated JSONWP call
@@ -534,25 +540,25 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
     if (this.isAndroid) {
       const wifiState: number = await sendAdbCommand(
         this.sessionId,
-        this.context.scenario,
+        this.scenario,
         "settings",
         ["get", "global", "wifi_on"]
       );
       const mobileDataState: number = await sendAdbCommand(
         this.sessionId,
-        this.context.scenario,
+        this.scenario,
         "settings",
         ["get", "global", "mobile_data"]
       );
       const locationServicesState: number = await sendAdbCommand(
         this.sessionId,
-        this.context.scenario,
+        this.scenario,
         "settings",
         ["get", "secure", "location_mode"]
       );
       const airplaneModeState: number = await sendAdbCommand(
         this.sessionId,
-        this.context.scenario,
+        this.scenario,
         "settings",
         ["get", "global", "airplane_mode_on"]
       );
@@ -573,11 +579,7 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
       const airplaneModeState = await this._siriQueryAndResponse(
         "Airplane Mode"
       );
-      await sendSiriCommand(
-        this.sessionId,
-        this.context.scenario,
-        "Close Siri"
-      );
+      await sendSiriCommand(this.sessionId, this.scenario, "Close Siri");
       await delay(3500);
 
       devProperties.network = {
@@ -594,15 +596,11 @@ export class AppiumResponse extends ProtoResponse implements iResponse {
   protected async _siriQueryAndResponse(setting: string): Promise<boolean> {
     await sendSiriCommand(
       this.sessionId,
-      this.context.scenario,
+      this.scenario,
       `Get ${setting} status`
     );
 
-    const res = await getSiriEffect(
-      this.sessionId,
-      this.context.scenario,
-      setting
-    );
+    const res = await getSiriEffect(this.sessionId, this.scenario, setting);
 
     return res === "On" ? true : false;
   }

@@ -1,8 +1,9 @@
 import { ProtoResponse } from "../response";
-import { iResponse, iValue } from "../interfaces/general";
+import { iResponse } from "../interfaces/iresponse";
 import { HttpResponse } from "../http-response";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { ResourceScenario } from "./resource-scenario";
 
 export class ResourceResponse extends ProtoResponse implements iResponse {
   public get responseType(): ScenarioType {
@@ -25,7 +26,7 @@ export class ResourceResponse extends ProtoResponse implements iResponse {
     throw new Error("Generic Response does not yet support select");
   }
 
-  public async findAll(): Promise<iValue[]> {
+  public async findAll(): Promise<any[]> {
     throw new Error("Generic Response does not yet support selectAll");
   }
 }

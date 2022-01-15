@@ -1,3 +1,4 @@
+import { HttpResponse } from "..";
 import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
 import { HtmlResponse } from "./html-response";

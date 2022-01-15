@@ -2,7 +2,7 @@ import * as fs from "fs-extra";
 import { resolve } from "path";
 import { PNG } from "pngjs";
 import { toType, ensureFolderExists } from "../util";
-import { iAssertionContext } from "../interfaces/general";
+import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { FlagpoleExecution } from "../flagpole-execution";
 import pixelmatch = require("pixelmatch");
 

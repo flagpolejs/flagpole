@@ -1,10 +1,11 @@
-import { iResponse, iValue } from "../interfaces/general";
+import { iResponse } from "../interfaces/iresponse";
 import { HttpResponse } from "../http-response";
 import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { JsonResponse } from "../json/json-response";
 import { ScenarioType } from "../scenario-types";
+import { iValue } from "..";
 
 export class MediaStreamValidatorResponse
   extends JsonResponse

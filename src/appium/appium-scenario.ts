@@ -1,8 +1,8 @@
 import { AppiumResponse } from "./appium-response";
 import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
-import { KeyValue, ClassConstructor } from "../interfaces/generic-types";
-import { iSuite, iScenario } from "../interfaces/general";
+import { ClassConstructor, KeyValue } from "../interfaces/generic-types";
+import { iSuite } from "../interfaces/isuite";
 
 export class AppiumScenario extends ProtoScenario {
   public readonly requestAdapter = fetchWithNeedle;
@@ -11,10 +11,10 @@ export class AppiumScenario extends ProtoScenario {
   public constructor(
     public readonly suite: iSuite,
     public readonly title: string,
-    public readonly type: ClassConstructor<iScenario>,
+    public readonly type: ClassConstructor<AppiumScenario>,
     opts: KeyValue
   ) {
-    super(suite, title, type, opts);
+    super(suite, title, AppiumScenario, opts);
     this.open("POST /wd/hub/session", {
       data: {
         capabilities: {

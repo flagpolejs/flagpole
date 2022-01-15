@@ -1,4 +1,4 @@
-import { iResponse, iValue } from "../interfaces/general";
+import { iResponse } from "../interfaces/iresponse";
 import { HttpResponse } from "../http-response";
 import HLS from "parse-hls";
 import { wrapAsValue } from "../helpers";
@@ -6,6 +6,7 @@ import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "../json/jpath";
 import { MediaResponse } from "./media-response";
+import { iValue } from "..";
 
 export class HlsResponse
   extends MediaResponse

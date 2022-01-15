@@ -2,20 +2,22 @@ import { URL } from "url";
 import { FlagpoleReport } from "./logging/flagpole-report";
 import {
   iSuite,
-  iScenario,
   SuiteStatusCallback,
   SuiteCallback,
-  ScenarioCallback,
-  ScenarioMapper,
-  ScenarioInitOptions,
-  ScenarioTemplateInitOptions,
-} from "./interfaces/general";
+} from "./interfaces/isuite";
 import { exitProcess, toType } from "./util";
 import { FlagpoleExecution } from "./flagpole-execution";
 import { SuiteTaskManager } from "./suite-task-manager";
 import { ScenarioType } from "./scenario-types";
 import { createScenario } from "./scenario-type-map";
 import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
+import { iScenario } from ".";
+import {
+  ScenarioCallback,
+  ScenarioInitOptions,
+  ScenarioMapper,
+  ScenarioTemplateInitOptions,
+} from "./interfaces/iscenario";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 

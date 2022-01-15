@@ -1,11 +1,5 @@
 import { Assertion } from "./assertion";
-import {
-  iResponse,
-  iValue,
-  iAssertionContext,
-  iScenario,
-  iSuite,
-} from "./interfaces/general";
+import { iSuite } from "./interfaces/isuite";
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
@@ -40,6 +34,8 @@ import { ScreenshotOpts } from "./interfaces/screenshot";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
 import { PointerMove } from "./interfaces/pointer";
 import { ScreenProperties } from "./interfaces/screen-properties";
+import { iAssertionContext } from "./interfaces/iassertioncontext";
+import { iResponse, iScenario, iValue } from ".";
 
 const getParamsFromExists = (
   a: string,
@@ -595,7 +591,6 @@ export class AssertionContext implements iAssertionContext {
 
   public set(aliasName: string, value: any): iAssertionContext {
     this.scenario.set(aliasName, value);
-
     return this;
   }
 
@@ -604,7 +599,8 @@ export class AssertionContext implements iAssertionContext {
   }
 
   public async scrollTo(point: OptionalXY): Promise<iAssertionContext> {
-    return (await this.response.scrollTo(point)).context;
+    await this.response.scrollTo(point);
+    return this;
   }
 
   public map = asyncMap;
@@ -624,8 +620,8 @@ export class AssertionContext implements iAssertionContext {
     });
   }
 
-  public abort(message?: string): Promise<iScenario> {
-    return this.scenario.abort(message);
+  public async abort(message?: string): Promise<void> {
+    await this.scenario.abort(message);
   }
 
   public async rotateScreen(

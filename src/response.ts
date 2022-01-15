@@ -1,10 +1,5 @@
 import { URL } from "url";
-import {
-  iValue,
-  iResponse,
-  iScenario,
-  iAssertionContext,
-} from "./interfaces/general";
+import { iValue } from "./interfaces/ivalue";
 import { HttpResponse } from "./http-response";
 import { HttpRequest } from "./http-request";
 import { AssertionContext } from "./assertion-context";
@@ -15,6 +10,9 @@ import { PointerMove } from "./interfaces/pointer";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
 import { OptionalXY } from "./interfaces/generic-types";
 import { ScreenProperties } from "./interfaces/screen-properties";
+import { iAssertionContext } from "./interfaces/iassertioncontext";
+import { iScenario } from "./interfaces/iscenario";
+import { iResponse } from "./interfaces/iresponse";
 
 export abstract class ProtoResponse implements iResponse {
   protected _currentUrl: string | null = null;

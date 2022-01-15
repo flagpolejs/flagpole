@@ -1,14 +1,15 @@
 import { HTMLElement } from "./html-element";
 import { HttpResponse } from "../http-response";
-import { DOMResponse } from "./dom-response";
-import { iResponse, iValue } from "../interfaces/general";
+import { iValue } from "../interfaces/ivalue";
 import * as cheerio from "cheerio";
 import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
+import { iResponse } from "../interfaces/iresponse";
+import { ProtoResponse } from "../response";
 
-export class HtmlResponse extends DOMResponse implements iResponse {
+export class HtmlResponse extends ProtoResponse implements iResponse {
   private _cheerio: cheerio.Root | null = null;
 
   protected set cheerio(value: cheerio.Root) {
@@ -74,7 +75,6 @@ export class HtmlResponse extends DOMResponse implements iResponse {
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
   ): Promise<iValue[]> {
-    const response: HtmlResponse = this;
     const elements: cheerio.Cheerio = this.cheerio(selector);
     const params = getFindParams(a, b);
     let nodeElements: iValue[] = [];
@@ -83,7 +83,7 @@ export class HtmlResponse extends DOMResponse implements iResponse {
         nodeElements.push(
           await HTMLElement.create(
             this.cheerio(elements.get(i)),
-            response.context,
+            this.context,
             `${selector} [${i}]`,
             selector
           )

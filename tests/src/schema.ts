@@ -1,5 +1,5 @@
 import flagpole from "../../dist/index";
-import { HttpResponseOptions } from "../../dist/interfaces";
+import { HttpResponseOptions } from "../../dist/interfaces/http";
 
 flagpole("Test Assertion Schema", async (suite) => {
   const jtdSchema: any = {

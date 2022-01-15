@@ -1,4 +1,4 @@
-import { iResponse, iValue } from "../interfaces/general";
+import { iResponse } from "../interfaces/iresponse";
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http-response";
 import { ValuePromise } from "../value-promise";
@@ -26,7 +26,7 @@ export abstract class MediaResponse extends ProtoResponse implements iResponse {
     throw "This type of scenario does not suport find.";
   }
 
-  public async findAll(path: string): Promise<iValue[]> {
+  public async findAll(path: string): Promise<any[]> {
     throw "This type of scenario does not suport findAll.";
   }
 

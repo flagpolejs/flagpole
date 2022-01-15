@@ -1,4 +1,4 @@
-import { iAssertionContext, iValue } from "../interfaces/general";
+import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { PuppeteerElement } from "./puppeteer-element";
 import {
   JSHandle,
@@ -12,6 +12,7 @@ import * as ext from "./extjs-helper";
 import { wrapAsValue } from "../helpers";
 import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
+import { iValue } from "..";
 
 const visible: EvaluateFn = (c) => c.isVisible(true);
 const hidden: EvaluateFn = (c) => c.isHidden(true);

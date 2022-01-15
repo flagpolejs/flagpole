@@ -1,15 +1,5 @@
 import { ScenarioStatusEvent, ScenarioDisposition } from "./interfaces/enums";
-import {
-  iAssertionContext,
-  iResponse,
-  iScenario,
-  iSuite,
-  iNextCallback,
-  ScenarioCallback,
-  ScenarioStatusCallback,
-  ScenarioCallbackAndMessage,
-  iValue,
-} from "./interfaces/general";
+import { iSuite } from "./interfaces/isuite";
 import {
   AssertionResult,
   AssertionPass,
@@ -54,6 +44,18 @@ import {
 } from "./interfaces/http";
 import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
 import { iAssertion } from "./interfaces/iassertion";
+import {
+  iScenario,
+  ScenarioCallback,
+  ScenarioCallbackAndMessage,
+  ScenarioStatusCallback,
+} from "./interfaces/iscenario";
+import {
+  iAssertionContext,
+  iNextCallback,
+} from "./interfaces/iassertioncontext";
+import { iResponse } from "./interfaces/iresponse";
+import { iValue } from "./interfaces/ivalue";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -1029,10 +1031,7 @@ export abstract class ProtoScenario implements iScenario {
     this._publish(ScenarioStatusEvent.executionProgress);
     bluebird
       .mapSeries(this._nextCallbacks, (_then, index) => {
-        const context: iAssertionContext = new AssertionContext(
-          this,
-          this.response
-        );
+        const context = this.response.context;
         const comment: string | null = this._nextMessages[index];
         if (comment !== null) {
           this._pushToLog(new LogScenarioSubHeading(comment));

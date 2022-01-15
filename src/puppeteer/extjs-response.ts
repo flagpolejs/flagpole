@@ -1,5 +1,5 @@
 import { ExtJsComponent } from "./extjs-component";
-import { iResponse, iValue } from "../interfaces/general";
+import { iResponse } from "../interfaces/iresponse";
 import { FindOptions, FindAllOptions } from "../interfaces/find-options";
 import { PuppeteerResponse } from "./puppeteer-response";
 import { PuppeteerElement } from "./puppeteer-element";
@@ -18,6 +18,7 @@ import { query, jsHandleArrayToHandles } from "./extjs-helper";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
 import { ExtJsScenario } from "./extjs-scenario";
+import { iValue } from "..";
 
 declare type globalThis = {
   Ext: any;
@@ -78,14 +79,13 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     if (!this.page) {
       throw "Page must be defined.";
     }
-    const response: iResponse = this;
     const puppeteerElements: PuppeteerElement[] = [];
     if (this.scenario.page !== null) {
       const elements = await this.scenario.page.$x(xPath);
       await asyncForEach(elements, async (el, i) => {
         const element = await ExtJsComponent.create(
           el,
-          response.context,
+          this.context,
           `${xPath} [${i}]`,
           xPath
         );

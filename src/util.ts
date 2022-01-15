@@ -1,8 +1,4 @@
-import {
-  iMessageAndCallback,
-  iScenario,
-  iNextCallback,
-} from "./interfaces/general";
+import { iScenario } from "./interfaces/iscenario";
 import * as fs from "fs";
 import * as path from "path";
 import * as nodeAssert from "assert";
@@ -14,6 +10,8 @@ import { types } from "util";
 import AjvJsonSchema, { Schema, ValidateFunction } from "ajv";
 import AjvJtd from "ajv/dist/jtd";
 import { AjvErrors, AssertSchemaType } from "./interfaces/schema";
+import { iMessageAndCallback } from "./interfaces/imessage-and-callback";
+import { iNextCallback } from "./interfaces/iassertioncontext";
 
 export const toArray = <T>(value: any): T[] =>
   Array.isArray(value) ? value : [value];

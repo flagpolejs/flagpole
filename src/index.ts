@@ -1,7 +1,10 @@
 import { Flagpole } from "./flagpole";
 import { FlagpoleExecution } from "./flagpole-execution";
 import { ScenarioType } from "./scenario-types";
-import { iResponse, iValue, iScenario, iSuite } from "./interfaces/general";
+import { iSuite } from "./interfaces/isuite";
+import { iValue } from "./interfaces/ivalue";
+import { iResponse } from "./interfaces/iresponse";
+import { iScenario } from "./interfaces/iscenario";
 import { HttpRequest } from "./http-request";
 import { Assertion } from "./assertion";
 import { AssertionContext } from "./assertion-context";

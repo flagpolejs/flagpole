@@ -1,5 +1,5 @@
 import { HttpRequest } from "../http-request";
-import { iScenario, iValue } from "../interfaces/general";
+import { iValue } from "../interfaces/ivalue";
 import { applyOffsetAndLimit, delay, wrapAsValue } from "../helpers";
 import { AppiumResponse } from "./appium-response";
 import { JsonDoc } from "../json/jpath";
@@ -7,14 +7,13 @@ import { HttpRequestOptions } from "../interfaces/http";
 import { FindAllOptions } from "../interfaces/find-options";
 import { AppiumElementIdResponse } from "./appium-types";
 import { DeviceProperties } from "../interfaces/device-properties";
+import { iScenario } from "../interfaces/iscenario";
+import { AppiumScenario } from "./appium-scenario";
 
 const DEFAULT_APPIUM_PORT = 4723;
 
 // Get URL prefix for sending Appium HTTP calls
-/*
- * @param {iScenario} scenario - FlagPole scenario
- * */
-const getUrlPrefix = (scenario: iScenario): string =>
+const getUrlPrefix = (scenario: AppiumScenario): string =>
   scenario.suite.baseUrl
     ? `${scenario.suite.baseUrl.protocol}//${scenario.suite.baseUrl.host}/wd/hub`
     : `http://localhost:${DEFAULT_APPIUM_PORT}/wd/hub`;
@@ -27,7 +26,7 @@ const getUrlPrefix = (scenario: iScenario): string =>
  * @return {Promise<JsonDoc>} JSON object that is the result of the call to the Appium server
  * */
 export const sendAppiumRequest = async (
-  scenario: iScenario,
+  scenario: AppiumScenario,
   path: string,
   opts: HttpRequestOptions
 ) => {
@@ -46,11 +45,7 @@ export const sendAppiumRequest = async (
 
 // Get first returned Appium sessionId
 // This is necessary for all other HTTP calls to the Appium server
-/*
- * @param {iScenario} scenario - FlagPole scenario
- * @return {Promise<string>} sessionId to route all other HTTP requests
- * */
-const getAppiumSession = async (scenario: iScenario) => {
+const getAppiumSession = async (scenario: AppiumScenario) => {
   const json = await sendAppiumRequest(scenario, "/sessions", {
     method: "get",
   });
@@ -64,7 +59,10 @@ const getAppiumSession = async (scenario: iScenario) => {
  * @param {any} opts - Appium session settings, called "capabilities"
  * @return {Promise<string>} sessionId to route all other HTTP requests
  * */
-const createAppiumSession = async (scenario: iScenario, opts: any = {}) => {
+const createAppiumSession = async (
+  scenario: AppiumScenario,
+  opts: any = {}
+) => {
   const json = await sendAppiumRequest(scenario, "/session", {
     method: "post",
     data: {
@@ -83,7 +81,10 @@ const createAppiumSession = async (scenario: iScenario, opts: any = {}) => {
  * @param {any} opts - Appium session settings, called "capabilities"
  * @return {Promise<Scenario>} Initial scenario with alias set
  * */
-export const appiumSessionCreate = (scenario: iScenario, opts: any = {}) => {
+export const appiumSessionCreate = (
+  scenario: AppiumScenario,
+  opts: any = {}
+) => {
   return async () => {
     scenario.set("capabilities", opts);
     const newSessionId = await createAppiumSession(scenario, opts);
@@ -101,7 +102,7 @@ export const appiumSessionCreate = (scenario: iScenario, opts: any = {}) => {
  * @return {Promise<JsonDoc>} JSON response from DELETE call
  * */
 export const appiumSessionDestroy = async (
-  scenario: iScenario,
+  scenario: AppiumScenario,
   sessionId: string
 ) => {
   return await sendAppiumRequest(scenario, `/session/${sessionId}`, {
@@ -199,7 +200,7 @@ const appiumGetPackageName = async (
  * */
 const getAppiumSessionCapabilities = async (
   sessionId: string,
-  scenario: iScenario
+  scenario: AppiumScenario
 ) => {
   const res = await sendAppiumRequest(scenario, `/session/${sessionId}`, {
     method: "get",
@@ -217,7 +218,7 @@ const getAppiumSessionCapabilities = async (
  * */
 export const setDevProperties = async (
   sessionId: string,
-  scenario: iScenario,
+  scenario: AppiumScenario,
   devProperties: DeviceProperties = {}
 ): Promise<void> => {
   if (devProperties.network) {
@@ -363,7 +364,7 @@ export const setDevProperties = async (
 
 export const sendAdbCommand = async (
   sessionId: string,
-  scenario: iScenario,
+  scenario: AppiumScenario,
   command: string,
   args?: any[],
   timeout: number = 20000,
@@ -393,7 +394,7 @@ export const sendAdbCommand = async (
 
 export const sendSiriCommand = async (
   sessionId: string,
-  scenario: iScenario,
+  scenario: AppiumScenario,
   command: string
 ): Promise<void> => {
   await sendAppiumRequest(scenario, `/session/${sessionId}/execute`, {
@@ -409,7 +410,7 @@ export const sendSiriCommand = async (
 
 export const getSiriEffect = async (
   sessionId: string,
-  scenario: iScenario,
+  scenario: AppiumScenario,
   setting: string
 ): Promise<string> => {
   const prevTimeout = await getTimeout(sessionId, scenario);
@@ -442,7 +443,7 @@ export const getSiriEffect = async (
 
 export const siriCommandAndResponse = async (
   sessionId: string,
-  scenario: iScenario,
+  scenario: AppiumScenario,
   setting: string,
   isSet: boolean
 ): Promise<void> => {
@@ -458,7 +459,7 @@ export const siriCommandAndResponse = async (
 
 export const setImplicitWait = async (
   sessionId: string,
-  scenario: iScenario,
+  scenario: AppiumScenario,
   ms: number
 ): Promise<void> => {
   await sendAppiumRequest(
@@ -475,7 +476,7 @@ export const setImplicitWait = async (
 
 export const getTimeout = async (
   sessionId: string,
-  scenario: iScenario
+  scenario: AppiumScenario
 ): Promise<number> => {
   const res = await sendAppiumRequest(
     scenario,

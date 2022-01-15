@@ -1,9 +1,4 @@
-import {
-  iAssertionContext,
-  iValue,
-  iScenario,
-  ScenarioConstructor,
-} from "./interfaces/general";
+import { iValue } from "./interfaces/ivalue";
 import {
   toType,
   isNullOrUndefined,
@@ -37,6 +32,8 @@ import { JsFunction, KeyValue } from "./interfaces/generic-types";
 import { iBounds } from "./interfaces/ibounds";
 import { HttpRequestOptions } from "./interfaces/http";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
+import { iAssertionContext } from "./interfaces/iassertioncontext";
+import { iScenario, ScenarioConstructor } from "./interfaces/iscenario";
 
 export class Value implements iValue {
   protected _input: any;

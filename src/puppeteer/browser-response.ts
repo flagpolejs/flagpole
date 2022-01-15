@@ -1,4 +1,4 @@
-import { iResponse, iValue } from "../interfaces/general";
+import { iResponse } from "../interfaces/iresponse";
 import { FindOptions, FindAllOptions } from "../interfaces/find-options";
 import {
   PointerMove,
@@ -18,6 +18,8 @@ import {
 import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { iValue } from "..";
+import { BrowserScenario } from "./browser-scenario";
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
   public get responseTypeName(): string {
@@ -93,13 +95,12 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
   }
 
   public async findAllXPath(xPath: string): Promise<BrowserElement[]> {
-    const response: iResponse = this;
     const out: BrowserElement[] = [];
     const elements: ElementHandle[] = await this._page.$x(xPath);
     await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
       const element = await BrowserElement.create(
         el,
-        response.context,
+        this.context,
         `${xPath} [${i}]`,
         xPath
       );

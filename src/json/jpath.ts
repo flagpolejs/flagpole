@@ -1,7 +1,8 @@
 import * as jmespath from "jmespath";
-import { iResponse, iValue } from "../interfaces/general";
+import { iValue } from "../interfaces/ivalue";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
+import { iResponse } from "..";
 
 export class JsonDoc {
   public get root(): any {

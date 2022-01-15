@@ -1,11 +1,12 @@
 import { ProtoResponse } from "../response";
-import { iResponse, iValue } from "../interfaces/general";
+import { iResponse } from "../interfaces/iresponse";
 import { URL } from "url";
 import { HttpResponse } from "../http-response";
 import { Value } from "../value";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { ScenarioType } from "../scenario-types";
+import { iValue } from "..";
 
 export interface ImageProperties {
   width: number;

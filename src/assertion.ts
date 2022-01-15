@@ -32,7 +32,7 @@ import { iAssertion } from "./interfaces/iassertion";
 import { iAssertionIs } from "./interfaces/iassertion-is";
 import { iValue } from ".";
 import { iAssertionResult } from "./interfaces/iassertion-result";
-import { iAssertionContext } from "./interfaces/general";
+import { iAssertionContext } from "./interfaces/iassertioncontext";
 import { CompareCallback, JsFunction } from "./interfaces/generic-types";
 import { AssertSchemaType } from "./interfaces/schema";
 
