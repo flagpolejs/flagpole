@@ -5,8 +5,7 @@ import { HttpResponse } from "../http-response";
 import { Value } from "../value";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
-import { ScenarioType } from "../scenario-types";
-import { iValue } from "..";
+import { iValue } from "../interfaces/ivalue";
 
 export interface ImageProperties {
   width: number;
@@ -43,13 +42,7 @@ export class ImageResponse extends ProtoResponse implements iResponse {
     );
   }
 
-  public get responseType(): ScenarioType {
-    return "image";
-  }
-
-  public get responseTypeName(): string {
-    return "Image";
-  }
+  public readonly responseTypeName = "Image";
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);

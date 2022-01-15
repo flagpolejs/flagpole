@@ -4,7 +4,6 @@ import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { JsonResponse } from "../json/json-response";
-import { ScenarioType } from "../scenario-types";
 import { iValue } from "..";
 
 export class MediaStreamValidatorResponse
@@ -12,14 +11,7 @@ export class MediaStreamValidatorResponse
   implements iResponse, JPathProvider
 {
   public jsonDoc: JsonDoc | undefined;
-
-  public get responseTypeName(): string {
-    return "MediaStreamValidator Data";
-  }
-
-  public get responseType(): ScenarioType {
-    return "mediastreamvalidator";
-  }
+  public readonly responseTypeName = "MediaStreamValidator Data";
 
   public get jsonBody(): iValue {
     return wrapAsValue(

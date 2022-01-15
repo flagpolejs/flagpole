@@ -6,9 +6,7 @@ import { iResponse } from "../interfaces/iresponse";
 import { HeadersScenario } from "./headers-scenario";
 
 export class HeadersResponse extends ProtoResponse implements iResponse {
-  public get responseTypeName(): string {
-    return "Headers";
-  }
+  public readonly responseTypeName = "Headers";
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);

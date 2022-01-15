@@ -12,7 +12,6 @@ import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/log-collection";
 import { HttpRequest } from "./http-request";
 import { toType, asyncForEach, runAsync, getFunctionArgs } from "./util";
-import { AssertionContext } from "./assertion-context";
 import * as bluebird from "bluebird";
 import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
@@ -65,6 +64,24 @@ enum ScenarioRequestType {
 }
 
 export abstract class ProtoScenario implements iScenario {
+  public constructor(
+    public readonly suite: iSuite,
+    public readonly title: string,
+    public readonly type: ClassConstructor<iScenario>,
+    opts: KeyValue
+  ) {
+    this._requestPromise = new Promise((resolve) => {
+      this._requestResolve = resolve;
+    });
+    this._finishedPromise = new Promise((resolve) => {
+      this._finishedResolve = resolve;
+    });
+    this._webhookPromise = new Promise((resolve) => {
+      this._webhookResolver = resolve;
+    });
+    this.request = new HttpRequest(this._getRequestOptions(opts));
+  }
+
   /**
    * Length of time in milliseconds from initialization to completion
    */
@@ -291,24 +308,6 @@ export abstract class ProtoScenario implements iScenario {
   public abstract readonly requestAdapter: HttpRequestFetch;
   public abstract readonly response: iResponse;
   public readonly request: HttpRequest;
-
-  public constructor(
-    public readonly suite: iSuite,
-    public readonly title: string,
-    public readonly type: ClassConstructor<iScenario>,
-    opts: KeyValue
-  ) {
-    this._requestPromise = new Promise((resolve) => {
-      this._requestResolve = resolve;
-    });
-    this._finishedPromise = new Promise((resolve) => {
-      this._finishedResolve = resolve;
-    });
-    this._webhookPromise = new Promise((resolve) => {
-      this._webhookResolver = resolve;
-    });
-    this.request = new HttpRequest(this._getRequestOptions(opts));
-  }
 
   protected _getDefaultRequestOptions(): HttpRequestOptions {
     return {

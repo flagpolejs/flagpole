@@ -68,10 +68,6 @@ The numeric value of how many redirects were followed.
 context.assert(context.response.redirectCount).lessThan(10);
 ```
 
-### responseType: string
-
-Get the type of response this is, such as: html, browser, extjs, json, xml, rss, image, etc.
-
 ### scenario: iScenario
 
 Reference to the scenario that created this response.

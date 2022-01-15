@@ -88,14 +88,7 @@ export class AppiumResponse extends ProtoResponse {
   }
 
   public jsonDoc?: JsonDoc;
-
-  public get responseTypeName(): string {
-    return "Appium";
-  }
-
-  public get responseType(): ScenarioType {
-    return "appium";
-  }
+  public readonly responseTypeName = "Appium";
 
   public getRoot(): any {
     return this.jsonBody.$;

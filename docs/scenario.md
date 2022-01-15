@@ -583,12 +583,6 @@ Get the options that we have set for the request. This will include cookies, hea
 
 The total time between when the Scenario's request went out and when the response back back. Null if it the request has not yet returned a response.
 
-### responseType: ScenarioType
-
-The type of Scenario this is, the type of request we'll make and the response we'll expect back.
-
-_Possible Values: html, json, image, script, video, audio, resource, browser, extjs_
-
 ### title: string
 
 Title of the Scenario as it will be printed on reports. This is both a getter and a setter.

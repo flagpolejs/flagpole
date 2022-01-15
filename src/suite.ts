@@ -11,7 +11,7 @@ import { SuiteTaskManager } from "./suite-task-manager";
 import { ScenarioType } from "./scenario-types";
 import { createScenario } from "./scenario-type-map";
 import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
-import { iScenario } from ".";
+import { iScenario } from "./interfaces/iscenario";
 import {
   ScenarioCallback,
   ScenarioInitOptions,

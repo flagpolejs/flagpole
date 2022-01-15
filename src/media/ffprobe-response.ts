@@ -4,7 +4,6 @@ import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { JsonResponse } from "../json/json-response";
-import { ScenarioType } from "../scenario-types";
 import { KeyValue } from "../interfaces/generic-types";
 import { FfprobeData } from "media-probe";
 import { iValue } from "..";
@@ -23,13 +22,7 @@ export class FfprobeResponse
 {
   public jsonDoc: JsonDoc | undefined;
 
-  public get responseTypeName(): string {
-    return "FFprobe Data";
-  }
-
-  public get responseType(): ScenarioType {
-    return "ffprobe";
-  }
+  public readonly responseTypeName = "FFprobe Data";
 
   public get jsonBody(): iValue {
     return wrapAsValue(this.context, this.jsonDoc?.root, "FFprobe Data");

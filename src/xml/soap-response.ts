@@ -1,7 +1,6 @@
 import { HttpResponse } from "../http-response";
 import { iResponse } from "../interfaces/iresponse";
 import { XmlResponse } from "./xml-response";
-import { ScenarioType } from "../scenario-types";
 
 const validMimeTypes = [
   "application/soap+xml",
@@ -12,13 +11,7 @@ const validMimeTypes = [
 ];
 
 export class SoapResponse extends XmlResponse implements iResponse {
-  public get responseTypeName(): string {
-    return "SOAP";
-  }
-
-  public get responseType(): ScenarioType {
-    return "soap";
-  }
+  public readonly responseTypeName = "SOAP";
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);

@@ -3,7 +3,6 @@ import { HttpResponse } from "../http-response";
 import HLS from "parse-hls";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
-import { ScenarioType } from "../scenario-types";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "../json/jpath";
 import { MediaResponse } from "./media-response";
 import { iValue } from "..";
@@ -14,14 +13,7 @@ export class HlsResponse
 {
   public jsonDoc: JsonDoc | undefined;
   protected _mimePattern = /mpegurl|octet-stream/i;
-
-  public get responseTypeName(): string {
-    return "HLS Video";
-  }
-
-  public get responseType(): ScenarioType {
-    return "hls";
-  }
+  public readonly responseTypeName = "HLS Video";
 
   public get jsonBody(): iValue {
     return wrapAsValue(this.context, this.jsonDoc?.root, "Parsed Manifest");

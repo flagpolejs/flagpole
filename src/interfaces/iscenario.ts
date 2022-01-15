@@ -15,7 +15,8 @@ import { ScenarioDisposition, ScenarioStatusEvent } from "./enums";
 import { ResponsePipe } from "./response-pipe";
 import { iAssertionResult } from "./iassertion-result";
 import { iNextCallback } from "./iassertioncontext";
-import { iSuite, ScenarioType } from "..";
+import { iSuite } from "./isuite";
+import { ScenarioType } from "../scenario-types";
 
 interface ValueLink {
   getUrl(): Promise<any>;

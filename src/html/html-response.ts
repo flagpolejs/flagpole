@@ -23,13 +23,7 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
     return this._cheerio;
   }
 
-  public get responseTypeName(): string {
-    return "HTML";
-  }
-
-  public get responseType(): ScenarioType {
-    return "html";
-  }
+  public readonly responseTypeName: string = "HTML";
 
   public get currentUrl(): iValue {
     return wrapAsValue(this.context, this._currentUrl, "Current URL");

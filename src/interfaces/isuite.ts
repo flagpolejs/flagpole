@@ -1,6 +1,5 @@
 import { SuiteStatusEvent } from "./enums";
 import { FlagpoleExecution } from "../flagpole-execution";
-import { ScenarioType } from "../scenario-types";
 import { ClassConstructor, KeyValue } from "./generic-types";
 import {
   iScenario,
@@ -8,6 +7,7 @@ import {
   ScenarioInitOptions,
   ScenarioMapper,
 } from "./iscenario";
+import { ScenarioType } from "../scenario-types";
 
 export type SuiteStatusCallback = (
   suite: iSuite,

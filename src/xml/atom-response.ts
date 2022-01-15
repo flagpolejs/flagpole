@@ -1,18 +1,11 @@
 import { HttpResponse } from "../http-response";
 import { iResponse } from "../interfaces/iresponse";
 import { XmlResponse } from "./xml-response";
-import { ScenarioType } from "../scenario-types";
 
 const validMimeTypes = ["application/atom+xml", "text/xml", "text/atom+xml"];
 
 export class AtomResponse extends XmlResponse implements iResponse {
-  public get responseTypeName(): string {
-    return "Atom";
-  }
-
-  public get responseType(): ScenarioType {
-    return "atom";
-  }
+  public readonly responseTypeName = "Atom";
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);

@@ -17,18 +17,10 @@ import {
 } from "../helpers";
 import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
-import { ScenarioType } from "../scenario-types";
-import { iValue } from "..";
-import { BrowserScenario } from "./browser-scenario";
+import { iValue } from "../interfaces/ivalue";
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
-  public get responseTypeName(): string {
-    return "Browser";
-  }
-
-  public get responseType(): ScenarioType {
-    return "browser";
-  }
+  public readonly responseTypeName: string = "Browser";
 
   /**
    * Select the first matching element

@@ -18,7 +18,7 @@ export abstract class ProtoResponse implements iResponse {
   protected _currentUrl: string | null = null;
   protected _httpResponse: HttpResponse = HttpResponse.createEmpty();
 
-  abstract get responseTypeName(): string;
+  abstract responseTypeName: string;
   abstract find(selector: string, opts?: FindOptions): ValuePromise;
   abstract find(
     selector: string,

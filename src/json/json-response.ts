@@ -2,7 +2,6 @@ import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http-response";
 import { iResponse } from "../interfaces/iresponse";
 import { ValuePromise } from "../value-promise";
-import { ScenarioType } from "../scenario-types";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "./jpath";
 import { iValue } from "..";
 
@@ -12,13 +11,7 @@ export class JsonResponse
 {
   public jsonDoc: JsonDoc | undefined;
 
-  public get responseTypeName(): string {
-    return "JSON";
-  }
-
-  public get responseType(): ScenarioType {
-    return "json";
-  }
+  public readonly responseTypeName: string = "JSON";
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);

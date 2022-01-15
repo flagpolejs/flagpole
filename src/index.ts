@@ -1,6 +1,5 @@
 import { Flagpole } from "./flagpole";
 import { FlagpoleExecution } from "./flagpole-execution";
-import { ScenarioType } from "./scenario-types";
 import { iSuite } from "./interfaces/isuite";
 import { iValue } from "./interfaces/ivalue";
 import { iResponse } from "./interfaces/iresponse";
@@ -49,7 +48,6 @@ export {
   ImageResponse,
   JsonResponse,
   ResourceResponse,
-  ScenarioType,
   ProtoResponse,
   iResponse,
   HttpRequest,

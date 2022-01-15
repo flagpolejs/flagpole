@@ -1,19 +1,12 @@
 import { HttpResponse } from "../http-response";
 import { HtmlResponse } from "../html/html-response";
 import * as cheerio from "cheerio";
-import { ScenarioType } from "../scenario-types";
 import { ValuePromise } from "../value-promise";
 import { iResponse, iValue } from "..";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 
 export class XmlResponse extends HtmlResponse implements iResponse {
-  public get responseTypeName(): string {
-    return "XML";
-  }
-
-  public get responseType(): ScenarioType {
-    return "xml";
-  }
+  public readonly responseTypeName: string = "XML";
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
