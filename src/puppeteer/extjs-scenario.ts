@@ -12,12 +12,12 @@ import { runAsync } from "../util";
 import { Browser, Page } from "puppeteer-core";
 import { ExtJSResponse } from "./extjs-response";
 import { BrowserOptions } from "./browser-opts";
+import { HttpRequestOptions } from "../interfaces/http";
 
 export class ExtJsScenario extends ProtoScenario {
-  public readonly requestAdapter = fetchWithNeedle;
+  public readonly adapter = fetchWithNeedle;
   public readonly response = new ExtJSResponse(this);
-
-  protected _defaultBrowserOptions: BrowserOptions = {
+  public readonly defaultRequestOptions: BrowserOptions = {
     headless: true,
     recordConsole: true,
     outputConsole: false,
@@ -53,7 +53,7 @@ export class ExtJsScenario extends ProtoScenario {
 
   protected _getRequestOptions(opts: KeyValue = {}): KeyValue {
     opts.browserOptions = {
-      ...this._defaultBrowserOptions,
+      ...this.defaultRequestOptions,
       ...opts.browserOptions,
     };
     if (FlagpoleExecution.global.headless !== undefined) {

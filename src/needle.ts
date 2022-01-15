@@ -1,7 +1,7 @@
 import { HttpResponse } from "./http-response";
 import needle = require("needle");
 import { FlagpoleExecution } from "./flagpole-execution";
-import { HttpRequestFetch, iHttpRequest } from "./interfaces/http";
+import { HttpAdapter, iHttpRequest } from "./interfaces/http";
 import {
   CONTENT_TYPE_FORM_MULTIPART,
   CONTENT_TYPE_JSON,
@@ -33,7 +33,7 @@ export const getNeedleOptions = (
   };
 };
 
-export const fetchWithNeedle: HttpRequestFetch = (
+export const fetchWithNeedle: HttpAdapter = (
   request: iHttpRequest,
   opts?: KeyValue
 ): Promise<HttpResponse> => {

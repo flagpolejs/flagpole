@@ -1,6 +1,5 @@
 import { KeyValue } from "./generic-types";
 import * as http from "http";
-import { HttpResponse } from "../http-response";
 
 export const HttpMethodVerbArray = [
   "get",
@@ -15,10 +14,10 @@ export type HttpMethodVerb = typeof HttpMethodVerbArray[number];
 
 export type HttpAuthType = "basic" | "digest" | "auto";
 
-export type HttpRequestFetch = (
+export type HttpAdapter = (
   request: iHttpRequest,
   opts?: KeyValue
-) => Promise<HttpResponse>;
+) => Promise<iHttpResponse>;
 
 export type HttpAuth = {
   username: string;
@@ -88,4 +87,16 @@ export interface HttpResponseOptions {
   trailers?: KeyValue;
   method?: string;
   url?: string;
+}
+
+export interface iHttpResponse {
+  body: string;
+  json: any;
+  statusCode: number;
+  statusMessage: string;
+  headers: KeyValue;
+  cookies: KeyValue;
+  trailers: KeyValue;
+  url: string;
+  method: string;
 }

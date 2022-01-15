@@ -6,7 +6,7 @@ import { ProtoScenario } from "../scenario";
 import { SoapResponse } from "./soap-response";
 
 export class SoapScenario extends ProtoScenario {
-  public readonly requestAdapter = fetchWithNeedle;
+  public readonly adapter = fetchWithNeedle;
   public readonly response = new SoapResponse(this);
 
   protected _getDefaultRequestOptions(): HttpRequestOptions {

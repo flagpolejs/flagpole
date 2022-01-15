@@ -3,7 +3,7 @@ import { fetchWithNeedle } from "../needle";
 import { ProtoScenario } from "../scenario";
 
 export class HeadersScenario extends ProtoScenario {
-  public readonly requestAdapter = fetchWithNeedle;
+  public readonly adapter = fetchWithNeedle;
   public readonly response = new HeadersResponse(this);
 
   protected _executeHttpRequest() {

@@ -3,9 +3,9 @@ import {
   mediaStreamValidator,
   MediaStreamValidatorOpts,
 } from "media-stream-validator";
-import { HttpRequestFetch, iHttpRequest } from "../interfaces/http";
+import { HttpAdapter, iHttpRequest } from "../interfaces/http";
 
-export const fetchWithMediaStreamValidator: HttpRequestFetch = (
+export const fetchWithMediaStreamValidator: HttpAdapter = (
   request: iHttpRequest,
   opts?: MediaStreamValidatorOpts
 ): Promise<HttpResponse> => {

@@ -1,9 +1,13 @@
 import { NeedleResponse } from "needle";
 import { readFile } from "fs-extra";
 import { KeyValue } from "./interfaces/generic-types";
-import { HttpResponseOptions, iHttpRequest } from "./interfaces/http";
+import {
+  HttpResponseOptions,
+  iHttpRequest,
+  iHttpResponse,
+} from "./interfaces/http";
 
-export class HttpResponse {
+export class HttpResponse implements iHttpResponse {
   public body: string = "";
   public json: any = null;
   public statusCode: number = 0;

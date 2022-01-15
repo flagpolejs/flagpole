@@ -5,7 +5,7 @@ import {
   HttpTimeout,
   HttpProxy,
   HttpRequestOptions,
-  HttpRequestFetch,
+  HttpAdapter,
 } from "./interfaces/http";
 import { HttpResponse } from "./http-response";
 import tunnel = require("tunnel");
@@ -311,7 +311,7 @@ export class HttpRequest implements iHttpRequest {
    */
   public fetch(
     opts: KeyValue = {},
-    fetchMethod?: HttpRequestFetch
+    fetchMethod?: HttpAdapter
   ): Promise<HttpResponse> {
     if (this._fetched) {
       throw new Error("This request was already fetched.");

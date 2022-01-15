@@ -36,7 +36,7 @@ import {
   HttpMethodVerb,
   HttpMethodVerbArray,
   HttpProxy,
-  HttpRequestFetch,
+  HttpAdapter,
   HttpRequestOptions,
   HttpResponseOptions,
   HttpTimeout,
@@ -64,6 +64,13 @@ enum ScenarioRequestType {
 }
 
 export abstract class ProtoScenario implements iScenario {
+  public abstract readonly adapter: HttpAdapter;
+  public abstract readonly response: iResponse;
+  public readonly request: HttpRequest;
+  public readonly defaultRequestOptions: HttpRequestOptions = {
+    method: "get",
+  };
+
   public constructor(
     public readonly suite: iSuite,
     public readonly title: string,
@@ -79,7 +86,10 @@ export abstract class ProtoScenario implements iScenario {
     this._webhookPromise = new Promise((resolve) => {
       this._webhookResolver = resolve;
     });
-    this.request = new HttpRequest(this._getRequestOptions(opts));
+    this.request = new HttpRequest({
+      ...this.defaultRequestOptions,
+      ...opts,
+    });
   }
 
   /**
@@ -304,24 +314,6 @@ export abstract class ProtoScenario implements iScenario {
   protected _disposition: ScenarioDisposition = ScenarioDisposition.pending;
   protected _webhookPromise: Promise<WebhookServer>;
   protected _webhookResolver: Function = () => {};
-
-  public abstract readonly requestAdapter: HttpRequestFetch;
-  public abstract readonly response: iResponse;
-  public readonly request: HttpRequest;
-
-  protected _getDefaultRequestOptions(): HttpRequestOptions {
-    return {
-      method: "get",
-      headers: {},
-    };
-  }
-
-  protected _getRequestOptions(opts: KeyValue = {}): KeyValue {
-    return {
-      ...this._getDefaultRequestOptions(),
-      ...opts,
-    };
-  }
 
   protected _getArray(key: string): any[] {
     const type = toType(this._aliasedData[key]);
@@ -1087,7 +1079,7 @@ export abstract class ProtoScenario implements iScenario {
             this._redirectChain.push(url);
           },
         },
-        this.requestAdapter
+        this.adapter
       )
       .then((response) => {
         this._processResponse(response);

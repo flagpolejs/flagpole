@@ -1,8 +1,8 @@
 import { HttpResponse } from "../http-response";
 import { ffprobe, FfprobeOptions } from "media-probe";
-import { HttpRequestFetch, iHttpRequest } from "../interfaces/http";
+import { HttpAdapter, iHttpRequest } from "../interfaces/http";
 
-export const fetchWithFfprobe: HttpRequestFetch = (
+export const fetchWithFfprobe: HttpAdapter = (
   request: iHttpRequest,
   opts?: FfprobeOptions
 ): Promise<HttpResponse> => {

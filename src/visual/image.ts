@@ -1,5 +1,5 @@
 import { HttpResponse } from "../http-response";
-import { HttpRequestFetch, iHttpRequest } from "../interfaces/http";
+import { HttpAdapter, iHttpRequest } from "../interfaces/http";
 import needle = require("needle");
 import { getNeedleOptions } from "../needle";
 import { ImageProbe } from "@zerodeps/image-probe";
@@ -44,7 +44,7 @@ function fromProbeImage(
   );
 }
 
-export const fetchImageWithNeedle: HttpRequestFetch = (
+export const fetchImageWithNeedle: HttpAdapter = (
   request: iHttpRequest,
   opts?: KeyValue
 ): Promise<HttpResponse> => {

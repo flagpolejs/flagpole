@@ -5,7 +5,7 @@ import { ClassConstructor, KeyValue } from "../interfaces/generic-types";
 import { iSuite } from "../interfaces/isuite";
 
 export class AppiumScenario extends ProtoScenario {
-  public readonly requestAdapter = fetchWithNeedle;
+  public readonly adapter = fetchWithNeedle;
   public readonly response = new AppiumResponse(this);
 
   public constructor(
