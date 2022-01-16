@@ -10,7 +10,7 @@ import {
   ErrorActualValueLine,
 } from "./console-line";
 import { LogItem } from "./log-item";
-import { isNullOrUndefined, toType } from "../util";
+import { isNullOrUndefined, toType } from "../helpers";
 import { iAssertionResult } from "../interfaces/iassertion-result";
 import { iConsoleLine, LineType } from "../interfaces/iconsole-log";
 

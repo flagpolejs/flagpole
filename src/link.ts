@@ -1,5 +1,5 @@
 import { URL } from "url";
-import { toType } from "./util";
+import { toType } from "./helpers";
 
 const isValidDataUrl = require("valid-data-url");
 

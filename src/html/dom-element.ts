@@ -3,7 +3,7 @@ import { iValue } from "../interfaces/ivalue";
 import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { iScenario } from "../interfaces/iscenario";
 import { Link } from "../link";
-import { getMessageAndCallbackFromOverloading } from "../util";
+import { getMessageAndCallbackFromOverloading } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { ImageScenario } from "../visual/image-scenario";
 import { ResourceScenario } from "../resource/resource-scenario";
@@ -11,7 +11,7 @@ import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { ClassConstructor } from "../interfaces/generic-types";
 import { iMessageAndCallback } from "../interfaces/imessage-and-callback";
 
-export abstract class DOMElement extends Value {
+export abstract class DOMElement<T = any> extends Value {
   public get name(): string {
     return this._name || this._path || "DOM Element";
   }
@@ -26,31 +26,31 @@ export abstract class DOMElement extends Value {
     this._path = path || "";
   }
 
-  abstract find(selector: string, opts?: FindOptions): ValuePromise;
+  abstract find(selector: string, opts?: FindOptions): ValuePromise<T>;
   abstract find(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): ValuePromise;
+  ): ValuePromise<T>;
   abstract find(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise;
+  ): ValuePromise<T>;
   abstract findAll(
     selector: string,
     opts?: FindAllOptions
-  ): Promise<iValue<any>[]>;
+  ): Promise<iValue<T>[]>;
   abstract findAll(
     selector: string,
     contains: string,
     opts?: FindAllOptions
-  ): Promise<iValue<any>[]>;
+  ): Promise<iValue<T>[]>;
   abstract findAll(
     selector: string,
     matches: RegExp,
     opts?: FindAllOptions
-  ): Promise<iValue<any>[]>;
+  ): Promise<iValue<T>[]>;
 
   protected abstract _getTagName(): Promise<string>;
   protected abstract _getAttribute(key: string): Promise<string | null>;

@@ -2,7 +2,7 @@ import { HTMLElement } from "./html-element";
 import { HttpResponse } from "../http/http-response";
 import { iValue } from "../interfaces/ivalue";
 import * as cheerio from "cheerio";
-import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
+import { getFindParams, filterFind, wrapValue, findOne } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { iResponse } from "../interfaces/iresponse";
@@ -49,7 +49,7 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
             null,
             selector
           )
-        : wrapAsValue(this.context, null, selector);
+        : wrapValue(this.context, null, selector);
     });
   }
 

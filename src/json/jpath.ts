@@ -1,6 +1,6 @@
 import * as jmespath from "jmespath";
 import { iValue } from "../interfaces/ivalue";
-import { wrapAsValue } from "../helpers";
+import { wrapValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { iResponse } from "../interfaces/iresponse";
 
@@ -45,6 +45,6 @@ export const jpathFind = (
       throw Error("No JSON document is defined.");
     }
     const selection = await self.jsonDoc.search(path);
-    return wrapAsValue(self.context, selection, path, selection);
+    return wrapValue(self.context, selection, path, selection);
   });
 };

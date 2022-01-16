@@ -13,7 +13,7 @@ import {
   emptyDirSync,
 } from "fs-extra";
 import * as path from "path";
-import { toJson } from "./util";
+import { toJson } from "./helpers";
 
 export enum FlagpoleOutput {
   console = "console",

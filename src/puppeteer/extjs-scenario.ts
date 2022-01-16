@@ -8,7 +8,7 @@ import { AssertionFailOptional } from "../logging/assertion-result";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { KeyValue } from "../interfaces/generic-types";
 import { HttpResponse } from "../http/http-response";
-import { runAsync } from "../util";
+import { runAsync } from "../helpers";
 import { Browser, Page } from "puppeteer-core";
 import { ExtJSResponse } from "./extjs-response";
 import { BrowserOptions } from "./browser-opts";

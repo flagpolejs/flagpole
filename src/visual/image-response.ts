@@ -3,7 +3,7 @@ import { iResponse } from "../interfaces/iresponse";
 import { URL } from "url";
 import { HttpResponse } from "../http/http-response";
 import { Value } from "../value";
-import { wrapAsValue } from "../helpers";
+import { wrapValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { iValue } from "../interfaces/ivalue";
 
@@ -27,15 +27,15 @@ export class ImageResponse extends ProtoResponse implements iResponse {
   };
 
   public get length(): iValue {
-    return wrapAsValue(this.context, this.imageProperties.length, "Image Size");
+    return wrapValue(this.context, this.imageProperties.length, "Image Size");
   }
 
   public get url(): iValue {
-    return wrapAsValue(this.context, this.imageProperties.url, "URL of Image");
+    return wrapValue(this.context, this.imageProperties.url, "URL of Image");
   }
 
   public get path(): iValue {
-    return wrapAsValue(
+    return wrapValue(
       this.context,
       new URL(this.imageProperties.url).pathname,
       "URL Path of Image"

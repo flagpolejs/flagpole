@@ -20,15 +20,16 @@ import {
   asyncMapToObject,
   flatten,
   asyncCount,
-} from "../util";
+  getFindName,
+  wrapValue,
+  getFindParams,
+} from "../helpers";
 import { FlagpoleExecution } from "../flagpole-execution";
-import { getFindParams, getFindName, wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { IteratorBoolCallback } from "../interfaces/iterator-callbacks";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { iHttpRequest } from "../interfaces/http";
 import { iAssertionResult } from "../interfaces/iassertion-result";
-import { iAssertion } from "../interfaces/iassertion";
 import { JsFunction, KeyValue, OptionalXY } from "../interfaces/generic-types";
 import { ScreenshotOpts } from "../interfaces/screenshot";
 import { GestureOpts, GestureType } from "../interfaces/gesture";
@@ -380,7 +381,7 @@ export class AssertionContext implements iAssertionContext {
           : await this.response.find(selector, opts)
       );
       const name = getFindName(params, selectors, 0);
-      const value = element === null ? wrapAsValue(this, null, name) : element;
+      const value = element === null ? wrapValue(this, null, name) : element;
       this._assertExists(null, name, value);
       return value;
     });
@@ -446,7 +447,7 @@ export class AssertionContext implements iAssertionContext {
       });
       return (
         element === null
-          ? wrapAsValue(this, null, getFindName(params, selectors, null))
+          ? wrapValue(this, null, getFindName(params, selectors, null))
           : element
       ) as T;
     });
@@ -614,9 +615,9 @@ export class AssertionContext implements iAssertionContext {
     return ValuePromise.execute(async () => {
       if (callback) {
         const n = await asyncCount<T>(arr, callback);
-        return wrapAsValue(this, n, "Count");
+        return wrapValue(this, n, "Count");
       }
-      return wrapAsValue(this, arr.length, "Count");
+      return wrapValue(this, arr.length, "Count");
     });
   }
 

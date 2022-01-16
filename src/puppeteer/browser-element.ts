@@ -1,7 +1,7 @@
 import { PuppeteerElement } from "./puppeteer-element";
 import { iValue } from "../interfaces/ivalue";
 import { ElementHandle, BoxModel, JSHandle } from "puppeteer-core";
-import { asyncForEach, toType, toArray, asyncMap } from "../util";
+import { asyncForEach, toType, toArray, asyncMap } from "../helpers";
 import csstoxpath from "csstoxpath";
 import { ValuePromise } from "../value-promise";
 import { BrowserScenario } from "./browser-scenario";
@@ -10,7 +10,10 @@ import { KeyValue } from "../interfaces/generic-types";
 import { ScreenshotOpts } from "../interfaces/screenshot";
 import { iAssertionContext } from "../interfaces/iassertioncontext";
 
-export class BrowserElement extends PuppeteerElement implements iValue {
+export class BrowserElement
+  extends PuppeteerElement
+  implements iValue<ElementHandle>
+{
   protected _input: ElementHandle;
 
   public get $(): ElementHandle {
@@ -25,9 +28,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
   ): Promise<BrowserElement> {
     return new Promise((resolve) => {
       const element = new BrowserElement(input, context, name, path);
-      if (name === null) {
-        element._name = String(path);
-      }
+      if (name === null) element._name = String(path);
       Promise.all([element._getTagName(), element._getSourceCode()]).then(
         () => {
           resolve(element);
@@ -47,11 +48,11 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     this._path = path || "";
   }
 
-  public find(selector: string): ValuePromise {
+  public find(selector: string): ValuePromise<ElementHandle | null> {
     return ValuePromise.execute(async () => {
-      const element: ElementHandle | null = await this.$.$(selector);
-      const name: string = `${selector} under ${this.name}`;
-      const path: string = `${this.path} ${selector}`;
+      const element = await this.$.$(selector);
+      const name = `${selector} under ${this.name}`;
+      const path = `${this.path} ${selector}`;
       if (element !== null) {
         return BrowserElement.create(element, this.context, name, path);
       }

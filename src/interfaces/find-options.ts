@@ -6,3 +6,9 @@ export interface FindOptions {
 export interface FindAllOptions extends FindOptions {
   limit?: number;
 }
+
+export type FindParams = {
+  contains: string | null;
+  matches: RegExp | null;
+  opts: FindOptions | FindAllOptions | null;
+};

@@ -1,23 +1,27 @@
 import { ExtJsComponent } from "./extjs-component";
-import { iResponse } from "../interfaces/iresponse";
-import { FindOptions, FindAllOptions } from "../interfaces/find-options";
+import {
+  FindOptions,
+  FindAllOptions,
+  FindParams,
+  iResponse,
+  iValue,
+} from "../interfaces";
 import { PuppeteerResponse } from "./puppeteer-response";
 import { PuppeteerElement } from "./puppeteer-element";
-import { asyncForEach, asyncMap } from "../util";
 import {
   filterFind,
   getFindParams,
-  wrapAsValue,
+  wrapValue,
   findOne,
   getFindName,
-  FindParams,
+  asyncForEach,
+  asyncMap,
 } from "../helpers";
 import { ElementHandle, JSHandle, EvaluateFn } from "puppeteer-core";
 import { BrowserElement } from "./browser-element";
 import { query, jsHandleArrayToHandles } from "./extjs-helper";
 import { ValuePromise } from "../value-promise";
 import { ExtJsScenario } from "./extjs-scenario";
-import { iValue } from "../interfaces/ivalue";
 
 declare type globalThis = {
   Ext: any;
@@ -62,7 +66,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
           xPath
         );
       }
-      return wrapAsValue(this.context, null, xPath);
+      return wrapValue(this.context, null, xPath);
     });
   }
 
@@ -142,7 +146,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     const ref = await this._page.evaluateHandle(js);
     return ref
       ? await ExtJsComponent.create(ref, this.context, name, path)
-      : wrapAsValue(this.context, null, name, path);
+      : wrapValue(this.context, null, name, path);
   }
 
   private async _injectScript(content: string): Promise<void> {
@@ -186,7 +190,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
           return component;
         }
       }
-      return wrapAsValue(this.context, null, selector);
+      return wrapValue(this.context, null, selector);
     });
   }
 

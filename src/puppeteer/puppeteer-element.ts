@@ -12,9 +12,14 @@ import { ValuePromise } from "../value-promise";
 import { BrowserScenario } from "./browser-scenario";
 import { iAssertionContext } from "../interfaces/iassertioncontext";
 
-export abstract class PuppeteerElement extends DOMElement implements iValue {
-  protected abstract _input: ElementHandle | JSHandle;
-  public abstract get $(): ElementHandle | JSHandle;
+type ElementInput = ElementHandle | JSHandle;
+
+export abstract class PuppeteerElement
+  extends DOMElement
+  implements iValue<ElementInput>
+{
+  protected abstract _input: ElementInput;
+  public abstract get $(): ElementInput;
 
   protected get _page(): Page {
     const scenario = this.context.scenario as BrowserScenario;
@@ -25,7 +30,7 @@ export abstract class PuppeteerElement extends DOMElement implements iValue {
   }
 
   protected constructor(
-    input: JSHandle | ElementHandle,
+    input: ElementInput,
     context: iAssertionContext,
     name: string,
     path?: string

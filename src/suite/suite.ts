@@ -5,7 +5,7 @@ import {
   SuiteStatusCallback,
   SuiteCallback,
 } from "../interfaces/isuite";
-import { exitProcess, toType } from "../util";
+import { exitProcess, toType } from "../helpers";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { SuiteTaskManager } from "./suite-task-manager";
 import { ScenarioType } from "../scenario-types";

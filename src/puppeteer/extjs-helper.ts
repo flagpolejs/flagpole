@@ -1,9 +1,8 @@
 import { JSHandle, Page, EvaluateFn } from "puppeteer-core";
 import { ExtJsComponent } from "./extjs-component";
-import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { Value } from "../value";
-import { asyncMap } from "../util";
-import { iValue } from "..";
+import { asyncMap } from "../helpers";
+import { iValue, iAssertionContext } from "../interfaces";
 
 export async function jsHandleIsNull(handle: JSHandle<any>) {
   return await handle.evaluate((r) => r === null);

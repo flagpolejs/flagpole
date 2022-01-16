@@ -4,14 +4,7 @@ import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http/http-response";
 import { iValue } from "../interfaces/ivalue";
 import { ValuePromise } from "../value-promise";
-import {
-  wrapAsValue,
-  getFindParams,
-  findOne,
-  applyOffsetAndLimit,
-} from "../helpers";
 import { JsonDoc } from "../json/jpath";
-import { delay } from "../helpers";
 import {
   sendAppiumRequest,
   appiumFindByUiAutomator,
@@ -22,7 +15,14 @@ import {
   appiumSessionDestroy,
 } from "./appium-helpers";
 import { AppiumElement } from "./appium-element";
-import { toType } from "../util";
+import {
+  toType,
+  delay,
+  wrapValue,
+  getFindParams,
+  findOne,
+  applyOffsetAndLimit,
+} from "../helpers";
 import { _ } from "ajv";
 import { PointerMove, PointerPoint, PointerType } from "../interfaces/pointer";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
@@ -144,7 +144,7 @@ export class AppiumResponse extends ProtoResponse {
         );
         return element;
       } else {
-        return wrapAsValue(this.context, null, selector);
+        return wrapValue(this.context, null, selector);
       }
     });
   }
@@ -428,13 +428,13 @@ export class AppiumResponse extends ProtoResponse {
       let isVisible: Boolean = false;
       setTimeout(() => (timedOut = true), timeout || 30000);
       while (!elementCheckStr) {
-        if (timedOut) return wrapAsValue(this.context, null, selector);
+        if (timedOut) return wrapValue(this.context, null, selector);
         element = await this.find(selector);
         elementCheckStr = element.$;
         await delay(10);
       }
       while (!isVisible) {
-        if (timedOut) return wrapAsValue(this.context, null, selector);
+        if (timedOut) return wrapValue(this.context, null, selector);
         isVisible = await this.isVisible(element);
         await delay(10);
       }
@@ -450,13 +450,13 @@ export class AppiumResponse extends ProtoResponse {
       let isVisible: Boolean = true;
       setTimeout(() => (timedOut = true), timeout || 30000);
       while (!elementCheckStr) {
-        if (timedOut) return wrapAsValue(this.context, null, selector);
+        if (timedOut) return wrapValue(this.context, null, selector);
         element = (await this.find(selector)) as AppiumElement;
         elementCheckStr = element.$;
         await delay(10);
       }
       while (isVisible) {
-        if (timedOut) return wrapAsValue(this.context, null, selector);
+        if (timedOut) return wrapValue(this.context, null, selector);
         isVisible = await this.isVisible(element);
         await delay(10);
       }
@@ -599,7 +599,7 @@ export class AppiumResponse extends ProtoResponse {
   public getSource(): ValuePromise {
     return ValuePromise.execute(async () => {
       const res = await this.get("source");
-      return wrapAsValue(
+      return wrapValue(
         this.context,
         res.jsonRoot.value,
         "XML source for current viewport"

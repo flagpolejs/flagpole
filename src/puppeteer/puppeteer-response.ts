@@ -8,8 +8,7 @@ import {
 } from "puppeteer-core";
 import { iResponse } from "../interfaces/iresponse";
 import { BrowserControl } from "./browser-control";
-import { toType } from "../util";
-import { wrapAsValue } from "../helpers";
+import { toType, wrapValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { BrowserScenario } from "./browser-scenario";
 import { ExtJsScenario } from "./extjs-scenario";
@@ -45,13 +44,12 @@ export abstract class PuppeteerResponse
     return this.scenario.browserControl?.response || null;
   }
 
-  public get currentUrl(): iValue {
-    const page = this.scenario.page;
-    let url: string | null = null;
-    if (page) {
-      url = page.url();
-    }
-    return wrapAsValue(this.context, url, "Current URL");
+  public get currentUrl(): iValue<string> {
+    return wrapValue(
+      this.context,
+      this.page ? this.page.url() : "",
+      "Current URL"
+    );
   }
 
   protected get _page(): Page {

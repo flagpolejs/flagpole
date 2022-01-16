@@ -3,7 +3,7 @@ import { iValue } from "./interfaces/ivalue";
 import { createEmptyResponse } from "./http/http-response";
 import { HttpRequest } from "./http/http-request";
 import { AssertionContext } from "./assertion/assertion-context";
-import { wrapAsValue } from "./helpers";
+import { wrapValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
 import { PointerMove } from "./interfaces/pointer";
@@ -14,6 +14,10 @@ import { iAssertionContext } from "./interfaces/iassertioncontext";
 import { iScenario } from "./interfaces/iscenario";
 import { iResponse } from "./interfaces/iresponse";
 import { iHttpResponse } from "./interfaces/http";
+import {
+  AssertionActionCompleted,
+  AssertionActionFailed,
+} from "./logging/assertion-result";
 
 export abstract class ProtoResponse implements iResponse {
   protected _currentUrl: string | null = null;
@@ -57,6 +61,22 @@ export abstract class ProtoResponse implements iResponse {
     opts?: FindAllOptions
   ): Promise<iValue<any>[]>;
 
+  public exists(selector?: string): ValuePromise {
+    return ValuePromise.execute(async () => {
+      const el: iValue<any> = selector
+        ? await this.find(selector)
+        : this.rawBody;
+      el.isNull()
+        ? this.scenario.result(
+            new AssertionActionFailed("EXISTS", selector || "*")
+          )
+        : this.scenario.result(
+            new AssertionActionCompleted("EXISTS", selector || "*")
+          );
+      return el;
+    });
+  }
+
   public async eval(callback: any, ...args: any[]): Promise<any> {
     throw "This type of scenario does not suport eval.";
   }
@@ -69,7 +89,7 @@ export abstract class ProtoResponse implements iResponse {
    * HTTP Status Code
    */
   public get statusCode(): iValue<number> {
-    return wrapAsValue(
+    return wrapValue(
       this.context,
       this.httpResponse.statusCode,
       "HTTP Status Code"
@@ -80,7 +100,7 @@ export abstract class ProtoResponse implements iResponse {
    * HTTP Status Message
    */
   public get statusMessage(): iValue<string> {
-    return wrapAsValue(
+    return wrapValue(
       this.context,
       this.httpResponse.statusMessage,
       "HTTP Status Message"
@@ -88,7 +108,7 @@ export abstract class ProtoResponse implements iResponse {
   }
 
   public get body(): iValue<string> {
-    return wrapAsValue<string>(
+    return wrapValue<string>(
       this.context,
       this.httpResponse.body,
       "Response Body String"
@@ -96,7 +116,7 @@ export abstract class ProtoResponse implements iResponse {
   }
 
   public get rawBody(): iValue<any> {
-    return wrapAsValue(
+    return wrapValue(
       this.context,
       this.httpResponse.rawBody,
       "Raw Response Body"
@@ -107,7 +127,7 @@ export abstract class ProtoResponse implements iResponse {
    * Size of the response body
    */
   public get length(): iValue<number> {
-    return wrapAsValue(
+    return wrapValue(
       this.context,
       this.httpResponse.body.length,
       "Length of Response Body"
@@ -118,46 +138,42 @@ export abstract class ProtoResponse implements iResponse {
    * HTTP Headers
    */
   public get headers(): iValue<KeyValue> {
-    return wrapAsValue(this.context, this.httpResponse.headers, "HTTP Headers");
+    return wrapValue(this.context, this.httpResponse.headers, "HTTP Headers");
   }
 
   /**
    * HTTP Cookies
    */
   public get cookies(): iValue<KeyValue> {
-    return wrapAsValue(this.context, this.httpResponse.cookies, "HTTP Cookies");
+    return wrapValue(this.context, this.httpResponse.cookies, "HTTP Cookies");
   }
 
   /**
    * HTTP Trailers
    */
   public get trailers(): iValue<KeyValue> {
-    return wrapAsValue(
-      this.context,
-      this.httpResponse.trailers,
-      "HTTP Trailers"
-    );
+    return wrapValue(this.context, this.httpResponse.trailers, "HTTP Trailers");
   }
 
   /**
    * JSON parsed response body
    */
   public get jsonBody(): iValue<any> {
-    return wrapAsValue(this.context, this.httpResponse.jsonBody, "JSON Body");
+    return wrapValue(this.context, this.httpResponse.jsonBody, "JSON Body");
   }
 
   /**
    * URL of the request
    */
   public get url(): iValue<string | null> {
-    return wrapAsValue(this.context, this.scenario.url, "Request URL");
+    return wrapValue(this.context, this.scenario.url, "Request URL");
   }
 
   /**
    * URL of the response, after all redirects
    */
   public get finalUrl(): iValue<string | null> {
-    return wrapAsValue(
+    return wrapValue(
       this.context,
       this.scenario.finalUrl,
       "Response URL (after redirects)"
@@ -168,14 +184,14 @@ export abstract class ProtoResponse implements iResponse {
    * Current URL after any navigation, is nothing for static requets but comes into play with browser requests
    */
   public get currentUrl(): iValue<string | null> {
-    return wrapAsValue(this.context, this.scenario.finalUrl, "Current URL");
+    return wrapValue(this.context, this.scenario.finalUrl, "Current URL");
   }
 
   /**
    * URL of the response, after all redirects
    */
   public get redirectCount(): iValue<number> {
-    return wrapAsValue(
+    return wrapValue(
       this.context,
       this.scenario.redirectCount,
       "Response URL (after redirects)"
@@ -186,7 +202,7 @@ export abstract class ProtoResponse implements iResponse {
    * Time from request start to response complete
    */
   public get loadTime(): iValue<number | null> {
-    return wrapAsValue(
+    return wrapValue(
       this.context,
       this.scenario.requestDuration,
       "Request to Response Load Time"
@@ -194,7 +210,7 @@ export abstract class ProtoResponse implements iResponse {
   }
 
   public get method(): iValue<string> {
-    return wrapAsValue(this.context, this.httpResponse.method, "Method");
+    return wrapValue(this.context, this.httpResponse.method, "Method");
   }
 
   /**
@@ -240,7 +256,7 @@ export abstract class ProtoResponse implements iResponse {
         ? key
         : key.toLowerCase();
     const headerValue: any = this.httpResponse.headers[key];
-    return wrapAsValue(
+    return wrapValue(
       this.context,
       typeof headerValue == "undefined" ? null : headerValue,
       "HTTP Headers[" + key + "]"
@@ -253,7 +269,7 @@ export abstract class ProtoResponse implements iResponse {
    * @param key
    */
   public cookie(key: string): iValue<any> {
-    return wrapAsValue(
+    return wrapValue(
       this.context,
       this.httpResponse.cookies[key],
       "HTTP Cookies[" + key + "]"

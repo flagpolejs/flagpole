@@ -8,7 +8,7 @@ import { AppiumResponse } from "./appium-response";
 import {
   getFindParams,
   findOne,
-  wrapAsValue,
+  wrapValue,
   applyOffsetAndLimit,
 } from "../helpers";
 import { appiumFindByUiAutomator } from "./appium-helpers";
@@ -94,7 +94,7 @@ export class AppiumElement extends DOMElement implements iValue<any> {
         );
         return element;
       } else {
-        return wrapAsValue(this.session.context, null, selector);
+        return wrapValue(this.session.context, null, selector);
       }
     });
   }

@@ -7,17 +7,20 @@ import {
 } from "../interfaces/pointer";
 import { ElementHandle } from "puppeteer-core";
 import { PuppeteerResponse } from "./puppeteer-response";
-import { asyncForEach, asyncMap } from "../util";
 import {
   getFindParams,
   filterFind,
   findOne,
-  wrapAsValue,
+  wrapValue,
   getFindName,
+  asyncForEach,
+  asyncMap,
 } from "../helpers";
 import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
 import { iValue } from "../interfaces/ivalue";
+
+type ElementQueryResult = ElementHandle<Element> | null;
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
   /**
@@ -29,7 +32,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise {
+  ): ValuePromise<ElementQueryResult> {
     return ValuePromise.execute(async () => {
       // Filter with options
       const params = getFindParams(a, b);
@@ -37,9 +40,9 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
         return findOne(this, selector, params);
       }
       // No options, so just find from selector
-      const el: ElementHandle<Element> | null = await this._page.$(selector);
+      const el: ElementQueryResult = await this._page.$(selector);
       return el === null
-        ? wrapAsValue(this.context, null, selector)
+        ? wrapValue(this.context, null, selector)
         : BrowserElement.create(el, this.context, selector, selector);
     });
   }
@@ -80,7 +83,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
           xPath
         );
       }
-      return wrapAsValue(this.context, null, xPath);
+      return wrapValue(this.context, null, xPath);
     });
   }
 
@@ -203,7 +206,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
           opts
         );
       }
-      return wrapAsValue(this.context, true, selector);
+      return wrapValue(this.context, true, selector);
     });
   }
 

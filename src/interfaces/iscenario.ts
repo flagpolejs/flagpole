@@ -14,9 +14,10 @@ import { ServerOptions } from "https";
 import { ScenarioDisposition, ScenarioStatusEvent } from "./enums";
 import { ResponsePipe } from "./response-pipe";
 import { iAssertionResult } from "./iassertion-result";
-import { iAssertionContext, iNextCallback } from "./iassertioncontext";
+import { iNextCallback } from "./iassertioncontext";
 import { iSuite } from "./isuite";
 import { ScenarioType } from "../scenario-types";
+import { ContextProvider } from "./context-provider";
 
 interface ValueLink {
   getUrl(): Promise<any>;
@@ -75,12 +76,11 @@ export interface ScenarioInitOptions<T extends iScenario> {
   opts?: KeyValue;
 }
 
-export interface iScenario {
+export interface iScenario extends ContextProvider {
   title: string;
   type: ScenarioConstructor;
   typeName: string;
   suite: iSuite;
-  context: iAssertionContext<iScenario>;
   opts: KeyValue;
   totalDuration: number | null;
   executionDuration: number | null;

@@ -9,7 +9,7 @@ import {
   asyncMap,
   arrayEquals,
   arrayExactly,
-  deepEqual,
+  deepEquals,
   deepStrictEqual,
   toArray,
   objectContains,
@@ -18,7 +18,7 @@ import {
   asyncFind,
   asyncFindNot,
   validateSchema,
-} from "../util";
+} from "../helpers";
 import { HttpResponse } from "../http/http-response";
 import { ImageCompare } from "../visual/image-compare";
 import { AssertionIs } from "./assertion-is";
@@ -328,7 +328,7 @@ export class Assertion implements iAssertion {
     }
     if (thisType == "object" && thatType == "object") {
       return this.execute(
-        deepEqual(thisValue, thatValue),
+        deepEquals(thisValue, thatValue),
         thisStringified,
         null,
         thatStringified

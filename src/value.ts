@@ -9,7 +9,9 @@ import {
   middleIn,
   toOrdinal,
   nthIn,
-} from "./util";
+  wrapValue,
+  wrapValuePromise,
+} from "./helpers";
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
@@ -166,7 +168,12 @@ export class Value<T = any> implements iValue<T> {
     protected _name?: string,
     protected readonly _parent: any = null,
     protected readonly _highlight: string = ""
-  ) {}
+  ) {
+    // Get source code from parent
+    if (_parent?.sourceCode) {
+      this._sourceCode = _parent.sourceCode;
+    }
+  }
 
   public rename(newName: string): iValue<T> {
     const oldName = this.name;
@@ -986,12 +993,7 @@ export class Value<T = any> implements iValue<T> {
     parent?: any,
     highlight?: string
   ): iValue<T> {
-    const val = new Value<T>(data, this.context, name, parent, highlight);
-    // If no source code of its own, inherit it from parent
-    if (!val.sourceCode && parent && parent.sourceCode) {
-      val._sourceCode = parent.sourceCode;
-    }
-    return val;
+    return wrapValue<T>(this.context, data, name, parent, highlight);
   }
 
   protected _wrapAsValuePromise<T>(
@@ -1000,8 +1002,6 @@ export class Value<T = any> implements iValue<T> {
     parent?: any,
     highlight?: string
   ): ValuePromise {
-    return ValuePromise.wrap(
-      this._wrapAsValue<T>(data, name, parent, highlight)
-    );
+    return wrapValuePromise<T>(this.context, data, name, parent, highlight);
   }
 }

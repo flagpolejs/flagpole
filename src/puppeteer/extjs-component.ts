@@ -6,13 +6,12 @@ import {
   SerializableOrJSHandle,
   ElementHandle,
 } from "puppeteer-core";
-import { toArray, asyncMap } from "../util";
 import { ExtJSResponse } from "./extjs-response";
 import * as ext from "./extjs-helper";
-import { wrapAsValue } from "../helpers";
+import { wrapValue, toArray, asyncMap } from "../helpers";
 import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
-import { iValue } from "..";
+import { iValue } from "../interfaces";
 
 const visible: EvaluateFn = (c) => c.isVisible(true);
 const hidden: EvaluateFn = (c) => c.isHidden(true);
@@ -191,7 +190,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
           path
         );
       }
-      return wrapAsValue(this.context, null, name, path);
+      return wrapValue(this.context, null, name, path);
     });
   }
 

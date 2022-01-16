@@ -1,7 +1,7 @@
 import { iResponse } from "../interfaces/iresponse";
 import { HttpResponse } from "../http/http-response";
 import HLS from "parse-hls";
-import { wrapAsValue } from "../helpers";
+import { wrapValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "../json/jpath";
 import { MediaResponse } from "./media-response";
@@ -12,7 +12,7 @@ export class HlsResponse extends MediaResponse implements JPathProvider {
   protected _mimePattern = /mpegurl|octet-stream/i;
 
   public get jsonBody(): iValue {
-    return wrapAsValue(this.context, this.jsonDoc?.root, "Parsed Manifest");
+    return wrapValue(this.context, this.jsonDoc?.root, "Parsed Manifest");
   }
 
   protected get isM3U8(): boolean {

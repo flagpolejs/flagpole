@@ -6,8 +6,8 @@ import {
 } from "./suite-execution";
 import { SuiteConfig } from "../flagpole-config";
 import { FlagpoleReport } from "../logging/flagpole-report";
-import { iSuite } from "../interfaces/isuite";
-import { asyncForEach } from "../util";
+import { iSuite } from "../interfaces";
+import { asyncForEach } from "../helpers";
 import { Flagpole } from "../flagpole";
 
 export class SuiteExecutionInline extends SuiteExecution {

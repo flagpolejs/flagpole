@@ -1,16 +1,16 @@
 import { ValuePromise } from "../value-promise";
-import { FindAllOptions, FindOptions } from "./find-options";
+import { ContextProvider } from "./context-provider";
+import { FindOptions } from "./find-options";
+import { FindProvider } from "./find-provider";
 import { JsFunction, KeyValue, OptionalXY } from "./generic-types";
 import { GestureOpts, GestureType } from "./gesture";
 import { iHttpRequest, iHttpResponse } from "./http";
-import { iAssertionContext } from "./iassertioncontext";
 import { iValue } from "./ivalue";
 import { PointerMove } from "./pointer";
 import { ScreenProperties } from "./screen-properties";
 import { ScreenshotOpts } from "./screenshot";
 
-export interface iResponse {
-  context: iAssertionContext;
+export interface iResponse extends FindProvider, ContextProvider {
   statusCode: iValue<number>;
   statusMessage: iValue<string>;
   body: iValue<string>;
@@ -27,20 +27,6 @@ export interface iResponse {
   init(res: iHttpResponse): void;
   navigate(req: iHttpRequest): Promise<void>;
   getRoot(): any;
-  find(path: string, opts?: FindOptions): ValuePromise;
-  find(path: string, contains: string, opts?: FindOptions): ValuePromise;
-  find(path: string, mathces: RegExp, opts?: FindOptions): ValuePromise;
-  findAll(path: string, opts?: FindAllOptions): Promise<iValue[]>;
-  findAll(
-    path: string,
-    contains: string,
-    opts?: FindAllOptions
-  ): Promise<iValue[]>;
-  findAll(
-    path: string,
-    matches: RegExp,
-    opts?: FindAllOptions
-  ): Promise<iValue[]>;
   findXPath(xPath: string): ValuePromise;
   findAllXPath(xPath: string): Promise<iValue[]>;
   header(key?: string): iValue;

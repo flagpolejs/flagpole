@@ -1,6 +1,7 @@
 import { HttpResponse, ValuePromise } from "..";
 import { Link } from "../link";
-import { FindAllOptions, FindOptions } from "./find-options";
+import { ContextProvider } from "./context-provider";
+import { FindProvider } from "./find-provider";
 import { JsFunction, KeyValue } from "./generic-types";
 import { GestureOpts, GestureType } from "./gesture";
 import { HttpRequestOptions } from "./http";
@@ -17,9 +18,8 @@ import {
 import { PointerClick } from "./pointer";
 import { ScreenshotOpts } from "./screenshot";
 
-export interface iValue<T = any> {
+export interface iValue<T = any> extends FindProvider, ContextProvider {
   $: T;
-  context: iAssertionContext;
   name: string;
   tagName: string;
   outerHTML: string;
@@ -158,21 +158,6 @@ export interface iValue<T = any> {
   waitForHidden(timeout?: number): ValuePromise;
   waitForVisible(timeout?: number): ValuePromise;
   // Tree traversal
-  exists(selector?: string): ValuePromise;
-  find(selector: string, opts?: FindOptions): ValuePromise;
-  find(selector: string, contains: string, opts?: FindOptions): ValuePromise;
-  find(selector: string, matches: RegExp, opts?: FindOptions): ValuePromise;
-  findAll(selector: string, opts?: FindAllOptions): Promise<iValue<any>[]>;
-  findAll(
-    selector: string,
-    contains: string,
-    opts?: FindAllOptions
-  ): Promise<iValue<any>[]>;
-  findAll(
-    selector: string,
-    matches: RegExp,
-    opts?: FindAllOptions
-  ): Promise<iValue<any>[]>;
   getChildren(selector?: string): Promise<iValue<any>[]>;
   getFirstChild(selector?: string): ValuePromise;
   getLastChild(selector?: string): ValuePromise;

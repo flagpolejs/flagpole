@@ -11,11 +11,16 @@ import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/log-collection";
 import { HttpRequest } from "./http/http-request";
-import { toType, asyncForEach, runAsync, getFunctionArgs } from "./util";
 import * as bluebird from "bluebird";
 import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
-import { wrapAsValue } from "./helpers";
+import {
+  wrapValue,
+  toType,
+  asyncForEach,
+  runAsync,
+  getFunctionArgs,
+} from "./helpers";
 import {
   beforeScenarioExecuted,
   afterScenarioReady,
@@ -41,21 +46,18 @@ import {
   HttpResponseOptions,
   HttpTimeout,
   iHttpResponse,
-} from "./interfaces/http";
-import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
-import { iAssertion } from "./interfaces/iassertion";
-import {
+  ClassConstructor,
+  KeyValue,
   iScenario,
   ScenarioCallback,
   ScenarioCallbackAndMessage,
   ScenarioStatusCallback,
-} from "./interfaces/iscenario";
-import {
+  iAssertion,
   iAssertionContext,
   iNextCallback,
-} from "./interfaces/iassertioncontext";
-import { iResponse } from "./interfaces/iresponse";
-import { iValue } from "./interfaces/ivalue";
+  iValue,
+  iResponse,
+} from "./interfaces";
 import { AssertionContext } from ".";
 
 enum ScenarioRequestType {
@@ -1285,7 +1287,7 @@ export abstract class ProtoScenario implements iScenario {
       const paths = Object.keys(responseValues);
       await context.each(paths, async (path) => {
         const data = await json.search(path);
-        const thisValue: iValue = wrapAsValue(context, data, path, data);
+        const thisValue: iValue = wrapValue(context, data, path, data);
         const thatValue = responseValues[path];
         const type = toType(thatValue);
         if (type === "function") {

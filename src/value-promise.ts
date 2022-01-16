@@ -1,8 +1,6 @@
-import { cast } from "./util";
 import { AssertionPromise } from "./assertion/assertion-promise";
-import { iAssertionIs } from "./interfaces/iassertion-is";
-import { iAssertion } from "./interfaces/iassertion";
-import { iValue } from "./interfaces/ivalue";
+import { iValue, iAssertion, iAssertionIs } from "./interfaces";
+import { cast } from "./helpers";
 
 function assertionMethod(
   target: Object,
@@ -20,15 +18,15 @@ function assertionMethod(
   };
 }
 
-export class ValuePromise<T extends iValue = iValue>
-  extends Promise<T>
-  implements PromiseLike<T>
+export class ValuePromise<TypeOfValue = any>
+  extends Promise<iValue<TypeOfValue>>
+  implements PromiseLike<iValue<TypeOfValue>>
 {
-  public static execute<T extends iValue<any>>(callback: () => Promise<T>) {
+  public static execute<T = any>(callback: () => Promise<iValue<T>>) {
     return ValuePromise.wrap<T>(callback());
   }
 
-  public static wrap<T extends iValue<any>>(value: T | Promise<T>) {
+  public static wrap<T = any>(value: iValue<T> | Promise<iValue<T>>) {
     return new ValuePromise<T>(async (resolve, reject) => {
       try {
         resolve(await value);
@@ -40,7 +38,7 @@ export class ValuePromise<T extends iValue = iValue>
 
   private constructor(
     executor: (
-      resolve: (value?: T | PromiseLike<T>) => void,
+      resolve: (value?: iValue<TypeOfValue>) => void,
       reject: (reason?: any) => void
     ) => void
   ) {
@@ -137,8 +135,11 @@ export class ValuePromise<T extends iValue = iValue>
     return new Promise((r) => this.then((v) => r(v[property])));
   }
 
-  private toValuePromise(method: string, ...args: any[]): ValuePromise {
-    return ValuePromise.execute(async () => {
+  private toValuePromise<T = any>(
+    method: string,
+    ...args: any[]
+  ): ValuePromise<T> {
+    return ValuePromise.execute<T>(async () => {
       const value = await this;
       return value[method].apply(value, args);
     });

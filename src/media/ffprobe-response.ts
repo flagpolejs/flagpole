@@ -1,7 +1,7 @@
 import { iResponse } from "../interfaces/iresponse";
 import { HttpResponse } from "../http/http-response";
 import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
-import { wrapAsValue } from "../helpers";
+import { wrapValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { JsonResponse } from "../json/json-response";
 import { KeyValue } from "../interfaces/generic-types";
