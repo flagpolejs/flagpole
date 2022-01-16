@@ -17,15 +17,13 @@ import { BrowserElement } from "./browser-element";
 import { query, jsHandleArrayToHandles } from "./extjs-helper";
 import { ValuePromise } from "../value-promise";
 import { ExtJsScenario } from "./extjs-scenario";
-import { iValue } from "..";
+import { iValue } from "../interfaces/ivalue";
 
 declare type globalThis = {
   Ext: any;
 };
 
 export class ExtJSResponse extends PuppeteerResponse implements iResponse {
-  public readonly responseTypeName = "ExtJS";
-
   constructor(scenario: ExtJsScenario) {
     super(scenario);
     // Before this scenario starts to run

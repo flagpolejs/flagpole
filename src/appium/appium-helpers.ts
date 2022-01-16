@@ -1,4 +1,4 @@
-import { HttpRequest } from "../http-request";
+import { HttpRequest } from "../http/http-request";
 import { iValue } from "../interfaces/ivalue";
 import { applyOffsetAndLimit, delay, wrapAsValue } from "../helpers";
 import { AppiumResponse } from "./appium-response";

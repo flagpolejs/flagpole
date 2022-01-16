@@ -1,12 +1,12 @@
 import { Assertion } from "./assertion";
-import { iSuite } from "./interfaces/isuite";
+import { iSuite } from "../interfaces/isuite";
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
   AssertionFail,
   AssertionPass,
   AssertionFailOptional,
-} from "./logging/assertion-result";
+} from "../logging/assertion-result";
 import {
   openInBrowser,
   asyncMap,
@@ -20,22 +20,22 @@ import {
   asyncMapToObject,
   flatten,
   asyncCount,
-} from "./util";
-import { FlagpoleExecution } from "./flagpole-execution";
-import { getFindParams, getFindName, wrapAsValue } from "./helpers";
-import { ValuePromise } from "./value-promise";
-import { IteratorBoolCallback } from "./interfaces/iterator-callbacks";
-import { FindAllOptions, FindOptions } from "./interfaces/find-options";
-import { iHttpRequest } from "./interfaces/http";
-import { iAssertionResult } from "./interfaces/iassertion-result";
-import { iAssertion } from "./interfaces/iassertion";
-import { JsFunction, KeyValue, OptionalXY } from "./interfaces/generic-types";
-import { ScreenshotOpts } from "./interfaces/screenshot";
-import { GestureOpts, GestureType } from "./interfaces/gesture";
-import { PointerMove } from "./interfaces/pointer";
-import { ScreenProperties } from "./interfaces/screen-properties";
-import { iAssertionContext } from "./interfaces/iassertioncontext";
-import { iResponse, iScenario, iValue } from ".";
+} from "../util";
+import { FlagpoleExecution } from "../flagpole-execution";
+import { getFindParams, getFindName, wrapAsValue } from "../helpers";
+import { ValuePromise } from "../value-promise";
+import { IteratorBoolCallback } from "../interfaces/iterator-callbacks";
+import { FindAllOptions, FindOptions } from "../interfaces/find-options";
+import { iHttpRequest } from "../interfaces/http";
+import { iAssertionResult } from "../interfaces/iassertion-result";
+import { iAssertion } from "../interfaces/iassertion";
+import { JsFunction, KeyValue, OptionalXY } from "../interfaces/generic-types";
+import { ScreenshotOpts } from "../interfaces/screenshot";
+import { GestureOpts, GestureType } from "../interfaces/gesture";
+import { PointerMove } from "../interfaces/pointer";
+import { ScreenProperties } from "../interfaces/screen-properties";
+import { iAssertionContext } from "../interfaces/iassertioncontext";
+import { iResponse, iScenario, iValue } from "..";
 
 const getParamsFromExists = (
   a: string,

@@ -1,5 +1,5 @@
 import { ProtoResponse } from "../response";
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { iResponse } from "../interfaces/iresponse";
 import { ValuePromise } from "../value-promise";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "./jpath";
@@ -11,22 +11,17 @@ export class JsonResponse
 {
   public jsonDoc: JsonDoc | undefined;
 
-  public readonly responseTypeName: string = "JSON";
-
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
-    this.jsonDoc = new JsonDoc(this.jsonBody.$);
+    const jsonBody = httpResponse.jsonBody;
+    this.jsonDoc = new JsonDoc(jsonBody);
     this.context
-      .assert("JSON is valid", this.jsonBody.$)
+      .assert(`${this.scenario.typeName} data is valid.`, jsonBody)
       .type.not.equals("null");
   }
 
   public getRoot(): any {
     return this.jsonBody.$;
-  }
-
-  public async eval(): Promise<any> {
-    throw "This type of scenario does not suport eval.";
   }
 
   public find = (path: string): ValuePromise => jpathFind(this, path);

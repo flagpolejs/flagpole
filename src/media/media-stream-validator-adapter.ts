@@ -1,4 +1,4 @@
-import { HttpResponse, parseResponsefromJsonData } from "../http-response";
+import { HttpResponse, parseResponsefromJsonData } from "../http/http-response";
 import {
   mediaStreamValidator,
   MediaStreamValidatorOpts,

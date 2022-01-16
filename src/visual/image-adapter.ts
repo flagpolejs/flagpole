@@ -1,7 +1,7 @@
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { HttpAdapter, iHttpRequest } from "../interfaces/http";
 import needle = require("needle");
-import { getNeedleOptions } from "../needle";
+import { getNeedleOptions } from "../http/needle";
 import { ImageProbe } from "@zerodeps/image-probe";
 import { KeyValue } from "../interfaces/generic-types";
 

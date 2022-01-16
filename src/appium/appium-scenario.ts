@@ -1,5 +1,5 @@
 import { AppiumResponse } from "./appium-response";
-import { fetchWithNeedle } from "../needle";
+import { fetchWithNeedle } from "../http/needle";
 import { ProtoScenario } from "../scenario";
 import { ClassConstructor, KeyValue } from "../interfaces/generic-types";
 import { iSuite } from "../interfaces/isuite";
@@ -7,6 +7,7 @@ import { iSuite } from "../interfaces/isuite";
 export class AppiumScenario extends ProtoScenario {
   public readonly adapter = fetchWithNeedle;
   public readonly response = new AppiumResponse(this);
+  public readonly typeName = "Appium";
 
   public constructor(
     public readonly suite: iSuite,

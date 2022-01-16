@@ -78,6 +78,7 @@ export interface ScenarioInitOptions<T extends iScenario> {
 export interface iScenario {
   title: string;
   type: ScenarioConstructor;
+  typeName: string;
   suite: iSuite;
   opts: KeyValue;
   totalDuration: number | null;

@@ -1,4 +1,4 @@
-import { Value } from "./value";
+import { Value } from "../value";
 import { getSchema, writeSchema } from "./assertion-schema";
 import {
   toType,
@@ -18,23 +18,23 @@ import {
   asyncFind,
   asyncFindNot,
   validateSchema,
-} from "./util";
-import { HttpResponse } from "./http-response";
-import { ImageCompare } from "./visual/image-compare";
+} from "../util";
+import { HttpResponse } from "../http/http-response";
+import { ImageCompare } from "../visual/image-compare";
 import { AssertionIs } from "./assertion-is";
 import { Schema } from "ajv";
 import generateJsonSchema from "@flagpolejs/json-to-jsonschema";
 import {
   IteratorBoolCallback,
   IteratorCallback,
-} from "./interfaces/iterator-callbacks";
-import { iAssertion } from "./interfaces/iassertion";
-import { iAssertionIs } from "./interfaces/iassertion-is";
-import { iValue } from ".";
-import { iAssertionResult } from "./interfaces/iassertion-result";
-import { iAssertionContext } from "./interfaces/iassertioncontext";
-import { CompareCallback, JsFunction } from "./interfaces/generic-types";
-import { AssertSchemaType } from "./interfaces/schema";
+} from "../interfaces/iterator-callbacks";
+import { iAssertion } from "../interfaces/iassertion";
+import { iAssertionIs } from "../interfaces/iassertion-is";
+import { iValue } from "../interfaces/ivalue";
+import { iAssertionResult } from "../interfaces/iassertion-result";
+import { iAssertionContext } from "../interfaces/iassertioncontext";
+import { CompareCallback, JsFunction } from "../interfaces/generic-types";
+import { AssertSchemaType } from "../interfaces/schema";
 
 export class Assertion implements iAssertion {
   public get value(): any {

@@ -1,5 +1,5 @@
 import { HTMLElement } from "./html-element";
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { iValue } from "../interfaces/ivalue";
 import * as cheerio from "cheerio";
 import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
@@ -22,8 +22,6 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
     return this._cheerio;
   }
 
-  public readonly responseTypeName: string = "HTML";
-
   public get currentUrl(): iValue {
     return wrapAsValue(this.context, this._currentUrl, "Current URL");
   }
@@ -35,10 +33,6 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
 
   public getRoot(): cheerio.Root {
     return this.cheerio;
-  }
-
-  public async eval(): Promise<any> {
-    throw "This type of scenario does not suport eval.";
   }
 
   public find(

@@ -2,7 +2,7 @@ import * as jmespath from "jmespath";
 import { iValue } from "../interfaces/ivalue";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
-import { iResponse } from "..";
+import { iResponse } from "../interfaces/iresponse";
 
 export class JsonDoc {
   public get root(): any {
@@ -19,6 +19,7 @@ export class JsonDoc {
     }
   };
 }
+
 export interface JPathProvider {
   jsonDoc: JsonDoc | undefined;
 }

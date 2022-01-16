@@ -1,4 +1,4 @@
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { HtmlResponse } from "../html/html-response";
 import * as cheerio from "cheerio";
 import { ValuePromise } from "../value-promise";
@@ -6,8 +6,6 @@ import { iResponse, iValue } from "..";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 
 export class XmlResponse extends HtmlResponse implements iResponse {
-  public readonly responseTypeName: string = "XML";
-
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
     this.cheerio = cheerio.load(httpResponse.body, {

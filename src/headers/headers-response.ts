@@ -1,19 +1,13 @@
 import { ProtoResponse } from "../response";
 import { iValue } from "../interfaces/ivalue";
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { ValuePromise } from "../value-promise";
 import { iResponse } from "../interfaces/iresponse";
 import { HeadersScenario } from "./headers-scenario";
 
 export class HeadersResponse extends ProtoResponse implements iResponse {
-  public readonly responseTypeName = "Headers";
-
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
-  }
-
-  public async eval(): Promise<any> {
-    throw "This type of scenario does not suport eval.";
   }
 
   public find(key: string): ValuePromise {

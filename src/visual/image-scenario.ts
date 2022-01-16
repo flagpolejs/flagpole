@@ -5,4 +5,5 @@ import { fetchImageWithNeedle } from "./image-adapter";
 export class ImageScenario extends ProtoScenario {
   public readonly adapter = fetchImageWithNeedle;
   public readonly response = new ImageResponse(this);
+  public readonly typeName = "Image";
 }

@@ -20,8 +20,6 @@ import { ValuePromise } from "../value-promise";
 import { iValue } from "../interfaces/ivalue";
 
 export class BrowserResponse extends PuppeteerResponse implements iResponse {
-  public readonly responseTypeName: string = "Browser";
-
   /**
    * Select the first matching element
    *

@@ -1,23 +1,23 @@
 import { URL } from "url";
-import { FlagpoleReport } from "./logging/flagpole-report";
+import { FlagpoleReport } from "../logging/flagpole-report";
 import {
   iSuite,
   SuiteStatusCallback,
   SuiteCallback,
-} from "./interfaces/isuite";
-import { exitProcess, toType } from "./util";
-import { FlagpoleExecution } from "./flagpole-execution";
+} from "../interfaces/isuite";
+import { exitProcess, toType } from "../util";
+import { FlagpoleExecution } from "../flagpole-execution";
 import { SuiteTaskManager } from "./suite-task-manager";
-import { ScenarioType } from "./scenario-types";
-import { createScenario } from "./scenario-type-map";
-import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
-import { iScenario } from "./interfaces/iscenario";
+import { ScenarioType } from "../scenario-types";
+import { createScenario } from "../scenario-type-map";
+import { ClassConstructor, KeyValue } from "../interfaces/generic-types";
+import { iScenario } from "../interfaces/iscenario";
 import {
   ScenarioCallback,
   ScenarioInitOptions,
   ScenarioMapper,
   ScenarioTemplateInitOptions,
-} from "./interfaces/iscenario";
+} from "../interfaces/iscenario";
 
 type BaseDomainCallback = (suite: iSuite) => string;
 

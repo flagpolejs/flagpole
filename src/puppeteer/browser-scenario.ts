@@ -1,5 +1,5 @@
 import { BrowserResponse } from "./browser-response";
-import { fetchWithNeedle } from "../needle";
+import { fetchWithNeedle } from "../http/needle";
 import { ProtoScenario } from "../scenario";
 import { beforeScenarioRequestStarted } from "../decorators/internal";
 import { ScenarioDisposition } from "../interfaces/enums";
@@ -8,7 +8,7 @@ import * as puppeteer from "puppeteer-core";
 import { AssertionFailOptional } from "../logging/assertion-result";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { KeyValue } from "../interfaces/generic-types";
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { runAsync } from "../util";
 import { Browser, Page } from "puppeteer-core";
 import { BrowserOptions } from "./browser-opts";
@@ -16,6 +16,7 @@ import { BrowserOptions } from "./browser-opts";
 export class BrowserScenario extends ProtoScenario {
   public readonly adapter = fetchWithNeedle;
   public readonly response = new BrowserResponse(this);
+  public readonly typeName = "Puppeteer";
   public readonly defaultRequestOptions: BrowserOptions = {
     headless: true,
     recordConsole: true,

@@ -1,6 +1,6 @@
 import { iResponse } from "../interfaces/iresponse";
 import { ProtoResponse } from "../response";
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { ValuePromise } from "../value-promise";
 
 export abstract class MediaResponse extends ProtoResponse implements iResponse {
@@ -16,10 +16,6 @@ export abstract class MediaResponse extends ProtoResponse implements iResponse {
     super.init(httpResponse);
     this._assertStatusCode();
     this._assertMimeType();
-  }
-
-  public async eval(): Promise<any> {
-    throw "This type of scenario does not suport eval.";
   }
 
   public find(path: string): ValuePromise {

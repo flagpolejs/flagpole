@@ -6,11 +6,11 @@ import {
   AssertionFail,
   AssertionFailWarning,
 } from "./logging/assertion-result";
-import { HttpResponse, parseResponseFromLocalFile } from "./http-response";
+import { HttpResponse, parseResponseFromLocalFile } from "./http/http-response";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/log-collection";
-import { HttpRequest } from "./http-request";
+import { HttpRequest } from "./http/http-request";
 import { toType, asyncForEach, runAsync, getFunctionArgs } from "./util";
 import * as bluebird from "bluebird";
 import minikin, { Response } from "minikin";
@@ -67,6 +67,7 @@ enum ScenarioRequestType {
 export abstract class ProtoScenario implements iScenario {
   public abstract readonly adapter: HttpAdapter;
   public abstract readonly response: iResponse;
+  public abstract readonly typeName: string;
   public readonly request: HttpRequest;
   public readonly defaultRequestOptions: HttpRequestOptions = {
     method: "get",
@@ -1010,9 +1011,7 @@ export abstract class ProtoScenario implements iScenario {
     this._requestResolve(this);
     this.result(
       new AssertionPass(
-        `Loaded ${this.response.responseTypeName} ${
-          this.url ? this.url : "[manual input]"
-        }`
+        `Loaded ${this.typeName} ${this.url ? this.url : "[manual input]"}`
       )
     );
     let lastReturnValue: any = null;

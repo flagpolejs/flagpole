@@ -1,5 +1,5 @@
 import { iResponse } from "../interfaces/iresponse";
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { JPathProvider, jpathFind, jpathFindAll, JsonDoc } from "../json/jpath";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
@@ -18,26 +18,4 @@ export interface ffprobeResponse {
 
 export class FfprobeResponse
   extends JsonResponse
-  implements iResponse, JPathProvider
-{
-  public jsonDoc: JsonDoc | undefined;
-
-  public readonly responseTypeName = "FFprobe Data";
-
-  public get jsonBody(): iValue {
-    return wrapAsValue(this.context, this.jsonDoc?.root, "FFprobe Data");
-  }
-
-  public init(httpResponse: HttpResponse) {
-    super.init(httpResponse);
-    try {
-      this.jsonDoc = new JsonDoc(httpResponse.jsonBody);
-    } catch (ex) {
-      this.context.logFailure("Error parsing ffprobe output.", ex);
-    }
-  }
-
-  public find = (path: string): ValuePromise => jpathFind(this, path);
-  public findAll = (path: string): Promise<iValue[]> =>
-    jpathFindAll(this, path);
-}
+  implements iResponse, JPathProvider {}

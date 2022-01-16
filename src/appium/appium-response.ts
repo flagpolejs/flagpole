@@ -1,7 +1,7 @@
 import { promises } from "fs";
 import * as Jimp from "jimp";
 import { ProtoResponse } from "../response";
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { iValue } from "../interfaces/ivalue";
 import { ValuePromise } from "../value-promise";
 import {
@@ -87,7 +87,6 @@ export class AppiumResponse extends ProtoResponse {
   }
 
   public jsonDoc?: JsonDoc;
-  public readonly responseTypeName = "Appium";
 
   public getRoot(): any {
     return this.jsonBody.$;

@@ -1,7 +1,7 @@
 import { ProtoResponse } from "../response";
 import { iResponse } from "../interfaces/iresponse";
 import { URL } from "url";
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { Value } from "../value";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
@@ -41,8 +41,6 @@ export class ImageResponse extends ProtoResponse implements iResponse {
       "URL Path of Image"
     );
   }
-
-  public readonly responseTypeName = "Image";
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);

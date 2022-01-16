@@ -1,13 +1,13 @@
 import { HttpResponse, parseResponseFromNeedle } from "./http-response";
 import needle = require("needle");
-import { FlagpoleExecution } from "./flagpole-execution";
-import { HttpAdapter, iHttpRequest } from "./interfaces/http";
+import { FlagpoleExecution } from "../flagpole-execution";
+import { HttpAdapter, iHttpRequest } from "../interfaces/http";
 import {
   CONTENT_TYPE_FORM_MULTIPART,
   CONTENT_TYPE_JSON,
   ENCODING_GZIP,
-} from "./interfaces/constants";
-import { KeyValue } from "./interfaces/generic-types";
+} from "../interfaces/constants";
+import { KeyValue } from "../interfaces/generic-types";
 
 export const getNeedleOptions = (
   request: iHttpRequest

@@ -1,8 +1,8 @@
 import { URL } from "url";
 import { iValue } from "./interfaces/ivalue";
-import { createEmptyResponse } from "./http-response";
-import { HttpRequest } from "./http-request";
-import { AssertionContext } from "./assertion-context";
+import { createEmptyResponse } from "./http/http-response";
+import { HttpRequest } from "./http/http-request";
+import { AssertionContext } from "./assertion/assertion-context";
 import { wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
@@ -19,7 +19,6 @@ export abstract class ProtoResponse implements iResponse {
   protected _currentUrl: string | null = null;
   protected _httpResponse: iHttpResponse = createEmptyResponse();
 
-  abstract responseTypeName: string;
   abstract find(selector: string, opts?: FindOptions): ValuePromise;
   abstract find(
     selector: string,
@@ -124,12 +123,7 @@ export abstract class ProtoResponse implements iResponse {
    * JSON parsed response body
    */
   public get jsonBody(): iValue {
-    try {
-      const json = JSON.parse(this.httpResponse.body);
-      return wrapAsValue(this.context, json, "JSON Response");
-    } catch (ex) {
-      return wrapAsValue(this.context, null, `JSON Response: ${ex}`);
-    }
+    return wrapAsValue(this.context, this.httpResponse.jsonBody, "JSON Body");
   }
 
   /**
@@ -221,7 +215,7 @@ export abstract class ProtoResponse implements iResponse {
 
   public getSource(): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support getSource.`
+      `This scenario type (${this.scenario.typeName}) does not support getSource.`
     );
   }
 
@@ -280,37 +274,37 @@ export abstract class ProtoResponse implements iResponse {
 
   public waitForHidden(..._args: any[]): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support waitForHidden.`
+      `This scenario type (${this.scenario.typeName}) does not support waitForHidden.`
     );
   }
 
   public waitForVisible(..._args: any[]): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support waitForVisible.`
+      `This scenario type (${this.scenario.typeName}) does not support waitForVisible.`
     );
   }
 
   public waitForExists(..._args: any[]): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support waitForExists.`
+      `This scenario type (${this.scenario.typeName}) does not support waitForExists.`
     );
   }
 
   public waitForNotExists(..._args: any[]): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support waitForNotExists.`
+      `This scenario type (${this.scenario.typeName}) does not support waitForNotExists.`
     );
   }
 
   public waitForHavingText(..._args: any[]): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support waitForHavingText.`
+      `This scenario type (${this.scenario.typeName}) does not support waitForHavingText.`
     );
   }
 
   public async screenshot(): Promise<Buffer> {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support screenshots.`
+      `This scenario type (${this.scenario.typeName}) does not support screenshots.`
     );
   }
 
@@ -320,13 +314,13 @@ export abstract class ProtoResponse implements iResponse {
     opts: any = {}
   ): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support type.`
+      `This scenario type (${this.scenario.typeName}) does not support type.`
     );
   }
 
   public clear(selector: string): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support clear.`
+      `This scenario type (${this.scenario.typeName}) does not support clear.`
     );
   }
 
@@ -336,25 +330,25 @@ export abstract class ProtoResponse implements iResponse {
     opts: any = {}
   ): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support clearThenType.`
+      `This scenario type (${this.scenario.typeName}) does not support clearThenType.`
     );
   }
 
   public waitForXPath(xPath: string): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support waitForXPath.`
+      `This scenario type (${this.scenario.typeName}) does not support waitForXPath.`
     );
   }
 
   public findXPath(xPath: string): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support findXPath.`
+      `This scenario type (${this.scenario.typeName}) does not support findXPath.`
     );
   }
 
   public async findAllXPath(xPath: string): Promise<iValue[]> {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support findAllXPath.`
+      `This scenario type (${this.scenario.typeName}) does not support findAllXPath.`
     );
   }
 
@@ -363,7 +357,7 @@ export abstract class ProtoResponse implements iResponse {
     searchForText: string | RegExp
   ): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support findHavingText.`
+      `This scenario type (${this.scenario.typeName}) does not support findHavingText.`
     );
   }
 
@@ -372,7 +366,7 @@ export abstract class ProtoResponse implements iResponse {
     searchForText: string | RegExp
   ): Promise<iValue[]> {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support findAllHavingText.`
+      `This scenario type (${this.scenario.typeName}) does not support findAllHavingText.`
     );
   }
 
@@ -381,13 +375,13 @@ export abstract class ProtoResponse implements iResponse {
     value: string | string[]
   ): ValuePromise {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support selectOption.`
+      `This scenario type (${this.scenario.typeName}) does not support selectOption.`
     );
   }
 
   public async movePointer(...pointers: PointerMove[]): Promise<iResponse> {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support pointer.`
+      `This scenario type (${this.scenario.typeName}) does not support pointer.`
     );
   }
 
@@ -396,7 +390,7 @@ export abstract class ProtoResponse implements iResponse {
     opts: GestureOpts
   ): Promise<iResponse> {
     throw new Error(
-      `This scenario type (${this.responseTypeName}) does not support gesture.`
+      `This scenario type (${this.scenario.typeName}) does not support gesture.`
     );
   }
 

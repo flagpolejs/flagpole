@@ -3,14 +3,14 @@ import {
   SuiteStatusCallback,
   SuiteCallback,
   SuiteCallbackAndMessage,
-} from "./interfaces/isuite";
+} from "../interfaces/isuite";
 import * as bluebird from "bluebird";
-import { runAsync } from "./util";
+import { runAsync } from "../util";
 import {
   iScenario,
   ScenarioCallback,
   ScenarioCallbackAndMessage,
-} from "./interfaces/iscenario";
+} from "../interfaces/iscenario";
 
 type WhichCallback =
   | "beforeAll"

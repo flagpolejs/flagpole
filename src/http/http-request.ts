@@ -7,19 +7,19 @@ import {
   HttpRequestOptions,
   HttpAdapter,
   iHttpResponse,
-} from "./interfaces/http";
+} from "../interfaces/http";
 import tunnel = require("tunnel");
 import * as http from "http";
 import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
 import { fetchWithNeedle } from "./needle";
-import { HttpAuthType, HttpMethodVerb } from "./interfaces/http";
-import { KeyValue } from "./interfaces/generic-types";
+import { HttpAuthType, HttpMethodVerb } from "../interfaces/http";
+import { KeyValue } from "../interfaces/generic-types";
 import {
   CONTENT_TYPE_FORM,
   CONTENT_TYPE_FORM_MULTIPART,
   CONTENT_TYPE_JSON,
-} from "./interfaces/constants";
+} from "../interfaces/constants";
 
 export class HttpRequest implements iHttpRequest {
   private _uri: string | null = null;

@@ -17,8 +17,8 @@ import {
 import { Link } from "./link";
 import * as fs from "fs";
 import { ValuePromise } from "./value-promise";
-import { HttpResponse } from "./http-response";
-import { HttpRequest } from "./http-request";
+import { HttpResponse } from "./http/http-response";
+import { HttpRequest } from "./http/http-request";
 import { jpathSearch } from "./json/jpath";
 import {
   SyncIteratorBoolCallback,

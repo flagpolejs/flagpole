@@ -1,8 +1,8 @@
 import { NeedleResponse } from "needle";
 import { readFile } from "fs-extra";
-import { KeyValue } from "./interfaces/generic-types";
-import { HttpResponseOptions, iHttpResponse } from "./interfaces/http";
-import { CONTENT_TYPE_JSON } from "./interfaces/constants";
+import { KeyValue } from "../interfaces/generic-types";
+import { HttpResponseOptions, iHttpResponse } from "../interfaces/http";
+import { CONTENT_TYPE_JSON } from "../interfaces/constants";
 
 export const parseResponseFromLocalFile = async (
   relativePath: string

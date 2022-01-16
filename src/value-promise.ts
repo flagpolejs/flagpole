@@ -1,5 +1,5 @@
 import { cast } from "./util";
-import { AssertionPromise } from "./assertion-promise";
+import { AssertionPromise } from "./assertion/assertion-promise";
 import { iAssertionIs } from "./interfaces/iassertion-is";
 import { iAssertion } from "./interfaces/iassertion";
 import { iValue } from "./interfaces/ivalue";

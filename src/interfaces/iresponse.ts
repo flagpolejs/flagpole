@@ -11,7 +11,6 @@ import { ScreenshotOpts } from "./screenshot";
 
 export interface iResponse {
   context: iAssertionContext;
-  responseTypeName: string;
   statusCode: iValue;
   statusMessage: iValue;
   body: iValue;

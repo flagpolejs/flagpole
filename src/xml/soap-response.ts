@@ -1,4 +1,4 @@
-import { HttpResponse } from "../http-response";
+import { HttpResponse } from "../http/http-response";
 import { iResponse } from "../interfaces/iresponse";
 import { XmlResponse } from "./xml-response";
 
@@ -11,8 +11,6 @@ const validMimeTypes = [
 ];
 
 export class SoapResponse extends XmlResponse implements iResponse {
-  public readonly responseTypeName = "SOAP";
-
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
     this.context.assert(this.statusCode).between(200, 299);

@@ -4,7 +4,7 @@ import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { asyncForEach } from "../util";
 import { getFindParams, filterFind } from "../helpers";
 import { ValuePromise } from "../value-promise";
-import { HttpRequest } from "../http-request";
+import { HttpRequest } from "../http/http-request";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { KeyValue } from "../interfaces/generic-types";
 import { HttpMethodVerb } from "../interfaces/http";

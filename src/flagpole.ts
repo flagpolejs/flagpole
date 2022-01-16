@@ -1,4 +1,4 @@
-import { Suite } from "./suite";
+import { Suite } from "./suite/suite";
 
 export class Flagpole {
   public static suites: Suite[] = [];
