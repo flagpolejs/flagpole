@@ -1,4 +1,4 @@
-import flagpole from "../../dist/index";
+import flagpole, { JsonScenario } from "../../dist/index";
 import { isAsyncCallback } from "../../dist/util";
 
 flagpole("Simple Mock Tests", (suite) => {
@@ -25,12 +25,13 @@ flagpole("Simple Mock Tests", (suite) => {
     });
 
   suite
-    .scenario("Array of iValues", "json")
+    .scenario("Array of iValues", JsonScenario)
     .mock({
-      body: { data: [{ foo: "bar" }] },
+      jsonBody: { data: [{ foo: "bar" }] },
     })
     .next(async (context) => {
       const data = await context.exists("data"); // pass
+      data.length.$;
       context.assert(data).is.array(); // pass
       context.assert(data.$[0].foo).exists(); // pass
       data.first.exists("foo");
@@ -42,7 +43,7 @@ flagpole("Simple Mock Tests", (suite) => {
   suite
     .scenario("Test Async", "json")
     .mock({
-      body: {},
+      jsonBody: {},
     })
     .next(async (context) => {
       context.comment(isAsyncCallback(() => {}));

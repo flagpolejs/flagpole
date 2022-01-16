@@ -16,7 +16,7 @@ export class HeadersResponse extends ProtoResponse implements iResponse {
     });
   }
 
-  public async findAll(key: string): Promise<iValue[]> {
+  public async findAll(key: string): Promise<iValue<any>[]> {
     return [this.header(key)];
   }
 }

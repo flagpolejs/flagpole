@@ -1,4 +1,4 @@
-import flagpole from "../../dist/index";
+import flagpole, { JsonScenario } from "../../dist/index";
 import { HttpResponseOptions } from "../../dist/interfaces/http";
 
 flagpole("Test Assertion Schema", async (suite) => {
@@ -17,14 +17,14 @@ flagpole("Test Assertion Schema", async (suite) => {
 
   const validResponse: HttpResponseOptions = {
     status: [200, "OK"],
-    body: {
+    jsonBody: {
       foo: "bar",
     },
   };
 
   const invalidResponse: HttpResponseOptions = {
     status: [200, "OK"],
-    body: {
+    jsonBody: {
       foo: 123,
     },
   };
@@ -79,7 +79,7 @@ flagpole("Test Assertion Schema", async (suite) => {
     });
 
   suite
-    .scenario("Homepage Loads", "json")
+    .scenario("Homepage Loads", JsonScenario)
     .open("https://pokeapi.co/api/v2/pokemon/ditto")
     .next(async (context) => {
       context.assert(context.response.statusCode).equals(200);

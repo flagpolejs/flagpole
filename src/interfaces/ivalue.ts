@@ -17,8 +17,8 @@ import {
 import { PointerClick } from "./pointer";
 import { ScreenshotOpts } from "./screenshot";
 
-export interface iValue {
-  $: any;
+export interface iValue<T = any> {
+  $: T;
   context: iAssertionContext;
   name: string;
   tagName: string;
@@ -28,25 +28,25 @@ export interface iValue {
   parent: any;
   sourceCode: string;
   isFlagpoleValue: true;
-  length: iValue;
-  trim: iValue;
-  uppercase: iValue;
-  lowercase: iValue;
-  keys: iValue;
-  values: iValue;
-  first: iValue;
-  mid: iValue;
-  last: iValue;
-  random: iValue;
-  array: iValue;
-  string: iValue;
-  int: iValue;
-  float: iValue;
-  bool: iValue;
-  json: iValue;
+  length: iValue<number>;
+  trim: iValue<string>;
+  uppercase: iValue<string>;
+  lowercase: iValue<string>;
+  keys: iValue<string[]>;
+  values: iValue<unknown>;
+  first: iValue<unknown>;
+  mid: iValue<unknown>;
+  last: iValue<unknown>;
+  random: iValue<unknown>;
+  array: iValue<any[]>;
+  string: iValue<string>;
+  int: iValue<number>;
+  float: iValue<number>;
+  bool: iValue<boolean>;
+  json: iValue<any>;
   is: iAssertionIs;
   assert(message?: string): iAssertion;
-  item(key: string | number): iValue;
+  item(key: string | number): iValue<any>;
   valueOf(): any;
   toArray(): any[];
   toString(): string;
@@ -74,33 +74,33 @@ export interface iValue {
   isTag(...tagNames: string[]): boolean;
   isVisible(): Promise<boolean>;
   isHidden(): Promise<boolean>;
-  split(splitter: string | RegExp, limit?: number): iValue;
-  join(splitter: string): iValue;
-  pluck(property: string): iValue;
-  nth(index: number): iValue;
-  map(mapper: SyncMapperCallback): iValue;
-  filter(callback: SyncIteratorBoolCallback): iValue;
-  each(callback: SyncIteratorCallback): iValue;
-  every(callback: SyncIteratorBoolCallback): iValue;
-  some(callback: SyncIteratorBoolCallback): iValue;
-  none(callback: SyncIteratorBoolCallback): iValue;
-  reduce(callback: SyncReducerCallback, initial?: any): iValue;
-  sum(key?: string): iValue;
-  median(key?: string): iValue;
-  count(key?: string): iValue;
-  avg(key?: string): iValue;
-  min(key?: string): iValue;
-  max(key?: string): iValue;
-  asc(key?: string): iValue;
-  desc(key?: string): iValue;
-  col(keys: string[]): iValue;
-  col(key: string): iValue;
-  groupBy(key: string): iValue;
-  unique(): iValue;
+  split(splitter: string | RegExp, limit?: number): iValue<any[]>;
+  join(splitter: string): iValue<string>;
+  pluck(property: string): iValue<any[]>;
+  nth(index: number): iValue<any>;
+  map(mapper: SyncMapperCallback): iValue<any[]>;
+  filter(callback: SyncIteratorBoolCallback): iValue<any[]>;
+  each(callback: SyncIteratorCallback): iValue<T>;
+  every(callback: SyncIteratorBoolCallback): iValue<boolean>;
+  some(callback: SyncIteratorBoolCallback): iValue<boolean>;
+  none(callback: SyncIteratorBoolCallback): iValue<boolean>;
+  reduce(callback: SyncReducerCallback, initial?: any): iValue<any>;
+  sum(key?: string): iValue<number>;
+  median(key?: string): iValue<number>;
+  count(key?: string): iValue<number>;
+  avg(key?: string): iValue<number>;
+  min(key?: string): iValue<any>;
+  max(key?: string): iValue<any>;
+  asc(key?: string): iValue<any>;
+  desc(key?: string): iValue<any>;
+  col(keys: string[]): iValue<any>;
+  col(key: string): iValue<any>;
+  groupBy(key: string): iValue<any>;
+  unique(): iValue<any>;
   //as(aliasName: string): iValue;
-  rename(newName: string): iValue;
-  echo(callback: (str: string) => void): iValue;
-  echo(): iValue;
+  rename(newName: string): iValue<T>;
+  echo(callback: (str: string) => void): iValue<T>;
+  echo(): iValue<T>;
   // DOM Elements only
   click(opts?: PointerClick): ValuePromise;
   submit(): ValuePromise;
@@ -162,33 +162,33 @@ export interface iValue {
   find(selector: string, opts?: FindOptions): ValuePromise;
   find(selector: string, contains: string, opts?: FindOptions): ValuePromise;
   find(selector: string, matches: RegExp, opts?: FindOptions): ValuePromise;
-  findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
+  findAll(selector: string, opts?: FindAllOptions): Promise<iValue<any>[]>;
   findAll(
     selector: string,
     contains: string,
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
+  ): Promise<iValue<any>[]>;
   findAll(
     selector: string,
     matches: RegExp,
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
-  getChildren(selector?: string): Promise<iValue[]>;
+  ): Promise<iValue<any>[]>;
+  getChildren(selector?: string): Promise<iValue<any>[]>;
   getFirstChild(selector?: string): ValuePromise;
   getLastChild(selector?: string): ValuePromise;
   getChildOrSelf(selector: string): ValuePromise;
-  getDescendants(selector: string): Promise<iValue[]>;
+  getDescendants(selector: string): Promise<iValue<any>[]>;
   getDescendantOrSelf(selector: string): ValuePromise;
   getParent(): ValuePromise;
   getAncestor(selector: string): ValuePromise;
-  getAncestors(selector: string): Promise<iValue[]>;
+  getAncestors(selector: string): Promise<iValue<any>[]>;
   getAncestorOrSelf(selector: string): ValuePromise;
-  getSiblings(selector?: string): Promise<iValue[]>;
+  getSiblings(selector?: string): Promise<iValue<any>[]>;
   getFirstSibling(selector?: string): ValuePromise;
   getLastSibling(selector?: string): ValuePromise;
   getPreviousSibling(selector?: string): ValuePromise;
-  getPreviousSiblings(selector?: string): Promise<iValue[]>;
+  getPreviousSiblings(selector?: string): Promise<iValue<any>[]>;
   getNextSibling(selector?: string): ValuePromise;
-  getNextSiblings(selector?: string): Promise<iValue[]>;
+  getNextSiblings(selector?: string): Promise<iValue<any>[]>;
   gesture(type: GestureType, opts: GestureOpts): ValuePromise;
 }

@@ -11,19 +11,19 @@ import { ScreenshotOpts } from "./screenshot";
 
 export interface iResponse {
   context: iAssertionContext;
-  statusCode: iValue;
-  statusMessage: iValue;
-  body: iValue;
-  jsonBody: iValue;
-  url: iValue; // The URL initially requested
-  finalUrl: iValue; // The URL after any redirects
-  currentUrl: iValue; // The URL right now, after any further navigation
-  length: iValue;
-  loadTime: iValue;
-  headers: iValue;
-  cookies: iValue;
-  trailers: iValue;
-  method: iValue;
+  statusCode: iValue<number>;
+  statusMessage: iValue<string>;
+  body: iValue<string>;
+  jsonBody: iValue<any>;
+  url: iValue<string | null>; // The URL initially requested
+  finalUrl: iValue<string | null>; // The URL after any redirects
+  currentUrl: iValue<string | null>; // The URL right now, after any further navigation
+  length: iValue<number>;
+  loadTime: iValue<number | null>;
+  headers: iValue<KeyValue>;
+  cookies: iValue<KeyValue>;
+  trailers: iValue<KeyValue>;
+  method: iValue<string>;
   init(res: iHttpResponse): void;
   navigate(req: iHttpRequest): Promise<void>;
   getRoot(): any;

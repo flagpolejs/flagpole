@@ -153,9 +153,9 @@ export class AppiumResponse extends ProtoResponse {
     selector: string,
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
-  ): Promise<iValue[]> {
+  ): Promise<iValue<any>[]> {
     const usingValue = selector.split(/\/(.+)/);
-    let elements: iValue[] = [];
+    let elements: iValue<any>[] = [];
     const params = getFindParams(a, b);
     let res: JsonDoc = new JsonDoc({});
     if (params.matches) {
@@ -464,7 +464,7 @@ export class AppiumResponse extends ProtoResponse {
     });
   }
 
-  public async isVisible(element: iValue): Promise<boolean> {
+  public async isVisible(element: iValue<any>): Promise<boolean> {
     const res = await this.get(`element/${element}/displayed`);
     return res.jsonRoot.value;
   }

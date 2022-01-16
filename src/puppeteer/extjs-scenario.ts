@@ -134,7 +134,7 @@ export class ExtJsScenario extends ProtoScenario {
     message: string | null = null,
     details: string | null = null,
     disposition: ScenarioDisposition = ScenarioDisposition.completed
-  ): Promise<ExtJsScenario> {
+  ): Promise<this> {
     // Only run this once
     if (!this.hasFinished) {
       super._markScenarioCompleted(message, details, disposition);

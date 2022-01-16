@@ -22,10 +22,6 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
     return this._cheerio;
   }
 
-  public get currentUrl(): iValue {
-    return wrapAsValue(this.context, this._currentUrl, "Current URL");
-  }
-
   public init(res: HttpResponse) {
     super.init(res);
     this._cheerio = cheerio.load(res.body);
@@ -61,15 +57,15 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
     selector: string,
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
-  ): Promise<iValue[]> {
-    const elements: cheerio.Cheerio = this.cheerio(selector);
+  ): Promise<iValue<cheerio.Element>[]> {
+    const elements: cheerio.Element[] = this.cheerio(selector).toArray();
     const params = getFindParams(a, b);
-    let nodeElements: iValue[] = [];
+    let nodeElements: iValue<cheerio.Element>[] = [];
     if (elements.length > 0) {
       for (let i = 0; i < elements.length; i++) {
         nodeElements.push(
           await HTMLElement.create(
-            this.cheerio(elements.get(i)),
+            elements[i],
             this.context,
             `${selector} [${i}]`,
             selector
@@ -77,11 +73,11 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
         );
       }
       if (params.opts || params.contains || params.matches) {
-        nodeElements = await filterFind(
+        nodeElements = (await filterFind(
           nodeElements,
           params.contains || params.matches,
           params.opts
-        );
+        )) as HTMLElement<cheerio.Element>[];
       }
     }
     return nodeElements;

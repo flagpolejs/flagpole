@@ -25,6 +25,6 @@ export class JsonResponse
   }
 
   public find = (path: string): ValuePromise => jpathFind(this, path);
-  public findAll = (path: string): Promise<iValue[]> =>
+  public findAll = (path: string): Promise<iValue<any>[]> =>
     jpathFindAll(this, path);
 }

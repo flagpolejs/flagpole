@@ -11,26 +11,29 @@ import { iValue } from "./ivalue";
 import { PointerMove } from "./pointer";
 import { ScreenProperties } from "./screen-properties";
 
-export interface iNextCallback {
-  (context: iAssertionContext, ...args: any[]): Promise<any> | void;
+export interface iNextCallback<T = iAssertionContext> {
+  (context: T, ...args: any[]): Promise<any> | void;
 }
 
-export interface iAssertionContext {
+export interface iAssertionContext<
+  ScenarioType extends iScenario = iScenario,
+  ResponseType extends iResponse = iResponse
+> {
   result: any;
   request: iHttpRequest;
-  response: iResponse;
-  scenario: iScenario;
+  response: ResponseType;
+  scenario: ScenarioType;
   suite: iSuite;
   executionOptions: FlagpoleExecution;
   incompleteAssertions: iAssertion[];
   assertionsResolved: Promise<(iAssertionResult | null)[]>;
   subScenariosResolved: Promise<any[]>;
-  currentUrl: iValue;
-  comment(input: any): iAssertionContext;
+  currentUrl: iValue<string | null>;
+  comment(input: any): this;
   assert(a: any, b?: any): iAssertion;
   pause(milliseconds: number): Promise<void>;
-  push(aliasName: string, value: any): iAssertionContext;
-  set(aliasName: string, value: any): iAssertionContext;
+  push(aliasName: string, value: any): this;
+  set(aliasName: string, value: any): this;
   get<T = any>(aliasName: string): T;
   exists<T extends iValue>(
     selector: string | string[],

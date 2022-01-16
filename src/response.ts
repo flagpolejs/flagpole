@@ -8,7 +8,7 @@ import { ValuePromise } from "./value-promise";
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
 import { PointerMove } from "./interfaces/pointer";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
-import { OptionalXY } from "./interfaces/generic-types";
+import { KeyValue, OptionalXY } from "./interfaces/generic-types";
 import { ScreenProperties } from "./interfaces/screen-properties";
 import { iAssertionContext } from "./interfaces/iassertioncontext";
 import { iScenario } from "./interfaces/iscenario";
@@ -18,6 +18,18 @@ import { iHttpResponse } from "./interfaces/http";
 export abstract class ProtoResponse implements iResponse {
   protected _currentUrl: string | null = null;
   protected _httpResponse: iHttpResponse = createEmptyResponse();
+
+  constructor(public readonly scenario: iScenario) {
+    this._currentUrl = scenario.finalUrl;
+  }
+
+  public init(res: iHttpResponse) {
+    this._httpResponse = res;
+  }
+
+  public get context(): iAssertionContext {
+    return new AssertionContext(this.scenario, this);
+  }
 
   abstract find(selector: string, opts?: FindOptions): ValuePromise;
   abstract find(
@@ -30,17 +42,20 @@ export abstract class ProtoResponse implements iResponse {
     matches: RegExp,
     opts?: FindOptions
   ): ValuePromise;
-  abstract findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
+  abstract findAll(
+    selector: string,
+    opts?: FindAllOptions
+  ): Promise<iValue<any>[]>;
   abstract findAll(
     selector: string,
     contains: string,
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
+  ): Promise<iValue<any>[]>;
   abstract findAll(
     selector: string,
     matches: RegExp,
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
+  ): Promise<iValue<any>[]>;
 
   public async eval(callback: any, ...args: any[]): Promise<any> {
     throw "This type of scenario does not suport eval.";
@@ -53,7 +68,7 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * HTTP Status Code
    */
-  public get statusCode(): iValue {
+  public get statusCode(): iValue<number> {
     return wrapAsValue(
       this.context,
       this.httpResponse.statusCode,
@@ -64,7 +79,7 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * HTTP Status Message
    */
-  public get statusMessage(): iValue {
+  public get statusMessage(): iValue<string> {
     return wrapAsValue(
       this.context,
       this.httpResponse.statusMessage,
@@ -72,13 +87,18 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  /**
-   * Raw Response Body
-   */
-  public get body(): iValue {
-    return wrapAsValue(
+  public get body(): iValue<string> {
+    return wrapAsValue<string>(
       this.context,
       this.httpResponse.body,
+      "Response Body String"
+    );
+  }
+
+  public get rawBody(): iValue<any> {
+    return wrapAsValue(
+      this.context,
+      this.httpResponse.rawBody,
       "Raw Response Body"
     );
   }
@@ -86,7 +106,7 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * Size of the response body
    */
-  public get length(): iValue {
+  public get length(): iValue<number> {
     return wrapAsValue(
       this.context,
       this.httpResponse.body.length,
@@ -97,21 +117,21 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * HTTP Headers
    */
-  public get headers(): iValue {
+  public get headers(): iValue<KeyValue> {
     return wrapAsValue(this.context, this.httpResponse.headers, "HTTP Headers");
   }
 
   /**
    * HTTP Cookies
    */
-  public get cookies(): iValue {
+  public get cookies(): iValue<KeyValue> {
     return wrapAsValue(this.context, this.httpResponse.cookies, "HTTP Cookies");
   }
 
   /**
    * HTTP Trailers
    */
-  public get trailers(): iValue {
+  public get trailers(): iValue<KeyValue> {
     return wrapAsValue(
       this.context,
       this.httpResponse.trailers,
@@ -122,21 +142,21 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * JSON parsed response body
    */
-  public get jsonBody(): iValue {
+  public get jsonBody(): iValue<any> {
     return wrapAsValue(this.context, this.httpResponse.jsonBody, "JSON Body");
   }
 
   /**
    * URL of the request
    */
-  public get url(): iValue {
+  public get url(): iValue<string | null> {
     return wrapAsValue(this.context, this.scenario.url, "Request URL");
   }
 
   /**
    * URL of the response, after all redirects
    */
-  public get finalUrl(): iValue {
+  public get finalUrl(): iValue<string | null> {
     return wrapAsValue(
       this.context,
       this.scenario.finalUrl,
@@ -147,14 +167,14 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * Current URL after any navigation, is nothing for static requets but comes into play with browser requests
    */
-  public get currentUrl(): iValue {
+  public get currentUrl(): iValue<string | null> {
     return wrapAsValue(this.context, this.scenario.finalUrl, "Current URL");
   }
 
   /**
    * URL of the response, after all redirects
    */
-  public get redirectCount(): iValue {
+  public get redirectCount(): iValue<number> {
     return wrapAsValue(
       this.context,
       this.scenario.redirectCount,
@@ -165,7 +185,7 @@ export abstract class ProtoResponse implements iResponse {
   /**
    * Time from request start to response complete
    */
-  public get loadTime(): iValue {
+  public get loadTime(): iValue<number | null> {
     return wrapAsValue(
       this.context,
       this.scenario.requestDuration,
@@ -173,20 +193,8 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public get method(): iValue {
-    return wrapAsValue(this.context, this._httpResponse.method, "Method");
-  }
-
-  public get context(): iAssertionContext {
-    return new AssertionContext(this.scenario, this);
-  }
-
-  constructor(public readonly scenario: iScenario) {
-    this._currentUrl = scenario.finalUrl;
-  }
-
-  public init(res: iHttpResponse) {
-    this._httpResponse = res;
+  public get method(): iValue<string> {
+    return wrapAsValue(this.context, this.httpResponse.method, "Method");
   }
 
   /**
@@ -225,7 +233,7 @@ export abstract class ProtoResponse implements iResponse {
    * @param {string} key
    * @returns {Value}
    */
-  public header(key: string): iValue {
+  public header(key: string): iValue<any> {
     // Try first as they put it in the test, then try all lowercase
     key =
       typeof this.httpResponse.headers[key] !== "undefined"
@@ -244,7 +252,7 @@ export abstract class ProtoResponse implements iResponse {
    *
    * @param key
    */
-  public cookie(key: string): iValue {
+  public cookie(key: string): iValue<any> {
     return wrapAsValue(
       this.context,
       this.httpResponse.cookies[key],
@@ -346,7 +354,7 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public async findAllXPath(xPath: string): Promise<iValue[]> {
+  public async findAllXPath(xPath: string): Promise<iValue<any>[]> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support findAllXPath.`
     );
@@ -364,7 +372,7 @@ export abstract class ProtoResponse implements iResponse {
   public async findAllHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): Promise<iValue[]> {
+  ): Promise<iValue<any>[]> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support findAllHavingText.`
     );

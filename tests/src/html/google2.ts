@@ -20,7 +20,7 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
       });
       ctx.assert(await searchBox.getValue()).equals(searchTerm);
       const res = await form.submit();
-      const resUrl = res.context.response.currentUrl.$;
+      const resUrl = res.context.response.currentUrl.$ || "";
       resultsScenatio.open(resUrl);
     });
 

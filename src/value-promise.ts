@@ -24,11 +24,11 @@ export class ValuePromise<T extends iValue = iValue>
   extends Promise<T>
   implements PromiseLike<T>
 {
-  public static execute<T extends iValue>(callback: () => Promise<T>) {
+  public static execute<T extends iValue<any>>(callback: () => Promise<T>) {
     return ValuePromise.wrap<T>(callback());
   }
 
-  public static wrap<T extends iValue>(value: T | Promise<T>) {
+  public static wrap<T extends iValue<any>>(value: T | Promise<T>) {
     return new ValuePromise<T>(async (resolve, reject) => {
       try {
         resolve(await value);
@@ -107,7 +107,7 @@ export class ValuePromise<T extends iValue = iValue>
     );
   };
 
-  exists = (): Promise<iValue> => this._promisifyMethod("exists");
+  exists = (): Promise<iValue<boolean>> => this._promisifyMethod("exists");
 
   private _promisifyAssertMethod<T>(
     method: string,

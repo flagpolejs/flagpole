@@ -67,6 +67,11 @@ export class AssertionContext implements iAssertionContext {
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
 
+  constructor(
+    public readonly scenario: iScenario,
+    public readonly response: iResponse
+  ) {}
+
   /**
    * Get returned value from previous next block
    */
@@ -112,17 +117,12 @@ export class AssertionContext implements iAssertionContext {
     return this.response.currentUrl;
   }
 
-  constructor(
-    public readonly scenario: iScenario,
-    public readonly response: iResponse
-  ) {}
-
   /**
    * Make a comment in the scenario output
    *
    * @param input
    */
-  public comment(input: any): iAssertionContext {
+  public comment(input: any): this {
     this.scenario.comment(input);
     return this;
   }
@@ -133,9 +133,9 @@ export class AssertionContext implements iAssertionContext {
    * @param message
    * @param value
    */
-  public assert(message: string, value: any): iAssertion;
-  public assert(value: any): iAssertion;
-  public assert(a: any, b?: any): iAssertion {
+  public assert(message: string, value: any): Assertion;
+  public assert(value: any): Assertion;
+  public assert(a: any, b?: any): Assertion {
     const { value, message } =
       arguments.length === 2
         ? { value: b, message: a }
@@ -150,7 +150,7 @@ export class AssertionContext implements iAssertionContext {
    *
    * @param milliseconds
    */
-  public pause(milliseconds: number): Promise<any> {
+  public pause(milliseconds: number): Promise<void> {
     return new Promise((resolve) => {
       setTimeout(() => {
         this._completedAction("PAUSE", `${milliseconds}ms`);
@@ -584,12 +584,12 @@ export class AssertionContext implements iAssertionContext {
     return this.response.gesture(type, opts);
   }
 
-  public push(key: string, value: any): iAssertionContext {
+  public push(key: string, value: any): this {
     this.scenario.push(key, value);
     return this;
   }
 
-  public set(aliasName: string, value: any): iAssertionContext {
+  public set(aliasName: string, value: any): this {
     this.scenario.set(aliasName, value);
     return this;
   }

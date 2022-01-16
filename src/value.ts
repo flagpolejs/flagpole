@@ -35,21 +35,12 @@ import { GestureOpts, GestureType } from "./interfaces/gesture";
 import { iAssertionContext } from "./interfaces/iassertioncontext";
 import { iScenario, ScenarioConstructor } from "./interfaces/iscenario";
 
-export class Value implements iValue {
-  protected _input: any;
-  protected _context: iAssertionContext;
-  protected _name: string | null;
-  protected _parent: any;
-  protected _highlight: string;
+export class Value<T = any> implements iValue<T> {
   protected _sourceCode: string | null = null;
   protected _path: string | undefined;
   protected _tagName: string | undefined;
 
-  public get context(): iAssertionContext {
-    return this._context;
-  }
-
-  public get $(): any {
+  public get $(): T {
     return this._input;
   }
 
@@ -73,95 +64,76 @@ export class Value implements iValue {
     throw "This Value does not support pressEnter.";
   }
 
-  public get length(): iValue {
-    return new Value(
-      this.$ && this.$.length ? this.$.length : 0,
-      this._context,
+  public get length(): iValue<number> {
+    return new Value<number>(
+      this.$ && this.$["length"] ? this.$["length"] : 0,
+      this.context,
       `Length of ${this._name}`
     );
   }
 
-  public get trim(): iValue {
-    const thisValue: any = this.$;
-    return new Value(
-      typeof thisValue === "string" ? thisValue.trim() : thisValue,
-      this._context,
+  public get trim(): iValue<string> {
+    return new Value<string>(
+      typeof this.$ === "string" ? this.$.trim() : "",
+      this.context,
       `Trim of ${this._name}`
     );
   }
 
-  public get uppercase(): iValue {
-    const thisValue: any = this.$;
+  public get uppercase(): iValue<string> {
     return new Value(
-      typeof thisValue === "string" ? thisValue.toUpperCase() : thisValue,
-      this._context,
+      typeof this.$ === "string" ? this.$.toUpperCase() : "",
+      this.context,
       `Uppercase of ${this._name}`
     );
   }
 
-  public get lowercase(): iValue {
-    const thisValue: any = this.$;
+  public get lowercase(): iValue<string> {
     return new Value(
-      typeof thisValue === "string" ? thisValue.toLowerCase() : thisValue,
-      this._context,
+      typeof this.$ === "string" ? this.$.toLowerCase() : "",
+      this.context,
       `Lowercase of ${this._name}`
     );
   }
 
-  public get first(): iValue {
-    const thisValue: any = this.$;
-    return new Value(
-      firstIn(thisValue),
-      this._context,
-      `First in ${this._name}`
-    );
+  public get first(): iValue<any> {
+    return new Value(firstIn(this.$), this.context, `First in ${this._name}`);
   }
 
-  public get mid(): iValue {
-    const thisValue: any = this.$;
-    return new Value(
-      middleIn(thisValue),
-      this._context,
-      `Middle in ${this._name}`
-    );
+  public get mid(): iValue<any> {
+    return new Value(middleIn(this.$), this.context, `Middle in ${this._name}`);
   }
 
-  public get last(): iValue {
-    const thisValue: any = this.$;
-    return new Value(lastIn(thisValue), this._context, `Last in ${this._name}`);
+  public get last(): iValue<any> {
+    return new Value(lastIn(this.$), this.context, `Last in ${this._name}`);
   }
 
-  public get random(): iValue {
-    const thisValue: any = this.$;
-    return new Value(
-      randomIn(thisValue),
-      this._context,
-      `Random in ${this._name}`
-    );
+  public get random(): iValue<any> {
+    return new Value(randomIn(this.$), this.context, `Random in ${this._name}`);
   }
 
-  public get string(): iValue {
-    return new Value(this.toString(), this._context, this.name);
+  public get string(): iValue<string> {
+    return new Value(this.toString(), this.context, this.name);
   }
 
-  public get array(): iValue {
-    return new Value(this.toArray(), this._context, this.name);
+  public get array(): iValue<any[]> {
+    return new Value(this.toArray(), this.context, this.name);
   }
 
-  public get float(): iValue {
-    return new Value(this.toFloat(), this._context, this.name);
+  public get float(): iValue<number> {
+    return new Value(this.toFloat(), this.context, this.name);
   }
 
-  public get int(): iValue {
-    return new Value(this.toInteger(), this._context, this.name);
+  public get int(): iValue<number> {
+    return new Value(this.toInteger(), this.context, this.name);
   }
 
-  public get bool(): iValue {
-    return new Value(this.toBoolean(), this._context, this.name);
+  public get bool(): iValue<boolean> {
+    return new Value(this.toBoolean(), this.context, this.name);
   }
 
-  public get json(): iValue {
-    return new Value(this.toJSON(), this._context, this.name);
+  public get json(): iValue<any> {
+    return new Value(this.toJSON(), this.context, this.name);
   }
 
   public get path(): string {
@@ -189,20 +161,14 @@ export class Value implements iValue {
   }
 
   constructor(
-    input: any,
-    context: iAssertionContext,
-    name?: string,
-    parent: any = null,
-    highlight: string = ""
-  ) {
-    this._input = input;
-    this._context = context;
-    this._name = name || null;
-    this._parent = parent;
-    this._highlight = highlight;
-  }
+    protected readonly _input: T,
+    public readonly context: iAssertionContext,
+    protected _name?: string,
+    protected readonly _parent: any = null,
+    protected readonly _highlight: string = ""
+  ) {}
 
-  public rename(newName: string): iValue {
+  public rename(newName: string): iValue<T> {
     const oldName = this.name;
     this._name = newName;
     //this._completedAction("RENAME", `${oldName} to ${newName}`);
@@ -210,29 +176,30 @@ export class Value implements iValue {
   }
 
   public toArray(): any[] {
-    return this.isArray() ? this._input : [this._input];
+    return Array.isArray(this.$) ? this.$ : [this.$];
   }
 
-  public valueOf(): any {
-    return this._input;
+  public valueOf(): T {
+    return this.$;
   }
 
   public toString(): string {
-    const type: string = toType(this._input);
+    const value = this._input as any;
+    const type: string = toType(value);
     // Handle a Value in a Value
-    if (type == "value" && this._input && this._input.$) {
-      return String(this._input.$);
+    if (type == "value" && value?.$) {
+      return String(value.$);
     }
     // If there's a value property, use that
-    else if (this._input && this._input.value) {
-      return String(this._input.value);
+    else if (value?.value) {
+      return String(value.value);
     }
     // If this is an object, list the keys
     else if (type == "object") {
-      return String(Object.keys(this._input));
+      return String(Object.keys(value));
     }
     // Default
-    return String(this._input);
+    return String(value);
   }
 
   public toBoolean(): boolean {
@@ -292,19 +259,19 @@ export class Value implements iValue {
   }
 
   public isNumber(): boolean {
-    return this.toType() == "number" && this._input !== NaN;
+    return this.toType() == "number" && (this._input as any) !== NaN;
   }
 
   public isNumeric(): boolean {
-    return !isNaN(this._input);
+    return !isNaN(this.$ as any);
   }
 
   public isNaN(): boolean {
-    return this._input === NaN;
+    return (this.$ as any) === NaN;
   }
 
   public isCookie(): boolean {
-    return this._input && this._input.cookieString;
+    return this._input && this.$["cookieString"];
   }
 
   public isRegularExpression(): boolean {
@@ -343,7 +310,7 @@ export class Value implements iValue {
 
   /*
   public as(aliasName: string): iValue {
-    this._context.scenario.set(aliasName, this);
+    this.context.scenario.set(aliasName, this);
     return this;
   }
   */
@@ -358,12 +325,12 @@ export class Value implements iValue {
   }
 
   public click(opts: PointerClick): ValuePromise {
-    this._context.logFailure(`Element could not be clicked on: ${this.name}`);
+    this.context.logFailure(`Element could not be clicked on: ${this.name}`);
     return ValuePromise.wrap(this);
   }
 
   public submit(): ValuePromise {
-    this._context.logFailure(`Element could not be submitted on: ${this.name}`);
+    this.context.logFailure(`Element could not be submitted on: ${this.name}`);
     return ValuePromise.wrap(this);
   }
 
@@ -403,7 +370,7 @@ export class Value implements iValue {
     const src = await this.getUrl();
     return new Link(
       src.isString() ? src.toString() : "",
-      this._context.scenario.buildUrl()
+      this.context.scenario.buildUrl()
     );
   }
 
@@ -429,7 +396,7 @@ export class Value implements iValue {
           return (await this.getAttribute("href")).$;
         } else if (this.isTag("form")) {
           return (
-            (await this.getAttribute("action")).$ || this._context.scenario.url
+            (await this.getAttribute("action")).$ || this.context.scenario.url
           );
         }
         return null;
@@ -452,7 +419,7 @@ export class Value implements iValue {
           : this._completedAction("EXISTS", `${this.name}`);
         return this;
       } else {
-        const el: iValue = await this.find(selector);
+        const el: iValue<any> = await this.find(selector);
         el.isNull()
           ? this._failedAction("EXISTS", `${selector}`)
           : this._completedAction("EXISTS", `${selector}`);
@@ -465,7 +432,7 @@ export class Value implements iValue {
     return ValuePromise.wrap(this.item(selector));
   }
 
-  public async findAll(selector: string): Promise<iValue[]> {
+  public async findAll(selector: string): Promise<iValue<any>[]> {
     return [await this.find(selector)];
   }
 
@@ -563,7 +530,7 @@ export class Value implements iValue {
     );
   }
 
-  public get values(): iValue {
+  public get values(): iValue<any> {
     let values: any[] = [];
     try {
       values = Object.values(this.$);
@@ -576,7 +543,7 @@ export class Value implements iValue {
     );
   }
 
-  public get keys(): iValue {
+  public get keys(): iValue<string[]> {
     let keys: string[] = [];
     try {
       keys = Object.keys(this.$);
@@ -639,11 +606,11 @@ export class Value implements iValue {
     throw `getAncestor() is not supported by ${this.name}`;
   }
 
-  public async getChildren(selector?: string): Promise<iValue[]> {
+  public async getChildren(selector?: string): Promise<iValue<any>[]> {
     throw `getChildren() is not supported by ${this.name}`;
   }
 
-  public async getAncestors(selector: string): Promise<iValue[]> {
+  public async getAncestors(selector: string): Promise<iValue<any>[]> {
     throw `getAncestors() is not supported by ${this.name}`;
   }
 
@@ -675,7 +642,7 @@ export class Value implements iValue {
     throw `getDescendantOrSelf() is not supported by ${this.name}`;
   }
 
-  public async getDescendants(selector?: string): Promise<iValue[]> {
+  public async getDescendants(selector?: string): Promise<iValue<any>[]> {
     throw `getDescendants() is not supported by ${this.name}`;
   }
 
@@ -683,7 +650,7 @@ export class Value implements iValue {
     throw `getParent() is not supported by ${this.name}`;
   }
 
-  public async getSiblings(selector?: string): Promise<iValue[]> {
+  public async getSiblings(selector?: string): Promise<iValue<any>[]> {
     throw `getSiblings() is not supported by ${this.name}`;
   }
 
@@ -691,7 +658,7 @@ export class Value implements iValue {
     throw `getPreviousSibling() is not supported by ${this.name}`;
   }
 
-  public async getPreviousSiblings(selector?: string): Promise<iValue[]> {
+  public async getPreviousSiblings(selector?: string): Promise<iValue<any>[]> {
     throw `getPreviousSiblings() is not supported by ${this.name}`;
   }
 
@@ -699,7 +666,7 @@ export class Value implements iValue {
     throw `getNextSibling() is not supported by ${this.name}`;
   }
 
-  public async getNextSiblings(selector?: string): Promise<iValue[]> {
+  public async getNextSiblings(selector?: string): Promise<iValue<any>[]> {
     throw `getNextSiblings() is not supported by ${this.name}`;
   }
 
@@ -780,118 +747,120 @@ export class Value implements iValue {
       : this.context.assert(this);
   }
 
-  public split(by: string | RegExp, limit?: number): iValue {
-    return new Value(
-      this.toString().split(by, limit),
-      this._context,
-      this.name
-    );
+  public split(by: string | RegExp, limit?: number): iValue<any[]> {
+    return new Value(this.toString().split(by, limit), this.context, this.name);
   }
 
-  public join(by: string): iValue {
-    return new Value(this.toArray().join(by), this._context, this.name);
+  public join(by: string): iValue<string> {
+    return new Value(this.toArray().join(by), this.context, this.name);
   }
 
-  public pluck(property: string): iValue {
+  public pluck(property: string): iValue<any[]> {
     const arr = this.toArray().map((item) => item[property]);
     return new Value(
       arr,
-      this._context,
+      this.context,
       `Values of ${property} in ${this.name}`
     );
   }
 
-  public nth(index: number): iValue {
+  public nth(index: number): iValue<any> {
     const value = nthIn(this.$, index);
     const nth = toOrdinal(index + 1);
-    return new Value(value, this._context, `${nth} value in ${this.name}`);
+    return new Value(value, this.context, `${nth} value in ${this.name}`);
   }
 
-  public map(callback: SyncMapperCallback): iValue {
+  public map(callback: SyncMapperCallback): iValue<any[]> {
     return new Value(
       this.isArray() ? this.toArray().map(callback) : callback(this._input),
-      this._context,
+      this.context,
       this.name
     );
   }
 
   public filter(
     func: (value: any, i?: number, arr?: any[]) => boolean
-  ): iValue {
-    return new Value(this.toArray().filter(func), this._context, this.name);
+  ): iValue<any[]> {
+    return new Value(this.toArray().filter(func), this.context, this.name);
   }
 
-  public each(callback: SyncIteratorCallback): iValue {
+  public each(callback: SyncIteratorCallback): this {
     this.toArray().forEach(callback);
     return this;
   }
 
-  public min(key?: string): iValue {
+  public min(key?: string): iValue<any> {
     return new Value(
       this.toArray().reduce((min, row) => {
         const val = key ? row[key] : row;
         return min === null || val < min ? val : min;
       }, null),
-      this._context,
+      this.context,
       this.name
     );
   }
 
-  public max(key?: string): iValue {
+  public max(key?: string): iValue<any> {
     return new Value(
       this.toArray().reduce((max, row) => {
         const val = key ? row[key] : row;
         return max === null || val > max ? val : max;
       }, null),
-      this._context,
+      this.context,
       this.name
     );
   }
 
-  public sum(key?: string): iValue {
+  public sum(key?: string): iValue<number> {
     return new Value(
-      this.toArray().reduce(
-        (sum, row) => (sum += Number(key ? row[key] : row)),
-        0
+      Number(
+        this.toArray().reduce(
+          (sum, row) => (sum += Number(key ? row[key] : row)),
+          0
+        )
       ),
-      this._context,
+      this.context,
       this.name
     );
   }
 
-  public count(key?: string): iValue {
+  public count(key?: string): iValue<number> {
     return new Value(
-      this.toArray().reduce((count, row) => {
-        if (key) {
-          return count + !!row[key] ? 1 : 0;
-        }
-        return count + 1;
-      }, 0),
-      this._context,
+      Number(
+        this.toArray().reduce((count, row) => {
+          if (key) {
+            return count + !!row[key] ? 1 : 0;
+          }
+          return count + 1;
+        }, 0)
+      ),
+      this.context,
       this.name
     );
   }
 
-  public unique(): iValue {
-    return new Value([...new Set(this.toArray())], this._context, this.name);
+  public unique(): iValue<any[]> {
+    return new Value([...new Set(this.toArray())], this.context, this.name);
   }
 
-  public groupBy(key: string): iValue {
+  public groupBy(key: string): iValue<{
+    [key: string]: any[];
+  }> {
     return new Value(
       this.toArray().reduce((grouper, row) => {
-        const val = row[key];
+        const val = String(row[key]);
         if (!grouper[val]) {
           grouper[val] = [];
         }
         grouper[val].push(row);
         return grouper;
       }, {}),
-      this._context,
+      this.context,
       this.name
     );
   }
 
-  public asc(key?: string): iValue {
+  public asc(key?: string): iValue<any[]> {
     const collator = new Intl.Collator("en", {
       numeric: true,
       sensitivity: "base",
@@ -899,10 +868,10 @@ export class Value implements iValue {
     const arr = this.toArray().sort((a, b) =>
       key ? collator.compare(a[key], b[key]) : collator.compare(a, b)
     );
-    return new Value(arr, this._context, this.name);
+    return new Value(arr, this.context, this.name);
   }
 
-  public desc(key?: string): iValue {
+  public desc(key?: string): iValue<any[]> {
     const collator = new Intl.Collator("en", {
       numeric: true,
       sensitivity: "base",
@@ -911,66 +880,66 @@ export class Value implements iValue {
       (a, b) =>
         (key ? collator.compare(a[key], b[key]) : collator.compare(a, b)) * -1
     );
-    return new Value(arr, this._context, this.name);
+    return new Value(arr, this.context, this.name);
   }
 
-  public median(key?: string): iValue {
+  public median(key?: string): iValue<number> {
     const arr = this.toArray().sort((a, b) =>
       key ? parseFloat(a[key]) - parseFloat(b[key]) : a - b
     );
-    const med = arr[Math.floor(arr.length / 2)];
-    return new Value(key ? med[key] : med, this._context, this.name);
+    const med = Number(arr[Math.floor(arr.length / 2)]);
+    return new Value(med, this.context, this.name);
   }
 
-  public avg(key?: string): iValue {
+  public avg(key?: string): iValue<number> {
     const arr = this.toArray();
     return new Value(
       arr.reduce((sum, row) => (sum += Number(key ? row[key] : row)), 0) /
         arr.length,
-      this._context,
+      this.context,
       this.name
     );
   }
 
-  public reduce(callback: SyncReducerCallback, initial?: any): iValue {
+  public reduce(callback: SyncReducerCallback, initial?: any): iValue<any> {
     return new Value(
       this.toArray().reduce(callback, initial),
-      this._context,
+      this.context,
       this.name
     );
   }
 
-  public every(callback: SyncIteratorBoolCallback): iValue {
-    return new Value(this.toArray().every(callback), this._context, this.name);
+  public every(callback: SyncIteratorBoolCallback): iValue<boolean> {
+    return new Value(this.toArray().every(callback), this.context, this.name);
   }
 
-  public some(callback: SyncIteratorBoolCallback): iValue {
-    return new Value(this.toArray().some(callback), this._context, this.name);
+  public some(callback: SyncIteratorBoolCallback): iValue<boolean> {
+    return new Value(this.toArray().some(callback), this.context, this.name);
   }
 
-  public none(callback: SyncIteratorBoolCallback): iValue {
-    return new Value(!this.toArray().some(callback), this._context, this.name);
+  public none(callback: SyncIteratorBoolCallback): iValue<boolean> {
+    return new Value(!this.toArray().some(callback), this.context, this.name);
   }
 
-  public item(key: string | number): iValue {
+  public item(key: string | number): iValue<any> {
     const name = `${key} in ${this.name}`;
     if (typeof key === "string") {
-      return new Value(jpathSearch(this._input, key), this._context, name);
+      return new Value(jpathSearch(this.$, key), this.context, name);
     }
-    if (this._input.hasOwnProperty(key)) {
-      return new Value(this._input[key], this._context, name);
+    if (this.$[key]) {
+      return new Value(this.$[key], this.context, name);
     }
-    return new Value(null, this._context, name);
+    return new Value(null, this.context, name);
   }
 
-  public echo(callback?: (str: string) => void): iValue {
-    this._context.comment(
+  public echo(callback?: (str: string) => void): this {
+    this.context.comment(
       callback ? callback(this.toString()) : this.toString()
     );
     return this;
   }
 
-  public col(key: string | string[]): iValue {
+  public col(key: string | string[]): iValue<any[]> {
     // Array of strings
     if (Array.isArray(key)) {
       const name = `${key.join(", ")} in ${this.name}`;
@@ -982,7 +951,7 @@ export class Value implements iValue {
           });
           return out;
         }),
-        this._context,
+        this.context,
         name
       );
     }
@@ -990,7 +959,7 @@ export class Value implements iValue {
     const name = `${key} in ${this.name}`;
     return new Value(
       this.toArray().map((row) => row[key]),
-      this._context,
+      this.context,
       name
     );
   }
@@ -1000,24 +969,24 @@ export class Value implements iValue {
   }
 
   protected async _completedAction(verb: string, noun?: string) {
-    this._context.scenario.result(
+    this.context.scenario.result(
       new AssertionActionCompleted(verb, noun || this.name)
     );
   }
 
   protected async _failedAction(verb: string, noun?: string) {
-    this._context.scenario.result(
+    this.context.scenario.result(
       new AssertionActionFailed(verb, noun || this.name)
     );
   }
 
-  protected _wrapAsValue(
-    data: any,
+  protected _wrapAsValue<T>(
+    data: T,
     name: string,
     parent?: any,
     highlight?: string
-  ): iValue {
-    const val: Value = new Value(data, this._context, name, parent, highlight);
+  ): iValue<T> {
+    const val = new Value<T>(data, this.context, name, parent, highlight);
     // If no source code of its own, inherit it from parent
     if (!val.sourceCode && parent && parent.sourceCode) {
       val._sourceCode = parent.sourceCode;
@@ -1025,12 +994,14 @@ export class Value implements iValue {
     return val;
   }
 
-  protected _wrapAsValuePromise(
-    data: any,
+  protected _wrapAsValuePromise<T>(
+    data: T,
     name: string,
     parent?: any,
     highlight?: string
   ): ValuePromise {
-    return ValuePromise.wrap(this._wrapAsValue(data, name, parent, highlight));
+    return ValuePromise.wrap(
+      this._wrapAsValue<T>(data, name, parent, highlight)
+    );
   }
 }

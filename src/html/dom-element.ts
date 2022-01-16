@@ -37,17 +37,20 @@ export abstract class DOMElement extends Value {
     matches: RegExp,
     opts?: FindOptions
   ): ValuePromise;
-  abstract findAll(selector: string, opts?: FindAllOptions): Promise<iValue[]>;
+  abstract findAll(
+    selector: string,
+    opts?: FindAllOptions
+  ): Promise<iValue<any>[]>;
   abstract findAll(
     selector: string,
     contains: string,
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
+  ): Promise<iValue<any>[]>;
   abstract findAll(
     selector: string,
     matches: RegExp,
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
+  ): Promise<iValue<any>[]>;
 
   protected abstract _getTagName(): Promise<string>;
   protected abstract _getAttribute(key: string): Promise<string | null>;
@@ -63,7 +66,7 @@ export abstract class DOMElement extends Value {
    * Convert element synchronously to string as best we can
    */
   public toString(): string {
-    return this._context.response.getRoot().html(this._input);
+    return this.context.response.getRoot().html(this._input);
   }
 
   /**
@@ -274,7 +277,7 @@ export abstract class DOMElement extends Value {
   > {
     if ((await this._isFormTag()) || (await this._isClickable())) {
       // If we are loading an html page, stay in our current mode
-      return this._context.scenario.type;
+      return this.context.scenario.type;
     } else if (await this._isImageTag()) {
       return ImageScenario;
     } else {
@@ -288,7 +291,7 @@ export abstract class DOMElement extends Value {
     const scenarioType = await this._getLambdaScenarioType();
     const opts = this.context.scenario.request.options;
     return overloaded.scenario === undefined
-      ? this._context.suite.scenario(overloaded.message, scenarioType, opts)
+      ? this.context.suite.scenario(overloaded.message, scenarioType, opts)
       : overloaded.scenario;
   }
 

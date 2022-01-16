@@ -136,7 +136,7 @@ export class BrowserScenario extends ProtoScenario {
     message: string | null = null,
     details: string | null = null,
     disposition: ScenarioDisposition = ScenarioDisposition.completed
-  ): Promise<BrowserScenario> {
+  ): Promise<this> {
     // Only run this once
     if (!this.hasFinished) {
       super._markScenarioCompleted(message, details, disposition);

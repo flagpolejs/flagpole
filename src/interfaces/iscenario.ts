@@ -14,7 +14,7 @@ import { ServerOptions } from "https";
 import { ScenarioDisposition, ScenarioStatusEvent } from "./enums";
 import { ResponsePipe } from "./response-pipe";
 import { iAssertionResult } from "./iassertion-result";
-import { iNextCallback } from "./iassertioncontext";
+import { iAssertionContext, iNextCallback } from "./iassertioncontext";
 import { iSuite } from "./isuite";
 import { ScenarioType } from "../scenario-types";
 
@@ -80,6 +80,7 @@ export interface iScenario {
   type: ScenarioConstructor;
   typeName: string;
   suite: iSuite;
+  context: iAssertionContext<iScenario>;
   opts: KeyValue;
   totalDuration: number | null;
   executionDuration: number | null;

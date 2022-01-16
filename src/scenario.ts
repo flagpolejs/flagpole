@@ -56,6 +56,7 @@ import {
 } from "./interfaces/iassertioncontext";
 import { iResponse } from "./interfaces/iresponse";
 import { iValue } from "./interfaces/ivalue";
+import { AssertionContext } from ".";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -92,6 +93,10 @@ export abstract class ProtoScenario implements iScenario {
       ...this.defaultRequestOptions,
       ...opts,
     });
+  }
+
+  public get context(): iAssertionContext {
+    return new AssertionContext(this, this.response);
   }
 
   /**
@@ -704,7 +709,7 @@ export abstract class ProtoScenario implements iScenario {
   @beforeScenarioExecuted
   public async execute(pathParams?: {
     [key: string]: string | number;
-  }): Promise<iScenario> {
+  }): Promise<this> {
     // Apply path parameters when the url was like /articles/{id}
     if (pathParams) {
       // Change the URL
@@ -823,9 +828,13 @@ export abstract class ProtoScenario implements iScenario {
     return this._pushCallbacks("finally", "_finallyCallbacks", a, b);
   }
 
+  public mock(): this;
+  public mock(opts: HttpResponseOptions): this;
+  public mock(content: string): this;
   public mock(opts: HttpResponseOptions | string = ""): this {
     this._requestType = ScenarioRequestType.manual;
-    this._mockResponseOptions = typeof opts == "string" ? { body: opts } : opts;
+    this._mockResponseOptions =
+      typeof opts == "string" ? { body: opts } : opts || {};
     return this;
   }
 
@@ -1163,7 +1172,7 @@ export abstract class ProtoScenario implements iScenario {
     message: string | null = null,
     details: string | null = null,
     disposition: ScenarioDisposition = ScenarioDisposition.completed
-  ): Promise<iScenario> {
+  ): Promise<this> {
     // Only run this once
     if (!this.hasFinished) {
       this._disposition = disposition;

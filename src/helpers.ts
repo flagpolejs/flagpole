@@ -4,9 +4,9 @@ import { Value } from "./value";
 import { toType, asyncFilter } from "./util";
 import { iResponse, iValue } from ".";
 
-export function wrapAsValue(
+export function wrapAsValue<T>(
   context: iAssertionContext,
-  data: any,
+  data: T,
   name: string,
   source?: any
 ) {
@@ -14,7 +14,7 @@ export function wrapAsValue(
 }
 
 export async function findOne(
-  scope: iValue | iResponse,
+  scope: iValue<any> | iResponse,
   selector: string,
   params: FindParams
 ) {
@@ -60,8 +60,8 @@ export function getFindParams(a: any, b: any): FindParams {
   return { contains: contains, matches: matches, opts: opts };
 }
 
-export async function filterFind(
-  elements: iValue[],
+export async function filterFind<T = any>(
+  elements: iValue<T>[],
   contains?: string | RegExp | null,
   opts?: FindAllOptions | null
 ) {
@@ -72,7 +72,7 @@ export async function filterFind(
   }
   // Filter by contents
   if (contains) {
-    elements = await asyncFilter(elements, async (element: iValue) => {
+    elements = await asyncFilter(elements, async (element: iValue<any>) => {
       const text: string = await (async () => {
         if (opts?.findBy == "value") {
           return (await element.getValue()).$;
@@ -97,8 +97,8 @@ export async function filterFind(
 
 export function applyOffsetAndLimit(
   opts: FindAllOptions,
-  elements: iValue[]
-): iValue[] {
+  elements: iValue<any>[]
+): iValue<any>[] {
   const start = opts.offset || 0;
   const end = opts.limit ? start + opts.limit : undefined;
   elements = elements.slice(start, end);

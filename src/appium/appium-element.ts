@@ -21,7 +21,7 @@ import { iAssertionContext } from "../interfaces/iassertioncontext";
 
 const fs = promises;
 
-export class AppiumElement extends DOMElement implements iValue {
+export class AppiumElement extends DOMElement implements iValue<any> {
   protected _elementId: string;
   protected _response: JsonDoc | undefined;
 
@@ -103,9 +103,9 @@ export class AppiumElement extends DOMElement implements iValue {
     selector: string,
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
-  ): Promise<iValue[]> {
+  ): Promise<iValue<any>[]> {
     const usingValue = selector.split(/\/(.+)/);
-    let elements: iValue[] = [];
+    let elements: iValue<any>[] = [];
     const params = getFindParams(a, b);
     let res: JsonDoc = new JsonDoc({});
     if (params.matches) {

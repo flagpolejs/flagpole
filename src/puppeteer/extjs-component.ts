@@ -377,7 +377,7 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
         }
         return false;
       }, valuesToSelect);
-      this._context
+      this.context
         .assert(`Select values on ${this.name}`, ableToSetValue)
         .equals(true);
       return this;

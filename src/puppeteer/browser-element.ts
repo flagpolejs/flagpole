@@ -53,7 +53,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       const name: string = `${selector} under ${this.name}`;
       const path: string = `${this.path} ${selector}`;
       if (element !== null) {
-        return BrowserElement.create(element, this._context, name, path);
+        return BrowserElement.create(element, this.context, name, path);
       }
       return this._wrapAsValue(null, name);
     });
@@ -66,7 +66,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       out.push(
         await BrowserElement.create(
           element,
-          this._context,
+          this.context,
           `${selector}[${i}] under ${this.name}`,
           `${this.path} ${selector}[${i}]`
         )
@@ -168,7 +168,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       const name: string = `Ancestor ${selector} of ${this.name}`;
       const path: string = `${this.path}[ancestor::${selector}]`;
       return closest.length > 0
-        ? BrowserElement.create(closest[0], this._context, name, path)
+        ? BrowserElement.create(closest[0], this.context, name, path)
         : this._wrapAsValue(null, name, this);
     });
   }
@@ -179,7 +179,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
     await asyncForEach(children, async (child: ElementHandle, i: number) => {
       const name: string = `Child ${selector} ${i} of ${this.name}`;
       const path: string = `${this.path}[child::${selector}][${i}]`;
-      out.push(await BrowserElement.create(child, this._context, name, path));
+      out.push(await BrowserElement.create(child, this.context, name, path));
     });
     return out;
   }
@@ -190,7 +190,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       const name: string = `Parent of ${this.name}`;
       const path: string = `${this.path}[..]`;
       if (parents.length > 0) {
-        return BrowserElement.create(parents[0], this._context, name, path);
+        return BrowserElement.create(parents[0], this.context, name, path);
       }
       return this._wrapAsValue(null, name, this);
     });
@@ -212,7 +212,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
         const name: string = `Sibling ${i} of ${this.name}`;
         const path: string = `${this.path}[sibling::${selector}][${i}]`;
         siblings.push(
-          await BrowserElement.create(sibling, this._context, name, path)
+          await BrowserElement.create(sibling, this.context, name, path)
         );
       }
     );
@@ -228,7 +228,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       const name: string = `Previous Sibling of ${this.name}`;
       const path: string = `${this.path}[preceding-sibling::${selector}][0]`;
       if (siblings.length > 0) {
-        return BrowserElement.create(siblings[0], this._context, name, path);
+        return BrowserElement.create(siblings[0], this.context, name, path);
       }
       return this._wrapAsValue(null, name, this);
     });
@@ -246,7 +246,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
         const name: string = `Previous Sibling ${i} of ${this.name}`;
         const path: string = `${this.path}[preceding-sibling::${selector}][${i}]`;
         siblings.push(
-          await BrowserElement.create(sibling, this._context, name, path)
+          await BrowserElement.create(sibling, this.context, name, path)
         );
       }
     );
@@ -262,7 +262,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       const name: string = `Next Sibling of ${this.name}`;
       const path: string = `${this.path}[following-sibling::${selector}][0]`;
       if (siblings.length > 0) {
-        return BrowserElement.create(siblings[0], this._context, name, path);
+        return BrowserElement.create(siblings[0], this.context, name, path);
       }
       return this._wrapAsValue(null, name, this);
     });
@@ -280,7 +280,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
         const name: string = `Next Sibling ${i} of ${this.name}`;
         const path: string = `${this.path}/following-sibling::${selector}[${i}]`;
         siblings.push(
-          await BrowserElement.create(sibling, this._context, name, path)
+          await BrowserElement.create(sibling, this.context, name, path)
         );
       }
     );
@@ -445,7 +445,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
             ) {
               // Do nothing for now (maybe should click??)
             } else {
-              await this._context.clearThenType(selector, value);
+              await this.context.clearThenType(selector, value);
             }
           }
           // Button elements
@@ -464,7 +464,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       if (!this._isFormTag()) {
         throw new Error("You can only use .submit() with a form element.");
       }
-      const scenario = this._context.scenario as BrowserScenario;
+      const scenario = this.context.scenario as BrowserScenario;
       if (scenario.page === null) {
         throw new Error("Page was null");
       }
@@ -507,7 +507,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       valuesToSelect = toArray<string>(valuesToSelect);
       this._completedAction("SELECT", valuesToSelect.join(", "));
       const valuesSelected = await this.$.select.apply(this.$, valuesToSelect);
-      this._context
+      this.context
         .assert(
           `Select values on ${this.name}`,
           valuesToSelect.length == valuesSelected.length
@@ -606,7 +606,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
   ): ValuePromise {
     return ValuePromise.execute(async () => {
       return elements.length > 0
-        ? await BrowserElement.create(elements[0], this._context, name, path)
+        ? await BrowserElement.create(elements[0], this.context, name, path)
         : this._wrapAsValue(null, name, path);
     });
   }
@@ -622,7 +622,7 @@ export class BrowserElement extends PuppeteerElement implements iValue {
       async (child: ElementHandle, i: number) =>
         await BrowserElement.create(
           child,
-          this._context,
+          this.context,
           `${name} [${i}]`,
           `${path} [${i}]`
         )
