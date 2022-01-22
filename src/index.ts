@@ -28,6 +28,9 @@ import { AppiumResponse } from "./appium/appium-response";
 import { AppiumScenario } from "./appium/appium-scenario";
 import { HtmlScenario } from "./html/html-scenario";
 import { JsonScenario } from "./json/json-scenario";
+import { XmlScenario } from "./xml/xml-scenario";
+import { SoapScenario } from "./xml/soap-scenario";
+import { ResourceScenario } from "./resource/resource-scenario";
 
 // Aliases
 const execution = FlagpoleExecution.global;
@@ -66,4 +69,7 @@ export {
   HtmlScenario,
   JsonScenario,
   HlsScenario,
+  SoapScenario,
+  XmlScenario,
+  ResourceScenario,
 };

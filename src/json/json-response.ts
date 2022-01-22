@@ -15,9 +15,15 @@ export class JsonResponse
     super.init(httpResponse);
     const jsonBody = httpResponse.jsonBody;
     this.jsonDoc = new JsonDoc(jsonBody);
-    this.context
-      .assert(`${this.scenario.typeName} data is valid.`, jsonBody)
-      .type.not.equals("null");
+    if (httpResponse.statusCode == 204) {
+      this.context
+        .assert(`No Response Body with 204`, httpResponse.body.length)
+        .equals(0);
+    } else {
+      this.context
+        .assert(`${this.scenario.typeName} data is valid.`, jsonBody)
+        .type.not.equals("null");
+    }
   }
 
   public getRoot(): any {
