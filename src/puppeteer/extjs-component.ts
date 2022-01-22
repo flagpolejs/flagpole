@@ -8,10 +8,12 @@ import {
 } from "puppeteer-core";
 import { ExtJSResponse } from "./extjs-response";
 import * as ext from "./extjs-helper";
-import { wrapValue, toArray, asyncMap } from "../helpers";
+import { toArray, asyncMap } from "../helpers";
 import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
-import { iValue } from "../interfaces";
+import { iValue, ValueOptions } from "../interfaces";
+import { ExtJsScenario } from "./extjs-scenario";
+import { AssertionContext } from "..";
 
 const visible: EvaluateFn = (c) => c.isVisible(true);
 const hidden: EvaluateFn = (c) => c.isHidden(true);
@@ -61,54 +63,33 @@ export const ExtJsComponentTypes = {
   formpanel: "Ext.form.Panel",
 };
 
-export class ExtJsComponent extends PuppeteerElement implements iValue {
-  protected _input: JSHandle;
-  protected _path: string;
-
-  public get $(): JSHandle {
-    return this._input;
-  }
-
-  public get path(): string {
-    return this._path;
-  }
-
-  public get name(): string {
-    return this._name || this._path || "ExtJs Component";
-  }
-
-  private get _response(): ExtJSResponse {
-    // @ts-ignore
-    return this._context.response as ExtJSResponse;
-  }
-
-  private get _isExtComponent(): boolean {
-    return this.toType() == "ext";
+export class ExtJsComponent<InputType extends JSHandle = JSHandle>
+  extends PuppeteerElement<InputType>
+  implements iValue<InputType>
+{
+  private constructor(
+    handle: InputType,
+    context: AssertionContext<ExtJsScenario, ExtJSResponse>,
+    opts: ValueOptions
+  ) {
+    super(handle, context, opts);
   }
 
   public static async create(
     handle: JSHandle,
-    context: iAssertionContext,
-    name: string,
-    path: string
+    context: AssertionContext<ExtJsScenario, ExtJSResponse>,
+    opts: ValueOptions
   ) {
-    const element = new ExtJsComponent(handle, context, name, path);
+    const element = new ExtJsComponent(handle, context, opts);
     const componentType = await element._getTagName();
-    if (!element._name && componentType !== null) {
-      element._name = `<${componentType}> Component @ ${element.path}`;
+    if (!element.name && componentType !== null) {
+      element.opts.name = `<${componentType}> Component @ ${element.path}`;
     }
     return element;
   }
 
-  private constructor(
-    handle: JSHandle,
-    context: iAssertionContext,
-    name: string,
-    path?: string
-  ) {
-    super(handle, context, name, path || name);
-    this._path = path || name;
-    this._input = handle;
+  public get name(): string {
+    return this.opts.name || this.opts.path || "ExtJs Component";
   }
 
   public focus(): ValuePromise {
@@ -183,20 +164,17 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
       }
       const el = await ext.queryDomElementWithinComponent(this.$, selector);
       if (el !== null) {
-        return BrowserElement.create(
-          el as ElementHandle,
-          this.context,
+        return BrowserElement.create(el as ElementHandle, this.context, {
           name,
-          path
-        );
+          path,
+        });
       }
-      return wrapValue(this.context, null, name, path);
+      return this.valueFactory.createNull({ name, path });
     });
   }
 
   public async findAll(selector: string): Promise<iValue[]> {
     const result = await ext.queryWithinComponent(this.$, selector);
-    //console.log(await result.evaluate((r) => r.length));
     return ext.jsHandleArrayToComponents(
       result,
       this.context,
@@ -322,9 +300,12 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   public getNextSibling(selector: string): ValuePromise {
     return ValuePromise.execute(async () => {
       const id = String(await this.eval((c) => c.nextSibling(selector)));
-      const component = await this._response.getComponentById(id);
+      const component = await (
+        this.context.response as ExtJSResponse
+      ).getComponentById(id);
       return (
-        component || this._wrapAsValue(null, `Next Sibling of ${this.name}`)
+        component ||
+        this.valueFactory.createNull(`Next Sibling of ${this.name}`)
       );
     });
   }
@@ -332,9 +313,12 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   public getPreviousSibling(selector: string): ValuePromise {
     return ValuePromise.execute(async () => {
       const id = String(await this.eval((c) => c.previousSibling(selector)));
-      const component = await this._response.getComponentById(id);
+      const component = await (
+        this.context.response as ExtJSResponse
+      ).getComponentById(id);
       return (
-        component || this._wrapAsValue(null, `Previous Sibling of ${this.name}`)
+        component ||
+        this.valueFactory.createNull(`Previous Sibling of ${this.name}`)
       );
     });
   }
@@ -413,8 +397,8 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   }
 
   protected async _getTagName(): Promise<string> {
-    this._tagName = String(await this.eval((c) => c.xtype));
-    return this._tagName;
+    this.opts.tagName = String(await this.eval((c) => c.xtype));
+    return this.tagName;
   }
 
   protected async _getInnerText() {

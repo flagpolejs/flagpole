@@ -1,7 +1,7 @@
+import { createStandardValue } from ".";
 import { ContextProvider } from "../interfaces/context-provider";
 import { FindParams } from "../interfaces/find-options";
 import { FindProvider } from "../interfaces/find-provider";
-import { wrapValue } from "./wrap-value";
 
 export async function findOne(
   scope: FindProvider & ContextProvider,
@@ -19,5 +19,5 @@ export async function findOne(
   })();
   return elements.length
     ? elements[0]
-    : wrapValue(scope.context, null, selector);
+    : createStandardValue(null, scope.context, { selector, name: selector });
 }

@@ -15,11 +15,11 @@ import * as bluebird from "bluebird";
 import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
 import {
-  wrapValue,
   toType,
   asyncForEach,
   runAsync,
   getFunctionArgs,
+  StandardValueFactory,
 } from "./helpers";
 import {
   beforeScenarioExecuted,
@@ -68,6 +68,7 @@ enum ScenarioRequestType {
 }
 
 export abstract class ProtoScenario implements iScenario {
+  protected readonly valueFactory = new StandardValueFactory(this.context);
   public abstract readonly adapter: HttpAdapter;
   public abstract readonly response: iResponse;
   public abstract readonly typeName: string;
@@ -233,11 +234,11 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * Get the url
    */
-  public get url(): string | null {
-    return this.request.uri;
+  public get url(): string {
+    return this.request.uri || "";
   }
 
-  public set url(value: string | null) {
+  public set url(value: string) {
     if (this.hasRequestStarted) {
       throw "Can not change the URL after the request has already started.";
     }
@@ -262,8 +263,8 @@ export abstract class ProtoScenario implements iScenario {
   /**
    * URL after redirects
    */
-  public get finalUrl(): string | null {
-    return this._finalUrl;
+  public get finalUrl(): string {
+    return this._finalUrl || "";
   }
 
   /**
@@ -716,8 +717,7 @@ export abstract class ProtoScenario implements iScenario {
     if (pathParams) {
       // Change the URL
       Object.keys(pathParams).forEach((key) => {
-        this.url =
-          this.url?.replace(`{${key}}`, String(pathParams[key])) || null;
+        this.url = this.url?.replace(`{${key}}`, String(pathParams[key]));
       });
     }
     // Execute was called, so stop any explicit wait
@@ -1287,7 +1287,7 @@ export abstract class ProtoScenario implements iScenario {
       const paths = Object.keys(responseValues);
       await context.each(paths, async (path) => {
         const data = await json.search(path);
-        const thisValue: iValue = wrapValue(context, data, path, data);
+        const thisValue = this.valueFactory.create(data, { selector: path });
         const thatValue = responseValues[path];
         const type = toType(thatValue);
         if (type === "function") {

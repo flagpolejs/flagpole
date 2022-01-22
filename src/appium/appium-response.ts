@@ -18,10 +18,11 @@ import { AppiumElement } from "./appium-element";
 import {
   toType,
   delay,
-  wrapValue,
   getFindParams,
   findOne,
   applyOffsetAndLimit,
+  createNullValue,
+  createStandardValue,
 } from "../helpers";
 import { _ } from "ajv";
 import { PointerMove, PointerPoint, PointerType } from "../interfaces/pointer";
@@ -144,7 +145,7 @@ export class AppiumResponse extends ProtoResponse {
         );
         return element;
       } else {
-        return wrapValue(this.context, null, selector);
+        return createNullValue(this.context, { selector });
       }
     });
   }
@@ -428,13 +429,13 @@ export class AppiumResponse extends ProtoResponse {
       let isVisible: Boolean = false;
       setTimeout(() => (timedOut = true), timeout || 30000);
       while (!elementCheckStr) {
-        if (timedOut) return wrapValue(this.context, null, selector);
+        if (timedOut) return createNullValue(this.context, { selector });
         element = await this.find(selector);
         elementCheckStr = element.$;
         await delay(10);
       }
       while (!isVisible) {
-        if (timedOut) return wrapValue(this.context, null, selector);
+        if (timedOut) return createNullValue(this.context, { selector });
         isVisible = await this.isVisible(element);
         await delay(10);
       }
@@ -450,13 +451,13 @@ export class AppiumResponse extends ProtoResponse {
       let isVisible: Boolean = true;
       setTimeout(() => (timedOut = true), timeout || 30000);
       while (!elementCheckStr) {
-        if (timedOut) return wrapValue(this.context, null, selector);
+        if (timedOut) return createNullValue(this.context, { selector });
         element = (await this.find(selector)) as AppiumElement;
         elementCheckStr = element.$;
         await delay(10);
       }
       while (isVisible) {
-        if (timedOut) return wrapValue(this.context, null, selector);
+        if (timedOut) return createNullValue(this.context, { selector });
         isVisible = await this.isVisible(element);
         await delay(10);
       }
@@ -599,11 +600,9 @@ export class AppiumResponse extends ProtoResponse {
   public getSource(): ValuePromise {
     return ValuePromise.execute(async () => {
       const res = await this.get("source");
-      return wrapValue(
-        this.context,
-        res.jsonRoot.value,
-        "XML source for current viewport"
-      );
+      return createStandardValue(res.jsonRoot.value, this.context, {
+        name: "XML source for current viewport",
+      });
     });
   }
 

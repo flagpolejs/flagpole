@@ -1,8 +1,8 @@
 import * as jmespath from "jmespath";
 import { iValue } from "../interfaces/ivalue";
-import { wrapValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { iResponse } from "../interfaces/iresponse";
+import { createStandardValue, createValue } from "../helpers";
 
 export class JsonDoc {
   public get root(): any {
@@ -45,6 +45,6 @@ export const jpathFind = (
       throw Error("No JSON document is defined.");
     }
     const selection = await self.jsonDoc.search(path);
-    return wrapValue(self.context, selection, path, selection);
+    return createStandardValue(self.context, selection, { path });
   });
 };

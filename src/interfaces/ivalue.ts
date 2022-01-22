@@ -18,13 +18,32 @@ import {
 import { PointerClick } from "./pointer";
 import { ScreenshotOpts } from "./screenshot";
 
-export interface iValue<T = any> extends FindProvider, ContextProvider {
+export interface ValueOptions {
+  // Human-readable name
+  name?: string;
+  // Actual selector, which could actually be used to select
+  selector?: string;
+  // Similar to the selector but intended to be human-readable
+  path?: string;
+  // The parent document or section of the document where it was selected from
+  parent?: iValue<any>;
+  // The source for this element
+  sourceCode?: string;
+  // If this was an element with a tag, the tag name
+  tagName?: string;
+  // The text to highlight if there is an error to show where it happened
+  highlightText?: string;
+}
+
+export interface iValue<T = any>
+  extends FindProvider,
+    ContextProvider,
+    Required<ValueOptions> {
   $: T;
   name: string;
   tagName: string;
-  outerHTML: string;
-  path: string;
-  highlight: string;
+  selector: string;
+  highlightText: string;
   parent: any;
   sourceCode: string;
   isFlagpoleValue: true;
@@ -97,10 +116,9 @@ export interface iValue<T = any> extends FindProvider, ContextProvider {
   col(key: string): iValue<any>;
   groupBy(key: string): iValue<any>;
   unique(): iValue<any>;
-  //as(aliasName: string): iValue;
-  rename(newName: string): iValue<T>;
-  echo(callback: (str: string) => void): iValue<T>;
-  echo(): iValue<T>;
+  rename(newName: string): this;
+  echo(callback: (str: string) => void): this;
+  echo(): this;
   // DOM Elements only
   click(opts?: PointerClick): ValuePromise;
   submit(): ValuePromise;

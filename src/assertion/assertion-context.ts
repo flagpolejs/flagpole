@@ -21,8 +21,8 @@ import {
   flatten,
   asyncCount,
   getFindName,
-  wrapValue,
   getFindParams,
+  StandardValueFactory,
 } from "../helpers";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { ValuePromise } from "../value-promise";
@@ -64,13 +64,18 @@ const getParamsFromExists = (
   };
 };
 
-export class AssertionContext implements iAssertionContext {
+export class AssertionContext<
+  ScenarioType extends iScenario = iScenario,
+  ResponseType extends iResponse = iResponse
+> implements iAssertionContext<ScenarioType, ResponseType>
+{
+  protected valueFactory = new StandardValueFactory(this);
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
 
   constructor(
-    public readonly scenario: iScenario,
-    public readonly response: iResponse
+    public readonly scenario: ScenarioType,
+    public readonly response: ResponseType
   ) {}
 
   /**
@@ -381,7 +386,8 @@ export class AssertionContext implements iAssertionContext {
           : await this.response.find(selector, opts)
       );
       const name = getFindName(params, selectors, 0);
-      const value = element === null ? wrapValue(this, null, name) : element;
+      const value =
+        element === null ? this.valueFactory.createNull(name) : element;
       this._assertExists(null, name, value);
       return value;
     });
@@ -447,7 +453,7 @@ export class AssertionContext implements iAssertionContext {
       });
       return (
         element === null
-          ? wrapValue(this, null, getFindName(params, selectors, null))
+          ? this.valueFactory.createNull(getFindName(params, selectors, null))
           : element
       ) as T;
     });
@@ -611,13 +617,16 @@ export class AssertionContext implements iAssertionContext {
   public none = asyncNone;
   public each = asyncForEach;
 
-  public count<T>(arr: T[], callback?: IteratorBoolCallback): ValuePromise {
+  public count<T>(
+    arr: T[],
+    callback?: IteratorBoolCallback
+  ): ValuePromise<number> {
     return ValuePromise.execute(async () => {
       if (callback) {
         const n = await asyncCount<T>(arr, callback);
-        return wrapValue(this, n, "Count");
+        return this.valueFactory.create(n, "Count");
       }
-      return wrapValue(this, arr.length, "Count");
+      return this.valueFactory.create(arr.length, "Count");
     });
   }
 

@@ -8,8 +8,8 @@ import { AppiumResponse } from "./appium-response";
 import {
   getFindParams,
   findOne,
-  wrapValue,
   applyOffsetAndLimit,
+  createNullValue,
 } from "../helpers";
 import { appiumFindByUiAutomator } from "./appium-helpers";
 import { PointerClick, PointerPoint } from "../interfaces/pointer";
@@ -36,10 +36,10 @@ export class AppiumElement extends DOMElement implements iValue<any> {
     elementId: string
   ): Promise<AppiumElement> {
     const element = new AppiumElement(input, context, name, elementId);
-    element._tagName = await element._getTagName();
+    element.opts.tagName = await element._getTagName();
     if (name === null || name === "") {
-      if (element._tagName !== null) {
-        element._name = `<${element.tagName}>`;
+      if (element.opts.tagName !== null) {
+        element.opts.name = `<${element.tagName}>`;
       }
     }
     return element;
@@ -51,7 +51,9 @@ export class AppiumElement extends DOMElement implements iValue<any> {
     name: string | null,
     elementId: string
   ) {
-    super(input, context, name || "Appium Element", input);
+    super(input, context, {
+      name: name || "Appium Element",
+    });
     this._elementId = elementId || "";
   }
 
@@ -94,7 +96,7 @@ export class AppiumElement extends DOMElement implements iValue<any> {
         );
         return element;
       } else {
-        return wrapValue(this.session.context, null, selector);
+        return createNullValue(this.session.context, { selector });
       }
     });
   }

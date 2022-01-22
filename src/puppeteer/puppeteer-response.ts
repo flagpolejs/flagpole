@@ -8,7 +8,7 @@ import {
 } from "puppeteer-core";
 import { iResponse } from "../interfaces/iresponse";
 import { BrowserControl } from "./browser-control";
-import { toType, wrapValue } from "../helpers";
+import { toType } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { BrowserScenario } from "./browser-scenario";
 import { ExtJsScenario } from "./extjs-scenario";
@@ -16,6 +16,7 @@ import { ScreenshotOpts } from "../interfaces/screenshot";
 import { iHttpRequest } from "../interfaces/http";
 import { iValue } from "../interfaces/ivalue";
 import { ProtoResponse } from "../response";
+import { Value } from "..";
 
 const DEFAULT_WAITFOR_TIMEOUT = 30000;
 
@@ -44,9 +45,8 @@ export abstract class PuppeteerResponse
     return this.scenario.browserControl?.response || null;
   }
 
-  public get currentUrl(): iValue<string> {
-    return wrapValue(
-      this.context,
+  public get currentUrl(): Value<string> {
+    return this.valueFactory.create(
       this.page ? this.page.url() : "",
       "Current URL"
     );

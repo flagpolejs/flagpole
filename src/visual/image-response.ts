@@ -3,7 +3,6 @@ import { iResponse } from "../interfaces/iresponse";
 import { URL } from "url";
 import { HttpResponse } from "../http/http-response";
 import { Value } from "../value";
-import { wrapValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { iValue } from "../interfaces/ivalue";
 
@@ -27,18 +26,23 @@ export class ImageResponse extends ProtoResponse implements iResponse {
   };
 
   public get length(): iValue {
-    return wrapValue(this.context, this.imageProperties.length, "Image Size");
+    return this.valueFactory.create(this.imageProperties.length, {
+      name: "Image Size",
+    });
   }
 
   public get url(): iValue {
-    return wrapValue(this.context, this.imageProperties.url, "URL of Image");
+    return this.valueFactory.create(this.imageProperties.url, {
+      name: "URL of Image",
+    });
   }
 
   public get path(): iValue {
-    return wrapValue(
-      this.context,
+    return this.valueFactory.create(
       new URL(this.imageProperties.url).pathname,
-      "URL Path of Image"
+      {
+        name: "URL Path of Image",
+      }
     );
   }
 
@@ -58,14 +62,11 @@ export class ImageResponse extends ProtoResponse implements iResponse {
   }
 
   public find(propertyName: string): ValuePromise {
-    return ValuePromise.wrap(
-      new Value(
-        typeof this.imageProperties[propertyName] !== "undefined"
-          ? this.imageProperties[propertyName]
-          : null,
-        this.context,
-        `${propertyName} of Image`
-      )
+    return this.valueFactory.createPromise(
+      typeof this.imageProperties[propertyName] !== "undefined"
+        ? this.imageProperties[propertyName]
+        : null,
+      { name: `${propertyName} of Image` }
     );
   }
 

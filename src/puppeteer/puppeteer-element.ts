@@ -1,4 +1,4 @@
-import { iValue } from "../interfaces/ivalue";
+import { iValue, ValueOptions } from "../interfaces";
 import {
   JSHandle,
   ElementHandle,
@@ -12,14 +12,21 @@ import { ValuePromise } from "../value-promise";
 import { BrowserScenario } from "./browser-scenario";
 import { iAssertionContext } from "../interfaces/iassertioncontext";
 
-type ElementInput = ElementHandle | JSHandle;
+type ElementInput = ElementHandle<Element> | JSHandle;
 
-export abstract class PuppeteerElement
-  extends DOMElement
-  implements iValue<ElementInput>
+export abstract class PuppeteerElement<
+    InputType extends ElementInput = ElementInput
+  >
+  extends DOMElement<InputType>
+  implements iValue<InputType>
 {
-  protected abstract _input: ElementInput;
-  public abstract get $(): ElementInput;
+  protected constructor(
+    input: InputType,
+    context: iAssertionContext,
+    opts: ValueOptions
+  ) {
+    super(input, context, opts);
+  }
 
   protected get _page(): Page {
     const scenario = this.context.scenario as BrowserScenario;
@@ -29,20 +36,14 @@ export abstract class PuppeteerElement
     return scenario.page;
   }
 
-  protected constructor(
-    input: ElementInput,
-    context: iAssertionContext,
-    name: string,
-    path?: string
-  ) {
-    super(input, context, name, path);
-  }
-
   public toString(): string {
-    return String(this.path);
+    return String(this.sourceCode);
   }
 
-  public clearThenType(textToType: string, opts: any = {}): ValuePromise {
+  public clearThenType(
+    textToType: string,
+    opts: any = {}
+  ): ValuePromise<InputType> {
     return ValuePromise.execute(async () => {
       await this.clear();
       await this.type(textToType, opts);
@@ -58,17 +59,17 @@ export abstract class PuppeteerElement
     js: EvaluateFn<any>,
     timeout: number,
     ...args: SerializableOrJSHandle[]
-  ): ValuePromise;
+  ): ValuePromise<InputType>;
   public waitForFunction(
     js: EvaluateFn<any>,
     opts?: PageFnOptions,
     ...args: SerializableOrJSHandle[]
-  ): ValuePromise;
+  ): ValuePromise<InputType>;
   public waitForFunction(
     js: EvaluateFn<any>,
     a?: PageFnOptions | number,
     ...args: SerializableOrJSHandle[]
-  ): ValuePromise {
+  ): ValuePromise<InputType> {
     return ValuePromise.execute(async () => {
       const opts: PageFnOptions =
         typeof a == "number" ? { timeout: a } : a || {};
@@ -86,17 +87,9 @@ export abstract class PuppeteerElement
     });
   }
 
-  public waitForHidden(timeout?: number): ValuePromise {
-    return ValuePromise.wrap(this);
-  }
-
-  public waitForVisible(timeout?: number): ValuePromise {
-    return ValuePromise.wrap(this);
-  }
-
   protected async _getSourceCode(): Promise<string> {
-    this._sourceCode = await this._getOuterHtml();
-    return this._sourceCode;
+    this.opts.sourceCode = await this._getOuterHtml();
+    return this.sourceCode;
   }
 
   protected _eval(js: EvaluateFn<any>, arg?: any): Promise<any> {
@@ -104,14 +97,15 @@ export abstract class PuppeteerElement
   }
 
   protected async _getProperty(key: string) {
-    return (await this._input.getProperty(key)).jsonValue();
+    const property = await this.$.getProperty(key);
+    return property.jsonValue();
   }
 
   protected _waitForIt(
     fn: EvaluateFn,
     verb: string,
     timeout?: number
-  ): ValuePromise {
+  ): ValuePromise<InputType> {
     return ValuePromise.execute(async () => {
       try {
         await this._waitForFunction(fn, timeout);
@@ -123,7 +117,10 @@ export abstract class PuppeteerElement
     });
   }
 
-  protected async _waitForFunction(fn: EvaluateFn, timeout?: number) {
+  protected async _waitForFunction(
+    fn: EvaluateFn,
+    timeout?: number
+  ): Promise<this> {
     const opts = {
       timeout: timeout,
     };

@@ -42,4 +42,4 @@ export * from "./to-json";
 export * from "./to-ordinal";
 export * from "./to-type";
 export * from "./unique-id";
-export * from "./wrap-value";
+export * from "./value-constructor";
