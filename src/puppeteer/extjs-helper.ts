@@ -1,7 +1,7 @@
 import { JSHandle, Page, EvaluateFn } from "puppeteer-core";
 import { ExtJsComponent } from "./extjs-component";
 import { Value } from "../value";
-import { asyncMap } from "../helpers";
+import { asyncMap, createNullValue } from "../helpers";
 import { iValue, iAssertionContext } from "../interfaces";
 
 export async function jsHandleIsNull(handle: JSHandle<any>) {
@@ -129,6 +129,6 @@ export async function jsHandleToComponent(
   path: string
 ): Promise<iValue> {
   return handle
-    ? await ExtJsComponent.create(handle, context, name, path)
-    : new Value(null, context, name, path);
+    ? await ExtJsComponent.create(handle, context, { name, path })
+    : createNullValue(context, { name, path });
 }

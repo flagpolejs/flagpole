@@ -1,6 +1,6 @@
 import { HttpRequest } from "../http/http-request";
 import { iValue } from "../interfaces/ivalue";
-import { applyOffsetAndLimit, delay, wrapValue } from "../helpers";
+import { applyOffsetAndLimit, createStandardValue, delay } from "../helpers";
 import { AppiumResponse } from "./appium-response";
 import { JsonDoc } from "../json/jpath";
 import { HttpRequestOptions } from "../interfaces/http";
@@ -160,11 +160,9 @@ export const appiumFindByUiAutomator = async (
   const elements: iValue[] = (
     res.jsonRoot.value as AppiumElementIdResponse[]
   ).map((item, i) =>
-    wrapValue(
-      response.context,
-      item.ELEMENT,
-      `${selector} with text "${text}" [${i}]`
-    )
+    createStandardValue(item.ELEMENT, response.context, {
+      name: `${selector} with text "${text}" [${i}]`,
+    })
   );
 
   return opts?.offset || opts?.limit

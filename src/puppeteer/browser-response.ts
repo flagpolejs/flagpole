@@ -11,7 +11,6 @@ import {
   getFindParams,
   filterFind,
   findOne,
-  wrapValue,
   getFindName,
   asyncForEach,
   asyncMap,
@@ -22,7 +21,7 @@ import { iValue } from "../interfaces/ivalue";
 
 type ElementQueryResult = ElementHandle<Element> | null;
 
-export class BrowserResponse extends PuppeteerResponse implements iResponse {
+export class BrowserResponse extends PuppeteerResponse {
   /**
    * Select the first matching element
    *
@@ -42,8 +41,8 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
       // No options, so just find from selector
       const el: ElementQueryResult = await this._page.$(selector);
       return el === null
-        ? wrapValue(this.context, null, selector)
-        : BrowserElement.create(el, this.context, selector, selector);
+        ? this.valueFactory.createNull(selector)
+        : BrowserElement.create(el, this.context, { name: selector, selector });
     });
   }
 
@@ -61,29 +60,26 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     const elements: BrowserElement[] = await asyncMap(
       await this._page.$$(selector),
       async (el: ElementHandle<Element>, i) => {
-        return await BrowserElement.create(
-          el,
-          this.context,
-          getFindName(params, selector, i),
-          selector
-        );
+        return await BrowserElement.create(el, this.context, {
+          name: getFindName(params, selector, i),
+          selector,
+        });
       }
     );
     return filterFind(elements, params.contains || params.matches, params.opts);
   }
 
   public findXPath(xPath: string): ValuePromise {
+    const opts: ValueOptions = {
+      name: xPath,
+      selector: xPath,
+    };
     return ValuePromise.execute(async () => {
       const elements: ElementHandle<Element>[] = await this._page.$x(xPath);
       if (elements.length > 0) {
-        return await BrowserElement.create(
-          elements[0],
-          this.context,
-          xPath,
-          xPath
-        );
+        return await BrowserElement.create(elements[0], this.context, opts);
       }
-      return wrapValue(this.context, null, xPath);
+      return this.valueFactory.createNull(opts);
     });
   }
 
@@ -91,12 +87,10 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     const out: BrowserElement[] = [];
     const elements: ElementHandle[] = await this._page.$x(xPath);
     await asyncForEach(elements, async (el: ElementHandle<Element>, i) => {
-      const element = await BrowserElement.create(
-        el,
-        this.context,
-        `${xPath} [${i}]`,
-        xPath
-      );
+      const element = await BrowserElement.create(el, this.context, {
+        name: `${xPath} [${i}]`,
+        selector: xPath,
+      });
       out.push(element);
     });
     return out;
@@ -115,7 +109,10 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
         hidden: true,
       };
       const element = await this._page.waitForSelector(selector, opts);
-      return BrowserElement.create(element, this.context, selector, selector);
+      return BrowserElement.create(element, this.context, {
+        name: selector,
+        selector,
+      });
     });
   }
 
@@ -126,7 +123,10 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
         visible: true,
       };
       const element = await this._page.waitForSelector(selector, opts);
-      return BrowserElement.create(element, this.context, selector, selector);
+      return BrowserElement.create(element, this.context, {
+        name: selector,
+        selector,
+      });
     });
   }
 
@@ -146,7 +146,10 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
       const pattern = this.getContainsPatternFromOverload(a);
       if (pattern === null) {
         const element = await this._page.waitForSelector(selector, opts);
-        return BrowserElement.create(element, this.context, selector, selector);
+        return BrowserElement.create(element, this.context, {
+          name: selector,
+          selector,
+        });
       }
       const element = (
         await this._page.waitForFunction(
@@ -156,7 +159,10 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
           opts
         )
       ).asElement();
-      return BrowserElement.create(element!, this.context, selector, selector);
+      return BrowserElement.create(element!, this.context, {
+        name: selector,
+        selector,
+      });
     });
   }
 
@@ -164,7 +170,10 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
     return ValuePromise.execute(async () => {
       const opts = { timeout: this.getTimeoutFromOverload(timeout) };
       const element = await this._page.waitForXPath(xPath, opts);
-      return BrowserElement.create(element, this.context, xPath, xPath);
+      return BrowserElement.create(element, this.context, {
+        name: xPath,
+        selector: xPath,
+      });
     });
   }
 
@@ -206,7 +215,7 @@ export class BrowserResponse extends PuppeteerResponse implements iResponse {
           opts
         );
       }
-      return wrapValue(this.context, true, selector);
+      return this.valueFactory.create(true, { selector });
     });
   }
 

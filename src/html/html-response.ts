@@ -2,13 +2,12 @@ import { HTMLElement } from "./html-element";
 import { HttpResponse } from "../http/http-response";
 import { iValue } from "../interfaces/ivalue";
 import * as cheerio from "cheerio";
-import { getFindParams, filterFind, wrapValue, findOne } from "../helpers";
+import { getFindParams, filterFind, findOne } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
-import { iResponse } from "../interfaces/iresponse";
 import { ProtoResponse } from "../response";
 
-export class HtmlResponse extends ProtoResponse implements iResponse {
+export class HtmlResponse extends ProtoResponse {
   private _cheerio: cheerio.Root | null = null;
 
   protected set cheerio(value: cheerio.Root) {
@@ -43,13 +42,10 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
       }
       const selection: cheerio.Cheerio = this.cheerio(selector);
       return selection.length > 0
-        ? await HTMLElement.create(
-            selection.eq(0),
-            this.context,
-            null,
-            selector
-          )
-        : wrapValue(this.context, null, selector);
+        ? await HTMLElement.create(selection.eq(0)[0], this.context, {
+            selector,
+          })
+        : this.valueFactory.createNull({ selector });
     });
   }
 
@@ -64,12 +60,10 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
     if (elements.length > 0) {
       for (let i = 0; i < elements.length; i++) {
         nodeElements.push(
-          await HTMLElement.create(
-            elements[i],
-            this.context,
-            `${selector} [${i}]`,
-            selector
-          )
+          await HTMLElement.create(elements[i], this.context, {
+            name: `${selector} [${i}]`,
+            selector,
+          })
         );
       }
       if (params.opts || params.contains || params.matches) {

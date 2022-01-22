@@ -5,13 +5,13 @@ import {
   FindParams,
   iResponse,
   iValue,
+  ValueOptions,
 } from "../interfaces";
 import { PuppeteerResponse } from "./puppeteer-response";
 import { PuppeteerElement } from "./puppeteer-element";
 import {
   filterFind,
   getFindParams,
-  wrapValue,
   findOne,
   getFindName,
   asyncForEach,
@@ -27,7 +27,7 @@ declare type globalThis = {
   Ext: any;
 };
 
-export class ExtJSResponse extends PuppeteerResponse implements iResponse {
+export class ExtJSResponse extends PuppeteerResponse {
   constructor(scenario: ExtJsScenario) {
     super(scenario);
     // Before this scenario starts to run
@@ -53,20 +53,16 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
   }
 
   public findXPath(xPath: string): ValuePromise {
+    const opts: ValueOptions = { name: xPath, path: xPath };
     return ValuePromise.execute(async () => {
       if (!this.page) {
         throw "Page must be defined.";
       }
       const elements = await this.page.$x(xPath);
       if (elements.length > 0) {
-        return await ExtJsComponent.create(
-          elements[0],
-          this.context,
-          xPath,
-          xPath
-        );
+        return await ExtJsComponent.create(elements[0], this.context, opts);
       }
-      return wrapValue(this.context, null, xPath);
+      return this.valueFactory.createNull(opts);
     });
   }
 
@@ -78,12 +74,10 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     if (this.scenario.page !== null) {
       const elements = await this.scenario.page.$x(xPath);
       await asyncForEach(elements, async (el, i) => {
-        const element = await ExtJsComponent.create(
-          el,
-          this.context,
-          `${xPath} [${i}]`,
-          xPath
-        );
+        const element = await ExtJsComponent.create(el, this.context, {
+          name: `${xPath} [${i}]`,
+          path: xPath,
+        });
         puppeteerElements.push(element);
       });
     }
@@ -105,7 +99,10 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
           timeout: this.getTimeoutFromOverload(a, b),
         }
       );
-      return await ExtJsComponent.create(ref, this.context, `${path}[0]`, path);
+      return await ExtJsComponent.create(ref, this.context, {
+        name: `${path}[0]`,
+        path,
+      });
     });
   }
 
@@ -134,7 +131,10 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
   public async getComponentById(id: string) {
     const ref = await this._page.evaluateHandle(`Ext.getCmp(${id}")`);
     return ref
-      ? await ExtJsComponent.create(ref, this.context, `#${id}`, `#${id}`)
+      ? await ExtJsComponent.create(ref, this.context, {
+          name: `#${id}`,
+          selector: `#${id}`,
+        })
       : null;
   }
 
@@ -144,9 +144,10 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     path: string
   ) {
     const ref = await this._page.evaluateHandle(js);
+    const opts: ValueOptions = { name, path };
     return ref
-      ? await ExtJsComponent.create(ref, this.context, name, path)
-      : wrapValue(this.context, null, name, path);
+      ? await ExtJsComponent.create(ref, this.context, opts)
+      : this.valueFactory.createNull(opts);
   }
 
   private async _injectScript(content: string): Promise<void> {
@@ -190,7 +191,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
           return component;
         }
       }
-      return wrapValue(this.context, null, selector);
+      return this.valueFactory.createNull({ selector });
     });
   }
 
@@ -254,7 +255,7 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     ).jsonValue());
     return isComponent
       ? this._getComponentFromElementHandle(el)
-      : BrowserElement.create(el, this.context, name, path);
+      : BrowserElement.create(el, this.context, { name, path });
   }
 
   private async _getComponentFromElementHandle(el: ElementHandle<Element>) {
@@ -287,12 +288,10 @@ export class ExtJSResponse extends PuppeteerResponse implements iResponse {
     const results = await query(this._page, selector);
     const components = await jsHandleArrayToHandles(results);
     return asyncMap(components, async (component: JSHandle<any>, i) => {
-      return await ExtJsComponent.create(
-        component,
-        this.context,
-        getFindName(params, selector, i),
-        selector
-      );
+      return await ExtJsComponent.create(component, this.context, {
+        name: getFindName(params, selector, i),
+        selector,
+      });
     });
   }
 }

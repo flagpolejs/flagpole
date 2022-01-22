@@ -18,6 +18,7 @@ import {
   asyncFind,
   asyncFindNot,
   validateSchema,
+  createStandardValue,
 } from "../helpers";
 import { HttpResponse } from "../http/http-response";
 import { ImageCompare } from "../visual/image-compare";
@@ -1027,7 +1028,7 @@ export class Assertion implements iAssertion {
     // Create new assertion
     const assertion: Assertion = new Assertion(
       this._context,
-      new Value(value, this._context, name),
+      createStandardValue(value, this._context, { name }),
       this._message
     );
     this._not && assertion.not;

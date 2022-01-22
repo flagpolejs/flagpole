@@ -14,9 +14,8 @@ import { BrowserScenario } from "./browser-scenario";
 import { ExtJsScenario } from "./extjs-scenario";
 import { ScreenshotOpts } from "../interfaces/screenshot";
 import { iHttpRequest } from "../interfaces/http";
-import { iValue } from "../interfaces/ivalue";
 import { ProtoResponse } from "../response";
-import { Value } from "..";
+import { Value } from "../value";
 
 const DEFAULT_WAITFOR_TIMEOUT = 30000;
 
