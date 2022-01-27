@@ -18,6 +18,9 @@ It supports a number of different types of testing:
 - Visual comparisons of a screenshot against a control image
 - Generic XML
 - RSS or Atom feeds
+- Appium
+- SOAP
+- GraphQL
 
 Flagpole is designed to be simple so that the most junior engineer or QA analyst can pick it up within hours. But it is so powerful it can take years to master and satisfy the most senior engineer.
 
