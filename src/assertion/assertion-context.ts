@@ -35,7 +35,9 @@ import { GestureOpts, GestureType } from "../interfaces/gesture";
 import { PointerMove } from "../interfaces/pointer";
 import { ScreenProperties } from "../interfaces/screen-properties";
 import { iAssertionContext } from "../interfaces/iassertioncontext";
-import { iResponse, iScenario, iValue } from "..";
+import { iResponse, iScenario, iValue, Value } from "..";
+import { ValueOptions } from "../interfaces/value-options";
+import { createStandardValue } from "../helpers/value-factory";
 
 const getParamsFromExists = (
   a: string,
@@ -643,6 +645,10 @@ export class AssertionContext implements iAssertionContext {
     return ValuePromise.execute(async () => {
       return await this.response.getSource();
     });
+  }
+
+  public wrapValue<T>(data: T, opts: ValueOptions): Value<T> {
+    return createStandardValue(data, this, opts);
   }
 
   protected async _findAllForSelectors(

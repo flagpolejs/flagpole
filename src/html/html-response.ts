@@ -43,12 +43,7 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
       }
       const selection: cheerio.Cheerio = this.cheerio(selector);
       return selection.length > 0
-        ? await HTMLElement.create(
-            selection.eq(0),
-            this.context,
-            null,
-            selector
-          )
+        ? await HTMLElement.create(selection.eq(0), this.context, { selector })
         : wrapAsValue(this.context, null, selector);
     });
   }
@@ -64,12 +59,10 @@ export class HtmlResponse extends ProtoResponse implements iResponse {
     if (elements.length > 0) {
       for (let i = 0; i < elements.length; i++) {
         nodeElements.push(
-          await HTMLElement.create(
-            elements[i],
-            this.context,
-            `${selector} [${i}]`,
-            selector
-          )
+          await HTMLElement.create(elements[i], this.context, {
+            name: `${selector} [${i}]`,
+            selector,
+          })
         );
       }
       if (params.opts || params.contains || params.matches) {

@@ -1027,7 +1027,7 @@ export class Assertion implements iAssertion {
     // Create new assertion
     const assertion: Assertion = new Assertion(
       this._context,
-      new Value(value, this._context, name),
+      new Value(value, this._context, { name }),
       this._message
     );
     this._not && assertion.not;

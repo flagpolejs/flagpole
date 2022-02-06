@@ -4,6 +4,7 @@ import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { Value } from "../value";
 import { asyncMap } from "../util";
 import { iValue } from "..";
+import { createNullValue, createStandardValue } from "../helpers/value-factory";
 
 export async function jsHandleIsNull(handle: JSHandle<any>) {
   return await handle.evaluate((r) => r === null);
@@ -130,6 +131,6 @@ export async function jsHandleToComponent(
   path: string
 ): Promise<iValue> {
   return handle
-    ? await ExtJsComponent.create(handle, context, name, path)
-    : new Value(null, context, name, path);
+    ? await ExtJsComponent.create(handle, context, { name, path })
+    : createNullValue(context, { name, path });
 }

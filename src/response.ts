@@ -436,7 +436,7 @@ export abstract class ProtoResponse implements iResponse {
         : matches
         ? await this.find(selector, matches, opts)
         : await this.find(selector, opts);
-      if (!(await element.exists()).isNull()) {
+      if (element.isNull()) {
         return element.click();
       }
       return element;

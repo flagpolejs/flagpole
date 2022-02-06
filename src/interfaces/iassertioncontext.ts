@@ -10,6 +10,7 @@ import { IteratorBoolCallback, IteratorCallback } from "./iterator-callbacks";
 import { iValue } from "./ivalue";
 import { PointerMove } from "./pointer";
 import { ScreenProperties } from "./screen-properties";
+import { ValueOptions } from "./value-options";
 
 export interface iNextCallback<T = iAssertionContext> {
   (context: T, ...args: any[]): Promise<any> | void;
@@ -177,4 +178,5 @@ export interface iAssertionContext<
   movePointer(...pointers: PointerMove[]): Promise<iResponse>;
   gesture(type: GestureType, opts: GestureOpts): Promise<iResponse>;
   getSource(): ValuePromise;
+  wrapValue<T>(data: T, opts: ValueOptions): iValue<T>;
 }

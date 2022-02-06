@@ -8,9 +8,9 @@ export function wrapAsValue<T>(
   context: iAssertionContext,
   data: T,
   name: string,
-  source?: any
+  sourceCode?: any
 ) {
-  return new Value(data, context, name, source);
+  return new Value(data, context, { name, sourceCode });
 }
 
 export async function findOne(

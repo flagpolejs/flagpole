@@ -13,6 +13,7 @@ import { wrapAsValue } from "../helpers";
 import { BrowserElement } from "./browser-element";
 import { ValuePromise } from "../value-promise";
 import { iValue } from "..";
+import { ValueOptions } from "../interfaces/value-options";
 
 const visible: EvaluateFn = (c) => c.isVisible(true);
 const hidden: EvaluateFn = (c) => c.isHidden(true);
@@ -63,40 +64,20 @@ export const ExtJsComponentTypes = {
 };
 
 export class ExtJsComponent extends PuppeteerElement implements iValue {
-  protected _input: JSHandle;
-  protected _path: string;
-
-  public get $(): JSHandle {
-    return this._input;
-  }
-
-  public get path(): string {
-    return this._path;
-  }
-
-  public get name(): string {
-    return this._name || this._path || "ExtJs Component";
-  }
-
   private get _response(): ExtJSResponse {
     // @ts-ignore
     return this._context.response as ExtJSResponse;
   }
 
-  private get _isExtComponent(): boolean {
-    return this.toType() == "ext";
-  }
-
   public static async create(
     handle: JSHandle,
     context: iAssertionContext,
-    name: string,
-    path: string
+    opts: ValueOptions
   ) {
-    const element = new ExtJsComponent(handle, context, name, path);
+    const element = new ExtJsComponent(handle, context, opts);
     const componentType = await element._getTagName();
-    if (!element._name && componentType !== null) {
-      element._name = `<${componentType}> Component @ ${element.path}`;
+    if (!opts.name && componentType !== null) {
+      element.opts.name = `<${componentType}> Component @ ${element.path}`;
     }
     return element;
   }
@@ -104,12 +85,9 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   private constructor(
     handle: JSHandle,
     context: iAssertionContext,
-    name: string,
-    path?: string
+    opts: ValueOptions
   ) {
-    super(handle, context, name, path || name);
-    this._path = path || name;
-    this._input = handle;
+    super(handle, context, opts);
   }
 
   public focus(): ValuePromise {
@@ -184,12 +162,10 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
       }
       const el = await ext.queryDomElementWithinComponent(this.$, selector);
       if (el !== null) {
-        return BrowserElement.create(
-          el as ElementHandle,
-          this.context,
+        return BrowserElement.create(el as ElementHandle, this.context, {
           name,
-          path
-        );
+          path,
+        });
       }
       return wrapAsValue(this.context, null, name, path);
     });
@@ -325,7 +301,8 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
       const id = String(await this.eval((c) => c.nextSibling(selector)));
       const component = await this._response.getComponentById(id);
       return (
-        component || this._wrapAsValue(null, `Next Sibling of ${this.name}`)
+        component ||
+        this.context.wrapValue(null, { name: `Next Sibling of ${this.name}` })
       );
     });
   }
@@ -335,7 +312,10 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
       const id = String(await this.eval((c) => c.previousSibling(selector)));
       const component = await this._response.getComponentById(id);
       return (
-        component || this._wrapAsValue(null, `Previous Sibling of ${this.name}`)
+        component ||
+        this.context.wrapValue(null, {
+          name: `Previous Sibling of ${this.name}`,
+        })
       );
     });
   }
@@ -414,8 +394,8 @@ export class ExtJsComponent extends PuppeteerElement implements iValue {
   }
 
   protected async _getTagName(): Promise<string> {
-    this._tagName = String(await this.eval((c) => c.xtype));
-    return this._tagName;
+    this.opts.tagName = String(await this.eval((c) => c.xtype));
+    return this.opts.tagName;
   }
 
   protected async _getInnerText() {

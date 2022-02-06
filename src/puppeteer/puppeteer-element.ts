@@ -11,11 +11,9 @@ import { DOMElement } from "../html/dom-element";
 import { ValuePromise } from "../value-promise";
 import { BrowserScenario } from "./browser-scenario";
 import { iAssertionContext } from "../interfaces/iassertioncontext";
+import { ValueOptions } from "../interfaces/value-options";
 
 export abstract class PuppeteerElement extends DOMElement implements iValue {
-  protected abstract _input: ElementHandle | JSHandle;
-  public abstract get $(): ElementHandle | JSHandle;
-
   protected get _page(): Page {
     const scenario = this.context.scenario as BrowserScenario;
     if (scenario.page === null) {
@@ -27,10 +25,9 @@ export abstract class PuppeteerElement extends DOMElement implements iValue {
   protected constructor(
     input: JSHandle | ElementHandle,
     context: iAssertionContext,
-    name: string,
-    path?: string
+    opts: ValueOptions
   ) {
-    super(input, context, name, path);
+    super(input, context, opts);
   }
 
   public toString(): string {
@@ -90,8 +87,8 @@ export abstract class PuppeteerElement extends DOMElement implements iValue {
   }
 
   protected async _getSourceCode(): Promise<string> {
-    this._sourceCode = await this._getOuterHtml();
-    return this._sourceCode;
+    this.opts.sourceCode = await this._getOuterHtml();
+    return this.opts.sourceCode;
   }
 
   protected _eval(js: EvaluateFn<any>, arg?: any): Promise<any> {
@@ -99,7 +96,7 @@ export abstract class PuppeteerElement extends DOMElement implements iValue {
   }
 
   protected async _getProperty(key: string) {
-    return (await this._input.getProperty(key)).jsonValue();
+    return (await this.$.getProperty(key)).jsonValue();
   }
 
   protected _waitForIt(

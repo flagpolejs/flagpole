@@ -136,12 +136,10 @@ export class AppiumResponse extends ProtoResponse {
         value: usingValue[1],
       });
       if (res.jsonRoot.value.ELEMENT) {
-        const element = await AppiumElement.create(
-          selector,
-          this.context,
-          selector,
-          res.jsonRoot.value.ELEMENT
-        );
+        const element = await AppiumElement.create(selector, this.context, {
+          name: selector,
+          path: res.jsonRoot.value.ELEMENT,
+        });
         return element;
       } else {
         return wrapAsValue(this.context, null, selector);
@@ -169,12 +167,10 @@ export class AppiumResponse extends ProtoResponse {
           params.opts
         );
         for (let i = 0; i < values?.length; i++) {
-          const element = await AppiumElement.create(
-            selector,
-            this.context,
-            selector,
-            values[i].$
-          );
+          const element = await AppiumElement.create(selector, this.context, {
+            name: selector,
+            path: values[i].$,
+          });
           elements.push(element);
         }
         return elements;
@@ -199,12 +195,10 @@ export class AppiumResponse extends ProtoResponse {
     }
     for (let i = 0; i < res.jsonRoot.value?.length; i++) {
       elements.push(
-        await AppiumElement.create(
-          selector,
-          this.context,
-          selector,
-          res.jsonRoot.value[i].ELEMENT
-        )
+        await AppiumElement.create(selector, this.context, {
+          name: selector,
+          path: res.jsonRoot.value[i].ELEMENT,
+        })
       );
     }
     if (params.opts) {

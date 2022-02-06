@@ -34,22 +34,44 @@ import { HttpRequestOptions } from "./interfaces/http";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
 import { iAssertionContext } from "./interfaces/iassertioncontext";
 import { iScenario, ScenarioConstructor } from "./interfaces/iscenario";
+import { StandardValueFactory } from "./helpers/value-factory";
+import { ValueOptions } from "./interfaces/value-options";
 
-export class Value<T = any> implements iValue<T> {
-  protected _sourceCode: string | null = null;
-  protected _path: string | undefined;
-  protected _tagName: string | undefined;
+export class Value<InputType = any> implements iValue<InputType> {
+  protected valueFactory = new StandardValueFactory(this.context);
 
-  public get $(): T {
-    return this._input;
+  constructor(
+    public readonly $: InputType,
+    public readonly context: iAssertionContext,
+    protected opts: ValueOptions
+  ) {}
+
+  public get selector(): string {
+    return this.opts.selector || "";
+  }
+
+  public get path(): string {
+    return this.opts.path || this.opts.selector || "";
+  }
+
+  public get name(): string {
+    return this.opts.name || this.opts.path || this.opts.selector || "it";
+  }
+
+  public get sourceCode(): string {
+    return this.opts.sourceCode || "";
+  }
+
+  public get highlightText(): string {
+    return this.opts.highlightText || "";
+  }
+
+  public get parent(): any {
+    return this.opts.parent || null;
   }
 
   public get tagName(): string {
-    return this._tagName?.toLowerCase() || "";
-  }
-
-  public get outerHTML(): string {
-    return this._sourceCode || "";
+    return this.opts.tagName ? this.opts.tagName.toLowerCase() : "";
   }
 
   public get is(): iAssertionIs {
@@ -64,113 +86,91 @@ export class Value<T = any> implements iValue<T> {
     throw "This Value does not support pressEnter.";
   }
 
-  public get length(): iValue<number> {
-    return new Value<number>(
-      this.$ && this.$["length"] ? this.$["length"] : 0,
-      this.context,
-      `Length of ${this._name}`
+  public get length(): Value<number> {
+    return this.valueFactory.create(
+      Number(this.$ && this.$["length"] ? this.$["length"] : 0),
+      {
+        name: `Length of ${this.name}`,
+      }
     );
   }
 
-  public get trim(): iValue<string> {
-    return new Value<string>(
+  public get trim(): Value<string> {
+    return this.valueFactory.create(
       typeof this.$ === "string" ? this.$.trim() : "",
-      this.context,
-      `Trim of ${this._name}`
+      { name: `Trim of ${this.name}` }
     );
   }
 
-  public get uppercase(): iValue<string> {
-    return new Value(
+  public get uppercase(): Value<string> {
+    return this.valueFactory.create(
       typeof this.$ === "string" ? this.$.toUpperCase() : "",
-      this.context,
-      `Uppercase of ${this._name}`
+      { name: `Uppercase of ${this.name}` }
     );
   }
 
-  public get lowercase(): iValue<string> {
-    return new Value(
+  public get lowercase(): Value<string> {
+    return this.valueFactory.create(
       typeof this.$ === "string" ? this.$.toLowerCase() : "",
-      this.context,
-      `Lowercase of ${this._name}`
+      { name: `Lowercase of ${this.name}` }
     );
   }
 
-  public get first(): iValue<any> {
-    return new Value(firstIn(this.$), this.context, `First in ${this._name}`);
+  public get first(): Value<any> {
+    return this.valueFactory.create(firstIn(this.$), {
+      name: `First in ${this.name}`,
+    });
   }
 
   public get mid(): iValue<any> {
-    return new Value(middleIn(this.$), this.context, `Middle in ${this._name}`);
+    return this.valueFactory.create(middleIn(this.$), {
+      name: `Middle in ${this.name}`,
+    });
   }
 
   public get last(): iValue<any> {
-    return new Value(lastIn(this.$), this.context, `Last in ${this._name}`);
+    return this.valueFactory.create(lastIn(this.$), {
+      name: `Last in ${this.name}`,
+    });
   }
 
   public get random(): iValue<any> {
-    return new Value(randomIn(this.$), this.context, `Random in ${this._name}`);
+    return this.valueFactory.create(randomIn(this.$), {
+      name: `Random in ${this.name}`,
+    });
   }
 
   public get string(): iValue<string> {
-    return new Value(this.toString(), this.context, this.name);
+    return this.valueFactory.create(this.toString(), { name: this.name });
   }
 
   public get array(): iValue<any[]> {
-    return new Value(this.toArray(), this.context, this.name);
+    return this.valueFactory.create(this.toArray(), { name: this.name });
   }
 
   public get float(): iValue<number> {
-    return new Value(this.toFloat(), this.context, this.name);
+    return this.valueFactory.create(this.toFloat(), { name: this.name });
   }
 
   public get int(): iValue<number> {
-    return new Value(this.toInteger(), this.context, this.name);
+    return this.valueFactory.create(this.toInteger(), { name: this.name });
   }
 
   public get bool(): iValue<boolean> {
-    return new Value(this.toBoolean(), this.context, this.name);
+    return this.valueFactory.create(this.toBoolean(), { name: this.name });
   }
 
   public get json(): iValue<any> {
-    return new Value(this.toJSON(), this.context, this.name);
-  }
-
-  public get path(): string {
-    return this._path || "";
-  }
-
-  public get name(): string {
-    return this._name || "it";
-  }
-
-  public get highlight(): string {
-    return this._highlight;
-  }
-
-  public get parent(): any {
-    return this._parent;
-  }
-
-  public get sourceCode(): string {
-    return this._sourceCode === null ? "" : this._sourceCode;
+    return this.valueFactory.create(this.toJSON(), { name: this.name });
   }
 
   public get isFlagpoleValue(): true {
     return true;
   }
 
-  constructor(
-    protected readonly _input: T,
-    public readonly context: iAssertionContext,
-    protected _name?: string,
-    protected readonly _parent: any = null,
-    protected readonly _highlight: string = ""
-  ) {}
-
-  public rename(newName: string): iValue<T> {
+  public rename(newName: string): this {
     const oldName = this.name;
-    this._name = newName;
+    this.opts.name = newName;
     //this._completedAction("RENAME", `${oldName} to ${newName}`);
     return this;
   }
@@ -179,20 +179,20 @@ export class Value<T = any> implements iValue<T> {
     return Array.isArray(this.$) ? this.$ : [this.$];
   }
 
-  public valueOf(): T {
+  public valueOf(): InputType {
     return this.$;
   }
 
   public toString(): string {
-    const value = this._input as any;
+    const value = this.$;
     const type: string = toType(value);
     // Handle a Value in a Value
-    if (type == "value" && value?.$) {
-      return String(value.$);
+    if (type == "value" && value && value["$"]) {
+      return String(value["$"]);
     }
     // If there's a value property, use that
-    else if (value?.value) {
-      return String(value.value);
+    else if (value && value["value"]) {
+      return String(value["value"]);
     }
     // If this is an object, list the keys
     else if (type == "object") {
@@ -227,11 +227,11 @@ export class Value<T = any> implements iValue<T> {
   }
 
   public toType(): string {
-    return String(toType(this._input));
+    return String(toType(this.$));
   }
 
   public isNullOrUndefined(): boolean {
-    return isNullOrUndefined(this._input);
+    return isNullOrUndefined(this.$);
   }
 
   public isUndefined(): boolean {
@@ -239,7 +239,7 @@ export class Value<T = any> implements iValue<T> {
   }
 
   public isNull(): boolean {
-    return this._input === null;
+    return this.$ === null;
   }
 
   public isPromise(): boolean {
@@ -259,7 +259,7 @@ export class Value<T = any> implements iValue<T> {
   }
 
   public isNumber(): boolean {
-    return this.toType() == "number" && (this._input as any) !== NaN;
+    return this.toType() == "number" && (this.$ as any) !== NaN;
   }
 
   public isNumeric(): boolean {
@@ -271,7 +271,7 @@ export class Value<T = any> implements iValue<T> {
   }
 
   public isCookie(): boolean {
-    return this._input && this.$["cookieString"];
+    return this.$ && this.$["cookieString"];
   }
 
   public isRegularExpression(): boolean {
@@ -316,11 +316,8 @@ export class Value<T = any> implements iValue<T> {
   */
 
   public getProperty(key: string): ValuePromise {
-    return ValuePromise.execute(async () => {
-      return this._wrapAsValue(
-        this._input[key],
-        `${this.name} property of ${key}`
-      );
+    return this.valueFactory.createPromise(this.$[key], {
+      name: `${this.name} property of ${key}`,
     });
   }
 
@@ -401,7 +398,7 @@ export class Value<T = any> implements iValue<T> {
         }
         return null;
       })();
-      return this._wrapAsValue(url, `URL from ${this.name}`, this);
+      return this.valueFactory.create(url, { name: `URL from ${this.name}` });
     });
   }
 
@@ -437,7 +434,7 @@ export class Value<T = any> implements iValue<T> {
   }
 
   public getClassName(): ValuePromise {
-    return ValuePromise.wrap(this._wrapAsValue(null, `${this.name} Class`));
+    throw "Class Name is not supported for this type of value";
   }
 
   public async hasClassName(name?: string | RegExp): Promise<boolean> {
@@ -456,9 +453,9 @@ export class Value<T = any> implements iValue<T> {
   }
 
   public getTag(): ValuePromise {
-    return ValuePromise.wrap(
-      this._wrapAsValue(this.tagName, `Tag Name of ${this.name}`)
-    );
+    return this.valueFactory.createPromise(this.tagName, {
+      name: `Tag Name of ${this.name}`,
+    });
   }
 
   public async hasTag(tag?: string | RegExp): Promise<boolean> {
@@ -470,21 +467,17 @@ export class Value<T = any> implements iValue<T> {
   }
 
   public getInnerText(): ValuePromise {
-    return ValuePromise.wrap(
-      this._wrapAsValue(this.toString(), `Inner Text of ${this.name}`)
-    );
+    return this.valueFactory.createPromise(this.toString(), {
+      name: `Inner Text of ${this.name}`,
+    });
   }
 
   public getInnerHtml(): ValuePromise {
-    return ValuePromise.wrap(
-      this._wrapAsValue(null, `Inner HTML of ${this.name}`)
-    );
+    throw "Inner HTML not supported for this type of value";
   }
 
   public getOuterHtml(): ValuePromise {
-    return ValuePromise.wrap(
-      this._wrapAsValue(null, `Outer HTML of ${this.name}`)
-    );
+    throw "Outer HTML not supported for this type of value";
   }
 
   public async hasAttribute(
@@ -508,15 +501,15 @@ export class Value<T = any> implements iValue<T> {
   }
 
   public getStyleProperty(key: string): ValuePromise {
-    return ValuePromise.wrap(this._wrapAsValue(null, `Style of ${key}`));
+    throw "Style Property not supported for this type of value";
   }
 
   public getValue(): ValuePromise {
-    return ValuePromise.wrap(this);
+    throw "Get Value is not supported for this type of value";
   }
 
   public scrollTo(): ValuePromise {
-    return ValuePromise.wrap(this);
+    throw "Scroll To is not supported for this type of value";
   }
 
   public async hasText(text?: string): Promise<boolean> {
@@ -524,10 +517,12 @@ export class Value<T = any> implements iValue<T> {
     return text ? text == myText : !!myText;
   }
 
-  public getText(): ValuePromise {
-    return ValuePromise.wrap(
-      this._wrapAsValue(this.toString(), this.name, this.parent, this.highlight)
-    );
+  public getText(): ValuePromise<string> {
+    return this.valueFactory.createPromise(this.toString(), {
+      name: this.name,
+      parent: this.parent,
+      highlightText: this.highlightText,
+    });
   }
 
   public get values(): iValue<any> {
@@ -535,12 +530,10 @@ export class Value<T = any> implements iValue<T> {
     try {
       values = Object.values(this.$);
     } catch {}
-    return this._wrapAsValue(
-      values,
-      `Values of ${this.name}`,
-      this,
-      this.highlight
-    );
+    return this.valueFactory.create(values, {
+      name: `Values of ${this.name}`,
+      highlightText: this.highlightText,
+    });
   }
 
   public get keys(): iValue<string[]> {
@@ -548,12 +541,10 @@ export class Value<T = any> implements iValue<T> {
     try {
       keys = Object.keys(this.$);
     } catch {}
-    return this._wrapAsValue(
-      keys,
-      `Keys of ${this.name}`,
-      this,
-      this.highlight
-    );
+    return this.valueFactory.create(keys, {
+      name: `Keys of ${this.name}`,
+      highlightText: this.highlightText,
+    });
   }
 
   public async screenshot(): Promise<Buffer> {
@@ -748,40 +739,45 @@ export class Value<T = any> implements iValue<T> {
   }
 
   public split(by: string | RegExp, limit?: number): iValue<any[]> {
-    return new Value(this.toString().split(by, limit), this.context, this.name);
+    return this.valueFactory.create(this.toString().split(by, limit), {
+      name: this.name,
+    });
   }
 
   public join(by: string): iValue<string> {
-    return new Value(this.toArray().join(by), this.context, this.name);
+    return this.valueFactory.create(this.toArray().join(by), {
+      name: this.name,
+    });
   }
 
-  public pluck(property: string): iValue<any[]> {
+  public pluck(property: string): Value {
     const arr = this.toArray().map((item) => item[property]);
-    return new Value(
-      arr,
-      this.context,
-      `Values of ${property} in ${this.name}`
-    );
+    return this.valueFactory.create(arr, {
+      name: `Values of ${property} in ${this.name}`,
+    });
   }
 
   public nth(index: number): iValue<any> {
     const value = nthIn(this.$, index);
     const nth = toOrdinal(index + 1);
-    return new Value(value, this.context, `${nth} value in ${this.name}`);
+    return this.valueFactory.create(value, {
+      name: `${nth} value in ${this.name}`,
+    });
   }
 
   public map(callback: SyncMapperCallback): iValue<any[]> {
-    return new Value(
-      this.isArray() ? this.toArray().map(callback) : callback(this._input),
-      this.context,
-      this.name
+    return this.valueFactory.create(
+      this.isArray() ? this.toArray().map(callback) : callback(this.$),
+      { name: this.name }
     );
   }
 
   public filter(
     func: (value: any, i?: number, arr?: any[]) => boolean
   ): iValue<any[]> {
-    return new Value(this.toArray().filter(func), this.context, this.name);
+    return this.valueFactory.create(this.toArray().filter(func), {
+      name: this.name,
+    });
   }
 
   public each(callback: SyncIteratorCallback): this {
@@ -790,42 +786,39 @@ export class Value<T = any> implements iValue<T> {
   }
 
   public min(key?: string): iValue<any> {
-    return new Value(
+    return this.valueFactory.create(
       this.toArray().reduce((min, row) => {
         const val = key ? row[key] : row;
         return min === null || val < min ? val : min;
       }, null),
-      this.context,
-      this.name
+      { name: this.name }
     );
   }
 
   public max(key?: string): iValue<any> {
-    return new Value(
+    return this.valueFactory.create(
       this.toArray().reduce((max, row) => {
         const val = key ? row[key] : row;
         return max === null || val > max ? val : max;
       }, null),
-      this.context,
-      this.name
+      { name: this.name }
     );
   }
 
   public sum(key?: string): iValue<number> {
-    return new Value(
+    return this.valueFactory.create(
       Number(
         this.toArray().reduce(
           (sum, row) => (sum += Number(key ? row[key] : row)),
           0
         )
       ),
-      this.context,
-      this.name
+      { name: this.name }
     );
   }
 
   public count(key?: string): iValue<number> {
-    return new Value(
+    return this.valueFactory.create(
       Number(
         this.toArray().reduce((count, row) => {
           if (key) {
@@ -834,19 +827,20 @@ export class Value<T = any> implements iValue<T> {
           return count + 1;
         }, 0)
       ),
-      this.context,
-      this.name
+      { name: this.name }
     );
   }
 
   public unique(): iValue<any[]> {
-    return new Value([...new Set(this.toArray())], this.context, this.name);
+    return this.valueFactory.create([...new Set(this.toArray())], {
+      name: this.name,
+    });
   }
 
   public groupBy(key: string): iValue<{
     [key: string]: any[];
   }> {
-    return new Value(
+    return this.valueFactory.create(
       this.toArray().reduce((grouper, row) => {
         const val = String(row[key]);
         if (!grouper[val]) {
@@ -855,8 +849,7 @@ export class Value<T = any> implements iValue<T> {
         grouper[val].push(row);
         return grouper;
       }, {}),
-      this.context,
-      this.name
+      { name: this.name }
     );
   }
 
@@ -868,7 +861,7 @@ export class Value<T = any> implements iValue<T> {
     const arr = this.toArray().sort((a, b) =>
       key ? collator.compare(a[key], b[key]) : collator.compare(a, b)
     );
-    return new Value(arr, this.context, this.name);
+    return this.valueFactory.create(arr, { name: this.name });
   }
 
   public desc(key?: string): iValue<any[]> {
@@ -880,7 +873,7 @@ export class Value<T = any> implements iValue<T> {
       (a, b) =>
         (key ? collator.compare(a[key], b[key]) : collator.compare(a, b)) * -1
     );
-    return new Value(arr, this.context, this.name);
+    return this.valueFactory.create(arr, { name: this.name });
   }
 
   public median(key?: string): iValue<number> {
@@ -888,48 +881,51 @@ export class Value<T = any> implements iValue<T> {
       key ? parseFloat(a[key]) - parseFloat(b[key]) : a - b
     );
     const med = Number(arr[Math.floor(arr.length / 2)]);
-    return new Value(med, this.context, this.name);
+    return this.valueFactory.create(med, { name: this.name });
   }
 
   public avg(key?: string): iValue<number> {
     const arr = this.toArray();
-    return new Value(
+    return this.valueFactory.create(
       arr.reduce((sum, row) => (sum += Number(key ? row[key] : row)), 0) /
         arr.length,
-      this.context,
-      this.name
+      { name: this.name }
     );
   }
 
   public reduce(callback: SyncReducerCallback, initial?: any): iValue<any> {
-    return new Value(
-      this.toArray().reduce(callback, initial),
-      this.context,
-      this.name
-    );
+    return this.valueFactory.create(this.toArray().reduce(callback, initial), {
+      name: this.name,
+    });
   }
 
   public every(callback: SyncIteratorBoolCallback): iValue<boolean> {
-    return new Value(this.toArray().every(callback), this.context, this.name);
+    return this.valueFactory.create(this.toArray().every(callback), {
+      name: this.name,
+    });
   }
 
   public some(callback: SyncIteratorBoolCallback): iValue<boolean> {
-    return new Value(this.toArray().some(callback), this.context, this.name);
+    return this.valueFactory.create(this.toArray().some(callback), {
+      name: this.name,
+    });
   }
 
   public none(callback: SyncIteratorBoolCallback): iValue<boolean> {
-    return new Value(!this.toArray().some(callback), this.context, this.name);
+    return this.valueFactory.create(!this.toArray().some(callback), {
+      name: this.name,
+    });
   }
 
   public item(key: string | number): iValue<any> {
     const name = `${key} in ${this.name}`;
     if (typeof key === "string") {
-      return new Value(jpathSearch(this.$, key), this.context, name);
+      return this.valueFactory.create(jpathSearch(this.$, key), { name });
     }
     if (this.$[key]) {
-      return new Value(this.$[key], this.context, name);
+      return this.valueFactory.create(this.$[key], { name: name });
     }
-    return new Value(null, this.context, name);
+    return this.valueFactory.create(null, { name: name });
   }
 
   public echo(callback?: (str: string) => void): this {
@@ -943,7 +939,7 @@ export class Value<T = any> implements iValue<T> {
     // Array of strings
     if (Array.isArray(key)) {
       const name = `${key.join(", ")} in ${this.name}`;
-      return new Value(
+      return this.valueFactory.create(
         this.toArray().map((row) => {
           const out: any[] = [];
           key.forEach((k) => {
@@ -951,16 +947,18 @@ export class Value<T = any> implements iValue<T> {
           });
           return out;
         }),
-        this.context,
-        name
+        {
+          name,
+        }
       );
     }
     // String
     const name = `${key} in ${this.name}`;
-    return new Value(
+    return this.valueFactory.create(
       this.toArray().map((row) => row[key]),
-      this.context,
-      name
+      {
+        name,
+      }
     );
   }
 
@@ -977,31 +975,6 @@ export class Value<T = any> implements iValue<T> {
   protected async _failedAction(verb: string, noun?: string) {
     this.context.scenario.result(
       new AssertionActionFailed(verb, noun || this.name)
-    );
-  }
-
-  protected _wrapAsValue<T>(
-    data: T,
-    name: string,
-    parent?: any,
-    highlight?: string
-  ): iValue<T> {
-    const val = new Value<T>(data, this.context, name, parent, highlight);
-    // If no source code of its own, inherit it from parent
-    if (!val.sourceCode && parent && parent.sourceCode) {
-      val._sourceCode = parent.sourceCode;
-    }
-    return val;
-  }
-
-  protected _wrapAsValuePromise<T>(
-    data: T,
-    name: string,
-    parent?: any,
-    highlight?: string
-  ): ValuePromise {
-    return ValuePromise.wrap(
-      this._wrapAsValue<T>(data, name, parent, highlight)
     );
   }
 }
