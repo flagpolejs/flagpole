@@ -10,20 +10,15 @@ import { ResourceScenario } from "../resource/resource-scenario";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { ClassConstructor } from "../interfaces/generic-types";
 import { iMessageAndCallback } from "../interfaces/imessage-and-callback";
+import { ValueOptions } from "../interfaces/value-options";
 
 export abstract class DOMElement extends Value {
-  public get name(): string {
-    return this._name || this._path || "DOM Element";
-  }
-
   protected constructor(
     input: any,
     context: iAssertionContext,
-    name?: string | null,
-    path?: string
+    opts: ValueOptions
   ) {
-    super(input, context, name || "DOM Element");
-    this._path = path || "";
+    super(input, context, { name: "DOM Element", ...opts });
   }
 
   abstract find(selector: string, opts?: FindOptions): ValuePromise;
@@ -66,7 +61,7 @@ export abstract class DOMElement extends Value {
    * Convert element synchronously to string as best we can
    */
   public toString(): string {
-    return this.context.response.getRoot().html(this._input);
+    return this.context.response.getRoot().html(this.$);
   }
 
   /**
@@ -74,10 +69,9 @@ export abstract class DOMElement extends Value {
    */
   public getClassName(): ValuePromise {
     return ValuePromise.execute(async () => {
-      return this._wrapAsValue(
-        await this._getClassName(),
-        `Class Name of ${this.name}`
-      );
+      return this.context.wrapValue(await this._getClassName(), {
+        name: `Class Name of ${this.name}`,
+      });
     });
   }
 
@@ -86,10 +80,9 @@ export abstract class DOMElement extends Value {
    */
   public getInnerText(): ValuePromise {
     return ValuePromise.execute(async () => {
-      return this._wrapAsValue(
-        await this._getInnerText(),
-        `Inner Text of ${this.name}`
-      );
+      return this.context.wrapValue(await this._getInnerText(), {
+        name: `Inner Text of ${this.name}`,
+      });
     });
   }
 
@@ -98,10 +91,9 @@ export abstract class DOMElement extends Value {
    */
   public getInnerHtml(): ValuePromise {
     return ValuePromise.execute(async () => {
-      return this._wrapAsValue(
-        await this._getInnerHtml(),
-        `Inner Html of ${this.name}`
-      );
+      return this.context.wrapValue(await this._getInnerHtml(), {
+        name: `Inner Html of ${this.name}`,
+      });
     });
   }
 
@@ -110,10 +102,9 @@ export abstract class DOMElement extends Value {
    */
   public getOuterHtml(): ValuePromise {
     return ValuePromise.execute(async () => {
-      return this._wrapAsValue(
-        await this._getOuterHtml(),
-        `Outer Html of ${this.name}`
-      );
+      return this.context.wrapValue(await this._getOuterHtml(), {
+        name: `Outer Html of ${this.name}`,
+      });
     });
   }
 
@@ -126,7 +117,10 @@ export abstract class DOMElement extends Value {
     return ValuePromise.execute(async () => {
       const name: string = `${this.name} -> ${key}`;
       const attr: string | null = await this._getAttribute(key);
-      return this._wrapAsValue(attr, name, this, `${key}="${attr}"`);
+      return this.context.wrapValue(attr, {
+        name,
+        sourceCode: `${key}="${attr}"`,
+      });
     });
   }
 
@@ -147,7 +141,7 @@ export abstract class DOMElement extends Value {
           return false;
         });
       }
-      return this._wrapAsValue(attr, name, this);
+      return this.context.wrapValue(attr, { name });
     });
   }
 
@@ -157,10 +151,9 @@ export abstract class DOMElement extends Value {
    */
   public getProperty(key: string): ValuePromise {
     return ValuePromise.execute(async () => {
-      return this._wrapAsValue(
-        await this._getProperty(key),
-        `${key} of ${this.name}`
-      );
+      return this.context.wrapValue(await this._getProperty(key), {
+        name: `${key} of ${this.name}`,
+      });
     });
   }
 
@@ -169,7 +162,9 @@ export abstract class DOMElement extends Value {
    */
   public getValue(): ValuePromise {
     return ValuePromise.execute(async () =>
-      this._wrapAsValue(await this._getValue(), `Value of ${this.name}`)
+      this.context.wrapValue(await this._getValue(), {
+        name: `Value of ${this.name}`,
+      })
     );
   }
 
@@ -178,7 +173,9 @@ export abstract class DOMElement extends Value {
    */
   public getText(): ValuePromise {
     return ValuePromise.execute(async () =>
-      this._wrapAsValue(await this._getText(), `Text of ${this.name}`)
+      this.context.wrapValue(await this._getText(), {
+        name: `Text of ${this.name}`,
+      })
     );
   }
 
@@ -195,7 +192,7 @@ export abstract class DOMElement extends Value {
     a?: string | Function | iScenario,
     b?: Function
   ): Promise<void | iScenario> {
-    const overloaded = getMessageAndCallbackFromOverloading(a, b, this._path);
+    const overloaded = getMessageAndCallbackFromOverloading(a, b, this.path);
     const scenario = await this._createSubScenario(overloaded);
     this._completedAction("LOAD");
     const link: Link = await this.getLink();

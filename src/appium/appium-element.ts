@@ -18,6 +18,7 @@ import { iBounds } from "../interfaces/ibounds";
 import { GestureOpts, GestureType } from "../interfaces/gesture";
 import { ScreenshotOpts } from "../interfaces/screenshot";
 import { iAssertionContext } from "../interfaces/iassertioncontext";
+import { ValueOptions } from "../interfaces/value-options";
 
 const fs = promises;
 
@@ -32,14 +33,13 @@ export class AppiumElement extends DOMElement implements iValue<any> {
   public static async create(
     input: string,
     context: iAssertionContext,
-    name: string,
-    elementId: string
+    opts: ValueOptions
   ): Promise<AppiumElement> {
-    const element = new AppiumElement(input, context, name, elementId);
-    element._tagName = await element._getTagName();
-    if (name === null || name === "") {
-      if (element._tagName !== null) {
-        element._name = `<${element.tagName}>`;
+    const element = new AppiumElement(input, context, opts);
+    element.opts.tagName = await element._getTagName();
+    if (!opts.name) {
+      if (opts.tagName) {
+        element.opts.name = `<${element.tagName}>`;
       }
     }
     return element;
@@ -48,11 +48,10 @@ export class AppiumElement extends DOMElement implements iValue<any> {
   protected constructor(
     input: string,
     context: iAssertionContext,
-    name: string | null,
-    elementId: string
+    opts: ValueOptions
   ) {
-    super(input, context, name || "Appium Element", input);
-    this._elementId = elementId || "";
+    super(input, context, { name: "Appium Element", ...opts });
+    this._elementId = opts.path || "";
   }
 
   public click(opts?: PointerClick): ValuePromise {
@@ -89,8 +88,7 @@ export class AppiumElement extends DOMElement implements iValue<any> {
         const element = await AppiumElement.create(
           selector,
           this.session.context,
-          selector,
-          res.jsonRoot.value.ELEMENT
+          { name: selector, path: res.jsonRoot.value.ELEMENT }
         );
         return element;
       } else {
@@ -126,8 +124,7 @@ export class AppiumElement extends DOMElement implements iValue<any> {
           const element = await AppiumElement.create(
             selector,
             this.session.context,
-            selector,
-            values[i].$
+            { name: selector, path: values[i].$ }
           );
           elements.push(element);
         }
@@ -155,12 +152,10 @@ export class AppiumElement extends DOMElement implements iValue<any> {
     }
     for (let i = 0; i < res.jsonRoot.value?.length; i++) {
       elements.push(
-        await AppiumElement.create(
-          selector,
-          this.context,
-          selector,
-          res.jsonRoot.value[i].ELEMENT
-        )
+        await AppiumElement.create(selector, this.context, {
+          name: selector,
+          path: res.jsonRoot.value[i].ELEMENT,
+        })
       );
     }
     if (params.opts) {
@@ -169,8 +164,6 @@ export class AppiumElement extends DOMElement implements iValue<any> {
 
     return elements;
   }
-
-  protected;
 
   public type(input: string): ValuePromise {
     return ValuePromise.execute(async () => {

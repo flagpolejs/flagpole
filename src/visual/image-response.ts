@@ -6,6 +6,7 @@ import { Value } from "../value";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { iValue } from "../interfaces/ivalue";
+import { createStandardValue } from "../helpers/value-factory";
 
 export interface ImageProperties {
   width: number;
@@ -59,12 +60,12 @@ export class ImageResponse extends ProtoResponse implements iResponse {
 
   public find(propertyName: string): ValuePromise {
     return ValuePromise.wrap(
-      new Value(
+      createStandardValue(
         typeof this.imageProperties[propertyName] !== "undefined"
           ? this.imageProperties[propertyName]
           : null,
         this.context,
-        `${propertyName} of Image`
+        { name: `${propertyName} of Image` }
       )
     );
   }
