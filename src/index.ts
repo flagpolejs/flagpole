@@ -22,8 +22,6 @@ import { ValuePromise } from "./value-promise";
 import { HlsResponse } from "./media/hls-response";
 import { HlsScenario } from "./media/hls-scenario";
 import { HeadersResponse } from "./headers/headers-response";
-import { AppiumResponse } from "./appium/appium-response";
-import { AppiumScenario } from "./appium/appium-scenario";
 import { HtmlScenario } from "./html/html-scenario";
 import { JsonScenario } from "./json/json-scenario";
 import { ResourceScenario } from "./resource/resource-scenario";
@@ -61,13 +59,11 @@ export {
   Value,
   HlsResponse,
   HeadersResponse,
-  AppiumResponse,
   iScenario,
   iSuite,
   execution,
   ProtoScenario,
   ValuePromise,
-  AppiumScenario,
   HtmlScenario,
   JsonScenario,
   HlsScenario,

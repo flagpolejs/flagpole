@@ -65,9 +65,12 @@ enum ScenarioRequestType {
   webhook = "webhook",
 }
 
-export abstract class ProtoScenario implements iScenario {
+export abstract class ProtoScenario<ResponseType extends iResponse>
+  implements iScenario
+{
+  public abstract readonly response: ResponseType;
   public abstract readonly adapter: HttpAdapter;
-  public abstract readonly response: iResponse;
+
   public abstract readonly typeName: string;
   public readonly request: HttpRequest;
   public readonly defaultRequestOptions: HttpRequestOptions = {

@@ -2,7 +2,6 @@ import { ProtoResponse } from "../response";
 import { iResponse } from "../interfaces/iresponse";
 import { URL } from "url";
 import { HttpResponse } from "../http/http-response";
-import { Value } from "../value";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { iValue } from "../interfaces/ivalue";
