@@ -8,9 +8,7 @@ import { HttpRequest } from "./http/http-request";
 import { Assertion } from "./assertion/assertion";
 import { AssertionContext } from "./assertion/assertion-context";
 import { AssertionResult } from "./logging/assertion-result";
-import { BrowserResponse } from "./puppeteer/browser-response";
 import { DOMElement } from "./html/dom-element";
-import { ExtJSResponse } from "./puppeteer/extjs-response";
 import { HtmlResponse } from "./html/html-response";
 import { HttpResponse } from "./http/http-response";
 import { ImageResponse } from "./visual/image-response";
@@ -34,8 +32,6 @@ import { RssScenario } from "./xml/rss-scenario";
 import { AtomScenario } from "./xml/atom-scenario";
 import { SoapScenario } from "./xml/soap-scenario";
 import { ImageScenario } from "./visual/image-scenario";
-import { BrowserScenario } from "./puppeteer/browser-scenario";
-import { ExtJsScenario } from "./puppeteer/extjs-scenario";
 import { HeadersScenario } from "./headers/headers-scenario";
 import { FfprobeScenario } from "./media/ffprobe-scenario";
 import { MediaStreamValidatorScenario } from "./media/media-stream-validator-scenario";
@@ -52,9 +48,7 @@ export {
   Assertion,
   AssertionContext,
   AssertionResult,
-  BrowserResponse,
   DOMElement,
-  ExtJSResponse,
   HtmlResponse,
   ImageResponse,
   JsonResponse,
@@ -82,8 +76,6 @@ export {
   AtomScenario,
   SoapScenario,
   RssScenario,
-  BrowserScenario,
-  ExtJsScenario,
   ImageScenario,
   HeadersScenario,
   FfprobeScenario,

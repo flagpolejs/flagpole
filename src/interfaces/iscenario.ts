@@ -16,7 +16,6 @@ import { ResponsePipe } from "./response-pipe";
 import { iAssertionResult } from "./iassertion-result";
 import { iAssertionContext, iNextCallback } from "./iassertioncontext";
 import { iSuite } from "./isuite";
-import { ScenarioType } from "../scenario-types";
 
 interface ValueLink {
   getUrl(): Promise<any>;
@@ -53,7 +52,7 @@ export type ScenarioStatusCallback = (
 ) => any;
 
 export interface ScenarioInitOptions<T extends iScenario> {
-  type: ClassConstructor<T> | ScenarioType;
+  type: ClassConstructor<T>;
   bearerToken?: string;
   url?: string;
   httpRequestOpts?: HttpRequestOptions;

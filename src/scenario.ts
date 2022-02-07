@@ -705,7 +705,6 @@ export abstract class ProtoScenario implements iScenario {
   public async execute(params: {
     [key: string]: string | number;
   }): Promise<this>;
-
   @beforeScenarioExecuted
   public async execute(pathParams?: {
     [key: string]: string | number;

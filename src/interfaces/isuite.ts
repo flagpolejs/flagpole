@@ -7,7 +7,6 @@ import {
   ScenarioInitOptions,
   ScenarioMapper,
 } from "./iscenario";
-import { ScenarioType } from "../scenario-types";
 
 export type SuiteStatusCallback = (
   suite: iSuite,
@@ -47,11 +46,6 @@ export interface iSuite {
   scenario<T extends iScenario>(
     title: string,
     type: ClassConstructor<T>,
-    opts?: KeyValue
-  ): T;
-  scenario<T extends iScenario>(
-    title: string,
-    type: ScenarioType,
     opts?: KeyValue
   ): T;
   base(url: string | KeyValue): this;

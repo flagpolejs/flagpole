@@ -175,6 +175,11 @@
       "id": "",
       "name": "hls",
       "tags": []
+    },
+    "BasicBrowser": {
+      "id": "",
+      "name": "browser/basic",
+      "tags": []
     }
   }
 }

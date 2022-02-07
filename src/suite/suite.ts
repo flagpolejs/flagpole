@@ -8,8 +8,7 @@ import {
 import { exitProcess, toType } from "../util";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { SuiteTaskManager } from "./suite-task-manager";
-import { ScenarioType } from "../scenario-types";
-import { createScenario } from "../scenario-type-map";
+import { createScenario } from "../scenario-factory";
 import { ClassConstructor, KeyValue } from "../interfaces/generic-types";
 import { iScenario } from "../interfaces/iscenario";
 import {
@@ -224,7 +223,7 @@ export class Suite implements iSuite {
 
   public scenario<T extends iScenario>(
     title: string,
-    type: ScenarioType | ClassConstructor<T>,
+    type: ClassConstructor<T>,
     opts: KeyValue = {}
   ): T {
     const scenario: iScenario = createScenario<T>(this, title, type, opts);
