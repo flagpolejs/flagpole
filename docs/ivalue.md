@@ -495,7 +495,7 @@ checkable, checked, class, className, clickable, content-desc, contentDescriptio
 Valid attributes for iOS Appium elements are:  
 accessibilityContainer, accessible, enabled, frame, index, label, name, rect, selected, type, value, visible, wdAccessibilityContainer, wdAccessible, wdEnabled, wdFrame, wdIndex, wdLabel, wdName, wdRect, wdSelected, wdType, wdUID, wdValue, wdVisible"
 
-### getBounds(boxType?: string): Promise\<iBounds | null\>;
+### getBounds(boxType?: string): Promise\<Bounds | null\>;
 
 Get the bounds of this DOM or Appium Element.
 

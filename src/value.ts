@@ -28,7 +28,7 @@ import {
 } from "./interfaces/iterator-callbacks";
 import { PointerClick } from "./interfaces/pointer";
 import { JsFunction, KeyValue } from "./interfaces/generic-types";
-import { iBounds } from "./interfaces/ibounds";
+import { Bounds } from "./interfaces/bounds";
 import { HttpRequestOptions } from "./interfaces/http";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
 import { iScenario, ScenarioConstructor } from "./interfaces/iscenario";
@@ -661,7 +661,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     throw `getNextSiblings() is not supported by ${this.name}`;
   }
 
-  public async getBounds(boxType?: string): Promise<iBounds | null> {
+  public async getBounds(boxType?: string): Promise<Bounds | null> {
     return null;
   }
 

@@ -6,7 +6,7 @@ import { FindProvider } from "./find-provider";
 import { JsFunction, KeyValue } from "./generic-types";
 import { GestureOpts, GestureType } from "./gesture";
 import { HttpRequestOptions } from "./http";
-import { iBounds } from "./ibounds";
+import { Bounds } from "./bounds";
 import {
   SyncIteratorBoolCallback,
   SyncIteratorCallback,
@@ -110,7 +110,7 @@ export interface iValue<T = any>
   getInnerHtml(): ValuePromise;
   getOuterHtml(): ValuePromise;
   setValue(text: string): ValuePromise;
-  getBounds(boxType?: string): Promise<iBounds | null>;
+  getBounds(boxType?: string): Promise<Bounds | null>;
   getUrl(): ValuePromise;
   getLink(): Promise<Link>;
   getStyleProperty(key: string): ValuePromise;

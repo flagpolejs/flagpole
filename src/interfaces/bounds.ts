@@ -1,4 +1,4 @@
-export interface iBounds {
+export interface Bounds {
   x: number;
   y: number;
   width: number;
