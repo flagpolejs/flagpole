@@ -14,7 +14,7 @@ import { ImageResponse } from "./visual/image-response";
 import { JsonResponse } from "./json/json-response";
 import { ResourceResponse } from "./resource/resource-response";
 import { ProtoResponse } from "./response";
-import { ProtoScenario } from "./scenario";
+import { Scenario } from "./scenario";
 import { Suite } from "./suite/suite";
 import { Value } from "./value";
 import { ValuePromise } from "./value-promise";
@@ -60,7 +60,7 @@ export {
   HeadersResponse,
   iScenario,
   execution,
-  ProtoScenario,
+  Scenario,
   ValuePromise,
   HtmlScenario,
   JsonScenario,

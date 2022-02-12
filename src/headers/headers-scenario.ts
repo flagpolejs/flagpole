@@ -1,8 +1,8 @@
 import { HeadersResponse } from "./headers-response";
-import { ProtoScenario } from "../scenario";
+import { Scenario } from "../scenario";
 import { NeedleAdapter } from "../adapter.needle";
 
-export class HeadersScenario extends ProtoScenario<HeadersResponse> {
+export class HeadersScenario extends Scenario<HeadersResponse> {
   public readonly adapter = new NeedleAdapter();
   public readonly response = new HeadersResponse(this);
   public readonly typeName = "Headers";
