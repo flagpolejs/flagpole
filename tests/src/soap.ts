@@ -1,8 +1,8 @@
-import flagpole from "../../dist/index";
+import flagpole, { SoapScenario } from "../../dist/index";
 
 flagpole("SOAP Service", (suite) => {
   suite
-    .scenario("Convert Temperature", "soap")
+    .scenario("Convert Temperature", SoapScenario)
     .open("https://www.w3schools.com/xml/tempconvert.asmx")
     .setRawBody(
       `<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">

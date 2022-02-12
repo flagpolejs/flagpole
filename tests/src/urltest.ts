@@ -1,4 +1,4 @@
-import { Flagpole } from "../../dist/index.js";
+import { Flagpole, HtmlScenario } from "../../dist/index.js";
 
 const suite = Flagpole.Suite("Example test suite for blog post")
   .base({
@@ -9,7 +9,7 @@ const suite = Flagpole.Suite("Example test suite for blog post")
   .finally((suite) => suite.print());
 
 suite
-  .scenario("Homepage Loads", "html")
+  .scenario("Homepage Loads", HtmlScenario)
   .open("/")
   .next(async (context) => {
     // selectors are obfuscated, cannot guarantee articel in this example
@@ -24,7 +24,7 @@ suite
   });
 
 const articleScenario = suite
-  .scenario("Test Article", "html")
+  .scenario("Test Article", HtmlScenario)
   .next(async (context) => {
     // assert that anything exists
     await context.exists("div");

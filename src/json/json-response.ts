@@ -1,14 +1,10 @@
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http/http-response";
-import { iResponse } from "../interfaces/iresponse";
 import { ValuePromise } from "../value-promise";
 import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "./jpath";
 import { iValue } from "..";
 
-export class JsonResponse
-  extends ProtoResponse
-  implements iResponse, JPathProvider
-{
+export class JsonResponse extends ProtoResponse implements JPathProvider {
   public jsonDoc: JsonDoc | undefined;
 
   public init(httpResponse: HttpResponse) {

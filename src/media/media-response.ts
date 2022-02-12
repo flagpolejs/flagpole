@@ -1,9 +1,8 @@
-import { iResponse } from "../interfaces/iresponse";
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http/http-response";
 import { ValuePromise } from "../value-promise";
 
-export abstract class MediaResponse extends ProtoResponse implements iResponse {
+export abstract class MediaResponse extends ProtoResponse {
   protected abstract _mimePattern: RegExp;
 
   protected get extension(): string {

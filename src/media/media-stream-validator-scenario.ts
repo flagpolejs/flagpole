@@ -1,9 +1,9 @@
 import { ProtoScenario } from "../scenario";
+import { MediaStreamValidatorAdapter } from "./media-stream-validator-adapter";
 import { MediaStreamValidatorResponse } from "./media-stream-validator-response";
-import { fetchWithMediaStreamValidator } from "./media-stream-validator-adapter";
 
-export class MediaStreamValidatorScenario extends ProtoScenario {
-  public readonly adapter = fetchWithMediaStreamValidator;
+export class MediaStreamValidatorScenario extends ProtoScenario<MediaStreamValidatorResponse> {
+  public readonly adapter = new MediaStreamValidatorAdapter();
   public readonly response = new MediaStreamValidatorResponse(this);
   public readonly typeName = "MediaStreamValidator";
 }

@@ -1,4 +1,3 @@
-import { iResponse } from "../interfaces/iresponse";
 import { HttpResponse } from "../http/http-response";
 import HLS from "parse-hls";
 import { wrapAsValue } from "../helpers";

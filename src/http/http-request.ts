@@ -1,18 +1,14 @@
 import {
-  iHttpRequest,
   HttpData,
   HttpAuth,
   HttpTimeout,
   HttpProxy,
   HttpRequestOptions,
-  HttpAdapter,
-  iHttpResponse,
 } from "../interfaces/http";
 import tunnel = require("tunnel");
 import * as http from "http";
 import * as FormData from "form-data";
 import formurlencoded from "form-urlencoded";
-import { fetchWithNeedle } from "./needle";
 import { HttpAuthType, HttpMethodVerb } from "../interfaces/http";
 import { KeyValue } from "../interfaces/generic-types";
 import {
@@ -20,8 +16,10 @@ import {
   CONTENT_TYPE_FORM_MULTIPART,
   CONTENT_TYPE_JSON,
 } from "../interfaces/constants";
+import { Adapter } from "../adapter";
+import { HttpResponse } from "./http-response";
 
-export class HttpRequest implements iHttpRequest {
+export class HttpRequest {
   private _uri: string | null = null;
   private _method: HttpMethodVerb = "get";
   private _headers: KeyValue = {};
@@ -309,10 +307,7 @@ export class HttpRequest implements iHttpRequest {
    *
    * @param opts
    */
-  public fetch(
-    opts: KeyValue = {},
-    fetchMethod?: HttpAdapter
-  ): Promise<iHttpResponse> {
+  public fetch(adapter: Adapter, opts: KeyValue = {}): Promise<HttpResponse> {
     if (this._fetched) {
       throw new Error("This request was already fetched.");
     }
@@ -320,7 +315,6 @@ export class HttpRequest implements iHttpRequest {
     if (this._uri === null) {
       throw new Error("Invalid URI");
     }
-    if (fetchMethod) return fetchMethod(this, opts);
-    return fetchWithNeedle(this, opts);
+    return adapter.fetch(this, opts);
   }
 }

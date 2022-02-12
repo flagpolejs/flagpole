@@ -31,7 +31,7 @@ flagpole("HLS Testing Demo", async (suite) => {
   });
 
   const variantTemplate = suite.template({
-    type: "hls",
+    type: HlsScenario,
     next: {
       "Should be a VOD with more than one segment": async (context) => {
         await context.find("type").equals("vod");

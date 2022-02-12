@@ -13,17 +13,17 @@ import { ScreenProperties } from "./interfaces/screen-properties";
 import { iAssertionContext } from "./interfaces/iassertioncontext";
 import { iScenario } from "./interfaces/iscenario";
 import { iResponse } from "./interfaces/iresponse";
-import { iHttpResponse } from "./interfaces/http";
+import { HttpResponse } from "./http/http-response";
 
 export abstract class ProtoResponse implements iResponse {
   protected _currentUrl: string | null = null;
-  protected _httpResponse: iHttpResponse = createEmptyResponse();
+  protected _httpResponse: HttpResponse = createEmptyResponse();
 
   constructor(public readonly scenario: iScenario) {
     this._currentUrl = scenario.finalUrl;
   }
 
-  public init(res: iHttpResponse) {
+  public init(res: HttpResponse) {
     this._httpResponse = res;
   }
 
@@ -61,7 +61,7 @@ export abstract class ProtoResponse implements iResponse {
     throw "This type of scenario does not suport eval.";
   }
 
-  public get httpResponse(): iHttpResponse {
+  public get httpResponse(): HttpResponse {
     return this._httpResponse;
   }
 
@@ -205,7 +205,7 @@ export abstract class ProtoResponse implements iResponse {
    */
   public async navigate(req: HttpRequest) {
     this._currentUrl = this.absolutizeUri(req.uri || "");
-    return this.init(await req.fetch());
+    return this.init(await req.fetch(this.scenario.adapter));
   }
 
   /**

@@ -1,8 +1,13 @@
-import { FlagpoleExecution, iScenario, iSuite, ValuePromise } from "..";
+import {
+  FlagpoleExecution,
+  HttpRequest,
+  iScenario,
+  iSuite,
+  ValuePromise,
+} from "..";
 import { FindAllOptions, FindOptions } from "./find-options";
 import { JsFunction, OptionalXY } from "./generic-types";
 import { GestureOpts, GestureType } from "./gesture";
-import { iHttpRequest } from "./http";
 import { iAssertion } from "./iassertion";
 import { iAssertionResult } from "./iassertion-result";
 import { iResponse } from "./iresponse";
@@ -21,7 +26,7 @@ export interface iAssertionContext<
   ResponseType extends iResponse = iResponse
 > {
   result: any;
-  request: iHttpRequest;
+  request: HttpRequest;
   response: ResponseType;
   scenario: ScenarioType;
   suite: iSuite;

@@ -1,10 +1,10 @@
-import flagpole from "../../dist/index";
+import flagpole, { HtmlScenario } from "../../dist/index";
 
 flagpole("Test Waits", (suite) => {
   suite.base("https://orlando.craigslist.org/");
 
   const homepage = suite
-    .scenario("Homepage Loads", "html")
+    .scenario("Homepage Loads", HtmlScenario)
     .open("/")
     .next(async (context) => {
       const communityLink = await context.exists("div.community h3 a");
@@ -13,7 +13,7 @@ flagpole("Test Waits", (suite) => {
     });
 
   const community = suite
-    .scenario("Community Category Loads", "html")
+    .scenario("Community Category Loads", HtmlScenario)
     .next(async (context) => {
       const results = await context.findAll("#sortable-results ul.rows li");
       context.assert(results).length.greaterThan(0);

@@ -1,8 +1,8 @@
-import flagpole from "../../dist/index";
+import flagpole, { HtmlScenario } from "../../dist/index";
 
 flagpole("Test Templates", async (suite) => {
   const get = suite.template({
-    type: "html",
+    type: HtmlScenario,
     method: "get",
     statusCode: 200,
     set: { email: "email@email.com", password: "password1!" },

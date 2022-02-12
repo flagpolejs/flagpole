@@ -1,4 +1,4 @@
-import { Flagpole } from "../../dist/index.js";
+import { Flagpole, HtmlScenario } from "../../dist/index.js";
 
 const suite = Flagpole.suite("Test order of callbacks")
   .base("https://www.whatismyip.com")
@@ -34,7 +34,7 @@ const suite = Flagpole.suite("Test order of callbacks")
   });
 
 suite
-  .scenario("Main Page", "html")
+  .scenario("Main Page", HtmlScenario)
   .open("/")
   .before(() => {
     console.log("Before First Scenario");
@@ -59,7 +59,7 @@ suite
   });
 
 suite
-  .scenario("IP Lookup", "html")
+  .scenario("IP Lookup", HtmlScenario)
   .open("/ip-address-lookup/")
   .before(() => {
     console.log("Before Second Scenario");
@@ -84,7 +84,7 @@ suite
   });
 
 suite
-  .scenario("Change IP", "html")
+  .scenario("Change IP", HtmlScenario)
   .open("/how-to-change-your-ip-address/")
   .before(() => {
     console.log("Before Third Scenario");

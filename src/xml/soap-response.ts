@@ -1,5 +1,4 @@
 import { HttpResponse } from "../http/http-response";
-import { iResponse } from "../interfaces/iresponse";
 import { XmlResponse } from "./xml-response";
 
 const validMimeTypes = [
@@ -10,7 +9,7 @@ const validMimeTypes = [
   "text/wsdl+xml",
 ];
 
-export class SoapResponse extends XmlResponse implements iResponse {
+export class SoapResponse extends XmlResponse {
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
     this.context.assert(this.statusCode).between(200, 299);

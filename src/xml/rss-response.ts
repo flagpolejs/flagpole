@@ -1,11 +1,10 @@
 import { HttpResponse } from "../http/http-response";
-import { iResponse } from "../interfaces/iresponse";
 import { XmlResponse } from "./xml-response";
 import * as cheerio from "cheerio";
 
 const validMimeTypes = ["application/rss+xml", "text/xml", "text/rss+xml"];
 
-export class RssResponse extends XmlResponse implements iResponse {
+export class RssResponse extends XmlResponse {
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
     this.context.assert(this.statusCode).between(200, 299);

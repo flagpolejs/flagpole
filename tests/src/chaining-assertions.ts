@@ -1,9 +1,9 @@
-import flagpole from "../../dist/index";
+import flagpole, { JsonScenario } from "../../dist/index";
 
 const suite = flagpole("Chaining Assertions");
 
 suite
-  .scenario("With undefined and assertion titles", "json")
+  .scenario("With undefined and assertion titles", JsonScenario)
   .open("https://reqres.in/api/users?page=1")
   .next(async (context) => {
     context

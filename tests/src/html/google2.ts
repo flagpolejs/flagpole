@@ -1,11 +1,11 @@
-import flagpole from "../../../dist/index";
+import flagpole, { HtmlScenario } from "../../../dist/index";
 const searchTerm = "Flagpole JS";
 
 flagpole("Basic Smoke Test of Site", async (suite) => {
   suite.base("https://www.google.com").finally((suite) => suite.print());
 
   suite
-    .scenario("Homepage Loads", "html")
+    .scenario("Homepage Loads", HtmlScenario)
     .open("/")
     .next("Test the basic headers", (ctx) => {
       ctx.assert("Status is 200", ctx.response.statusCode).equals(200);
@@ -25,7 +25,7 @@ flagpole("Basic Smoke Test of Site", async (suite) => {
     });
 
   const resultsScenatio = suite
-    .scenario("Results Page Loads", "html")
+    .scenario("Results Page Loads", HtmlScenario)
     .next("Test the basic headers", (ctx) => {
       ctx.assert("Status is 200", ctx.response.statusCode).equals(200);
     })

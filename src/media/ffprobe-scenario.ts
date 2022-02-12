@@ -1,9 +1,9 @@
 import { ProtoScenario } from "../scenario";
+import { FfprobeAdapter } from "./ffprobe-adapter";
 import { FfprobeResponse } from "./ffprobe-response";
-import { fetchWithFfprobe } from "./ffprobe-adapter";
 
-export class FfprobeScenario extends ProtoScenario {
-  public readonly adapter = fetchWithFfprobe;
+export class FfprobeScenario extends ProtoScenario<FfprobeResponse> {
+  public readonly adapter = new FfprobeAdapter();
   public readonly response = new FfprobeResponse(this);
   public readonly typeName = "FFprobe";
 }

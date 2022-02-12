@@ -1,11 +1,11 @@
-import { Flagpole } from "../../dist/index.js";
+import { Flagpole, JsonScenario } from "../../dist/index.js";
 
 const main = Flagpole.suite("Todo").base(
   "https://jsonplaceholder.typicode.com"
 );
 
 main
-  .scenario("Check todos", "json")
+  .scenario("Check todos", JsonScenario)
   .open("/todos/1")
   .setMethod("get")
   .next(async (context) => {

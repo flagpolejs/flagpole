@@ -1,5 +1,4 @@
 import { ProtoResponse } from "../response";
-import { iResponse } from "../interfaces/iresponse";
 import { URL } from "url";
 import { HttpResponse } from "../http/http-response";
 import { wrapAsValue } from "../helpers";
@@ -16,7 +15,7 @@ export interface ImageProperties {
   url: string;
 }
 
-export class ImageResponse extends ProtoResponse implements iResponse {
+export class ImageResponse extends ProtoResponse {
   protected imageProperties: ImageProperties = {
     width: 0,
     height: 0,

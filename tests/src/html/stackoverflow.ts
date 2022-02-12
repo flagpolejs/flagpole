@@ -1,11 +1,11 @@
-import flagpole from "../../../dist/index";
+import flagpole, { HtmlScenario } from "../../../dist/index";
 
 flagpole("Stack Overflow")
   .base("http://www.stackoverflow.com")
   .finally(function (suite) {
     suite.print();
   })
-  .scenario("Homepage", "html")
+  .scenario("Homepage", HtmlScenario)
   .open("/")
   .next("Check basic parameters", async function (context) {
     context.assert(context.response.statusCode).equals(200);

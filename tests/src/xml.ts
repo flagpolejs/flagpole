@@ -1,9 +1,9 @@
-import flagpole from "../../dist/index";
+import flagpole, { XmlScenario } from "../../dist/index";
 
 const suite = flagpole("Test XML");
 
 suite
-  .scenario("NASA RSS as XML", "xml")
+  .scenario("NASA RSS as XML", XmlScenario)
   .open("https:////www.nasa.gov/rss/dyn/breaking_news.rss")
   .next(async (context) => {
     const titleText = await (

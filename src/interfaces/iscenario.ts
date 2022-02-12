@@ -6,7 +6,6 @@ import {
   HttpRequestOptions,
   HttpResponseOptions,
   HttpTimeout,
-  iHttpRequest,
 } from "./http";
 import { iLogItem } from "./ilog-item";
 import { WebhookServer } from "./webhook";
@@ -16,6 +15,10 @@ import { ResponsePipe } from "./response-pipe";
 import { iAssertionResult } from "./iassertion-result";
 import { iAssertionContext, iNextCallback } from "./iassertioncontext";
 import { iSuite } from "./isuite";
+import { HttpRequest } from "../http/http-request";
+import { iResponse } from "../interfaces/iresponse";
+import { Adapter } from "../adapter";
+import { AssertionContext } from "..";
 
 interface ValueLink {
   getUrl(): Promise<any>;
@@ -75,6 +78,8 @@ export interface ScenarioInitOptions<T extends iScenario> {
 }
 
 export interface iScenario {
+  response: iResponse;
+  adapter: Adapter;
   title: string;
   type: ScenarioConstructor;
   typeName: string;
@@ -95,7 +100,7 @@ export interface iScenario {
   finalUrl: string | null;
   redirectCount: number;
   redirectChain: string[];
-  request: iHttpRequest;
+  request: HttpRequest;
   hasAborted: boolean;
   hasBeenCancelled: boolean;
   hasBeenSkipped: boolean;

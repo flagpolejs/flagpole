@@ -32,9 +32,9 @@ import { iAssertion } from "../interfaces/iassertion";
 import { iAssertionIs } from "../interfaces/iassertion-is";
 import { iValue } from "../interfaces/ivalue";
 import { iAssertionResult } from "../interfaces/iassertion-result";
-import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { CompareCallback, JsFunction } from "../interfaces/generic-types";
 import { AssertSchemaType } from "../interfaces/schema";
+import { AssertionContext } from "..";
 
 export class Assertion implements iAssertion {
   public get value(): any {
@@ -168,11 +168,11 @@ export class Assertion implements iAssertion {
     return !!this._input?.isFlagpoleValue;
   }
 
-  private get context(): iAssertionContext {
+  private get context(): AssertionContext {
     return this._context;
   }
 
-  private _context: iAssertionContext;
+  private _context: AssertionContext;
   private _input: any;
   private _message: string | null;
   private _not: boolean = false;
@@ -185,7 +185,7 @@ export class Assertion implements iAssertion {
   private _defaultMessages: [string, string] = ["True", "False"];
 
   public static async create(
-    context: iAssertionContext,
+    context: AssertionContext,
     thisValue: any,
     message?: string
   ): Promise<Assertion> {
@@ -193,7 +193,7 @@ export class Assertion implements iAssertion {
   }
 
   constructor(
-    context: iAssertionContext,
+    context: AssertionContext,
     thisValue: any,
     message?: string | null
   ) {

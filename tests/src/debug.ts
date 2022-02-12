@@ -1,11 +1,11 @@
-import flagpole from "../../dist/index.js";
+import flagpole, { HtmlScenario } from "../../dist/index.js";
 
 const suite = flagpole("Basic Smoke Test of Site").base(
   "http://jsonprettyprint.net/"
 );
 
 suite
-  .scenario("Submit JSON Pretty Print", "html")
+  .scenario("Submit JSON Pretty Print", HtmlScenario)
   .open("POST /json-pretty-print")
   .setFormData({ json_string: `{ "foo": "dsaf" }` })
   .next(async (context) => {
@@ -13,8 +13,3 @@ suite
     const pre = await body.exists("pre");
     context.comment((await pre.getInnerHtml()).$);
   });
-
-suite
-  .scenario("Homepage Loads", "browser", { headless: false })
-  .open("/")
-  .next(async (context) => {});

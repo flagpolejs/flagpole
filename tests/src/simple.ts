@@ -3,7 +3,7 @@ import { isAsyncCallback } from "../../dist/util";
 
 flagpole("Simple Mock Tests", (suite) => {
   suite
-    .scenario("Array Stuff", "json")
+    .scenario("Array Stuff", JsonScenario)
     .mock(
       JSON.stringify({
         array1: [{ name: "Bo" }, { name: "Jackson" }],
@@ -41,7 +41,7 @@ flagpole("Simple Mock Tests", (suite) => {
     });
 
   suite
-    .scenario("Test Async", "json")
+    .scenario("Test Async", JsonScenario)
     .mock({
       jsonBody: {},
     })

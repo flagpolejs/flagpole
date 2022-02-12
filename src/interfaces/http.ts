@@ -1,5 +1,4 @@
 import { KeyValue } from "./generic-types";
-import * as http from "http";
 
 export const HttpMethodVerbArray = [
   "get",
@@ -13,11 +12,6 @@ export const HttpMethodVerbArray = [
 export type HttpMethodVerb = typeof HttpMethodVerbArray[number];
 
 export type HttpAuthType = "basic" | "digest" | "auto";
-
-export type HttpAdapter = (
-  request: iHttpRequest,
-  opts?: KeyValue
-) => Promise<iHttpResponse>;
 
 export type HttpAuth = {
   username: string;
@@ -61,24 +55,6 @@ export type HttpRequestOptions = {
   cacheKey?: string;
 };
 
-export interface iHttpRequest {
-  uri: string | null;
-  method: HttpMethodVerb;
-  headers: KeyValue;
-  cookies: KeyValue;
-  verifyCert: boolean;
-  proxy: HttpProxy | undefined;
-  timeout: HttpTimeout;
-  maxRedirects: number;
-  auth: HttpAuth | undefined;
-  authType?: HttpAuthType;
-  data: HttpData;
-  customOpts?: KeyValue;
-  outputFile?: string;
-  options: HttpRequestOptions;
-  proxyAgent?: http.Agent;
-}
-
 export interface HttpResponseOptions {
   body?: string;
   jsonBody?: any;
@@ -89,18 +65,4 @@ export interface HttpResponseOptions {
   trailers?: KeyValue;
   method?: string;
   url?: string;
-}
-
-export interface iHttpResponse {
-  body: string;
-  jsonBody: any;
-  rawBody: any;
-  status: [statusCode: number, statusMessage: string];
-  statusCode: number;
-  statusMessage: string;
-  headers: KeyValue;
-  cookies: KeyValue;
-  trailers: KeyValue;
-  url: string;
-  method: string;
 }

@@ -1,4 +1,4 @@
-import flagpole from "../../../dist/index";
+import flagpole, { JsonScenario } from "../../../dist/index";
 
 const trackSchema = {
   type: ["object"],
@@ -118,7 +118,7 @@ const itunesApiSchema = {
 const suite = flagpole("Test iTunes API").base("https://itunes.apple.com");
 
 suite
-  .scenario("Search for Tupac", "json")
+  .scenario("Search for Tupac", JsonScenario)
   .open("/search?term=2pac&entity=musicVideo")
   .next("Check response code and headers", (context) => {
     context

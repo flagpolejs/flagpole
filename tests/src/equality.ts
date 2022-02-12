@@ -1,9 +1,9 @@
-import flagpole from "../../dist/index";
+import flagpole, { ResourceScenario } from "../../dist/index";
 
 const suite = flagpole("Equals");
 
 suite
-  .scenario("Test string, object, and array equality", "resource")
+  .scenario("Test string, object, and array equality", ResourceScenario)
   .mock()
   .next((context) => {
     context.assert("OK").equals("OK");

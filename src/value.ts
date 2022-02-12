@@ -703,7 +703,7 @@ export class Value<InputType = any> implements iValue<InputType> {
       },
       ...opts,
     });
-    const resp = await request.fetch();
+    const resp = await request.fetch(this.context.scenario.adapter);
     const file: string | Buffer = resp.headers["content-type"].startsWith(
       "image"
     )

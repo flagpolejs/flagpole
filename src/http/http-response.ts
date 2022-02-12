@@ -1,34 +1,6 @@
-import { NeedleResponse } from "needle";
-import { readFile } from "fs-extra";
 import { KeyValue } from "../interfaces/generic-types";
-import { HttpResponseOptions, iHttpResponse } from "../interfaces/http";
+import { HttpResponseOptions } from "../interfaces/http";
 import { CONTENT_TYPE_JSON } from "../interfaces/constants";
-
-export const parseResponseFromLocalFile = async (
-  relativePath: string
-): Promise<HttpResponse> => {
-  const path: string = `${__dirname}/${relativePath}`;
-  const data = await readFile(path);
-  return new HttpResponse({
-    body: data.toString(),
-  });
-};
-
-export const parseResponseFromNeedle = (response: NeedleResponse) =>
-  new HttpResponse({
-    status: [response.statusCode || 0, response.statusMessage || ""],
-    headers: <KeyValue>response.headers,
-    body:
-      typeof response.body === "string" ||
-      response.headers["content-type"]?.includes("image")
-        ? response.body
-        : response.body.toString("utf8"),
-    cookies: response.cookies ? <KeyValue>response.cookies : {},
-    trailers: <KeyValue>response.trailers,
-    method: response.method || "get",
-    url: response.url || "",
-    rawBody: response.raw,
-  });
 
 export const parseResponsefromJsonData = (jsonBody: any): HttpResponse =>
   new HttpResponse({
@@ -48,7 +20,7 @@ export const parseResponseFromString = (body: string) =>
     body,
   });
 
-export class HttpResponse implements iHttpResponse {
+export class HttpResponse {
   public get method(): string {
     return this.opts.method || "get";
   }

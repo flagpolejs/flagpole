@@ -1,10 +1,9 @@
 import { HttpResponse } from "../http/http-response";
-import { iResponse } from "../interfaces/iresponse";
 import { XmlResponse } from "./xml-response";
 
 const validMimeTypes = ["application/atom+xml", "text/xml", "text/atom+xml"];
 
-export class AtomResponse extends XmlResponse implements iResponse {
+export class AtomResponse extends XmlResponse {
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
     this.context.assert(this.statusCode).between(200, 299);

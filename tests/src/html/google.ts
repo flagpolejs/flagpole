@@ -1,10 +1,10 @@
-import flagpole from "../../../dist/index";
+import flagpole, { HtmlScenario } from "../../../dist/index";
 
 flagpole("Test Google", (suite) => {
   suite.base("http://www.google.com");
 
   const homepage = suite
-    .scenario("Homepage", "html")
+    .scenario("Homepage", HtmlScenario)
     .open("/")
     .next("Test basic HTTP headers", async (context) => {
       context.assert(context.response.statusCode).equals(200);

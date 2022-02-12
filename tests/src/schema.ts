@@ -30,7 +30,7 @@ flagpole("Test Assertion Schema", async (suite) => {
   };
 
   suite
-    .scenario("Matching Schema - File JsonSchema", "json")
+    .scenario("Matching Schema - File JsonSchema", JsonScenario)
     .mock(validResponse)
     .next((context) => {
       context.assert(context.response.jsonBody).schema("@foobar");
@@ -45,7 +45,7 @@ flagpole("Test Assertion Schema", async (suite) => {
   //   });
 
   suite
-    .scenario("Matching Schema - Manual Schema JsonSchema", "json")
+    .scenario("Matching Schema - Manual Schema JsonSchema", JsonScenario)
     .mock(validResponse)
     .next((context) => {
       context
@@ -54,7 +54,7 @@ flagpole("Test Assertion Schema", async (suite) => {
     });
 
   suite
-    .scenario("Not matching schema, JsonSchema", "json")
+    .scenario("Not matching schema, JsonSchema", JsonScenario)
     .mock(invalidResponse)
     .next((context) => {
       context
@@ -63,14 +63,14 @@ flagpole("Test Assertion Schema", async (suite) => {
     });
 
   suite
-    .scenario("Matching Schema - Manual Schema JTD", "json")
+    .scenario("Matching Schema - Manual Schema JTD", JsonScenario)
     .mock(validResponse)
     .next((context) => {
       context.assert(context.response.jsonBody).schema(jtdSchema, "JTD");
     });
 
   suite
-    .scenario("Not matching schema, JTD", "json")
+    .scenario("Not matching schema, JTD", JsonScenario)
     .mock(invalidResponse)
     .next((context) => {
       context

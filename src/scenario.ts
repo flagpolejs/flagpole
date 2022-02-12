@@ -6,7 +6,7 @@ import {
   AssertionFail,
   AssertionFailWarning,
 } from "./logging/assertion-result";
-import { HttpResponse, parseResponseFromLocalFile } from "./http/http-response";
+import { HttpResponse } from "./http/http-response";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/log-collection";
@@ -36,11 +36,9 @@ import {
   HttpMethodVerb,
   HttpMethodVerbArray,
   HttpProxy,
-  HttpAdapter,
   HttpRequestOptions,
   HttpResponseOptions,
   HttpTimeout,
-  iHttpResponse,
 } from "./interfaces/http";
 import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
 import { iAssertion } from "./interfaces/iassertion";
@@ -57,6 +55,8 @@ import {
 import { iResponse } from "./interfaces/iresponse";
 import { iValue } from "./interfaces/ivalue";
 import { AssertionContext } from ".";
+import { Adapter } from "./adapter";
+import { LocalAdapter } from "./adapter.local";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -69,7 +69,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
   implements iScenario
 {
   public abstract readonly response: ResponseType;
-  public abstract readonly adapter: HttpAdapter;
+  public abstract readonly adapter: Adapter;
 
   public abstract readonly typeName: string;
   public readonly request: HttpRequest;
@@ -999,8 +999,8 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
    * @param httpResponse
    */
   protected async _pipeResponses(
-    httpResponse: iHttpResponse
-  ): Promise<iHttpResponse> {
+    httpResponse: HttpResponse
+  ): Promise<HttpResponse> {
     await bluebird.mapSeries(this._pipeCallbacks, async (cb) => {
       cb.message && this.comment(cb.message);
       const result = await cb.callback(httpResponse);
@@ -1015,7 +1015,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
    * Handle the normalized response once the request comes back
    * This will loop through each next
    */
-  protected async _processResponse(httpResponse: iHttpResponse) {
+  protected async _processResponse(httpResponse: HttpResponse) {
     httpResponse = await this._pipeResponses(httpResponse);
     this.response.init(httpResponse);
     this._timeRequestLoaded = Date.now();
@@ -1083,15 +1083,12 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
    */
   private _executeDefaultRequest() {
     this.request
-      .fetch(
-        {
-          redirect: (url: string) => {
-            this._finalUrl = url;
-            this._redirectChain.push(url);
-          },
+      .fetch(this.adapter, {
+        redirect: (url: string) => {
+          this._finalUrl = url;
+          this._redirectChain.push(url);
         },
-        this.adapter
-      )
+      })
       .then((response) => {
         this._processResponse(response);
       })
@@ -1131,8 +1128,9 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
       throw "Can not execute request with null URL.";
     }
     this._markRequestAsStarted();
-    parseResponseFromLocalFile(this.url)
-      .then((res: HttpResponse) => {
+    this.request
+      .fetch(new LocalAdapter())
+      .then((res) => {
         this._processResponse(res);
       })
       .catch((err) => {

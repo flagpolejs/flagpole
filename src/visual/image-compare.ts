@@ -2,19 +2,19 @@ import * as fs from "fs-extra";
 import { resolve } from "path";
 import { PNG } from "pngjs";
 import { toType, ensureFolderExists } from "../util";
-import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { FlagpoleExecution } from "../flagpole-execution";
 import pixelmatch = require("pixelmatch");
+import { AssertionContext } from "..";
 
 export class ImageCompare {
-  private _context: iAssertionContext;
+  private _context: AssertionContext;
   private _inputImage: PNG | null;
   private _control: any;
   private _controlImage: PNG | null;
   private _autoCreateIfNotExists: boolean;
 
   constructor(
-    context: iAssertionContext,
+    context: AssertionContext,
     input: Buffer | string,
     control: Buffer | string
   ) {
