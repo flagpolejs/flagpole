@@ -92,7 +92,7 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
     });
   }
 
-  public get context(): AssertionContext {
+  public get context(): AssertionContext<this, ResponseType> {
     return new AssertionContext(this, this.response);
   }
 
@@ -629,13 +629,20 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
   /**
    * Set the callback for the assertions to run after the request has a response
    */
-  public next(callback: NextCallback): this;
-  public next(message: string, callback: NextCallback): this;
-  public next(...callbacks: NextCallback[]): this;
+  public next(callback: NextCallback<this, ResponseType>): this;
+  public next(
+    message: string,
+    callback: NextCallback<this, ResponseType>
+  ): this;
+  public next(...callbacks: NextCallback<this, ResponseType>[]): this;
   public next(responseValues: { [key: string]: any }): this;
   public next(
-    a: NextCallback | NextCallback[] | string | { [key: string]: any },
-    b?: NextCallback | { [key: string]: any }
+    a:
+      | NextCallback<this, ResponseType>
+      | NextCallback<this, ResponseType>[]
+      | string
+      | { [key: string]: any },
+    b?: NextCallback<this, ResponseType> | { [key: string]: any }
   ): this {
     if (Array.isArray(a)) {
       a.forEach((callback) => {

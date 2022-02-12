@@ -1,5 +1,10 @@
+import { iScenario, ProtoResponse, Scenario } from "..";
 import { AssertionContext } from "../assertion/assertion-context";
 
-export interface NextCallback {
-  (context: AssertionContext, ...args: any[]): Promise<any> | void;
-}
+export type NextCallback<
+  ScenarioType extends iScenario = iScenario,
+  ResponseType extends ProtoResponse = ProtoResponse
+> = (
+  context: AssertionContext<ScenarioType, ResponseType>,
+  ...args: any[]
+) => Promise<any> | void;
