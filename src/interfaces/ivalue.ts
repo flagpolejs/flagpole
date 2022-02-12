@@ -47,6 +47,7 @@ export interface iValue<T = any>
   json: iValue<any>;
   is: AssertionIs;
   assert(message?: string): Assertion;
+  exists(selector?: string): ValuePromise;
   item(key: string | number): iValue<any>;
   valueOf(): any;
   toArray(): any[];
