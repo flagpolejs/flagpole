@@ -1,7 +1,7 @@
 import { iScenario } from "./iscenario";
 import { NextCallback } from "./next-callback";
 
-export interface iMessageAndCallback {
+export interface MessageAndCallback {
   isSubScenario: boolean;
   message: string;
   callback: NextCallback;

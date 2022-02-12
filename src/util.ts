@@ -10,7 +10,7 @@ import { types } from "util";
 import AjvJsonSchema, { Schema, ValidateFunction } from "ajv";
 import AjvJtd from "ajv/dist/jtd";
 import { AjvErrors, AssertSchemaType } from "./interfaces/schema";
-import { iMessageAndCallback } from "./interfaces/imessage-and-callback";
+import { MessageAndCallback } from "./interfaces/message-and-callback";
 import { NextCallback } from "./interfaces/next-callback";
 
 export const toArray = <T>(value: any): T[] =>
@@ -313,7 +313,7 @@ export function getMessageAndCallbackFromOverloading(
   a: any,
   b: any,
   defaultMessage: string = "Untitled"
-): iMessageAndCallback {
+): MessageAndCallback {
   const message: string = typeof a == "string" ? a : defaultMessage;
   const callback: NextCallback = (() => {
     // Handle overloading

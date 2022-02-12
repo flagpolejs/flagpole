@@ -8,7 +8,7 @@ import { ImageScenario } from "../visual/image-scenario";
 import { ResourceScenario } from "../resource/resource-scenario";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { ClassConstructor } from "../interfaces/generic-types";
-import { iMessageAndCallback } from "../interfaces/imessage-and-callback";
+import { MessageAndCallback } from "../interfaces/message-and-callback";
 import { ValueOptions } from "../interfaces/value-options";
 import { AssertionContext } from "..";
 
@@ -283,7 +283,7 @@ export abstract class DOMElement extends Value {
   }
 
   protected async _createSubScenario(
-    overloaded: iMessageAndCallback
+    overloaded: MessageAndCallback
   ): Promise<iScenario> {
     const scenarioType = await this._getLambdaScenarioType();
     const opts = this.context.scenario.request.options;
@@ -293,7 +293,7 @@ export abstract class DOMElement extends Value {
   }
 
   protected _loadSubScenario(
-    overloaded: iMessageAndCallback
+    overloaded: MessageAndCallback
   ): Promise<iScenario> {
     return overloaded.scenario === undefined
       ? this.load(overloaded.message, overloaded.callback)
