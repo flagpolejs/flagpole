@@ -1,4 +1,4 @@
-import { LineType } from "../interfaces/iconsole-log";
+import { LineType } from "../interfaces/line-type";
 
 export const lineToVerbosity: { [key in LineType]: number } = {
   resultFailure: 10,

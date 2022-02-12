@@ -1,8 +1,8 @@
 import { oneLine } from "common-tags";
 import Ansi, { FG_MAGENTA, FG_GREEN, FG_YELLOW } from "cli-ansi";
-import { iConsoleLine, LineType } from "../interfaces/iconsole-log";
+import { LineType } from "../interfaces/line-type";
 
-export abstract class ConsoleLine implements iConsoleLine {
+export abstract class ConsoleLine {
   public timestamp: Date;
   public textPrefix: string = "";
   public textSuffix: string = "";
@@ -26,7 +26,7 @@ export abstract class ConsoleLine implements iConsoleLine {
   }
 }
 
-export class HeadingLine extends ConsoleLine implements iConsoleLine {
+export class HeadingLine extends ConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [255, 255, 0];
@@ -46,7 +46,7 @@ export class HeadingLine extends ConsoleLine implements iConsoleLine {
   }
 }
 
-export class SubheadingLine extends ConsoleLine implements iConsoleLine {
+export class SubheadingLine extends ConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [255, 255, 0];
@@ -59,7 +59,7 @@ export class SubheadingLine extends ConsoleLine implements iConsoleLine {
   }
 }
 
-export class SectionHeadingLine extends ConsoleLine implements iConsoleLine {
+export class SectionHeadingLine extends ConsoleLine {
   constructor(message: string) {
     super(message);
     this.fg = [255, 255, 255];
@@ -72,7 +72,7 @@ export class SectionHeadingLine extends ConsoleLine implements iConsoleLine {
   }
 }
 
-export class CustomLine extends ConsoleLine implements iConsoleLine {
+export class CustomLine extends ConsoleLine {
   constructor(message: string, fg: [number, number, number]) {
     super(message);
     this.fg = fg;
@@ -80,14 +80,14 @@ export class CustomLine extends ConsoleLine implements iConsoleLine {
   }
 }
 
-export class LineBreak extends ConsoleLine implements iConsoleLine {
+export class LineBreak extends ConsoleLine {
   constructor() {
     super(" ");
     this.type = LineType.decoration;
   }
 }
 
-export class CommentLine extends ConsoleLine implements iConsoleLine {
+export class CommentLine extends ConsoleLine {
   public textPrefix: string = "»";
 
   constructor(message: string) {
@@ -109,7 +109,7 @@ export class CommentLine extends ConsoleLine implements iConsoleLine {
   }
 }
 
-export class PassLine extends ConsoleLine implements iConsoleLine {
+export class PassLine extends ConsoleLine {
   public textPrefix: string = "✔";
 
   constructor(message: string) {
@@ -126,7 +126,7 @@ export class PassLine extends ConsoleLine implements iConsoleLine {
   }
 }
 
-export class ActionCompletedLine extends PassLine implements iConsoleLine {
+export class ActionCompletedLine extends PassLine {
   protected _verb: string;
   protected _noun: string;
 
@@ -146,7 +146,7 @@ export class ActionCompletedLine extends PassLine implements iConsoleLine {
   }
 }
 
-export class FailLine extends ConsoleLine implements iConsoleLine {
+export class FailLine extends ConsoleLine {
   public textPrefix: string = "✕";
 
   constructor(message: string) {
@@ -163,7 +163,7 @@ export class FailLine extends ConsoleLine implements iConsoleLine {
   }
 }
 
-export class ActionFailedLine extends FailLine implements iConsoleLine {
+export class ActionFailedLine extends FailLine {
   protected _verb: string;
   protected _noun: string;
 
@@ -183,7 +183,7 @@ export class ActionFailedLine extends FailLine implements iConsoleLine {
   }
 }
 
-export class OptionalFailLine extends ConsoleLine implements iConsoleLine {
+export class OptionalFailLine extends ConsoleLine {
   public textPrefix: string = "✕";
 
   constructor(message: string) {
@@ -201,7 +201,7 @@ export class OptionalFailLine extends ConsoleLine implements iConsoleLine {
   }
 }
 
-export class WarningLine extends ConsoleLine implements iConsoleLine {
+export class WarningLine extends ConsoleLine {
   public textPrefix: string = "!";
 
   constructor(message: string) {
@@ -218,7 +218,7 @@ export class WarningLine extends ConsoleLine implements iConsoleLine {
   }
 }
 
-export class DetailLine extends ConsoleLine implements iConsoleLine {
+export class DetailLine extends ConsoleLine {
   public textPrefix: string = "…";
 
   constructor(message: string) {
@@ -242,7 +242,7 @@ export class ErrorActualValueLine extends DetailLine {
   }
 }
 
-export class SourceCodeBlock extends ConsoleLine implements iConsoleLine {
+export class SourceCodeBlock extends ConsoleLine {
   public textPrefix: string = "         ";
 
   protected highlight: string | null = null;

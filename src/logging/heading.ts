@@ -1,6 +1,10 @@
 import { LogItem } from "./log-item";
-import { SubheadingLine, SectionHeadingLine } from "./console-line";
-import { iConsoleLine, LineType } from "../interfaces/iconsole-log";
+import {
+  SubheadingLine,
+  SectionHeadingLine,
+  ConsoleLine,
+} from "./console-line";
+import { LineType } from "../interfaces/line-type";
 
 export class LogSuiteHeading extends LogItem {
   public readonly type: LineType = LineType.h1;
@@ -21,7 +25,7 @@ export class LogScenarioHeading extends LogSuiteHeading {
         `;
   }
 
-  public toConsole(): iConsoleLine[] {
+  public toConsole(): ConsoleLine[] {
     return [new SubheadingLine(this.message)];
   }
 }
@@ -36,7 +40,7 @@ export class LogScenarioSubHeading extends LogSuiteHeading {
         `;
   }
 
-  public toConsole(): iConsoleLine[] {
+  public toConsole(): ConsoleLine[] {
     return [new SectionHeadingLine(this.message)];
   }
 }

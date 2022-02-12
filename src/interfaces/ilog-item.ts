@@ -1,4 +1,5 @@
-import { iConsoleLine, LineType } from "./iconsole-log";
+import { ConsoleLine } from "../logging/console-line";
+import { LineType } from "./line-type";
 
 export interface iLogItem {
   type: LineType;
@@ -8,7 +9,7 @@ export interface iLogItem {
   failed: boolean;
   isOptional: boolean;
   timestamp: Date;
-  toConsole(): iConsoleLine[];
+  toConsole(): ConsoleLine[];
   toJson(): any;
   toCsv(): string;
   toPsv(): string;

@@ -1,6 +1,6 @@
 import { LogItem } from "./log-item";
-import { CommentLine } from "./console-line";
-import { iConsoleLine, LineType } from "../interfaces/iconsole-log";
+import { CommentLine, ConsoleLine } from "./console-line";
+import { LineType } from "../interfaces/line-type";
 
 export class LogComment extends LogItem {
   public readonly type: LineType = LineType.comment;
@@ -14,7 +14,7 @@ export class LogComment extends LogItem {
         `;
   }
 
-  public toConsole(): iConsoleLine[] {
+  public toConsole(): ConsoleLine[] {
     return [new CommentLine(this.message)];
   }
 }

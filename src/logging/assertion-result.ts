@@ -8,16 +8,17 @@ import {
   ActionCompletedLine,
   ActionFailedLine,
   ErrorActualValueLine,
+  ConsoleLine,
 } from "./console-line";
 import { LogItem } from "./log-item";
 import { isNullOrUndefined, toType } from "../util";
-import { iConsoleLine, LineType } from "../interfaces/iconsole-log";
+import { LineType } from "../interfaces/line-type";
 
 export abstract class AssertionResult extends LogItem implements iLogItem {
   public abstract readonly type: LineType;
   public abstract className: string;
 
-  public abstract toConsole(): iConsoleLine[];
+  public abstract toConsole(): ConsoleLine[];
 
   protected _rawDetails: any;
   protected _sourceCode: any = null;
@@ -36,7 +37,7 @@ export class AssertionPass extends AssertionResult implements iLogItem {
     super(message);
   }
 
-  public toConsole(): iConsoleLine[] {
+  public toConsole(): ConsoleLine[] {
     return [new PassLine(this.message)];
   }
 }
@@ -52,7 +53,7 @@ export class AssertionActionCompleted extends AssertionPass {
     this._noun = noun;
   }
 
-  public toConsole(): iConsoleLine[] {
+  public toConsole(): ConsoleLine[] {
     return [new ActionCompletedLine(this._verb, this._noun)];
   }
 }
@@ -108,8 +109,8 @@ export class AssertionFail extends AssertionResult implements iLogItem {
     return [String(details)];
   }
 
-  public toConsole(): iConsoleLine[] {
-    const lines: iConsoleLine[] = [new FailLine(this.message)];
+  public toConsole(): ConsoleLine[] {
+    const lines: ConsoleLine[] = [new FailLine(this.message)];
     this.detailsMessage
       .filter((str) => str.length > 0)
       .forEach((details) => {
@@ -139,7 +140,7 @@ export class AssertionFailOptional extends AssertionFail implements iLogItem {
     return true;
   }
 
-  public toConsole(): iConsoleLine[] {
+  public toConsole(): ConsoleLine[] {
     return [new OptionalFailLine(this.message)];
   }
 }
@@ -152,7 +153,7 @@ export class AssertionFailWarning extends AssertionFail implements iLogItem {
     return true;
   }
 
-  public toConsole(): iConsoleLine[] {
+  public toConsole(): ConsoleLine[] {
     return [new WarningLine(this.message)];
   }
 }
@@ -168,7 +169,7 @@ export class AssertionActionFailed extends AssertionPass implements iLogItem {
     this._noun = noun;
   }
 
-  public toConsole(): iConsoleLine[] {
+  public toConsole(): ConsoleLine[] {
     return [new ActionFailedLine(this._verb, this._noun)];
   }
 }

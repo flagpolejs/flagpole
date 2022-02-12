@@ -13,12 +13,3 @@ export enum LineType {
   debugInfo = "debugInfo",
   summaryData = "summaryData",
 }
-
-export interface iConsoleLine {
-  timestamp: Date;
-  fg: [number, number, number];
-  message: string;
-  type: LineType;
-  toConsoleString(): string;
-  toString(): string;
-}

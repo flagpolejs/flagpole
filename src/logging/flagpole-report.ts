@@ -4,13 +4,13 @@ import {
   LineBreak,
   PassLine,
   FailLine,
+  ConsoleLine,
 } from "./console-line";
 import { LogComment } from "./comment";
 import { iSuite } from "../interfaces/isuite";
 import { asyncForEach } from "../util";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { lineToVerbosity } from "./verbosity";
-import { iConsoleLine } from "../interfaces/iconsole-log";
 import { iLogItem } from "../interfaces/ilog-item";
 import { iScenario } from "..";
 
@@ -24,8 +24,8 @@ export class FlagpoleReport {
   /**
    * Get ASCII formatted string with colors from output lines, ready to go to console
    */
-  public async toConsole(): Promise<iConsoleLine[]> {
-    let lines: iConsoleLine[] = [];
+  public async toConsole(): Promise<ConsoleLine[]> {
+    let lines: ConsoleLine[] = [];
     lines.push(new HeadingLine(this.suite.title));
     lines.push(new CommentLine(`Base URL: ${this.suite.baseUrl}`));
     lines.push(
@@ -307,7 +307,7 @@ export class FlagpoleReport {
         return this.toXML();
       // Text
       case FlagpoleExecution.global.isTextOutput:
-        (await this.toConsole()).forEach((line: iConsoleLine) => {
+        (await this.toConsole()).forEach((line: ConsoleLine) => {
           if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
             out += line.toString() + "\n";
           }
@@ -317,7 +317,7 @@ export class FlagpoleReport {
         return this.toCI();
       // Console
       default:
-        (await this.toConsole()).forEach((line: iConsoleLine) => {
+        (await this.toConsole()).forEach((line: ConsoleLine) => {
           if (lineToVerbosity[line.type] <= FlagpoleExecution.global.volume) {
             out += line.toConsoleString() + "\n";
           }
