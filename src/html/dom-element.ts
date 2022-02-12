@@ -1,6 +1,5 @@
 import { Value } from "../value";
 import { iValue } from "../interfaces/ivalue";
-import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { iScenario } from "../interfaces/iscenario";
 import { Link } from "../link";
 import { getMessageAndCallbackFromOverloading } from "../util";
@@ -11,11 +10,12 @@ import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { ClassConstructor } from "../interfaces/generic-types";
 import { iMessageAndCallback } from "../interfaces/imessage-and-callback";
 import { ValueOptions } from "../interfaces/value-options";
+import { AssertionContext } from "..";
 
 export abstract class DOMElement extends Value {
   protected constructor(
     input: any,
-    context: iAssertionContext,
+    context: AssertionContext,
     opts: ValueOptions
   ) {
     super(input, context, { name: "DOM Element", ...opts });

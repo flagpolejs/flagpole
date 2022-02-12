@@ -1,5 +1,5 @@
-import { iAssertionContext } from "./iassertioncontext";
+import { AssertionContext } from "..";
 
 export interface ContextProvider {
-  context: iAssertionContext;
+  context: AssertionContext;
 }

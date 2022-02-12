@@ -10,7 +10,6 @@ import { PointerMove } from "./interfaces/pointer";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
 import { KeyValue, OptionalXY } from "./interfaces/generic-types";
 import { ScreenProperties } from "./interfaces/screen-properties";
-import { iAssertionContext } from "./interfaces/iassertioncontext";
 import { iScenario } from "./interfaces/iscenario";
 import { iResponse } from "./interfaces/iresponse";
 import { HttpResponse } from "./http/http-response";
@@ -27,7 +26,7 @@ export abstract class ProtoResponse implements iResponse {
     this._httpResponse = res;
   }
 
-  public get context(): iAssertionContext {
+  public get context(): AssertionContext {
     return new AssertionContext(this.scenario, this);
   }
 

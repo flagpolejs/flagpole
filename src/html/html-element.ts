@@ -1,6 +1,5 @@
 import { DOMElement } from "./dom-element";
 import { Link } from "../link";
-import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { asyncForEach } from "../util";
 import { getFindParams, filterFind } from "../helpers";
 import { ValuePromise } from "../value-promise";
@@ -10,13 +9,14 @@ import { KeyValue } from "../interfaces/generic-types";
 import { HttpMethodVerb } from "../interfaces/http";
 import { iValue } from "../interfaces/ivalue";
 import { ValueOptions } from "../interfaces/value-options";
+import { AssertionContext } from "..";
 
 let $: cheerio.Root;
 
 export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
   public static async create(
     input: any,
-    context: iAssertionContext,
+    context: AssertionContext,
     opts: ValueOptions
   ): Promise<HTMLElement<any>> {
     const element = new HTMLElement(input, context, opts);
@@ -32,7 +32,7 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
 
   protected constructor(
     input: T,
-    context: iAssertionContext,
+    context: AssertionContext,
     opts: ValueOptions
   ) {
     super(input, context, {

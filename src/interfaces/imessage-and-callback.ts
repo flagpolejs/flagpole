@@ -1,9 +1,9 @@
-import { iNextCallback } from "./iassertioncontext";
 import { iScenario } from "./iscenario";
+import { NextCallback } from "./next-callback";
 
 export interface iMessageAndCallback {
   isSubScenario: boolean;
   message: string;
-  callback: iNextCallback;
+  callback: NextCallback;
   scenario?: iScenario;
 }

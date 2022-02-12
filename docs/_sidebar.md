@@ -10,7 +10,7 @@
 - Classes
   - [AppiumResponse](appiumresponse.md)
   - [iAssertion](assertion.md)
-  - [iAssertionContext](assertion-context.md)
+  - [AssertionContext](assertion-context.md)
   - [iResponse](iresponse.md)
   - [iScenario](scenario.md)
   - [iSuite](suite.md)

@@ -11,7 +11,7 @@ import AjvJsonSchema, { Schema, ValidateFunction } from "ajv";
 import AjvJtd from "ajv/dist/jtd";
 import { AjvErrors, AssertSchemaType } from "./interfaces/schema";
 import { iMessageAndCallback } from "./interfaces/imessage-and-callback";
-import { iNextCallback } from "./interfaces/iassertioncontext";
+import { NextCallback } from "./interfaces/next-callback";
 
 export const toArray = <T>(value: any): T[] =>
   Array.isArray(value) ? value : [value];
@@ -315,7 +315,7 @@ export function getMessageAndCallbackFromOverloading(
   defaultMessage: string = "Untitled"
 ): iMessageAndCallback {
   const message: string = typeof a == "string" ? a : defaultMessage;
-  const callback: iNextCallback = (() => {
+  const callback: NextCallback = (() => {
     // Handle overloading
     if (typeof b == "function") {
       return b;

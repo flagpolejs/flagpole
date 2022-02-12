@@ -12,7 +12,7 @@ The string value of the raw HTTP response body.
 context.assert(context.response.body).contains("flosports");
 ```
 
-### context: iAssertionContext
+### context: AssertionContext
 
 Get the assertion context for this response.
 

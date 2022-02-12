@@ -32,7 +32,6 @@ import { ScreenshotOpts } from "../interfaces/screenshot";
 import { GestureOpts, GestureType } from "../interfaces/gesture";
 import { PointerMove } from "../interfaces/pointer";
 import { ScreenProperties } from "../interfaces/screen-properties";
-import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { HttpRequest, iResponse, iScenario, iValue, Value } from "..";
 import { ValueOptions } from "../interfaces/value-options";
 import { createStandardValue } from "../helpers/value-factory";
@@ -63,13 +62,16 @@ const getParamsFromExists = (
   };
 };
 
-export class AssertionContext implements iAssertionContext {
+export class AssertionContext<
+  ScenarioType extends iScenario = iScenario,
+  ResponseType extends iResponse = iResponse
+> {
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
 
   constructor(
-    public readonly scenario: iScenario,
-    public readonly response: iResponse
+    public readonly scenario: ScenarioType,
+    public readonly response: ResponseType
   ) {}
 
   /**
@@ -598,7 +600,7 @@ export class AssertionContext implements iAssertionContext {
     return this.scenario.get<T>(aliasName);
   }
 
-  public async scrollTo(point: OptionalXY): Promise<iAssertionContext> {
+  public async scrollTo(point: OptionalXY): Promise<AssertionContext> {
     await this.response.scrollTo(point);
     return this;
   }

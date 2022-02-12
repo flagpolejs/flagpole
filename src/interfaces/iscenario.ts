@@ -13,11 +13,11 @@ import { ServerOptions } from "https";
 import { ScenarioDisposition, ScenarioStatusEvent } from "./enums";
 import { ResponsePipe } from "./response-pipe";
 import { iAssertionResult } from "./iassertion-result";
-import { iAssertionContext, iNextCallback } from "./iassertioncontext";
 import { iSuite } from "./isuite";
 import { HttpRequest } from "../http/http-request";
 import { iResponse } from "../interfaces/iresponse";
 import { Adapter } from "../adapter";
+import { NextCallback } from "./next-callback";
 import { AssertionContext } from "..";
 
 interface ValueLink {
@@ -70,7 +70,7 @@ export interface ScenarioInitOptions<T extends iScenario> {
   basicAuth?: HttpAuth;
   digestAuth?: HttpAuth;
   maxRedirects?: number;
-  next?: iNextCallback | { [title: string]: iNextCallback } | iNextCallback[];
+  next?: NextCallback | { [title: string]: NextCallback } | NextCallback[];
   set?: KeyValue;
   statusCode?: number;
   maxLoadTime?: number;
@@ -84,7 +84,7 @@ export interface iScenario {
   type: ScenarioConstructor;
   typeName: string;
   suite: iSuite;
-  context: iAssertionContext<iScenario>;
+  context: AssertionContext<iScenario>;
   opts: KeyValue;
   totalDuration: number | null;
   executionDuration: number | null;
@@ -110,7 +110,7 @@ export interface iScenario {
   disposition: ScenarioDisposition;
   nextCallbacks: Array<{
     message: string;
-    callback: iNextCallback;
+    callback: NextCallback;
   }>;
   push(aliasName: string, value: any): this;
   set(aliasName: string, value: any): this;
@@ -140,13 +140,13 @@ export interface iScenario {
   ignore(assertions?: boolean | Function): this;
   open(url: string, opts?: HttpRequestOptions): this;
   open(link: ValueLink, opts?: HttpRequestOptions): this;
-  next(callback: iNextCallback): this;
-  next(...callbacks: iNextCallback[]): this;
-  next(message: string, callback: iNextCallback): this;
+  next(callback: NextCallback): this;
+  next(...callbacks: NextCallback[]): this;
+  next(message: string, callback: NextCallback): this;
   next(responseValues: { [key: string]: any }): this;
   next(message: string, responseValues: { [key: string]: any }): this;
-  nextPrepend(callback: iNextCallback): this;
-  nextPrepend(message: string, callback: iNextCallback): this;
+  nextPrepend(callback: NextCallback): this;
+  nextPrepend(message: string, callback: NextCallback): this;
   skip(message?: string): Promise<this>;
   abort(message?: string): Promise<this>;
   cancel(message?: string): Promise<this>;

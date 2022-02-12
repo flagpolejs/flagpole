@@ -1,16 +1,15 @@
-import { HttpRequest, HttpResponse } from "..";
+import { AssertionContext, HttpRequest, HttpResponse } from "..";
 import { ValuePromise } from "../value-promise";
 import { FindAllOptions, FindOptions } from "./find-options";
 import { JsFunction, KeyValue, OptionalXY } from "./generic-types";
 import { GestureOpts, GestureType } from "./gesture";
-import { iAssertionContext } from "./iassertioncontext";
 import { iValue } from "./ivalue";
 import { PointerMove } from "./pointer";
 import { ScreenProperties } from "./screen-properties";
 import { ScreenshotOpts } from "./screenshot";
 
 export interface iResponse {
-  context: iAssertionContext;
+  context: AssertionContext;
   statusCode: iValue<number>;
   statusMessage: iValue<string>;
   body: iValue<string>;

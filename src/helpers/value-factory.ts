@@ -1,15 +1,15 @@
-import { iAssertionContext } from "../interfaces/iassertioncontext";
 import { ValuePromise } from "../value-promise";
 import { iValue } from "../interfaces/ivalue";
 import { ValueOptions } from "../interfaces/value-options";
 import { Value } from "../value";
+import { AssertionContext } from "..";
 
 interface ValueConstructor<DataType, Wrapper extends iValue<DataType>> {
-  new (data: DataType, context: iAssertionContext, opts: ValueOptions): Wrapper;
+  new (data: DataType, context: AssertionContext, opts: ValueOptions): Wrapper;
 }
 
 export class StandardValueFactory {
-  constructor(private context: iAssertionContext) {}
+  constructor(private context: AssertionContext) {}
 
   public create<DataType>(data: DataType, name: string): Value<DataType>;
   public create<DataType>(data: DataType, opts?: ValueOptions): Value<DataType>;
@@ -46,7 +46,7 @@ export class StandardValueFactory {
 export const createValue = <Wrapper extends iValue<DataType>, DataType>(
   wrapperClass: ValueConstructor<DataType, Wrapper>,
   data: DataType,
-  context: iAssertionContext,
+  context: AssertionContext,
   opts: ValueOptions
 ): Wrapper => {
   return new wrapperClass(data, context, opts);
@@ -54,14 +54,14 @@ export const createValue = <Wrapper extends iValue<DataType>, DataType>(
 
 export const createStandardValue = <T>(
   data: T,
-  context: iAssertionContext,
+  context: AssertionContext,
   opts: ValueOptions
 ) => {
   return createValue(Value, data, context, opts);
 };
 
 export const createNullValue = (
-  context: iAssertionContext,
+  context: AssertionContext,
   opts: ValueOptions
 ) => {
   return createValue(Value, null, context, opts);
@@ -69,7 +69,7 @@ export const createNullValue = (
 
 export const createValuePromise = <T>(
   data: T,
-  context: iAssertionContext,
+  context: AssertionContext,
   opts: ValueOptions
 ): ValuePromise<T> => {
   return ValuePromise.wrap(createStandardValue(data, context, opts));
@@ -77,7 +77,7 @@ export const createValuePromise = <T>(
 
 export const awaitValuePromise = <T>(
   data: Promise<T>,
-  context: iAssertionContext,
+  context: AssertionContext,
   opts: ValueOptions
 ): ValuePromise<T> => {
   return ValuePromise.execute(async () =>

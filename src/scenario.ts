@@ -48,15 +48,12 @@ import {
   ScenarioCallbackAndMessage,
   ScenarioStatusCallback,
 } from "./interfaces/iscenario";
-import {
-  iAssertionContext,
-  iNextCallback,
-} from "./interfaces/iassertioncontext";
 import { iResponse } from "./interfaces/iresponse";
 import { iValue } from "./interfaces/ivalue";
 import { AssertionContext } from ".";
 import { Adapter } from "./adapter";
 import { LocalAdapter } from "./adapter.local";
+import { NextCallback } from "./interfaces/next-callback";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -98,7 +95,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
     });
   }
 
-  public get context(): iAssertionContext {
+  public get context(): AssertionContext {
     return new AssertionContext(this, this.response);
   }
 
@@ -283,7 +280,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
 
   public get nextCallbacks(): Array<{
     message: string;
-    callback: iNextCallback;
+    callback: NextCallback;
   }> {
     return this._nextCallbacks.map((callback, i) => {
       return {
@@ -295,7 +292,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
 
   protected _log: LogCollection = new LogCollection();
   protected _subscribers: ScenarioStatusCallback[] = [];
-  protected _nextCallbacks: iNextCallback[] = [];
+  protected _nextCallbacks: NextCallback[] = [];
   protected _nextMessages: Array<string | null> = [];
   protected _beforeCallbacks: ScenarioCallbackAndMessage[] = [];
   protected _afterCallbacks: ScenarioCallbackAndMessage[] = [];
@@ -596,7 +593,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
    * @param milliseconds
    */
   public pause(milliseconds: number): this {
-    this.next((context: iAssertionContext) => {
+    this.next((context: AssertionContext) => {
       context.comment(`Pause for ${milliseconds}ms`);
       return context.pause(milliseconds);
     });
@@ -635,13 +632,13 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
   /**
    * Set the callback for the assertions to run after the request has a response
    */
-  public next(callback: iNextCallback): this;
-  public next(message: string, callback: iNextCallback): this;
-  public next(...callbacks: iNextCallback[]): this;
+  public next(callback: NextCallback): this;
+  public next(message: string, callback: NextCallback): this;
+  public next(...callbacks: NextCallback[]): this;
   public next(responseValues: { [key: string]: any }): this;
   public next(
-    a: iNextCallback | iNextCallback[] | string | { [key: string]: any },
-    b?: iNextCallback | { [key: string]: any }
+    a: NextCallback | NextCallback[] | string | { [key: string]: any },
+    b?: NextCallback | { [key: string]: any }
   ): this {
     if (Array.isArray(a)) {
       a.forEach((callback) => {
@@ -656,9 +653,9 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
   /**
    * Insert this as the first next
    */
-  public nextPrepend(message: string, callback: iNextCallback): this;
-  public nextPrepend(callback: iNextCallback): this;
-  public nextPrepend(a: iNextCallback | string, b?: iNextCallback): this {
+  public nextPrepend(message: string, callback: NextCallback): this;
+  public nextPrepend(callback: NextCallback): this;
+  public nextPrepend(a: NextCallback | string, b?: NextCallback): this {
     return this._next(a, b, false);
   }
 
@@ -1279,7 +1276,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
     };
   }
 
-  protected _expect(responseValues: { [key: string]: any }): iNextCallback {
+  protected _expect(responseValues: { [key: string]: any }): NextCallback {
     return async (context) => {
       const json = new JsonDoc(context.response.serialize());
       const paths = Object.keys(responseValues);
@@ -1333,13 +1330,11 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
 
   @beforeScenarioFinished
   protected _next(
-    a: iNextCallback | string | { [key: string]: any },
-    b?: iNextCallback | { [key: string]: any } | null,
+    a: NextCallback | string | { [key: string]: any },
+    b?: NextCallback | { [key: string]: any } | null,
     append: boolean = true
   ): this {
-    const callback: iNextCallback = <iNextCallback>(
-      this._getCallbackOverload(a, b)
-    );
+    const callback = <NextCallback>this._getCallbackOverload(a, b);
     const message: string | null = this._getMessageOverload(a);
     if (append) {
       this._nextCallbacks.push(callback);

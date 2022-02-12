@@ -32,17 +32,17 @@ import { JsFunction, KeyValue } from "./interfaces/generic-types";
 import { iBounds } from "./interfaces/ibounds";
 import { HttpRequestOptions } from "./interfaces/http";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
-import { iAssertionContext } from "./interfaces/iassertioncontext";
 import { iScenario, ScenarioConstructor } from "./interfaces/iscenario";
 import { StandardValueFactory } from "./helpers/value-factory";
 import { ValueOptions } from "./interfaces/value-options";
+import { AssertionContext } from ".";
 
 export class Value<InputType = any> implements iValue<InputType> {
   protected valueFactory = new StandardValueFactory(this.context);
 
   constructor(
     public readonly $: InputType,
-    public readonly context: iAssertionContext,
+    public readonly context: AssertionContext,
     protected opts: ValueOptions
   ) {}
 
