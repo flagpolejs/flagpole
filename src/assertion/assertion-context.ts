@@ -26,7 +26,6 @@ import { getFindParams, getFindName, wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { IteratorBoolCallback } from "../interfaces/iterator-callbacks";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
-import { iAssertionResult } from "../interfaces/iassertion-result";
 import { JsFunction, KeyValue, OptionalXY } from "../interfaces/generic-types";
 import { ScreenshotOpts } from "../interfaces/screenshot";
 import { GestureOpts, GestureType } from "../interfaces/gesture";
@@ -35,6 +34,7 @@ import { ScreenProperties } from "../interfaces/screen-properties";
 import { HttpRequest, iResponse, iScenario, iValue, Value } from "..";
 import { ValueOptions } from "../interfaces/value-options";
 import { createStandardValue } from "../helpers/value-factory";
+import { AssertionResult } from "../logging/assertion-result";
 
 const getParamsFromExists = (
   a: string,
@@ -101,8 +101,8 @@ export class AssertionContext<
     return incompleteAssertions;
   }
 
-  public get assertionsResolved(): Promise<(iAssertionResult | null)[]> {
-    const promises: Promise<iAssertionResult | null>[] = [];
+  public get assertionsResolved(): Promise<(AssertionResult | null)[]> {
+    const promises: Promise<AssertionResult | null>[] = [];
     this._assertions.forEach((assertion) => {
       if (assertion.assertionMade) {
         promises.push(assertion.result);
@@ -499,7 +499,7 @@ export class AssertionContext<
     errorDetails?: any,
     sourceCode?: any,
     highlightText?: any
-  ): iAssertionResult {
+  ): AssertionResult {
     const result = new AssertionFail(
       message,
       errorDetails,
@@ -513,13 +513,13 @@ export class AssertionContext<
   public logOptionalFailure(
     message: string,
     errorDetails?: any
-  ): iAssertionResult {
+  ): AssertionResult {
     const result = new AssertionFailOptional(message, errorDetails);
     this.scenario.result(result);
     return result;
   }
 
-  public logPassing(message: string): iAssertionResult {
+  public logPassing(message: string): AssertionResult {
     const result = new AssertionPass(message);
     this.scenario.result(result);
     return result;

@@ -28,15 +28,12 @@ import {
   IteratorBoolCallback,
   IteratorCallback,
 } from "../interfaces/iterator-callbacks";
-import { iAssertion } from "../interfaces/iassertion";
-import { iAssertionIs } from "../interfaces/iassertion-is";
 import { iValue } from "../interfaces/ivalue";
-import { iAssertionResult } from "../interfaces/iassertion-result";
 import { CompareCallback, JsFunction } from "../interfaces/generic-types";
 import { AssertSchemaType } from "../interfaces/schema";
-import { AssertionContext } from "..";
+import { AssertionContext, AssertionResult } from "..";
 
-export class Assertion implements iAssertion {
+export class Assertion {
   public get value(): any {
     return this._getCompareValue(this._input);
   }
@@ -71,28 +68,28 @@ export class Assertion implements iAssertion {
       : String(name);
   }
 
-  public get is(): iAssertionIs {
+  public get is(): AssertionIs {
     return new AssertionIs(this);
   }
 
   /**
    * Creates a new assertion with the same value and settings, just no result
    */
-  public get and(): iAssertion {
+  public get and(): Assertion {
     return this._clone(this._input, `&& ${this._getMessage()}`);
   }
 
   /**
    * Creates a new assertion with the type of this one
    */
-  public get type(): iAssertion {
+  public get type(): Assertion {
     return this._clone(toType(this.value), `Type of ${this.subject}`);
   }
 
   /**
    * Creates a new assertion with the lengh of this one
    */
-  public get length(): iAssertion {
+  public get length(): Assertion {
     const length: number = (() => {
       const thisValue = this.value;
       return thisValue && thisValue.length ? thisValue.length : 0;
@@ -100,14 +97,14 @@ export class Assertion implements iAssertion {
     return this._clone(length, `Length of ${this.subject}`);
   }
 
-  public get trim(): iAssertion {
+  public get trim(): Assertion {
     return this._clone(this.text.trim(), `Trim of ${this.subject}`);
   }
 
   /**
    * Creates a new assertion with the keys of the object as the value
    */
-  public get keys(): iAssertion {
+  public get keys(): Assertion {
     const keys: string[] = (() => {
       const thisValue: any = this.value;
       return isNullOrUndefined(thisValue) ? [] : Object.keys(thisValue);
@@ -118,7 +115,7 @@ export class Assertion implements iAssertion {
   /**
    * Creates a new assertion with the values of the object as the value
    */
-  public get values(): iAssertion {
+  public get values(): Assertion {
     const values: any[] = (() => {
       const thisValue = this.value;
       return isNullOrUndefined(thisValue) ? [] : Object.values(thisValue);
@@ -129,7 +126,7 @@ export class Assertion implements iAssertion {
   /**
    * Flips the expected assertion evaluation
    */
-  public get not(): iAssertion {
+  public get not(): Assertion {
     this._not = true;
     return this;
   }
@@ -137,12 +134,12 @@ export class Assertion implements iAssertion {
   /**
    * Marks this assertion optional if it fails
    */
-  public get optional(): iAssertion {
+  public get optional(): Assertion {
     this._optional = true;
     return this;
   }
 
-  public get result(): Promise<iAssertionResult | null> {
+  public get result(): Promise<AssertionResult | null> {
     return this._finishedPromise;
   }
 
@@ -177,8 +174,8 @@ export class Assertion implements iAssertion {
   private _message: string | null;
   private _not: boolean = false;
   private _optional: boolean = false;
-  private _result: iAssertionResult | null = null;
-  private _finishedPromise: Promise<iAssertionResult | null>;
+  private _result: AssertionResult | null = null;
+  private _finishedPromise: Promise<AssertionResult | null>;
   private _finishedResolver: Function = () => {};
   private _statement: boolean | null = null;
   private _assertionMade: boolean = false;
@@ -205,14 +202,14 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public async visible(): Promise<iAssertion> {
+  public async visible(): Promise<Assertion> {
     const is = await this._is("isVisible");
     this.setDefaultNotMessage(`${this.subject} is not visible`);
     this.setDefaultMessage(`${this.subject} is visible`);
     return this.execute(is, is);
   }
 
-  public async hidden(): Promise<iAssertion> {
+  public async hidden(): Promise<Assertion> {
     const is = await this._is("isHidden");
     this.setDefaultMessages(
       `${this.subject} is not hidden`,
@@ -221,7 +218,7 @@ export class Assertion implements iAssertion {
     return this.execute(is, is);
   }
 
-  public async hasValue(value: any): Promise<iAssertion> {
+  public async hasValue(value: any): Promise<Assertion> {
     const hasValue = await this._hasValue("hasValue", value);
     const thatValue = this._getCompareValue(value);
     this.setDefaultMessages(
@@ -231,7 +228,7 @@ export class Assertion implements iAssertion {
     return this.execute(hasValue, thatValue);
   }
 
-  public async hasProperty(key: string, value?: string): Promise<iAssertion> {
+  public async hasProperty(key: string, value?: string): Promise<Assertion> {
     const hasKey = await this._hasKeyValue("hasProperty", key, value);
     this.setDefaultMessages(
       `${this.subject} does not have property ${key}`,
@@ -240,7 +237,7 @@ export class Assertion implements iAssertion {
     return this.execute(hasKey, hasKey);
   }
 
-  public async hasAttribute(key: string, value?: string): Promise<iAssertion> {
+  public async hasAttribute(key: string, value?: string): Promise<Assertion> {
     const hasKey = await this._hasKeyValue("hasAttribute", key, value);
     this.setDefaultMessages(
       `${this.subject} does not have attribute ${key}`,
@@ -249,7 +246,7 @@ export class Assertion implements iAssertion {
     return this.execute(hasKey, hasKey);
   }
 
-  public async hasClassName(key: string, value?: string): Promise<iAssertion> {
+  public async hasClassName(key: string, value?: string): Promise<Assertion> {
     const hasKey = await this._hasKeyValue("hasClassName", key, value);
     this.setDefaultMessages(
       `${this.subject} does not have class named ${key}`,
@@ -258,7 +255,7 @@ export class Assertion implements iAssertion {
     return this.execute(hasKey, hasKey);
   }
 
-  public async hasData(key: string, value?: string): Promise<iAssertion> {
+  public async hasData(key: string, value?: string): Promise<Assertion> {
     const hasKey = await this._hasKeyValue("hasData", key, value);
     this.setDefaultMessages(
       `${this.subject} does not have data ${key}`,
@@ -267,7 +264,7 @@ export class Assertion implements iAssertion {
     return this.execute(hasKey, hasKey);
   }
 
-  public async hasText(text: string): Promise<iAssertion> {
+  public async hasText(text: string): Promise<Assertion> {
     const hasValue = await this._hasValue("hasText", text);
     this.setDefaultMessages(
       `${this.subject} does not have text "${text}"`,
@@ -276,7 +273,7 @@ export class Assertion implements iAssertion {
     return this.execute(hasValue, hasValue);
   }
 
-  public async hasTag(tagName?: string): Promise<iAssertion> {
+  public async hasTag(tagName?: string): Promise<Assertion> {
     const hasValue = await this._hasValue("hasTag", tagName);
     tagName
       ? this.setDefaultMessages(
@@ -290,7 +287,7 @@ export class Assertion implements iAssertion {
     return this.execute(hasValue, this._input.tagName || "Not a tag");
   }
 
-  public exactly(value: any): iAssertion {
+  public exactly(value: any): Assertion {
     const { thisValue, thatValue } = this._getValues(value);
     const thisType = toType(thisValue);
     const thatType = toType(thatValue);
@@ -307,7 +304,7 @@ export class Assertion implements iAssertion {
     return this.execute(thisValue === thatValue, thisValue, null);
   }
 
-  public equals(value: any): iAssertion {
+  public equals(value: any): Assertion {
     const { thisValue, thatValue } = this._getValues(value);
     const thisType = toType(thisValue);
     const thatType = toType(thatValue);
@@ -337,7 +334,7 @@ export class Assertion implements iAssertion {
     return this.execute(thisValue == thatValue, thisValue, null, thatValue);
   }
 
-  public like(value: any): iAssertion {
+  public like(value: any): Assertion {
     const thisValue: any = this.text.toLowerCase().trim();
     const thatValue: any = String(this._getCompareValue(value))
       .toLowerCase()
@@ -358,7 +355,7 @@ export class Assertion implements iAssertion {
     return this.execute(thisValue == thatValue, thisValue);
   }
 
-  public greaterThan(value: any): iAssertion {
+  public greaterThan(value: any): Assertion {
     const { thisValue, thatValue } = this._getValues(value);
     this.setDefaultMessages(
       `${this.subject} is not greater than ${thatValue}`,
@@ -372,7 +369,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public greaterThanOrEquals(value: any): iAssertion {
+  public greaterThanOrEquals(value: any): Assertion {
     const { thisValue, thatValue } = this._getValues(value);
     this.setDefaultMessages(
       `${this.subject} is not greater than or equal to ${thatValue}`,
@@ -386,7 +383,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public lessThan(value: any): iAssertion {
+  public lessThan(value: any): Assertion {
     const { thisValue, thatValue } = this._getValues(value);
     this.setDefaultMessages(
       `${this.subject} is not less than ${thatValue}`,
@@ -400,7 +397,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public lessThanOrEquals(value: any): iAssertion {
+  public lessThanOrEquals(value: any): Assertion {
     const { thisValue, thatValue } = this._getValues(value);
     this.setDefaultMessages(
       `${this.subject} is not less than or equal to ${thatValue}`,
@@ -414,7 +411,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public between(min: any, max: any): iAssertion {
+  public between(min: any, max: any): Assertion {
     const thisValue = this.value;
     const thatMin: number = parseFloat(this._getCompareValue(min));
     const thatMax: number = parseFloat(this._getCompareValue(max));
@@ -430,7 +427,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public matches(value: string | RegExp): iAssertion {
+  public matches(value: string | RegExp): Assertion {
     const { thisValue, thatValue } = this._getValues(value);
     const thatType = toType(thatValue);
     // Test it as regular expression
@@ -450,7 +447,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public in(values: any[]): iAssertion {
+  public in(values: any[]): Assertion {
     const thisValue = this.value;
     this.setDefaultMessages(
       `${this.subject} is not in list: ${values.join(", ")}`,
@@ -459,11 +456,11 @@ export class Assertion implements iAssertion {
     return this.execute(values.indexOf(thisValue) >= 0, thisValue);
   }
 
-  public includes(value: any): iAssertion {
+  public includes(value: any): Assertion {
     return this.contains(value);
   }
 
-  public contains(value: any): iAssertion {
+  public contains(value: any): Assertion {
     const { thisValue, thatValue } = this._getValues(value),
       thisType = toType(thisValue),
       thatType = toType(thisValue);
@@ -492,7 +489,7 @@ export class Assertion implements iAssertion {
   public looksLike(
     controlImage: string | Buffer,
     allowedDifference: number | string = 0
-  ): iAssertion {
+  ): Assertion {
     const toCompare =
       this.value instanceof HttpResponse
         ? Buffer.from(this.value.body, "base64")
@@ -534,7 +531,7 @@ export class Assertion implements iAssertion {
     return this.execute(assertionPassed, details);
   }
 
-  public startsWith(value: any): iAssertion {
+  public startsWith(value: any): Assertion {
     const { thisValue, thatValue } = this._getValues(value);
     const bool: boolean = (() => {
       if (toType(thisValue) == "array") {
@@ -552,7 +549,7 @@ export class Assertion implements iAssertion {
     return this.execute(bool, String(thisValue));
   }
 
-  public endsWith(value: any): iAssertion {
+  public endsWith(value: any): Assertion {
     const { thisValue, thatValue } = this._getValues(value);
     const bool: boolean = (() => {
       if (toType(thisValue) == "array") {
@@ -570,7 +567,7 @@ export class Assertion implements iAssertion {
     return this.execute(bool, String(this._input));
   }
 
-  public exists(): iAssertion {
+  public exists(): Assertion {
     const thisValue = this.value;
     this.setDefaultMessages(
       `${this.subject} does not exist`,
@@ -588,7 +585,7 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public resolves(continueOnReject: boolean = false): Promise<iAssertion> {
+  public resolves(continueOnReject: boolean = false): Promise<Assertion> {
     const thisValue = this.value;
     this.setDefaultMessages(
       `${this.subject} was not resolved`,
@@ -646,7 +643,7 @@ export class Assertion implements iAssertion {
     });
   }
 
-  public async none(callback: IteratorBoolCallback): Promise<iAssertion> {
+  public async none(callback: IteratorBoolCallback): Promise<Assertion> {
     this._mustBeArray(this.value);
     this.setDefaultMessages(
       `Some were true in ${this.subject}`,
@@ -659,7 +656,7 @@ export class Assertion implements iAssertion {
     return this.execute(result, which);
   }
 
-  public async eval(js: JsFunction, ...args: any[]): Promise<iAssertion> {
+  public async eval(js: JsFunction, ...args: any[]): Promise<Assertion> {
     const result = await this.context.eval.apply(undefined, [
       js,
       this.value,
@@ -672,7 +669,7 @@ export class Assertion implements iAssertion {
     return this.execute(!!result, result);
   }
 
-  public async evalEvery(js: JsFunction, ...args: any[]): Promise<iAssertion> {
+  public async evalEvery(js: JsFunction, ...args: any[]): Promise<Assertion> {
     this._mustBeArray(this.value);
     this.setDefaultMessages(
       `Every function evaluates false`,
@@ -685,7 +682,7 @@ export class Assertion implements iAssertion {
     return this.execute(result, this.value);
   }
 
-  public async every(callback: IteratorBoolCallback): Promise<iAssertion> {
+  public async every(callback: IteratorBoolCallback): Promise<Assertion> {
     this._mustBeArray(this.value);
     this.setDefaultMessages(
       `Some or none were true in ${this.subject}`,
@@ -699,7 +696,7 @@ export class Assertion implements iAssertion {
     return this.execute(result, which);
   }
 
-  public everySync(callback: IteratorCallback): iAssertion {
+  public everySync(callback: IteratorCallback): Assertion {
     this._mustBeArray(this.value);
     this.setDefaultMessages(
       `Some or none were true in ${this.subject}`,
@@ -713,12 +710,12 @@ export class Assertion implements iAssertion {
     );
   }
 
-  public async map(callback: IteratorCallback): Promise<iAssertion> {
+  public async map(callback: IteratorCallback): Promise<Assertion> {
     const mapped = await asyncMap(this.value, callback);
     return this._clone(mapped, `Mapped ${this.subject}`);
   }
 
-  public async some(callback: IteratorBoolCallback): Promise<iAssertion> {
+  public async some(callback: IteratorBoolCallback): Promise<Assertion> {
     this._mustBeArray(this.value);
     this.setDefaultMessages(
       `None were true in ${this.subject}`,
@@ -741,13 +738,13 @@ export class Assertion implements iAssertion {
     );
   }
 
-  schema(schemaName: string, useJsonSchema: boolean): Promise<iAssertion>;
-  schema(schema: string, schemaType?: AssertSchemaType): Promise<iAssertion>;
-  schema(schema: Schema, schemaType?: AssertSchemaType): Promise<iAssertion>;
+  schema(schemaName: string, useJsonSchema: boolean): Promise<Assertion>;
+  schema(schema: string, schemaType?: AssertSchemaType): Promise<Assertion>;
+  schema(schema: Schema, schemaType?: AssertSchemaType): Promise<Assertion>;
   public async schema(
     schema: Schema | string,
     schemaType: AssertSchemaType | boolean = "JsonSchema"
-  ): Promise<iAssertion> {
+  ): Promise<Assertion> {
     const thisValue = this.value;
     // Handle overload of schema type
     if (typeof schemaType === "boolean") {
@@ -774,9 +771,9 @@ export class Assertion implements iAssertion {
    * @param message
    * @param value
    */
-  public assert(message: string, value: any): iAssertion;
-  public assert(value: any): iAssertion;
-  public assert(a: any, b?: any): iAssertion {
+  public assert(message: string, value: any): Assertion;
+  public assert(value: any): Assertion;
+  public assert(a: any, b?: any): Assertion {
     return arguments.length === 2
       ? this._context.assert(a, b)
       : this._context.assert(a);
@@ -787,7 +784,7 @@ export class Assertion implements iAssertion {
    *
    * @param input
    */
-  public comment(input: any): iAssertion {
+  public comment(input: any): Assertion {
     this._context.comment(input);
     return this;
   }
@@ -798,7 +795,7 @@ export class Assertion implements iAssertion {
    * @param aliasName
    * @returns
    */
-  public as(aliasName: string): iAssertion {
+  public as(aliasName: string): Assertion {
     this._context.set(aliasName, this._input);
     return this;
   }
@@ -808,7 +805,7 @@ export class Assertion implements iAssertion {
     actualValue: any,
     highlightText: string | null = null,
     expectedValue?: string
-  ): iAssertion {
+  ): Assertion {
     // Result is immutable, so only let them assert once
     if (this.isFinalized) {
       throw new Error("Assertion result is immutable.");
@@ -840,12 +837,12 @@ export class Assertion implements iAssertion {
     return this;
   }
 
-  public setDefaultMessage(message: string): iAssertion {
+  public setDefaultMessage(message: string): Assertion {
     this._defaultMessages[1] = message;
     return this;
   }
 
-  public setDefaultNotMessage(message: string): iAssertion {
+  public setDefaultNotMessage(message: string): Assertion {
     this._defaultMessages[0] = message;
     return this;
   }
@@ -853,13 +850,13 @@ export class Assertion implements iAssertion {
   public setDefaultMessages(
     notMessage: string,
     standardMessage: string
-  ): iAssertion {
+  ): Assertion {
     this._defaultMessages[0] = notMessage;
     this._defaultMessages[1] = standardMessage;
     return this;
   }
 
-  public sort(compareFunc?: CompareCallback): iAssertion {
+  public sort(compareFunc?: CompareCallback): Assertion {
     const values: any[] = Array.isArray(this.value)
       ? this.value.sort(compareFunc)
       : isNullOrUndefined(this.value)

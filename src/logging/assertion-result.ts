@@ -11,13 +11,9 @@ import {
 } from "./console-line";
 import { LogItem } from "./log-item";
 import { isNullOrUndefined, toType } from "../util";
-import { iAssertionResult } from "../interfaces/iassertion-result";
 import { iConsoleLine, LineType } from "../interfaces/iconsole-log";
 
-export abstract class AssertionResult
-  extends LogItem
-  implements iLogItem, iAssertionResult
-{
+export abstract class AssertionResult extends LogItem implements iLogItem {
   public abstract readonly type: LineType;
   public abstract className: string;
 

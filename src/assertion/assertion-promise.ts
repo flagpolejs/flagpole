@@ -1,5 +1,5 @@
+import { Assertion } from "..";
 import { cast } from "../util";
-import { iAssertion } from "../interfaces/iassertion";
 
 function assertionMethod(
   target: Object,
@@ -17,12 +17,12 @@ function assertionMethod(
 }
 
 export class AssertionPromise
-  extends Promise<iAssertion>
-  implements PromiseLike<iAssertion>
+  extends Promise<Assertion>
+  implements PromiseLike<Assertion>
 {
   public constructor(
     executor: (
-      resolve: (value?: iAssertion | PromiseLike<iAssertion>) => void,
+      resolve: (value?: Assertion | PromiseLike<Assertion>) => void,
       reject: (reason?: any) => void
     ) => void
   ) {

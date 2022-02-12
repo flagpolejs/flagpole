@@ -9,7 +9,7 @@
 - [Events](events.md)
 - Classes
   - [AppiumResponse](appiumresponse.md)
-  - [iAssertion](assertion.md)
+  - [Assertion](assertion.md)
   - [AssertionContext](assertion-context.md)
   - [iResponse](iresponse.md)
   - [iScenario](scenario.md)

@@ -41,7 +41,6 @@ import {
   HttpTimeout,
 } from "./interfaces/http";
 import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
-import { iAssertion } from "./interfaces/iassertion";
 import {
   iScenario,
   ScenarioCallback,
@@ -50,7 +49,7 @@ import {
 } from "./interfaces/iscenario";
 import { iResponse } from "./interfaces/iresponse";
 import { iValue } from "./interfaces/ivalue";
-import { AssertionContext } from ".";
+import { Assertion, AssertionContext } from ".";
 import { Adapter } from "./adapter";
 import { LocalAdapter } from "./adapter.local";
 import { NextCallback } from "./interfaces/next-callback";
@@ -1042,7 +1041,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
         });
         lastReturnValue = _then.apply(context, [context, ...args]);
         // Warn about any incomplete assertions
-        context.incompleteAssertions.forEach((assertion: iAssertion) => {
+        context.incompleteAssertions.forEach((assertion: Assertion) => {
           this.result(
             new AssertionFailWarning(
               `Incomplete assertion: ${assertion.name}`,

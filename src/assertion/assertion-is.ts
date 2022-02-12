@@ -1,6 +1,5 @@
-import { iAssertion } from "../interfaces/iassertion";
-import { iAssertionIs } from "../interfaces/iassertion-is";
 import validator from "validator";
+import { Assertion } from "..";
 import {
   canadaProvinceCodes,
   countryCodes2,
@@ -8,7 +7,7 @@ import {
   usStateCodes,
 } from "../interfaces/region-abbreviations";
 
-export class AssertionIs implements iAssertionIs {
+export class AssertionIs {
   public get not(): AssertionIs {
     this._assertion.not;
     return this;
@@ -19,7 +18,7 @@ export class AssertionIs implements iAssertionIs {
     return this;
   }
 
-  constructor(private _assertion: iAssertion) {}
+  constructor(private _assertion: Assertion) {}
 
   public type(type: string) {
     return this._assertion.type.equals(type);

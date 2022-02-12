@@ -47,7 +47,7 @@ Maps the value to an array of its keys if an object or an array.
 
 Returns a new iValue, identical to this one but whose input value is an integer.
 
-### is: iAssertionIs (readonly)
+### is: AssertionIs (readonly)
 
 Returns an "Is-Assertion" that can be a great way to make powerful and readable assertions. Many is-assertions use the validator library internally.
 
@@ -733,10 +733,14 @@ image.load("Make sure logo is a valid image");
 ```
 
 <<<<<<< HEAD
+
 ### longpress(): Promise\<iValue\>;
+
 =======
+
 ### longpress(): Promise\<string | void\>;
->>>>>>> 1b6de62862a80aeb276c9808de682d134bf9dc9d
+
+> > > > > > > 1b6de62862a80aeb276c9808de682d134bf9dc9d
 
 Longpress on an element. Holds touch action for 2000 milliseconds by default. This currently only works for Appium elements.
 

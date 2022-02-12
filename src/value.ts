@@ -26,7 +26,6 @@ import {
   SyncMapperCallback,
   SyncReducerCallback,
 } from "./interfaces/iterator-callbacks";
-import { iAssertionIs } from "./interfaces/iassertion-is";
 import { PointerClick } from "./interfaces/pointer";
 import { JsFunction, KeyValue } from "./interfaces/generic-types";
 import { iBounds } from "./interfaces/ibounds";
@@ -36,6 +35,7 @@ import { iScenario, ScenarioConstructor } from "./interfaces/iscenario";
 import { StandardValueFactory } from "./helpers/value-factory";
 import { ValueOptions } from "./interfaces/value-options";
 import { AssertionContext } from ".";
+import { AssertionIs } from "./assertion/assertion-is";
 
 export class Value<InputType = any> implements iValue<InputType> {
   protected valueFactory = new StandardValueFactory(this.context);
@@ -74,7 +74,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     return this.opts.tagName ? this.opts.tagName.toLowerCase() : "";
   }
 
-  public get is(): iAssertionIs {
+  public get is(): AssertionIs {
     return this.assert().is;
   }
 

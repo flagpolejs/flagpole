@@ -1,12 +1,11 @@
-import { HttpResponse, ValuePromise } from "..";
+import { Assertion, HttpResponse, ValuePromise } from "..";
+import { AssertionIs } from "../assertion/assertion-is";
 import { Link } from "../link";
 import { ContextProvider } from "./context-provider";
 import { FindProvider } from "./find-provider";
 import { JsFunction, KeyValue } from "./generic-types";
 import { GestureOpts, GestureType } from "./gesture";
 import { HttpRequestOptions } from "./http";
-import { iAssertion } from "./iassertion";
-import { iAssertionIs } from "./iassertion-is";
 import { iBounds } from "./ibounds";
 import {
   SyncIteratorBoolCallback,
@@ -46,8 +45,8 @@ export interface iValue<T = any>
   float: iValue<number>;
   bool: iValue<boolean>;
   json: iValue<any>;
-  is: iAssertionIs;
-  assert(message?: string): iAssertion;
+  is: AssertionIs;
+  assert(message?: string): Assertion;
   item(key: string | number): iValue<any>;
   valueOf(): any;
   toArray(): any[];

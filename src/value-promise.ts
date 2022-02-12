@@ -1,8 +1,8 @@
 import { AssertionPromise } from "./assertion/assertion-promise";
 import { iValue } from "./interfaces/ivalue";
-import { iAssertionIs } from "./interfaces/iassertion-is";
-import { iAssertion } from "./interfaces/iassertion";
 import { cast } from "./helpers/cast";
+import { AssertionIs } from "./assertion/assertion-is";
+import { Assertion } from ".";
 
 function assertionMethod(
   target: Object,
@@ -48,11 +48,11 @@ export class ValuePromise<TypeOfValue = any>
   }
 
   get is() {
-    return this._promisifyProperty<iAssertionIs>("is");
+    return this._promisifyProperty<AssertionIs>("is");
   }
 
   get not() {
-    return this._promisifyAssertProperty<iAssertion>("not");
+    return this._promisifyAssertProperty<Assertion>("not");
   }
 
   @assertionMethod equals(value: any) {

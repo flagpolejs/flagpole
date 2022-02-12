@@ -12,13 +12,12 @@ import { WebhookServer } from "./webhook";
 import { ServerOptions } from "https";
 import { ScenarioDisposition, ScenarioStatusEvent } from "./enums";
 import { ResponsePipe } from "./response-pipe";
-import { iAssertionResult } from "./iassertion-result";
 import { iSuite } from "./isuite";
 import { HttpRequest } from "../http/http-request";
 import { iResponse } from "../interfaces/iresponse";
 import { Adapter } from "../adapter";
 import { NextCallback } from "./next-callback";
-import { AssertionContext } from "..";
+import { AssertionContext, AssertionResult } from "..";
 
 interface ValueLink {
   getUrl(): Promise<any>;
@@ -136,7 +135,7 @@ export interface iScenario {
   setMethod(method: HttpMethodVerb): this;
   wait(bool?: boolean): this;
   comment(input: any): this;
-  result(result: iAssertionResult): this;
+  result(result: AssertionResult): this;
   ignore(assertions?: boolean | Function): this;
   open(url: string, opts?: HttpRequestOptions): this;
   open(link: ValueLink, opts?: HttpRequestOptions): this;
