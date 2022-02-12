@@ -1,9 +1,9 @@
-import { iSuite } from "./interfaces/isuite";
+import { Suite } from ".";
 import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
 import { iScenario } from "./interfaces/iscenario";
 
 export const createScenario = <T extends iScenario>(
-  suite: iSuite,
+  suite: Suite,
   title: string,
   scenarioType: ClassConstructor<T>,
   opts: KeyValue

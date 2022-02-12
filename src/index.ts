@@ -1,6 +1,5 @@
 import { Flagpole } from "./flagpole";
 import { FlagpoleExecution } from "./flagpole-execution";
-import { iSuite } from "./interfaces/isuite";
 import { iValue } from "./interfaces/ivalue";
 import { iResponse } from "./interfaces/iresponse";
 import { iScenario } from "./interfaces/iscenario";
@@ -60,7 +59,6 @@ export {
   HlsResponse,
   HeadersResponse,
   iScenario,
-  iSuite,
   execution,
   ProtoScenario,
   ValuePromise,

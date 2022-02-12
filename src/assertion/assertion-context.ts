@@ -1,5 +1,4 @@
 import { Assertion } from "./assertion";
-import { iSuite } from "../interfaces/isuite";
 import {
   AssertionActionCompleted,
   AssertionActionFailed,
@@ -31,7 +30,7 @@ import { ScreenshotOpts } from "../interfaces/screenshot";
 import { GestureOpts, GestureType } from "../interfaces/gesture";
 import { PointerMove } from "../interfaces/pointer";
 import { ScreenProperties } from "../interfaces/screen-properties";
-import { HttpRequest, iResponse, iScenario, iValue, Value } from "..";
+import { HttpRequest, iResponse, iScenario, iValue, Suite, Value } from "..";
 import { ValueOptions } from "../interfaces/value-options";
 import { createStandardValue } from "../helpers/value-factory";
 import { AssertionResult } from "../logging/assertion-result";
@@ -83,7 +82,7 @@ export class AssertionContext<
     return this.scenario.request;
   }
 
-  public get suite(): iSuite {
+  public get suite(): Suite {
     return this.scenario.suite;
   }
 

@@ -6,9 +6,9 @@ import {
 } from "./suite-execution";
 import { SuiteConfig } from "../flagpole-config";
 import { FlagpoleReport } from "../logging/flagpole-report";
-import { iSuite } from "../interfaces/isuite";
 import { asyncForEach } from "../util";
 import { Flagpole } from "../flagpole";
+import { Suite } from "..";
 
 export class SuiteExecutionInline extends SuiteExecution {
   public static executePath(filePath: string): SuiteExecutionInline {
@@ -46,13 +46,13 @@ export class SuiteExecutionInline extends SuiteExecution {
       const createdSuites = Flagpole.suites.slice(preSuiteCount);
       // Loop through each added suite and grab the "finished" promise, which will be resolved once it is done
       const promises: Promise<void>[] = [];
-      createdSuites.forEach((suite: iSuite) => {
+      createdSuites.forEach((suite: Suite) => {
         promises.push(suite.finished);
       });
       // Wait for every suite to finish executing
       await Promise.all(promises);
       // Loop through the added suites again and capture output
-      await asyncForEach(createdSuites, async (suite: iSuite) => {
+      await asyncForEach(createdSuites, async (suite: Suite) => {
         if (suite.hasFailed) {
           exitCode = SuiteExecutionExitCode.failure;
         }

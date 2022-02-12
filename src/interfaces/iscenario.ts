@@ -11,12 +11,11 @@ import { WebhookServer } from "./webhook";
 import { ServerOptions } from "https";
 import { ScenarioDisposition, ScenarioStatusEvent } from "./enums";
 import { ResponsePipe } from "./response-pipe";
-import { iSuite } from "./isuite";
 import { HttpRequest } from "../http/http-request";
 import { iResponse } from "../interfaces/iresponse";
 import { Adapter } from "../adapter";
 import { NextCallback } from "./next-callback";
-import { AssertionContext, AssertionResult } from "..";
+import { AssertionContext, AssertionResult, Suite } from "..";
 import { LogItem } from "../logging/log-item";
 
 interface ValueLink {
@@ -27,9 +26,9 @@ export type ScenarioConstructor = ClassConstructor<iScenario>;
 
 export type ScenarioAsyncCallback = (
   scenario: iScenario,
-  suite: iSuite
+  suite: Suite
 ) => Promise<void>;
-export type ScenarioSyncCallback = (scenario: iScenario, suite: iSuite) => void;
+export type ScenarioSyncCallback = (scenario: iScenario, suite: Suite) => void;
 export type ScenarioCallback = ScenarioAsyncCallback | ScenarioSyncCallback;
 export type ScenarioCallbackAndMessage = {
   message: string;
@@ -45,7 +44,7 @@ export type ScenarioMapper = (
   value: any,
   index: number,
   arr: any[],
-  suite: iSuite
+  suite: Suite
 ) => iScenario;
 
 export type ScenarioStatusCallback = (
@@ -82,7 +81,7 @@ export interface iScenario {
   title: string;
   type: ScenarioConstructor;
   typeName: string;
-  suite: iSuite;
+  suite: Suite;
   context: AssertionContext<iScenario>;
   opts: KeyValue;
   totalDuration: number | null;

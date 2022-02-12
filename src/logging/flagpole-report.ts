@@ -7,17 +7,16 @@ import {
   ConsoleLine,
 } from "./console-line";
 import { LogComment } from "./comment";
-import { iSuite } from "../interfaces/isuite";
 import { asyncForEach } from "../util";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { lineToVerbosity } from "./verbosity";
-import { iScenario } from "..";
+import { iScenario, Suite } from "..";
 import { LogItem } from "./log-item";
 
 export class FlagpoleReport {
-  public readonly suite: iSuite;
+  public readonly suite: Suite;
 
-  constructor(suite: iSuite) {
+  constructor(suite: Suite) {
     this.suite = suite;
   }
 

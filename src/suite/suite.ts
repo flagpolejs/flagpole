@@ -1,10 +1,6 @@
 import { URL } from "url";
 import { FlagpoleReport } from "../logging/flagpole-report";
-import {
-  iSuite,
-  SuiteStatusCallback,
-  SuiteCallback,
-} from "../interfaces/isuite";
+import { SuiteStatusCallback, SuiteCallback } from "../interfaces/suite";
 import { exitProcess, toType } from "../util";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { SuiteTaskManager } from "./suite-task-manager";
@@ -18,12 +14,12 @@ import {
   ScenarioTemplateInitOptions,
 } from "../interfaces/iscenario";
 
-type BaseDomainCallback = (suite: iSuite) => string;
+type BaseDomainCallback = (suite: Suite) => string;
 
 /**
  * A suite contains many scenarios
  */
-export class Suite implements iSuite {
+export class Suite {
   public get baseUrl(): URL | null {
     return this._baseUrl;
   }
@@ -374,7 +370,7 @@ export class Suite implements iSuite {
   /**
    * Promisify the suite: resolves on pass, rejects on failure
    */
-  public promise(): Promise<iSuite> {
+  public promise(): Promise<Suite> {
     return new Promise((resolve, reject) => {
       this.success(resolve);
       this.failure(reject);

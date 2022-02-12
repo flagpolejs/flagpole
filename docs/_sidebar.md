@@ -13,5 +13,5 @@
   - [AssertionContext](assertion-context.md)
   - [iResponse](iresponse.md)
   - [iScenario](scenario.md)
-  - [iSuite](suite.md)
+  - [Suite](suite.md)
   - [iValue](ivalue.md)

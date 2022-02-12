@@ -1,5 +1,4 @@
 import { ScenarioStatusEvent, ScenarioDisposition } from "./interfaces/enums";
-import { iSuite } from "./interfaces/isuite";
 import {
   AssertionResult,
   AssertionPass,
@@ -48,7 +47,7 @@ import {
 } from "./interfaces/iscenario";
 import { iResponse } from "./interfaces/iresponse";
 import { iValue } from "./interfaces/ivalue";
-import { Assertion, AssertionContext } from ".";
+import { Assertion, AssertionContext, Suite } from ".";
 import { Adapter } from "./adapter";
 import { LocalAdapter } from "./adapter.local";
 import { NextCallback } from "./interfaces/next-callback";
@@ -74,7 +73,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
   };
 
   public constructor(
-    public readonly suite: iSuite,
+    public readonly suite: Suite,
     public readonly title: string,
     public readonly type: ClassConstructor<iScenario>,
     opts: KeyValue

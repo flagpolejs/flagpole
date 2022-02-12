@@ -1,9 +1,8 @@
 import {
-  iSuite,
   SuiteStatusCallback,
   SuiteCallback,
   SuiteCallbackAndMessage,
-} from "../interfaces/isuite";
+} from "../interfaces/suite";
 import * as bluebird from "bluebird";
 import { runAsync } from "../util";
 import {
@@ -11,6 +10,7 @@ import {
   ScenarioCallback,
   ScenarioCallbackAndMessage,
 } from "../interfaces/iscenario";
+import { Suite } from "..";
 
 type WhichCallback =
   | "beforeAll"
@@ -22,7 +22,7 @@ type WhichCallback =
   | "finally";
 
 export class SuiteTaskManager {
-  private _suite: iSuite;
+  private _suite: Suite;
   private _scenarios: iScenario[] = [];
   private _dateInitialized: number;
   private _dateStarted: number | null = null;
@@ -162,7 +162,7 @@ export class SuiteTaskManager {
     });
   }
 
-  constructor(suite: iSuite) {
+  constructor(suite: Suite) {
     this._suite = suite;
     this._dateInitialized = Date.now();
     this._finishedPromise = new Promise((resolve) => {
