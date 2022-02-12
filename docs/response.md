@@ -1,4 +1,4 @@
-# iResponse
+# Response
 
 This interface is implemented by the specific response object of each scenario type.
 

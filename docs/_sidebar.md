@@ -11,7 +11,7 @@
   - [AppiumResponse](appiumresponse.md)
   - [Assertion](assertion.md)
   - [AssertionContext](assertion-context.md)
-  - [iResponse](iresponse.md)
+  - [Response](response.md)
   - [iScenario](scenario.md)
   - [Suite](suite.md)
   - [iValue](ivalue.md)

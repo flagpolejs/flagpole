@@ -8,13 +8,13 @@ import { ValuePromise } from "./value-promise";
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
 import { PointerMove } from "./interfaces/pointer";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
-import { KeyValue, OptionalXY } from "./interfaces/generic-types";
+import { JsFunction, KeyValue, OptionalXY } from "./interfaces/generic-types";
 import { ScreenProperties } from "./interfaces/screen-properties";
 import { iScenario } from "./interfaces/iscenario";
-import { iResponse } from "./interfaces/iresponse";
 import { HttpResponse } from "./http/http-response";
+import { ScreenshotOpts } from "./interfaces/screenshot";
 
-export abstract class ProtoResponse implements iResponse {
+export abstract class ProtoResponse {
   protected _currentUrl: string | null = null;
   protected _httpResponse: HttpResponse = createEmptyResponse();
 
@@ -259,57 +259,86 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public async waitForFunction(..._args: any[]): Promise<void> {
+  public async waitForFunction(
+    js: JsFunction,
+    opts?: KeyValue,
+    ...args: any[]
+  ): Promise<void> {
     return this.context.pause(1);
   }
 
-  public async waitForNavigation(..._args: any[]): Promise<void> {
+  public async waitForNavigation(
+    timeout?: number,
+    waitFor?: string | string[]
+  ): Promise<void> {
     return this.context.pause(1);
   }
 
-  public async waitForLoad(..._args: any[]): Promise<void> {
+  public async waitForLoad(timeout?: number): Promise<void> {
     return this.context.pause(1);
   }
 
-  public async waitForReady(..._args: any[]): Promise<void> {
+  public async waitForReady(timeout?: number): Promise<void> {
     return this.context.pause(1);
   }
 
-  public async waitForNetworkIdle(..._args: any[]): Promise<void> {
+  public async waitForNetworkIdle(timeout?: number): Promise<void> {
     return this.context.pause(1);
   }
 
-  public waitForHidden(..._args: any[]): ValuePromise {
+  public waitForHidden(selector: string, timeout?: number): ValuePromise {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForHidden.`
     );
   }
 
-  public waitForVisible(..._args: any[]): ValuePromise {
+  public waitForVisible(selector: string, timeout?: number): ValuePromise {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForVisible.`
     );
   }
 
+  waitForExists(selector: string, timeout?: number): ValuePromise;
+  waitForExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): ValuePromise;
   public waitForExists(..._args: any[]): ValuePromise {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForExists.`
     );
   }
 
+  waitForNotExists(selector: string, timeout?: number): ValuePromise;
+  waitForNotExists(
+    selector: string,
+    contains: string | RegExp,
+    timeout?: number
+  ): ValuePromise;
   public waitForNotExists(..._args: any[]): ValuePromise {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForNotExists.`
     );
   }
 
-  public waitForHavingText(..._args: any[]): ValuePromise {
+  public waitForHavingText(
+    selector: string,
+    text: string | RegExp,
+    timeout?: number
+  ): ValuePromise {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForHavingText.`
     );
   }
 
-  public async screenshot(): Promise<Buffer> {
+  screenshot(): Promise<Buffer>;
+  screenshot(localFilePath: string, opts?: ScreenshotOpts): Promise<Buffer>;
+  screenshot(opts: ScreenshotOpts): Promise<Buffer>;
+  public async screenshot(
+    a?: string | ScreenshotOpts,
+    b?: ScreenshotOpts
+  ): Promise<Buffer> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support screenshots.`
     );
@@ -341,7 +370,7 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public waitForXPath(xPath: string): ValuePromise {
+  public waitForXPath(xPath: string, timeout?: number): ValuePromise {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForXPath.`
     );
@@ -386,7 +415,7 @@ export abstract class ProtoResponse implements iResponse {
     );
   }
 
-  public async movePointer(...pointers: PointerMove[]): Promise<iResponse> {
+  public async movePointer(...pointers: PointerMove[]): Promise<ProtoResponse> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support pointer.`
     );
@@ -395,13 +424,13 @@ export abstract class ProtoResponse implements iResponse {
   public async gesture(
     type: GestureType,
     opts: GestureOpts
-  ): Promise<iResponse> {
+  ): Promise<ProtoResponse> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support gesture.`
     );
   }
 
-  public async scrollTo(_point: OptionalXY): Promise<iResponse> {
+  public async scrollTo(_point: OptionalXY): Promise<ProtoResponse> {
     return this;
   }
 

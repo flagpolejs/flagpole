@@ -1,7 +1,7 @@
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
 import { Value } from "./value";
 import { toType, asyncFilter } from "./util";
-import { AssertionContext, iResponse, iValue } from ".";
+import { AssertionContext, iValue, ProtoResponse } from ".";
 
 export function wrapAsValue<T>(
   context: AssertionContext,
@@ -13,7 +13,7 @@ export function wrapAsValue<T>(
 }
 
 export async function findOne(
-  scope: iValue<any> | iResponse,
+  scope: iValue<any> | ProtoResponse,
   selector: string,
   params: FindParams
 ) {

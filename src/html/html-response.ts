@@ -5,10 +5,9 @@ import * as cheerio from "cheerio";
 import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
-import { iResponse } from "../interfaces/iresponse";
 import { ProtoResponse } from "../response";
 
-export class HtmlResponse extends ProtoResponse implements iResponse {
+export class HtmlResponse extends ProtoResponse {
   private _cheerio: cheerio.Root | null = null;
 
   protected set cheerio(value: cheerio.Root) {

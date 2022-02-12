@@ -1,7 +1,6 @@
 import { Flagpole } from "./flagpole";
 import { FlagpoleExecution } from "./flagpole-execution";
 import { iValue } from "./interfaces/ivalue";
-import { iResponse } from "./interfaces/iresponse";
 import { iScenario } from "./interfaces/iscenario";
 import { HttpRequest } from "./http/http-request";
 import { Assertion } from "./assertion/assertion";
@@ -51,7 +50,6 @@ export {
   JsonResponse,
   ResourceResponse,
   ProtoResponse,
-  iResponse,
   HttpRequest,
   HttpResponse,
   iValue,

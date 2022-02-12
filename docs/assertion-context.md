@@ -24,7 +24,7 @@ Get the request object.
 console.log(context.request.method);
 ```
 
-### response: iResponse
+### response: Response
 
 The response from the request. This will vary based on the type of Scenario, but some underlying properties are constant in the interface.
 
@@ -464,7 +464,7 @@ Checks for an element to exist with XPath of `xPath`. Usually a CSS selector is 
 const title = await context.findXpath("/main/h1[1]/span");
 ```
 
-### gesture(type: GestureType, opts: GestureOpts): Promise\<iResponse\>
+### gesture(type: GestureType, opts: GestureOpts): Promise\<Response\>
 
 Executes a gesture onscreen. Currently, pinch and stretch gestures are supported.
 
@@ -524,7 +524,7 @@ Hide onscreen keyboard. Currently only works in Appium scenarios. Does not work 
 await context.hideKeyboard();
 ```
 
-### movePointer(...pointers: PointerMove[]): Promise\<iResponse\>
+### movePointer(...pointers: PointerMove[]): Promise\<Response\>
 
 Move pointer on screen. Can be used for touches, gestures, pinching, zooming, rotating, dragging, etc.
 

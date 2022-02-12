@@ -12,10 +12,9 @@ import { ServerOptions } from "https";
 import { ScenarioDisposition, ScenarioStatusEvent } from "./enums";
 import { ResponsePipe } from "./response-pipe";
 import { HttpRequest } from "../http/http-request";
-import { iResponse } from "../interfaces/iresponse";
 import { Adapter } from "../adapter";
 import { NextCallback } from "./next-callback";
-import { AssertionContext, AssertionResult, Suite } from "..";
+import { AssertionContext, AssertionResult, ProtoResponse, Suite } from "..";
 import { LogItem } from "../logging/log-item";
 
 interface ValueLink {
@@ -76,7 +75,7 @@ export interface ScenarioInitOptions<T extends iScenario> {
 }
 
 export interface iScenario {
-  response: iResponse;
+  response: ProtoResponse;
   adapter: Adapter;
   title: string;
   type: ScenarioConstructor;

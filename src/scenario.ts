@@ -45,9 +45,8 @@ import {
   ScenarioCallbackAndMessage,
   ScenarioStatusCallback,
 } from "./interfaces/iscenario";
-import { iResponse } from "./interfaces/iresponse";
 import { iValue } from "./interfaces/ivalue";
-import { Assertion, AssertionContext, Suite } from ".";
+import { Assertion, AssertionContext, ProtoResponse, Suite } from ".";
 import { Adapter } from "./adapter";
 import { LocalAdapter } from "./adapter.local";
 import { NextCallback } from "./interfaces/next-callback";
@@ -60,7 +59,7 @@ enum ScenarioRequestType {
   webhook = "webhook",
 }
 
-export abstract class Scenario<ResponseType extends iResponse>
+export abstract class Scenario<ResponseType extends ProtoResponse>
   implements iScenario
 {
   public abstract readonly response: ResponseType;

@@ -2,10 +2,8 @@ import { ProtoResponse } from "../response";
 import { iValue } from "../interfaces/ivalue";
 import { HttpResponse } from "../http/http-response";
 import { ValuePromise } from "../value-promise";
-import { iResponse } from "../interfaces/iresponse";
-import { HeadersScenario } from "./headers-scenario";
 
-export class HeadersResponse extends ProtoResponse implements iResponse {
+export class HeadersResponse extends ProtoResponse {
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
   }

@@ -2,7 +2,7 @@ import * as jmespath from "jmespath";
 import { iValue } from "../interfaces/ivalue";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
-import { iResponse } from "../interfaces/iresponse";
+import { ProtoResponse } from "..";
 
 export class JsonDoc {
   public get root(): any {
@@ -29,7 +29,7 @@ export const jpathSearch = (input: any, path: string) => {
 };
 
 export const jpathFindAll = async (
-  self: JPathProvider & iResponse,
+  self: JPathProvider & ProtoResponse,
   path: string
 ): Promise<iValue[]> => {
   const item = await self.find(path);
@@ -37,7 +37,7 @@ export const jpathFindAll = async (
 };
 
 export const jpathFind = (
-  self: JPathProvider & iResponse,
+  self: JPathProvider & ProtoResponse,
   path: string
 ): ValuePromise => {
   return ValuePromise.execute(async () => {

@@ -30,7 +30,14 @@ import { ScreenshotOpts } from "../interfaces/screenshot";
 import { GestureOpts, GestureType } from "../interfaces/gesture";
 import { PointerMove } from "../interfaces/pointer";
 import { ScreenProperties } from "../interfaces/screen-properties";
-import { HttpRequest, iResponse, iScenario, iValue, Suite, Value } from "..";
+import {
+  HttpRequest,
+  iScenario,
+  iValue,
+  ProtoResponse,
+  Suite,
+  Value,
+} from "..";
 import { ValueOptions } from "../interfaces/value-options";
 import { createStandardValue } from "../helpers/value-factory";
 import { AssertionResult } from "../logging/assertion-result";
@@ -63,7 +70,7 @@ const getParamsFromExists = (
 
 export class AssertionContext<
   ScenarioType extends iScenario = iScenario,
-  ResponseType extends iResponse = iResponse
+  ResponseType extends ProtoResponse = ProtoResponse
 > {
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
@@ -577,11 +584,11 @@ export class AssertionContext<
     return output;
   }
 
-  public movePointer(...pointers: PointerMove[]): Promise<iResponse> {
+  public movePointer(...pointers: PointerMove[]): Promise<ProtoResponse> {
     return this.response.movePointer(...pointers);
   }
 
-  public gesture(type: GestureType, opts: GestureOpts): Promise<iResponse> {
+  public gesture(type: GestureType, opts: GestureOpts): Promise<ProtoResponse> {
     return this.response.gesture(type, opts);
   }
 
