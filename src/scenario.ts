@@ -25,7 +25,6 @@ import {
 } from "./decorators/internal";
 import { JsonDoc } from "./json/jpath";
 import { _ } from "ajv";
-import { iLogItem } from "./interfaces/ilog-item";
 import {
   ResponsePipe,
   ResponsePipeCallbackAndMessage,
@@ -53,6 +52,7 @@ import { Assertion, AssertionContext } from ".";
 import { Adapter } from "./adapter";
 import { LocalAdapter } from "./adapter.local";
 import { NextCallback } from "./interfaces/next-callback";
+import { LogItem } from "./logging/log-item";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -130,7 +130,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
    * Did any assertions in this scenario fail?
    */
   public get hasFailed(): boolean {
-    return this._log.items.some((item: iLogItem) => {
+    return this._log.items.some((item: LogItem) => {
       return item.type == "resultFailure";
     });
   }
@@ -350,7 +350,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
   /**
    * Get log of all assetions, comments, etc. from this scenario
    */
-  public async getLog(): Promise<iLogItem[]> {
+  public async getLog(): Promise<LogItem[]> {
     return this._log.items;
   }
 
@@ -1357,7 +1357,7 @@ export abstract class ProtoScenario<ResponseType extends iResponse>
     });
   }
 
-  protected _pushToLog(logItem: iLogItem): this {
+  protected _pushToLog(logItem: LogItem): this {
     this._log.add(logItem);
     return this;
   }

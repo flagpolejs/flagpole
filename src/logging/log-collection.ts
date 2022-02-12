@@ -1,13 +1,13 @@
-import { iLogItem } from "../interfaces/ilog-item";
+import { LogItem } from "./log-item";
 
 export class LogCollection {
-  protected _logItems: iLogItem[] = [];
+  protected _logItems: LogItem[] = [];
 
-  public get items(): iLogItem[] {
+  public get items(): LogItem[] {
     return this._logItems;
   }
 
-  public add(item: iLogItem) {
+  public add(item: LogItem) {
     if (item && Reflect.has(item, "className")) {
       this._logItems.push(item);
       return;

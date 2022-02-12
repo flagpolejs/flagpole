@@ -7,7 +7,6 @@ import {
   HttpResponseOptions,
   HttpTimeout,
 } from "./http";
-import { iLogItem } from "./ilog-item";
 import { WebhookServer } from "./webhook";
 import { ServerOptions } from "https";
 import { ScenarioDisposition, ScenarioStatusEvent } from "./enums";
@@ -18,6 +17,7 @@ import { iResponse } from "../interfaces/iresponse";
 import { Adapter } from "../adapter";
 import { NextCallback } from "./next-callback";
 import { AssertionContext, AssertionResult } from "..";
+import { LogItem } from "../logging/log-item";
 
 interface ValueLink {
   getUrl(): Promise<any>;
@@ -114,7 +114,7 @@ export interface iScenario {
   push(aliasName: string, value: any): this;
   set(aliasName: string, value: any): this;
   get<T = any>(aliasName: string): T;
-  getLog(): Promise<iLogItem[]>;
+  getLog(): Promise<LogItem[]>;
   subscribe(callback: ScenarioStatusCallback): this;
   setJsonBody(jsonObject: any): this;
   setRawBody(str: string): this;

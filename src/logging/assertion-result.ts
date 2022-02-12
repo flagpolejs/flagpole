@@ -1,4 +1,3 @@
-import { iLogItem } from "../interfaces/ilog-item";
 import {
   PassLine,
   OptionalFailLine,
@@ -14,7 +13,7 @@ import { LogItem } from "./log-item";
 import { isNullOrUndefined, toType } from "../util";
 import { LineType } from "../interfaces/line-type";
 
-export abstract class AssertionResult extends LogItem implements iLogItem {
+export abstract class AssertionResult extends LogItem {
   public abstract readonly type: LineType;
   public abstract className: string;
 
@@ -25,7 +24,7 @@ export abstract class AssertionResult extends LogItem implements iLogItem {
   protected _highlight: string = "";
 }
 
-export class AssertionPass extends AssertionResult implements iLogItem {
+export class AssertionPass extends AssertionResult {
   public readonly type: LineType = LineType.resultPass;
   public readonly className: string = "pass";
 
@@ -58,7 +57,7 @@ export class AssertionActionCompleted extends AssertionPass {
   }
 }
 
-export class AssertionFail extends AssertionResult implements iLogItem {
+export class AssertionFail extends AssertionResult {
   public readonly type: LineType = LineType.resultFailure;
   public readonly className: string = "fail";
 
@@ -132,7 +131,7 @@ export class AssertionFail extends AssertionResult implements iLogItem {
   }
 }
 
-export class AssertionFailOptional extends AssertionFail implements iLogItem {
+export class AssertionFailOptional extends AssertionFail {
   public readonly type: LineType = LineType.resultOptionalFailure;
   public readonly className: string = "failOptional";
 
@@ -145,7 +144,7 @@ export class AssertionFailOptional extends AssertionFail implements iLogItem {
   }
 }
 
-export class AssertionFailWarning extends AssertionFail implements iLogItem {
+export class AssertionFailWarning extends AssertionFail {
   public readonly type: LineType = LineType.comment;
   public readonly className: string = "failWarning";
 
@@ -158,7 +157,7 @@ export class AssertionFailWarning extends AssertionFail implements iLogItem {
   }
 }
 
-export class AssertionActionFailed extends AssertionPass implements iLogItem {
+export class AssertionActionFailed extends AssertionPass {
   public readonly type: LineType = LineType.resultFailure;
   protected _verb: string;
   protected _noun: string;

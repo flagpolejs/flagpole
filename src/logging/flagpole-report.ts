@@ -11,8 +11,8 @@ import { iSuite } from "../interfaces/isuite";
 import { asyncForEach } from "../util";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { lineToVerbosity } from "./verbosity";
-import { iLogItem } from "../interfaces/ilog-item";
 import { iScenario } from "..";
+import { LogItem } from "./log-item";
 
 export class FlagpoleReport {
   public readonly suite: iSuite;
@@ -52,7 +52,7 @@ export class FlagpoleReport {
     lines.push(new LineBreak());
     await asyncForEach(this.suite.scenarios, async (scenario: iScenario) => {
       const log = await scenario.getLog();
-      log.forEach((item: iLogItem) => {
+      log.forEach((item: LogItem) => {
         lines = lines.concat(item.toConsole());
       });
       lines.push(new LineBreak());
@@ -78,7 +78,7 @@ export class FlagpoleReport {
     let passCount: number = 0;
     for (let i = 0; i < scenarios.length; i++) {
       const scenario: iScenario = scenarios[i];
-      const log: iLogItem[] = await scenario.getLog();
+      const log: LogItem[] = await scenario.getLog();
       out.scenarios[i] = {
         title: scenario.title,
         done: scenario.hasFinished,
@@ -86,7 +86,7 @@ export class FlagpoleReport {
         passCount: 0,
         log: [],
       };
-      log.forEach((item: iLogItem) => {
+      log.forEach((item: LogItem) => {
         out.scenarios[i].log.push(item.toJson());
         if (item.type.startsWith("result")) {
           if (item.passed) {
@@ -133,7 +133,7 @@ export class FlagpoleReport {
                 <h3>${scenario.title}</h3>
             `;
       html += "<ul>\n";
-      log.forEach((item: iLogItem) => {
+      log.forEach((item: LogItem) => {
         if (item.type.startsWith("result") || item.type == "comment") {
           html += item.toHtml();
         }
@@ -160,7 +160,7 @@ export class FlagpoleReport {
       // .next("I am a subscenario title", async context => { })
       let subScenarioTitle: string;
 
-      log.forEach((item: iLogItem) => {
+      log.forEach((item: LogItem) => {
         if (item.className === "heading") {
           subScenarioTitle = this.cleanXMLCharacters(item.message);
         }
@@ -217,7 +217,7 @@ export class FlagpoleReport {
       // .next("I am a subscenario title", async context => { })
       let subScenarioTitle: string;
 
-      log.forEach((item: iLogItem) => {
+      log.forEach((item: LogItem) => {
         if (item.className === "heading") {
           subScenarioTitle = item.message;
         }
@@ -252,7 +252,7 @@ export class FlagpoleReport {
     const lines: string[] = [];
     await this.suite.scenarios.forEach(async function (scenario) {
       const log = await scenario.getLog();
-      log.forEach((item: iLogItem) => {
+      log.forEach((item: LogItem) => {
         lines.push(item[funcName]());
       });
     });

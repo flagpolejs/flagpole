@@ -1,8 +1,7 @@
 import { LineType } from "../interfaces/line-type";
 import { ConsoleLine, CustomLine } from "./console-line";
-import { iLogItem } from "../interfaces/ilog-item";
 
-export abstract class LogItem implements iLogItem {
+export abstract class LogItem {
   public abstract readonly type: LineType;
   public abstract readonly className: string;
 
