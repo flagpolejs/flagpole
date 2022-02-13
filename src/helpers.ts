@@ -1,9 +1,7 @@
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
 import { Value } from "./value";
 import { toType, asyncFilter } from "./util";
-import { AssertionContext, iValue, ProtoResponse, ValuePromise } from ".";
-import { FindProvider } from "./interfaces/find-provider";
-import { ContextProvider } from "./interfaces/context-provider";
+import { AssertionContext } from "./assertion/assertion-context";
 
 export function wrapAsValue<InputType>(
   context: AssertionContext,
@@ -45,7 +43,7 @@ export function getFindParams(a: any, b: any): FindParams {
 
 export async function filterFind<
   InputType = any,
-  Wrapper extends iValue<InputType> = iValue<InputType>
+  Wrapper extends Value<InputType> = Value<InputType>
 >(
   elements: Wrapper[],
   contains?: string | RegExp | null,
@@ -58,7 +56,7 @@ export async function filterFind<
   }
   // Filter by contents
   if (contains) {
-    elements = await asyncFilter(elements, async (element: iValue<any>) => {
+    elements = await asyncFilter(elements, async (element: Wrapper) => {
       const text: string = await (async () => {
         if (opts?.findBy == "value") {
           return (await element.getValue()).$;
@@ -83,7 +81,7 @@ export async function filterFind<
 
 export function applyOffsetAndLimit<
   InputType = any,
-  Wrapper extends iValue<InputType> = iValue<InputType>
+  Wrapper extends Value<InputType> = Value<InputType>
 >(opts: FindAllOptions, elements: Wrapper[]): Wrapper[] {
   const start = opts.offset || 0;
   const end = opts.limit ? start + opts.limit : undefined;

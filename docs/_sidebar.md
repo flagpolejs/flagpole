@@ -14,4 +14,4 @@
   - [Response](response.md)
   - [iScenario](scenario.md)
   - [Suite](suite.md)
-  - [iValue](ivalue.md)
+  - [Value](value.md)

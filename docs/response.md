@@ -4,7 +4,7 @@ This interface is implemented by the specific response object of each scenario t
 
 ## Properties
 
-### body: iValue
+### body: Value
 
 The string value of the raw HTTP response body.
 
@@ -16,11 +16,11 @@ context.assert(context.response.body).contains("flosports");
 
 Get the assertion context for this response.
 
-### cookies: iValue
+### cookies: Value
 
 Value object containing an array of all the cookies.
 
-### finalUrl: iValue
+### finalUrl: Value
 
 The string value of the final URL of the response, after any redirects. It will be a full URL with HTTP scheme, host, path, and query string.
 
@@ -28,7 +28,7 @@ The string value of the final URL of the response, after any redirects. It will 
 context.assert(context.response.finalUrl).contains("google.com");
 ```
 
-### headers: iValue
+### headers: Value
 
 Value object containing the key-value pair of all the response headers.
 
@@ -36,7 +36,7 @@ Value object containing the key-value pair of all the response headers.
 context.assert(context.response.headers).contains("session");
 ```
 
-### jsonBody: iValue
+### jsonBody: Value
 
 The JSON body of the response. If the response body was not in a valid JSON format this will be a null value.
 
@@ -44,7 +44,7 @@ The JSON body of the response. If the response body was not in a valid JSON form
 context.assert(context.response.jsonBody).not.equals(null);
 ```
 
-### length: iValue
+### length: Value
 
 The numeric value of the length of the HTTP Response body.
 
@@ -52,7 +52,7 @@ The numeric value of the length of the HTTP Response body.
 context.assert(context.response.length).greaterThan(0);
 ```
 
-### loadTime: iValue
+### loadTime: Value
 
 The numeric value of the time in millseconds that it took between when the request was made and when the response came back.
 
@@ -60,7 +60,7 @@ The numeric value of the time in millseconds that it took between when the reque
 context.assert(context.response.loadTime).lessThan(1000);
 ```
 
-### redirectCount: iValue
+### redirectCount: Value
 
 The numeric value of how many redirects were followed.
 
@@ -72,7 +72,7 @@ context.assert(context.response.redirectCount).lessThan(10);
 
 Reference to the scenario that created this response.
 
-### statusCode: iValue
+### statusCode: Value
 
 The numeric value of the HTTP Status Code of the Response.
 
@@ -80,7 +80,7 @@ The numeric value of the HTTP Status Code of the Response.
 context.assert(context.response.statusCode).equals(200);
 ```
 
-### statusMessage: iValue
+### statusMessage: Value
 
 The string value of the HTTP Status Message of the Response.
 
@@ -88,7 +88,7 @@ The string value of the HTTP Status Message of the Response.
 context.assert(context.response.statusMessage).like("OK");
 ```
 
-### url: iValue
+### url: Value
 
 The string value of the requested URL of the Scenario.
 

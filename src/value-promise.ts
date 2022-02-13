@@ -1,5 +1,4 @@
 import { AssertionPromise } from "./assertion/assertion-promise";
-import { iValue } from "./interfaces/ivalue";
 import { cast } from "./helpers/cast";
 import { AssertionIs } from "./assertion/assertion-is";
 import { Assertion, Value } from ".";
@@ -20,17 +19,17 @@ function assertionMethod<InputType, Wrapper extends Value<InputType>>(
   };
 }
 
-export class ValuePromise<InputType, Wrapper extends iValue<InputType>>
+export class ValuePromise<InputType, Wrapper extends Value<InputType>>
   extends Promise<Wrapper>
   implements PromiseLike<Wrapper>
 {
-  public static execute<InputType, Wrapper extends iValue<InputType>>(
+  public static execute<InputType, Wrapper extends Value<InputType>>(
     callback: () => Promise<Wrapper>
   ) {
     return ValuePromise.wrap<InputType, Wrapper>(callback());
   }
 
-  public static wrap<InputType, Wrapper extends iValue<InputType>>(
+  public static wrap<InputType, Wrapper extends Value<InputType>>(
     value: Wrapper | Promise<Wrapper>
   ) {
     return new ValuePromise<InputType, Wrapper>(async (resolve, reject) => {
@@ -51,11 +50,11 @@ export class ValuePromise<InputType, Wrapper extends iValue<InputType>>
     super(executor);
   }
 
-  get is() {
+  public get is() {
     return this._promisifyProperty<AssertionIs>("is");
   }
 
-  get not() {
+  public get not() {
     return this._promisifyAssertProperty<Assertion>("not");
   }
 
@@ -99,19 +98,31 @@ export class ValuePromise<InputType, Wrapper extends iValue<InputType>>
     return cast<AssertionPromise>(null);
   }
 
-  rename = (newName: string) => this.toValuePromise("rename", newName);
-  clear = () => this.toValuePromise("clear");
-  clearThenType = (text: string, opts?: any) =>
-    this.toValuePromise("clearThenType", text, opts);
-  type = (text: string, opts?: any) => this.toValuePromise("type", text, opts);
+  public rename(newName: string) {
+    return this.toValuePromise("rename", newName);
+  }
 
-  assert = (message: string): AssertionPromise => {
+  public clear() {
+    return this.toValuePromise("clear");
+  }
+
+  public clearThenType(text: string, opts?: any) {
+    return this.toValuePromise("clearThenType", text, opts);
+  }
+
+  public type(text: string, opts?: any) {
+    return this.toValuePromise("type", text, opts);
+  }
+
+  public assert = (message: string): AssertionPromise => {
     return new AssertionPromise((resolve) =>
       this.then((value) => resolve(value.assert(message)))
     );
   };
 
-  exists = (): Promise<iValue<boolean>> => this._promisifyMethod("exists");
+  public exists<T extends Value<boolean>>(): Promise<T> {
+    return this._promisifyMethod("exists");
+  }
 
   private _promisifyAssertMethod<T>(
     method: string,
@@ -129,7 +140,7 @@ export class ValuePromise<InputType, Wrapper extends iValue<InputType>>
     return new Promise((r) => this.then((v) => r(v.assert()[property])));
   }
 
-  private async _promisifyMethod<T>(
+  private async _promisifyMethod<T extends Value<any>>(
     method: string,
     args: any[] = []
   ): Promise<T> {

@@ -30,14 +30,7 @@ import { ScreenshotOpts } from "../interfaces/screenshot";
 import { GestureOpts, GestureType } from "../interfaces/gesture";
 import { PointerMove } from "../interfaces/pointer";
 import { ScreenProperties } from "../interfaces/screen-properties";
-import {
-  HttpRequest,
-  iScenario,
-  iValue,
-  ProtoResponse,
-  Suite,
-  Value,
-} from "..";
+import { HttpRequest, iScenario, ProtoResponse, Suite, Value } from "..";
 import { AssertionResult } from "../logging/assertion-result";
 import { ValueFactory } from "../helpers/value-factory";
 
@@ -289,12 +282,12 @@ export class AssertionContext<
   public waitForExists(
     selector: string,
     timeout?: number
-  ): ValuePromise<any, iValue>;
+  ): ValuePromise<any, Value<any>>;
   public waitForExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): ValuePromise<any, iValue>;
+  ): ValuePromise<any, Value<any>>;
   public waitForExists(
     selector: string,
     a?: number | string | RegExp,
@@ -342,11 +335,11 @@ export class AssertionContext<
     a?: string | FindOptions | RegExp,
     b?: FindOptions
   ) {
-    return ValuePromise.execute(async () => {
+    return ValuePromise.execute<any, Value<any>>(async () => {
       const selectors = toArray<string>(selector);
       const params = getFindParams(a, b);
       const opts = params.opts || {};
-      const element = await asyncUntil<iValue>(selectors, async (selector) =>
+      const element = await asyncUntil(selectors, async (selector) =>
         params.contains
           ? await this.response.find(selector, params.contains, opts)
           : params.matches
@@ -354,7 +347,7 @@ export class AssertionContext<
           : await this.response.find(selector, opts)
       );
       const name = getFindName(params, selectors, 0);
-      const value = element === null ? wrapAsValue(this, null, name) : element;
+      const value = this.valueFactory.create(element, name);
       this._assertExists(null, name, value);
       return value;
     });
@@ -377,8 +370,8 @@ export class AssertionContext<
         ? `${selectors.join(", ")} all exist`
         : `${selectors[0]} exists`,
       Object.values(elements)
-    ).every((element: iValue[]) => !element[0].isNullOrUndefined());
-    return flatten<iValue>(elements);
+    ).every((element: Value<any>[]) => !element[0].isNullOrUndefined());
+    return flatten<Value<any>>(elements);
   }
 
   public async existsAny(
@@ -392,8 +385,8 @@ export class AssertionContext<
         ? `${selectors.join(", ")} some exist`
         : `${selectors[0]} exists`,
       Object.values(elements)
-    ).some((element: iValue[]) => !element[0].isNullOrUndefined());
-    return flatten<iValue>(elements);
+    ).some((element: Value<any>[]) => !element[0].isNullOrUndefined());
+    return flatten<Value<any>>(elements);
   }
 
   /**
@@ -401,15 +394,15 @@ export class AssertionContext<
    *
    * @param selector
    */
-  public find<InputType extends iValue>(
+  public find<InputType, Wrapper extends Value<InputType>>(
     selector: string | string[],
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise<InputType, iValue> {
-    return ValuePromise.execute(async () => {
-      const selectors = toArray<string>(selector);
-      const params = getFindParams(a, b);
-      const element = await asyncUntil<iValue>(selectors, async (selector) => {
+  ): ValuePromise<InputType, Wrapper> | ValuePromise<null, Value<null>> {
+    const selectors = toArray<string>(selector);
+    const params = getFindParams(a, b);
+    return ValuePromise.execute<InputType, Wrapper>(async () => {
+      const element = await asyncUntil<Wrapper>(selectors, async (selector) => {
         const value =
           typeof a == "string"
             ? await this.response.find(selector, a, b)
@@ -418,11 +411,9 @@ export class AssertionContext<
             : await this.response.find(selector, b);
         return value.isNullOrUndefined() ? false : value;
       });
-      return (
-        element === null
-          ? wrapAsValue(this, null, getFindName(params, selectors, null))
-          : element
-      ) as InputType;
+      return element === null
+        ? this.valueFactory.createNull(getFindName(params, selectors, null))
+        : element;
     });
   }
 
@@ -435,10 +426,10 @@ export class AssertionContext<
     selector: string | string[],
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
-  ): Promise<iValue[]> {
+  ): Promise<Value<any>[]> {
     const selectors = toArray<string>(selector);
     const elements = await this._findAllForSelectors(selectors, a, b);
-    return flatten<iValue>(elements);
+    return flatten<Value<any>>(elements);
   }
 
   public findXPath(xPath: string) {
@@ -458,7 +449,7 @@ export class AssertionContext<
    */
   public submit(selector: string) {
     return ValuePromise.execute(async () => {
-      const el: iValue = await this.exists(selector);
+      const el = await this.exists(selector);
       if (el.isTag()) {
         el.submit();
       }
@@ -502,17 +493,17 @@ export class AssertionContext<
    *
    * @param selector
    */
-  click(selector: string, opts?: FindOptions): ValuePromise<any, iValue>;
+  click(selector: string, opts?: FindOptions): ValuePromise<any, Value<any>>;
   click(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): ValuePromise<any, iValue>;
+  ): ValuePromise<any, Value<any>>;
   click(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise<any, iValue>;
+  ): ValuePromise<any, Value<any>>;
   public click(
     selector: string,
     a?: FindOptions | string | RegExp,
@@ -631,8 +622,8 @@ export class AssertionContext<
     selectors: string[],
     a?: string | FindAllOptions | RegExp,
     b?: FindAllOptions
-  ): Promise<{ [selector: string]: iValue[] }> {
-    return asyncMapToObject<iValue[]>(selectors, async (selector) =>
+  ): Promise<{ [selector: string]: Value<any>[] }> {
+    return asyncMapToObject<Value<any>[]>(selectors, async (selector) =>
       typeof a == "string"
         ? this.response.findAll(selector, a, b)
         : a instanceof RegExp
@@ -649,7 +640,11 @@ export class AssertionContext<
     this.scenario.result(new AssertionActionFailed(verb, noun || ""));
   }
 
-  protected _assertExists(message: string | null, name: string, el: iValue) {
+  protected _assertExists(
+    message: string | null,
+    name: string,
+    el: Value<any>
+  ) {
     if (message) {
       el.isNullOrUndefined()
         ? this.scenario.result(new AssertionFail(message, name))

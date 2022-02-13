@@ -1,4 +1,4 @@
-import { iValue } from "./ivalue";
+import { Value } from "../value";
 
 export interface ValueOptions {
   // Human-readable name
@@ -8,7 +8,7 @@ export interface ValueOptions {
   // Similar to the selector but intended to be human-readable
   path?: string;
   // The parent document or section of the document where it was selected from
-  parent?: iValue<any>;
+  parent?: Value<any>;
   // The source for this element
   sourceCode?: string;
   // If this was an element with a tag, the tag name

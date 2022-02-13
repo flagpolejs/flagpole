@@ -25,7 +25,7 @@ flagpole("Simple Mock Tests", (suite) => {
     });
 
   suite
-    .scenario("Array of iValues", JsonScenario)
+    .scenario("Array of Values", JsonScenario)
     .mock({
       jsonBody: { data: [{ foo: "bar" }] },
     })

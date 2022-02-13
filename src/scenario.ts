@@ -49,8 +49,7 @@ import {
   ScenarioCallbackAndMessage,
   ScenarioStatusCallback,
 } from "./interfaces/iscenario";
-import { iValue } from "./interfaces/ivalue";
-import { Assertion, AssertionContext, ProtoResponse, Suite } from ".";
+import { Assertion, AssertionContext, ProtoResponse, Suite, Value } from ".";
 import { Adapter } from "./adapter";
 import { LocalAdapter } from "./adapter.local";
 import { NextCallback } from "./interfaces/next-callback";
@@ -607,8 +606,8 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
    * @param {string} url
    */
   public open(url: string, opts?: HttpRequestOptions): this;
-  public open(link: iValue, opts?: HttpRequestOptions): this;
-  public open(a: string | iValue, opts?: HttpRequestOptions) {
+  public open(link: Value<any>, opts?: HttpRequestOptions): this;
+  public open(a: string | Value<any>, opts?: HttpRequestOptions) {
     if (this.hasExecuted) {
       throw `Can call open after scenario has executed`;
     }
@@ -622,7 +621,7 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
       // Passed in a string, so open it as url
       this.url = String(a);
     } else {
-      // Passed in an iValue so get URL from that element
+      // Passed in an Value so get URL from that element
       runAsync(async () => {
         this.url = (await a.getUrl()).toString();
       });

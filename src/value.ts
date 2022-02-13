@@ -1,4 +1,3 @@
-import { iValue } from "./interfaces/ivalue";
 import {
   toType,
   isNullOrUndefined,
@@ -36,7 +35,7 @@ import { AssertionContext } from ".";
 import { AssertionIs } from "./assertion/assertion-is";
 import { ValueFactory } from "./helpers/value-factory";
 
-export class Value<InputType> implements iValue<InputType> {
+export class Value<InputType> {
   protected valueFactory = new ValueFactory(this.context);
 
   constructor(
@@ -117,39 +116,39 @@ export class Value<InputType> implements iValue<InputType> {
     return this.valueFactory.create(firstIn(this.$), `First in ${this.name}`);
   }
 
-  public get mid(): iValue<any> {
+  public get mid(): Value<any> {
     return this.valueFactory.create(middleIn(this.$), `Middle in ${this.name}`);
   }
 
-  public get last(): iValue<any> {
+  public get last(): Value<any> {
     return this.valueFactory.create(lastIn(this.$), `Last in ${this.name}`);
   }
 
-  public get random(): iValue<any> {
+  public get random(): Value<any> {
     return this.valueFactory.create(randomIn(this.$), `Random in ${this.name}`);
   }
 
-  public get string(): iValue<string> {
+  public get string(): Value<string> {
     return this.valueFactory.create(this.toString(), this.name);
   }
 
-  public get array(): iValue<any[]> {
+  public get array(): Value<any[]> {
     return this.valueFactory.create(this.toArray(), this.name);
   }
 
-  public get float(): iValue<number> {
+  public get float(): Value<number> {
     return this.valueFactory.create(this.toFloat(), this.name);
   }
 
-  public get int(): iValue<number> {
+  public get int(): Value<number> {
     return this.valueFactory.create(this.toInteger(), this.name);
   }
 
-  public get bool(): iValue<boolean> {
+  public get bool(): Value<boolean> {
     return this.valueFactory.create(this.toBoolean(), this.name);
   }
 
-  public get json(): iValue<any> {
+  public get json(): Value<any> {
     return this.valueFactory.create(this.toJSON(), this.name);
   }
 
@@ -397,8 +396,8 @@ export class Value<InputType> implements iValue<InputType> {
   }
 
   exists(): ValuePromise<InputType, this>;
-  exists(selector: string): ValuePromise<any, iValue>;
-  public exists(selector?: string): ValuePromise<any, iValue> {
+  exists(selector: string): ValuePromise<any, Value<any>>;
+  public exists(selector?: string): ValuePromise<any, Value<any>> {
     // Without a selector, we're making an assertion that this item exists and then returning itself
     if (selector === undefined) {
       this.isNullOrUndefined()
@@ -416,11 +415,11 @@ export class Value<InputType> implements iValue<InputType> {
     });
   }
 
-  public find(selector: string): ValuePromise<any, iValue> {
+  public find(selector: string): ValuePromise<any, Value<any>> {
     return ValuePromise.wrap(this.item(selector));
   }
 
-  public async findAll(selector: string): Promise<iValue<any>[]> {
+  public async findAll(selector: string): Promise<Value<any>[]> {
     return [await this.find(selector)];
   }
 
@@ -589,71 +588,71 @@ export class Value<InputType> implements iValue<InputType> {
     throw `This element does not support clear().`;
   }
 
-  public getAncestor(selector: string): ValuePromise<InputType, iValue> {
+  public getAncestor(selector: string): ValuePromise<InputType, Value<any>> {
     throw `getAncestor() is not supported by ${this.name}`;
   }
 
-  public async getChildren(selector?: string): Promise<iValue<any>[]> {
+  public async getChildren(selector?: string): Promise<Value<any>[]> {
     throw `getChildren() is not supported by ${this.name}`;
   }
 
-  public async getAncestors(selector: string): Promise<iValue<any>[]> {
+  public async getAncestors(selector: string): Promise<Value<any>[]> {
     throw `getAncestors() is not supported by ${this.name}`;
   }
 
-  public getAncestorOrSelf(selector: string): ValuePromise<any, iValue> {
+  public getAncestorOrSelf(selector: string): ValuePromise<any, Value<any>> {
     throw `getAncestorOrSelf() is not supported by ${this.name}`;
   }
 
-  public getFirstChild(selector?: string): ValuePromise<any, iValue> {
+  public getFirstChild(selector?: string): ValuePromise<any, Value<any>> {
     throw `getFirstChild() is not supported by ${this.name}`;
   }
 
-  public getLastChild(selector?: string): ValuePromise<any, iValue> {
+  public getLastChild(selector?: string): ValuePromise<any, Value<any>> {
     throw `getLastChild() is not supported by ${this.name}`;
   }
 
-  public getFirstSibling(selector?: string): ValuePromise<any, iValue> {
+  public getFirstSibling(selector?: string): ValuePromise<any, Value<any>> {
     throw `getFirstSibling() is not supported by ${this.name}`;
   }
 
-  public getLastSibling(selector?: string): ValuePromise<any, iValue> {
+  public getLastSibling(selector?: string): ValuePromise<any, Value<any>> {
     throw `getLastSibling() is not supported by ${this.name}`;
   }
 
-  public getChildOrSelf(selector?: string): ValuePromise<any, iValue> {
+  public getChildOrSelf(selector?: string): ValuePromise<any, Value<any>> {
     throw `getChildOrSelf() is not supported by ${this.name}`;
   }
 
-  public getDescendantOrSelf(selector?: string): ValuePromise<any, iValue> {
+  public getDescendantOrSelf(selector?: string): ValuePromise<any, Value<any>> {
     throw `getDescendantOrSelf() is not supported by ${this.name}`;
   }
 
-  public async getDescendants(selector?: string): Promise<iValue<any>[]> {
+  public async getDescendants(selector?: string): Promise<Value<any>[]> {
     throw `getDescendants() is not supported by ${this.name}`;
   }
 
-  public getParent(): ValuePromise<any, iValue> {
+  public getParent(): ValuePromise<any, Value<any>> {
     throw `getParent() is not supported by ${this.name}`;
   }
 
-  public async getSiblings(selector?: string): Promise<iValue<any>[]> {
+  public async getSiblings(selector?: string): Promise<Value<any>[]> {
     throw `getSiblings() is not supported by ${this.name}`;
   }
 
-  public getPreviousSibling(selector?: string): ValuePromise<any, iValue> {
+  public getPreviousSibling(selector?: string): ValuePromise<any, Value<any>> {
     throw `getPreviousSibling() is not supported by ${this.name}`;
   }
 
-  public async getPreviousSiblings(selector?: string): Promise<iValue<any>[]> {
+  public async getPreviousSiblings(selector?: string): Promise<Value<any>[]> {
     throw `getPreviousSiblings() is not supported by ${this.name}`;
   }
 
-  public getNextSibling(selector?: string): ValuePromise<any, iValue> {
+  public getNextSibling(selector?: string): ValuePromise<any, Value<any>> {
     throw `getNextSibling() is not supported by ${this.name}`;
   }
 
-  public async getNextSiblings(selector?: string): Promise<iValue<any>[]> {
+  public async getNextSiblings(selector?: string): Promise<Value<any>[]> {
     throw `getNextSiblings() is not supported by ${this.name}`;
   }
 
@@ -735,7 +734,7 @@ export class Value<InputType> implements iValue<InputType> {
       : this.context.assert(this);
   }
 
-  public split(by: string | RegExp, limit?: number): iValue<any[]> {
+  public split(by: string | RegExp, limit?: number): Value<any[]> {
     return this.valueFactory.create(this.toString().split(by, limit), {
       name: this.name,
     });
@@ -758,19 +757,17 @@ export class Value<InputType> implements iValue<InputType> {
     return this.valueFactory.create(value, `${nth} value in ${this.name}`);
   }
 
-  public map(callback: SyncMapperCallback): iValue<any[]> {
+  public map(callback: SyncMapperCallback): Value<any[]> {
     return this.valueFactory.create(
       this.isArray() ? this.toArray().map(callback) : callback(this.$),
-      { name: this.name }
+      this.name
     );
   }
 
   public filter(
     func: (value: any, i?: number, arr?: any[]) => boolean
-  ): iValue<any[]> {
-    return this.valueFactory.create(this.toArray().filter(func), {
-      name: this.name,
-    });
+  ): Value<any[]> {
+    return this.valueFactory.create(this.toArray().filter(func), this.name);
   }
 
   public each(callback: SyncIteratorCallback): this {
@@ -778,27 +775,27 @@ export class Value<InputType> implements iValue<InputType> {
     return this;
   }
 
-  public min(key?: string): iValue<any> {
+  public min(key?: string): Value<any> {
     return this.valueFactory.create(
       this.toArray().reduce((min, row) => {
         const val = key ? row[key] : row;
         return min === null || val < min ? val : min;
       }, null),
-      { name: this.name }
+      this.name
     );
   }
 
-  public max(key?: string): iValue<any> {
+  public max(key?: string): Value<any> {
     return this.valueFactory.create(
       this.toArray().reduce((max, row) => {
         const val = key ? row[key] : row;
         return max === null || val > max ? val : max;
       }, null),
-      { name: this.name }
+      this.name
     );
   }
 
-  public sum(key?: string): iValue<number> {
+  public sum(key?: string): Value<number> {
     return this.valueFactory.create(
       Number(
         this.toArray().reduce(
@@ -806,11 +803,11 @@ export class Value<InputType> implements iValue<InputType> {
           0
         )
       ),
-      { name: this.name }
+      this.name
     );
   }
 
-  public count(key?: string): iValue<number> {
+  public count(key?: string): Value<number> {
     return this.valueFactory.create(
       Number(
         this.toArray().reduce((count, row) => {
@@ -820,17 +817,15 @@ export class Value<InputType> implements iValue<InputType> {
           return count + 1;
         }, 0)
       ),
-      { name: this.name }
+      this.name
     );
   }
 
-  public unique(): iValue<any[]> {
-    return this.valueFactory.create([...new Set(this.toArray())], {
-      name: this.name,
-    });
+  public unique(): Value<any[]> {
+    return this.valueFactory.create([...new Set(this.toArray())], this.name);
   }
 
-  public groupBy(key: string): iValue<{
+  public groupBy(key: string): Value<{
     [key: string]: any[];
   }> {
     return this.valueFactory.create(
@@ -842,11 +837,11 @@ export class Value<InputType> implements iValue<InputType> {
         grouper[val].push(row);
         return grouper;
       }, {}),
-      { name: this.name }
+      this.name
     );
   }
 
-  public asc(key?: string): iValue<any[]> {
+  public asc(key?: string): Value<any[]> {
     const collator = new Intl.Collator("en", {
       numeric: true,
       sensitivity: "base",
@@ -854,10 +849,10 @@ export class Value<InputType> implements iValue<InputType> {
     const arr = this.toArray().sort((a, b) =>
       key ? collator.compare(a[key], b[key]) : collator.compare(a, b)
     );
-    return this.valueFactory.create(arr, { name: this.name });
+    return this.valueFactory.create(arr, this.name);
   }
 
-  public desc(key?: string): iValue<any[]> {
+  public desc(key?: string): Value<any[]> {
     const collator = new Intl.Collator("en", {
       numeric: true,
       sensitivity: "base",
@@ -866,48 +861,43 @@ export class Value<InputType> implements iValue<InputType> {
       (a, b) =>
         (key ? collator.compare(a[key], b[key]) : collator.compare(a, b)) * -1
     );
-    return this.valueFactory.create(arr, { name: this.name });
+    return this.valueFactory.create(arr, this.name);
   }
 
-  public median(key?: string): iValue<number> {
+  public median(key?: string): Value<number> {
     const arr = this.toArray().sort((a, b) =>
       key ? parseFloat(a[key]) - parseFloat(b[key]) : a - b
     );
     const med = Number(arr[Math.floor(arr.length / 2)]);
-    return this.valueFactory.create(med, { name: this.name });
+    return this.valueFactory.create(med, this.name);
   }
 
-  public avg(key?: string): iValue<number> {
+  public avg(key?: string): Value<number> {
     const arr = this.toArray();
     return this.valueFactory.create(
       arr.reduce((sum, row) => (sum += Number(key ? row[key] : row)), 0) /
         arr.length,
-      { name: this.name }
+      this.name
     );
   }
 
-  public reduce(callback: SyncReducerCallback, initial?: any): iValue<any> {
-    return this.valueFactory.create(this.toArray().reduce(callback, initial), {
-      name: this.name,
-    });
+  public reduce(callback: SyncReducerCallback, initial?: any): Value<any> {
+    return this.valueFactory.create(
+      this.toArray().reduce(callback, initial),
+      this.name
+    );
   }
 
-  public every(callback: SyncIteratorBoolCallback): iValue<boolean> {
-    return this.valueFactory.create(this.toArray().every(callback), {
-      name: this.name,
-    });
+  public every(callback: SyncIteratorBoolCallback): Value<boolean> {
+    return this.valueFactory.create(this.toArray().every(callback), this.name);
   }
 
-  public some(callback: SyncIteratorBoolCallback): iValue<boolean> {
-    return this.valueFactory.create(this.toArray().some(callback), {
-      name: this.name,
-    });
+  public some(callback: SyncIteratorBoolCallback): Value<boolean> {
+    return this.valueFactory.create(this.toArray().some(callback), this.name);
   }
 
-  public none(callback: SyncIteratorBoolCallback): iValue<boolean> {
-    return this.valueFactory.create(!this.toArray().some(callback), {
-      name: this.name,
-    });
+  public none(callback: SyncIteratorBoolCallback): Value<boolean> {
+    return this.valueFactory.create(!this.toArray().some(callback), this.name);
   }
 
   public item(key: string | number) {
@@ -925,7 +915,7 @@ export class Value<InputType> implements iValue<InputType> {
     return this;
   }
 
-  public col(key: string | string[]): iValue<any[]> {
+  public col(key: string | string[]): Value<any[]> {
     // Array of strings
     if (Array.isArray(key)) {
       const name = `${key.join(", ")} in ${this.name}`;

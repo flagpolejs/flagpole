@@ -15,7 +15,7 @@ context.assert(meta).exists();
 const meta = await context.exists("meta");
 ```
 
-The [exists()](assertion-context?id=exists-promiseltivaluegt) method will find the element or property and make an assertion that it exists
+The [exists()](assertion-context?id=exists-promiseltvaluegt) method will find the element or property and make an assertion that it exists
 
 ---
 
@@ -53,9 +53,9 @@ const dataArray = await context.find("data");
 const firstDataObj = dataArray.first;
 ```
 
-Using [.$](ivalue?id=-any-readonly) stips the Flagpole wrapper off of a value and prevents us from using Flapgole methods on that value.
+Using [.$](value?id=-any-readonly) stips the Flagpole wrapper off of a value and prevents us from using Flapgole methods on that value.
 
-You can use [first](ivalue?id=first-ivalue-readonly), [last](ivalue?id=last-ivalue-readonly), or [random](ivalue?id=random-ivalue-readonly) to grab items from an array and keep them wrapped in Flagpole's `iValue` type.
+You can use [first](value?id=first-value-readonly), [last](value?id=last-value-readonly), or [random](value?id=random-value-readonly) to grab items from an array and keep them wrapped in Flagpole's `value` type.
 
 ---
 
@@ -267,7 +267,7 @@ await form.fillForm("id", {
 });
 ```
 
-Using [.type()](assertion-context?id=typepath-string-texttotype-string-opts-any-promiseltvoidgt) isn't bad, but if you have many fields to fill out, [.fillForm()](ivalue?id=fillform-promiseltvaluegt) might be a better alternative.
+Using [.type()](assertion-context?id=typepath-string-texttotype-string-opts-any-promiseltvoidgt) isn't bad, but if you have many fields to fill out, [.fillForm()](value?id=fillform-promiseltvaluegt) might be a better alternative.
 
 ## Asynchronous
 

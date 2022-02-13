@@ -1,4 +1,4 @@
-# iValue
+# Value
 
 This is an interface that covers most things that you select within Flagpole. It (and the classes that implement it) is a wrapper of the actual underlying value that lets you do some nice things.
 
@@ -23,29 +23,29 @@ This is a quick way to get the underlying input value within this wrapper object
 const firstDataItem = context.response.jsonBody.$.data[0];
 ```
 
-### array: iValue (readonly)
+### array: Value (readonly)
 
-Returns a new iValue, identical to this one but whose input value is an array.
+Returns a new Value, identical to this one but whose input value is an array.
 
-### bool: iValue (readonly)
+### bool: Value (readonly)
 
-Returns a new iValue, identical to this one but whose input value is an boolean. It will take the current iValue's input and evaluate if it is truthy.
+Returns a new Value, identical to this one but whose input value is an boolean. It will take the current Value's input and evaluate if it is truthy.
 
-### first: iValue (readonly)
+### first: Value (readonly)
 
-Gets the first item from this array or object and returns it as a new iValue.
+Gets the first item from this array or object and returns it as a new Value.
 
-### float: iValue (readonly)
+### float: Value (readonly)
 
-Returns a new iValue, identical to this one but whose input value is a float.
+Returns a new Value, identical to this one but whose input value is a float.
 
-### keys: iValue (readonly)
+### keys: Value (readonly)
 
 Maps the value to an array of its keys if an object or an array.
 
-### int: iValue (readonly)
+### int: Value (readonly)
 
-Returns a new iValue, identical to this one but whose input value is an integer.
+Returns a new Value, identical to this one but whose input value is an integer.
 
 ### is: AssertionIs (readonly)
 
@@ -55,30 +55,30 @@ Returns an "Is-Assertion" that can be a great way to make powerful and readable 
 data.item("dateStart").is.date().and.is.sameOrBeforeDate(data.item("dateEnd"));
 ```
 
-### json: iValue (readonly)
+### json: Value (readonly)
 
-Returns a new iValue, identical to this one but whose input value is an object by parsing the string contents of this current element with `JSON.parse()`.
+Returns a new Value, identical to this one but whose input value is an object by parsing the string contents of this current element with `JSON.parse()`.
 
 ```javascript
 context.response.body.json.echo();
 ```
 
-### last: iValue (readonly)
+### last: Value (readonly)
 
-Gets the last item from this array or object and returns it as a new iValue.
+Gets the last item from this array or object and returns it as a new Value.
 
-### length: iValue (readonly)
+### length: Value (readonly)
 
 Get a new Value object, containing the length of the input value. This could be the number of characters in a string-like value or the number of elements if it's an array.
 
-In this case the input value the iValue resulting from `context.find` will be an array. So `.length` gives us an iValue with the number of items in the array.
+In this case the input value the Value resulting from `context.find` will be an array. So `.length` gives us an Value with the number of items in the array.
 
 ```javascript
 const images = await context.findAll("img");
 const numberOfImages = images.length;
 ```
 
-In other cases, the input value might be a string. Then the `.length` would be an iValue containing the number of characters.
+In other cases, the input value might be a string. Then the `.length` would be an Value containing the number of characters.
 
 ```javascript
 const title = await context.find("title");
@@ -86,13 +86,13 @@ const text = await title.getInnerText();
 context.assert(text.length).greaterThan(0);
 ```
 
-### lowercase: iValue (readonly)
+### lowercase: Value (readonly)
 
 Makes the value an lowercase string.
 
-### mid: iValue (readonly)
+### mid: Value (readonly)
 
-Gets the middle item from this array or object and returns it as a new iValue.
+Gets the middle item from this array or object and returns it as a new Value.
 
 ### name: string (readonly)
 
@@ -105,21 +105,21 @@ const title = await context.find("title");
 context.comment('Flagpole calls title: ${title.name}`);
 ```
 
-### random: iValue (readonly)
+### random: Value (readonly)
 
-Gets a random item from this array or object and returns it as a new iValue.
+Gets a random item from this array or object and returns it as a new Value.
 
-### string: iValue (readonly)
+### string: Value (readonly)
 
-Returns a new iValue, identical to this one but whose input value is a string.
+Returns a new Value, identical to this one but whose input value is a string.
 
-### uppercase: iValue (readonly)
+### uppercase: Value (readonly)
 
 Makes the value an uppercase string.
 
-### values: iValue (readonly)
+### values: Value (readonly)
 
-Maps the iValue to an array of its values if an object.
+Maps the Value to an array of its values if an object.
 
 ## Methods
 
@@ -145,13 +145,13 @@ const sortedUsStates = usStates.asc("name");
 
 ### assert(message?: string): Assertion
 
-Make an assertion against this iValue with an optional assertion message.
+Make an assertion against this Value with an optional assertion message.
 
 ```javascript
 context.response.statusCode.assert("HTTP Status is 200").equals(200);
 ```
 
-### avg(key?: string): iValue;
+### avg(key?: string): Value;
 
 Loop through the array or object items and take the average value.
 
@@ -238,9 +238,9 @@ await loginLink.click();
 await context.waitForNavigation();
 ```
 
-### col(key: string | string[]): iValue;
+### col(key: string | string[]): Value;
 
-Loops through the input array of objects and returns an iValue containing the array of just that column.
+Loops through the input array of objects and returns an Value containing the array of just that column.
 
 ```javascript
 const prices = lineItems.col("price");
@@ -252,7 +252,7 @@ If you pass in an array of strings, the resulting array will be an array of arra
 const quantitiesAndPrices = lineItems.col(["quantity", "price"]);
 ```
 
-### count(key?: string): iValue;
+### count(key?: string): Value;
 
 Loop through the array or object items and count the number of items.
 
@@ -338,7 +338,7 @@ const download2 = await cssLink.download("./localFile.css", {
 });
 ```
 
-### each(callback: (val) => void): iValue;
+### each(callback: (val) => void): Value;
 
 Loop through the array or object items.
 
@@ -348,7 +348,7 @@ rows.each((row, i) => {
 });
 ```
 
-### echo(): iValue
+### echo(): Value
 
 This will convert the input to a string and write it out as a scenario comment. It is a shorthand for using the `context.comment` method to do the same thing.
 
@@ -364,7 +364,7 @@ It can also take a function as an argument so that you can formulate it into a h
 lineItems.length.echo((n) => `There are ${n} line items`);
 ```
 
-### every(callback: (val) => boolean): iValue;
+### every(callback: (val) => boolean): Value;
 
 Loop through the array or object items and make sure all return true.
 
@@ -372,9 +372,9 @@ Loop through the array or object items and make sure all return true.
 const allAreActive = rows.every((row) => row.isActive);
 ```
 
-### exists(): Promise\<iValue\>
+### exists(): Promise\<Value\>
 
-#### exists(): Promise\<iValue\>;
+#### exists(): Promise\<Value\>;
 
 With no arguments, you are making an assertion that this element exists. That is, it is not `null` or `undefined`. An assertion message is automatically generated based on the original selector.
 
@@ -385,7 +385,7 @@ await h1.exists();
 
 Note that using exists in this manner is not supported in Appium testing.
 
-#### exists(message: string): Promise\<iValue\>;
+#### exists(message: string): Promise\<Value\>;
 
 You can alternately specify a custom asertion message:
 
@@ -432,7 +432,7 @@ await form.fillForm("ng-relect-name", {
 });
 ```
 
-### filter(callback: (val) => boolean): iValue;
+### filter(callback: (val) => boolean): Value;
 
 Loop through the array or object items and filter the input;
 
@@ -440,7 +440,7 @@ Loop through the array or object items and filter the input;
 const activeRows = rows.filter((row) => row.isActive);
 ```
 
-### find(selector: string): Promise\<iValue\>
+### find(selector: string): Promise\<Value\>
 
 Find the first element in the descendents of the current element that matches this selector. If there are no matches, you will be returned a Value object that contains null.
 
@@ -452,7 +452,7 @@ There are additional overloads for this method. For more details see the documen
 
 Note that find does not work in this manner on Appium elements.
 
-### findAll(selector: string): Promise\<iValue\>
+### findAll(selector: string): Promise\<Value\>
 
 Find all of the elements in the descendents of the current element that match this selector. If there are no matches, it will be an empty array.
 
@@ -468,7 +468,7 @@ Note that findAll does not work in this manner on Appium elements.
 
 Give this element focus.
 
-### gesture(type: GestureType, opts: GestureOpts): Promise\<iValue\>
+### gesture(type: GestureType, opts: GestureOpts): Promise\<Value\>
 
 Perform a gesture on an element. Currently, pinch and stretch gestures are supported.
 
@@ -619,7 +619,7 @@ const searchTerm = await input.getValue();
 
 ### groupBy(key: string): Value
 
-Loops through the input array of objects and returns a new iValue with an object with a property for each distinct value in that field, each with a value that is an array of the items that had that value.
+Loops through the input array of objects and returns a new Value with an object with a property for each distinct value in that field, each with a value that is an array of the items that had that value.
 
 ```javascript
 const eventsByCountry = events.groupBy("venueCountry");
@@ -709,7 +709,7 @@ Self explanatory.
 
 Self explanatory.
 
-### item(selector: string): iValue
+### item(selector: string): Value
 
 This is very similar to find on a JSON scenario, except that it is sychrononous. This allows you to chain it.
 
@@ -717,9 +717,9 @@ This is very similar to find on a JSON scenario, except that it is sychrononous.
 jsonData.item("meta.count").assert().greaterThan(0);
 ```
 
-### join(joiner: string): iValue;
+### join(joiner: string): Value;
 
-Convert the input to a array and join it into a string, return the resulting iValue;
+Convert the input to a array and join it into a string, return the resulting Value;
 
 ### load(): Promise\<Scenario\>
 
@@ -734,7 +734,7 @@ image.load("Make sure logo is a valid image");
 
 <<<<<<< HEAD
 
-### longpress(): Promise\<iValue\>;
+### longpress(): Promise\<Value\>;
 
 =======
 
@@ -744,9 +744,9 @@ image.load("Make sure logo is a valid image");
 
 Longpress on an element. Holds touch action for 2000 milliseconds by default. This currently only works for Appium elements.
 
-### map(mapper: Function): iValue;
+### map(mapper: Function): Value;
 
-If input is an array, map over each element in the array to transform it. Otherwise, use mapper to transform the input itself. This method returns a new iValue with the transformed input.
+If input is an array, map over each element in the array to transform it. Otherwise, use mapper to transform the input itself. This method returns a new Value with the transformed input.
 
 With an array:
 
@@ -760,7 +760,7 @@ With a string input:
 const lcName = name.map((str) => str.toLowerCase());
 ```
 
-### max(key?: string): iValue;
+### max(key?: string): Value;
 
 Loop through the array or object items and find the maximum value.
 
@@ -776,7 +776,7 @@ If the input is an array of objects, it will look for the max value in that fiel
 const maxPrice = lineItems.max("price");
 ```
 
-### median(key?: string): iValue;
+### median(key?: string): Value;
 
 Loop through the array or object items and take the median value.
 
@@ -792,7 +792,7 @@ If the input is an array of objects, the argument then should be the key of the 
 const medianPrice = rows.median("price");
 ```
 
-### min(key?: string): iValue;
+### min(key?: string): Value;
 
 Loop through the array or object items and find the minimum value.
 
@@ -808,7 +808,7 @@ If the input is an array of objects, it will look for the min value in that fiel
 const minPrice = lineItems.min("price");
 ```
 
-### none(callback: (val) => boolean): iValue;
+### none(callback: (val) => boolean): Value;
 
 Loop through the array or object items and make sure none return true.
 
@@ -816,7 +816,7 @@ Loop through the array or object items and make sure none return true.
 const noneAreActive = rows.none((row) => row.isActive);
 ```
 
-### nth(index: number): iValue;
+### nth(index: number): Value;
 
 Get the `n`th value in the array or object.
 
@@ -824,9 +824,9 @@ Get the `n`th value in the array or object.
 const fourthItem = array.nth(3);
 ```
 
-### pluck(property: string): iValue;
+### pluck(property: string): Value;
 
-When the Value contains an array of objects, this method will "pluck" the value of that property from each item in the array. It returns an iValue containing that array of values.
+When the Value contains an array of objects, this method will "pluck" the value of that property from each item in the array. It returns an Value containing that array of values.
 
 ```javascript
 const ids = array.pluck("id");
@@ -845,7 +845,7 @@ array
 
 Press these keys on the keyboard.
 
-### reduce(callback: (val) => any, initial: any): iValue;
+### reduce(callback: (val) => any, initial: any): Value;
 
 Loop through the array or object items with reduce. Returns the final result.
 
@@ -866,7 +866,7 @@ const emailField = await context.exists("input[name='email']");
 await emailField.scrollTo();
 ```
 
-### some(callback: (val) => boolean): iValue;
+### some(callback: (val) => boolean): Value;
 
 Loop through the array or object items and see if any return true.
 
@@ -874,9 +874,9 @@ Loop through the array or object items and see if any return true.
 const anyAreActive = rows.some((row) => row.isActive);
 ```
 
-### split(splitter: string | RegExp): iValue;
+### split(splitter: string | RegExp): Value;
 
-Convert the input to a string and split it into an array, return the resulting iValue;
+Convert the input to a string and split it into an array, return the resulting Value;
 
 ### submit(): Promise\<Scenario\>
 
@@ -894,7 +894,7 @@ await form.submit();
 await context.waitForNavigation();
 ```
 
-### sum(key?: string): iValue;
+### sum(key?: string): Value;
 
 Loop through the array or object items and sum up the total value.
 
@@ -910,7 +910,7 @@ If the input is an array of objects, the argument then should be the key of the 
 const totalCount = rows.sum("quantity");
 ```
 
-### tap(opts?: PointerClick): Promise\<iValue\>;
+### tap(opts?: PointerClick): Promise\<Value\>;
 
 Tap the element, by default with touch.
 
@@ -975,7 +975,7 @@ await textBox.type("College Football is Back", { delay: 100 });
 
 ### unique(): Value
 
-Takes the input array of items or object values, removes duplicates, and returns a new iValue with an array of that result of distinct values.
+Takes the input array of items or object values, removes duplicates, and returns a new Value with an array of that result of distinct values.
 
 ```javascript
 const countries = rows.col("venueCountry").unique();

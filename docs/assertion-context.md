@@ -166,9 +166,9 @@ context.comment(context.response.body);
 context.comment(json.data);
 ```
 
-### exists(): Promise\<iValue\>
+### exists(): Promise\<Value\>
 
-#### exists(selector: string): Promise\<iValue\>
+#### exists(selector: string): Promise\<Value\>
 
 This is just like an `find`, but it also does an assertion that the element actually exists. It is similar to `waitForExists` except that it doesn't wait around.
 
@@ -184,7 +184,7 @@ Or you can grab the element that it returns:
 const firstArticle = await context.exists("section.topStories article");
 ```
 
-#### exists(selector: string, contains: string): Promise\<iValue\>
+#### exists(selector: string, contains: string): Promise\<Value\>
 
 Pass in a third argument as a string to test whether the item exists that contains this text.
 
@@ -196,7 +196,7 @@ await context.exists(
 );
 ```
 
-#### exists(selector: string, mathces: RegExp): Promise\<iValue\>
+#### exists(selector: string, mathces: RegExp): Promise\<Value\>
 
 This third argument can alternately be a regular expression:
 
@@ -208,7 +208,7 @@ await context.exists(
 );
 ```
 
-#### exists(selector: string, contains: string | RegExp, opts: FindOps): Promise\<iValue\>
+#### exists(selector: string, contains: string | RegExp, opts: FindOps): Promise\<Value\>
 
 As a fourth argument, you can include any of the `opts` properties from `find()`, for example:
 
@@ -232,9 +232,9 @@ await context.exists(
 );
 ```
 
-The `exists` method will return the matched element inside of the iValue or a null iValue if there is no match.
+The `exists` method will return the matched element inside of the Value or a null Value if there is no match.
 
-#### exists(selectors: string[]): Promise\<iValue\>
+#### exists(selectors: string[]): Promise\<Value\>
 
 With any variation of `exists`, your first agument can also be an array of selectors. Passing in more than one element for the array will make sure that at least one of them exists, and it will return the first one that does.
 
@@ -303,9 +303,9 @@ const loginText = await context.evaluate((json) => {
 
 In theory, with any of these types, you could also manipulate the response with this method.
 
-### find(): Promise\<iValue\>
+### find(): Promise\<Value\>
 
-#### find(selector: string, opts?: FindOpts): Promise\<iValue\>
+#### find(selector: string, opts?: FindOpts): Promise\<Value\>
 
 Select the first matching element or value at the given path. What this actually does varies by the type of scenario.
 
@@ -332,7 +332,7 @@ const loginButton = await context.find("id/login_button");
 
 Valid selector strategies are `id`, `xpath`, `class name`, `accessibility id`, `css selector`. It is only possible to find elements by CSS selector in a Webview context. When testing an Android app with UiAutomator2, you may also use `-android uiautomator`, though it is recommended to use a different strategy, see below. When testing an Android app with Espresso, additional selector strategies include `-android viewtag`, `tag name`, `-android datamatcher`, `-android viewmatcher`, `text`. When testing an iOS app, you may also use `-ios class chain` and `-ios predicate string`. Note that spaces are valid in the selector strategy.
 
-#### find(selector: string, contents: string, opts?: FindOpts): Promise\<iValue\>
+#### find(selector: string, contents: string, opts?: FindOpts): Promise\<Value\>
 
 Find the first element matching the given selector that have the given text. The second argument is a string of the text we are looking for the element to contain
 
@@ -356,7 +356,7 @@ const buttonWithYesValue = await context.find("button", "Yes", {
 
 Please note that findBy is not supported in Appium testing.
 
-#### find(selector: string, matches: RegExp, opts?: FindOpts): Promise\<iValue\>
+#### find(selector: string, matches: RegExp, opts?: FindOpts): Promise\<Value\>
 
 Similar to the previous overload of `find`, we can also search the contents of the element for one that matches a regular expression. This gives us greater control over how exactly it should match, such as matching capitalization and spacing.
 
@@ -372,7 +372,7 @@ const buttonExactlyYes = await context.find("button", /^Yes$/);
 
 RegEx is not supported in Appium testing.
 
-#### find(selectors: string[]): Promise\<iValue\>
+#### find(selectors: string[]): Promise\<Value\>
 
 With any of the above variations, selector can also be an array of strings. This will cause `find` to look for the first instance of ANY of those selector paths.
 
@@ -382,13 +382,13 @@ const firstButtonLikeThing = await context.find(["button", ".button"]);
 
 This is not supported in Appium testing.
 
-### findAll(): Promise\<iValue[]\>
+### findAll(): Promise\<Value[]\>
 
 Select the elements or values at the given path. What this actually does varies by the type of scenario.
 
 This always returns an array. It will be an empty array if nothing matched. The array elements themselves will be the same object types that you'd have gotten from `.find()`.
 
-#### findAll(selector: string, opts?: FindAllOpts): Promise\<iValue[]\>
+#### findAll(selector: string, opts?: FindAllOpts): Promise\<Value[]\>
 
 The first argument is always the selector. It is the only required argument.
 
@@ -416,7 +416,7 @@ const articles = await context.findAll("section.headlines article", {
 });
 ```
 
-#### findAll(selector: string, contains: string, opts?: FindAllOpts): Promise\<iValue[]\>
+#### findAll(selector: string, contains: string, opts?: FindAllOpts): Promise\<Value[]\>
 
 This overload will allow you to search for only elements that match the selector AND have the contains string in the text node.
 
@@ -428,7 +428,7 @@ The optional `opts` argument allows you to use `offset`, `limit` and `findBy` (w
 
 With Appium, this works the same way as the find by selector and text overload does in the `find()` method, with the addition of the `offset` and `limit` fields in the `opts` argument.
 
-#### findAll(selector: string, matches: RegExp, opts?: FindAllOpts): Promise\<iValue[]\>
+#### findAll(selector: string, matches: RegExp, opts?: FindAllOpts): Promise\<Value[]\>
 
 This works like the `contains` string, except you can use a regular expression for more exacting matches.
 
@@ -438,7 +438,7 @@ const itemsContainingTupac = await context.findAll("li", /tupac/i);
 
 This is not supported when Appium testing.
 
-#### findAll(selectors: string[]): Promise\<iValue[]\>
+#### findAll(selectors: string[]): Promise\<Value[]\>
 
 With any of the above variations of `findAll`, the first argument can also be an array of strings. If you pass in more than one, the resulting response will include any items that match any of those selectors.
 

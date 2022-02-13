@@ -1,10 +1,9 @@
 import { ValuePromise } from "../value-promise";
-import { iValue } from "../interfaces/ivalue";
 import { ValueOptions } from "../interfaces/value-options";
 import { Value } from "../value";
 import { AssertionContext } from "../assertion/assertion-context";
 
-interface ValueConstructor<DataType, Wrapper extends iValue<DataType>> {
+interface ValueConstructor<DataType, Wrapper extends Value<DataType>> {
   new (data: DataType, context: AssertionContext, opts: ValueOptions): Wrapper;
 }
 
