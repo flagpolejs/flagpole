@@ -8,39 +8,52 @@ import { ValuePromise } from "./value-promise";
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
 import { PointerMove } from "./interfaces/pointer";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
-import { JsFunction, KeyValue, OptionalXY } from "./interfaces/generic-types";
+import {
+  HttpHeaderValue,
+  JsFunction,
+  KeyValue,
+  OptionalXY,
+} from "./interfaces/generic-types";
 import { ScreenProperties } from "./interfaces/screen-properties";
 import { iScenario } from "./interfaces/iscenario";
 import { HttpResponse } from "./http/http-response";
 import { ScreenshotOpts } from "./interfaces/screenshot";
+import { JsonData } from "./json/jpath";
+import { Value } from ".";
+import { ValueFactory } from "./helpers/value-factory";
 
 export abstract class ProtoResponse {
   protected _currentUrl: string | null = null;
   protected _httpResponse: HttpResponse = createEmptyResponse();
 
+  public readonly context: AssertionContext;
+  public readonly valueFactory: ValueFactory;
+
   constructor(public readonly scenario: iScenario) {
     this._currentUrl = scenario.finalUrl;
+    this.context = new AssertionContext(this.scenario, this);
+    this.valueFactory = new ValueFactory(this.context);
   }
 
   public init(res: HttpResponse) {
     this._httpResponse = res;
   }
 
-  public get context(): AssertionContext {
-    return new AssertionContext(this.scenario, this);
-  }
-
-  abstract find(selector: string, opts?: FindOptions): ValuePromise;
+  abstract find(
+    selector: string,
+    opts?: FindOptions
+  ): ValuePromise<any, iValue>;
   abstract find(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): ValuePromise;
+  ): ValuePromise<any, iValue>;
   abstract find(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise;
+  ): ValuePromise<any, iValue>;
+
   abstract findAll(
     selector: string,
     opts?: FindAllOptions
@@ -220,7 +233,7 @@ export abstract class ProtoResponse {
     return this.httpResponse.body;
   }
 
-  public getSource(): ValuePromise {
+  public getSource(): ValuePromise<string, Value> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support getSource.`
     );
@@ -232,16 +245,16 @@ export abstract class ProtoResponse {
    * @param {string} key
    * @returns {Value}
    */
-  public header(key: string): iValue<any> {
+  public header(key: string): Value<HttpHeaderValue | null> {
     // Try first as they put it in the test, then try all lowercase
     key =
       typeof this.httpResponse.headers[key] !== "undefined"
         ? key
         : key.toLowerCase();
-    const headerValue: any = this.httpResponse.headers[key];
+    const headerValue = this.httpResponse.headers[key];
     return wrapAsValue(
       this.context,
-      typeof headerValue == "undefined" ? null : headerValue,
+      headerValue === undefined ? null : headerValue,
       "HTTP Headers[" + key + "]"
     );
   }
@@ -286,37 +299,46 @@ export abstract class ProtoResponse {
     return this.context.pause(1);
   }
 
-  public waitForHidden(selector: string, timeout?: number): ValuePromise {
+  public waitForHidden(
+    selector: string,
+    timeout?: number
+  ): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForHidden.`
     );
   }
 
-  public waitForVisible(selector: string, timeout?: number): ValuePromise {
+  public waitForVisible(
+    selector: string,
+    timeout?: number
+  ): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForVisible.`
     );
   }
 
-  waitForExists(selector: string, timeout?: number): ValuePromise;
+  waitForExists(selector: string, timeout?: number): ValuePromise<any, iValue>;
   waitForExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): ValuePromise;
-  public waitForExists(..._args: any[]): ValuePromise {
+  ): ValuePromise<any, iValue>;
+  public waitForExists(..._args: any[]): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForExists.`
     );
   }
 
-  waitForNotExists(selector: string, timeout?: number): ValuePromise;
+  waitForNotExists(
+    selector: string,
+    timeout?: number
+  ): ValuePromise<any, iValue>;
   waitForNotExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): ValuePromise;
-  public waitForNotExists(..._args: any[]): ValuePromise {
+  ): ValuePromise<any, iValue>;
+  public waitForNotExists(..._args: any[]): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForNotExists.`
     );
@@ -326,7 +348,7 @@ export abstract class ProtoResponse {
     selector: string,
     text: string | RegExp,
     timeout?: number
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForHavingText.`
     );
@@ -348,13 +370,13 @@ export abstract class ProtoResponse {
     selector: string,
     textToType: string,
     opts: any = {}
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support type.`
     );
   }
 
-  public clear(selector: string): ValuePromise {
+  public clear(selector: string): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support clear.`
     );
@@ -364,19 +386,22 @@ export abstract class ProtoResponse {
     selector: string,
     textToType: string,
     opts: any = {}
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support clearThenType.`
     );
   }
 
-  public waitForXPath(xPath: string, timeout?: number): ValuePromise {
+  public waitForXPath(
+    xPath: string,
+    timeout?: number
+  ): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForXPath.`
     );
   }
 
-  public findXPath(xPath: string): ValuePromise {
+  public findXPath(xPath: string): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support findXPath.`
     );
@@ -391,7 +416,7 @@ export abstract class ProtoResponse {
   public findHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support findHavingText.`
     );
@@ -409,7 +434,7 @@ export abstract class ProtoResponse {
   public selectOption(
     selector: string,
     value: string | string[]
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support selectOption.`
     );
@@ -439,22 +464,22 @@ export abstract class ProtoResponse {
    *
    * @param selector
    */
-  public click(selector: string, opts?: FindOptions): ValuePromise;
+  public click(selector: string, opts?: FindOptions): ValuePromise<any, iValue>;
   public click(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): ValuePromise;
+  ): ValuePromise<any, iValue>;
   public click(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise;
+  ): ValuePromise<any, iValue>;
   public click(
     selector: string,
     a?: FindOptions | string | RegExp,
     b?: FindOptions
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     return ValuePromise.execute(async () => {
       const contains = typeof a == "string" ? a : undefined;
       const matches = a instanceof RegExp ? a : undefined;
@@ -471,7 +496,7 @@ export abstract class ProtoResponse {
     });
   }
 
-  public serialize(): object {
+  public serialize(): JsonData {
     return {
       statusCode: this.statusCode.$,
       statusMessage: this.statusMessage.$,

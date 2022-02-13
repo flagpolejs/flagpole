@@ -1,4 +1,5 @@
-import { KeyValue } from "./generic-types";
+import { JsonData } from "../json/jpath";
+import { KeyValue, HttpHeaders } from "./generic-types";
 
 export const HttpMethodVerbArray = [
   "get",
@@ -57,10 +58,10 @@ export type HttpRequestOptions = {
 
 export interface HttpResponseOptions {
   body?: string;
-  jsonBody?: any;
+  jsonBody?: JsonData;
   rawBody?: any;
   status?: [number, string];
-  headers?: KeyValue;
+  headers?: HttpHeaders;
   cookies?: KeyValue;
   trailers?: KeyValue;
   method?: string;

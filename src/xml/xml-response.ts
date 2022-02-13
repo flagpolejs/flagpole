@@ -2,8 +2,8 @@ import { HttpResponse } from "../http/http-response";
 import { HtmlResponse } from "../html/html-response";
 import * as cheerio from "cheerio";
 import { ValuePromise } from "../value-promise";
-import { iValue } from "../interfaces/ivalue";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
+import { CheerioElement, HTMLElement } from "../html/html-element";
 
 export class XmlResponse extends HtmlResponse {
   public init(httpResponse: HttpResponse) {
@@ -21,7 +21,7 @@ export class XmlResponse extends HtmlResponse {
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise {
+  ): ValuePromise<CheerioElement, HTMLElement> {
     return super.find(this.normalizeSelector(selector), a, b);
   }
 
@@ -29,7 +29,7 @@ export class XmlResponse extends HtmlResponse {
     selector: string,
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
-  ): Promise<iValue[]> {
+  ): Promise<HTMLElement[]> {
     return super.findAll(this.normalizeSelector(selector), a, b);
   }
 }

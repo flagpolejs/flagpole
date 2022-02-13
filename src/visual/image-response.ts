@@ -4,7 +4,8 @@ import { HttpResponse } from "../http/http-response";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { iValue } from "../interfaces/ivalue";
-import { createStandardValue } from "../helpers/value-factory";
+import { JsonData } from "../json/jpath";
+import { Value } from "../value";
 
 export interface ImageProperties {
   width: number;
@@ -43,7 +44,7 @@ export class ImageResponse extends ProtoResponse {
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
-    this.imageProperties = httpResponse.jsonBody as ImageProperties;
+    this.imageProperties = httpResponse.jsonBody as unknown as ImageProperties;
     this.context
       .assert(
         "MIME Type matches expected value for an image",
@@ -56,20 +57,16 @@ export class ImageResponse extends ProtoResponse {
     throw "This type of scenario does not suport eval.";
   }
 
-  public find(propertyName: string): ValuePromise {
-    return ValuePromise.wrap(
-      createStandardValue(
-        typeof this.imageProperties[propertyName] !== "undefined"
-          ? this.imageProperties[propertyName]
-          : null,
-        this.context,
-        { name: `${propertyName} of Image` }
-      )
-    );
+  public find(propertyName: string): ValuePromise<JsonData, Value> {
+    const input =
+      typeof this.imageProperties[propertyName] !== "undefined"
+        ? this.imageProperties[propertyName]
+        : null;
+    return this.valueFactory.createPromise(input, `${propertyName} of Image`);
   }
 
-  public async findAll(propertyName: string): Promise<iValue[]> {
-    const value: iValue = await this.find(propertyName);
+  public async findAll(propertyName: string): Promise<Value<JsonData>[]> {
+    const value = await this.find(propertyName);
     return value.isNull() ? [] : [value];
   }
 }

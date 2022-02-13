@@ -19,7 +19,6 @@ import * as fs from "fs";
 import { ValuePromise } from "./value-promise";
 import { HttpResponse } from "./http/http-response";
 import { HttpRequest } from "./http/http-request";
-import { jpathSearch } from "./json/jpath";
 import {
   SyncIteratorBoolCallback,
   SyncIteratorCallback,
@@ -32,13 +31,13 @@ import { Bounds } from "./interfaces/bounds";
 import { HttpRequestOptions } from "./interfaces/http";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
 import { iScenario, ScenarioConstructor } from "./interfaces/iscenario";
-import { StandardValueFactory } from "./helpers/value-factory";
 import { ValueOptions } from "./interfaces/value-options";
 import { AssertionContext } from ".";
 import { AssertionIs } from "./assertion/assertion-is";
+import { ValueFactory } from "./helpers/value-factory";
 
 export class Value<InputType = any> implements iValue<InputType> {
-  protected valueFactory = new StandardValueFactory(this.context);
+  protected valueFactory = new ValueFactory(this.context);
 
   constructor(
     public readonly $: InputType,
@@ -78,90 +77,80 @@ export class Value<InputType = any> implements iValue<InputType> {
     return this.assert().is;
   }
 
-  public selectOption(value: string | string[]): ValuePromise {
+  public selectOption(value: string | string[]): ValuePromise<InputType, this> {
     throw "This Value does not support select.";
   }
 
-  public pressEnter(): ValuePromise {
+  public pressEnter(): ValuePromise<InputType, this> {
     throw "This Value does not support pressEnter.";
   }
 
   public get length(): Value<number> {
     return this.valueFactory.create(
       Number(this.$ && this.$["length"] ? this.$["length"] : 0),
-      {
-        name: `Length of ${this.name}`,
-      }
+      `Length of ${this.name}`
     );
   }
 
   public get trim(): Value<string> {
     return this.valueFactory.create(
       typeof this.$ === "string" ? this.$.trim() : "",
-      { name: `Trim of ${this.name}` }
+      `Trim of ${this.name}`
     );
   }
 
   public get uppercase(): Value<string> {
     return this.valueFactory.create(
       typeof this.$ === "string" ? this.$.toUpperCase() : "",
-      { name: `Uppercase of ${this.name}` }
+      `Uppercase of ${this.name}`
     );
   }
 
   public get lowercase(): Value<string> {
     return this.valueFactory.create(
       typeof this.$ === "string" ? this.$.toLowerCase() : "",
-      { name: `Lowercase of ${this.name}` }
+      `Lowercase of ${this.name}`
     );
   }
 
   public get first(): Value<any> {
-    return this.valueFactory.create(firstIn(this.$), {
-      name: `First in ${this.name}`,
-    });
+    return this.valueFactory.create(firstIn(this.$), `First in ${this.name}`);
   }
 
   public get mid(): iValue<any> {
-    return this.valueFactory.create(middleIn(this.$), {
-      name: `Middle in ${this.name}`,
-    });
+    return this.valueFactory.create(middleIn(this.$), `Middle in ${this.name}`);
   }
 
   public get last(): iValue<any> {
-    return this.valueFactory.create(lastIn(this.$), {
-      name: `Last in ${this.name}`,
-    });
+    return this.valueFactory.create(lastIn(this.$), `Last in ${this.name}`);
   }
 
   public get random(): iValue<any> {
-    return this.valueFactory.create(randomIn(this.$), {
-      name: `Random in ${this.name}`,
-    });
+    return this.valueFactory.create(randomIn(this.$), `Random in ${this.name}`);
   }
 
   public get string(): iValue<string> {
-    return this.valueFactory.create(this.toString(), { name: this.name });
+    return this.valueFactory.create(this.toString(), this.name);
   }
 
   public get array(): iValue<any[]> {
-    return this.valueFactory.create(this.toArray(), { name: this.name });
+    return this.valueFactory.create(this.toArray(), this.name);
   }
 
   public get float(): iValue<number> {
-    return this.valueFactory.create(this.toFloat(), { name: this.name });
+    return this.valueFactory.create(this.toFloat(), this.name);
   }
 
   public get int(): iValue<number> {
-    return this.valueFactory.create(this.toInteger(), { name: this.name });
+    return this.valueFactory.create(this.toInteger(), this.name);
   }
 
   public get bool(): iValue<boolean> {
-    return this.valueFactory.create(this.toBoolean(), { name: this.name });
+    return this.valueFactory.create(this.toBoolean(), this.name);
   }
 
   public get json(): iValue<any> {
-    return this.valueFactory.create(this.toJSON(), { name: this.name });
+    return this.valueFactory.create(this.toJSON(), this.name);
   }
 
   public get isFlagpoleValue(): true {
@@ -308,25 +297,18 @@ export class Value<InputType = any> implements iValue<InputType> {
     return value == thisValue.$;
   }
 
-  /*
-  public as(aliasName: string): iValue {
-    this.context.scenario.set(aliasName, this);
-    return this;
-  }
-  */
-
-  public getProperty(key: string): ValuePromise {
+  public getProperty(key: string): ValuePromise<any, Value> {
     return this.valueFactory.createPromise(this.$[key], {
       name: `${this.name} property of ${key}`,
     });
   }
 
-  public click(opts: PointerClick): ValuePromise {
+  public click(opts?: PointerClick): ValuePromise<InputType, this> {
     this.context.logFailure(`Element could not be clicked on: ${this.name}`);
     return ValuePromise.wrap(this);
   }
 
-  public submit(): ValuePromise {
+  public submit(): ValuePromise<InputType, this> {
     this.context.logFailure(`Element could not be submitted on: ${this.name}`);
     return ValuePromise.wrap(this);
   }
@@ -371,7 +353,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     );
   }
 
-  public getUrl(): ValuePromise {
+  public getUrl(): ValuePromise<string | null, Value> {
     return ValuePromise.execute(async () => {
       const url = await (async () => {
         if (this.isString()) {
@@ -402,30 +384,39 @@ export class Value<InputType = any> implements iValue<InputType> {
     });
   }
 
-  public fillForm(attributeName: string, formData: KeyValue): ValuePromise;
-  public fillForm(formData: KeyValue): ValuePromise;
-  public fillForm(a: string | KeyValue, b?: KeyValue): ValuePromise {
+  public fillForm(
+    attributeName: string,
+    formData: KeyValue
+  ): ValuePromise<InputType, this>;
+  public fillForm(formData: KeyValue): ValuePromise<InputType, this>;
+  public fillForm(
+    a: string | KeyValue,
+    b?: KeyValue
+  ): ValuePromise<InputType, this> {
     return ValuePromise.wrap(this);
   }
 
-  public exists(selector?: string): ValuePromise {
+  exists(): ValuePromise<InputType, this>;
+  exists(selector: string): ValuePromise<any, iValue>;
+  public exists(selector?: string): ValuePromise<any, iValue> {
+    // Without a selector, we're making an assertion that this item exists and then returning itself
+    if (selector === undefined) {
+      this.isNullOrUndefined()
+        ? this._failedAction("EXISTS", `${this.name}`)
+        : this._completedAction("EXISTS", `${this.name}`);
+      return ValuePromise.wrap(this);
+    }
+    // With a secelector we're doing a find, seeing if that sub-item exists and returning that sub-item
     return ValuePromise.execute(async () => {
-      if (selector === undefined) {
-        this.isNullOrUndefined()
-          ? this._failedAction("EXISTS", `${this.name}`)
-          : this._completedAction("EXISTS", `${this.name}`);
-        return this;
-      } else {
-        const el: iValue<any> = await this.find(selector);
-        el.isNull()
-          ? this._failedAction("EXISTS", `${selector}`)
-          : this._completedAction("EXISTS", `${selector}`);
-        return el;
-      }
+      const el = await this.find(selector);
+      el.isNull()
+        ? this._failedAction("EXISTS", `${selector}`)
+        : this._completedAction("EXISTS", `${selector}`);
+      return el;
     });
   }
 
-  public find(selector: string): ValuePromise {
+  public find(selector: string): ValuePromise<any, iValue> {
     return ValuePromise.wrap(this.item(selector));
   }
 
@@ -433,7 +424,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     return [await this.find(selector)];
   }
 
-  public getClassName(): ValuePromise {
+  public getClassName(): ValuePromise<string, Value> {
     throw "Class Name is not supported for this type of value";
   }
 
@@ -452,7 +443,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     })();
   }
 
-  public getTag(): ValuePromise {
+  public getTag(): ValuePromise<string, Value> {
     return this.valueFactory.createPromise(this.tagName, {
       name: `Tag Name of ${this.name}`,
     });
@@ -466,17 +457,17 @@ export class Value<InputType = any> implements iValue<InputType> {
     return tag instanceof RegExp ? (tag as RegExp).test(myTag) : myTag == tag;
   }
 
-  public getInnerText(): ValuePromise {
+  public getInnerText(): ValuePromise<string, Value> {
     return this.valueFactory.createPromise(this.toString(), {
       name: `Inner Text of ${this.name}`,
     });
   }
 
-  public getInnerHtml(): ValuePromise {
+  public getInnerHtml(): ValuePromise<string, Value> {
     throw "Inner HTML not supported for this type of value";
   }
 
-  public getOuterHtml(): ValuePromise {
+  public getOuterHtml(): ValuePromise<string, Value> {
     throw "Outer HTML not supported for this type of value";
   }
 
@@ -496,19 +487,19 @@ export class Value<InputType = any> implements iValue<InputType> {
       : (value as RegExp).test(strThisValue);
   }
 
-  public getAttribute(key: string): ValuePromise {
+  public getAttribute(key: string): ValuePromise<any, Value> {
     return this.getProperty(key);
   }
 
-  public getStyleProperty(key: string): ValuePromise {
+  public getStyleProperty(key: string): ValuePromise<string, Value> {
     throw "Style Property not supported for this type of value";
   }
 
-  public getValue(): ValuePromise {
+  public getValue(): ValuePromise<any, iValue> {
     throw "Get Value is not supported for this type of value";
   }
 
-  public scrollTo(): ValuePromise {
+  public scrollTo(): ValuePromise<InputType, this> {
     throw "Scroll To is not supported for this type of value";
   }
 
@@ -517,7 +508,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     return text ? text == myText : !!myText;
   }
 
-  public getText(): ValuePromise<string> {
+  public getText(): ValuePromise<string, Value> {
     return this.valueFactory.createPromise(this.toString(), {
       name: this.name,
       parent: this.parent,
@@ -525,7 +516,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     });
   }
 
-  public get values(): iValue<any> {
+  public get values(): Value<any> {
     let values: any[] = [];
     try {
       values = Object.values(this.$);
@@ -536,7 +527,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     });
   }
 
-  public get keys(): iValue<string[]> {
+  public get keys(): Value<string[]> {
     let keys: string[] = [];
     try {
       keys = Object.keys(this.$);
@@ -557,43 +548,46 @@ export class Value<InputType = any> implements iValue<InputType> {
     throw `This element does not support eval().`;
   }
 
-  public focus(): ValuePromise {
+  public focus(): ValuePromise<InputType, this> {
     throw `This element does not support focus().`;
   }
 
-  public hover(): ValuePromise {
+  public hover(): ValuePromise<InputType, this> {
     throw `This element does not support hover().`;
   }
 
-  public blur(): ValuePromise {
+  public blur(): ValuePromise<InputType, this> {
     throw `This element does not support blur().`;
   }
 
-  public tap(opts: PointerClick): ValuePromise {
+  public tap(opts: PointerClick): ValuePromise<InputType, this> {
     throw `This element does not support tap().`;
   }
 
-  public longpress(opts: PointerClick): ValuePromise {
+  public longpress(opts: PointerClick): ValuePromise<InputType, this> {
     throw `This element does not support longpress().`;
   }
 
-  public press(key: string, opts?: any): ValuePromise {
+  public press(key: string, opts?: any): ValuePromise<InputType, this> {
     throw `This element does not support press().`;
   }
 
-  public clearThenType(textToType: string, opts?: any): ValuePromise {
+  public clearThenType(
+    textToType: string,
+    opts?: any
+  ): ValuePromise<InputType, this> {
     throw `This element does not support clearThenType().`;
   }
 
-  public type(textToType: string, opts?: any): ValuePromise {
+  public type(textToType: string, opts?: any): ValuePromise<InputType, this> {
     throw `This element does not support type().`;
   }
 
-  public clear(): ValuePromise {
+  public clear(): ValuePromise<InputType, this> {
     throw `This element does not support clear().`;
   }
 
-  public getAncestor(selector: string): ValuePromise {
+  public getAncestor(selector: string): ValuePromise<InputType, iValue> {
     throw `getAncestor() is not supported by ${this.name}`;
   }
 
@@ -605,31 +599,31 @@ export class Value<InputType = any> implements iValue<InputType> {
     throw `getAncestors() is not supported by ${this.name}`;
   }
 
-  public getAncestorOrSelf(selector: string): ValuePromise {
+  public getAncestorOrSelf(selector: string): ValuePromise<any, iValue> {
     throw `getAncestorOrSelf() is not supported by ${this.name}`;
   }
 
-  public getFirstChild(selector?: string): ValuePromise {
+  public getFirstChild(selector?: string): ValuePromise<any, iValue> {
     throw `getFirstChild() is not supported by ${this.name}`;
   }
 
-  public getLastChild(selector?: string): ValuePromise {
+  public getLastChild(selector?: string): ValuePromise<any, iValue> {
     throw `getLastChild() is not supported by ${this.name}`;
   }
 
-  public getFirstSibling(selector?: string): ValuePromise {
+  public getFirstSibling(selector?: string): ValuePromise<any, iValue> {
     throw `getFirstSibling() is not supported by ${this.name}`;
   }
 
-  public getLastSibling(selector?: string): ValuePromise {
+  public getLastSibling(selector?: string): ValuePromise<any, iValue> {
     throw `getLastSibling() is not supported by ${this.name}`;
   }
 
-  public getChildOrSelf(selector?: string): ValuePromise {
+  public getChildOrSelf(selector?: string): ValuePromise<any, iValue> {
     throw `getChildOrSelf() is not supported by ${this.name}`;
   }
 
-  public getDescendantOrSelf(selector?: string): ValuePromise {
+  public getDescendantOrSelf(selector?: string): ValuePromise<any, iValue> {
     throw `getDescendantOrSelf() is not supported by ${this.name}`;
   }
 
@@ -637,7 +631,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     throw `getDescendants() is not supported by ${this.name}`;
   }
 
-  public getParent(): ValuePromise {
+  public getParent(): ValuePromise<any, iValue> {
     throw `getParent() is not supported by ${this.name}`;
   }
 
@@ -645,7 +639,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     throw `getSiblings() is not supported by ${this.name}`;
   }
 
-  public getPreviousSibling(selector?: string): ValuePromise {
+  public getPreviousSibling(selector?: string): ValuePromise<any, iValue> {
     throw `getPreviousSibling() is not supported by ${this.name}`;
   }
 
@@ -653,7 +647,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     throw `getPreviousSiblings() is not supported by ${this.name}`;
   }
 
-  public getNextSibling(selector?: string): ValuePromise {
+  public getNextSibling(selector?: string): ValuePromise<any, iValue> {
     throw `getNextSibling() is not supported by ${this.name}`;
   }
 
@@ -704,9 +698,10 @@ export class Value<InputType = any> implements iValue<InputType> {
       ...opts,
     });
     const resp = await request.fetch(this.context.scenario.adapter);
-    const file: string | Buffer = resp.headers["content-type"].startsWith(
-      "image"
-    )
+    const header = Array.isArray(resp.headers["content-type"])
+      ? resp.headers["content-type"][0]
+      : resp.headers["content-type"];
+    const file: string | Buffer = header.startsWith("image")
       ? Buffer.from(resp.body, "base64")
       : resp.body;
     if (localFilePath) {
@@ -716,19 +711,19 @@ export class Value<InputType = any> implements iValue<InputType> {
     return resp;
   }
 
-  public waitForFunction(js: JsFunction): ValuePromise {
+  public waitForFunction(js: JsFunction): ValuePromise<any, this> {
     throw `waitForFunction() is not supported by this type of scenario`;
   }
 
-  public waitForHidden(): ValuePromise {
+  public waitForHidden(): ValuePromise<any, this> {
     throw `waitForHidden() is not supported by this type of scenario`;
   }
 
-  public waitForVisible(): ValuePromise {
+  public waitForVisible(): ValuePromise<any, this> {
     throw `waitForVisible() is not supported by this type of scenario`;
   }
 
-  public setValue(text: string): ValuePromise {
+  public setValue(text: string): ValuePromise<any, this> {
     throw `setValue() is not supported by ${this.name}`;
   }
 
@@ -917,15 +912,12 @@ export class Value<InputType = any> implements iValue<InputType> {
     });
   }
 
-  public item(key: string | number): iValue<any> {
+  public item(key: string | number) {
     const name = `${key} in ${this.name}`;
-    if (typeof key === "string") {
-      return this.valueFactory.create(jpathSearch(this.$, key), { name });
-    }
     if (this.$[key]) {
-      return this.valueFactory.create(this.$[key], { name: name });
+      return this.valueFactory.create(this.$[key], { name });
     }
-    return this.valueFactory.create(null, { name: name });
+    return this.valueFactory.create(null, { name });
   }
 
   public echo(callback?: (str: string) => void): this {
@@ -962,7 +954,10 @@ export class Value<InputType = any> implements iValue<InputType> {
     );
   }
 
-  public gesture(type: GestureType, opts: GestureOpts): ValuePromise {
+  public gesture(
+    type: GestureType,
+    opts: GestureOpts
+  ): ValuePromise<InputType, this> {
     throw `gesture not implemented for ${this.name}`;
   }
 

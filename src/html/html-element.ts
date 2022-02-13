@@ -13,13 +13,17 @@ import { AssertionContext } from "..";
 
 let $: cheerio.Root;
 
-export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
+export type CheerioElement = cheerio.Element | cheerio.Cheerio | null;
+
+export class HTMLElement<
+  InputType extends CheerioElement = CheerioElement
+> extends DOMElement<InputType> {
   public static async create(
-    input: any,
+    input: CheerioElement,
     context: AssertionContext,
     opts: ValueOptions
-  ): Promise<HTMLElement<any>> {
-    const element = new HTMLElement(input, context, opts);
+  ) {
+    const element = new this(input, context, opts);
     element.opts.tagName = await element._getTagName();
     element.opts.sourceCode = (await element.getOuterHtml()).toString();
     if (!opts.name) {
@@ -30,11 +34,7 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
     return element;
   }
 
-  protected constructor(
-    input: T,
-    context: AssertionContext,
-    opts: ValueOptions
-  ) {
+  constructor(input: InputType, context: AssertionContext, opts: ValueOptions) {
     super(input, context, {
       name: "HTML Element",
       ...opts,
@@ -55,7 +55,7 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise {
+  ): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
       const params = getFindParams(a, b);
       const name: string = `${selector} under ${this.name}`;
@@ -67,7 +67,7 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
           return HTMLElement.create(element, this.context, { name, path });
         }
       }
-      return this.context.wrapValue(null, { name });
+      return HTMLElement.create(null, this.context, { name });
     });
   }
 
@@ -75,9 +75,9 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
     selector: string,
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
-  ): Promise<iValue<cheerio.Element>[]> {
+  ): Promise<HTMLElement[]> {
     const params = getFindParams(a, b);
-    const out: HTMLElement<cheerio.Element>[] = [];
+    const out: HTMLElement[] = [];
     const elements: cheerio.Element[] = this.cheerio.find(selector).toArray();
     await asyncForEach(elements, async (element, i) => {
       return out.push(
@@ -87,22 +87,30 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
         })
       );
     });
-    return filterFind(out, params.contains || params.matches, params.opts);
+    return filterFind<CheerioElement, HTMLElement>(
+      out,
+      params.contains || params.matches,
+      params.opts
+    );
   }
 
-  public getAncestorOrSelf(selector: string): ValuePromise {
-    return ValuePromise.execute(async () => {
-      const closest = this.cheerio.closest(selector);
-      const name: string = `Closest ${selector} of ${this.name}`;
-      const path: string = `${this.path}[ancestor-or-self::${selector}]`;
-      if (closest.length > 0) {
-        return HTMLElement.create(closest[0], this.context, { name, path });
-      }
-      return this.context.wrapValue(null, { name });
-    });
+  public getAncestorOrSelf(
+    selector: string
+  ): ValuePromise<CheerioElement, HTMLElement> {
+    const closest = this.cheerio.closest(selector);
+    const name: string = `Closest ${selector} of ${this.name}`;
+    const path: string = `${this.path}[ancestor-or-self::${selector}]`;
+    const el = closest.length > 0 ? closest[0] : null;
+    return this.valueFactory.createPromise<CheerioElement, HTMLElement>(
+      el,
+      { name, path },
+      HTMLElement
+    );
   }
 
-  public getFirstChild(selector: string): ValuePromise {
+  public getFirstChild(
+    selector: string
+  ): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
       const child = this.cheerio.children(selector).first();
       return HTMLElement.create(child, this.context, {
@@ -112,7 +120,9 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
     });
   }
 
-  public getLastChild(selector: string): ValuePromise {
+  public getLastChild(
+    selector: string
+  ): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
       const child = this.cheerio.children(selector).last();
       return HTMLElement.create(child, this.context, {
@@ -136,11 +146,9 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
     return out;
   }
 
-  public async getSiblings(
-    selector: string
-  ): Promise<iValue<cheerio.Element>[]> {
+  public async getSiblings(selector: string): Promise<HTMLElement[]> {
     const children = this.cheerio.siblings(selector).toArray();
-    const out: HTMLElement<cheerio.Element>[] = [];
+    const out: HTMLElement[] = [];
     for (let i = 0; i < children.length; i++) {
       out.push(
         await HTMLElement.create(children[i], this.context, {
@@ -152,7 +160,9 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
     return out;
   }
 
-  public getFirstSibling(selector: string): ValuePromise {
+  public getFirstSibling(
+    selector: string
+  ): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
       const child = this.cheerio.siblings(selector).first();
       return HTMLElement.create(child, this.context, {
@@ -162,7 +172,9 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
     });
   }
 
-  public getLastSibling(selector: string): ValuePromise {
+  public getLastSibling(
+    selector: string
+  ): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
       const child = this.cheerio.siblings(selector).last();
       return HTMLElement.create(child, this.context, {
@@ -172,38 +184,35 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
     });
   }
 
-  public getAncestor(selector: string = "*"): ValuePromise {
-    return ValuePromise.execute(async () => {
-      const ancestors = this.cheerio.parentsUntil(selector);
-      const name: string = `Ancestor of ${this.name}`;
-      const path: string = `${this.path}[ancestor::${selector}][0]`;
-      return ancestors.length > 0
-        ? HTMLElement.create(ancestors[0], this.context, { name, path })
-        : this.context.wrapValue(null, { name });
-    });
+  public getAncestor(selector: string = "*"): ValuePromise<any, iValue> {
+    const ancestors = this.cheerio.parentsUntil(selector);
+    const name: string = `Ancestor of ${this.name}`;
+    const path: string = `${this.path}[ancestor::${selector}][0]`;
+    const el: CheerioElement = ancestors.length > 0 ? ancestors[0] : null;
+    return this.valueFactory.createPromise(el, { name, path });
   }
 
-  public getParent(): ValuePromise {
+  public getParent(): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
       const parent = this.cheerio.parent();
       const name: string = `Parent of ${this.name}`;
       const path: string = `${this.path}[..]`;
-      if (parent !== null) {
-        return HTMLElement.create(parent, this.context, { name, path });
-      }
-      return this.context.wrapValue(null, { name });
+      return HTMLElement.create(parent, this.context, { name, path });
     });
   }
 
-  public getPreviousSibling(selector: string = "*"): ValuePromise {
+  public getPreviousSibling(
+    selector: string = "*"
+  ): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
       const siblings = this.cheerio.prev(selector);
       const name: string = `Previous Sibling of ${this.name}`;
       const path: string = `${this.path}[preceding-sibling::${selector}][0]`;
-      if (siblings.length > 0) {
-        return HTMLElement.create(siblings[0], this.context, { name, path });
-      }
-      return this.context.wrapValue(null, { name });
+      return HTMLElement.create(
+        siblings.length > 0 ? siblings[0] : null,
+        this.context,
+        { name, path }
+      );
     });
   }
 
@@ -223,15 +232,18 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
     return siblings;
   }
 
-  public getNextSibling(selector: string = "*"): ValuePromise {
+  public getNextSibling(
+    selector: string = "*"
+  ): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
       const siblings = this.cheerio.next(selector);
       const name: string = `Next Sibling of ${this.name}`;
       const path: string = `${this.path}/following-sibling::${selector}[0]`;
-      if (siblings.length > 0) {
-        return HTMLElement.create(siblings[0], this.context, { name, path });
-      }
-      return this.context.wrapValue(null, { name });
+      return HTMLElement.create(
+        siblings.length > 0 ? siblings[0] : null,
+        this.context,
+        { name, path }
+      );
     });
   }
 
@@ -252,7 +264,7 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
   /**
    * Click on this element and then load a new page.
    */
-  public click(): ValuePromise {
+  public click(): ValuePromise<InputType, this> {
     return ValuePromise.execute(async () => {
       // If this is a link tag, treat it the same as load
       if (await this._isLinkTag()) {
@@ -293,9 +305,12 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
    *
    * @param formData
    */
-  public fillForm(attributeName: string, formData: KeyValue): ValuePromise;
-  public fillForm(formData: KeyValue): ValuePromise;
-  public fillForm(a: string | KeyValue, b?: KeyValue): ValuePromise {
+  public fillForm(
+    attributeName: string,
+    formData: KeyValue
+  ): ValuePromise<InputType, this>;
+  public fillForm(formData: KeyValue): ValuePromise<InputType, this>;
+  public fillForm(a: string | KeyValue, b?: KeyValue) {
     return ValuePromise.execute(async () => {
       if (!(await this._isFormTag())) {
         throw new Error("This is not a form element.");
@@ -324,7 +339,7 @@ export class HTMLElement<T = any> extends DOMElement implements iValue<T> {
   /**
    * If this is a form element, submit the form
    */
-  public submit(): ValuePromise {
+  public submit(): ValuePromise<InputType, this> {
     return ValuePromise.execute(async () => {
       if (!(await this._isFormTag())) {
         throw new Error("You can only use .submit() with a form element.");

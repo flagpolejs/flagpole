@@ -39,8 +39,8 @@ import {
   Value,
 } from "..";
 import { ValueOptions } from "../interfaces/value-options";
-import { createStandardValue } from "../helpers/value-factory";
 import { AssertionResult } from "../logging/assertion-result";
+import { ValueFactory } from "../helpers/value-factory";
 
 const getParamsFromExists = (
   a: string,
@@ -72,6 +72,7 @@ export class AssertionContext<
   ScenarioType extends iScenario = iScenario,
   ResponseType extends ProtoResponse = ProtoResponse
 > {
+  protected valueFactory = new ValueFactory(this);
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
 
@@ -178,7 +179,7 @@ export class AssertionContext<
     selector: string,
     textToType: string,
     opts: any = {}
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     return this.response.clearThenType(selector, textToType, opts);
   }
 
@@ -187,7 +188,7 @@ export class AssertionContext<
    *
    * @param selector
    */
-  public clear(selector: string): ValuePromise {
+  public clear(selector: string): ValuePromise<any, iValue> {
     return this.response.clear(selector);
   }
 
@@ -195,7 +196,7 @@ export class AssertionContext<
     selector: string,
     textToType: string,
     opts: any = {}
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     return this.response.type(selector, textToType, opts);
   }
 
@@ -261,7 +262,10 @@ export class AssertionContext<
     this._completedAction("WAIT", "Navigation");
   }
 
-  public waitForXPath(xPath: string, timeout?: number): ValuePromise {
+  public waitForXPath(
+    xPath: string,
+    timeout?: number
+  ): ValuePromise<any, iValue> {
     return ValuePromise.execute(async () => {
       const el: iValue = await this.response.waitForXPath(xPath, timeout);
       el.isNull()
@@ -277,7 +281,10 @@ export class AssertionContext<
    * @param selector
    * @param timeout
    */
-  public waitForHidden(selector: string, timeout?: number): ValuePromise {
+  public waitForHidden(
+    selector: string,
+    timeout?: number
+  ): ValuePromise<any, iValue> {
     return ValuePromise.execute(async () => {
       const el: iValue = await this.response.waitForHidden(selector, timeout);
       el.isNull()
@@ -293,7 +300,10 @@ export class AssertionContext<
    * @param selector
    * @param timeout
    */
-  public waitForVisible(selector: string, timeout?: number): ValuePromise {
+  public waitForVisible(
+    selector: string,
+    timeout?: number
+  ): ValuePromise<any, iValue> {
     return ValuePromise.execute(async () => {
       const el: iValue = await this.response.waitForVisible(selector, timeout);
       el.isNull()
@@ -314,7 +324,7 @@ export class AssertionContext<
     selector: string,
     text: string | RegExp,
     timeout?: number
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     return ValuePromise.execute(async () =>
       this.waitForExists(selector, text, timeout)
     );
@@ -323,17 +333,20 @@ export class AssertionContext<
   /**
    * Wait for element at the selected path to exist in the DOM
    */
-  public waitForExists(selector: string, timeout?: number): ValuePromise;
+  public waitForExists(
+    selector: string,
+    timeout?: number
+  ): ValuePromise<any, iValue>;
   public waitForExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): ValuePromise;
+  ): ValuePromise<any, iValue>;
   public waitForExists(
     selector: string,
     a?: number | string | RegExp,
     b?: number
-  ): ValuePromise {
+  ) {
     return ValuePromise.execute(async () => {
       const selectors = toArray<string>(selector);
       try {
@@ -352,7 +365,7 @@ export class AssertionContext<
     selector: string,
     a?: number | string | RegExp,
     b?: number
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     return ValuePromise.execute(async () => {
       try {
         // @ts-ignore This is fine, TypeScript is being stupid
@@ -375,7 +388,7 @@ export class AssertionContext<
     selector: string | string[],
     a?: string | FindOptions | RegExp,
     b?: FindOptions
-  ): ValuePromise {
+  ): ValuePromise<any, iValue> {
     return ValuePromise.execute(async () => {
       const selectors = toArray<string>(selector);
       const params = getFindParams(a, b);
@@ -435,12 +448,12 @@ export class AssertionContext<
    *
    * @param selector
    */
-  public find<T extends iValue>(
+  public find<InputType extends iValue>(
     selector: string | string[],
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise<T> {
-    return ValuePromise.execute<T>(async () => {
+  ): ValuePromise<InputType, iValue> {
+    return ValuePromise.execute(async () => {
       const selectors = toArray<string>(selector);
       const params = getFindParams(a, b);
       const element = await asyncUntil<iValue>(selectors, async (selector) => {
@@ -456,7 +469,7 @@ export class AssertionContext<
         element === null
           ? wrapAsValue(this, null, getFindName(params, selectors, null))
           : element
-      ) as T;
+      ) as InputType;
     });
   }
 
@@ -475,7 +488,7 @@ export class AssertionContext<
     return flatten<iValue>(elements);
   }
 
-  public findXPath(xPath: string): ValuePromise {
+  public findXPath(xPath: string): ValuePromise<any, iValue> {
     return ValuePromise.execute(async () => {
       return this.response.findXPath(xPath);
     });
@@ -490,7 +503,7 @@ export class AssertionContext<
    *
    * @param selector
    */
-  public submit(selector: string): ValuePromise {
+  public submit(selector: string): ValuePromise<any, iValue> {
     return ValuePromise.execute(async () => {
       const el: iValue = await this.exists(selector);
       if (el.isTag()) {
@@ -536,14 +549,22 @@ export class AssertionContext<
    *
    * @param selector
    */
-  click(selector: string, opts?: FindOptions): ValuePromise;
-  click(selector: string, contains: string, opts?: FindOptions): ValuePromise;
-  click(selector: string, matches: RegExp, opts?: FindOptions): ValuePromise;
+  click(selector: string, opts?: FindOptions): ValuePromise<any, iValue>;
+  click(
+    selector: string,
+    contains: string,
+    opts?: FindOptions
+  ): ValuePromise<any, iValue>;
+  click(
+    selector: string,
+    matches: RegExp,
+    opts?: FindOptions
+  ): ValuePromise<any, iValue>;
   public click(
     selector: string,
     a?: FindOptions | string | RegExp,
     b?: FindOptions
-  ): ValuePromise {
+  ) {
     return ValuePromise.execute(async () => {
       return typeof a == "string"
         ? this.response.click(selector, a, b)
@@ -618,7 +639,10 @@ export class AssertionContext<
   public none = asyncNone;
   public each = asyncForEach;
 
-  public count<T>(arr: T[], callback?: IteratorBoolCallback): ValuePromise {
+  public count<T>(
+    arr: T[],
+    callback?: IteratorBoolCallback
+  ): ValuePromise<any, iValue> {
     return ValuePromise.execute(async () => {
       if (callback) {
         const n = await asyncCount<T>(arr, callback);
@@ -647,14 +671,10 @@ export class AssertionContext<
     await this.response.hideKeyboard();
   }
 
-  public getSource(): ValuePromise {
+  public getSource(): ValuePromise<string, Value> {
     return ValuePromise.execute(async () => {
       return await this.response.getSource();
     });
-  }
-
-  public wrapValue<T>(data: T, opts: ValueOptions): Value<T> {
-    return createStandardValue(data, this, opts);
   }
 
   protected async _findAllForSelectors(

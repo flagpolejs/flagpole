@@ -2,15 +2,15 @@ import { AssertionPromise } from "./assertion/assertion-promise";
 import { iValue } from "./interfaces/ivalue";
 import { cast } from "./helpers/cast";
 import { AssertionIs } from "./assertion/assertion-is";
-import { Assertion } from ".";
+import { Assertion, Value } from ".";
 
-function assertionMethod(
+function assertionMethod<InputType, Wrapper extends Value<InputType>>(
   target: Object,
   methodName: string,
   descriptor: PropertyDescriptor
 ) {
   descriptor.value = function (...args: any[]) {
-    const valuePromise = cast<ValuePromise>(this);
+    const valuePromise = cast<ValuePromise<InputType, Wrapper>>(this);
     return new AssertionPromise((resolve) =>
       valuePromise.then((value) => {
         const assertion = value.assert();
@@ -20,16 +20,20 @@ function assertionMethod(
   };
 }
 
-export class ValuePromise<TypeOfValue = any>
-  extends Promise<iValue<TypeOfValue>>
-  implements PromiseLike<iValue<TypeOfValue>>
+export class ValuePromise<InputType, Wrapper extends iValue<InputType>>
+  extends Promise<Wrapper>
+  implements PromiseLike<Wrapper>
 {
-  public static execute<T = any>(callback: () => Promise<iValue<T>>) {
-    return ValuePromise.wrap<T>(callback());
+  public static execute<InputType, Wrapper extends iValue<InputType>>(
+    callback: () => Promise<Wrapper>
+  ) {
+    return ValuePromise.wrap<InputType, Wrapper>(callback());
   }
 
-  public static wrap<T = any>(value: iValue<T> | Promise<iValue<T>>) {
-    return new ValuePromise<T>(async (resolve, reject) => {
+  public static wrap<InputType, Wrapper extends iValue<InputType>>(
+    value: Wrapper | Promise<Wrapper>
+  ) {
+    return new ValuePromise<InputType, Wrapper>(async (resolve, reject) => {
       try {
         resolve(await value);
       } catch (ex) {
@@ -40,7 +44,7 @@ export class ValuePromise<TypeOfValue = any>
 
   private constructor(
     executor: (
-      resolve: (value?: iValue<TypeOfValue>) => void,
+      resolve: (value?: Wrapper) => void,
       reject: (reason?: any) => void
     ) => void
   ) {
@@ -137,11 +141,8 @@ export class ValuePromise<TypeOfValue = any>
     return new Promise((r) => this.then((v) => r(v[property])));
   }
 
-  private toValuePromise<T = any>(
-    method: string,
-    ...args: any[]
-  ): ValuePromise<T> {
-    return ValuePromise.execute<T>(async () => {
+  private toValuePromise<T = any>(method: string, ...args: any[]) {
+    return ValuePromise.execute<InputType, Wrapper>(async () => {
       const value = await this;
       return value[method].apply(value, args);
     });

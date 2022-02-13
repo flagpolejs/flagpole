@@ -1,16 +1,13 @@
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http/http-response";
-import { ValuePromise } from "../value-promise";
-import { jpathFind, jpathFindAll, JPathProvider, JsonDoc } from "./jpath";
-import { iValue } from "..";
+import { JsonDoc, jsonFind, jsonFindAll, JsonProvider } from "./jpath";
 
-export class JsonResponse extends ProtoResponse implements JPathProvider {
-  public jsonDoc: JsonDoc | undefined;
+export class JsonResponse extends ProtoResponse implements JsonProvider {
+  public json?: JsonDoc;
 
   public init(httpResponse: HttpResponse) {
     super.init(httpResponse);
-    const jsonBody = httpResponse.jsonBody;
-    this.jsonDoc = new JsonDoc(jsonBody);
+    this.json = new JsonDoc(httpResponse.jsonBody);
     if (httpResponse.statusCode == 204) {
       this.context
         .assert(
@@ -20,16 +17,14 @@ export class JsonResponse extends ProtoResponse implements JPathProvider {
         .equals(0);
     } else {
       this.context
-        .assert(`${this.scenario.typeName} data is valid.`, jsonBody)
+        .assert(
+          `${this.scenario.typeName} data is valid.`,
+          httpResponse.jsonBody
+        )
         .type.not.equals("null");
     }
   }
 
-  public getRoot(): any {
-    return this.jsonBody.$;
-  }
-
-  public find = (path: string): ValuePromise => jpathFind(this, path);
-  public findAll = (path: string): Promise<iValue<any>[]> =>
-    jpathFindAll(this, path);
+  public find = (path: string) => jsonFind(this, path);
+  public findAll = (path: string) => jsonFindAll(this, path);
 }

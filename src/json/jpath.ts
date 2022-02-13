@@ -1,50 +1,56 @@
 import * as jmespath from "jmespath";
-import { iValue } from "../interfaces/ivalue";
 import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
-import { ProtoResponse } from "..";
+import { ContextProvider } from "../interfaces/context-provider";
+import { Value } from "../value";
+
+export type JsonData =
+  | string
+  | number
+  | boolean
+  | null
+  | { [x: string]: JsonData }
+  | Array<JsonData>;
+
+export const jsonSearch = (input: JsonData, path: string) => {
+  return jmespath.search(input, path);
+};
 
 export class JsonDoc {
-  public get root(): any {
-    return this.jsonRoot;
-  }
+  constructor(public readonly root: JsonData) {}
 
-  constructor(public jsonRoot: any) {}
-
-  public search = async (path: string) => {
+  public search = async (path: string): Promise<JsonData | undefined> => {
     try {
-      return jpathSearch(this.jsonRoot, path);
+      return jsonSearch(this.root, path) as JsonData;
     } catch (ex) {
       return undefined;
     }
   };
 }
 
-export interface JPathProvider {
-  jsonDoc: JsonDoc | undefined;
+export interface JsonProvider {
+  json?: JsonDoc;
+  find: (path: string) => ValuePromise<JsonData, Value>;
+  findAll: (path: string) => Promise<Value<JsonData>[]>;
 }
 
-export const jpathSearch = (input: any, path: string) => {
-  return jmespath.search(input, path);
-};
-
-export const jpathFindAll = async (
-  self: JPathProvider & ProtoResponse,
+export const jsonFindAll = async (
+  self: JsonProvider,
   path: string
-): Promise<iValue[]> => {
+): Promise<Value<JsonData>[]> => {
   const item = await self.find(path);
   return [item];
 };
 
-export const jpathFind = (
-  self: JPathProvider & ProtoResponse,
+export const jsonFind = (
+  self: JsonProvider & ContextProvider,
   path: string
-): ValuePromise => {
-  return ValuePromise.execute(async () => {
-    if (self.jsonDoc === undefined) {
+): ValuePromise<JsonData, Value> => {
+  return ValuePromise.execute<JsonData, Value>(async () => {
+    if (self.json === undefined) {
       throw Error("No JSON document is defined.");
     }
-    const selection = await self.jsonDoc.search(path);
+    const selection = await self.json.search(path);
     return wrapAsValue(self.context, selection, path, selection);
   });
 };

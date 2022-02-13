@@ -17,11 +17,11 @@ import { PointerClick } from "./pointer";
 import { ScreenshotOpts } from "./screenshot";
 import { ValueOptions } from "./value-options";
 
-export interface iValue<T = any>
+export interface iValue<InputType = any>
   extends FindProvider,
     ContextProvider,
     Required<ValueOptions> {
-  $: T;
+  $: InputType;
   name: string;
   tagName: string;
   selector: string;
@@ -47,7 +47,8 @@ export interface iValue<T = any>
   json: iValue<any>;
   is: AssertionIs;
   assert(message?: string): Assertion;
-  exists(selector?: string): ValuePromise;
+  exists(): ValuePromise<InputType, this>;
+  exists(selector: string): ValuePromise<any, iValue>;
   item(key: string | number): iValue<any>;
   valueOf(): any;
   toArray(): any[];
@@ -82,7 +83,7 @@ export interface iValue<T = any>
   nth(index: number): iValue<any>;
   map(mapper: SyncMapperCallback): iValue<any[]>;
   filter(callback: SyncIteratorBoolCallback): iValue<any[]>;
-  each(callback: SyncIteratorCallback): iValue<T>;
+  each(callback: SyncIteratorCallback): this;
   every(callback: SyncIteratorBoolCallback): iValue<boolean>;
   some(callback: SyncIteratorBoolCallback): iValue<boolean>;
   none(callback: SyncIteratorBoolCallback): iValue<boolean>;
@@ -103,24 +104,27 @@ export interface iValue<T = any>
   echo(callback: (str: string) => void): this;
   echo(): this;
   // DOM Elements only
-  click(opts?: PointerClick): ValuePromise;
-  submit(): ValuePromise;
-  fillForm(attribute: string, formData: KeyValue): ValuePromise;
-  fillForm(formData: KeyValue): ValuePromise;
-  getInnerText(): ValuePromise;
-  getInnerHtml(): ValuePromise;
-  getOuterHtml(): ValuePromise;
-  setValue(text: string): ValuePromise;
+  click(opts?: PointerClick): ValuePromise<InputType, this>;
+  submit(): ValuePromise<InputType, this>;
+  fillForm(
+    attribute: string,
+    formData: KeyValue
+  ): ValuePromise<InputType, this>;
+  fillForm(formData: KeyValue): ValuePromise<InputType, this>;
+  getInnerText(): ValuePromise<string, iValue>;
+  getInnerHtml(): ValuePromise<string, iValue>;
+  getOuterHtml(): ValuePromise<string, iValue>;
+  setValue(text: string): ValuePromise<InputType, this>;
   getBounds(boxType?: string): Promise<Bounds | null>;
-  getUrl(): ValuePromise;
+  getUrl(): ValuePromise<string, iValue>;
   getLink(): Promise<Link>;
-  getStyleProperty(key: string): ValuePromise;
-  getValue(): ValuePromise;
-  getText(): ValuePromise;
-  getClassName(): ValuePromise;
-  getAttribute(key: string): ValuePromise;
-  getProperty(key: string): ValuePromise;
-  getTag(): ValuePromise;
+  getStyleProperty(key: string): ValuePromise<string, iValue>;
+  getValue(): ValuePromise<any, iValue>;
+  getText(): ValuePromise<string, iValue>;
+  getClassName(): ValuePromise<string, iValue>;
+  getAttribute(key: string): ValuePromise<any, iValue>;
+  getProperty(key: string): ValuePromise<any, iValue>;
+  getTag(): ValuePromise<string, iValue>;
   hasTag(tag?: string | RegExp): Promise<boolean>;
   hasAttribute(key: string, value?: string | RegExp): Promise<boolean>;
   hasClassName(className: string | RegExp): Promise<boolean>;
@@ -138,43 +142,43 @@ export interface iValue<T = any>
   screenshot(localFilePath: string): Promise<Buffer>;
   screenshot(localFilePath: string, opts: ScreenshotOpts): Promise<Buffer>;
   screenshot(opts: ScreenshotOpts): Promise<Buffer>;
-  focus(): ValuePromise;
-  blur(): ValuePromise;
-  hover(): ValuePromise;
-  tap(opts?: PointerClick): ValuePromise;
-  longpress(opts?: PointerClick): ValuePromise;
-  press(key: string, opts?: any): ValuePromise;
-  clearThenType(textToType: string, opts?: any): ValuePromise;
-  type(textToType: string, opts?: any): ValuePromise;
-  clear(): ValuePromise;
+  focus(): ValuePromise<InputType, this>;
+  blur(): ValuePromise<InputType, this>;
+  hover(): ValuePromise<InputType, this>;
+  tap(opts?: PointerClick): ValuePromise<InputType, this>;
+  longpress(opts?: PointerClick): ValuePromise<InputType, this>;
+  press(key: string, opts?: any): ValuePromise<InputType, this>;
+  clearThenType(textToType: string, opts?: any): ValuePromise<InputType, this>;
+  type(textToType: string, opts?: any): ValuePromise<InputType, this>;
+  clear(): ValuePromise<InputType, this>;
   eval(js: JsFunction, ...args: any[]): Promise<any>;
-  selectOption(value: string | string[]): ValuePromise;
-  pressEnter(): ValuePromise;
-  scrollTo(): ValuePromise;
+  selectOption(value: string | string[]): ValuePromise<InputType, this>;
+  pressEnter(): ValuePromise<InputType, this>;
+  scrollTo(): ValuePromise<InputType, this>;
   waitForFunction(
     js: JsFunction,
     opts?: KeyValue,
     ...args: any[]
-  ): ValuePromise;
-  waitForHidden(timeout?: number): ValuePromise;
-  waitForVisible(timeout?: number): ValuePromise;
+  ): ValuePromise<InputType, this>;
+  waitForHidden(timeout?: number): ValuePromise<InputType, this>;
+  waitForVisible(timeout?: number): ValuePromise<InputType, this>;
   // Tree traversal
   getChildren(selector?: string): Promise<iValue<any>[]>;
-  getFirstChild(selector?: string): ValuePromise;
-  getLastChild(selector?: string): ValuePromise;
-  getChildOrSelf(selector: string): ValuePromise;
+  getFirstChild(selector?: string): ValuePromise<any, iValue>;
+  getLastChild(selector?: string): ValuePromise<any, iValue>;
+  getChildOrSelf(selector: string): ValuePromise<any, iValue>;
   getDescendants(selector: string): Promise<iValue<any>[]>;
-  getDescendantOrSelf(selector: string): ValuePromise;
-  getParent(): ValuePromise;
-  getAncestor(selector: string): ValuePromise;
+  getDescendantOrSelf(selector: string): ValuePromise<any, iValue>;
+  getParent(): ValuePromise<any, iValue>;
+  getAncestor(selector: string): ValuePromise<any, iValue>;
   getAncestors(selector: string): Promise<iValue<any>[]>;
-  getAncestorOrSelf(selector: string): ValuePromise;
+  getAncestorOrSelf(selector: string): ValuePromise<any, iValue>;
   getSiblings(selector?: string): Promise<iValue<any>[]>;
-  getFirstSibling(selector?: string): ValuePromise;
-  getLastSibling(selector?: string): ValuePromise;
-  getPreviousSibling(selector?: string): ValuePromise;
+  getFirstSibling(selector?: string): ValuePromise<any, iValue>;
+  getLastSibling(selector?: string): ValuePromise<any, iValue>;
+  getPreviousSibling(selector?: string): ValuePromise<any, iValue>;
   getPreviousSiblings(selector?: string): Promise<iValue<any>[]>;
-  getNextSibling(selector?: string): ValuePromise;
+  getNextSibling(selector?: string): ValuePromise<any, iValue>;
   getNextSiblings(selector?: string): Promise<iValue<any>[]>;
-  gesture(type: GestureType, opts: GestureOpts): ValuePromise;
+  gesture(type: GestureType, opts: GestureOpts): ValuePromise<InputType, this>;
 }

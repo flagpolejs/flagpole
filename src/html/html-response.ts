@@ -1,8 +1,7 @@
-import { HTMLElement } from "./html-element";
+import { CheerioElement, HTMLElement } from "./html-element";
 import { HttpResponse } from "../http/http-response";
-import { iValue } from "../interfaces/ivalue";
 import * as cheerio from "cheerio";
-import { getFindParams, filterFind, wrapAsValue, findOne } from "../helpers";
+import { getFindParams, filterFind } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { ProtoResponse } from "../response";
@@ -34,16 +33,12 @@ export class HtmlResponse extends ProtoResponse {
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise {
+  ): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
-      const params = getFindParams(a, b);
-      if (params.contains || params.matches || params.opts) {
-        return findOne(this, selector, params);
-      }
-      const selection: cheerio.Cheerio = this.cheerio(selector);
+      const selection = await this.findAll(selector, a, b);
       return selection.length > 0
-        ? await HTMLElement.create(selection.eq(0), this.context, { selector })
-        : wrapAsValue(this.context, null, selector);
+        ? selection[0]
+        : this.valueFactory.createNull({ selector }, HTMLElement);
     });
   }
 
@@ -51,10 +46,10 @@ export class HtmlResponse extends ProtoResponse {
     selector: string,
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
-  ): Promise<iValue<cheerio.Element>[]> {
-    const elements: cheerio.Element[] = this.cheerio(selector).toArray();
+  ) {
+    const elements: CheerioElement[] = this.cheerio(selector).toArray();
     const params = getFindParams(a, b);
-    let nodeElements: iValue<cheerio.Element>[] = [];
+    let nodeElements: HTMLElement<CheerioElement>[] = [];
     if (elements.length > 0) {
       for (let i = 0; i < elements.length; i++) {
         nodeElements.push(
@@ -65,11 +60,11 @@ export class HtmlResponse extends ProtoResponse {
         );
       }
       if (params.opts || params.contains || params.matches) {
-        nodeElements = (await filterFind(
+        nodeElements = await filterFind(
           nodeElements,
           params.contains || params.matches,
           params.opts
-        )) as HTMLElement<cheerio.Element>[];
+        );
       }
     }
     return nodeElements;
@@ -79,16 +74,16 @@ export class HtmlResponse extends ProtoResponse {
     selector: string,
     textToType: string,
     opts: any = {}
-  ): ValuePromise {
+  ): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
-      const el = await this.find(selector);
+      const el = await this.find(selector, opts);
       const currentValue = await el.getValue();
       el.setValue(currentValue + textToType);
       return el;
     });
   }
 
-  public clear(selector: string): ValuePromise {
+  public clear(selector: string): ValuePromise<CheerioElement, HTMLElement> {
     return ValuePromise.execute(async () => {
       const el = await this.find(selector);
       el.setValue("");

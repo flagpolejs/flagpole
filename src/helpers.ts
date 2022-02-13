@@ -1,33 +1,17 @@
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
 import { Value } from "./value";
 import { toType, asyncFilter } from "./util";
-import { AssertionContext, iValue, ProtoResponse } from ".";
+import { AssertionContext, iValue, ProtoResponse, ValuePromise } from ".";
+import { FindProvider } from "./interfaces/find-provider";
+import { ContextProvider } from "./interfaces/context-provider";
 
-export function wrapAsValue<T>(
+export function wrapAsValue<InputType>(
   context: AssertionContext,
-  data: T,
+  data: InputType,
   name: string,
   sourceCode?: any
 ) {
   return new Value(data, context, { name, sourceCode });
-}
-
-export async function findOne(
-  scope: iValue<any> | ProtoResponse,
-  selector: string,
-  params: FindParams
-) {
-  const opts = {
-    ...params.opts,
-    ...{ limit: 1 },
-  };
-  const elements =
-    params.contains !== null
-      ? await scope.findAll(selector, params.contains, opts)
-      : params.matches !== null
-      ? await scope.findAll(selector, params.matches, opts)
-      : await scope.findAll(selector, opts);
-  return elements[0] || wrapAsValue(scope.context, null, selector);
 }
 
 export type FindParams = {
@@ -59,8 +43,11 @@ export function getFindParams(a: any, b: any): FindParams {
   return { contains: contains, matches: matches, opts: opts };
 }
 
-export async function filterFind<T = any>(
-  elements: iValue<T>[],
+export async function filterFind<
+  InputType = any,
+  Wrapper extends iValue<InputType> = iValue<InputType>
+>(
+  elements: Wrapper[],
   contains?: string | RegExp | null,
   opts?: FindAllOptions | null
 ) {
@@ -94,10 +81,10 @@ export async function filterFind<T = any>(
   return elements;
 }
 
-export function applyOffsetAndLimit(
-  opts: FindAllOptions,
-  elements: iValue<any>[]
-): iValue<any>[] {
+export function applyOffsetAndLimit<
+  InputType = any,
+  Wrapper extends iValue<InputType> = iValue<InputType>
+>(opts: FindAllOptions, elements: Wrapper[]): Wrapper[] {
   const start = opts.offset || 0;
   const end = opts.limit ? start + opts.limit : undefined;
   elements = elements.slice(start, end);
@@ -107,4 +94,22 @@ export function applyOffsetAndLimit(
 
 export const delay = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
+export const stripUndefinedValues = <T>(obj: T): Partial<T> => {
+  Object.keys(obj).forEach((key) => {
+    if (obj[key] === undefined) {
+      delete obj[key];
+    }
+  });
+  return obj;
+};
+
+export const stripNullishValues = <T>(obj: T): Partial<T> => {
+  Object.keys(obj).forEach((key) => {
+    if (obj[key] === undefined || obj[key] === null) {
+      delete obj[key];
+    }
+  });
+  return obj;
 };

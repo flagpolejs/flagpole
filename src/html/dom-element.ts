@@ -12,26 +12,30 @@ import { MessageAndCallback } from "../interfaces/message-and-callback";
 import { ValueOptions } from "../interfaces/value-options";
 import { AssertionContext } from "..";
 
-export abstract class DOMElement extends Value {
+export abstract class DOMElement<InputType> extends Value<InputType> {
   protected constructor(
-    input: any,
+    input: InputType,
     context: AssertionContext,
     opts: ValueOptions
   ) {
     super(input, context, { name: "DOM Element", ...opts });
   }
 
-  abstract find(selector: string, opts?: FindOptions): ValuePromise;
+  abstract find(
+    selector: string,
+    opts?: FindOptions
+  ): ValuePromise<any, iValue>;
   abstract find(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): ValuePromise;
+  ): ValuePromise<any, iValue>;
   abstract find(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise;
+  ): ValuePromise<any, iValue>;
+
   abstract findAll(
     selector: string,
     opts?: FindAllOptions
@@ -67,45 +71,40 @@ export abstract class DOMElement extends Value {
   /**
    * Get all class names for element
    */
-  public getClassName(): ValuePromise {
-    return ValuePromise.execute(async () => {
-      return this.context.wrapValue(await this._getClassName(), {
-        name: `Class Name of ${this.name}`,
-      });
-    });
+  public getClassName(): ValuePromise<string, Value> {
+    return this.valueFactory.awaitPromise(
+      this._getClassName(),
+      `Class Name of ${this.name}`
+    );
   }
 
   /**
    * Get element's innerText
    */
-  public getInnerText(): ValuePromise {
-    return ValuePromise.execute(async () => {
-      return this.context.wrapValue(await this._getInnerText(), {
-        name: `Inner Text of ${this.name}`,
-      });
+  public getInnerText(): ValuePromise<string, Value> {
+    return this.valueFactory.awaitPromise(this._getInnerText(), {
+      name: `Inner Text of ${this.name}`,
     });
   }
 
   /**
    * Get element's innerHtml which will not include the element itself, only its contents
    */
-  public getInnerHtml(): ValuePromise {
-    return ValuePromise.execute(async () => {
-      return this.context.wrapValue(await this._getInnerHtml(), {
-        name: `Inner Html of ${this.name}`,
-      });
-    });
+  public getInnerHtml(): ValuePromise<string, Value> {
+    return this.valueFactory.awaitPromise(
+      this._getInnerHtml(),
+      `Inner Html of ${this.name}`
+    );
   }
 
   /**
    * Get the HTML of the element and all of its contents
    */
-  public getOuterHtml(): ValuePromise {
-    return ValuePromise.execute(async () => {
-      return this.context.wrapValue(await this._getOuterHtml(), {
-        name: `Outer Html of ${this.name}`,
-      });
-    });
+  public getOuterHtml(): ValuePromise<string, Value> {
+    return this.valueFactory.awaitPromise(
+      this._getOuterHtml(),
+      `Outer Html of ${this.name}`
+    );
   }
 
   /**
@@ -113,18 +112,18 @@ export abstract class DOMElement extends Value {
    *
    * @param key
    */
-  public getAttribute(key: string): ValuePromise {
+  public getAttribute(key: string): ValuePromise<string | null, Value> {
     return ValuePromise.execute(async () => {
       const name: string = `${this.name} -> ${key}`;
       const attr: string | null = await this._getAttribute(key);
-      return this.context.wrapValue(attr, {
+      return this.valueFactory.createPromise(attr, {
         name,
         sourceCode: `${key}="${attr}"`,
       });
     });
   }
 
-  public getStyleProperty(key: string): ValuePromise {
+  public getStyleProperty(key: string): ValuePromise<string | null, Value> {
     return ValuePromise.execute(async () => {
       const name: string = `${this.name} -> style[${key}]`;
       const style: string | null = await this._getAttribute("style");
@@ -141,7 +140,7 @@ export abstract class DOMElement extends Value {
           return false;
         });
       }
-      return this.context.wrapValue(attr, { name });
+      return this.valueFactory.create(attr, { name });
     });
   }
 
@@ -149,33 +148,30 @@ export abstract class DOMElement extends Value {
    * Get the property with this name in the element, or null if it doesn't exist
    * @param key
    */
-  public getProperty(key: string): ValuePromise {
-    return ValuePromise.execute(async () => {
-      return this.context.wrapValue(await this._getProperty(key), {
-        name: `${key} of ${this.name}`,
-      });
-    });
+  public getProperty(key: string): ValuePromise<any, Value> {
+    return this.valueFactory.awaitPromise(
+      this._getProperty(key),
+      `${key} of ${this.name}`
+    );
   }
 
   /**
    * Get the value of this element, such as the value of an input field
    */
-  public getValue(): ValuePromise {
-    return ValuePromise.execute(async () =>
-      this.context.wrapValue(await this._getValue(), {
-        name: `Value of ${this.name}`,
-      })
+  public getValue(): ValuePromise<any, Value> {
+    return this.valueFactory.awaitPromise(
+      this._getValue(),
+      `Value of ${this.name}`
     );
   }
 
   /**
    * Get the text content within the element
    */
-  public getText(): ValuePromise {
-    return ValuePromise.execute(async () =>
-      this.context.wrapValue(await this._getText(), {
-        name: `Text of ${this.name}`,
-      })
+  public getText(): ValuePromise<string, Value> {
+    return this.valueFactory.awaitPromise(
+      this._getText(),
+      `Text of ${this.name}`
     );
   }
 

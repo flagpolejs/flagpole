@@ -16,3 +16,9 @@ export interface iCallbackAndMessage {
 export type KeyValue = {
   [key: string]: any;
 };
+
+export type HttpHeaderValue = string | string[];
+
+export type HttpHeaders = {
+  [key: string]: HttpHeaderValue;
+};

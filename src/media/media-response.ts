@@ -1,6 +1,7 @@
 import { ProtoResponse } from "../response";
 import { HttpResponse } from "../http/http-response";
 import { ValuePromise } from "../value-promise";
+import { iValue } from "..";
 
 export abstract class MediaResponse extends ProtoResponse {
   protected abstract _mimePattern: RegExp;
@@ -17,11 +18,11 @@ export abstract class MediaResponse extends ProtoResponse {
     this._assertMimeType();
   }
 
-  public find(path: string): ValuePromise {
+  public find(path: string): ValuePromise<any, iValue> {
     throw "This type of scenario does not suport find.";
   }
 
-  public async findAll(path: string): Promise<any[]> {
+  public async findAll(path: string): Promise<iValue<any>[]> {
     throw "This type of scenario does not suport findAll.";
   }
 

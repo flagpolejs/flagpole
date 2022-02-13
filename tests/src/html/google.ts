@@ -12,7 +12,7 @@ flagpole("Test Google", (suite) => {
         .assert(context.response.header("content-type"))
         .contains("text/html");
     })
-    .next(async (context) => {
+    .next("Submit button", async (context) => {
       const submitButton = await context.find('input[type="submit"]');
       context.comment(submitButton);
       context

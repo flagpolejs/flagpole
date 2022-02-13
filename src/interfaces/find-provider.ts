@@ -3,30 +3,34 @@ import { FindAllOptions, FindOptions } from "./find-options";
 
 export interface FindProvider {
   // ONE
-  find<Wrapper extends iValue, InnerValue = any>(
+  find<InputType, Wrapper extends iValue<InputType>>(
     path: string,
     opts?: FindOptions
-  ): ValuePromise<Wrapper>;
-  find<Wrapper extends iValue>(
+  ): ValuePromise<InputType, Wrapper>;
+  find<InputType, Wrapper extends iValue<InputType>>(
     path: string,
     contains: string,
     opts?: FindOptions
-  ): ValuePromise<Wrapper>;
-  find<Wrapper extends iValue>(
+  ): ValuePromise<InputType, Wrapper>;
+  find<InputType, Wrapper extends iValue<InputType>>(
     path: string,
     mathces: RegExp,
     opts?: FindOptions
-  ): ValuePromise<Wrapper>;
+  ): ValuePromise<InputType, Wrapper>;
+
   // ALL
-  findAll(path: string, opts?: FindAllOptions): Promise<iValue[]>;
-  findAll(
+  findAll<InputType, Wrapper extends iValue<InputType>>(
+    path: string,
+    opts?: FindAllOptions
+  ): Promise<Wrapper[]>;
+  findAll<InputType, Wrapper extends iValue<InputType>>(
     path: string,
     contains: string,
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
-  findAll(
+  ): Promise<Wrapper[]>;
+  findAll<InputType, Wrapper extends iValue<InputType>>(
     path: string,
     matches: RegExp,
     opts?: FindAllOptions
-  ): Promise<iValue[]>;
+  ): Promise<Wrapper[]>;
 }

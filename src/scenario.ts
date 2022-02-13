@@ -14,7 +14,7 @@ import { toType, asyncForEach, runAsync, getFunctionArgs } from "./util";
 import * as bluebird from "bluebird";
 import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
-import { wrapAsValue } from "./helpers";
+import { stripUndefinedValues, wrapAsValue } from "./helpers";
 import {
   beforeScenarioExecuted,
   afterScenarioReady,
@@ -38,7 +38,11 @@ import {
   HttpResponseOptions,
   HttpTimeout,
 } from "./interfaces/http";
-import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
+import {
+  ClassConstructor,
+  HttpHeaders,
+  KeyValue,
+} from "./interfaces/generic-types";
 import {
   iScenario,
   ScenarioCallback,
@@ -879,7 +883,7 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
         this.url = req.url;
         this._mockResponseOptions = {
           body: req.body,
-          headers: req.headers,
+          headers: stripUndefinedValues(req.headers) as HttpHeaders,
           cookies: req.cookies,
           trailers: req.trailers,
           url: req.url,

@@ -1,6 +1,7 @@
-import { KeyValue } from "../interfaces/generic-types";
+import { HttpHeaders, KeyValue } from "../interfaces/generic-types";
 import { HttpResponseOptions } from "../interfaces/http";
 import { CONTENT_TYPE_JSON } from "../interfaces/constants";
+import { JsonData } from "../json/jpath";
 
 export const parseResponsefromJsonData = (jsonBody: any): HttpResponse =>
   new HttpResponse({
@@ -29,7 +30,7 @@ export class HttpResponse {
     return this.opts.url || "/";
   }
 
-  public get headers(): KeyValue {
+  public get headers(): HttpHeaders {
     return this.opts.headers || {};
   }
 
@@ -73,7 +74,7 @@ export class HttpResponse {
       : "";
   }
 
-  public get jsonBody(): any {
+  public get jsonBody(): JsonData {
     try {
       if (this.opts.jsonBody !== undefined) return this.opts.jsonBody;
       return this.opts.body != undefined
