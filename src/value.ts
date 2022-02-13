@@ -36,7 +36,7 @@ import { AssertionContext } from ".";
 import { AssertionIs } from "./assertion/assertion-is";
 import { ValueFactory } from "./helpers/value-factory";
 
-export class Value<InputType = any> implements iValue<InputType> {
+export class Value<InputType> implements iValue<InputType> {
   protected valueFactory = new ValueFactory(this.context);
 
   constructor(
@@ -297,7 +297,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     return value == thisValue.$;
   }
 
-  public getProperty(key: string): ValuePromise<any, Value> {
+  public getProperty(key: string): ValuePromise<any, Value<any>> {
     return this.valueFactory.createPromise(this.$[key], {
       name: `${this.name} property of ${key}`,
     });
@@ -353,7 +353,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     );
   }
 
-  public getUrl(): ValuePromise<string | null, Value> {
+  public getUrl(): ValuePromise<string | null, Value<string | null>> {
     return ValuePromise.execute(async () => {
       const url = await (async () => {
         if (this.isString()) {
@@ -424,7 +424,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     return [await this.find(selector)];
   }
 
-  public getClassName(): ValuePromise<string, Value> {
+  public getClassName(): ValuePromise<string, Value<string>> {
     throw "Class Name is not supported for this type of value";
   }
 
@@ -443,7 +443,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     })();
   }
 
-  public getTag(): ValuePromise<string, Value> {
+  public getTag(): ValuePromise<string, Value<string>> {
     return this.valueFactory.createPromise(this.tagName, {
       name: `Tag Name of ${this.name}`,
     });
@@ -457,17 +457,17 @@ export class Value<InputType = any> implements iValue<InputType> {
     return tag instanceof RegExp ? (tag as RegExp).test(myTag) : myTag == tag;
   }
 
-  public getInnerText(): ValuePromise<string, Value> {
+  public getInnerText(): ValuePromise<string, Value<string>> {
     return this.valueFactory.createPromise(this.toString(), {
       name: `Inner Text of ${this.name}`,
     });
   }
 
-  public getInnerHtml(): ValuePromise<string, Value> {
+  public getInnerHtml(): ValuePromise<string, Value<string>> {
     throw "Inner HTML not supported for this type of value";
   }
 
-  public getOuterHtml(): ValuePromise<string, Value> {
+  public getOuterHtml(): ValuePromise<string, Value<string>> {
     throw "Outer HTML not supported for this type of value";
   }
 
@@ -487,15 +487,17 @@ export class Value<InputType = any> implements iValue<InputType> {
       : (value as RegExp).test(strThisValue);
   }
 
-  public getAttribute(key: string): ValuePromise<any, Value> {
+  public getAttribute(key: string): ValuePromise<any, Value<any>> {
     return this.getProperty(key);
   }
 
-  public getStyleProperty(key: string): ValuePromise<string, Value> {
+  public getStyleProperty(
+    key: string
+  ): ValuePromise<string | null, Value<string | null>> {
     throw "Style Property not supported for this type of value";
   }
 
-  public getValue(): ValuePromise<any, iValue> {
+  public getValue(): ValuePromise<any, Value<any>> {
     throw "Get Value is not supported for this type of value";
   }
 
@@ -508,7 +510,7 @@ export class Value<InputType = any> implements iValue<InputType> {
     return text ? text == myText : !!myText;
   }
 
-  public getText(): ValuePromise<string, Value> {
+  public getText(): ValuePromise<string, Value<string>> {
     return this.valueFactory.createPromise(this.toString(), {
       name: this.name,
       parent: this.parent,
@@ -739,25 +741,21 @@ export class Value<InputType = any> implements iValue<InputType> {
     });
   }
 
-  public join(by: string): iValue<string> {
-    return this.valueFactory.create(this.toArray().join(by), {
-      name: this.name,
-    });
+  public join(by: string): Value<string> {
+    return this.valueFactory.create(this.toArray().join(by), this.name);
   }
 
-  public pluck(property: string): Value {
+  public pluck(property: string): Value<any[]> {
     const arr = this.toArray().map((item) => item[property]);
     return this.valueFactory.create(arr, {
       name: `Values of ${property} in ${this.name}`,
     });
   }
 
-  public nth(index: number): iValue<any> {
+  public nth(index: number): Value<any> {
     const value = nthIn(this.$, index);
     const nth = toOrdinal(index + 1);
-    return this.valueFactory.create(value, {
-      name: `${nth} value in ${this.name}`,
-    });
+    return this.valueFactory.create(value, `${nth} value in ${this.name}`);
   }
 
   public map(callback: SyncMapperCallback): iValue<any[]> {

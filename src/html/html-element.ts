@@ -7,7 +7,6 @@ import { HttpRequest } from "../http/http-request";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { KeyValue } from "../interfaces/generic-types";
 import { HttpMethodVerb } from "../interfaces/http";
-import { iValue } from "../interfaces/ivalue";
 import { ValueOptions } from "../interfaces/value-options";
 import { AssertionContext } from "..";
 
@@ -184,12 +183,14 @@ export class HTMLElement<
     });
   }
 
-  public getAncestor(selector: string = "*"): ValuePromise<any, iValue> {
+  public getAncestor(
+    selector: string = "*"
+  ): ValuePromise<CheerioElement, HTMLElement> {
     const ancestors = this.cheerio.parentsUntil(selector);
     const name: string = `Ancestor of ${this.name}`;
     const path: string = `${this.path}[ancestor::${selector}][0]`;
     const el: CheerioElement = ancestors.length > 0 ? ancestors[0] : null;
-    return this.valueFactory.createPromise(el, { name, path });
+    return this.valueFactory.createPromise(el, { name, path }, HTMLElement);
   }
 
   public getParent(): ValuePromise<CheerioElement, HTMLElement> {
@@ -282,7 +283,7 @@ export class HTMLElement<
       }
       // Is this a button?
       else if (await this._isButtonTag()) {
-        const type: iValue<any> = await this.getAttribute("type");
+        const type = await this.getAttribute("type");
         if (type.isNull() || type.toString().toLowerCase() == "submit") {
           // Grab the form and submit it
           const form = (this.$ as cheerio.Cheerio).closest("form");

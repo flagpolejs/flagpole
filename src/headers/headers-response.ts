@@ -1,5 +1,4 @@
 import { ProtoResponse } from "../response";
-import { iValue } from "../interfaces/ivalue";
 import { HttpResponse } from "../http/http-response";
 import { ValuePromise } from "../value-promise";
 import { HttpHeaderValue } from "../interfaces/generic-types";
@@ -10,8 +9,11 @@ export class HeadersResponse extends ProtoResponse {
     super.init(httpResponse);
   }
 
-  public find(key: string): ValuePromise<HttpHeaderValue, Value> {
-    return ValuePromise.wrap<HttpHeaderValue, Value>(this.header(key));
+  public find(key: string) {
+    return ValuePromise.wrap<
+      HttpHeaderValue | null,
+      Value<HttpHeaderValue | null>
+    >(this.header(key));
   }
 
   public async findAll(key: string): Promise<Value<HttpHeaderValue | null>[]> {

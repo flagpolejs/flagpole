@@ -1,9 +1,7 @@
 import { ProtoResponse } from "../response";
 import { URL } from "url";
 import { HttpResponse } from "../http/http-response";
-import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
-import { iValue } from "../interfaces/ivalue";
 import { JsonData } from "../json/jpath";
 import { Value } from "../value";
 
@@ -26,17 +24,16 @@ export class ImageResponse extends ProtoResponse {
     url: "",
   };
 
-  public get length(): iValue {
-    return wrapAsValue(this.context, this.imageProperties.length, "Image Size");
+  public get length(): Value<number> {
+    return this.valueFactory.create(this.imageProperties.length, "Image Size");
   }
 
-  public get url(): iValue {
-    return wrapAsValue(this.context, this.imageProperties.url, "URL of Image");
+  public get url(): Value<string> {
+    return this.valueFactory.create(this.imageProperties.url, "URL of Image");
   }
 
-  public get path(): iValue {
-    return wrapAsValue(
-      this.context,
+  public get path(): Value<string> {
+    return this.valueFactory.create(
       new URL(this.imageProperties.url).pathname,
       "URL Path of Image"
     );
@@ -57,7 +54,7 @@ export class ImageResponse extends ProtoResponse {
     throw "This type of scenario does not suport eval.";
   }
 
-  public find(propertyName: string): ValuePromise<JsonData, Value> {
+  public find(propertyName: string): ValuePromise<JsonData, Value<JsonData>> {
     const input =
       typeof this.imageProperties[propertyName] !== "undefined"
         ? this.imageProperties[propertyName]

@@ -1,4 +1,3 @@
-import { Value } from "../value";
 import { getSchema, writeSchema } from "./assertion-schema";
 import {
   toType,
@@ -28,10 +27,10 @@ import {
   IteratorBoolCallback,
   IteratorCallback,
 } from "../interfaces/iterator-callbacks";
-import { iValue } from "../interfaces/ivalue";
 import { CompareCallback, JsFunction } from "../interfaces/generic-types";
 import { AssertSchemaType } from "../interfaces/schema";
 import { AssertionContext, AssertionResult } from "..";
+import { Value } from "../value";
 
 export class Assertion {
   public get value(): any {
@@ -153,7 +152,7 @@ export class Assertion {
 
   public get name(): string {
     return this._message || this.isFlagpoleValue
-      ? (this._input as iValue).name
+      ? (this._input as Value<any>).name
       : String(this._input);
   }
 

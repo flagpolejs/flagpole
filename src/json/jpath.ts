@@ -30,7 +30,7 @@ export class JsonDoc {
 
 export interface JsonProvider {
   json?: JsonDoc;
-  find: (path: string) => ValuePromise<JsonData, Value>;
+  find: (path: string) => ValuePromise<JsonData, Value<JsonData>>;
   findAll: (path: string) => Promise<Value<JsonData>[]>;
 }
 
@@ -45,8 +45,11 @@ export const jsonFindAll = async (
 export const jsonFind = (
   self: JsonProvider & ContextProvider,
   path: string
-): ValuePromise<JsonData, Value> => {
-  return ValuePromise.execute<JsonData, Value>(async () => {
+) => {
+  return ValuePromise.execute<
+    JsonData | undefined,
+    Value<JsonData | undefined>
+  >(async () => {
     if (self.json === undefined) {
       throw Error("No JSON document is defined.");
     }

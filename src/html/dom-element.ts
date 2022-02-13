@@ -1,5 +1,4 @@
 import { Value } from "../value";
-import { iValue } from "../interfaces/ivalue";
 import { iScenario } from "../interfaces/iscenario";
 import { Link } from "../link";
 import { getMessageAndCallbackFromOverloading } from "../util";
@@ -10,7 +9,7 @@ import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { ClassConstructor } from "../interfaces/generic-types";
 import { MessageAndCallback } from "../interfaces/message-and-callback";
 import { ValueOptions } from "../interfaces/value-options";
-import { AssertionContext } from "..";
+import { AssertionContext } from "../assertion/assertion-context";
 
 export abstract class DOMElement<InputType> extends Value<InputType> {
   protected constructor(
@@ -24,32 +23,32 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
   abstract find(
     selector: string,
     opts?: FindOptions
-  ): ValuePromise<any, iValue>;
+  ): ValuePromise<any, Value<any>>;
   abstract find(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): ValuePromise<any, iValue>;
+  ): ValuePromise<any, Value<any>>;
   abstract find(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise<any, iValue>;
+  ): ValuePromise<any, Value<any>>;
 
   abstract findAll(
     selector: string,
     opts?: FindAllOptions
-  ): Promise<iValue<any>[]>;
+  ): Promise<Value<any>[]>;
   abstract findAll(
     selector: string,
     contains: string,
     opts?: FindAllOptions
-  ): Promise<iValue<any>[]>;
+  ): Promise<Value<any>[]>;
   abstract findAll(
     selector: string,
     matches: RegExp,
     opts?: FindAllOptions
-  ): Promise<iValue<any>[]>;
+  ): Promise<Value<any>[]>;
 
   protected abstract _getTagName(): Promise<string>;
   protected abstract _getAttribute(key: string): Promise<string | null>;
@@ -71,7 +70,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
   /**
    * Get all class names for element
    */
-  public getClassName(): ValuePromise<string, Value> {
+  public getClassName(): ValuePromise<string, Value<string>> {
     return this.valueFactory.awaitPromise(
       this._getClassName(),
       `Class Name of ${this.name}`
@@ -81,7 +80,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
   /**
    * Get element's innerText
    */
-  public getInnerText(): ValuePromise<string, Value> {
+  public getInnerText(): ValuePromise<string, Value<string>> {
     return this.valueFactory.awaitPromise(this._getInnerText(), {
       name: `Inner Text of ${this.name}`,
     });
@@ -90,7 +89,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
   /**
    * Get element's innerHtml which will not include the element itself, only its contents
    */
-  public getInnerHtml(): ValuePromise<string, Value> {
+  public getInnerHtml(): ValuePromise<string, Value<string>> {
     return this.valueFactory.awaitPromise(
       this._getInnerHtml(),
       `Inner Html of ${this.name}`
@@ -100,7 +99,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
   /**
    * Get the HTML of the element and all of its contents
    */
-  public getOuterHtml(): ValuePromise<string, Value> {
+  public getOuterHtml(): ValuePromise<string, Value<string>> {
     return this.valueFactory.awaitPromise(
       this._getOuterHtml(),
       `Outer Html of ${this.name}`
@@ -112,7 +111,9 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
    *
    * @param key
    */
-  public getAttribute(key: string): ValuePromise<string | null, Value> {
+  public getAttribute(
+    key: string
+  ): ValuePromise<string | null, Value<string | null>> {
     return ValuePromise.execute(async () => {
       const name: string = `${this.name} -> ${key}`;
       const attr: string | null = await this._getAttribute(key);
@@ -123,7 +124,9 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
     });
   }
 
-  public getStyleProperty(key: string): ValuePromise<string | null, Value> {
+  public getStyleProperty(
+    key: string
+  ): ValuePromise<string | null, Value<string | null>> {
     return ValuePromise.execute(async () => {
       const name: string = `${this.name} -> style[${key}]`;
       const style: string | null = await this._getAttribute("style");
@@ -148,7 +151,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
    * Get the property with this name in the element, or null if it doesn't exist
    * @param key
    */
-  public getProperty(key: string): ValuePromise<any, Value> {
+  public getProperty(key: string): ValuePromise<any, Value<any>> {
     return this.valueFactory.awaitPromise(
       this._getProperty(key),
       `${key} of ${this.name}`
@@ -158,7 +161,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
   /**
    * Get the value of this element, such as the value of an input field
    */
-  public getValue(): ValuePromise<any, Value> {
+  public getValue(): ValuePromise<any, Value<any>> {
     return this.valueFactory.awaitPromise(
       this._getValue(),
       `Value of ${this.name}`
@@ -168,7 +171,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
   /**
    * Get the text content within the element
    */
-  public getText(): ValuePromise<string, Value> {
+  public getText(): ValuePromise<string, Value<string>> {
     return this.valueFactory.awaitPromise(
       this._getText(),
       `Text of ${this.name}`

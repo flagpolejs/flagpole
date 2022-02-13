@@ -40,11 +40,11 @@ export class ValueFactory {
   public createPromise<InputType>(
     data: InputType,
     name: string
-  ): ValuePromise<InputType, Value>;
+  ): ValuePromise<InputType, Value<InputType>>;
   public createPromise<InputType>(
     data: InputType,
     opts: ValueOptions
-  ): ValuePromise<InputType, Value>;
+  ): ValuePromise<InputType, Value<InputType>>;
   public createPromise<InputType, Wrapper extends Value<InputType>>(
     data: InputType,
     opts: ValueOptions,
@@ -71,11 +71,11 @@ export class ValueFactory {
   public awaitPromise<InputType>(
     dataPromise: Promise<InputType>,
     name: string
-  ): ValuePromise<InputType, Value>;
+  ): ValuePromise<InputType, Value<InputType>>;
   public awaitPromise<InputType>(
     dataPromise: Promise<InputType>,
     opts: ValueOptions
-  ): ValuePromise<InputType, Value>;
+  ): ValuePromise<InputType, Value<InputType>>;
   public awaitPromise<InputType, Wrapper extends Value<InputType>>(
     dataPromise: Promise<InputType>,
     opts: ValueOptions,
@@ -102,7 +102,7 @@ export class ValueFactory {
         );
       });
     }
-    return ValuePromise.execute<InputType, Value>(async () => {
+    return ValuePromise.execute<InputType, Value<InputType>>(async () => {
       return this.create(await dataPromise, opts);
     });
   }

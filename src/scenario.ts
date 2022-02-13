@@ -608,7 +608,7 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
    */
   public open(url: string, opts?: HttpRequestOptions): this;
   public open(link: iValue, opts?: HttpRequestOptions): this;
-  public open(a: string | iValue, opts?: HttpRequestOptions): this {
+  public open(a: string | iValue, opts?: HttpRequestOptions) {
     if (this.hasExecuted) {
       throw `Can call open after scenario has executed`;
     }
@@ -1290,7 +1290,7 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
       const paths = Object.keys(responseValues);
       await context.each(paths, async (path) => {
         const data = await json.search(path);
-        const thisValue: iValue = wrapAsValue(context, data, path, data);
+        const thisValue = wrapAsValue(context, data, path, data);
         const thatValue = responseValues[path];
         const type = toType(thatValue);
         if (type === "function") {
