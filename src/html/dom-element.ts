@@ -1,5 +1,4 @@
 import { Value } from "../value";
-import { iScenario } from "../interfaces/iscenario";
 import { Link } from "../link";
 import { getMessageAndCallbackFromOverloading } from "../util";
 import { ValuePromise } from "../value-promise";
@@ -10,6 +9,7 @@ import { ClassConstructor } from "../interfaces/generic-types";
 import { MessageAndCallback } from "../interfaces/message-and-callback";
 import { ValueOptions } from "../interfaces/value-options";
 import { AssertionContext } from "../assertion/assertion-context";
+import { Scenario } from "..";
 
 export abstract class DOMElement<InputType> extends Value<InputType> {
   protected constructor(
@@ -183,14 +183,14 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
    * This is used to create a lambda scenario
    */
   public load(): Promise<void>;
-  public load(message: string): Promise<iScenario>;
-  public load(callback: Function): Promise<iScenario>;
-  public load(scenario: iScenario): Promise<iScenario>;
-  public load(message: string, callback: Function): Promise<iScenario>;
+  public load(message: string): Promise<Scenario>;
+  public load(callback: Function): Promise<Scenario>;
+  public load(scenario: Scenario): Promise<Scenario>;
+  public load(message: string, callback: Function): Promise<Scenario>;
   public async load(
-    a?: string | Function | iScenario,
+    a?: string | Function | Scenario,
     b?: Function
-  ): Promise<void | iScenario> {
+  ): Promise<void | Scenario> {
     const overloaded = getMessageAndCallbackFromOverloading(a, b, this.path);
     const scenario = await this._createSubScenario(overloaded);
     this._completedAction("LOAD");
@@ -269,7 +269,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
   }
 
   protected async _getLambdaScenarioType(): Promise<
-    ClassConstructor<iScenario>
+    ClassConstructor<Scenario>
   > {
     if ((await this._isFormTag()) || (await this._isClickable())) {
       // If we are loading an html page, stay in our current mode
@@ -283,7 +283,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
 
   protected async _createSubScenario(
     overloaded: MessageAndCallback
-  ): Promise<iScenario> {
+  ): Promise<Scenario> {
     const scenarioType = await this._getLambdaScenarioType();
     const opts = this.context.scenario.request.options;
     return overloaded.scenario === undefined
@@ -293,7 +293,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
 
   protected _loadSubScenario(
     overloaded: MessageAndCallback
-  ): Promise<iScenario> {
+  ): Promise<Scenario> {
     return overloaded.scenario === undefined
       ? this.load(overloaded.message, overloaded.callback)
       : this.load(overloaded.scenario);

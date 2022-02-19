@@ -1,4 +1,4 @@
-import { iScenario } from "../interfaces/iscenario";
+import { Scenario } from "..";
 import { AssertionFail } from "../logging/assertion-result";
 
 function cast<T>(val: any): T {
@@ -8,12 +8,12 @@ function cast<T>(val: any): T {
 const scenarioGuard = (
   propertyKey: string,
   descriptor: PropertyDescriptor,
-  callback: (scenario: iScenario) => boolean,
+  callback: (scenario: Scenario) => boolean,
   verb: string
 ) => {
   const method = descriptor.value;
   descriptor.value = function (...args: any[]) {
-    const scenario = cast<iScenario>(this);
+    const scenario = cast<Scenario>(this);
     if (callback(scenario)) {
       scenario.result(
         new AssertionFail(

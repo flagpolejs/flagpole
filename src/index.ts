@@ -1,6 +1,5 @@
 import { Flagpole } from "./flagpole";
 import { FlagpoleExecution } from "./flagpole-execution";
-import { iScenario } from "./interfaces/iscenario";
 import { HttpRequest } from "./http/http-request";
 import { Assertion } from "./assertion/assertion";
 import { AssertionContext } from "./assertion/assertion-context";
@@ -54,7 +53,6 @@ export {
   Value,
   HlsResponse,
   HeadersResponse,
-  iScenario,
   execution,
   Scenario,
   ValuePromise,

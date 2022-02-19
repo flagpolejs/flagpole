@@ -1,12 +1,12 @@
-import { Suite } from ".";
-import { ClassConstructor, KeyValue } from "./interfaces/generic-types";
-import { iScenario } from "./interfaces/iscenario";
+import { Scenario, Suite } from ".";
+import { ScenarioConstructor } from "./interfaces/constructor-types";
+import { KeyValue } from "./interfaces/generic-types";
 
-export const createScenario = <T extends iScenario>(
+export const createScenario = <ScenarioType extends Scenario>(
+  scenarioType: ScenarioConstructor<ScenarioType>,
   suite: Suite,
   title: string,
-  scenarioType: ClassConstructor<T>,
   opts: KeyValue
-): T => {
-  return new scenarioType(suite, title, scenarioType, opts) as T;
+): ScenarioType => {
+  return new scenarioType(suite, title, opts, scenarioType);
 };

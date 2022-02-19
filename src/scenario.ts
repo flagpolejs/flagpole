@@ -43,17 +43,15 @@ import {
   HttpHeaders,
   KeyValue,
 } from "./interfaces/generic-types";
-import {
-  iScenario,
-  ScenarioCallback,
-  ScenarioCallbackAndMessage,
-  ScenarioStatusCallback,
-} from "./interfaces/iscenario";
-import { Assertion, AssertionContext, ProtoResponse, Suite, Value } from ".";
-import { Adapter } from "./adapter";
+import { Assertion, AssertionContext, Suite, Value } from ".";
 import { LocalAdapter } from "./adapter.local";
 import { NextCallback } from "./interfaces/next-callback";
 import { LogItem } from "./logging/log-item";
+import {
+  ScenarioCallback,
+  ScenarioCallbackAndMessage,
+  ScenarioStatusCallback,
+} from "./interfaces/scenario-callbacks";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -62,23 +60,33 @@ enum ScenarioRequestType {
   webhook = "webhook",
 }
 
-export abstract class Scenario<ResponseType extends ProtoResponse>
-  implements iScenario
-{
-  public abstract readonly response: ResponseType;
-  public abstract readonly adapter: Adapter;
-
+export abstract class Scenario {
+  public abstract readonly context: AssertionContext;
   public abstract readonly typeName: string;
-  public readonly request: HttpRequest;
+
+  public readonly opts: KeyValue;
+
   public readonly defaultRequestOptions: HttpRequestOptions = {
     method: "get",
   };
 
+  public get adapter() {
+    return this.context.adapter;
+  }
+
+  public get response() {
+    return this.context.response;
+  }
+
+  public get request() {
+    return this.context.request;
+  }
+
   public constructor(
     public readonly suite: Suite,
-    public readonly title: string,
-    public readonly type: ClassConstructor<iScenario>,
-    opts: KeyValue
+    public title: string,
+    opts: KeyValue,
+    public readonly type: ClassConstructor<Scenario>
   ) {
     this._requestPromise = new Promise((resolve) => {
       this._requestResolve = resolve;
@@ -89,14 +97,10 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
     this._webhookPromise = new Promise((resolve) => {
       this._webhookResolver = resolve;
     });
-    this.request = new HttpRequest({
+    this.opts = {
       ...this.defaultRequestOptions,
       ...opts,
-    });
-  }
-
-  public get context(): AssertionContext<this, ResponseType> {
-    return new AssertionContext(this, this.response);
+    };
   }
 
   /**
@@ -169,10 +173,6 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
 
   public get disposition(): ScenarioDisposition {
     return this._disposition;
-  }
-
-  public get opts(): any {
-    return this.request.options;
   }
 
   /**
@@ -401,7 +401,7 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
    */
   public setTimeout(n: number): this;
   public setTimeout(timeouts: HttpTimeout): this;
-  public setTimeout(timeout: HttpTimeout | number): this {
+  public setTimeout(timeout: HttpTimeout | number) {
     this.request.timeout =
       typeof timeout === "number"
         ? {
@@ -536,7 +536,7 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
     return this;
   }
 
-  public waitFor(thatScenario: iScenario): this {
+  public waitFor(thatScenario: Scenario): this {
     if (this === thatScenario) {
       throw new Error("Scenario can't wait for itself");
     }
@@ -593,7 +593,7 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
    * @param milliseconds
    */
   public pause(milliseconds: number): this {
-    this.next((context: AssertionContext) => {
+    this.next((context) => {
       context.comment(`Pause for ${milliseconds}ms`);
       return context.pause(milliseconds);
     });
@@ -632,20 +632,13 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
   /**
    * Set the callback for the assertions to run after the request has a response
    */
-  public next(callback: NextCallback<this, ResponseType>): this;
-  public next(
-    message: string,
-    callback: NextCallback<this, ResponseType>
-  ): this;
-  public next(...callbacks: NextCallback<this, ResponseType>[]): this;
+  public next(callback: NextCallback): this;
+  public next(message: string, callback: NextCallback): this;
+  public next(...callbacks: NextCallback[]): this;
   public next(responseValues: { [key: string]: any }): this;
   public next(
-    a:
-      | NextCallback<this, ResponseType>
-      | NextCallback<this, ResponseType>[]
-      | string
-      | { [key: string]: any },
-    b?: NextCallback<this, ResponseType> | { [key: string]: any }
+    a: NextCallback | NextCallback[] | string | { [key: string]: any },
+    b?: NextCallback | { [key: string]: any }
   ): this {
     if (Array.isArray(a)) {
       a.forEach((callback) => {
@@ -912,21 +905,22 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
     return this._requestPromise;
   }
 
-  public promise(): Promise<iScenario> {
+  public promise(): Promise<Scenario> {
     return new Promise((resolve, reject) => {
       this.success(resolve);
       this.failure(reject);
     });
   }
 
-  public repeat(): iScenario;
-  public repeat(count: number): iScenario[];
-  public repeat(count?: number): iScenario | iScenario[] {
+  /*
+  public repeat(): Scenario;
+  public repeat(count: number): Scenario[];
+  public repeat(count?: number): Scenario | Scenario[] {
     if (typeof count == "number") {
       if (count < 1) {
         throw "Count must be an integer greater than or equal to one.";
       }
-      const scenarios: iScenario[] = [];
+      const scenarios: Scenario[] = [];
       for (let i = 1; i <= count; i++) {
         scenarios.push(this.suite.import(this));
       }
@@ -934,6 +928,7 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
     }
     return this.suite.import(this);
   }
+  */
 
   public buildUrl(): URL {
     const path = this.url || "/";
@@ -1359,9 +1354,8 @@ export abstract class Scenario<ResponseType extends ProtoResponse>
    * @param statusEvent
    */
   protected async _publish(statusEvent: ScenarioStatusEvent) {
-    const scenario = this;
     this._subscribers.forEach(async (callback) => {
-      callback(scenario, statusEvent);
+      callback(this, statusEvent);
     });
   }
 

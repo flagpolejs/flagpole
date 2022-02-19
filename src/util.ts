@@ -1,4 +1,3 @@
-import { iScenario } from "./interfaces/iscenario";
 import * as fs from "fs";
 import * as path from "path";
 import * as nodeAssert from "assert";
@@ -12,6 +11,7 @@ import AjvJtd from "ajv/dist/jtd";
 import { AjvErrors, AssertSchemaType } from "./interfaces/schema";
 import { MessageAndCallback } from "./interfaces/message-and-callback";
 import { NextCallback } from "./interfaces/next-callback";
+import { Scenario } from ".";
 
 export const toArray = <T>(value: any): T[] =>
   Array.isArray(value) ? value : [value];
@@ -327,7 +327,7 @@ export function getMessageAndCallbackFromOverloading(
       return () => {};
     }
   })();
-  const scenario: iScenario = (() => {
+  const scenario: Scenario = (() => {
     if (toType(a) == "scenario") {
       return a;
     } else if (toType(b) == "scenario") {

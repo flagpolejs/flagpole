@@ -6,13 +6,14 @@ import { FlagpoleExecution } from "../flagpole-execution";
 import { SuiteTaskManager } from "./suite-task-manager";
 import { createScenario } from "../scenario-factory";
 import { ClassConstructor, KeyValue } from "../interfaces/generic-types";
-import { iScenario } from "../interfaces/iscenario";
+import { Scenario } from "..";
 import {
   ScenarioCallback,
-  ScenarioInitOptions,
-  ScenarioMapper,
   ScenarioTemplateInitOptions,
-} from "../interfaces/iscenario";
+} from "../interfaces/scenario-callbacks";
+import { ScenarioMapper } from "../interfaces/scenario-mapper";
+import { ScenarioInitOptions } from "../interfaces/scenario-init-options";
+import { ScenarioConstructor } from "../interfaces/constructor-types";
 
 type BaseDomainCallback = (suite: Suite) => string;
 
@@ -90,7 +91,7 @@ export class Suite {
     return FlagpoleExecution.global;
   }
 
-  public get scenarios(): iScenario[] {
+  public get scenarios(): Scenario[] {
     return this._taskManager.scenarios;
   }
 
@@ -217,12 +218,12 @@ export class Suite {
     });
   }
 
-  public scenario<T extends iScenario>(
+  public scenario<T extends Scenario>(
     title: string,
-    type: ClassConstructor<T>,
+    type: ScenarioConstructor<T>,
     opts: KeyValue = {}
   ): T {
-    const scenario: iScenario = createScenario<T>(this, title, type, opts);
+    const scenario = createScenario<T>(type, this, title, opts);
     // Some local tests fail with SSL verify on, so may have been disabled on this suite
     scenario.verifyCert(this._verifySslCert);
     // Should we hold off on executing?
@@ -238,10 +239,11 @@ export class Suite {
    * @param originalScenario
    * @returns
    */
-  public import(originalScenario: iScenario) {
-    const scenario: iScenario = this.scenario(
+  /*
+  public import(originalScenario: Scenario) {
+    const scenario = this.scenario(
       originalScenario.title,
-      originalScenario.type,
+      originalScenario.constructor,
       originalScenario.opts
     ).open(originalScenario.buildUrl().href);
     originalScenario.nextCallbacks.forEach((next) => {
@@ -249,6 +251,7 @@ export class Suite {
     });
     return scenario;
   }
+  */
 
   /**
    * Set the base url, which is typically the domain. All scenarios will run relative to it.
@@ -389,12 +392,12 @@ export class Suite {
     return this._aliasedData[key];
   }
 
-  public mapScenarios(key: string, map: ScenarioMapper): Promise<iScenario[]>;
-  public mapScenarios(arr: any[], map: ScenarioMapper): Promise<iScenario[]>;
+  public mapScenarios(key: string, map: ScenarioMapper): Promise<Scenario[]>;
+  public mapScenarios(arr: any[], map: ScenarioMapper): Promise<Scenario[]>;
   public mapScenarios(
     a: string | any[],
     map: ScenarioMapper
-  ): Promise<iScenario[]> {
+  ): Promise<Scenario[]> {
     const arr = typeof a === "string" ? this._getArray(a) : a;
     return Promise.all(
       arr.map((item, i, arr) => map(item, i, arr, this).waitForFinished())
@@ -435,7 +438,7 @@ export class Suite {
     return this._aliasedData[key];
   }
 
-  public template<T extends iScenario>(
+  public template<T extends Scenario>(
     templateOptions: ScenarioInitOptions<T>
   ): (title: string, scenarioOptions: ScenarioTemplateInitOptions<T>) => T {
     return (

@@ -12,6 +12,6 @@
   - [Assertion](assertion.md)
   - [AssertionContext](assertion-context.md)
   - [Response](response.md)
-  - [iScenario](scenario.md)
+  - [Scenario](scenario.md)
   - [Suite](suite.md)
   - [Value](value.md)

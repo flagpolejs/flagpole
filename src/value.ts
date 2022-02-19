@@ -25,17 +25,22 @@ import {
   SyncReducerCallback,
 } from "./interfaces/iterator-callbacks";
 import { PointerClick } from "./interfaces/pointer";
-import { JsFunction, KeyValue } from "./interfaces/generic-types";
+import {
+  ClassConstructor,
+  JsFunction,
+  KeyValue,
+} from "./interfaces/generic-types";
 import { Bounds } from "./interfaces/bounds";
 import { HttpRequestOptions } from "./interfaces/http";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
-import { iScenario, ScenarioConstructor } from "./interfaces/iscenario";
 import { ValueOptions } from "./interfaces/value-options";
-import { AssertionContext } from ".";
+import { AssertionContext, Scenario } from ".";
 import { AssertionIs } from "./assertion/assertion-is";
 import { ValueFactory } from "./helpers/value-factory";
+import { JsonData } from "./json/jpath";
+import { ScenarioConstructor } from "./interfaces/constructor-types";
 
-export class Value<InputType> {
+export class Value<InputType = any> {
   protected valueFactory = new ValueFactory(this.context);
 
   constructor(
@@ -112,19 +117,19 @@ export class Value<InputType> {
     );
   }
 
-  public get first(): Value<any> {
+  public get first(): Value {
     return this.valueFactory.create(firstIn(this.$), `First in ${this.name}`);
   }
 
-  public get mid(): Value<any> {
+  public get mid(): Value {
     return this.valueFactory.create(middleIn(this.$), `Middle in ${this.name}`);
   }
 
-  public get last(): Value<any> {
+  public get last(): Value {
     return this.valueFactory.create(lastIn(this.$), `Last in ${this.name}`);
   }
 
-  public get random(): Value<any> {
+  public get random(): Value {
     return this.valueFactory.create(randomIn(this.$), `Random in ${this.name}`);
   }
 
@@ -148,7 +153,7 @@ export class Value<InputType> {
     return this.valueFactory.create(this.toBoolean(), this.name);
   }
 
-  public get json(): Value<any> {
+  public get json(): Value<JsonData> {
     return this.valueFactory.create(this.toJSON(), this.name);
   }
 
@@ -202,7 +207,7 @@ export class Value<InputType> {
     return parseInt(this.toString());
   }
 
-  public toJSON(): any {
+  public toJSON(): JsonData {
     try {
       return JSON.parse(this.toString());
     } catch (ex) {
@@ -296,7 +301,7 @@ export class Value<InputType> {
     return value == thisValue.$;
   }
 
-  public getProperty(key: string): ValuePromise<any, Value<any>> {
+  public getProperty(key: string): ValuePromise<any, Value> {
     return this.valueFactory.createPromise(this.$[key], {
       name: `${this.name} property of ${key}`,
     });
@@ -312,13 +317,11 @@ export class Value<InputType> {
     return ValuePromise.wrap(this);
   }
 
-  public open(scenario: iScenario): iScenario;
-  public open(title: string, type?: ScenarioConstructor): iScenario;
-  public open(a: string | iScenario, type?: ScenarioConstructor): iScenario {
-    const scenario =
-      typeof a == "string"
-        ? this.context.suite.scenario(a, type || this.context.scenario.type)
-        : a;
+  public open<T extends Scenario>(
+    title: string,
+    type: ScenarioConstructor<T>
+  ): T {
+    const scenario = this.context.suite.scenario(title, type);
     runAsync(async () => {
       const link = await this.getLink();
       if (link.isNavigation()) {
@@ -396,8 +399,8 @@ export class Value<InputType> {
   }
 
   exists(): ValuePromise<InputType, this>;
-  exists(selector: string): ValuePromise<any, Value<any>>;
-  public exists(selector?: string): ValuePromise<any, Value<any>> {
+  exists(selector: string): ValuePromise<any, Value>;
+  public exists(selector?: string): ValuePromise<any, Value> {
     // Without a selector, we're making an assertion that this item exists and then returning itself
     if (selector === undefined) {
       this.isNullOrUndefined()
@@ -415,15 +418,15 @@ export class Value<InputType> {
     });
   }
 
-  public find(selector: string): ValuePromise<any, Value<any>> {
+  public find(selector: string): ValuePromise<any, Value> {
     return ValuePromise.wrap(this.item(selector));
   }
 
-  public async findAll(selector: string): Promise<Value<any>[]> {
+  public async findAll(selector: string): Promise<Value[]> {
     return [await this.find(selector)];
   }
 
-  public getClassName(): ValuePromise<string, Value<string>> {
+  public getClassName(): ValuePromise<string, Value> {
     throw "Class Name is not supported for this type of value";
   }
 

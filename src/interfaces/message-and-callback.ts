@@ -1,9 +1,9 @@
-import { iScenario } from "./iscenario";
+import { Scenario } from "../scenario";
 import { NextCallback } from "./next-callback";
 
 export interface MessageAndCallback {
   isSubScenario: boolean;
   message: string;
   callback: NextCallback;
-  scenario?: iScenario;
+  scenario?: Scenario;
 }

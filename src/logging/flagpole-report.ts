@@ -10,8 +10,9 @@ import { LogComment } from "./comment";
 import { asyncForEach } from "../util";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { lineToVerbosity } from "./verbosity";
-import { iScenario, Suite } from "..";
 import { LogItem } from "./log-item";
+import { Scenario } from "../scenario";
+import { Suite } from "../suite/suite";
 
 export class FlagpoleReport {
   public readonly suite: Suite;
@@ -49,7 +50,7 @@ export class FlagpoleReport {
           )
         );
     lines.push(new LineBreak());
-    await asyncForEach(this.suite.scenarios, async (scenario: iScenario) => {
+    await asyncForEach(this.suite.scenarios, async (scenario: Scenario) => {
       const log = await scenario.getLog();
       log.forEach((item: LogItem) => {
         lines = lines.concat(item.toConsole());
@@ -66,7 +67,7 @@ export class FlagpoleReport {
    * @returns {any}
    */
   public async toJson(): Promise<any> {
-    const scenarios: iScenario[] = this.suite.scenarios;
+    const scenarios: Scenario[] = this.suite.scenarios;
     const out: any = {
       title: this.suite.title,
       baseUrl: String(this.suite.baseUrl),
@@ -76,7 +77,7 @@ export class FlagpoleReport {
     let failCount: number = 0;
     let passCount: number = 0;
     for (let i = 0; i < scenarios.length; i++) {
-      const scenario: iScenario = scenarios[i];
+      const scenario: Scenario = scenarios[i];
       const log: LogItem[] = await scenario.getLog();
       out.scenarios[i] = {
         title: scenario.title,
@@ -111,7 +112,7 @@ export class FlagpoleReport {
    * Create HTML output for results
    */
   public async toHTML(): Promise<string> {
-    const scenarios: iScenario[] = this.suite.scenarios;
+    const scenarios: Scenario[] = this.suite.scenarios;
     let html: string = "";
     html += '<article class="suite">' + "\n";
     html += `<h2>${this.suite.title}</h2>\n`;
@@ -125,7 +126,7 @@ export class FlagpoleReport {
     html += "</ul>\n";
     html += "</aside>\n";
     for (let i = 0; i < scenarios.length; i++) {
-      const scenario: iScenario = scenarios[i];
+      const scenario = scenarios[i];
       const log = await scenario.getLog();
       html += '<section class="scenario">' + "\n";
       html += `
@@ -148,12 +149,12 @@ export class FlagpoleReport {
    * Create XML output for results
    */
   public async toXML(): Promise<string> {
-    const scenarios: iScenario[] = this.suite.scenarios;
+    const scenarios = this.suite.scenarios;
 
     const testCases: string[] = [];
 
     for (let i = 0; i < scenarios.length; i++) {
-      const scenario: iScenario = scenarios[i];
+      const scenario = scenarios[i];
       const log = await scenario.getLog();
 
       // .next("I am a subscenario title", async context => { })
@@ -205,12 +206,12 @@ export class FlagpoleReport {
    * Details on failures only
    */
   public async toCI(): Promise<string> {
-    const scenarios: iScenario[] = this.suite.scenarios;
+    const scenarios = this.suite.scenarios;
 
     const ciOutput: string[] = [];
 
     for (let i = 0; i < scenarios.length; i++) {
-      const scenario: iScenario = scenarios[i];
+      const scenario = scenarios[i];
       const log = await scenario.getLog();
 
       // .next("I am a subscenario title", async context => { })

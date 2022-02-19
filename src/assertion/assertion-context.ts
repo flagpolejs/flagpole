@@ -30,31 +30,45 @@ import { ScreenshotOpts } from "../interfaces/screenshot";
 import { GestureOpts, GestureType } from "../interfaces/gesture";
 import { PointerMove } from "../interfaces/pointer";
 import { ScreenProperties } from "../interfaces/screen-properties";
-import { HttpRequest, iScenario, ProtoResponse, Suite, Value } from "..";
+import { HttpRequest, ProtoResponse, Scenario, Suite, Value } from "..";
 import { AssertionResult } from "../logging/assertion-result";
 import { ValueFactory } from "../helpers/value-factory";
+import { Adapter } from "../adapter";
+import {
+  AdapterConstructor,
+  ResponseConstructor,
+  WrapperConstructor,
+} from "../interfaces/constructor-types";
 
 export class AssertionContext<
-  ScenarioType extends iScenario = iScenario,
-  ResponseType extends ProtoResponse = ProtoResponse
+  ScenarioType extends Scenario = Scenario,
+  AdapterType extends Adapter = Adapter,
+  ResponseType extends ProtoResponse = ProtoResponse,
+  WrapperType extends Value = Value
 > {
-  protected valueFactory = new ValueFactory(this);
+  public readonly valueFactory = new ValueFactory(this);
+  public readonly request: HttpRequest;
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
 
+  public readonly response: ResponseType;
+  public readonly adapter: AdapterType;
+
   constructor(
     public readonly scenario: ScenarioType,
-    public readonly response: ResponseType
-  ) {}
+    public readonly AdapterClass: AdapterConstructor<AdapterType>,
+    public readonly ResponseClass: ResponseConstructor<ResponseType>,
+    public readonly WrapperClass: WrapperConstructor<WrapperType>
+  ) {
+    this.response = new ResponseClass(this.scenario);
+    this.adapter = new AdapterClass();
+    this.request = new HttpRequest(this.scenario.opts);
+  }
 
   /**
    * Get returned value from previous next block
    */
   public result: any;
-
-  public get request(): HttpRequest {
-    return this.scenario.request;
-  }
 
   public get suite(): Suite {
     return this.scenario.suite;
@@ -394,26 +408,30 @@ export class AssertionContext<
    *
    * @param selector
    */
-  public find<InputType, Wrapper extends Value<InputType>>(
+  public find<InputType>(
     selector: string | string[],
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise<InputType, Wrapper> | ValuePromise<null, Value<null>> {
+  ): ValuePromise<InputType | null, WrapperType> {
     const selectors = toArray<string>(selector);
     const params = getFindParams(a, b);
-    return ValuePromise.execute<InputType, Wrapper>(async () => {
-      const element = await asyncUntil<Wrapper>(selectors, async (selector) => {
-        const value =
-          typeof a == "string"
-            ? await this.response.find(selector, a, b)
-            : a instanceof RegExp
-            ? await this.response.find(selector, a, b)
-            : await this.response.find(selector, b);
-        return value.isNullOrUndefined() ? false : value;
-      });
-      return element === null
-        ? this.valueFactory.createNull(getFindName(params, selectors, null))
-        : element;
+    return ValuePromise.execute<InputType | null, WrapperType>(async () => {
+      const element = await asyncUntil<WrapperType>(
+        selectors,
+        async (selector) => {
+          const value =
+            typeof a == "string"
+              ? await this.response.find(selector, a, b)
+              : a instanceof RegExp
+              ? await this.response.find(selector, a, b)
+              : await this.response.find(selector, b);
+          return value.isNullOrUndefined() ? false : value;
+        }
+      );
+      return this.valueFactory.createNull(
+        getFindName(params, selectors, null),
+        this.WrapperClass
+      );
     });
   }
 
@@ -549,12 +567,14 @@ export class AssertionContext<
     return output;
   }
 
-  public movePointer(...pointers: PointerMove[]): Promise<ProtoResponse> {
-    return this.response.movePointer(...pointers);
+  public async movePointer(...pointers: PointerMove[]): Promise<this> {
+    await this.response.movePointer(...pointers);
+    return this;
   }
 
-  public gesture(type: GestureType, opts: GestureOpts): Promise<ProtoResponse> {
-    return this.response.gesture(type, opts);
+  public async gesture(type: GestureType, opts: GestureOpts): Promise<this> {
+    await this.response.gesture(type, opts);
+    return this;
   }
 
   public push(key: string, value: any): this {
@@ -571,7 +591,7 @@ export class AssertionContext<
     return this.scenario.get<T>(aliasName);
   }
 
-  public async scrollTo(point: OptionalXY): Promise<AssertionContext> {
+  public async scrollTo(point: OptionalXY): Promise<this> {
     await this.response.scrollTo(point);
     return this;
   }

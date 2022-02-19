@@ -1,7 +1,6 @@
 import { URL } from "url";
 import { createEmptyResponse } from "./http/http-response";
 import { HttpRequest } from "./http/http-request";
-import { AssertionContext } from "./assertion/assertion-context";
 import { wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
@@ -14,24 +13,26 @@ import {
   OptionalXY,
 } from "./interfaces/generic-types";
 import { ScreenProperties } from "./interfaces/screen-properties";
-import { iScenario } from "./interfaces/iscenario";
 import { HttpResponse } from "./http/http-response";
 import { ScreenshotOpts } from "./interfaces/screenshot";
 import { JsonData } from "./json/jpath";
-import { Value } from ".";
-import { ValueFactory } from "./helpers/value-factory";
+import { Value } from "./value";
+import { Scenario } from "./scenario";
 
 export abstract class ProtoResponse {
   protected _currentUrl: string | null = null;
   protected _httpResponse: HttpResponse = createEmptyResponse();
 
-  public readonly context: AssertionContext;
-  public readonly valueFactory: ValueFactory;
-
-  constructor(public readonly scenario: iScenario) {
+  constructor(public readonly scenario: Scenario) {
     this._currentUrl = scenario.finalUrl;
-    this.context = new AssertionContext(this.scenario, this);
-    this.valueFactory = new ValueFactory(this.context);
+  }
+
+  public get valueFactory() {
+    return this.context.valueFactory;
+  }
+
+  public get context() {
+    return this.scenario.context;
   }
 
   public init(res: HttpResponse) {
@@ -442,22 +443,19 @@ export abstract class ProtoResponse {
     );
   }
 
-  public async movePointer(...pointers: PointerMove[]): Promise<ProtoResponse> {
+  public async movePointer(...pointers: PointerMove[]): Promise<this> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support pointer.`
     );
   }
 
-  public async gesture(
-    type: GestureType,
-    opts: GestureOpts
-  ): Promise<ProtoResponse> {
+  public async gesture(type: GestureType, opts: GestureOpts): Promise<this> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support gesture.`
     );
   }
 
-  public async scrollTo(_point: OptionalXY): Promise<ProtoResponse> {
+  public async scrollTo(_point: OptionalXY): Promise<this> {
     return this;
   }
 

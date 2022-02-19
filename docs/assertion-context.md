@@ -110,7 +110,7 @@ There are a few forms of this
 await context.click('input[name="q"]');
 ```
 
-#### click(selector: string, message: string): Promise\<iScenario\>
+#### click(selector: string, message: string): Promise\<Scenario\>
 
 This will select the object and, if it is a clickable element (like a link), it will create a new dynamic scenario with that URL loaded.
 
@@ -122,7 +122,7 @@ context.click('a.login', 'Load login page')).next((loginContext) => {
 
 It returns a promise that resolves to the dynamic scenario.
 
-#### click(selector: string, callback: Function): Promise\<iScenario\>
+#### click(selector: string, callback: Function): Promise\<Scenario\>
 
 Alternately, you can pass a callback for the dynamic scenario as the second argument. The title of the scenario will be automatically created.
 
@@ -132,7 +132,7 @@ await context.click("a.login", (loginContext) => {
 });
 ```
 
-#### click(selector: string, message: string, callback: Function): Promise\<iScenario\>
+#### click(selector: string, message: string, callback: Function): Promise\<Scenario\>
 
 Or combine the two methods with a message and callback.
 
@@ -142,7 +142,7 @@ context.click("a.login", "Load login page", (loginContext) => {
 });
 ```
 
-#### click(selector: string, subScenario: iScenario): Promise\<iScenario\>
+#### click(selector: string, subScenario: Scenario): Promise\<Scenario\>
 
 Finally if you have a scenario already and you want to execute it with the link from the element, pass in the reference to that scenario.
 
@@ -643,7 +643,7 @@ await context.selectOption('select[name="favoriteSport"]', "Track & Field");
 
 Save `value` to alias `aliasName` so it that it can be retrieved later with a `.get(aliasName)` call.
 
-### submit(selector: string, ...): Promise\<iScenario | void\>
+### submit(selector: string, ...): Promise\<Scenario | void\>
 
 Submits the form, if the selected element is a form. This works on both browser and html types. For browser, it will do whatever submitting the form would do in the browser window. For html scenarios, it will serialize the form input and then submit it, navigating to the next page.
 

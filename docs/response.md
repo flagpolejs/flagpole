@@ -68,7 +68,7 @@ The numeric value of how many redirects were followed.
 context.assert(context.response.redirectCount).lessThan(10);
 ```
 
-### scenario: iScenario
+### scenario: Scenario
 
 Reference to the scenario that created this response.
 

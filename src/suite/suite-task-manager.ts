@@ -5,12 +5,12 @@ import {
 } from "../interfaces/suite";
 import * as bluebird from "bluebird";
 import { runAsync } from "../util";
+import { Scenario } from "../scenario";
+import { Suite } from "../suite/suite";
 import {
-  iScenario,
   ScenarioCallback,
   ScenarioCallbackAndMessage,
-} from "../interfaces/iscenario";
-import { Suite } from "..";
+} from "../interfaces/scenario-callbacks";
 
 type WhichCallback =
   | "beforeAll"
@@ -23,7 +23,7 @@ type WhichCallback =
 
 export class SuiteTaskManager {
   private _suite: Suite;
-  private _scenarios: iScenario[] = [];
+  private _scenarios: Scenario[] = [];
   private _dateInitialized: number;
   private _dateStarted: number | null = null;
   private _dateExecutionBegan: number | null = null;
@@ -128,35 +128,35 @@ export class SuiteTaskManager {
   /**
    * Return a clone of the array of scenarios (can't push into it directly)
    */
-  public get scenarios(): iScenario[] {
+  public get scenarios(): Scenario[] {
     return [...this._scenarios];
   }
 
-  public get scenariosNotReadyToExecute(): iScenario[] {
+  public get scenariosNotReadyToExecute(): Scenario[] {
     return this._scenarios.filter((scenario) => {
       return !scenario.isReadyToExecute;
     });
   }
 
-  public get scenariosReadyToExecute(): iScenario[] {
+  public get scenariosReadyToExecute(): Scenario[] {
     return this._scenarios.filter((scenario) => {
       return scenario.isReadyToExecute;
     });
   }
 
-  public get scenariosFailed(): iScenario[] {
+  public get scenariosFailed(): Scenario[] {
     return this._scenarios.filter((scenario) => {
       return !scenario.hasPassed && scenario.hasExecuted;
     });
   }
 
-  public get scenariosWaitingToExecute(): iScenario[] {
+  public get scenariosWaitingToExecute(): Scenario[] {
     return this._scenarios.filter((scenario) => {
       return scenario.isPending;
     });
   }
 
-  public get scenariosCurrentlyExcuting(): iScenario[] {
+  public get scenariosCurrentlyExcuting(): Scenario[] {
     return this._scenarios.filter((scenario) => {
       return scenario.hasExecuted && !scenario.hasFinished;
     });
@@ -289,7 +289,7 @@ export class SuiteTaskManager {
     this._addCallback("finally", a, b, c);
   }
 
-  public registerScenario(scenario: iScenario) {
+  public registerScenario(scenario: Scenario) {
     if (this.hasExecutionCompleted) {
       throw "Can not register new scenario after the suite has completed execution";
     }
@@ -397,7 +397,7 @@ export class SuiteTaskManager {
    * Pull the next batch of scenarios, execute it and wait for it to finish
    * Resolves null if there is an error
    */
-  private async _startExecutingScenarios(): Promise<iScenario[] | null> {
+  private async _startExecutingScenarios(): Promise<Scenario[] | null> {
     return new Promise(async (resolve) => {
       // Execute all scenarios that are ready to go
       const batch = this.scenariosReadyToExecute;
@@ -433,14 +433,14 @@ export class SuiteTaskManager {
     return true;
   }
 
-  private async _executeScenario(scenario: iScenario): Promise<iScenario> {
+  private async _executeScenario(scenario: Scenario): Promise<Scenario> {
     if (scenario.hasExecuted) {
       throw `Scenario ${scenario.title} has already started executing`;
     }
     if (!scenario.isReadyToExecute) {
       throw `Scenario ${scenario.title} is not ready to execute`;
     }
-    await (scenario as iScenario).go();
+    await (scenario as Scenario).go();
     return scenario;
   }
 
@@ -454,7 +454,7 @@ export class SuiteTaskManager {
 
   private async _fireScenarioCallbacks(
     callbacks: ScenarioCallbackAndMessage[],
-    scenario: iScenario
+    scenario: Scenario
   ): Promise<any> {
     return bluebird.mapSeries(callbacks, (callback) => {
       return callback.callback(scenario, this._suite);
