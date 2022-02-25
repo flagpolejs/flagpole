@@ -16,6 +16,10 @@ import commander = require("commander");
 
 const typesOfTest: any[] = [
   {
+    title: "Appium",
+    value: "appium",
+  },
+  {
     title: "REST API/JSON",
     value: "json",
   },
