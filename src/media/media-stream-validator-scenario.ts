@@ -1,4 +1,4 @@
-import { HttpRequest, Value } from "..";
+import { HttpRequest } from "..";
 import { Scenario } from "../scenario";
 import { MediaStreamValidatorAdapter } from "./media-stream-validator-adapter";
 import { MediaStreamValidatorResponse } from "./media-stream-validator-response";

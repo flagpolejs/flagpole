@@ -30,7 +30,7 @@ import { Bounds } from "./interfaces/bounds";
 import { HttpRequestOptions } from "./interfaces/http";
 import { GestureOpts, GestureType } from "./interfaces/gesture";
 import { ValueOptions } from "./interfaces/value-options";
-import { AssertionContext, Scenario, Value } from ".";
+import { AssertionContext, Scenario } from ".";
 import { AssertionIs } from "./assertion/assertion-is";
 import { JsonData } from "./json/jpath";
 import {
@@ -467,7 +467,7 @@ export abstract class ValueWrapper<InputType> {
     return ValuePromise.wrap(this.item(selector));
   }
 
-  public async findAll(selector: string): Promise<Value[]> {
+  public async findAll(selector: string): Promise<UnknownValue[]> {
     return [await this.find(selector)];
   }
 

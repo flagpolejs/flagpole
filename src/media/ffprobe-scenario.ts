@@ -1,4 +1,4 @@
-import { HttpRequest, Value } from "..";
+import { HttpRequest } from "..";
 import { Scenario } from "../scenario";
 import { FfprobeAdapter } from "./ffprobe-adapter";
 import { FfprobeResponse } from "./ffprobe-response";

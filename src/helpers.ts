@@ -1,7 +1,6 @@
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
-import { Value } from "./value";
 import { toType, asyncFilter } from "./util";
-import { AssertionContext } from "./assertion/assertion-context";
+import { ValueWrapper } from "./value-wrapper";
 
 export type FindParams = {
   contains: string | null;
@@ -34,7 +33,7 @@ export function getFindParams(a: any, b: any): FindParams {
 
 export async function filterFind<
   InputType = any,
-  Wrapper extends Value<InputType> = Value<InputType>
+  Wrapper extends ValueWrapper<InputType> = ValueWrapper<InputType>
 >(
   elements: Wrapper[],
   contains?: string | RegExp | null,
@@ -72,7 +71,7 @@ export async function filterFind<
 
 export function applyOffsetAndLimit<
   InputType = any,
-  Wrapper extends Value<InputType> = Value<InputType>
+  Wrapper extends ValueWrapper<InputType> = ValueWrapper<InputType>
 >(opts: FindAllOptions, elements: Wrapper[]): Wrapper[] {
   const start = opts.offset || 0;
   const end = opts.limit ? start + opts.limit : undefined;

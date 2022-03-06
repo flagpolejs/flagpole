@@ -1,7 +1,6 @@
 import * as jmespath from "jmespath";
 import { ValuePromise } from "../value-promise";
 import { ContextProvider } from "../interfaces/context-provider";
-import { Value } from "../value";
 import { JsonValue } from "../values/json-value";
 
 export type JsonData =
@@ -31,13 +30,13 @@ export class JsonDoc {
 export interface JsonProvider {
   json?: JsonDoc;
   find: (path: string) => ValuePromise<JsonValue>;
-  findAll: (path: string) => Promise<Value<JsonData>[]>;
+  findAll: (path: string) => Promise<JsonValue[]>;
 }
 
 export const jsonFindAll = async (
   self: JsonProvider,
   path: string
-): Promise<Value<JsonData>[]> => {
+): Promise<JsonValue[]> => {
   const item = await self.find(path);
   return [item];
 };

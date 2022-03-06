@@ -1,7 +1,7 @@
 import { HeadersResponse } from "./headers-response";
 import { Scenario } from "../scenario";
 import { NeedleAdapter } from "../adapter.needle";
-import { HttpRequest, Value } from "..";
+import { HttpRequest } from "..";
 
 export class HeadersScenario extends Scenario {
   public readonly typeName = "Headers";

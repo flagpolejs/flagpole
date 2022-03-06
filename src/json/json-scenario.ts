@@ -3,13 +3,12 @@ import { Scenario } from "../scenario";
 import { HttpRequestOptions } from "../interfaces/http";
 import { CONTENT_TYPE_JSON } from "../interfaces/constants";
 import { NeedleAdapter } from "../adapter.needle";
-import { HttpRequest, Value } from "..";
+import { HttpRequest } from "..";
 
 export class JsonScenario extends Scenario<
   HttpRequest,
   NeedleAdapter,
-  JsonResponse,
-  Value
+  JsonResponse
 > {
   public readonly typeName: string = "JSON";
   public readonly request = new HttpRequest(this.opts);

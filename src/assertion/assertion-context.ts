@@ -30,18 +30,17 @@ import { ScreenshotOpts } from "../interfaces/screenshot";
 import { GestureOpts, GestureType } from "../interfaces/gesture";
 import { PointerMove } from "../interfaces/pointer";
 import { ScreenProperties } from "../interfaces/screen-properties";
-import { HttpRequest, ProtoResponse, Scenario, Suite, Value } from "..";
+import { HttpRequest, ProtoResponse, Scenario, Suite } from "..";
 import { AssertionResult } from "../logging/assertion-result";
-import { ValueOptions } from "../interfaces/value-options";
 import { NumericValue } from "../values/numeric-value";
 import { StringValue } from "../values/string-value";
 import { UnknownValue } from "../values/unknown-value";
-import { GenericValue } from "../values/generic-value";
+import { ValueWrapper } from "../value-wrapper";
 
 export class AssertionContext<
   RequestType extends HttpRequest = HttpRequest,
   ResponseType extends ProtoResponse = ProtoResponse,
-  WrapperType extends Value = Value
+  WrapperType extends ValueWrapper<any> = ValueWrapper<any>
 > {
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
@@ -51,14 +50,6 @@ export class AssertionContext<
     public readonly request: RequestType,
     public readonly response: ResponseType
   ) {}
-
-  public createStandardValue<T>(
-    data: T,
-    opts: ValueOptions | string
-  ): Value<T> {
-    if (typeof opts == "string") opts = { name: opts };
-    return new Value(data, this.scenario.context, opts);
-  }
 
   /**
    * Get returned value from previous next block
@@ -379,8 +370,8 @@ export class AssertionContext<
         ? `${selectors.join(", ")} all exist`
         : `${selectors[0]} exists`,
       Object.values(elements)
-    ).every((element: Value<any>[]) => !element[0].isNullOrUndefined());
-    return flatten<Value<any>>(elements);
+    ).every((element: UnknownValue[]) => !element[0].isNullOrUndefined());
+    return flatten<UnknownValue>(elements);
   }
 
   public async existsAny(
@@ -394,8 +385,8 @@ export class AssertionContext<
         ? `${selectors.join(", ")} some exist`
         : `${selectors[0]} exists`,
       Object.values(elements)
-    ).some((element: Value<any>[]) => !element[0].isNullOrUndefined());
-    return flatten<Value<any>>(elements);
+    ).some((element: UnknownValue[]) => !element[0].isNullOrUndefined());
+    return flatten<UnknownValue>(elements);
   }
 
   /**
@@ -440,10 +431,10 @@ export class AssertionContext<
     selector: string | string[],
     a?: string | RegExp | FindAllOptions,
     b?: FindAllOptions
-  ): Promise<Value<any>[]> {
+  ): Promise<UnknownValue[]> {
     const selectors = toArray<string>(selector);
     const elements = await this._findAllForSelectors(selectors, a, b);
-    return flatten<Value<any>>(elements);
+    return flatten<UnknownValue>(elements);
   }
 
   public findXPath(xPath: string) {
@@ -641,8 +632,8 @@ export class AssertionContext<
     selectors: string[],
     a?: string | FindAllOptions | RegExp,
     b?: FindAllOptions
-  ): Promise<{ [selector: string]: Value<any>[] }> {
-    return asyncMapToObject<Value<any>[]>(selectors, async (selector) =>
+  ): Promise<{ [selector: string]: UnknownValue[] }> {
+    return asyncMapToObject<UnknownValue[]>(selectors, async (selector) =>
       typeof a == "string"
         ? this.response.findAll(selector, a, b)
         : a instanceof RegExp
@@ -662,7 +653,7 @@ export class AssertionContext<
   protected _assertExists(
     message: string | null,
     name: string,
-    el: Value<any>
+    el: UnknownValue
   ) {
     if (message) {
       el.isNullOrUndefined()

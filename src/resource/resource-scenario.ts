@@ -1,4 +1,4 @@
-import { HttpRequest, Value } from "..";
+import { HttpRequest } from "..";
 import { NeedleAdapter } from "../adapter.needle";
 import { Scenario } from "../scenario";
 import { ResourceResponse } from "./resource-response";

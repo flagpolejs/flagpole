@@ -3,7 +3,6 @@ import { URL } from "url";
 import { HttpResponse } from "../http/http-response";
 import { ValuePromise } from "../value-promise";
 import { JsonData } from "../json/jpath";
-import { Value } from "../value";
 import { NumericValue } from "../values/numeric-value";
 import { JsonValue } from "../values/json-value";
 import { StringValue } from "../values/string-value";
@@ -76,7 +75,7 @@ export class ImageResponse extends ProtoResponse {
     );
   }
 
-  public async findAll(propertyName: string): Promise<Value<JsonData>[]> {
+  public async findAll(propertyName: string): Promise<JsonValue[]> {
     const value = await this.find(propertyName);
     return value.isNull() ? [] : [value];
   }

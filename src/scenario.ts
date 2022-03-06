@@ -44,7 +44,6 @@ import {
   HttpRequest,
   ProtoResponse,
   Suite,
-  Value,
 } from ".";
 import { LocalAdapter } from "./adapter.local";
 import { NextCallback } from "./interfaces/next-callback";
@@ -56,6 +55,7 @@ import {
 } from "./interfaces/scenario-callbacks";
 import { Adapter } from "./adapter";
 import { UnknownValue } from "./values/unknown-value";
+import { ValueWrapper } from "./value-wrapper";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -68,7 +68,7 @@ export abstract class Scenario<
   RequestType extends HttpRequest = HttpRequest,
   AdapterType extends Adapter = Adapter,
   ResponseType extends ProtoResponse = ProtoResponse,
-  WrapperType extends Value = Value
+  WrapperType extends ValueWrapper<any> = ValueWrapper<any>
 > {
   public abstract readonly typeName: string;
   public abstract readonly request: RequestType;
@@ -608,8 +608,8 @@ export abstract class Scenario<
    * @param {string} url
    */
   public open(url: string, opts?: HttpRequestOptions): this;
-  public open(link: Value<any>, opts?: HttpRequestOptions): this;
-  public open(a: string | Value<any>, opts?: HttpRequestOptions) {
+  public open(link: UnknownValue, opts?: HttpRequestOptions): this;
+  public open(a: string | UnknownValue, opts?: HttpRequestOptions) {
     if (this.hasExecuted) {
       throw `Can call open after scenario has executed`;
     }

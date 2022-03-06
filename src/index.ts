@@ -13,7 +13,6 @@ import { ResourceResponse } from "./resource/resource-response";
 import { ProtoResponse } from "./proto-response";
 import { Scenario } from "./scenario";
 import { Suite } from "./suite/suite";
-import { Value } from "./value";
 import { ValuePromise } from "./value-promise";
 import { HlsResponse } from "./media/hls-response";
 import { HlsScenario } from "./media/hls-scenario";
@@ -50,7 +49,6 @@ export {
   ProtoResponse,
   HttpRequest,
   HttpResponse,
-  Value,
   HlsResponse,
   HeadersResponse,
   execution,

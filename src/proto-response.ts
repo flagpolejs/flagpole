@@ -15,7 +15,6 @@ import { ScreenProperties } from "./interfaces/screen-properties";
 import { HttpResponse } from "./http/http-response";
 import { ScreenshotOpts } from "./interfaces/screenshot";
 import { JsonData } from "./json/jpath";
-import { Value } from "./value";
 import { Scenario } from "./scenario";
 import { UnknownValue } from "./values/unknown-value";
 import { NumericValue } from "./values/numeric-value";
@@ -57,17 +56,17 @@ export abstract class ProtoResponse {
   abstract findAll(
     selector: string,
     opts?: FindAllOptions
-  ): Promise<Value<any>[]>;
+  ): Promise<UnknownValue[]>;
   abstract findAll(
     selector: string,
     contains: string,
     opts?: FindAllOptions
-  ): Promise<Value<any>[]>;
+  ): Promise<UnknownValue[]>;
   abstract findAll(
     selector: string,
     matches: RegExp,
     opts?: FindAllOptions
-  ): Promise<Value<any>[]>;
+  ): Promise<UnknownValue[]>;
 
   public async eval(callback: any, ...args: any[]): Promise<any> {
     throw "This type of scenario does not suport eval.";
@@ -412,7 +411,7 @@ export abstract class ProtoResponse {
     );
   }
 
-  public async findAllXPath(xPath: string): Promise<Value<any>[]> {
+  public async findAllXPath(xPath: string): Promise<UnknownValue[]> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support findAllXPath.`
     );
@@ -430,7 +429,7 @@ export abstract class ProtoResponse {
   public async findAllHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): Promise<Value<any>[]> {
+  ): Promise<UnknownValue[]> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support findAllHavingText.`
     );

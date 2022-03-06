@@ -1,7 +1,7 @@
 import { ImageResponse } from "./image-response";
 import { Scenario } from "../scenario";
 import { ImageAdapter } from "./image-adapter";
-import { HttpRequest, Value } from "..";
+import { HttpRequest } from "..";
 
 export class ImageScenario extends Scenario {
   public readonly typeName = "Image";

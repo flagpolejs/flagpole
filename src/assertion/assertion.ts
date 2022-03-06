@@ -30,7 +30,7 @@ import {
 import { CompareCallback, JsFunction } from "../interfaces/generic-types";
 import { AssertSchemaType } from "../interfaces/schema";
 import { AssertionContext, AssertionResult } from "..";
-import { Value } from "../value";
+import { UnknownValue } from "../values/unknown-value";
 
 export class Assertion {
   public get value(): any {
@@ -152,7 +152,7 @@ export class Assertion {
 
   public get name(): string {
     return this._message || this.isFlagpoleValue
-      ? (this._input as Value<any>).name
+      ? (this._input as UnknownValue).name
       : String(this._input);
   }
 
@@ -1023,7 +1023,7 @@ export class Assertion {
     // Create new assertion
     const assertion: Assertion = new Assertion(
       this._context,
-      new Value(value, this._context, { name }),
+      value,
       this._message
     );
     this._not && assertion.not;
