@@ -33,12 +33,13 @@ export class HtmlResponse extends ProtoResponse {
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  ): ValuePromise<HTMLElement> {
     return ValuePromise.execute(async () => {
       const selection = await this.findAll(selector, a, b);
-      return selection.length > 0
-        ? selection[0]
-        : this.valueFactory.create({ selector }, HTMLElement);
+      if (selection.length > 0) return selection[0];
+      return ValuePromise.wrap(
+        HTMLElement.create(null, this.context, { selector })
+      );
     });
   }
 
@@ -49,7 +50,7 @@ export class HtmlResponse extends ProtoResponse {
   ) {
     const elements: CheerioElement[] = this.cheerio(selector).toArray();
     const params = getFindParams(a, b);
-    let nodeElements: HTMLElement<CheerioElement>[] = [];
+    let nodeElements: HTMLElement[] = [];
     if (elements.length > 0) {
       for (let i = 0; i < elements.length; i++) {
         nodeElements.push(
@@ -74,7 +75,7 @@ export class HtmlResponse extends ProtoResponse {
     selector: string,
     textToType: string,
     opts: any = {}
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  ): ValuePromise<HTMLElement> {
     return ValuePromise.execute(async () => {
       const el = await this.find(selector, opts);
       const currentValue = await el.getValue();
@@ -83,7 +84,7 @@ export class HtmlResponse extends ProtoResponse {
     });
   }
 
-  public clear(selector: string): ValuePromise<CheerioElement, HTMLElement> {
+  public clear(selector: string): ValuePromise<HTMLElement> {
     return ValuePromise.execute(async () => {
       const el = await this.find(selector);
       el.setValue("");

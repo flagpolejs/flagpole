@@ -546,10 +546,6 @@ export abstract class ValueWrapper<InputType> {
     return this.getProperty(key);
   }
 
-  public getStyleProperty(key: string): ValuePromise<StringValue> {
-    throw "Style Property not supported for this type of value";
-  }
-
   public getValue(): ValuePromise<UnknownValue> {
     throw "Get Value is not supported for this type of value";
   }

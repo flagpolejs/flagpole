@@ -21,7 +21,7 @@ export class XmlResponse extends HtmlResponse {
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  ): ValuePromise<HTMLElement> {
     return super.find(this.normalizeSelector(selector), a, b);
   }
 

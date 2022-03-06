@@ -12,11 +12,9 @@ import { AssertionContext } from "..";
 
 let $: cheerio.Root;
 
-export type CheerioElement = cheerio.Element | cheerio.Cheerio | null;
+export type CheerioElement = cheerio.Element | null;
 
-export class HTMLElement<
-  InputType extends CheerioElement = CheerioElement
-> extends DOMElement<InputType | null> {
+export class HTMLElement extends DOMElement<CheerioElement> {
   public static async create(
     input: CheerioElement,
     context: AssertionContext,
@@ -33,7 +31,11 @@ export class HTMLElement<
     return element;
   }
 
-  constructor(input: InputType, context: AssertionContext, opts: ValueOptions) {
+  constructor(
+    input: CheerioElement,
+    context: AssertionContext,
+    opts: ValueOptions
+  ) {
     super(input, context, {
       name: "HTML Element",
       ...opts,
@@ -54,20 +56,17 @@ export class HTMLElement<
     selector: string,
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise<CheerioElement, HTMLElement> {
-    return ValuePromise.execute(async () => {
-      const params = getFindParams(a, b);
-      const name: string = `${selector} under ${this.name}`;
-      const path: string = `${this.path} ${selector}`;
-      if (params.contains || params.matches) {
-      } else {
-        const element = this.cheerio.find(selector).eq(0);
-        if (element?.length) {
-          return HTMLElement.create(element, this.context, { name, path });
-        }
-      }
-      return HTMLElement.create(null, this.context, { name });
-    });
+  ): ValuePromise<HTMLElement> {
+    const params = getFindParams(a, b);
+    const name: string = `${selector} under ${this.name}`;
+    const path: string = `${this.path} ${selector}`;
+    const results = this.cheerio.find(selector);
+    return ValuePromise.wrap(
+      HTMLElement.create(results?.length ? results[0] : null, this.context, {
+        name,
+        path,
+      })
+    );
   }
 
   public async findAll(
@@ -93,34 +92,30 @@ export class HTMLElement<
     );
   }
 
-  public getAncestorOrSelf(
-    selector: string
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  public getAncestorOrSelf(selector: string): ValuePromise<HTMLElement> {
     const closest = this.cheerio.closest(selector);
     const name: string = `Closest ${selector} of ${this.name}`;
     const path: string = `${this.path}[ancestor-or-self::${selector}]`;
     const el = closest.length > 0 ? closest[0] : null;
-    return this.valueFactory.createPromise(el, { name, path }, HTMLElement);
+    return ValuePromise.wrap(
+      HTMLElement.create(el, this.context, { name, path })
+    );
   }
 
-  public getFirstChild(
-    selector: string
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  public getFirstChild(selector: string): ValuePromise<HTMLElement> {
     return ValuePromise.execute(async () => {
       const child = this.cheerio.children(selector).first();
-      return HTMLElement.create(child, this.context, {
+      return HTMLElement.create(child[0], this.context, {
         name: `First Child ${selector} of ${this.name}`,
         path: `${this.path}[child::${selector}][1]`,
       });
     });
   }
 
-  public getLastChild(
-    selector: string
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  public getLastChild(selector: string): ValuePromise<HTMLElement> {
     return ValuePromise.execute(async () => {
       const child = this.cheerio.children(selector).last();
-      return HTMLElement.create(child, this.context, {
+      return HTMLElement.create(child[0], this.context, {
         name: `First Child ${selector} of ${this.name}`,
         path: `${this.path}[child::${selector}][1]`,
       });
@@ -155,52 +150,46 @@ export class HTMLElement<
     return out;
   }
 
-  public getFirstSibling(
-    selector: string
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  public getFirstSibling(selector: string): ValuePromise<HTMLElement> {
     return ValuePromise.execute(async () => {
       const child = this.cheerio.siblings(selector).first();
-      return HTMLElement.create(child, this.context, {
+      return HTMLElement.create(child[0], this.context, {
         name: `First sibling ${selector}} of ${this.name}`,
         path: `${this.path}[sibling::${selector}][1]`,
       });
     });
   }
 
-  public getLastSibling(
-    selector: string
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  public getLastSibling(selector: string): ValuePromise<HTMLElement> {
     return ValuePromise.execute(async () => {
       const child = this.cheerio.siblings(selector).last();
-      return HTMLElement.create(child, this.context, {
+      return HTMLElement.create(child[0], this.context, {
         name: `Last sibling ${selector}} of ${this.name}`,
         path: `${this.path}[sibling::${selector}][last()]`,
       });
     });
   }
 
-  public getAncestor(
-    selector: string = "*"
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  public getAncestor(selector: string = "*"): ValuePromise<HTMLElement> {
     const ancestors = this.cheerio.parentsUntil(selector);
     const name: string = `Ancestor of ${this.name}`;
     const path: string = `${this.path}[ancestor::${selector}][0]`;
-    const el: CheerioElement = ancestors.length > 0 ? ancestors[0] : null;
-    return this.valueFactory.createPromise(el, { name, path }, HTMLElement);
+    const el = ancestors.length > 0 ? ancestors[0] : null;
+    return ValuePromise.wrap(
+      HTMLElement.create(el, this.context, { name, path })
+    );
   }
 
-  public getParent(): ValuePromise<CheerioElement, HTMLElement> {
+  public getParent(): ValuePromise<HTMLElement> {
     return ValuePromise.execute(async () => {
       const parent = this.cheerio.parent();
       const name: string = `Parent of ${this.name}`;
       const path: string = `${this.path}[..]`;
-      return HTMLElement.create(parent, this.context, { name, path });
+      return HTMLElement.create(parent[0], this.context, { name, path });
     });
   }
 
-  public getPreviousSibling(
-    selector: string = "*"
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  public getPreviousSibling(selector: string = "*"): ValuePromise<HTMLElement> {
     return ValuePromise.execute(async () => {
       const siblings = this.cheerio.prev(selector);
       const name: string = `Previous Sibling of ${this.name}`;
@@ -229,9 +218,7 @@ export class HTMLElement<
     return siblings;
   }
 
-  public getNextSibling(
-    selector: string = "*"
-  ): ValuePromise<CheerioElement, HTMLElement> {
+  public getNextSibling(selector: string = "*"): ValuePromise<HTMLElement> {
     return ValuePromise.execute(async () => {
       const siblings = this.cheerio.next(selector);
       const name: string = `Next Sibling of ${this.name}`;
@@ -282,8 +269,8 @@ export class HTMLElement<
         const type = await this.getAttribute("type");
         if (type.isNull() || type.toString().toLowerCase() == "submit") {
           // Grab the form and submit it
-          const form = (this.$ as cheerio.Cheerio).closest("form");
-          const formEl = await HTMLElement.create(form, this.context, {
+          const form = $(this.$).closest("form");
+          const formEl = await HTMLElement.create(form[0], this.context, {
             name: `Parent form of ${this.name}`,
             path: this.path,
           });

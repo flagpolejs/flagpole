@@ -2,6 +2,9 @@ import { AssertionPromise } from "./assertion/assertion-promise";
 import { AssertionIs } from "./assertion/assertion-is";
 import { Assertion } from "./assertion/assertion";
 import { ValueWrapper } from "./value-wrapper";
+import { ValueOptions } from "./interfaces/value-options";
+import { WrapperConstructor } from "./interfaces/constructor-types";
+import { AssertionContext } from "./assertion/assertion-context";
 
 export class ValuePromise<ValueType extends ValueWrapper<any>>
   extends Promise<ValueType>
@@ -11,6 +14,17 @@ export class ValuePromise<ValueType extends ValueWrapper<any>>
     callback: () => Promise<ValueType>
   ): ValuePromise<ValueType> {
     return ValuePromise.wrap<ValueType>(callback());
+  }
+
+  public static create<T, W extends ValueWrapper<T>>(
+    input: Promise<T>,
+    opts: ValueOptions | string,
+    context: AssertionContext,
+    wrapper: WrapperConstructor<W>
+  ): ValuePromise<W> {
+    return ValuePromise.execute(
+      async () => new wrapper(await input, context, opts)
+    );
   }
 
   public static wrap<ValueType extends ValueWrapper<any>>(
