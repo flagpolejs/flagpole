@@ -1,7 +1,6 @@
 import { URL } from "url";
 import { createEmptyResponse } from "./http/http-response";
 import { HttpRequest } from "./http/http-request";
-import { wrapAsValue } from "./helpers";
 import { ValuePromise } from "./value-promise";
 import { FindAllOptions, FindOptions } from "./interfaces/find-options";
 import { PointerMove } from "./interfaces/pointer";
@@ -18,6 +17,11 @@ import { ScreenshotOpts } from "./interfaces/screenshot";
 import { JsonData } from "./json/jpath";
 import { Value } from "./value";
 import { Scenario } from "./scenario";
+import { UnknownValue } from "./values/unknown-value";
+import { NumericValue } from "./values/numeric-value";
+import { StringValue } from "./values/string-value";
+import { GenericValue } from "./values/generic-value";
+import { JsonValue } from "./values/json-value";
 
 export abstract class ProtoResponse {
   protected _currentUrl: string | null = null;
@@ -25,10 +29,6 @@ export abstract class ProtoResponse {
 
   constructor(public readonly scenario: Scenario) {
     this._currentUrl = scenario.finalUrl;
-  }
-
-  public get valueFactory() {
-    return this.context.valueFactory;
   }
 
   public get context() {
@@ -42,17 +42,17 @@ export abstract class ProtoResponse {
   abstract find(
     selector: string,
     opts?: FindOptions
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
   abstract find(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
   abstract find(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
 
   abstract findAll(
     selector: string,
@@ -80,10 +80,10 @@ export abstract class ProtoResponse {
   /**
    * HTTP Status Code
    */
-  public get statusCode(): Value<number> {
-    return wrapAsValue(
-      this.context,
+  public get statusCode() {
+    return new NumericValue(
       this.httpResponse.statusCode,
+      this.context,
       "HTTP Status Code"
     );
   }
@@ -91,26 +91,26 @@ export abstract class ProtoResponse {
   /**
    * HTTP Status Message
    */
-  public get statusMessage(): Value<string> {
-    return wrapAsValue(
-      this.context,
+  public get statusMessage() {
+    return new StringValue(
       this.httpResponse.statusMessage,
+      this.context,
       "HTTP Status Message"
     );
   }
 
-  public get body(): Value<string> {
-    return wrapAsValue<string>(
-      this.context,
+  public get body() {
+    return new StringValue(
       this.httpResponse.body,
+      this.context,
       "Response Body String"
     );
   }
 
-  public get rawBody(): Value<any> {
-    return wrapAsValue(
-      this.context,
+  public get rawBody() {
+    return new GenericValue<unknown>(
       this.httpResponse.rawBody,
+      this.context,
       "Raw Response Body"
     );
   }
@@ -118,10 +118,10 @@ export abstract class ProtoResponse {
   /**
    * Size of the response body
    */
-  public get length(): Value<number> {
-    return wrapAsValue(
-      this.context,
+  public get length() {
+    return new NumericValue(
       this.httpResponse.body.length,
+      this.context,
       "Length of Response Body"
     );
   }
@@ -129,24 +129,32 @@ export abstract class ProtoResponse {
   /**
    * HTTP Headers
    */
-  public get headers(): Value<KeyValue> {
-    return wrapAsValue(this.context, this.httpResponse.headers, "HTTP Headers");
+  public get headers() {
+    return new GenericValue<KeyValue>(
+      this.httpResponse.headers,
+      this.context,
+      "HTTP Headers"
+    );
   }
 
   /**
    * HTTP Cookies
    */
-  public get cookies(): Value<KeyValue> {
-    return wrapAsValue(this.context, this.httpResponse.cookies, "HTTP Cookies");
+  public get cookies() {
+    return new GenericValue<KeyValue>(
+      this.httpResponse.cookies,
+      this.context,
+      "HTTP Cookies"
+    );
   }
 
   /**
    * HTTP Trailers
    */
-  public get trailers(): Value<KeyValue> {
-    return wrapAsValue(
-      this.context,
+  public get trailers() {
+    return new GenericValue<KeyValue>(
       this.httpResponse.trailers,
+      this.context,
       "HTTP Trailers"
     );
   }
@@ -154,24 +162,28 @@ export abstract class ProtoResponse {
   /**
    * JSON parsed response body
    */
-  public get jsonBody(): Value<any> {
-    return wrapAsValue(this.context, this.httpResponse.jsonBody, "JSON Body");
+  public get jsonBody() {
+    return new JsonValue(this.httpResponse.jsonBody, this.context, "JSON Body");
   }
 
   /**
    * URL of the request
    */
-  public get url(): Value<string | null> {
-    return wrapAsValue(this.context, this.scenario.url, "Request URL");
+  public get url() {
+    return new StringValue(
+      this.scenario.url || "",
+      this.context,
+      "Request URL"
+    );
   }
 
   /**
    * URL of the response, after all redirects
    */
-  public get finalUrl(): Value<string | null> {
-    return wrapAsValue(
+  public get finalUrl() {
+    return new StringValue(
+      this.scenario.finalUrl || "",
       this.context,
-      this.scenario.finalUrl,
       "Response URL (after redirects)"
     );
   }
@@ -179,17 +191,21 @@ export abstract class ProtoResponse {
   /**
    * Current URL after any navigation, is nothing for static requets but comes into play with browser requests
    */
-  public get currentUrl(): Value<string | null> {
-    return wrapAsValue(this.context, this.scenario.finalUrl, "Current URL");
+  public get currentUrl() {
+    return new StringValue(
+      this.scenario.finalUrl || "",
+      this.context,
+      "Current URL"
+    );
   }
 
   /**
    * URL of the response, after all redirects
    */
-  public get redirectCount(): Value<number> {
-    return wrapAsValue(
-      this.context,
+  public get redirectCount() {
+    return new NumericValue(
       this.scenario.redirectCount,
+      this.context,
       "Response URL (after redirects)"
     );
   }
@@ -197,16 +213,16 @@ export abstract class ProtoResponse {
   /**
    * Time from request start to response complete
    */
-  public get loadTime(): Value<number | null> {
-    return wrapAsValue(
+  public get loadTime() {
+    return new NumericValue(
+      this.scenario.requestDuration || -1,
       this.context,
-      this.scenario.requestDuration,
       "Request to Response Load Time"
     );
   }
 
-  public get method(): Value<string> {
-    return wrapAsValue(this.context, this.httpResponse.method, "Method");
+  public get method() {
+    return new StringValue(this.httpResponse.method, this.context, "Method");
   }
 
   /**
@@ -233,41 +249,30 @@ export abstract class ProtoResponse {
     return this.httpResponse.body;
   }
 
-  public getSource(): ValuePromise<string, Value<any>> {
+  public getSource(): StringValue {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support getSource.`
     );
   }
 
-  /**
-   * Return a single header by key or all headers in an object
-   *
-   * @param {string} key
-   * @returns {Value}
-   */
-  public header(key: string): Value<HttpHeaderValue | null> {
+  public header(key: string) {
     // Try first as they put it in the test, then try all lowercase
     key =
       typeof this.httpResponse.headers[key] !== "undefined"
         ? key
         : key.toLowerCase();
     const headerValue = this.httpResponse.headers[key];
-    return wrapAsValue(
-      this.context,
+    return new GenericValue<HttpHeaderValue | null>(
       headerValue === undefined ? null : headerValue,
+      this.context,
       "HTTP Headers[" + key + "]"
     );
   }
 
-  /**
-   * Return a single cookie by key or all cookies in an object
-   *
-   * @param key
-   */
-  public cookie(key: string): Value<any> {
-    return wrapAsValue(
-      this.context,
+  public cookie(key: string) {
+    return new StringValue(
       this.httpResponse.cookies[key],
+      this.context,
       "HTTP Cookies[" + key + "]"
     );
   }
@@ -302,7 +307,7 @@ export abstract class ProtoResponse {
   public waitForHidden(
     selector: string,
     timeout?: number
-  ): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForHidden.`
     );
@@ -311,22 +316,19 @@ export abstract class ProtoResponse {
   public waitForVisible(
     selector: string,
     timeout?: number
-  ): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForVisible.`
     );
   }
 
-  waitForExists(
-    selector: string,
-    timeout?: number
-  ): ValuePromise<any, Value<any>>;
+  waitForExists(selector: string, timeout?: number): ValuePromise<UnknownValue>;
   waitForExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): ValuePromise<any, Value<any>>;
-  public waitForExists(..._args: any[]): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue>;
+  public waitForExists(..._args: any[]): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForExists.`
     );
@@ -335,13 +337,13 @@ export abstract class ProtoResponse {
   waitForNotExists(
     selector: string,
     timeout?: number
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
   waitForNotExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): ValuePromise<any, Value<any>>;
-  public waitForNotExists(..._args: any[]): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue>;
+  public waitForNotExists(..._args: any[]): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForNotExists.`
     );
@@ -351,7 +353,7 @@ export abstract class ProtoResponse {
     selector: string,
     text: string | RegExp,
     timeout?: number
-  ): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForHavingText.`
     );
@@ -373,13 +375,13 @@ export abstract class ProtoResponse {
     selector: string,
     textToType: string,
     opts: any = {}
-  ): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support type.`
     );
   }
 
-  public clear(selector: string): ValuePromise<any, Value<any>> {
+  public clear(selector: string): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support clear.`
     );
@@ -389,7 +391,7 @@ export abstract class ProtoResponse {
     selector: string,
     textToType: string,
     opts: any = {}
-  ): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support clearThenType.`
     );
@@ -398,13 +400,13 @@ export abstract class ProtoResponse {
   public waitForXPath(
     xPath: string,
     timeout?: number
-  ): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support waitForXPath.`
     );
   }
 
-  public findXPath(xPath: string): ValuePromise<any, Value<any>> {
+  public findXPath(xPath: string): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support findXPath.`
     );
@@ -419,7 +421,7 @@ export abstract class ProtoResponse {
   public findHavingText(
     selector: string,
     searchForText: string | RegExp
-  ): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support findHavingText.`
     );
@@ -437,7 +439,7 @@ export abstract class ProtoResponse {
   public selectOption(
     selector: string,
     value: string | string[]
-  ): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue> {
     throw new Error(
       `This scenario type (${this.scenario.typeName}) does not support selectOption.`
     );
@@ -467,22 +469,22 @@ export abstract class ProtoResponse {
   public click(
     selector: string,
     opts?: FindOptions
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
   public click(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
   public click(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
   public click(
     selector: string,
     a?: FindOptions | string | RegExp,
     b?: FindOptions
-  ): ValuePromise<any, Value<any>> {
+  ): ValuePromise<UnknownValue> {
     return ValuePromise.execute(async () => {
       const contains = typeof a == "string" ? a : undefined;
       const matches = a instanceof RegExp ? a : undefined;

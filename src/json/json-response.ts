@@ -1,4 +1,4 @@
-import { ProtoResponse } from "../response";
+import { ProtoResponse } from "../proto-response";
 import { HttpResponse } from "../http/http-response";
 import { JsonDoc, jsonFind, jsonFindAll, JsonProvider } from "./jpath";
 

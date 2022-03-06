@@ -1,16 +1,13 @@
 import { HeadersResponse } from "./headers-response";
 import { Scenario } from "../scenario";
 import { NeedleAdapter } from "../adapter.needle";
-import { AssertionContext, Value } from "..";
+import { HttpRequest, Value } from "..";
 
 export class HeadersScenario extends Scenario {
   public readonly typeName = "Headers";
-  public readonly context = new AssertionContext(
-    this,
-    NeedleAdapter,
-    HeadersResponse,
-    Value
-  );
+  public readonly request = new HttpRequest(this.opts);
+  public readonly adapter = new NeedleAdapter();
+  public readonly response: HeadersResponse = new HeadersResponse(this);
 
   protected _executeHttpRequest() {
     this.setMethod("head");

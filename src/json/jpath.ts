@@ -1,8 +1,8 @@
 import * as jmespath from "jmespath";
-import { wrapAsValue } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { ContextProvider } from "../interfaces/context-provider";
 import { Value } from "../value";
+import { JsonValue } from "../values/json-value";
 
 export type JsonData =
   | string
@@ -30,7 +30,7 @@ export class JsonDoc {
 
 export interface JsonProvider {
   json?: JsonDoc;
-  find: (path: string) => ValuePromise<JsonData, Value<JsonData>>;
+  find: (path: string) => ValuePromise<JsonValue>;
   findAll: (path: string) => Promise<Value<JsonData>[]>;
 }
 
@@ -46,14 +46,15 @@ export const jsonFind = (
   self: JsonProvider & ContextProvider,
   path: string
 ) => {
-  return ValuePromise.execute<
-    JsonData | undefined,
-    Value<JsonData | undefined>
-  >(async () => {
+  return ValuePromise.execute<JsonValue>(async () => {
     if (self.json === undefined) {
       throw Error("No JSON document is defined.");
     }
     const selection = await self.json.search(path);
-    return wrapAsValue(self.context, selection, path, selection);
+    return new JsonValue(
+      selection === undefined ? null : selection,
+      self.context,
+      { path }
+    );
   });
 };

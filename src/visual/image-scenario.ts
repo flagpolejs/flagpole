@@ -1,14 +1,11 @@
 import { ImageResponse } from "./image-response";
 import { Scenario } from "../scenario";
 import { ImageAdapter } from "./image-adapter";
-import { AssertionContext, Value } from "..";
+import { HttpRequest, Value } from "..";
 
 export class ImageScenario extends Scenario {
   public readonly typeName = "Image";
-  public readonly context = new AssertionContext(
-    this,
-    ImageAdapter,
-    ImageResponse,
-    Value
-  );
+  public readonly request = new HttpRequest(this.opts);
+  public readonly adapter = new ImageAdapter();
+  public readonly response: ImageResponse = new ImageResponse(this);
 }

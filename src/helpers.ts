@@ -3,15 +3,6 @@ import { Value } from "./value";
 import { toType, asyncFilter } from "./util";
 import { AssertionContext } from "./assertion/assertion-context";
 
-export function wrapAsValue<InputType>(
-  context: AssertionContext,
-  data: InputType,
-  name: string,
-  sourceCode?: any
-) {
-  return new Value(data, context, { name, sourceCode });
-}
-
 export type FindParams = {
   contains: string | null;
   matches: RegExp | null;
@@ -59,7 +50,7 @@ export async function filterFind<
     elements = await asyncFilter(elements, async (element: Wrapper) => {
       const text: string = await (async () => {
         if (opts?.findBy == "value") {
-          return (await element.getValue()).$;
+          return (await element.getValue()).toString();
         }
         if (opts?.findBy == "html") {
           return (await element.getOuterHtml()).$;

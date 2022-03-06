@@ -16,7 +16,7 @@ export type CheerioElement = cheerio.Element | cheerio.Cheerio | null;
 
 export class HTMLElement<
   InputType extends CheerioElement = CheerioElement
-> extends DOMElement<InputType> {
+> extends DOMElement<InputType | null> {
   public static async create(
     input: CheerioElement,
     context: AssertionContext,
@@ -100,11 +100,7 @@ export class HTMLElement<
     const name: string = `Closest ${selector} of ${this.name}`;
     const path: string = `${this.path}[ancestor-or-self::${selector}]`;
     const el = closest.length > 0 ? closest[0] : null;
-    return this.valueFactory.createPromise<CheerioElement, HTMLElement>(
-      el,
-      { name, path },
-      HTMLElement
-    );
+    return this.valueFactory.createPromise(el, { name, path }, HTMLElement);
   }
 
   public getFirstChild(
@@ -265,7 +261,7 @@ export class HTMLElement<
   /**
    * Click on this element and then load a new page.
    */
-  public click(): ValuePromise<InputType, this> {
+  public click(): ValuePromise<this> {
     return ValuePromise.execute(async () => {
       // If this is a link tag, treat it the same as load
       if (await this._isLinkTag()) {
@@ -309,8 +305,8 @@ export class HTMLElement<
   public fillForm(
     attributeName: string,
     formData: KeyValue
-  ): ValuePromise<InputType, this>;
-  public fillForm(formData: KeyValue): ValuePromise<InputType, this>;
+  ): ValuePromise<this>;
+  public fillForm(formData: KeyValue): ValuePromise<this>;
   public fillForm(a: string | KeyValue, b?: KeyValue) {
     return ValuePromise.execute(async () => {
       if (!(await this._isFormTag())) {
@@ -340,7 +336,7 @@ export class HTMLElement<
   /**
    * If this is a form element, submit the form
    */
-  public submit(): ValuePromise<InputType, this> {
+  public submit(): ValuePromise<this> {
     return ValuePromise.execute(async () => {
       if (!(await this._isFormTag())) {
         throw new Error("You can only use .submit() with a form element.");

@@ -1,9 +1,12 @@
-import { ProtoResponse } from "../response";
+import { ProtoResponse } from "../proto-response";
 import { URL } from "url";
 import { HttpResponse } from "../http/http-response";
 import { ValuePromise } from "../value-promise";
 import { JsonData } from "../json/jpath";
 import { Value } from "../value";
+import { NumericValue } from "../values/numeric-value";
+import { JsonValue } from "../values/json-value";
+import { StringValue } from "../values/string-value";
 
 export interface ImageProperties {
   width: number;
@@ -24,17 +27,26 @@ export class ImageResponse extends ProtoResponse {
     url: "",
   };
 
-  public get length(): Value<number> {
-    return this.valueFactory.create(this.imageProperties.length, "Image Size");
+  public get length() {
+    return new NumericValue(
+      this.imageProperties.length,
+      this.context,
+      "Image Size"
+    );
   }
 
-  public get url(): Value<string> {
-    return this.valueFactory.create(this.imageProperties.url, "URL of Image");
+  public get url() {
+    return new StringValue(
+      this.imageProperties.url,
+      this.context,
+      "URL of Image"
+    );
   }
 
-  public get path(): Value<string> {
-    return this.valueFactory.create(
+  public get path() {
+    return new StringValue(
       new URL(this.imageProperties.url).pathname,
+      this.context,
       "URL Path of Image"
     );
   }
@@ -54,12 +66,14 @@ export class ImageResponse extends ProtoResponse {
     throw "This type of scenario does not suport eval.";
   }
 
-  public find(propertyName: string): ValuePromise<JsonData, Value<JsonData>> {
+  public find(propertyName: string) {
     const input =
       typeof this.imageProperties[propertyName] !== "undefined"
         ? this.imageProperties[propertyName]
         : null;
-    return this.valueFactory.createPromise(input, `${propertyName} of Image`);
+    return ValuePromise.wrap(
+      new JsonValue(input, this.context, `${propertyName} of Image`)
+    );
   }
 
   public async findAll(propertyName: string): Promise<Value<JsonData>[]> {

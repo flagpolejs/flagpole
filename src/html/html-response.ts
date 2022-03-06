@@ -4,7 +4,7 @@ import * as cheerio from "cheerio";
 import { getFindParams, filterFind } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
-import { ProtoResponse } from "../response";
+import { ProtoResponse } from "../proto-response";
 
 export class HtmlResponse extends ProtoResponse {
   private _cheerio: cheerio.Root | null = null;
@@ -38,7 +38,7 @@ export class HtmlResponse extends ProtoResponse {
       const selection = await this.findAll(selector, a, b);
       return selection.length > 0
         ? selection[0]
-        : this.valueFactory.createNull({ selector }, HTMLElement);
+        : this.valueFactory.create({ selector }, HTMLElement);
     });
   }
 

@@ -1,38 +1,22 @@
 import { AssertionPromise } from "./assertion/assertion-promise";
-import { cast } from "./helpers/cast";
 import { AssertionIs } from "./assertion/assertion-is";
-import { Assertion, Value } from ".";
+import { Assertion } from "./assertion/assertion";
+import { ValueWrapper } from "./value-wrapper";
 
-function assertionMethod<InputType, Wrapper extends Value<InputType>>(
-  target: Object,
-  methodName: string,
-  descriptor: PropertyDescriptor
-) {
-  descriptor.value = function (...args: any[]) {
-    const valuePromise = cast<ValuePromise<InputType, Wrapper>>(this);
-    return new AssertionPromise((resolve) =>
-      valuePromise.then((value) => {
-        const assertion = value.assert();
-        resolve(assertion[methodName].apply(assertion, args));
-      })
-    );
-  };
-}
-
-export class ValuePromise<InputType, Wrapper extends Value<InputType>>
-  extends Promise<Wrapper>
-  implements PromiseLike<Wrapper>
+export class ValuePromise<ValueType extends ValueWrapper<any>>
+  extends Promise<ValueType>
+  implements PromiseLike<ValueType>
 {
-  public static execute<InputType, Wrapper extends Value<InputType>>(
-    callback: () => Promise<Wrapper>
-  ) {
-    return ValuePromise.wrap<InputType, Wrapper>(callback());
+  public static execute<ValueType extends ValueWrapper<any>>(
+    callback: () => Promise<ValueType>
+  ): ValuePromise<ValueType> {
+    return ValuePromise.wrap<ValueType>(callback());
   }
 
-  public static wrap<InputType, Wrapper extends Value<InputType>>(
-    value: Wrapper | Promise<Wrapper>
-  ) {
-    return new ValuePromise<InputType, Wrapper>(async (resolve, reject) => {
+  public static wrap<ValueType extends ValueWrapper<any>>(
+    value: ValueType | Promise<ValueType>
+  ): ValuePromise<ValueType> {
+    return new ValuePromise<ValueType>(async (resolve, reject) => {
       try {
         resolve(await value);
       } catch (ex) {
@@ -43,7 +27,7 @@ export class ValuePromise<InputType, Wrapper extends Value<InputType>>
 
   private constructor(
     executor: (
-      resolve: (value?: Wrapper) => void,
+      resolve: (value?: ValueType) => void,
       reject: (reason?: any) => void
     ) => void
   ) {
@@ -58,44 +42,44 @@ export class ValuePromise<InputType, Wrapper extends Value<InputType>>
     return this._promisifyAssertProperty<Assertion>("not");
   }
 
-  @assertionMethod equals(value: any) {
-    return cast<AssertionPromise>(null);
+  public equals(value: any) {
+    return this._promisifyAssertMethod("equals", value);
   }
-  @assertionMethod exactly(value: any) {
-    return cast<AssertionPromise>(null);
+  public exactly(value: any) {
+    return this._promisifyAssertMethod("exactly", value);
   }
-  @assertionMethod like(value: any) {
-    return cast<AssertionPromise>(null);
+  public like(value: any) {
+    return this._promisifyAssertMethod("like", value);
   }
-  @assertionMethod contains(value: any) {
-    return cast<AssertionPromise>(null);
+  public contains(value: any) {
+    return this._promisifyAssertMethod("contains", value);
   }
-  @assertionMethod greaterThan(value: any) {
-    return cast<AssertionPromise>(null);
+  public greaterThan(value: any) {
+    return this._promisifyAssertMethod("greaterThan", value);
   }
-  @assertionMethod lessThan(value: any) {
-    return cast<AssertionPromise>(null);
+  public lessThan(value: any) {
+    return this._promisifyAssertMethod("lessThan", value);
   }
-  @assertionMethod greaterThanOrEquals(value: any) {
-    return cast<AssertionPromise>(null);
+  public greaterThanOrEquals(value: any) {
+    return this._promisifyAssertMethod("greaterThanOrEquals", value);
   }
-  @assertionMethod lessThanOrEquals(value: any) {
-    return cast<AssertionPromise>(null);
+  public lessThanOrEquals(value: any) {
+    return this._promisifyAssertMethod("lessThanOrEquals", value);
   }
-  @assertionMethod between(min: any, max: any) {
-    return cast<AssertionPromise>(null);
+  public between(min: any, max: any) {
+    return this._promisifyAssertMethod("between", min, max);
   }
-  @assertionMethod matches(value: any) {
-    return cast<AssertionPromise>(null);
+  public matches(value: any) {
+    return this._promisifyAssertMethod("matches", value);
   }
-  @assertionMethod startsWith(value: any) {
-    return cast<AssertionPromise>(null);
+  public startsWith(value: any) {
+    return this._promisifyAssertMethod("startsWith", value);
   }
-  @assertionMethod endsWith(value: any) {
-    return cast<AssertionPromise>(null);
+  public endsWith(value: any) {
+    return this._promisifyAssertMethod("endsWith", value);
   }
-  @assertionMethod includes(value: any) {
-    return cast<AssertionPromise>(null);
+  public includes(value: any) {
+    return this._promisifyAssertMethod("includes", value);
   }
 
   public rename(newName: string) {
@@ -120,18 +104,18 @@ export class ValuePromise<InputType, Wrapper extends Value<InputType>>
     );
   };
 
-  public exists<T extends Value<boolean>>(): Promise<T> {
+  public exists<T extends ValueWrapper<boolean>>(): Promise<T> {
     return this._promisifyMethod("exists");
   }
 
   private _promisifyAssertMethod<T>(
-    method: string,
-    args: any[] = []
+    method: keyof Assertion,
+    ...args: any[]
   ): Promise<T> {
-    return new Promise((r) =>
+    return new Promise((resolve) =>
       this.then((value) => {
         const assertion = value.assert();
-        r(assertion[method].apply(assertion, args));
+        resolve(assertion[method].apply(assertion, args));
       })
     );
   }
@@ -140,7 +124,7 @@ export class ValuePromise<InputType, Wrapper extends Value<InputType>>
     return new Promise((r) => this.then((v) => r(v.assert()[property])));
   }
 
-  private async _promisifyMethod<T extends Value<any>>(
+  private async _promisifyMethod<T extends ValueWrapper<any>>(
     method: string,
     args: any[] = []
   ): Promise<T> {
@@ -152,8 +136,11 @@ export class ValuePromise<InputType, Wrapper extends Value<InputType>>
     return new Promise((r) => this.then((v) => r(v[property])));
   }
 
-  private toValuePromise<T = any>(method: string, ...args: any[]) {
-    return ValuePromise.execute<InputType, Wrapper>(async () => {
+  private toValuePromise<T extends ValueWrapper<any>>(
+    method: string,
+    ...args: any[]
+  ) {
+    return ValuePromise.execute<T>(async () => {
       const value = await this;
       return value[method].apply(value, args);
     });

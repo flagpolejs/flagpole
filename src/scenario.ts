@@ -9,12 +9,11 @@ import { HttpResponse } from "./http/http-response";
 import { LogScenarioSubHeading, LogScenarioHeading } from "./logging/heading";
 import { LogComment } from "./logging/comment";
 import { LogCollection } from "./logging/log-collection";
-import { HttpRequest } from "./http/http-request";
 import { toType, asyncForEach, runAsync, getFunctionArgs } from "./util";
 import * as bluebird from "bluebird";
 import minikin, { Response } from "minikin";
 import { ServerOptions } from "https";
-import { stripUndefinedValues, wrapAsValue } from "./helpers";
+import { stripUndefinedValues } from "./helpers";
 import {
   beforeScenarioExecuted,
   afterScenarioReady,
@@ -38,12 +37,15 @@ import {
   HttpResponseOptions,
   HttpTimeout,
 } from "./interfaces/http";
+import { HttpHeaders, KeyValue } from "./interfaces/generic-types";
 import {
-  ClassConstructor,
-  HttpHeaders,
-  KeyValue,
-} from "./interfaces/generic-types";
-import { Assertion, AssertionContext, Suite, Value } from ".";
+  Assertion,
+  AssertionContext,
+  HttpRequest,
+  ProtoResponse,
+  Suite,
+  Value,
+} from ".";
 import { LocalAdapter } from "./adapter.local";
 import { NextCallback } from "./interfaces/next-callback";
 import { LogItem } from "./logging/log-item";
@@ -52,6 +54,8 @@ import {
   ScenarioCallbackAndMessage,
   ScenarioStatusCallback,
 } from "./interfaces/scenario-callbacks";
+import { Adapter } from "./adapter";
+import { UnknownValue } from "./values/unknown-value";
 
 enum ScenarioRequestType {
   httpRequest = "httpRequest",
@@ -60,33 +64,32 @@ enum ScenarioRequestType {
   webhook = "webhook",
 }
 
-export abstract class Scenario {
-  public abstract readonly context: AssertionContext;
+export abstract class Scenario<
+  RequestType extends HttpRequest = HttpRequest,
+  AdapterType extends Adapter = Adapter,
+  ResponseType extends ProtoResponse = ProtoResponse,
+  WrapperType extends Value = Value
+> {
   public abstract readonly typeName: string;
+  public abstract readonly request: RequestType;
+  public abstract readonly adapter: AdapterType;
+  public abstract readonly response: ResponseType;
 
-  public readonly opts: KeyValue;
+  public get opts(): KeyValue {
+    return {
+      ...this.defaultRequestOptions,
+      ...this.inputOpts,
+    };
+  }
 
-  public readonly defaultRequestOptions: HttpRequestOptions = {
+  public readonly defaultRequestOptions: KeyValue = {
     method: "get",
   };
-
-  public get adapter() {
-    return this.context.adapter;
-  }
-
-  public get response() {
-    return this.context.response;
-  }
-
-  public get request() {
-    return this.context.request;
-  }
 
   public constructor(
     public readonly suite: Suite,
     public title: string,
-    opts: KeyValue,
-    public readonly type: ClassConstructor<Scenario>
+    protected readonly inputOpts: KeyValue
   ) {
     this._requestPromise = new Promise((resolve) => {
       this._requestResolve = resolve;
@@ -97,10 +100,14 @@ export abstract class Scenario {
     this._webhookPromise = new Promise((resolve) => {
       this._webhookResolver = resolve;
     });
-    this.opts = {
-      ...this.defaultRequestOptions,
-      ...opts,
-    };
+  }
+
+  public get context(): AssertionContext<
+    RequestType,
+    ResponseType,
+    WrapperType
+  > {
+    return new AssertionContext(this, this.request, this.response);
   }
 
   /**
@@ -221,7 +228,7 @@ export abstract class Scenario {
   }
 
   private get hasNextCallbacks(): boolean {
-    return this._nextCallbacks.length > 0;
+    return this._nexts.length > 0;
   }
 
   public get hasRequestStarted(): boolean {
@@ -278,22 +285,17 @@ export abstract class Scenario {
     return this._redirectChain;
   }
 
-  public get nextCallbacks(): Array<{
-    message: string;
-    callback: NextCallback;
-  }> {
-    return this._nextCallbacks.map((callback, i) => {
-      return {
-        message: this._nextMessages[i] || "",
-        callback: callback,
-      };
-    });
+  public get nextCallbacks() {
+    return this._nexts;
   }
+
+  private _nexts: {
+    message: string | null;
+    callback: NextCallback;
+  }[] = [];
 
   protected _log: LogCollection = new LogCollection();
   protected _subscribers: ScenarioStatusCallback[] = [];
-  protected _nextCallbacks: NextCallback[] = [];
-  protected _nextMessages: Array<string | null> = [];
   protected _beforeCallbacks: ScenarioCallbackAndMessage[] = [];
   protected _afterCallbacks: ScenarioCallbackAndMessage[] = [];
   protected _finallyCallbacks: ScenarioCallbackAndMessage[] = [];
@@ -1028,21 +1030,20 @@ export abstract class Scenario {
     // Execute all the assertion callbacks one by one
     this._publish(ScenarioStatusEvent.executionProgress);
     bluebird
-      .mapSeries(this._nextCallbacks, (_then, index) => {
-        const context = this.response.context;
-        const comment: string | null = this._nextMessages[index];
-        if (comment !== null) {
-          this._pushToLog(new LogScenarioSubHeading(comment));
+      .mapSeries(this._nexts, ({ message, callback }) => {
+        if (message !== null) {
+          this._pushToLog(new LogScenarioSubHeading(message));
         }
+        const context = this.context;
         context.result = lastReturnValue;
         // Run this next
-        const callbackArgNames = getFunctionArgs(_then);
+        const callbackArgNames = getFunctionArgs(callback);
         const args: any[] = callbackArgNames.slice(1).map((name) => {
           if (context[name]) return context[name];
           else if (context.response[name]) return context.response[name];
           return context;
         });
-        lastReturnValue = _then.apply(context, [context, ...args]);
+        lastReturnValue = callback.apply(context, [context, ...args]);
         // Warn about any incomplete assertions
         context.incompleteAssertions.forEach((assertion: Assertion) => {
           this.result(
@@ -1284,7 +1285,9 @@ export abstract class Scenario {
       const paths = Object.keys(responseValues);
       await context.each(paths, async (path) => {
         const data = await json.search(path);
-        const thisValue = wrapAsValue(context, data, path, data);
+        const thisValue = new UnknownValue(data, context, {
+          path,
+        });
         const thatValue = responseValues[path];
         const type = toType(thatValue);
         if (type === "function") {
@@ -1336,14 +1339,18 @@ export abstract class Scenario {
     b?: NextCallback | { [key: string]: any } | null,
     append: boolean = true
   ): this {
-    const callback = <NextCallback>this._getCallbackOverload(a, b);
-    const message: string | null = this._getMessageOverload(a);
+    const callback = this._getCallbackOverload(a, b) as NextCallback;
+    const message = this._getMessageOverload(a);
     if (append) {
-      this._nextCallbacks.push(callback);
-      this._nextMessages.push(message);
+      this._nexts.push({
+        message,
+        callback,
+      });
     } else {
-      this._nextCallbacks.unshift(callback);
-      this._nextMessages.unshift(message);
+      this._nexts.unshift({
+        message,
+        callback,
+      });
     }
     return this;
   }

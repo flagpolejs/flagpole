@@ -10,8 +10,11 @@ import { MessageAndCallback } from "../interfaces/message-and-callback";
 import { ValueOptions } from "../interfaces/value-options";
 import { AssertionContext } from "../assertion/assertion-context";
 import { Scenario } from "..";
+import { ValueWrapper } from "../value-wrapper";
+import { GenericValue } from "../values/generic-value";
+import { StringValue } from "../values/string-value";
 
-export abstract class DOMElement<InputType> extends Value<InputType> {
+export abstract class DOMElement<InputType> extends ValueWrapper<InputType> {
   protected constructor(
     input: InputType,
     context: AssertionContext,
@@ -70,7 +73,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
   /**
    * Get all class names for element
    */
-  public getClassName(): ValuePromise<string, Value<string>> {
+  public getClassName(): ValuePromise<StringValue> {
     return this.valueFactory.awaitPromise(
       this._getClassName(),
       `Class Name of ${this.name}`
@@ -143,7 +146,7 @@ export abstract class DOMElement<InputType> extends Value<InputType> {
           return false;
         });
       }
-      return this.valueFactory.create(attr, { name });
+      return this.create(attr, { name }, GenericValue);
     });
   }
 

@@ -1,14 +1,7 @@
-import { AssertionContext, Value } from "..";
-import { NeedleAdapter } from "../adapter.needle";
-import { Scenario } from "../scenario";
+import { JsonScenario } from "..";
 import { HlsResponse } from "./hls-response";
 
-export class HlsScenario extends Scenario {
+export class HlsScenario extends JsonScenario {
   public readonly typeName = "HLS Manifest";
-  public readonly context = new AssertionContext(
-    this,
-    NeedleAdapter,
-    HlsResponse,
-    Value
-  );
+  public readonly response: HlsResponse = new HlsResponse(this);
 }

@@ -10,7 +10,7 @@ import { HttpResponse } from "./http/http-response";
 import { ImageResponse } from "./visual/image-response";
 import { JsonResponse } from "./json/json-response";
 import { ResourceResponse } from "./resource/resource-response";
-import { ProtoResponse } from "./response";
+import { ProtoResponse } from "./proto-response";
 import { Scenario } from "./scenario";
 import { Suite } from "./suite/suite";
 import { Value } from "./value";

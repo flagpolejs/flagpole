@@ -21,7 +21,7 @@ import {
   asyncCount,
 } from "../util";
 import { FlagpoleExecution } from "../flagpole-execution";
-import { getFindParams, getFindName, wrapAsValue } from "../helpers";
+import { getFindParams, getFindName } from "../helpers";
 import { ValuePromise } from "../value-promise";
 import { IteratorBoolCallback } from "../interfaces/iterator-callbacks";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
@@ -32,37 +32,32 @@ import { PointerMove } from "../interfaces/pointer";
 import { ScreenProperties } from "../interfaces/screen-properties";
 import { HttpRequest, ProtoResponse, Scenario, Suite, Value } from "..";
 import { AssertionResult } from "../logging/assertion-result";
-import { ValueFactory } from "../helpers/value-factory";
-import { Adapter } from "../adapter";
-import {
-  AdapterConstructor,
-  ResponseConstructor,
-  WrapperConstructor,
-} from "../interfaces/constructor-types";
+import { ValueOptions } from "../interfaces/value-options";
+import { NumericValue } from "../values/numeric-value";
+import { StringValue } from "../values/string-value";
+import { UnknownValue } from "../values/unknown-value";
+import { GenericValue } from "../values/generic-value";
 
 export class AssertionContext<
-  ScenarioType extends Scenario = Scenario,
-  AdapterType extends Adapter = Adapter,
+  RequestType extends HttpRequest = HttpRequest,
   ResponseType extends ProtoResponse = ProtoResponse,
   WrapperType extends Value = Value
 > {
-  public readonly valueFactory = new ValueFactory(this);
-  public readonly request: HttpRequest;
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
 
-  public readonly response: ResponseType;
-  public readonly adapter: AdapterType;
-
   constructor(
-    public readonly scenario: ScenarioType,
-    public readonly AdapterClass: AdapterConstructor<AdapterType>,
-    public readonly ResponseClass: ResponseConstructor<ResponseType>,
-    public readonly WrapperClass: WrapperConstructor<WrapperType>
-  ) {
-    this.response = new ResponseClass(this.scenario);
-    this.adapter = new AdapterClass();
-    this.request = new HttpRequest(this.scenario.opts);
+    public readonly scenario: Scenario,
+    public readonly request: RequestType,
+    public readonly response: ResponseType
+  ) {}
+
+  public createStandardValue<T>(
+    data: T,
+    opts: ValueOptions | string
+  ): Value<T> {
+    if (typeof opts == "string") opts = { name: opts };
+    return new Value(data, this.scenario.context, opts);
   }
 
   /**
@@ -296,12 +291,12 @@ export class AssertionContext<
   public waitForExists(
     selector: string,
     timeout?: number
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
   public waitForExists(
     selector: string,
     contains: string | RegExp,
     timeout?: number
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
   public waitForExists(
     selector: string,
     a?: number | string | RegExp,
@@ -349,7 +344,7 @@ export class AssertionContext<
     a?: string | FindOptions | RegExp,
     b?: FindOptions
   ) {
-    return ValuePromise.execute<any, Value<any>>(async () => {
+    return ValuePromise.execute<UnknownValue>(async () => {
       const selectors = toArray<string>(selector);
       const params = getFindParams(a, b);
       const opts = params.opts || {};
@@ -361,7 +356,7 @@ export class AssertionContext<
           : await this.response.find(selector, opts)
       );
       const name = getFindName(params, selectors, 0);
-      const value = this.valueFactory.create(element, name);
+      const value = new UnknownValue(element, this, name);
       this._assertExists(null, name, value);
       return value;
     });
@@ -412,10 +407,10 @@ export class AssertionContext<
     selector: string | string[],
     a?: string | RegExp | FindOptions,
     b?: FindOptions
-  ): ValuePromise<InputType | null, WrapperType> {
+  ): ValuePromise<UnknownValue> {
     const selectors = toArray<string>(selector);
     const params = getFindParams(a, b);
-    return ValuePromise.execute<InputType | null, WrapperType>(async () => {
+    return ValuePromise.execute(async () => {
       const element = await asyncUntil<WrapperType>(
         selectors,
         async (selector) => {
@@ -428,9 +423,10 @@ export class AssertionContext<
           return value.isNullOrUndefined() ? false : value;
         }
       );
-      return this.valueFactory.createNull(
-        getFindName(params, selectors, null),
-        this.WrapperClass
+      return new UnknownValue(
+        element,
+        this,
+        getFindName(params, selectors, null)
       );
     });
   }
@@ -511,17 +507,17 @@ export class AssertionContext<
    *
    * @param selector
    */
-  click(selector: string, opts?: FindOptions): ValuePromise<any, Value<any>>;
+  click(selector: string, opts?: FindOptions): ValuePromise<UnknownValue>;
   click(
     selector: string,
     contains: string,
     opts?: FindOptions
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
   click(
     selector: string,
     matches: RegExp,
     opts?: FindOptions
-  ): ValuePromise<any, Value<any>>;
+  ): ValuePromise<UnknownValue>;
   public click(
     selector: string,
     a?: FindOptions | string | RegExp,
@@ -603,13 +599,16 @@ export class AssertionContext<
   public none = asyncNone;
   public each = asyncForEach;
 
-  public count<T>(arr: T[], callback?: IteratorBoolCallback) {
-    return ValuePromise.execute<number, Value<number>>(async () => {
+  public count<T>(
+    arr: T[],
+    callback?: IteratorBoolCallback
+  ): ValuePromise<NumericValue> {
+    return ValuePromise.execute<NumericValue>(async () => {
       if (callback) {
         const n = await asyncCount<T>(arr, callback);
-        return wrapAsValue(this, n, "Count");
+        return new NumericValue(n, this, "Count");
       }
-      return wrapAsValue(this, arr.length, "Count");
+      return new NumericValue(arr.length, this, "Count");
     });
   }
 
@@ -632,7 +631,7 @@ export class AssertionContext<
     await this.response.hideKeyboard();
   }
 
-  public getSource(): ValuePromise<string, Value<string>> {
+  public getSource(): ValuePromise<StringValue> {
     return ValuePromise.execute(async () => {
       return await this.response.getSource();
     });

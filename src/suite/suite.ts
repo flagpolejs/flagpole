@@ -4,9 +4,8 @@ import { SuiteStatusCallback, SuiteCallback } from "../interfaces/suite";
 import { exitProcess, toType } from "../util";
 import { FlagpoleExecution } from "../flagpole-execution";
 import { SuiteTaskManager } from "./suite-task-manager";
-import { createScenario } from "../scenario-factory";
-import { ClassConstructor, KeyValue } from "../interfaces/generic-types";
-import { Scenario } from "..";
+import { KeyValue } from "../interfaces/generic-types";
+import { Scenario } from "../scenario";
 import {
   ScenarioCallback,
   ScenarioTemplateInitOptions,
@@ -218,19 +217,22 @@ export class Suite {
     });
   }
 
-  public scenario<T extends Scenario>(
+  public scenario<
+    ScenarioType extends Scenario,
+    ScenarioOptions = ScenarioType["opts"]
+  >(
     title: string,
-    type: ScenarioConstructor<T>,
-    opts: KeyValue = {}
-  ): T {
-    const scenario = createScenario<T>(type, this, title, opts);
-    // Some local tests fail with SSL verify on, so may have been disabled on this suite
+    scenarioType: ScenarioConstructor<ScenarioType>,
+    opts?: ScenarioOptions
+  ): ScenarioType {
+    const scenario = new scenarioType(this, title, opts || {});
+    // Verify sert
     scenario.verifyCert(this._verifySslCert);
     // Should we hold off on executing?
-    this._waitToExecute && scenario.wait();
+    if (this._waitToExecute) scenario.wait();
     // Add this to our collection of scenarios
     this._taskManager.registerScenario(scenario);
-    return scenario as T;
+    return scenario;
   }
 
   /**

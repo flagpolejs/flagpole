@@ -201,8 +201,8 @@ export class HttpRequest {
     };
   }
 
-  constructor(opts: HttpRequestOptions) {
-    this.setOptions(opts);
+  constructor(public readonly inputOpts: HttpRequestOptions) {
+    this.setOptions(this.inputOpts);
   }
 
   /**
