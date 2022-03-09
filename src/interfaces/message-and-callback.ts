@@ -4,6 +4,6 @@ import { NextCallback } from "./next-callback";
 export interface MessageAndCallback {
   isSubScenario: boolean;
   message: string;
-  callback: NextCallback;
+  callback: NextCallback<any>;
   scenario?: Scenario;
 }

@@ -55,9 +55,8 @@ import {
 } from "./interfaces/scenario-callbacks";
 import { Adapter } from "./adapter";
 import { UnknownValue } from "./values/unknown-value";
-import { ValueWrapper } from "./value-wrapper";
 
-enum ScenarioRequestType {
+export enum ScenarioRequestType {
   httpRequest = "httpRequest",
   localFile = "localFile",
   manual = "manual",
@@ -67,8 +66,7 @@ enum ScenarioRequestType {
 export abstract class Scenario<
   RequestType extends HttpRequest = HttpRequest,
   AdapterType extends Adapter = Adapter,
-  ResponseType extends ProtoResponse = ProtoResponse,
-  WrapperType extends ValueWrapper<any> = ValueWrapper<any>
+  ResponseType extends ProtoResponse = ProtoResponse
 > {
   public abstract readonly typeName: string;
   public abstract readonly request: RequestType;
@@ -102,12 +100,8 @@ export abstract class Scenario<
     });
   }
 
-  public get context(): AssertionContext<
-    RequestType,
-    ResponseType,
-    WrapperType
-  > {
-    return new AssertionContext(this, this.request, this.response);
+  public get context() {
+    return new AssertionContext(this);
   }
 
   /**
@@ -291,7 +285,7 @@ export abstract class Scenario<
 
   private _nexts: {
     message: string | null;
-    callback: NextCallback;
+    callback: NextCallback<any>;
   }[] = [];
 
   protected _log: LogCollection = new LogCollection();
@@ -634,13 +628,17 @@ export abstract class Scenario<
   /**
    * Set the callback for the assertions to run after the request has a response
    */
-  public next(callback: NextCallback): this;
-  public next(message: string, callback: NextCallback): this;
-  public next(...callbacks: NextCallback[]): this;
+  public next(callback: NextCallback<this>): this;
+  public next(message: string, callback: NextCallback<this>): this;
+  public next(...callbacks: NextCallback<this>[]): this;
   public next(responseValues: { [key: string]: any }): this;
   public next(
-    a: NextCallback | NextCallback[] | string | { [key: string]: any },
-    b?: NextCallback | { [key: string]: any }
+    a:
+      | NextCallback<this>
+      | NextCallback<this>[]
+      | string
+      | { [key: string]: any },
+    b?: NextCallback<this> | { [key: string]: any }
   ): this {
     if (Array.isArray(a)) {
       a.forEach((callback) => {
@@ -655,9 +653,12 @@ export abstract class Scenario<
   /**
    * Insert this as the first next
    */
-  public nextPrepend(message: string, callback: NextCallback): this;
-  public nextPrepend(callback: NextCallback): this;
-  public nextPrepend(a: NextCallback | string, b?: NextCallback): this {
+  public nextPrepend(message: string, callback: NextCallback<this>): this;
+  public nextPrepend(callback: NextCallback<this>): this;
+  public nextPrepend(
+    a: NextCallback<this> | string,
+    b?: NextCallback<this>
+  ): this {
     return this._next(a, b, false);
   }
 
@@ -1279,7 +1280,7 @@ export abstract class Scenario<
     };
   }
 
-  protected _expect(responseValues: { [key: string]: any }): NextCallback {
+  protected _expect(responseValues: { [key: string]: any }): NextCallback<any> {
     return async (context) => {
       const json = new JsonDoc(context.response.serialize());
       const paths = Object.keys(responseValues);
@@ -1335,11 +1336,11 @@ export abstract class Scenario<
 
   @beforeScenarioFinished
   protected _next(
-    a: NextCallback | string | { [key: string]: any },
-    b?: NextCallback | { [key: string]: any } | null,
+    a: NextCallback<this> | string | { [key: string]: any },
+    b?: NextCallback<this> | { [key: string]: any } | null,
     append: boolean = true
   ): this {
-    const callback = this._getCallbackOverload(a, b) as NextCallback;
+    const callback = this._getCallbackOverload(a, b) as NextCallback<this>;
     const message = this._getMessageOverload(a);
     if (append) {
       this._nexts.push({

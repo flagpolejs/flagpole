@@ -20,6 +20,8 @@ export class HtmlResponse extends ProtoResponse {
     return this._cheerio;
   }
 
+  public helloHtml() {}
+
   public init(res: HttpResponse) {
     super.init(res);
     this._cheerio = cheerio.load(res.body);

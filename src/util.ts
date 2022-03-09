@@ -315,7 +315,7 @@ export function getMessageAndCallbackFromOverloading(
   defaultMessage: string = "Untitled"
 ): MessageAndCallback {
   const message: string = typeof a == "string" ? a : defaultMessage;
-  const callback: NextCallback = (() => {
+  const callback: NextCallback<any> = (() => {
     // Handle overloading
     if (typeof b == "function") {
       return b;

@@ -1,10 +1,7 @@
-import { HttpRequest, ProtoResponse } from "..";
 import { AssertionContext } from "../assertion/assertion-context";
+import { Scenario } from "../scenario";
 
-export type NextCallback = <
-  RequestType extends HttpRequest,
-  ResponseType extends ProtoResponse
->(
-  context: AssertionContext<RequestType, ResponseType>,
+export type NextCallback<ScenarioType extends Scenario> = (
+  context: AssertionContext<ScenarioType>,
   ...args: any[]
 ) => Promise<any> | void;

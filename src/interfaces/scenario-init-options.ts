@@ -24,7 +24,10 @@ export interface ScenarioInitOptions<T extends Scenario> {
   basicAuth?: HttpAuth;
   digestAuth?: HttpAuth;
   maxRedirects?: number;
-  next?: NextCallback | { [title: string]: NextCallback } | NextCallback[];
+  next?:
+    | NextCallback<any>
+    | { [title: string]: NextCallback<any> }
+    | NextCallback<any>[];
   set?: KeyValue;
   statusCode?: number;
   maxLoadTime?: number;

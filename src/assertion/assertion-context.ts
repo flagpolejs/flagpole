@@ -26,43 +26,30 @@ import { ValuePromise } from "../value-promise";
 import { IteratorBoolCallback } from "../interfaces/iterator-callbacks";
 import { FindAllOptions, FindOptions } from "../interfaces/find-options";
 import { JsFunction, KeyValue, OptionalXY } from "../interfaces/generic-types";
-import { ScreenshotOpts } from "../interfaces/screenshot";
-import { GestureOpts, GestureType } from "../interfaces/gesture";
-import { PointerMove } from "../interfaces/pointer";
-import { ScreenProperties } from "../interfaces/screen-properties";
-import { HttpRequest, ProtoResponse, Scenario, Suite } from "..";
 import { AssertionResult } from "../logging/assertion-result";
 import { NumericValue } from "../values/numeric-value";
 import { StringValue } from "../values/string-value";
 import { UnknownValue } from "../values/unknown-value";
-import { ValueWrapper } from "../value-wrapper";
+import { Scenario } from "../scenario";
 
-export class AssertionContext<
-  RequestType extends HttpRequest = HttpRequest,
-  ResponseType extends ProtoResponse = ProtoResponse,
-  WrapperType extends ValueWrapper<any> = ValueWrapper<any>
-> {
+export class AssertionContext<ScenarioType extends Scenario = Scenario> {
   protected _assertions: Assertion[] = [];
   protected _subScenarios: Promise<any>[] = [];
 
-  constructor(
-    public readonly scenario: Scenario,
-    public readonly request: RequestType,
-    public readonly response: ResponseType
-  ) {}
+  constructor(public readonly scenario: ScenarioType) {}
 
   /**
    * Get returned value from previous next block
    */
   public result: any;
 
-  public get suite(): Suite {
-    return this.scenario.suite;
-  }
+  public suite = this.scenario.suite;
+  public request = this.scenario.request;
+  public response = this.scenario.response;
+  public scenarioType = this.scenario.typeName;
+  public executionOptions = FlagpoleExecution.global;
 
-  public get executionOptions(): FlagpoleExecution {
-    return FlagpoleExecution.global;
-  }
+  public currentUrl = this.response.currentUrl;
 
   public get incompleteAssertions(): Assertion[] {
     const incompleteAssertions: Assertion[] = [];
@@ -88,19 +75,7 @@ export class AssertionContext<
     return Promise.all(this._subScenarios);
   }
 
-  public get currentUrl() {
-    return this.response.currentUrl;
-  }
-
-  /**
-   * Make a comment in the scenario output
-   *
-   * @param input
-   */
-  public comment(input: any): this {
-    this.scenario.comment(input);
-    return this;
-  }
+  public comment = this.scenario.comment;
 
   /**
    * Create a new assertion based on this value
@@ -134,52 +109,11 @@ export class AssertionContext<
     });
   }
 
-  /**
-   * Clear any current input and then type this into the input box
-   *
-   * @param selector
-   * @param textToType
-   * @param opts
-   */
-  public clearThenType(selector: string, textToType: string, opts: any = {}) {
-    return this.response.clearThenType(selector, textToType, opts);
-  }
-
-  /**
-   * Clear any current input in this input box
-   *
-   * @param selector
-   */
-  public clear(selector: string) {
-    return this.response.clear(selector);
-  }
-
-  public type(selector: string, textToType: string, opts: any = {}) {
-    return this.response.type(selector, textToType, opts);
-  }
-
-  /**
-   * Select items from a dropdown or multi-select box
-   *
-   * @param selector
-   * @param value
-   */
-  public async selectOption(selector: string, value: string | string[]) {
-    await this.response.selectOption(selector, value);
-    this._completedAction(
-      "SELECT",
-      typeof value == "string" ? value : value.join(", ")
-    );
-  }
-
-  /**
-   * Execute this javascript against the response
-   *
-   * @param callback
-   */
-  public async eval(js: JsFunction, ...args: any[]) {
-    return await this.response.eval.apply(this, [js, ...args]);
-  }
+  public type = this.response.type;
+  public clear = this.response.clear;
+  public clearThenType = this.response.clearThenType;
+  public selectOption = this.response.selectOption;
+  public eval = this.response.eval;
 
   public async waitForFunction(
     js: JsFunction,
@@ -389,63 +323,10 @@ export class AssertionContext<
     return flatten<UnknownValue>(elements);
   }
 
-  /**
-   * Find for first element at this selector path
-   *
-   * @param selector
-   */
-  public find<InputType>(
-    selector: string | string[],
-    a?: string | RegExp | FindOptions,
-    b?: FindOptions
-  ): ValuePromise<UnknownValue> {
-    const selectors = toArray<string>(selector);
-    const params = getFindParams(a, b);
-    return ValuePromise.execute(async () => {
-      const element = await asyncUntil<WrapperType>(
-        selectors,
-        async (selector) => {
-          const value =
-            typeof a == "string"
-              ? await this.response.find(selector, a, b)
-              : a instanceof RegExp
-              ? await this.response.find(selector, a, b)
-              : await this.response.find(selector, b);
-          return value.isNullOrUndefined() ? false : value;
-        }
-      );
-      return new UnknownValue(
-        element,
-        this,
-        getFindName(params, selectors, null)
-      );
-    });
-  }
-
-  /**
-   * Find all elements at this selector path
-   *
-   * @param selector
-   */
-  public async findAll(
-    selector: string | string[],
-    a?: string | RegExp | FindAllOptions,
-    b?: FindAllOptions
-  ): Promise<UnknownValue[]> {
-    const selectors = toArray<string>(selector);
-    const elements = await this._findAllForSelectors(selectors, a, b);
-    return flatten<UnknownValue>(elements);
-  }
-
-  public findXPath(xPath: string) {
-    return ValuePromise.execute(async () => {
-      return this.response.findXPath(xPath);
-    });
-  }
-
-  public findAllXPath(xPath: string) {
-    return this.response.findAllXPath(xPath);
-  }
+  public find = this.response.find;
+  public findAll = this.response.findAll;
+  public findXPath = this.response.findXPath;
+  public findAllXPath = this.response.findAllXPath;
 
   /**
    * Submit this form
@@ -493,35 +374,8 @@ export class AssertionContext<
     return result;
   }
 
-  /**
-   * Click on this element
-   *
-   * @param selector
-   */
-  click(selector: string, opts?: FindOptions): ValuePromise<UnknownValue>;
-  click(
-    selector: string,
-    contains: string,
-    opts?: FindOptions
-  ): ValuePromise<UnknownValue>;
-  click(
-    selector: string,
-    matches: RegExp,
-    opts?: FindOptions
-  ): ValuePromise<UnknownValue>;
-  public click(
-    selector: string,
-    a?: FindOptions | string | RegExp,
-    b?: FindOptions
-  ) {
-    return ValuePromise.execute(async () => {
-      return typeof a == "string"
-        ? this.response.click(selector, a, b)
-        : a instanceof RegExp
-        ? this.response.click(selector, a, b)
-        : this.response.click(selector, b);
-    });
-  }
+  public click = this.response.click;
+  public screenshot = this.response.screenshot;
 
   /**
    * Save the response body into a temporary file and open it. This is mainly for debugging.
@@ -533,50 +387,12 @@ export class AssertionContext<
     return filePath;
   }
 
-  public screenshot(): Promise<Buffer>;
-  public screenshot(localFilePath: string): Promise<Buffer>;
-  public screenshot(
-    localFilePath: string,
-    opts: ScreenshotOpts
-  ): Promise<Buffer>;
-  public screenshot(opts: ScreenshotOpts): Promise<Buffer>;
-  public screenshot(
-    a?: string | ScreenshotOpts,
-    b?: ScreenshotOpts
-  ): Promise<Buffer> {
-    const output = (() => {
-      if (typeof a === "string") {
-        return b ? this.response.screenshot(a, b) : this.response.screenshot(a);
-      }
-      return a ? this.response.screenshot(a) : this.response.screenshot();
-    })();
-    this._completedAction("SCREENSHOT");
-    return output;
-  }
+  public movePointer = this.response.movePointer;
+  public gesture = this.response.gesture;
 
-  public async movePointer(...pointers: PointerMove[]): Promise<this> {
-    await this.response.movePointer(...pointers);
-    return this;
-  }
-
-  public async gesture(type: GestureType, opts: GestureOpts): Promise<this> {
-    await this.response.gesture(type, opts);
-    return this;
-  }
-
-  public push(key: string, value: any): this {
-    this.scenario.push(key, value);
-    return this;
-  }
-
-  public set(aliasName: string, value: any): this {
-    this.scenario.set(aliasName, value);
-    return this;
-  }
-
-  public get<T = any>(aliasName: string): T {
-    return this.scenario.get<T>(aliasName);
-  }
+  public push = this.scenario.push;
+  public set = this.scenario.set;
+  public get = this.scenario.get;
 
   public async scrollTo(point: OptionalXY): Promise<this> {
     await this.response.scrollTo(point);
@@ -603,24 +419,11 @@ export class AssertionContext<
     });
   }
 
-  public async abort(message?: string): Promise<void> {
-    await this.scenario.abort(message);
-  }
+  public abort = this.scenario.abort;
 
-  public async rotateScreen(
-    rotation: string | number
-  ): Promise<string | number> {
-    return await this.response.rotateScreen(rotation);
-  }
-
-  public async getScreenProperties(): Promise<ScreenProperties> {
-    return await this.response.getScreenProperties();
-  }
-
-  /* Hides the software keyboard */
-  public async hideKeyboard(): Promise<void> {
-    await this.response.hideKeyboard();
-  }
+  public rotateScreen = this.response.rotateScreen;
+  public getScreenProperties = this.response.getScreenProperties;
+  public hideKeyboard = this.response.hideKeyboard;
 
   public getSource(): ValuePromise<StringValue> {
     return ValuePromise.execute(async () => {
