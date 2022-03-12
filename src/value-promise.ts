@@ -53,7 +53,7 @@ export class ValuePromise<ValueType extends ValueWrapper<any>>
   }
 
   public get not() {
-    return this._promisifyAssertProperty<Assertion>("not");
+    return this._promisifyAssertProperty<Assertion<any>>("not");
   }
 
   public equals(value: any) {
@@ -123,7 +123,7 @@ export class ValuePromise<ValueType extends ValueWrapper<any>>
   }
 
   private _promisifyAssertMethod<T>(
-    method: keyof Assertion,
+    method: keyof Assertion<any>,
     ...args: any[]
   ): Promise<T> {
     return new Promise((resolve) =>

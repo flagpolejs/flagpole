@@ -33,7 +33,7 @@ import { UnknownValue } from "../values/unknown-value";
 import { Scenario } from "../scenario";
 
 export class AssertionContext<ScenarioType extends Scenario = Scenario> {
-  protected _assertions: Assertion[] = [];
+  protected _assertions: Assertion<any>[] = [];
   protected _subScenarios: Promise<any>[] = [];
 
   constructor(public readonly scenario: ScenarioType) {}
@@ -51,8 +51,8 @@ export class AssertionContext<ScenarioType extends Scenario = Scenario> {
 
   public currentUrl = this.response.currentUrl;
 
-  public get incompleteAssertions(): Assertion[] {
-    const incompleteAssertions: Assertion[] = [];
+  public get incompleteAssertions() {
+    const incompleteAssertions: Assertion<any>[] = [];
     this._assertions.forEach((assertion) => {
       if (!assertion.assertionMade) {
         incompleteAssertions.push(assertion);
@@ -83,9 +83,9 @@ export class AssertionContext<ScenarioType extends Scenario = Scenario> {
    * @param message
    * @param value
    */
-  public assert(message: string, value: any): Assertion;
-  public assert(value: any): Assertion;
-  public assert(a: any, b?: any): Assertion {
+  public assert<T>(message: string, value: T): Assertion<T>;
+  public assert<T>(value: T): Assertion<T>;
+  public assert<T>(a: any, b?: any): Assertion<T> {
     const { value, message } =
       arguments.length === 2
         ? { value: b, message: a }

@@ -7,61 +7,63 @@ import {
   usStateCodes,
 } from "../interfaces/region-abbreviations";
 
-export class AssertionIs {
+export class AssertionIs<
+  AssertionType extends Assertion<any> = Assertion<any>
+> {
   public get not(): AssertionIs {
-    this._assertion.not;
+    this.assertion.not;
     return this;
   }
 
   public get optional(): AssertionIs {
-    this._assertion.optional;
+    this.assertion.optional;
     return this;
   }
 
-  constructor(private _assertion: Assertion) {}
+  constructor(public readonly assertion: AssertionType) {}
 
   public type(type: string) {
-    return this._assertion.type.equals(type);
+    return this.assertion.type.equals(type);
   }
 
   public array() {
-    return this._assertion.type.equals("array");
+    return this.assertion.type.equals("array");
   }
 
   public object() {
-    return this._assertion.type.equals("object");
+    return this.assertion.type.equals("object");
   }
 
   public null() {
-    return this._assertion.type.equals("null");
+    return this.assertion.type.equals("null");
   }
 
   public undefined() {
-    return this._assertion.type.equals("undefined");
+    return this.assertion.type.equals("undefined");
   }
 
   public number() {
-    return this._assertion.type.equals("number");
+    return this.assertion.type.equals("number");
   }
 
   public string() {
-    return this._assertion.type.equals("string");
+    return this.assertion.type.equals("string");
   }
 
   public greaterThan(value: any) {
-    return this._assertion.greaterThan(value);
+    return this.assertion.greaterThan(value);
   }
 
   public lessThan(value: any) {
-    return this._assertion.lessThan(value);
+    return this.assertion.lessThan(value);
   }
 
   public lessThanOrEquals(value: any) {
-    return this._assertion.lessThanOrEquals(value);
+    return this.assertion.lessThanOrEquals(value);
   }
 
   public greaterThanOrEquals(value: any) {
-    return this._assertion.greaterThanOrEquals(value);
+    return this.assertion.greaterThanOrEquals(value);
   }
 
   public boolean() {
@@ -366,21 +368,21 @@ export class AssertionIs {
   }
 
   private _setValidationMessage(thisThing: string) {
-    this._assertion.setDefaultMessages(
-      `${this._assertion.subject} is not ${thisThing}.`,
-      `${this._assertion.subject} is ${thisThing}.`
+    this.assertion.setDefaultMessages(
+      `${this.assertion.subject} is not ${thisThing}.`,
+      `${this.assertion.subject} is ${thisThing}.`
     );
   }
 
   private _validate(func: Function, thisThing: string) {
-    const text = this._assertion.text;
+    const text = this.assertion.text;
     this._setValidationMessage(thisThing);
-    return this._assertion.execute(func(text), text);
+    return this.assertion.execute(func(text), text);
   }
 
   private _validateWithOpts(func: Function, opts: any, thisThing: string) {
-    const text = this._assertion.text;
+    const text = this.assertion.text;
     this._setValidationMessage(thisThing);
-    return this._assertion.execute(func(text, opts), text);
+    return this.assertion.execute(func(text, opts), text);
   }
 }

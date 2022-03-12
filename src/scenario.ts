@@ -100,7 +100,7 @@ export abstract class Scenario<
     });
   }
 
-  public get context() {
+  public get context(): AssertionContext<this> {
     return new AssertionContext(this);
   }
 
@@ -1046,7 +1046,7 @@ export abstract class Scenario<
         });
         lastReturnValue = callback.apply(context, [context, ...args]);
         // Warn about any incomplete assertions
-        context.incompleteAssertions.forEach((assertion: Assertion) => {
+        context.incompleteAssertions.forEach((assertion) => {
           this.result(
             new AssertionFailWarning(
               `Incomplete assertion: ${assertion.name}`,

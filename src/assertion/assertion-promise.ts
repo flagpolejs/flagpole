@@ -17,12 +17,12 @@ function assertionMethod(
 }
 
 export class AssertionPromise
-  extends Promise<Assertion>
-  implements PromiseLike<Assertion>
+  extends Promise<Assertion<any>>
+  implements PromiseLike<Assertion<any>>
 {
   public constructor(
     executor: (
-      resolve: (value?: Assertion | PromiseLike<Assertion>) => void,
+      resolve: (value?: Assertion<any> | PromiseLike<Assertion<any>>) => void,
       reject: (reason?: any) => void
     ) => void
   ) {
